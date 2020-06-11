@@ -1,0 +1,66 @@
+A Skeleton for MPI Time-Dependent program
+=========================================
+S. Brunner, T.M. Tran   CRPP/EPFL
+-
+&BASIC
+  nrun=500000
+  dt=1.0D-3
+  tmax=100    ! time normalized to 1/omega_pe
+/
+&GRID
+  pmax=20      ! number of Hermite moments (including Ne,Te,Ue)
+  nz=128
+  zmin=0.
+  zmax= 20   ! Normalized to lambda_De
+/
+&OUTPUT_PAR
+  nsave_0d=1000
+  nsave_1d=1000
+  nsave_2d=1000
+  nsave_3d=0
+  write_theta=.true.
+  write_temp=.true.
+  write_vpar=.true.
+  write_moments=.true.
+  write_phi=.true.
+  write_doubleprecision=.true.  
+  resfile0='results'
+/
+&MODEL_PAR
+  ! Collisionality
+  nu=0.01     ! Normalized collision frequency normalized to plasma frequency
+  ! Numerically added diffusion
+  diff_theta=0.001
+  diff_temp=0.001
+  diff_vpar=0.001
+  diff_moments=0.001
+  ! Other
+  gradient_scheme='fd4'
+  freeze_theta=.false.
+  freeze_temp=.false.
+  freeze_vpar=.false.
+  freeze_moments=.false.
+  freeze_phi=.false.
+  fft_suppress_high_freq = .false.
+  fft_sigma=1
+/
+&INITIAL_CON
+  ! Background value
+  initback_density=1. 
+  initback_temp=1.
+  initback_vpar=0.
+  initback_moments=0.
+  ! Noise amplitude
+  initnoise_density=0.
+  initnoise_temp=0.
+  initnoise_vpar=0.
+  initnoise_moments=0.
+  iseed=42
+  init_nb_oscil_density=1.   ! per domain, i.e., zmax
+  init_nb_oscil_temp=1.  
+  init_ampli_density=1.0D-2
+  init_ampli_temp=0
+/
+&TIME_INTEGRATION_PAR
+  numerical_scheme='RK4'
+/
