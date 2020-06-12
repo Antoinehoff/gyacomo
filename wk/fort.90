@@ -8,19 +8,22 @@ S. Brunner, T.M. Tran   CRPP/EPFL
   tmax=100    ! time normalized to 1/omega_pe
 /
 &GRID
-  pmax=20      ! number of Hermite moments (including Ne,Te,Ue)
-  nz=128
-  zmin=0.
-  zmax= 20   ! Normalized to lambda_De
+  pmaxe=10    ! number of Hermite moments (including Ne,Te,Ue)
+  jmaxe=5     ! number of Hermite moments (including Ne,Te,Ue)
+  pmaxi=10    ! number of Hermite moments (including Ne,Te,Ue)
+  jmaxi=5     ! number of Hermite moments (including Ne,Te,Ue)
+  nkr=1
+  krmin=0.
+  krmax=0.     ! Normalized to ?
+  nkz=1
+  kzmin=1.
+  kzmax=1.     ! Normalized to ?
 /
 &OUTPUT_PAR
   nsave_0d=1000
-  nsave_1d=1000
+  nsave_1d=0
   nsave_2d=1000
   nsave_3d=0
-  write_theta=.true.
-  write_temp=.true.
-  write_vpar=.true.
   write_moments=.true.
   write_phi=.true.
   write_doubleprecision=.true.  
@@ -28,38 +31,24 @@ S. Brunner, T.M. Tran   CRPP/EPFL
 /
 &MODEL_PAR
   ! Collisionality
-  nu=0.01     ! Normalized collision frequency normalized to plasma frequency
-  ! Numerically added diffusion
-  diff_theta=0.001
-  diff_temp=0.001
-  diff_vpar=0.001
-  diff_moments=0.001
-  ! Other
-  gradient_scheme='fd4'
-  freeze_theta=.false.
-  freeze_temp=.false.
-  freeze_vpar=.false.
-  freeze_moments=.false.
-  freeze_phi=.false.
-  fft_suppress_high_freq = .false.
-  fft_sigma=1
+  nu      = 0.01        ! Normalized collision frequency normalized to plasma frequency
+  tau_e   = 1.0         ! T_e/T_e
+  tau_i   = 1.0         ! T_i/T_e       temperature ratio
+  sigma_e = 0.0233380   ! sqrt(m_e/m_i) mass ratio
+  sigma_i = 1.0         ! sqrt(m_i/m_i)
+  q_e     =-1.0         ! Electrons charge
+  q_i     = 1.0         ! Ions charge
+  eta_n   = 1.0         ! L_perp / L_n Density gradient
+  eta_T   = 0.0         ! L_perp / L_T Temperature gradient
+  eta_B   = 0.5         ! L_perp / L_B Magnetic gradient and curvature
+  lambdaD = 0.0         ! Debye length
 /
 &INITIAL_CON
   ! Background value
-  initback_density=1. 
-  initback_temp=1.
-  initback_vpar=0.
   initback_moments=0.
   ! Noise amplitude
-  initnoise_density=0.
-  initnoise_temp=0.
-  initnoise_vpar=0.
   initnoise_moments=0.
   iseed=42
-  init_nb_oscil_density=1.   ! per domain, i.e., zmax
-  init_nb_oscil_temp=1.  
-  init_ampli_density=1.0D-2
-  init_ampli_temp=0
 /
 &TIME_INTEGRATION_PAR
   numerical_scheme='RK4'

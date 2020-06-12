@@ -53,18 +53,20 @@ CONTAINS
 
   FUNCTION checkfield(field,str) RESULT(mlend)
 
-    USE space_grid
+    USE fourier_grid
 
     use prec_const
     IMPLICIT NONE
 
-    real(dp), DIMENSION(izs:ize), INTENT(IN) :: field
+    COMPLEX(dp), DIMENSION(ikrs:ikre,ikzs:ikze), INTENT(IN) :: field
     CHARACTER(LEN=*), INTENT(IN) :: str
     LOGICAL :: mlend
-    real(dp) :: sumfield
+    COMPLEX(dp) :: sumfield
 
     sumfield=SUM(field)
-    mlend=is_nan(sumfield,str).OR.is_inf(sumfield,str)
+
+    mlend= is_nan( REAL(sumfield),str).OR.is_inf( REAL(sumfield),str) &
+      .OR. is_nan(AIMAG(sumfield),str).OR.is_inf(AIMAG(sumfield),str)
   END FUNCTION checkfield
 
 END MODULE utility

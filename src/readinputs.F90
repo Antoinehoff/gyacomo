@@ -1,7 +1,7 @@
 SUBROUTINE readinputs
   ! Additional data specific for a new run
 
-  USE space_grid,       ONLY: space_grid_readinputs
+  USE fourier_grid,     ONLY: fourier_grid_readinputs
   USE diagnostics_par,  ONLY: output_par_readinputs
   USE model,            ONLY: model_readinputs
   USE initial_par,      ONLY: initial_readinputs
@@ -15,7 +15,7 @@ SUBROUTINE readinputs
   ! The input file must be in the same order as the following read routines commands (eg spacegrid then output then model)
 
   ! Load grid data from input file
-  CALL space_grid_readinputs
+  CALL fourier_grid_readinputs
 
   ! Load diagnostic options from input file
   CALL output_par_readinputs

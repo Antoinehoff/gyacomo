@@ -23,12 +23,12 @@ CONTAINS
     USE basic
     USE time_integration
     USE array
-    USE space_grid
+    USE fourier_grid
     use prec_const
     IMPLICIT NONE
 
-    real(dp), DIMENSION ( ikrs:ikre,ikzs:ikze,ntimelevel ) :: f
-    real(dp), DIMENSION ( ikrs:ikre,ikzs:ikze,ntimelevel ) :: f_rhs
+    COMPLEX(dp), DIMENSION ( ikrs:ikre, ikzs:ikze, ntimelevel ) :: f
+    COMPLEX(dp), DIMENSION ( ikrs:ikre, ikzs:ikze, ntimelevel ) :: f_rhs
     INTEGER :: ikr, ikz, istage
 
     SELECT CASE (updatetlevel)   
@@ -42,7 +42,7 @@ CONTAINS
       END DO
     CASE DEFAULT
       DO ikz=ikzs,ikze  
-        f(ikr,ikz,updatetlevel) = f(ikz,1);
+        f(ikr,ikz,updatetlevel) = f(ikr,ikz,1);
         DO ikr=ikrs,ikre
           DO istage=1,updatetlevel-1
             f(ikr,ikz,updatetlevel) = f(ikr,ikz,updatetlevel) + &
