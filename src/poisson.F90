@@ -5,27 +5,71 @@ subroutine poisson
   USE time_integration, ONLY: updatetlevel
   USE array
   USE fields
-  USE space_grid
+  USE fourier_grid
+  use model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, lambdaD
 
-  use prec_const
+  USE prec_const
   IMPLICIT NONE
 
+  INTEGER     :: ikr,ikz, ini,ine, i0j
+  REAL(dp)    :: kr, kz
+  REAL(dp)    :: k1_, k2_ ! sub kernel factor for recursive build
+  REAL(dp)    :: x_e, x_i, alphaD
+  COMPLEX(dp) :: gammaD, gammaphi
+  COMPLEX(dp) :: sum_kernel2_e,    sum_kernel2_i
+  COMPLEX(dp) :: sum_kernel_mom_e, sum_kernel_mom_i
 
-  INTEGER:: iz
+  DO ikr=ikrs,ikre
+    DO ikz=ikzs,ikze
+      kr = krarray(ikr)
+      kz = kzarray(ikz)
 
-  DO iz=izs,ize
-    laplace_rhs(iz) = exp( theta(iz,updatetlevel) ) - 1._dp ! more generally replace 1 by Zeff, "d2phi/dz2 = N-1"
-    ! laplace_rhs(iz) = 1.0_dp - exp( theta(iz,updatetlevel) ) ! more generally replace 1 by Zeff, old when using "delec/dz = 1-N"
-  END DO
-  laplace_rhs(ize+1) = 0._dp ! Boundary condition, insert here desired value of \int_zmin^zmax \phi(z) dz
-  ! laplace_rhs(izs+20) = 0.042_dp ! Boundary condition, to fix value of phi(izs) ! OLD, for using phi
-  ! laplace_rhs(izs+20) = 0.042_dp ! Boundary condition, to fix mean value of elec
-  
+      ! Compute electrons sum(Kernel**2) and sum(Kernel * Ne0j)
+      x_e    = sqrt(kr**2 + kz**2) * sigma_e * sqrt(2.0*tau_e)/2.0
+      sum_kernel2_e    = 0
+      sum_kernel_mom_e = 0
+      k1_      = moments(1,ikr,ikz,updatetlevel)
+      k2_      = 1.0
+      if (jmaxe .ge. 0) then
+        DO ine=1,jmaxe
+          CALL bare(0,ine,i0j)
+          k1_ = k1_ * x_e**2/ine
+          k2_ = k2_ * x_e**4/ine**2
+          sum_kernel_mom_e  = sum_kernel_mom_e  + k1_ * moments(i0j,ikr,ikz,updatetlevel)
+          sum_kernel2_e     = sum_kernel2_e     + k2_
+        END DO
+      endif
+      sum_kernel2_e    = sum_kernel2_e    * exp(-x_e**2)
+      sum_kernel_mom_e = sum_kernel_mom_e * exp(-x_e**2)**2
 
-!  CALL bsolve(laplace_smumps, laplace_rhs, laplace_sol) ! solves matrix problem "laplace_smumps*laplace_sol=laplace_rhs" for laplace_sol, writes solution in laplace_sol
+      ! Compute ions sum(Kernel**2) and sum(Kernel * Ne0j)
+      x_i    = sqrt(kr**2 + kz**2) * sigma_i * sqrt(2.0*tau_i)/2.0
+      sum_kernel2_i    = 0
+      sum_kernel_mom_i = 0
+      k1_      = moments(Nmomi + 1, ikr, ikz, updatetlevel)
+      k2_      = 1.0
+      if (jmaxi .ge. 0) then
+        DO ini=1,jmaxe
+          CALL bari(0,ini,i0j)
+          k1_ = k1_ * x_i**2/ini
+          k2_ = k2_ * x_i**4/ini**2
+          sum_kernel_mom_i  = sum_kernel_mom_i  + k1_ * moments(Nmome + i0j,ikr,ikz,updatetlevel)
+          sum_kernel2_i     = sum_kernel2_i     + k2_
+        END DO
+      endif
+      sum_kernel2_i    = sum_kernel2_i    * exp(-x_i**2)
+      sum_kernel_mom_i = sum_kernel_mom_i * exp(-x_i**2)**2
 
-  DO iz=izs,ize
-    phi(iz) =  laplace_sol(iz) ! laplace_sol has an extra coordinate at (ize+1) for the lagrange multiplier
+      ! Assembling the poisson equation
+      alphaD   = sqrt(kr**2 + kz**2) * lambdaD**2
+      gammaD   = alphaD + q_e**2/tau_e * sum_kernel2_e &
+                        + q_i**2/tau_i * sum_kernel2_i
+
+      gammaphi = q_e * sum_kernel_mom_e + q_i * sum_kernel_mom_i
+      
+      phi(ikr, ikz) =  gammaphi/gammaD
+    
+    END DO
   END DO
 
 END SUBROUTINE poisson
