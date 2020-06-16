@@ -32,7 +32,7 @@ subroutine poisson
       k2_      = 1.0
       if (jmaxe .ge. 0) then
         DO ine=1,jmaxe
-          CALL bare(0,ine,i0j)
+          i0j = bare(0,ine)
           k1_ = k1_ * x_e**2/ine
           k2_ = k2_ * x_e**4/ine**2
           sum_kernel_mom_e  = sum_kernel_mom_e  + k1_ * moments(i0j,ikr,ikz,updatetlevel)
@@ -50,7 +50,7 @@ subroutine poisson
       k2_      = 1.0
       if (jmaxi .ge. 0) then
         DO ini=1,jmaxe
-          CALL bari(0,ini,i0j)
+          i0j = bari(0,ini)
           k1_ = k1_ * x_i**2/ini
           k2_ = k2_ * x_i**4/ini**2
           sum_kernel_mom_i  = sum_kernel_mom_i  + k1_ * moments(Nmome + i0j,ikr,ikz,updatetlevel)
