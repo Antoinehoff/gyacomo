@@ -62,7 +62,7 @@ CONTAINS
 
     SELECT CASE (numerical_scheme)
     CASE ('RK4')
-       CALL RK4
+      CALL RK4
     CASE ('DOPRI5')
        CALL DOPRI5
     CASE DEFAULT 
@@ -72,8 +72,6 @@ CONTAINS
     write(*,*) " Time integration with ", numerical_scheme
 
   END SUBROUTINE set_numerical_scheme
-
-
 
   SUBROUTINE RK4
     ! Butcher coeff for RK4 (default)
