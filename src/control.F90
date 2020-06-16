@@ -46,18 +46,18 @@ SUBROUTINE control
   
   !________________________________________________________________________________
   !              2.   Main loop
-  !DO
-  !   step = step+1
-  !   cstep = cstep+1
-  !   CALL stepon
-  !   time = time + dt
+  DO
+     step  = step  + 1
+     cstep = cstep + 1
+     CALL stepon
+     time  = time  + dt
 
-!     CALL tesend
-!     CALL diagnose(step)
-!     IF( nlend ) EXIT ! exit do loop
+     CALL tesend
+     CALL diagnose(step)
+     IF( nlend ) EXIT ! exit do loop
 
      ! CALL write_restart ! if want to write a restart file every so often (in case of crash)
-!  END DO
+  END DO
   !________________________________________________________________________________
   !              9.   Epilogue
 
