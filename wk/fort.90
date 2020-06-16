@@ -3,7 +3,7 @@ A Skeleton for MPI Time-Dependent program
 S. Brunner, T.M. Tran   CRPP/EPFL
 -
 &BASIC
-  nrun=500000
+  nrun=3
   dt=1.0D-3
   tmax=100    ! time normalized to 1/omega_pe
 /
@@ -20,10 +20,10 @@ S. Brunner, T.M. Tran   CRPP/EPFL
   kzmax=1.     ! Normalized to ?
 /
 &OUTPUT_PAR
-  nsave_0d=1000
+  nsave_0d=0
   nsave_1d=0
-  nsave_2d=1000
-  nsave_3d=0
+  nsave_2d=1
+  nsave_3d=1
   write_moments=.true.
   write_phi=.true.
   write_doubleprecision=.true.  
@@ -45,9 +45,9 @@ S. Brunner, T.M. Tran   CRPP/EPFL
 /
 &INITIAL_CON
   ! Background value
-  initback_moments=0.
+  initback_moments=1. ! x 1e-3
   ! Noise amplitude
-  initnoise_moments=0.
+  initnoise_moments=0.1
   iseed=42
 /
 &TIME_INTEGRATION_PAR
