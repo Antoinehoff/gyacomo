@@ -145,7 +145,7 @@ SUBROUTINE diagnose(kstep)
   !________________________________________________________________________________
   !                   2.   Periodic diagnostics
   !
-  IF (kstep .GT. 0) THEN
+  IF (kstep .GT. 0 .OR. kstep .EQ. 0) THEN
 
      !                       2.1   0d history arrays
      IF (nsave_0d .NE. 0) THEN
