@@ -5,10 +5,6 @@ MODULE diagnostics_par
   IMPLICIT NONE
   PRIVATE
 
-
-  LOGICAL, PUBLIC, PROTECTED :: write_theta=.TRUE. 
-  LOGICAL, PUBLIC, PROTECTED :: write_temp=.TRUE.
-  LOGICAL, PUBLIC, PROTECTED :: write_vpar=.TRUE. 
   LOGICAL, PUBLIC, PROTECTED :: write_moments=.TRUE. 
   LOGICAL, PUBLIC, PROTECTED :: write_phi=.TRUE.
   LOGICAL, PUBLIC, PROTECTED :: write_doubleprecision=.FALSE.
@@ -38,8 +34,7 @@ CONTAINS
     IMPLICIT NONE
 
     NAMELIST /OUTPUT_PAR/ nsave_0d , nsave_1d , nsave_2d , nsave_3d
-    NAMELIST /OUTPUT_PAR/ write_theta, write_temp
-    NAMELIST /OUTPUT_PAR/ write_vpar, write_moments, write_phi, write_doubleprecision
+    NAMELIST /OUTPUT_PAR/ write_moments, write_phi, write_doubleprecision
     NAMELIST /OUTPUT_PAR/ resfile0!, rstfile0
 
        READ(lu_in,output_par)
@@ -58,9 +53,6 @@ CONTAINS
     INTEGER, INTENT(in) :: fidres
     CHARACTER(len=256), INTENT(in) :: str
 
-    CALL attach(fidres, TRIM(str), "write_theta", write_theta)
-    CALL attach(fidres, TRIM(str), "write_temp", write_temp)
-    CALL attach(fidres, TRIM(str), "write_vpar", write_vpar)
     CALL attach(fidres, TRIM(str), "write_moments", write_moments)
     CALL attach(fidres, TRIM(str), "write_phi", write_phi)
     CALL attach(fidres, TRIM(str), "write_doubleprecision", write_doubleprecision)

@@ -131,36 +131,37 @@ contains
     CALL attach(fidres, TRIM(str), "kzmax", kzmax)
   END SUBROUTINE fourier_grid_outputinputs
 
-  SUBROUTINE bare(p,j,idx)
+  !============To handle p,j coefficients efficiently
+  FUNCTION bare(p,j) RESULT(idx)
     USE prec_const
     IMPLICIT NONE
     INTEGER, INTENT(in) :: p,j
-    INTEGER, INTENT(out):: idx
+    INTEGER :: idx
 
     idx = (jmaxe + 1)*p + j + 1
 
-  END SUBROUTINE bare
+  END FUNCTION bare
 
-  SUBROUTINE bari(p,j,idx)
+  FUNCTION bari(p,j) RESULT(idx)
     INTEGER, INTENT(in) :: p,j
-    INTEGER, INTENT(out):: idx
+    INTEGER :: idx
 
-    idx = (jmaxi + 1)*p + j + 1
+    idx = Nmome + (jmaxi + 1)*p + j + 1
 
-  END SUBROUTINE bari
+  END FUNCTION bari
 
-  SUBROUTINE rabe(idx, p, j)
+  FUNCTION rabe(idx) RESULT(pj)
     INTEGER, INTENT(in) :: idx
-    INTEGER, INTENT(out):: p,j
-    p = FLOOR(real((idx-1) / (jmaxe + 1)))
-    j = idx - p * (jmaxe+1)
-  END SUBROUTINE rabe
+    INTEGER, DIMENSION(2) :: pj
+    pj(1) = int(FLOOR(real(idx-1) / (jmaxe + 1)))
+    pj(2) = idx - 1 - pj(1) * (jmaxe+1)
+  END FUNCTION rabe
 
-  SUBROUTINE rabi(idx, p, j)
-    INTEGER, INTENT(in):: idx
-    INTEGER, INTENT(out) :: p,j
-    p = FLOOR(real((idx-Nmome - 1) / (jmaxi + 1)))
-    j = (idx-Nmome) - p * (jmaxi+1)
-  END SUBROUTINE rabi
+  FUNCTION rabi(idx) RESULT(pj)
+    INTEGER, INTENT (in):: idx
+    INTEGER, DIMENSION(2) :: pj
+    pj(1) = FLOOR(real((idx-Nmome - 1) / (jmaxi + 1)))
+    pj(2) = (idx-Nmome) - 1 - pj(1) * (jmaxi+1)
+  END FUNCTION rabi
 
 END MODULE fourier_grid
