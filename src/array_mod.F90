@@ -5,7 +5,8 @@ MODULE array
   implicit none
 
   ! Arrays to store the rhs, for time integration
-  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_rhs ! (ipj,ikr,ikz,updatetlevel)
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: moments_rhs_e ! (ip,ij,ikr,ikz,updatetlevel)
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: moments_rhs_i ! (ip,ij,ikr,ikz,updatetlevel)
 
   ! Intermediate steps in rhs of equations
   !COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE:: moments_Apl, moments_Bpl, moments_Cpl, moments_Dpl,&

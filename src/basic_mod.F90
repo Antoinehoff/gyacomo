@@ -18,6 +18,7 @@ MODULE basic
   INTEGER :: iframe1d                  ! counting the number of times 1d datasets are outputed (for diagnose)
   INTEGER :: iframe2d                  ! counting the number of times 2d datasets are outputed (for diagnose)
   INTEGER :: iframe3d                  ! counting the number of times 3d datasets are outputed (for diagnose)
+  INTEGER :: iframe5d                  ! counting the number of times 5d datasets are outputed (for diagnose)
 
   !  List of logical file units
   INTEGER :: lu_in   = 90              ! File duplicated from STDIN
@@ -25,7 +26,7 @@ MODULE basic
 
   INTERFACE allocate_array
     MODULE PROCEDURE allocate_array_dp1,allocate_array_dp2,allocate_array_dp3,allocate_array_dp4
-    MODULE PROCEDURE allocate_array_dc1,allocate_array_dc2,allocate_array_dc3,allocate_array_dc4
+    MODULE PROCEDURE allocate_array_dc1,allocate_array_dc2,allocate_array_dc3,allocate_array_dc4, allocate_array_dc5
     MODULE PROCEDURE allocate_array_i1,allocate_array_i2,allocate_array_i3,allocate_array_i4
     MODULE PROCEDURE allocate_array_l1,allocate_array_l2,allocate_array_l3,allocate_array_l4
   END INTERFACE allocate_array
@@ -67,6 +68,7 @@ CONTAINS
 ! To allocate arrays of doubles, integers, etc. at run time
 
   SUBROUTINE allocate_array_dp1(a,is1,ie1)
+    IMPLICIT NONE
     real(dp), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1
     ALLOCATE(a(is1:ie1))
@@ -74,6 +76,7 @@ CONTAINS
   END SUBROUTINE allocate_array_dp1
 
   SUBROUTINE allocate_array_dp2(a,is1,ie1,is2,ie2)
+    IMPLICIT NONE
     real(dp), DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2   
     ALLOCATE(a(is1:ie1,is2:ie2))
@@ -81,6 +84,7 @@ CONTAINS
   END SUBROUTINE allocate_array_dp2
 
   SUBROUTINE allocate_array_dp3(a,is1,ie1,is2,ie2,is3,ie3)
+    IMPLICIT NONE
     real(dp), DIMENSION(:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3))
@@ -88,6 +92,7 @@ CONTAINS
   END SUBROUTINE allocate_array_dp3
 
   SUBROUTINE allocate_array_dp4(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4)
+    IMPLICIT NONE
     real(dp), DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4))
@@ -95,6 +100,7 @@ CONTAINS
   END SUBROUTINE allocate_array_dp4
 
   SUBROUTINE allocate_array_dp5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
+    IMPLICIT NONE
     real(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
@@ -104,6 +110,7 @@ CONTAINS
   !========================================
 
   SUBROUTINE allocate_array_dc1(a,is1,ie1)
+    IMPLICIT NONE
     DOUBLE COMPLEX, DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1
     ALLOCATE(a(is1:ie1))
@@ -111,6 +118,7 @@ CONTAINS
   END SUBROUTINE allocate_array_dc1
 
   SUBROUTINE allocate_array_dc2(a,is1,ie1,is2,ie2)
+    IMPLICIT NONE
     DOUBLE COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2   
     ALLOCATE(a(is1:ie1,is2:ie2))
@@ -118,6 +126,7 @@ CONTAINS
   END SUBROUTINE allocate_array_dc2
 
   SUBROUTINE allocate_array_dc3(a,is1,ie1,is2,ie2,is3,ie3)
+    IMPLICIT NONE
     DOUBLE COMPLEX, DIMENSION(:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3))
@@ -125,6 +134,7 @@ CONTAINS
   END SUBROUTINE allocate_array_dc3
 
   SUBROUTINE allocate_array_dc4(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4)
+    IMPLICIT NONE
     DOUBLE COMPLEX, DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4))
@@ -132,7 +142,8 @@ CONTAINS
   END SUBROUTINE allocate_array_dc4
 
   SUBROUTINE allocate_array_dc5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
-    real(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    IMPLICIT NONE
+    DOUBLE COMPLEX, DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
     a=CMPLX(0.0_dp,0.0_dp)
@@ -141,6 +152,7 @@ CONTAINS
   !========================================
 
   SUBROUTINE allocate_array_i1(a,is1,ie1)
+    IMPLICIT NONE
     INTEGER, DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1
     ALLOCATE(a(is1:ie1))
@@ -148,6 +160,7 @@ CONTAINS
   END SUBROUTINE allocate_array_i1
 
   SUBROUTINE allocate_array_i2(a,is1,ie1,is2,ie2)
+    IMPLICIT NONE
     INTEGER, DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2   
     ALLOCATE(a(is1:ie1,is2:ie2))
@@ -155,6 +168,7 @@ CONTAINS
   END SUBROUTINE allocate_array_i2
 
   SUBROUTINE allocate_array_i3(a,is1,ie1,is2,ie2,is3,ie3)
+    IMPLICIT NONE
     INTEGER, DIMENSION(:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3))
@@ -162,6 +176,7 @@ CONTAINS
   END SUBROUTINE allocate_array_i3
 
   SUBROUTINE allocate_array_i4(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4)
+    IMPLICIT NONE
     INTEGER, DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4))
@@ -169,6 +184,7 @@ CONTAINS
   END SUBROUTINE allocate_array_i4
 
   SUBROUTINE allocate_array_i5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
+    IMPLICIT NONE
     real(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
@@ -178,6 +194,7 @@ CONTAINS
   !========================================
 
   SUBROUTINE allocate_array_l1(a,is1,ie1)
+    IMPLICIT NONE
     LOGICAL, DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1
     ALLOCATE(a(is1:ie1))
@@ -185,6 +202,7 @@ CONTAINS
   END SUBROUTINE allocate_array_l1
 
   SUBROUTINE allocate_array_l2(a,is1,ie1,is2,ie2)
+    IMPLICIT NONE
     LOGICAL, DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2
     ALLOCATE(a(is1:ie1,is2:ie2))
@@ -192,6 +210,7 @@ CONTAINS
   END SUBROUTINE allocate_array_l2
 
   SUBROUTINE allocate_array_l3(a,is1,ie1,is2,ie2,is3,ie3)
+    IMPLICIT NONE
     LOGICAL, DIMENSION(:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3))
@@ -199,6 +218,7 @@ CONTAINS
   END SUBROUTINE allocate_array_l3
 
   SUBROUTINE allocate_array_l4(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4)
+    IMPLICIT NONE
     LOGICAL, DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4))
@@ -206,10 +226,22 @@ CONTAINS
   END SUBROUTINE allocate_array_l4
 
   SUBROUTINE allocate_array_l5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
+    IMPLICIT NONE
     real(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
     a=.false.
   END SUBROUTINE allocate_array_l5
+
+  RECURSIVE FUNCTION Factorial(n) RESULT(Fact)
+  IMPLICIT NONE
+  INTEGER :: Fact
+  INTEGER, INTENT(IN) :: n
+  IF (n == 0) THEN
+    Fact = 1
+  ELSE
+    Fact = n * Factorial(n-1)
+  END IF
+  END FUNCTION Factorial
 
 END MODULE basic

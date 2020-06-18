@@ -3,51 +3,51 @@ A Skeleton for MPI Time-Dependent program
 S. Brunner, T.M. Tran   CRPP/EPFL
 -
 &BASIC
-  nrun=3
-  dt=1.0D-3
+  nrun=10000
+  dt=0.01
   tmax=100    ! time normalized to 1/omega_pe
 /
 &GRID
-  pmaxe=10    ! number of Hermite moments (including Ne,Te,Ue)
-  jmaxe=5     ! number of Hermite moments (including Ne,Te,Ue)
-  pmaxi=10    ! number of Hermite moments (including Ne,Te,Ue)
-  jmaxi=5     ! number of Hermite moments (including Ne,Te,Ue)
-  nkr=1
-  krmin=0.
-  krmax=0.     ! Normalized to ?
-  nkz=1
-  kzmin=1.
-  kzmax=1.     ! Normalized to ?
+  pmaxe = 15    ! number of Hermite moments 
+  jmaxe = 4     ! number of Hermite moments 
+  pmaxi = 15    ! number of Hermite moments 
+  jmaxi = 4     ! number of Hermite moments
+  nkr   = 1
+  krmin = 0.
+  krmax = 0.     ! Normalized to ?
+  nkz   = 1
+  kzmin = 0.1
+  kzmax = 0.1     ! Normalized to ?
 /
 &OUTPUT_PAR
-  nsave_0d=0
-  nsave_1d=0
-  nsave_2d=1
-  nsave_3d=1
-  write_moments=.true.
-  write_phi=.true.
-  write_doubleprecision=.true.  
-  resfile0='results'
+  nsave_0d = 0
+  nsave_1d = 0
+  nsave_2d = 100
+  nsave_5d = 100
+  write_moments = .true.
+  write_phi     = .true.
+  write_doubleprecision = .true.
+  resfile0      = 'results'
 /
 &MODEL_PAR
   ! Collisionality
-  nu      = 0.01        ! Normalized collision frequency normalized to plasma frequency
+  nu      = 0.001       ! Normalized collision frequency normalized to plasma frequency
   tau_e   = 1.0         ! T_e/T_e
   tau_i   = 1.0         ! T_i/T_e       temperature ratio
   sigma_e = 0.0233380   ! sqrt(m_e/m_i) mass ratio
   sigma_i = 1.0         ! sqrt(m_i/m_i)
   q_e     =-1.0         ! Electrons charge
   q_i     = 1.0         ! Ions charge
-  eta_n   = 1.0         ! L_perp / L_n Density gradient
+  eta_n   = 2.0         ! L_perp / L_n Density gradient
   eta_T   = 0.0         ! L_perp / L_T Temperature gradient
-  eta_B   = 0.5         ! L_perp / L_B Magnetic gradient and curvature
+  eta_B   = 1.0         ! L_perp / L_B Magnetic gradient and curvature
   lambdaD = 0.0         ! Debye length
 /
 &INITIAL_CON
   ! Background value
-  initback_moments=1. ! x 1e-3
+  initback_moments=0.01 ! x 1e-3
   ! Noise amplitude
-  initnoise_moments=0.1
+  initnoise_moments=0.
   iseed=42
 /
 &TIME_INTEGRATION_PAR

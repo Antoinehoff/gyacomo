@@ -17,9 +17,9 @@ MODULE fourier_grid
   REAL(dp), PUBLIC, PROTECTED :: kzmin = 0._dp  ! kz coordinate for left boundary
   REAL(dp), PUBLIC, PROTECTED :: kzmax = 1._dp  ! kz coordinate for right boundary
 
-  ! Indices of s -> start , e-> end
-  INTEGER, PUBLIC, PROTECTED ::  ipjs, ipje
-  INTEGER, PUBLIC, PROTECTED ::  Nmome, Nmomi, Nmomtot
+  ! Indices of s -> start , e-> END
+  INTEGER, PUBLIC, PROTECTED ::  ips_e,ipe_e, ijs_e,ije_e
+  INTEGER, PUBLIC, PROTECTED ::  ips_i,ipe_i, ijs_i,ije_i
   INTEGER, PUBLIC, PROTECTED ::  ikrs, ikre, ikzs, ikze
 
   ! Toroidal direction
@@ -31,66 +31,67 @@ MODULE fourier_grid
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: krarray
   
   ! Grid containing the polynomials degrees
-  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: pjarray
+  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: parray_e
+  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: parray_i
+  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: jarray_e
+  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: jarray_i
 
   ! Public Functions
   PUBLIC :: set_krgrid, set_kzgrid, set_pj
   PUBLIC :: fourier_grid_readinputs, fourier_grid_outputinputs
-  PUBLIC :: bare, bari
-  PUBLIC :: rabe, rabi
 
-contains
+CONTAINS
 
-  subroutine set_krgrid
-    use prec_const
-    implicit none
-    integer :: ikr  
-    ! Start and end indices of grid
+  SUBROUTINE set_krgrid
+    USE prec_const
+    IMPLICIT NONE
+    INTEGER :: ikr  
+    ! Start and END indices of grid
     ikrs = 1
     ikre = nkr    
     ! Grid spacings, precompute some inverses
-    deltakr = (krmax - krmin) / real(nkr,dp)
+    deltakr = (krmax - krmin) / REAL(nkr,dp)
     ! Discretized kr positions
-    allocate(krarray(ikrs:ikre))
+    ALLOCATE(krarray(ikrs:ikre))
     DO ikr = ikrs,ikre
-      krarray(ikr) = krmin + real(ikr-1,dp) * deltakr
+      krarray(ikr) = krmin + REAL(ikr-1,dp) * deltakr
     END DO
-  end subroutine set_krgrid
+  END SUBROUTINE set_krgrid
 
-  subroutine set_kzgrid
-    use prec_const
-    implicit none
-    integer :: ikz
-    ! Start and end indices of grid
+  SUBROUTINE set_kzgrid
+    USE prec_const
+    IMPLICIT NONE
+    INTEGER :: ikz
+    ! Start and END indices of grid
     ikzs = 1
     ikze = nkz    
     ! Grid spacings, precompute some inverses
-    deltakz = (kzmax - kzmin) / real(nkz,dp)
+    deltakz = (kzmax - kzmin) / REAL(nkz,dp)
     ! Discretized kz positions
-    allocate(kzarray(ikzs:ikze))
+    ALLOCATE(kzarray(ikzs:ikze))
     DO ikz = ikzs,ikze
-       kzarray(ikz) = kzmin + real(ikz-1,dp) * deltakz
+       kzarray(ikz) = kzmin + REAL(ikz-1,dp) * deltakz
     END DO
-  end subroutine set_kzgrid
+  END SUBROUTINE set_kzgrid
 
-  subroutine set_pj
-    use prec_const
-    implicit none
-    integer :: ipj
-    ! number of electrons moments
-    Nmome   = (Pmaxe + 1)*(Jmaxe + 1)
-    ! number of ions moments
-    Nmomi   = (Pmaxi + 1)*(Jmaxi + 1)
-    ! total number of moments
-    Nmomtot = Nmome + Nmomi
-    ipjs = 1
-    ipje = Nmomtot
-    ! Polynomials degrees pj = (Jmaxs + 1)*p + j + 1
-    allocate(pjarray(ipjs:ipje))
-    DO ipj = ipjs,ipje
-      pjarray(ipj) = ipj
-    END DO
-  end subroutine set_pj
+  SUBROUTINE set_pj
+    USE prec_const
+    IMPLICIT NONE
+    INTEGER :: ip, ij
+    ips_e = 1; ipe_e = pmaxe + 1
+    ips_i = 1; ipe_i = pmaxi + 1    
+    ALLOCATE(parray_e(ips_e:ipe_e))
+    ALLOCATE(parray_i(ips_i:ipe_i))
+    DO ip = ips_e,ipe_e; parray_e(ip) = ip-1; END DO
+    DO ip = ips_i,ipe_i; parray_i(ip) = ip-1; END DO
+
+    ijs_e = 1; ije_e = jmaxe + 1
+    ijs_i = 1; ije_i = jmaxi + 1
+    ALLOCATE(jarray_e(ijs_e:ije_e))
+    ALLOCATE(jarray_i(ijs_i:ije_i))
+    DO ij = ijs_e,ije_e; jarray_e(ij) = ij-1; END DO
+    DO ij = ijs_i,ije_i; jarray_i(ij) = ij-1; END DO
+  END SUBROUTINE set_pj
 
   SUBROUTINE fourier_grid_readinputs
     ! Read the input parameters
@@ -130,38 +131,5 @@ contains
     CALL attach(fidres, TRIM(str), "kzmin", kzmin)
     CALL attach(fidres, TRIM(str), "kzmax", kzmax)
   END SUBROUTINE fourier_grid_outputinputs
-
-  !============To handle p,j coefficients efficiently
-  FUNCTION bare(p,j) RESULT(idx)
-    USE prec_const
-    IMPLICIT NONE
-    INTEGER, INTENT(in) :: p,j
-    INTEGER :: idx
-
-    idx = (jmaxe + 1)*p + j + 1
-
-  END FUNCTION bare
-
-  FUNCTION bari(p,j) RESULT(idx)
-    INTEGER, INTENT(in) :: p,j
-    INTEGER :: idx
-
-    idx = Nmome + (jmaxi + 1)*p + j + 1
-
-  END FUNCTION bari
-
-  FUNCTION rabe(idx) RESULT(pj)
-    INTEGER, INTENT(in) :: idx
-    INTEGER, DIMENSION(2) :: pj
-    pj(1) = int(FLOOR(real(idx-1) / (jmaxe + 1)))
-    pj(2) = idx - 1 - pj(1) * (jmaxe+1)
-  END FUNCTION rabe
-
-  FUNCTION rabi(idx) RESULT(pj)
-    INTEGER, INTENT (in):: idx
-    INTEGER, DIMENSION(2) :: pj
-    pj(1) = FLOOR(real((idx-Nmome - 1) / (jmaxi + 1)))
-    pj(2) = (idx-Nmome) - 1 - pj(1) * (jmaxi+1)
-  END FUNCTION rabi
 
 END MODULE fourier_grid

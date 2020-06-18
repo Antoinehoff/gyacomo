@@ -50,7 +50,7 @@ SUBROUTINE diagnose(kstep)
      !CALL creatg(fidres, "/data/var0d", "0d history arrays")
      !CALL creatg(fidres, "/data/var1d", "1d profiles")
      CALL creatg(fidres, "/data/var2d", "2d profiles")
-     CALL creatg(fidres, "/data/var3d", "3d profiles")
+     CALL creatg(fidres, "/data/var5d", "5d profiles")
 
 
      ! Initialize counter of number of saves for each category
@@ -63,15 +63,15 @@ SUBROUTINE diagnose(kstep)
      END IF
      CALL attach(fidres,"/data/var2d/" , "frames", iframe2d)
      IF (cstep==0) THEN 
-      iframe3d=0
+      iframe5d=0
      END IF
-     CALL attach(fidres,"/data/var3d/" , "frames", iframe3d)
+     CALL attach(fidres,"/data/var5d/" , "frames", iframe3d)
 
      !  File group
      CALL creatg(fidres, "/files", "files")
      CALL attach(fidres, "/files",  "jobnum", jobnum)
 
-     !  var2d group
+     !  var2d group (electro. pot.)
      rank = 0
      CALL creatd(fidres, rank, dims,  "/data/var2d/time",     "Time t*c_s/R")
      CALL creatd(fidres, rank, dims, "/data/var2d/cstep", "iteration number")
@@ -81,15 +81,22 @@ SUBROUTINE diagnose(kstep)
       CALL putarr(fidres, "/data/var2d/phi/coordkz", kzarray(ikzs:ikze), "kz*rho_s0",ionode=0)     
      END IF
 
-     !  var3d group
+     !  var5d group (moments)
      rank = 0
-     CALL creatd(fidres, rank, dims,  "/data/var3d/time",     "Time t*c_s/R")
-     CALL creatd(fidres, rank, dims, "/data/var3d/cstep", "iteration number")
+     CALL creatd(fidres, rank, dims,  "/data/var5d/time",     "Time t*c_s/R")
+     CALL creatd(fidres, rank, dims, "/data/var5d/cstep", "iteration number")
      IF (write_moments) THEN
-        CALL creatg(fidres, "/data/var3d/moments", "moments")
-        CALL putarr(fidres, "/data/var3d/moments/coordpj", pjarray(ipjs:ipje),"(Jmaxa+1)*p+j+1",ionode=0)
-        CALL putarr(fidres, "/data/var3d/moments/coordkr", krarray(ikrs:ikre),      "kr*rho_s0",ionode=0)
-        CALL putarr(fidres, "/data/var3d/moments/coordkz", kzarray(ikzs:ikze),      "kz*rho_s0",ionode=0)
+        CALL creatg(fidres, "/data/var5d/moments_e", "moments_e")
+        CALL putarr(fidres,  "/data/var5d/moments_e/coordp", parray_e(ips_e:ipe_e),       "p_e",ionode=0)
+        CALL putarr(fidres,  "/data/var5d/moments_e/coordj", jarray_e(ijs_e:ije_e),       "j_e",ionode=0)
+        CALL putarr(fidres, "/data/var5d/moments_e/coordkr",    krarray(ikrs:ikre), "kr*rho_s0",ionode=0)
+        CALL putarr(fidres, "/data/var5d/moments_e/coordkz",    kzarray(ikzs:ikze), "kz*rho_s0",ionode=0)
+        
+        CALL creatg(fidres, "/data/var5d/moments_i", "moments_i")
+        CALL putarr(fidres,  "/data/var5d/moments_i/coordp", parray_i(ips_i:ipe_i),       "p_i",ionode=0)
+        CALL putarr(fidres,  "/data/var5d/moments_i/coordj", jarray_i(ijs_i:ije_i),       "j_i",ionode=0)
+        CALL putarr(fidres, "/data/var5d/moments_i/coordkr",    krarray(ikrs:ikre), "kr*rho_s0",ionode=0)
+        CALL putarr(fidres, "/data/var5d/moments_i/coordkz",    kzarray(ikzs:ikze), "kz*rho_s0",ionode=0)
      END IF
 
      !  Add input namelist variables as attributes of /data/input, defined in srcinfo.h
@@ -145,7 +152,7 @@ SUBROUTINE diagnose(kstep)
   !________________________________________________________________________________
   !                   2.   Periodic diagnostics
   !
-  IF (kstep .GT. 0 .OR. kstep .EQ. 0) THEN
+  IF (kstep .GE. 0) THEN
 
      !                       2.1   0d history arrays
      IF (nsave_0d .NE. 0) THEN
@@ -165,9 +172,9 @@ SUBROUTINE diagnose(kstep)
      END IF
 
      !                       2.4   3d profiles
-     IF (nsave_3d .NE. 0) THEN
-        IF (MOD(cstep, nsave_3d) == 0) THEN
-           CALL diagnose_3d
+     IF (nsave_5d .NE. 0) THEN
+        IF (MOD(cstep, nsave_5d) == 0) THEN
+           CALL diagnose_5d
         END IF
      END IF
 
@@ -245,45 +252,65 @@ CONTAINS
   END SUBROUTINE write_field2d
 
 END SUBROUTINE diagnose_2d
-  
-SUBROUTINE diagnose_3d
+
+ SUBROUTINE diagnose_5d
 
    USE basic
    USE futils, ONLY: append, getatt, attach, putarrnd
    USE fields
+   USE fourier_grid, only: ips_e,ipe_e, ips_i, ipe_i, &
+                           ijs_e,ije_e, ijs_i, ije_i
    USE time_integration
    USE diagnostics_par
    use prec_const
    IMPLICIT NONE
  
-   CALL append(fidres,  "/data/var3d/time",           time,ionode=0) 
-   CALL append(fidres, "/data/var3d/cstep", real(cstep,dp),ionode=0) 
-   CALL getatt(fidres,      "/data/var3d/",       "frames",iframe3d) 
-   iframe3d=iframe3d+1
-   CALL attach(fidres,"/data/var3d/" , "frames", iframe3d) 
+   CALL append(fidres,  "/data/var5d/time",           time,ionode=0) 
+   CALL append(fidres, "/data/var5d/cstep", real(cstep,dp),ionode=0) 
+   CALL getatt(fidres,      "/data/var5d/",       "frames",iframe5d) 
+   iframe5d=iframe5d+1
+   CALL attach(fidres,"/data/var5d/" , "frames", iframe5d) 
  
    IF (write_moments) THEN
-      CALL write_field3d(moments(:,:,:,updatetlevel), 'moments')
+      CALL write_field5d_e(moments_e(:,:,:,:,updatetlevel), 'moments_e')
+      CALL write_field5d_i(moments_i(:,:,:,:,updatetlevel), 'moments_i')
    END IF
  
  CONTAINS
  
-   SUBROUTINE write_field3d(field, text)
-     USE futils, ONLY: attach, putarr
-     USE fourier_grid, only: ipjs,ipje, ikrs,ikre, ikzs,ikze
-     use prec_const
+   SUBROUTINE write_field5d_e(field, text)
+     USE futils, ONLY: attach, putarr 
+     USE fourier_grid, only: ips_e,ipe_e, ijs_e,ije_e, ikrs,ikre, ikzs,ikze   
+     USE prec_const
      IMPLICIT NONE
  
-     COMPLEX(dp), DIMENSION(ipjs:ipje,ikrs:ikre,ikzs:ikze), INTENT(IN) :: field
+     COMPLEX(dp), DIMENSION(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze), INTENT(IN) :: field
      CHARACTER(*), INTENT(IN) :: text
  
      CHARACTER(LEN=50) :: dset_name
  
-     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
-     CALL putarr(fidres, dset_name, field(ipjs:ipje,ikrs:ikre,ikzs:ikze),ionode=0)
+     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var5d", TRIM(text), iframe5d
+     CALL putarr(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze),ionode=0)
  
      CALL attach(fidres, dset_name, "time", time)
      
-   END SUBROUTINE write_field3d
- 
- END SUBROUTINE diagnose_3d
+   END SUBROUTINE write_field5d_e
+
+   SUBROUTINE write_field5d_i(field, text)
+      USE futils, ONLY: attach, putarr 
+      USE fourier_grid, only: ips_i,ipe_i, ijs_i,ije_i, ikrs,ikre, ikzs,ikze   
+      USE prec_const
+      IMPLICIT NONE
+  
+      COMPLEX(dp), DIMENSION(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze), INTENT(IN) :: field
+      CHARACTER(*), INTENT(IN) :: text
+  
+      CHARACTER(LEN=50) :: dset_name
+  
+      WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var5d", TRIM(text), iframe5d
+      CALL putarr(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze),ionode=0)
+  
+      CALL attach(fidres, dset_name, "time", time)
+      
+    END SUBROUTINE write_field5d_i
+ END SUBROUTINE diagnose_5d

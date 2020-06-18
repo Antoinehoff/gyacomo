@@ -1,5 +1,4 @@
-
-subroutine poisson
+SUBROUTINE poisson
   ! Solve poisson equation to get phi
 
   USE time_integration, ONLY: updatetlevel
@@ -12,58 +11,73 @@ subroutine poisson
   IMPLICIT NONE
 
   INTEGER     :: ikr,ikz, ini,ine, i0j
-  REAL(dp)    :: kr, kz
-  REAL(dp)    :: k1_, k2_ ! sub kernel factor for recursive build
-  REAL(dp)    :: x_e, x_i, alphaD
+  REAL(dp)    :: ini_dp, ine_dp
+  COMPLEX(dp) :: kr, kz, kperp2
+  COMPLEX(dp) :: xkm_, xk2_ ! sub kernel factor for recursive build
+  COMPLEX(dp) :: b_e2, b_i2, alphaD
+  COMPLEX(dp) :: sigmaetaue2, sigmaitaui2 ! To avoid redondant computation
   COMPLEX(dp) :: gammaD, gammaphi
   COMPLEX(dp) :: sum_kernel2_e,    sum_kernel2_i
   COMPLEX(dp) :: sum_kernel_mom_e, sum_kernel_mom_i
 
+  sigmaetaue2 = sigma_e**2 * tau_e/2.
+  sigmaitaui2 = sigma_i**2 * tau_i/2.
+
   DO ikr=ikrs,ikre
     DO ikz=ikzs,ikze
-      kr = krarray(ikr)
-      kz = kzarray(ikz)
+      kr    = krarray(ikr)
+      kz    = kzarray(ikz)
+      kperp2 = kr**2 + kz**2
 
-      ! Compute electrons sum(Kernel**2) and sum(Kernel * Ne0j)
-      x_e    = sqrt(kr**2 + kz**2) * sigma_e * sqrt(2.0*tau_e)/2.0
-      sum_kernel2_e    = 0
-      sum_kernel_mom_e = 0
-      k1_      = moments(1,ikr,ikz,updatetlevel)
-      k2_      = 1.0
-      if (jmaxe .ge. 0) then
-        DO ine=1,jmaxe
-          i0j = bare(0,ine)
-          k1_ = k1_ * x_e**2/ine
-          k2_ = k2_ * x_e**4/ine**2
-          sum_kernel_mom_e  = sum_kernel_mom_e  + k1_ * moments(i0j,ikr,ikz,updatetlevel)
-          sum_kernel2_e     = sum_kernel2_e     + k2_
+      ! Compute electrons sum(Kernel * Ne0n)  (skm) and sum(Kernel**2) (sk2)
+      b_e2  =  kperp2 * sigmaetaue2 ! non dim kernel argument (kperp2 sigma_a sqrt(2 tau_a)/2)
+
+      xkm_ = 1. ! Initialization for n = 0
+      xk2_ = 1.
+      
+      sum_kernel_mom_e = moments_e(1,1,ikr,ikz,updatetlevel)
+      sum_kernel2_e    = xk2_
+
+      if (jmaxe .GT. 0) then
+        DO ine=2,jmaxe+1
+          ine_dp = REAL(ine-1,dp)
+
+          xkm_ = xkm_ * b_e2/ine_dp
+          xk2_ = xk2_ *(b_e2/ine_dp)**2
+
+          sum_kernel_mom_e  = sum_kernel_mom_e  + xkm_ * moments_e(1,ine,ikr,ikz,updatetlevel)
+          sum_kernel2_e     = sum_kernel2_e     + xk2_
         END DO
       endif
-      sum_kernel2_e    = sum_kernel2_e    * exp(-x_e**2)
-      sum_kernel_mom_e = sum_kernel_mom_e * exp(-x_e**2)**2
+      sum_kernel2_e    = sum_kernel2_e    * exp(-b_e2)
+      sum_kernel_mom_e = sum_kernel_mom_e * exp(-2.*b_e2)
 
-      ! Compute ions sum(Kernel**2) and sum(Kernel * Ne0j)
-      x_i    = sqrt(kr**2 + kz**2) * sigma_i * sqrt(2.0*tau_i)/2.0
-      sum_kernel2_i    = 0
-      sum_kernel_mom_i = 0
-      k1_      = moments(Nmomi + 1, ikr, ikz, updatetlevel)
-      k2_      = 1.0
-      if (jmaxi .ge. 0) then
-        DO ini=1,jmaxe
-          i0j = bari(0,ini)
-          k1_ = k1_ * x_i**2/ini
-          k2_ = k2_ * x_i**4/ini**2
-          sum_kernel_mom_i  = sum_kernel_mom_i  + k1_ * moments(Nmome + i0j,ikr,ikz,updatetlevel)
-          sum_kernel2_i     = sum_kernel2_i     + k2_
+      ! Compute ions sum(Kernel * Ni0n)  (skm) and sum(Kernel**2) (sk2)
+      b_i2  = kperp2 * sigmaitaui2
+
+      xkm_ = 1.
+      xk2_ = 1.
+
+      sum_kernel_mom_i = moments_i(1, 1, ikr, ikz, updatetlevel)
+      sum_kernel2_i    = xk2_
+      if (jmaxi .GT. 0) then
+        DO ini=2,jmaxi + 1
+          ini_dp = REAL(ini-1,dp) ! Real index (0 to jmax)
+
+          xkm_ = xkm_ * b_i2/ini_dp
+          xk2_ = xk2_ *(b_i2/ini_dp)**2
+
+          sum_kernel_mom_i  = sum_kernel_mom_i  + xkm_ * moments_i(1,ini,ikr,ikz,updatetlevel)
+          sum_kernel2_i     = sum_kernel2_i     + xk2_
         END DO
       endif
-      sum_kernel2_i    = sum_kernel2_i    * exp(-x_i**2)
-      sum_kernel_mom_i = sum_kernel_mom_i * exp(-x_i**2)**2
+      sum_kernel2_i    = sum_kernel2_i    * exp(-b_i2)
+      sum_kernel_mom_i = sum_kernel_mom_i * exp(-2.*b_i2)
 
       ! Assembling the poisson equation
-      alphaD   = sqrt(kr**2 + kz**2) * lambdaD**2
-      gammaD   = alphaD + q_e**2/tau_e * sum_kernel2_e &
-                        + q_i**2/tau_i * sum_kernel2_i
+      alphaD   = kperp2 * lambdaD**2.
+      gammaD   = alphaD + (q_e**2)/tau_e * sum_kernel2_e &
+                        + (q_i**2)/tau_i * sum_kernel2_i
 
       gammaphi = q_e * sum_kernel_mom_e + q_i * sum_kernel_mom_i
       

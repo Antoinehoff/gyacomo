@@ -24,7 +24,7 @@ SUBROUTINE init_profiles
   use prec_const
   IMPLICIT NONE
 
-  INTEGER :: ipj, ikr, ikz
+  INTEGER :: ip,ij, ikr,ikz
   INTEGER, DIMENSION(12) :: iseedarr
   REAL(dp) :: noise
 
@@ -36,10 +36,25 @@ SUBROUTINE init_profiles
   
   DO ikr=ikrs,ikre  
     DO ikz=ikzs,ikze
-      DO ipj=ipjs,ipje
+
+      DO ip=ips_e,ipe_e
+        DO ij=ijs_e,ije_e
           CALL RANDOM_NUMBER(noise)
-          moments( ipj, ikr, ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
+          moments_e( ip,ij, ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp) ! Re
+          CALL RANDOM_NUMBER(noise)
+          moments_e( ip,ij, ikr,ikz, :) = imagu * (initback_moments + initnoise_moments*(noise-0.5_dp)) ! Im
+        END DO
       END DO
+
+      DO ip=ips_i,ipe_i
+        DO ij=ijs_i,ije_i
+          CALL RANDOM_NUMBER(noise)
+          moments_i( ip,ij, ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp) ! Re
+          CALL RANDOM_NUMBER(noise)
+          moments_i( ip,ij, ikr,ikz, :) = imagu * (initback_moments + initnoise_moments*(noise-0.5_dp)) ! Im
+      END DO
+    END DO
+
     END DO
   END DO
   

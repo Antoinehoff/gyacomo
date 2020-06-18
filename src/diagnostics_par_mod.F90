@@ -9,8 +9,7 @@ MODULE diagnostics_par
   LOGICAL, PUBLIC, PROTECTED :: write_phi=.TRUE.
   LOGICAL, PUBLIC, PROTECTED :: write_doubleprecision=.FALSE.
 
-  INTEGER, PUBLIC, PROTECTED :: nsave_0d , nsave_1d , nsave_2d , nsave_3d
-  ! REAL(dp), PUBLIC :: last_timeout_0d, last_timeout_1d, last_timeout_2d, last_timeout_3d
+  INTEGER, PUBLIC, PROTECTED :: nsave_0d , nsave_1d , nsave_2d , nsave_5d
 
 
   !  HDF5 file
@@ -33,7 +32,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /OUTPUT_PAR/ nsave_0d , nsave_1d , nsave_2d , nsave_3d
+    NAMELIST /OUTPUT_PAR/ nsave_0d , nsave_1d , nsave_2d , nsave_5d
     NAMELIST /OUTPUT_PAR/ write_moments, write_phi, write_doubleprecision
     NAMELIST /OUTPUT_PAR/ resfile0!, rstfile0
 
@@ -59,7 +58,7 @@ CONTAINS
     CALL attach(fidres, TRIM(str), "nsave_0d", nsave_0d)
     CALL attach(fidres, TRIM(str), "nsave_1d", nsave_1d)
     CALL attach(fidres, TRIM(str), "nsave_2d", nsave_2d)
-    CALL attach(fidres, TRIM(str), "nsave_3d", nsave_3d)
+    CALL attach(fidres, TRIM(str), "nsave_5d", nsave_5d)
     CALL attach(fidres, TRIM(str), "resfile0", resfile0) 
 
   END SUBROUTINE output_par_outputinputs
