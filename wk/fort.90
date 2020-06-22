@@ -1,23 +1,19 @@
-A Skeleton for MPI Time-Dependent program
-=========================================
-S. Brunner, T.M. Tran   CRPP/EPFL
--
 &BASIC
   nrun=100000
   dt=0.01
   tmax=200    ! time normalized to 1/omega_pe
 /
 &GRID
-  pmaxe = 15    ! number of Hermite moments 
+  pmaxe =15    ! number of Hermite moments 
   jmaxe = 4     ! number of Hermite moments 
   pmaxi = 15    ! number of Hermite moments 
   jmaxi = 4     ! number of Hermite moments
   nkr   = 1
-  krmin = 0.
-  krmax = 0.     ! Normalized to cs0/Omega_i
-  nkz   = 2
+  krmin = 0
+  krmax = 0     ! Normalized to cs0/Omega_i
+  nkz   = 9
   kzmin = 0.1
-  kzmax = 0.2     ! Normalized to cs0/Omega_i
+  kzmax = 1     ! Normalized to cs0/Omega_i
 /
 &OUTPUT_PAR
   nsave_0d = 0
@@ -33,22 +29,22 @@ S. Brunner, T.M. Tran   CRPP/EPFL
 &MODEL_PAR
   ! Collisionality
   nu      = 0.001       ! Normalized collision frequency normalized to plasma frequency
-  tau_e   = 1.0         ! T_e/T_e
-  tau_i   = 1.0         ! T_i/T_e       temperature ratio
-  sigma_e = 0.0233380   ! sqrt(m_e/m_i) mass ratio
-  sigma_i = 1.0         ! sqrt(m_i/m_i)
-  q_e     =-1.0         ! Electrons charge
-  q_i     = 1.0         ! Ions charge
-  eta_n   = 1.0         ! L_perp / L_n Density gradient
-  eta_T   = 0.0         ! L_perp / L_T Temperature gradient
+  tau_e   = 1         ! T_e/T_e
+  tau_i   = 1         ! T_i/T_e       temperature ratio
+  sigma_e = 0.023338   ! sqrt(m_e/m_i) mass ratio
+  sigma_i = 1         ! sqrt(m_i/m_i)
+  q_e     = -1         ! Electrons charge
+  q_i     = 1         ! Ions charge
+  eta_n   = 1         ! L_perp / L_n Density gradient
+  eta_T   = 0         ! L_perp / L_T Temperature gradient
   eta_B   = 0.5         ! L_perp / L_B Magnetic gradient and curvature
-  lambdaD = 0.0         ! Debye length
+  lambdaD = 0         ! Debye length
 /
 &INITIAL_CON
   ! Background value
   initback_moments=0.01 ! x 1e-3
   ! Noise amplitude
-  initnoise_moments=0.
+  initnoise_moments=0
   iseed=42
 /
 &TIME_INTEGRATION_PAR
