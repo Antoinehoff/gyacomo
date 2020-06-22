@@ -3,9 +3,9 @@ A Skeleton for MPI Time-Dependent program
 S. Brunner, T.M. Tran   CRPP/EPFL
 -
 &BASIC
-  nrun=10000
+  nrun=100000
   dt=0.01
-  tmax=100    ! time normalized to 1/omega_pe
+  tmax=200    ! time normalized to 1/omega_pe
 /
 &GRID
   pmaxe = 15    ! number of Hermite moments 
@@ -14,16 +14,17 @@ S. Brunner, T.M. Tran   CRPP/EPFL
   jmaxi = 4     ! number of Hermite moments
   nkr   = 1
   krmin = 0.
-  krmax = 0.     ! Normalized to ?
-  nkz   = 1
+  krmax = 0.     ! Normalized to cs0/Omega_i
+  nkz   = 2
   kzmin = 0.1
-  kzmax = 0.1     ! Normalized to ?
+  kzmax = 0.2     ! Normalized to cs0/Omega_i
 /
 &OUTPUT_PAR
   nsave_0d = 0
   nsave_1d = 0
   nsave_2d = 100
-  nsave_5d = 100
+  nsave_5d = 0
+  write_Ni00    = .true.
   write_moments = .true.
   write_phi     = .true.
   write_doubleprecision = .true.
@@ -38,9 +39,9 @@ S. Brunner, T.M. Tran   CRPP/EPFL
   sigma_i = 1.0         ! sqrt(m_i/m_i)
   q_e     =-1.0         ! Electrons charge
   q_i     = 1.0         ! Ions charge
-  eta_n   = 2.0         ! L_perp / L_n Density gradient
+  eta_n   = 1.0         ! L_perp / L_n Density gradient
   eta_T   = 0.0         ! L_perp / L_T Temperature gradient
-  eta_B   = 1.0         ! L_perp / L_B Magnetic gradient and curvature
+  eta_B   = 0.5         ! L_perp / L_B Magnetic gradient and curvature
   lambdaD = 0.0         ! Debye length
 /
 &INITIAL_CON
