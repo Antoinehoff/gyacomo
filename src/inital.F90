@@ -40,21 +40,21 @@ SUBROUTINE init_profiles
       DO ip=ips_e,ipe_e
         DO ij=ijs_e,ije_e
           CALL RANDOM_NUMBER(noise)
-          moments_e( ip,ij, ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp) ! Re
-          CALL RANDOM_NUMBER(noise)
-          moments_e( ip,ij, ikr,ikz, :) = imagu * (initback_moments + initnoise_moments*(noise-0.5_dp)) ! Im
+          !moments_e( ip,ij, ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
         END DO
       END DO
 
       DO ip=ips_i,ipe_i
         DO ij=ijs_i,ije_i
           CALL RANDOM_NUMBER(noise)
-          moments_i( ip,ij, ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp) ! Re
-          CALL RANDOM_NUMBER(noise)
-          moments_i( ip,ij, ikr,ikz, :) = imagu * (initback_moments + initnoise_moments*(noise-0.5_dp)) ! Im
+          !moments_i( ip,ij, ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
+        END DO
       END DO
-    END DO
-
+      
+      ! Poke initialization on only Ne00 and Ni00
+      moments_e( 1,1, ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
+      moments_i( 1,1, ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
+      
     END DO
   END DO
   
