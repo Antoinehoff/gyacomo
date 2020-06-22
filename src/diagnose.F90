@@ -65,16 +65,23 @@ SUBROUTINE diagnose(kstep)
      IF (cstep==0) THEN 
       iframe5d=0
      END IF
-     CALL attach(fidres,"/data/var5d/" , "frames", iframe3d)
+     CALL attach(fidres,"/data/var5d/" , "frames", iframe5d)
 
      !  File group
      CALL creatg(fidres, "/files", "files")
      CALL attach(fidres, "/files",  "jobnum", jobnum)
 
-     !  var2d group (electro. pot.)
+     !  var2d group (electro. pot., Ni00 moment)
      rank = 0
      CALL creatd(fidres, rank, dims,  "/data/var2d/time",     "Time t*c_s/R")
      CALL creatd(fidres, rank, dims, "/data/var2d/cstep", "iteration number")
+
+     IF (write_Ni00) THEN
+      CALL creatg(fidres, "/data/var2d/Ni00", "Ni00")
+      CALL putarr(fidres, "/data/var2d/Ni00/coordkr", krarray(ikrs:ikre), "kr*rho_s0",ionode=0)     
+      CALL putarr(fidres, "/data/var2d/Ni00/coordkz", kzarray(ikzs:ikze), "kz*rho_s0",ionode=0)     
+     END IF
+
      IF (write_phi) THEN
       CALL creatg(fidres, "/data/var2d/phi", "phi")
       CALL putarr(fidres, "/data/var2d/phi/coordkr", krarray(ikrs:ikre), "kr*rho_s0",ionode=0)     
@@ -231,6 +238,9 @@ SUBROUTINE diagnose_2d
      CALL write_field2d(phi(:,:), 'phi')
   END IF
 
+  IF (write_Ni00) THEN
+     CALL write_field2d(moments_i(1,1,:,:,updatetlevel), 'Ni00')
+  END IF
 CONTAINS
 
   SUBROUTINE write_field2d(field, text)
