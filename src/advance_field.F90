@@ -42,8 +42,8 @@ CONTAINS
       END DO
     CASE DEFAULT
       DO ikz=ikzs,ikze  
-        f(ikr,ikz,updatetlevel) = f(ikr,ikz,1);
         DO ikr=ikrs,ikre
+          f(ikr,ikz,updatetlevel) = f(ikr,ikz,1);
           DO istage=1,updatetlevel-1
             f(ikr,ikz,updatetlevel) = f(ikr,ikz,updatetlevel) + &
                                   dt*A_E(updatetlevel,istage)*f_rhs(ikr,ikz,istage)
