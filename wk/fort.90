@@ -1,18 +1,18 @@
 &BASIC
   nrun=100000
   dt=0.01
-  tmax=200    ! time normalized to 1/omega_pe
+  tmax=50    ! time normalized to 1/omega_pe
 /
 &GRID
-  pmaxe =15    ! number of Hermite moments 
-  jmaxe = 4     ! number of Hermite moments 
-  pmaxi = 15    ! number of Hermite moments 
-  jmaxi = 4     ! number of Hermite moments
+  pmaxe =81    ! number of Hermite moments 
+  jmaxe = 20     ! number of Hermite moments 
+  pmaxi = 81    ! number of Hermite moments 
+  jmaxi = 20     ! number of Hermite moments
   nkr   = 1
   krmin = 0
   krmax = 0     ! Normalized to cs0/Omega_i
-  nkz   = 9
-  kzmin = 0.1
+  nkz   = 1
+  kzmin = 1
   kzmax = 1     ! Normalized to cs0/Omega_i
 /
 &OUTPUT_PAR

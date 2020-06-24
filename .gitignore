@@ -28,3 +28,4 @@ obj/
 bin/
 .gitignore
 wk/fort.90
+.directory
