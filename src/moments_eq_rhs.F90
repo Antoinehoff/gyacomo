@@ -1,4 +1,4 @@
-SUBROUTINE moments_eq_rhs  
+SUBROUTINE moments_eq_rhs
 
   USE basic
   USE time_integration
@@ -12,18 +12,19 @@ SUBROUTINE moments_eq_rhs
 
   INTEGER     :: ip,ij, ikr,ikz ! loops indices
   REAL(dp)    :: ip_dp, ij_dp
-  REAL(dp) :: kr, kz, kperp2 
+  REAL(dp) :: kr, kz, kperp2
   REAL(dp) :: taue_qe_etaB, taui_qi_etaB
   REAL(dp) :: kernelj, kerneljp1, kerneljm1, b_e2, b_i2 ! Kernel functions and variable
   REAL(dp) :: factj, xb_e2, xb_i2 ! Auxiliary variables
   REAL(dp) :: xNapj, xNapp2j, xNapm2j, xNapjp1, xNapjm1 ! factors depending on the pj loop
   REAL(dp) :: xphij, xphijp1, xphijm1, xColl
-  COMPLEX(dp) :: TNapj, TNapp2j, TNapm2j, TNapjp1, TNapjm1, Tphi, TColl ! terms of the rhs
+  COMPLEX(dp) :: TNapj, TNapp2j, TNapm2j, TNapjp1, TNapjm1, Tphi
+  COMPLEX(dp) :: TColl, TColl20, TColl01, TColl10 ! terms of the rhs
 
   !Precompute species dependant factors
-  taue_qe_etaB  = tau_e/q_e * eta_B 
+  taue_qe_etaB  = tau_e/q_e * eta_B
   xb_e2         = sigma_e**2 * tau_e!/2.0 ! species dependant factor of the Kernel, squared
-  taui_qi_etaB  = tau_i/q_i * eta_B 
+  taui_qi_etaB  = tau_i/q_i * eta_B
   xb_i2         = sigma_i**2 * tau_i!/2.0 ! species dependant factor of the Kernel, squared
 
   !!!!!!!!! Electrons moments RHS !!!!!!!!!
@@ -65,8 +66,23 @@ SUBROUTINE moments_eq_rhs
       ! N_e^{pj} multiplicator
       xNapj   = -taue_qe_etaB * 2.*(ip_dp + ij_dp + 1.)
 
-      ! first part of collision operator (Lenard-Bernstein)
-      xColl = -(ip_dp + 2.*ij_dp)
+      ! Collision operator (DK Lenard-Bernstein basis)
+      xColl = ip_dp + 2.*ij_dp
+      ! ... adding Dougherty terms
+      IF ( (ip .EQ. 1) .AND. (ij .EQ. 2) ) THEN ! kronecker p0 * j1
+        TColl01 = 2.0/3.0*(SQRT2*moments_e(3,1,ikr,ikz,updatetlevel)&
+        - 2.0*moments_e(1,2,ikr,ikz,updatetlevel))
+        TColl20 = 0.0; TColl10 = 0.0;
+      ELSEIF ( (ip .EQ. 3) .AND. (ij .EQ. 1) ) THEN ! kronecker p2 * j0
+        TColl20 = -SQRT2/3.0*(SQRT2*moments_e(3,1,ikr,ikz,updatetlevel)&
+        - 2.0*moments_e(1,2,ikr,ikz,updatetlevel))
+        TColl10 = 0.0; TColl01 = 0.0;
+      ELSEIF ( (ip .EQ. 2) .AND. (ij .EQ. 1) ) THEN ! kronecker p1 * j0
+        TColl10 = moments_e(2,1,ikr,ikz,updatetlevel)
+        TColl20 = 0.0; TColl01 = 0.0;
+      ELSE
+        TColl10 = 0.0; TColl20 = 0.0; TColl01 = 0.0;
+      ENDIF
 
       ! phi multiplicator for different kernel numbers
       IF (ip .EQ. 1) THEN !(kronecker delta_p^0)
@@ -76,16 +92,16 @@ SUBROUTINE moments_eq_rhs
         factj   = REAL(Factorial(ij-1),dp)
       ELSE IF (ip .EQ. 3) THEN !(kronecker delta_p^2)
         xphij   =  (eta_T/SQRT2 - SQRT2*eta_B)
-        factj   = REAL(Factorial(ij-1),dp)        
+        factj   = REAL(Factorial(ij-1),dp)
       ELSE
         xphij = 0.; xphijp1 = 0.; xphijm1 = 0.
         factj = 1
-      ENDIF 
+      ENDIF
 
       !write(*,*) '(ip,ij) = (', ip,',', ij,')'
 
       ! Loop on kspace
-      krloope : DO ikr = ikrs,ikre 
+      krloope : DO ikr = ikrs,ikre
         kzloope : DO ikz = ikzs,ikze
           kr     = krarray(ikr)   ! Poloidal wavevector
           kz     = kzarray(ikz)   ! Toroidal wavevector
@@ -94,25 +110,25 @@ SUBROUTINE moments_eq_rhs
 
           !! Compute moments and mixing terms
           ! term propto N_e^{p,j}
-          TNapj = moments_e(ip,ij,ikr,ikz,updatetlevel) * xNapj          
+          TNapj = moments_e(ip,ij,ikr,ikz,updatetlevel) * xNapj
           ! term propto N_e^{p+2,j}
           IF (ip+2 .LE. ipe_e) THEN
             TNapp2j = moments_e(ip+2,ij,ikr,ikz,updatetlevel) * xNapp2j
           ELSE
             TNapp2j = 0.
-          ENDIF          
+          ENDIF
           ! term propto N_e^{p-2,j}
           IF (ip-2 .GE. ips_e) THEN
             TNapm2j = moments_e(ip-2,ij,ikr,ikz,updatetlevel) * xNapm2j
           ELSE
             TNapm2j = 0.
-          ENDIF          
+          ENDIF
           ! xterm propto N_e^{p,j+1}
           IF (ij+1 .LE. ije_e) THEN
             TNapjp1 = moments_e(ip,ij+1,ikr,ikz,updatetlevel) * xNapjp1
           ELSE
             TNapjp1 = 0.
-          ENDIF          
+          ENDIF
           ! term propto N_e^{p,j-1}
           IF (ij-1 .GE. ijs_e) THEN
             TNapjm1 = moments_e(ip,ij-1,ikr,ikz,updatetlevel) * xNapjm1
@@ -120,12 +136,9 @@ SUBROUTINE moments_eq_rhs
             TNapjm1 = 0.
           ENDIF
 
-          ! Collision term completed (Lenard-Bernstein)
-          IF (ip+2 .LE. ipe_e) THEN
-            TColl = nu*(xColl - b_e2) * moments_e(ip+2,ij,ikr,ikz,updatetlevel)
-          ELSE
-            TColl = 0.
-          ENDIF
+          ! Collision term completed (DK Dougherty)
+          TColl = -nu * (xColl * moments_e(ip,ij,ikr,ikz,updatetlevel) &
+                          + TColl01 + TColl10 + TColl20)
 
           !! Electrical potential term
           Tphi = 0
@@ -150,7 +163,7 @@ SUBROUTINE moments_eq_rhs
   Tphi = 0 ! electrostatic potential term
 
   ploopi : DO ip = ips_i, ipe_i
-    ip_dp = REAL(ip-1.,dp) 
+    ip_dp = REAL(ip-1.,dp)
 
     ! x N_i^{p+2,j}
     IF (ip+2 .LE. ipe_i) THEN
@@ -167,7 +180,7 @@ SUBROUTINE moments_eq_rhs
     ENDIF
 
     jloopi : DO ij = ijs_i, ije_i
-      ij_dp = REAL(ij-1.,dp) 
+      ij_dp = REAL(ij-1.,dp)
 
       ! x N_i^{p,j+1}
       IF (ij+1 .LE. ije_i) THEN
@@ -186,8 +199,25 @@ SUBROUTINE moments_eq_rhs
       ! x N_i^{pj}
       xNapj   = -taui_qi_etaB * 2.*(ip_dp + ij_dp + 1.)
 
-      ! first part of collision operator (Lenard-Bernstein)
-      xColl = -(ip_dp + 2.0*ij_dp)
+      ! Collision term completed (DK Dougherty)
+      TColl = -nu * (xColl * moments_i(ip,ij,ikr,ikz,updatetlevel) &
+                      + TColl01 + TColl10 + TColl20)
+
+      ! ... adding Dougherty terms
+      IF ( (ip .EQ. 1) .AND. (ij .EQ. 2) ) THEN ! kronecker p0 * j1
+        TColl01 = 2.0/3.0*(SQRT2*moments_i(3,1,ikr,ikz,updatetlevel)&
+        - 2.0*moments_i(1,2,ikr,ikz,updatetlevel))
+        TColl20 = 0.0; TColl10 = 0.0;
+      ELSEIF ( (ip .EQ. 3) .AND. (ij .EQ. 1) ) THEN ! kronecker p2 * j0
+        TColl20 = -SQRT2/3.0*(SQRT2*moments_i(3,1,ikr,ikz,updatetlevel)&
+        - 2.0*moments_i(1,2,ikr,ikz,updatetlevel))
+        TColl10 = 0.0; TColl01 = 0.0;
+      ELSEIF ( (ip .EQ. 2) .AND. (ij .EQ. 1) ) THEN ! kronecker p1 * j0
+        TColl10 = moments_i(2,1,ikr,ikz,updatetlevel)
+        TColl20 = 0.0; TColl01 = 0.0;
+      ELSE
+        TColl10 = 0.0; TColl20 = 0.0; TColl01 = 0.0;
+      ENDIF
 
       ! x phi
       IF (ip .EQ. 1) THEN !(krokecker delta_p^0)
@@ -197,14 +227,14 @@ SUBROUTINE moments_eq_rhs
         factj   = REAL(Factorial(ij-1),dp)
       ELSE IF (ip .EQ. 3) THEN !(krokecker delta_p^2)
         xphij   =  (eta_T/SQRT2 - SQRT2*eta_B)
-        factj   = REAL(Factorial(ij-1),dp)        
+        factj   = REAL(Factorial(ij-1),dp)
       ELSE
         xphij = 0.; xphijp1 = 0.; xphijm1 = 0.
         factj = 1.
-      ENDIF 
+      ENDIF
 
       ! Loop on kspace
-      krloopi : DO ikr = ikrs,ikre 
+      krloopi : DO ikr = ikrs,ikre
         kzloopi : DO ikz = ikzs,ikze
           kr     = krarray(ikr)   ! Poloidal wavevector
           kz     = kzarray(ikz)   ! Toroidal wavevector
@@ -213,25 +243,25 @@ SUBROUTINE moments_eq_rhs
 
           !! Compute moments and mixing terms
           ! term propto N_i^{p,j}
-          TNapj = moments_i(ip,ij,ikr,ikz,updatetlevel) * xNapj          
+          TNapj = moments_i(ip,ij,ikr,ikz,updatetlevel) * xNapj
           ! term propto N_i^{p+2,j}
           IF (ip+2 .LE. ipe_i) THEN
             TNapp2j = moments_i(ip+2,ij,ikr,ikz,updatetlevel) * xNapp2j
           ELSE
             TNapp2j = 0.
-          ENDIF          
+          ENDIF
           ! term propto N_i^{p-2,j}
           IF (ip-2 .GE. ips_i) THEN
             TNapm2j = moments_i(ip-2,ij,ikr,ikz,updatetlevel) * xNapm2j
           ELSE
             TNapm2j = 0.
-          ENDIF          
+          ENDIF
           ! xterm propto N_i^{p,j+1}
           IF (ij+1 .LE. ije_i) THEN
             TNapjp1 = moments_i(ip,ij+1,ikr,ikz,updatetlevel) * xNapjp1
           ELSE
             TNapjp1 = 0.
-          ENDIF          
+          ENDIF
           ! term propto N_i^{p,j-1}
           IF (ij-1 .GE. ijs_i) THEN
             TNapjm1 = moments_i(ip,ij-1,ikr,ikz,updatetlevel) * xNapjm1
@@ -239,12 +269,8 @@ SUBROUTINE moments_eq_rhs
             TNapjm1 = 0.
           ENDIF
 
-          ! Collision term completed (Lenard-Bernstein)
-          IF (ip+2 .LE. ipe_i) THEN
-            TColl = nu*(xColl - b_i2) * moments_i(ip+2,ij,ikr,ikz,updatetlevel)
-          ELSE
-            TColl = 0.
-          ENDIF
+          ! Collision term completed (Dougherty)
+          TColl = -nu* (xColl * moments_i(ip,ij,ikr,ikz,updatetlevel))
 
           !! Electrical potential term
           Tphi = 0
