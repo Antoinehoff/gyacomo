@@ -28,7 +28,7 @@ end
 LEGEND = [LEGEND, 'fits'];
 
 TITLE  = [];
-TITLE = [TITLE,'$\eta_n=',num2str(1.0/MODEL.eta_n),'$, '];
+TITLE = [TITLE,'$\eta_n=',num2str(MODEL.eta_n),'$, '];
 TITLE = [TITLE,'$\eta_B=',num2str(MODEL.eta_B),'$, '];
 TITLE = [TITLE,   '$\nu=',num2str(MODEL.nu),'$, '];
 TITLE = [TITLE, '$(P,J)=(',num2str(GRID.pmaxe),',',num2str(GRID.jmaxe),')$'];
