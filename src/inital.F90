@@ -1,13 +1,20 @@
 SUBROUTINE inital
   
-  use basic
-
-  use prec_const
+  USE basic
+  USE model, ONLY : CO
+  USE prec_const
   implicit none
 
   WRITE(*,'(a/)') '=== Set initial conditions ==='
 
   CALL init_profiles
+
+  IF (CO .EQ. -1) THEN
+    WRITE(*,'(a/)') '=== Load Full Coulomb matrix ==='
+
+    CALL load_FC_mat
+  ENDIF
+  !
 
 END SUBROUTINE inital
 
@@ -18,10 +25,10 @@ SUBROUTINE init_profiles
   USE basic
   USE fourier_grid
   USE fields
-  use initial_par
+  USE initial_par
   USE time_integration
 
-  use prec_const
+  USE prec_const
   IMPLICIT NONE
 
   INTEGER :: ip,ij, ikr,ikz
@@ -62,3 +69,9 @@ SUBROUTINE init_profiles
 
 END SUBROUTINE init_profiles
 
+SUBROUTINE load_FC_mat
+  USE basic
+  USE array
+  IMPLICIT NONE
+
+END SUBROUTINE load_FC_mat

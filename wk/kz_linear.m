@@ -13,18 +13,19 @@ OUTPUTS.write_phi     = '.true.';
 OUTPUTS.write_doubleprecision = '.true.';
 OUTPUTS.resfile0      = '''results''';
 %% Grid parameters
-GRID.pmaxe = 81;
-GRID.jmaxe = 20;
-GRID.pmaxi = 81;
-GRID.jmaxi = 20;
+GRID.pmaxe = 25;
+GRID.jmaxe = 9;
+GRID.pmaxi = 25;
+GRID.jmaxi = 9;
 GRID.nkr   = 1;
 GRID.krmin = 0.;
 GRID.krmax = 0.;
-GRID.nkz   = 10;
+GRID.nkz   = 20;
 GRID.kzmin = 0.1/sqrt(2.0);
-GRID.kzmax = 2.8/sqrt(2.0);
+GRID.kzmax = 5.0/sqrt(2.0);
 %% Model parameters
-MODEL.nu      = 0.001;
+MODEL.CO      = -1;  % Collision operator (-1 = Full Coulomb, 0 = Dougherty)
+MODEL.nu      = 0.001; % collisionality nu*L_perp/Cs0
 MODEL.tau_e   = 1.0;
 MODEL.tau_i   = 1.0;
 MODEL.sigma_e = 0.0233380;

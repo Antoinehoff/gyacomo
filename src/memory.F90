@@ -6,8 +6,9 @@ SUBROUTINE memory
   USE fields
   USE fourier_grid
   USE time_integration  
+  USE model, ONLY: CO
 
-  use prec_const
+  USE prec_const
   IMPLICIT NONE
 
   ! Moments and moments rhs
@@ -19,4 +20,9 @@ SUBROUTINE memory
   ! Electrostatic potential
   CALL allocate_array(phi, ikrs,ikre, ikzs,ikze)
 
+  ! Collision matrix
+  IF (CO .EQ. -1) THEN
+    CALL allocate_array( iCe, ips_i,ipe_i, ijs_i,ije_i )
+    CALL allocate_array( iCi, ips_i,ipe_i, ijs_i,ije_i )
+  ENDIF
 END SUBROUTINE memory
