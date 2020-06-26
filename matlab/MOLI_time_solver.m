@@ -25,7 +25,7 @@ options.MOLI = 1;    % 1 -> Solve MOLI, 0 -> off
 options.solver.solver = 3;
 
 % MOLI Linear Fit Solver
-options.LinFitSolver = 2;
+options.LinFitSolver = 0;
 
 %% Main parameter scan
 
@@ -86,16 +86,16 @@ options.COSOlver.cmd   = 'mpirun -np 6 ./bin/CO 2 2 2';
 options.magnetic        = 1;           % 1-> Add toroidal magnetic gradient drift resonance effects
 
 % Physical Parameters
-params.tau              = 1.0;         % Ti/Te
-params.nu               = MODEL.nu;       % electron/ion collision frequency ... only for nu/ omega_pe < nuoveromegapemax (electron plasma frequency) [See Banks et al. (2017)]
+params.tau              = MODEL.tau_i; % Ti/Te
+params.nu               = MODEL.nu;    % electron/ion collision frequency ... only for nu/ omega_pe < nuoveromegapemax (electron plasma frequency) [See Banks et al. (2017)]
 params.nuoveromegapemax = inf;         % Maximum ratio between electron/ion collision frequency and electron plasma frequency [See Banks et al. (2017)]. Set to inf if not desired !!!
 params.mu               = MODEL.sigma_e;   % sqrt(m_e/m_i)
 params.kpar             = 0.0;         % normalized parallel wave number to the major radius
-params.kperp            = GRID.kzmin;         % normalized perpendicular wave number to the soundLarmor radius. Note: If ions ==0 (e.g. EPW), kperp --> b
+params.kperp            = GRID.kzmin;  % normalized perpendicular wave number to the soundLarmor radius. Note: If ions ==0 (e.g. EPW), kperp --> b
 params.alphaD           = 0.0;         % (k*Debye length)^2
-params.Rn               = 1.0;	       % Major Radius / Background density gradient length
-params.RTe              = 0.0;         % Major Radius * normalized kperp / Background electron temperature gradient length
-params.RTi              = 0.0;         % Major Radius * normalized kperp / Background ion temperature gradient length
+params.Rn               = MODEL.eta_n; % Major Radius / Background density gradient length
+params.RTe              = MODEL.eta_T; % Major Radius * normalized kperp / Background electron temperature gradient length
+params.RTi              = MODEL.eta_T; % Major Radius * normalized kperp / Background ion temperature gradient length
 params.Rphi             = 0.0;         % Major Radius * normalized kperp / Background potentiel gradient length [presence of shear] - only for GK
 params.betae            = 1e-6;        % Electron Beta plasma.
 
@@ -143,7 +143,6 @@ options.fscan = 0;         % 1 -> peform scan over scan.list, 0-> off
 options.scan.list = {};% List of scan parameters. If empty, solve MOLI with params
 
 % Time-Evolution Problem [Solver==3] ...
-params.RK4 = 1;
 options.solver.TimeSolver.dt         = BASIC.dt;		% timestep of time evolution (R/c_s or 1/(k v/the) units)
 options.solver.TimeSolver.tmax       = BASIC.tmax;
 options.solver.TimeSolver.Trun       = BASIC.tmax;		  % total time to run time evolution
