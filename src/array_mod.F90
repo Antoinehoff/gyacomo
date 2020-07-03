@@ -9,11 +9,10 @@ MODULE array
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: moments_rhs_i ! (ip,ij,ikr,ikz,updatetlevel)
 
   ! To load collision matrix
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: iCe ! (ip,ij)
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: iCi ! (ip,ij)
-
-  ! Intermediate steps in rhs of equations
-  !COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE:: moments_Apl, moments_Bpl, moments_Cpl, moments_Dpl,&
-  !                                        moments_Epl, moments_Fpl, moments_Gpl, moments_Hpl  
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: Ceepj, CeipjT
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: CeipjF
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: Ciipj, CiepjT
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: CiepjF
+  
 END MODULE array
 
