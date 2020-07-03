@@ -16,7 +16,7 @@ SUBROUTINE tesend
 
   !________________________________________________________________________________
   !                   2.  Test on NRUN
-  nlend = step .GE. nrun 
+  nlend = step .GT. nrun 
   IF ( nlend ) THEN 
      WRITE(*,'(/a)') 'NRUN steps done'
      RETURN
@@ -25,7 +25,7 @@ SUBROUTINE tesend
 
   !________________________________________________________________________________
   !                   3.  Test on TMAX
-  nlend = time .GE. tmax
+  nlend = time .GT. tmax
   IF ( nlend ) THEN 
      WRITE(*,'(/a)') 'TMAX reached'
      RETURN

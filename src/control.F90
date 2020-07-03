@@ -15,13 +15,13 @@ SUBROUTINE control
 
 
   call daytim('Start at ')
-  
+
   !                   1.2     Define data specific to run
   WRITE(*,*) 'Load basic data...'
   CALL basic_data
   WRITE(*,*) '...basic data loaded.'
 
-  
+
   !                   1.3   Read input parameters from input file
   WRITE(*,*) 'Read input parameters...'
   CALL readinputs
@@ -43,7 +43,7 @@ SUBROUTINE control
   WRITE(*,*) '...initial diagnostics done'
   !
   CALL FLUSH(stdout)
-  
+
   !________________________________________________________________________________
   !              2.   Main loop
   DO
@@ -53,8 +53,9 @@ SUBROUTINE control
      time  = time  + dt
 
      CALL tesend
-     CALL diagnose(step)
      IF( nlend ) EXIT ! exit do loop
+
+     CALL diagnose(step)
 
      ! CALL write_restart ! if want to write a restart file every so often (in case of crash)
   END DO
