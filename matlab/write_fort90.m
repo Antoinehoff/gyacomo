@@ -51,6 +51,9 @@ fprintf(fid,['  initback_moments=', num2str(INITIAL.initback_moments),' ! x 1e-3
 fprintf(fid,'  ! Noise amplitude\n');
 fprintf(fid,['  initnoise_moments=', num2str(INITIAL.initnoise_moments),'\n']);
 fprintf(fid,['  iseed=', num2str(INITIAL.iseed),'\n']);
+fprintf(fid,['  selfmat_file=', INITIAL.selfmat_file,'\n']);
+fprintf(fid,['  eimat_file=', INITIAL.eimat_file,'\n']);
+fprintf(fid,['  iemat_file=', INITIAL.iemat_file,'\n']);
 fprintf(fid,'/\n');
 fprintf(fid,'&TIME_INTEGRATION_PAR\n');
 fprintf(fid,['  numerical_scheme=', TIME_INTEGRATION.numerical_scheme,'\n']);

@@ -45,7 +45,7 @@ options.electrons = 1;      % 0 ->  adiabatic electrons, 1 no adiabatic electron
 options.sw = 1;             % 1 -> sound waves on, 0 -> put ion parallel velocity row/column to 0
 
 %% Collision Operator Models and COSOlver Input Parameters
-options.collI  = -2;         % collI=-2 -> Dougherty, -1 -> COSOlver, 0 -> Lenard-Bernstein, other -> hyperviscosity exponent
+options.collI  = MODEL.CO;         % collI=-2 -> Dougherty, -1 -> COSOlver, 0 -> Lenard-Bernstein, other -> hyperviscosity exponent
 options.collGK = 0;         % collDKGK =1 -> GK collision operator, else DK collision operator
 options.COSOlver.GKE = 0;
 options.COSOlver.GKI = 0;
@@ -54,7 +54,7 @@ options.COSOlver.GKI = 0;
 options.COSOlver.eecolls = 1;	   % 1 -> electron-electron collisions, 0 -> off
 options.COSOlver.iicolls = 1;      % 1 -> ion-ion collisions, 0 -> off
 options.COSOlver.eicolls = 1;      % 1 -> electron-ion collisions (e-i) on, 0 -> off
-options.COSOlver.iecolls = 0;      % 1 -> ion-electron collisions (i-e) on, 0 -> off
+options.COSOlver.iecolls = 1;      % 1 -> ion-electron collisions (i-e) on, 0 -> off
 
 % Collisional Coulomb sum bounds (only if collI = -1, i.e. Coulomb)
 options.COSOlver.lmaxx = 10;                        % upper bound collision operator first sum first species
@@ -70,12 +70,12 @@ options.COSOlver.nimaxxFLR = 0;         % upper bound FLR ion collision
 % Set electron/ion test and back-reaction model operator
 %
 %  0 => Coulomb Collisions
-options.COSOlver.ETEST = 4; % 0 --> Buffer Operator, 1 --> Coulomb, 2 --> Lorentz
-options.COSOlver.EBACK = 0;
-options.COSOlver.ITEST = 4;
-options.COSOlver.IBACK = 0;
-options.COSOlver.ESELF = 4;
-options.COSOlver.ISELF = 4;
+options.COSOlver.ETEST = 1; % 0 --> Buffer Operator, 1 --> Coulomb, 2 --> Lorentz
+options.COSOlver.EBACK = 1;
+options.COSOlver.ITEST = 1;
+options.COSOlver.IBACK = 1;
+options.COSOlver.ESELF = 1;
+options.COSOlver.ISELF = 1;
 
 options.COSOlver.OVERWRITE = 0;    % overwrite collisional matrices even if exists
 

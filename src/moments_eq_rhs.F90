@@ -9,80 +9,89 @@ SUBROUTINE moments_eq_rhs
   USE prec_const
   IMPLICIT NONE
 
-  INTEGER     :: ip,ij, ikr,ikz ! loops indices
+  INTEGER     :: ip,ij, ikr,ikz, ip2, ij2 ! loops indices
   REAL(dp)    :: ip_dp, ij_dp
   REAL(dp)    :: kr, kz, kperp2
   REAL(dp)    :: taue_qe_etaB, taui_qi_etaB
   REAL(dp)    :: kernelj, kerneljp1, kerneljm1, b_e2, b_i2 ! Kernel functions and variable
   REAL(dp)    :: factj, sigmae2_taue_o2, sigmai2_taui_o2 ! Auxiliary variables
-  REAL(dp)    :: xNapj, xNapp2j, xNapm2j, xNapjp1, xNapjm1 ! factors depending on the pj loop
-  REAL(dp)    :: xphij, xphijp1, xphijm1, xColl
+  REAL(dp)    :: xNapj, xNapp2j, xNapm2j, xNapjp1, xNapjm1 ! Mom. factors depending on the pj loop
+  REAL(dp)    :: xphij, xphijp1, xphijm1   ! ESpot. factors depending on the pj loop
+  REAL(dp)    :: xCapj,   xCa20,   xCa01, xCa10 ! Coll. factors depending on the pj loop
   COMPLEX(dp) :: TNapj, TNapp2j, TNapm2j, TNapjp1, TNapjm1, Tphi
   COMPLEX(dp) :: TColl, TColl20, TColl01, TColl10 ! terms of the rhs
+  REAL(dp)    :: nu_e, nu_i, nu_ee, nu_ie ! Species collisional frequency
+!write(*,*) '----------------------------------------'
 
   !Precompute species dependant factors
   taue_qe_etaB    = tau_e/q_e * eta_B ! factor of the magnetic moment coupling
   taui_qi_etaB    = tau_i/q_i * eta_B
-  sigmae2_taue_o2 = sigma_e**2 * tau_e/2.0 ! factor of the Kernel argument
-  sigmai2_taui_o2 = sigma_i**2 * tau_i/2.0
-
+  sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the Kernel argument
+  sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp
+  nu_e  = nu ! electron-ion collision frequency (where already multiplied by 0.53..)
+  nu_i  = nu * sigma_e * (tau_i)**(-3._dp/2._dp)/SQRT2 ! ion-ion collision frequ.
+  nu_ee  = nu_e/SQRT2 ! e-e coll. frequ.
+  nu_ie  = nu*sigma_e**2 ! i-e coll. frequ.
+  
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!! Electrons moments RHS !!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ploope : DO ip = ips_e, ipe_e ! This loop is from 1 to pmaxe+1
-    ip_dp = REAL(ip-1,dp) ! REAL index is one minus the loop index (0 to pmax)
+    ip_dp = REAL(ip-1,dp) ! REAL index is one minus the loop index (0 to pmaxe)
 
-    ! N_e^{p+2,j} multiplicator
-    IF (ip+2 .LE. pmaxe+1) THEN
-      xNapp2j = -taue_qe_etaB * SQRT((ip_dp + 1.) * (ip_dp + 2.))
-    ELSE
-      xNapp2j = 0.
-    ENDIF
-
-    ! N_e^{p-2,j} multiplicator
-    IF (ip-2 .GE. 1) THEN
-      xNapm2j = -taue_qe_etaB * SQRT(ip_dp*(ip_dp - 1.))
-    ELSE
-      xNapm2j = 0.
-    ENDIF
+    ! N_e^{p+2,j} coeff
+    xNapp2j = -taue_qe_etaB * SQRT((ip_dp + 1._dp) * (ip_dp + 2._dp))
+    ! N_e^{p-2,j} coeff
+    xNapm2j = -taue_qe_etaB * SQRT(ip_dp * (ip_dp - 1._dp))
 
     factj = 1.0 ! Start of the recursive factorial
 
     jloope : DO ij = ijs_e, ije_e ! This loop is from 1 to jmaxe+1
-      ij_dp = REAL(ij-1,dp) ! REAL index is one minus the loop index (0 to jmax)
+      ij_dp = REAL(ij-1,dp) ! REAL index is one minus the loop index (0 to jmaxe)
 
-      IF (ij_dp .GT. 0) THEN
-        factj = factj * ij_dp; ! Recursive factorial
+      ! N_e^{p,j+1} coeff
+      xNapjp1 = taue_qe_etaB * (ij_dp + 1._dp)
+      ! N_e^{p,j-1} coeff
+      xNapjm1 = taue_qe_etaB * ij_dp
+      ! N_e^{pj} coeff
+      xNapj   = -taue_qe_etaB * 2._dp*(ip_dp + ij_dp + 1._dp)
+
+      !! Collision operator pj terms 
+      xCapj = -nu_e*(ip_dp + 2._dp*ij_dp) !DK Lenard-Bernstein basis
+      ! Dougherty part
+      IF     ((ip .EQ. 3) .AND. (ij .EQ. 1)) THEN ! kronecker pj20
+        xCa20 = nu_e * 2._dp/3._dp
+        xCa01 = -SQRT2 * xCa20
+        xCa10 = 0._dp
+      ELSEIF ((ip .EQ. 1) .AND. (ij .EQ. 2)) THEN ! kronecker pj01
+        xCa20 = -nu_e * SQRT2 * 2._dp/3._dp
+        xCa01 = -SQRT2 * xCa20
+        xCa10 = 0._dp
+      ELSEIF ((ip .EQ. 2) .AND. (ij .EQ. 1)) THEN ! kronecker pj10
+        xCa20 = 0._dp
+        xCa01 = 0._dp
+        xCa10 = nu_e
+      ELSE 
+        xCa20 = 0._dp; xCa01 = 0._dp; xCa10 = 0._dp
       ENDIF
 
-      ! N_e^{p,j+1} multiplicator
-      IF (ij+1 .LE. jmaxe+1) THEN
-        xNapjp1 = taue_qe_etaB * (ij_dp + 1.)
-      ELSE
-        xNapjp1 = 0.
-      ENDIF
-
-      ! N_e^{p,j-1} multiplicator
-      IF (ij-1 .GE. 1) THEN
-        xNapjm1 = taue_qe_etaB * ij_dp
-      ELSE
-        xNapjm1 = 0.
-      ENDIF
-
-      ! N_e^{pj} multiplicator
-      xNapj = -taue_qe_etaB * 2.*(ip_dp + ij_dp + 1.)
-
-      ! Collision operator (DK Lenard-Bernstein basis)
-      xColl = ip_dp + 2.*ij_dp
-
-      ! phi multiplicator for different kernel numbers
-      IF (ip .EQ. 1) THEN !(kronecker delta_p^0)
-        xphij   =  (eta_n + 2.*ij_dp*eta_T - 2.*eta_B*(ij_dp+1.) )
-        xphijp1 = -(eta_T - eta_B)*(ij_dp+1.)
+      !! Electrostatic potential pj terms
+      IF (ip .EQ. 1) THEN ! kronecker p0
+        xphij   =  (eta_n + 2.*ij_dp*eta_T - 2._dp*eta_B*(ij_dp+1._dp) )
+        xphijp1 = -(eta_T - eta_B)*(ij_dp+1._dp)
         xphijm1 = -(eta_T - eta_B)* ij_dp
-      ELSE IF (ip .EQ. 3) THEN !(kronecker delta_p^2)
+      ELSE IF (ip .EQ. 3) THEN ! kronecker p2
         xphij   =  (eta_T/SQRT2 - SQRT2*eta_B)
-        xphijp1 = 0.; xphijm1 = 0.
+        xphijp1 = 0._dp; xphijm1 = 0._dp
       ELSE
-        xphij = 0.; xphijp1 = 0.; xphijm1 = 0.
+        xphij = 0._dp; xphijp1 = 0._dp; xphijm1 = 0._dp
+      ENDIF
+
+      ! Recursive factorial
+      IF (ij_dp .GT. 0) THEN
+        factj = factj * ij_dp
+      ELSE
+        factj = 1._dp
       ENDIF
 
       ! Loop on kspace
@@ -95,128 +104,157 @@ SUBROUTINE moments_eq_rhs
 
           !! Compute moments and mixing terms
           ! term propto N_e^{p,j}
-          TNapj = moments_e(ip,ij,ikr,ikz,updatetlevel) * xNapj
+          TNapj = xNapj * moments_e(ip,ij,ikr,ikz,updatetlevel)
           ! term propto N_e^{p+2,j}
-          IF (ip+2 .LE. pmaxe+1) THEN
-            TNapp2j = moments_e(ip+2,ij,ikr,ikz,updatetlevel) * xNapp2j
+          IF (ip+2 .LE. pmaxe+1) THEN ! OoB check
+            TNapp2j = xNapp2j * moments_e(ip+2,ij,ikr,ikz,updatetlevel)
           ELSE
-            TNapp2j = 0.
+            TNapp2j = 0._dp
           ENDIF
           ! term propto N_e^{p-2,j}
-          IF (ip-2 .GE. 1) THEN
-            TNapm2j = moments_e(ip-2,ij,ikr,ikz,updatetlevel) * xNapm2j
+          IF (ip-2 .GE. 1) THEN ! OoB check
+            TNapm2j = xNapm2j * moments_e(ip-2,ij,ikr,ikz,updatetlevel)
           ELSE
-            TNapm2j = 0.
+            TNapm2j = 0._dp
           ENDIF
           ! xterm propto N_e^{p,j+1}
-          IF (ij+1 .LE. jmaxe+1) THEN
-            TNapjp1 = moments_e(ip,ij+1,ikr,ikz,updatetlevel) * xNapjp1
+          IF (ij+1 .LE. jmaxe+1) THEN ! OoB check
+            TNapjp1 = xNapjp1 * moments_e(ip,ij+1,ikr,ikz,updatetlevel)
           ELSE
-            TNapjp1 = 0.
+            TNapjp1 = 0._dp
           ENDIF
           ! term propto N_e^{p,j-1}
-          IF (ij-1 .GE. 1) THEN
-            TNapjm1 = moments_e(ip,ij-1,ikr,ikz,updatetlevel) * xNapjm1
+          IF (ij-1 .GE. 1) THEN ! OoB check
+            TNapjm1 = xNapjm1 * moments_e(ip,ij-1,ikr,ikz,updatetlevel)
           ELSE
-            TNapjm1 = 0.
+            TNapjm1 = 0._dp
           ENDIF
 
-          ! Dougherty Collision terms
-          IF ( (ip .EQ. 1) .AND. (ij .EQ. 2) .AND. (pmaxe .GE. 2) ) THEN ! kronecker p0 * j1
-            TColl01 = 2.0/3.0*(SQRT2*moments_e(3,1,ikr,ikz,updatetlevel)&
-            - 2.0*moments_e(1,2,ikr,ikz,updatetlevel))
-            TColl20 = 0.0; TColl10 = 0.0;
-          ELSEIF ( (ip .EQ. 3) .AND. (ij .EQ. 1) .AND. (jmaxe .GE. 1)) THEN ! kronecker p2 * j0
-            TColl20 = -SQRT2/3.0*(SQRT2*moments_e(3,1,ikr,ikz,updatetlevel)&
-            - 2.0*moments_e(1,2,ikr,ikz,updatetlevel))
-            TColl10 = 0.0; TColl01 = 0.0;
-          ELSEIF ( (ip .EQ. 2) .AND. (ij .EQ. 1) ) THEN ! kronecker p1 * j0
-            TColl10 = moments_e(2,1,ikr,ikz,updatetlevel)
-            TColl20 = 0.0; TColl01 = 0.0;
-          ELSE
-            TColl10 = 0.0; TColl20 = 0.0; TColl01 = 0.0;
+          !! Collision
+          IF (CO .EQ. -2) THEN ! Dougherty Collision terms
+            IF ( (pmaxe .GE. 2) ) THEN ! OoB check
+              TColl20 = xCa20 * moments_e(3,1,ikr,ikz,updatetlevel)
+            ELSE
+              TColl20 = 0._dp
+            ENDIF
+            IF ( (jmaxe .GE. 1) ) THEN ! OoB check
+              TColl01 = xCa01 * moments_e(1,2,ikr,ikz,updatetlevel)
+            ELSE
+              TColl01 = 0._dp
+            ENDIF
+            IF ( (pmaxe .GE. 1) ) THEN ! OoB check
+              TColl10 = xCa10 * moments_e(2,1,ikr,ikz,updatetlevel)
+            ELSE
+              TColl10 = 0._dp
+            ENDIF
+
+            ! Total collisional term
+            TColl =  xCapj* moments_e(ip,ij,ikr,ikz,updatetlevel)&
+                   + TColl20 + TColl01 + TColl10
+
+          ELSEIF (CO .EQ. -1) THEN !!! Full Coulomb (COSOlver matrix) !!!
+
+            TColl = 0._dp ! Initialization
+
+            ploopee: DO ip2 = 1,pmaxe ! sum the electron-self and electron-ion test terms
+              jloopee: DO ij2 = 1,jmaxe
+                TColl = TColl - moments_e(ip2,ij2,ikr,ikz,updatetlevel) &
+                   *( nu_e  * CeipjT(bare(ip-1,ij-1), bare(ip2-1,ij2-1)) &
+                     +nu_ee *  Ceepj(bare(ip-1,ij-1), bare(ip2-1,ij2-1)))
+              ENDDO jloopee
+            ENDDO ploopee
+
+            ploopei: DO ip2 = 1,pmaxi ! sum the electron-ion field terms
+              jloopei: DO ij2 = 1,jmaxi
+                TColl = TColl - moments_i(ip2,ij2,ikr,ikz,updatetlevel) &
+                  *(nu_e * CeipjF(bare(ip-1,ij-1), bari(ip2-1,ij2-1)))
+              END DO jloopei
+            ENDDO ploopei
+
+          ELSE ! Lenhard Bernstein
+            TColl = xCapj * moments_e(ip,ij,ikr,ikz,updatetlevel)
           ENDIF
-          ! Total collisional term
-          TColl = -nu * (xColl * moments_e(ip,ij,ikr,ikz,updatetlevel) &
-                           + TColl01 + TColl10 + TColl20)
 
           !! Electrical potential term
-          IF ( (ip .EQ. 1) .OR. (ip .EQ. 3) ) THEN ! kronecker delta_p^0, delta_p^2
+          IF ( (ip .EQ. 1) .OR. (ip .EQ. 3) ) THEN ! kronecker p0 or  p2
             kernelj    = b_e2**(ij-1) * exp(-b_e2)/factj
-            kerneljp1  = kernelj * b_e2  /(ij_dp + 1.)
+            kerneljp1  = kernelj * b_e2  /(ij_dp + 1._dp)
             kerneljm1  = kernelj * ij_dp / b_e2
             Tphi = (xphij*kernelj + xphijp1*kerneljp1 + xphijm1*kerneljm1) * phi(ikr,ikz)
           ELSE
-            Tphi = 0
+            Tphi = 0._dp
           ENDIF
 
           ! Sum of all precomputed terms
           moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
-              imagu * kz * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 + Tphi) + TColl
-          
+              -imagu * kz * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 + Tphi)&
+               + TColl
+
         END DO kzloope
       END DO krloope
 
     END DO jloope
   END DO ploope
 
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!! Ions moments RHS !!!!!!!!!
-  ploopi : DO ip = ips_i, ipe_i
-    ip_dp = REAL(ip-1,dp)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ploopi : DO ip = ips_i, ipe_i  ! This loop is from 1 to pmaxi+1
+    ip_dp = REAL(ip-1,dp) ! REAL index is one minus the loop index (0 to pmaxi)
 
-    ! x N_i^{p+2,j}
-    IF (ip+2 .LE. pmaxi+1) THEN
-      xNapp2j = -taui_qi_etaB * SQRT((ip_dp + 1.) * (ip_dp + 2.))
-    ELSE
-      xNapp2j = 0.
-    ENDIF
+    ! x N_i^{p+2,j} coeff
+    xNapp2j = -taui_qi_etaB * SQRT((ip_dp + 1._dp) * (ip_dp + 2._dp))
+    ! x N_i^{p-2,j} coeff
+    xNapm2j = -taui_qi_etaB * SQRT(ip_dp * (ip_dp - 1._dp))
 
-    ! x N_i^{p-2,j}
-    IF (ip-2 .GE. 1) THEN
-      xNapm2j = -taui_qi_etaB * SQRT(ip_dp * (ip_dp - 1.))
-    ELSE
-      xNapm2j = 0.
-    ENDIF
+    factj = 1._dp ! Start of the recursive factorial
 
-    factj = 1.0 ! Start of the recursive factorial
+    jloopi : DO ij = ijs_i, ije_i  ! This loop is from 1 to jmaxi+1
+      ij_dp = REAL(ij-1,dp) ! REAL index is one minus the loop index (0 to jmaxi)
 
-    jloopi : DO ij = ijs_i, ije_i
-      ij_dp = REAL(ij-1,dp)
+      ! x N_i^{p,j+1} coeff
+      xNapjp1 = taui_qi_etaB * (ij_dp + 1._dp)
+      ! x N_i^{p,j-1} coeff
+      xNapjm1 = taui_qi_etaB * ij_dp
+      ! x N_i^{pj} coeff
+      xNapj   = -taui_qi_etaB * 2._dp*(ip_dp + ij_dp + 1._dp)
 
-      IF (ij_dp .GT. 0) THEN
-        factj = factj * ij_dp; ! Recursive factorial
+      !! Collision operator pj terms 
+      xCapj = -nu_i*(ip_dp + 2._dp*ij_dp) !DK Lenard-Bernstein basis
+      ! Dougherty part
+      IF     ((ip .EQ. 3) .AND. (ij .EQ. 1)) THEN ! kronecker pj20
+        xCa20 = nu_i * 2._dp/3._dp
+        xCa01 = -SQRT2 * xCa20
+        xCa10 = 0._dp
+      ELSEIF ((ip .EQ. 1) .AND. (ij .EQ. 2)) THEN ! kronecker pj01
+        xCa20 = -nu_i * SQRT2 * 2._dp/3._dp
+        xCa01 = -SQRT2 * xCa20
+        xCa10 = 0._dp
+      ELSEIF ((ip .EQ. 2) .AND. (ij .EQ. 1)) THEN
+        xCa20 = 0._dp
+        xCa01 = 0._dp
+        xCa10 = nu_i
+      ELSE 
+        xCa20 = 0._dp; xCa01 = 0._dp; xCa10 = 0._dp
       ENDIF
 
-      ! x N_i^{p,j+1}
-      IF (ij+1 .LE. jmaxi+1) THEN
-        xNapjp1 = taui_qi_etaB * (ij_dp + 1.)
-      ELSE
-        xNapjp1 = 0.
-      ENDIF
-
-      ! x N_i^{p,j-1}
-      IF (ij-1 .GE. 1) THEN
-        xNapjm1 = taui_qi_etaB * ij_dp
-      ELSE
-        xNapjm1 = 0.
-      ENDIF
-
-      ! x N_i^{pj}
-      xNapj   = -taui_qi_etaB * 2.*(ip_dp + ij_dp + 1.)
-
-      ! Collision operator (DK Lenard-Bernstein basis)
-      xColl = ip_dp + 2.*ij_dp
-
-      ! x phi
-      IF (ip .EQ. 1) THEN !(krokecker delta_p^0)
-        xphij   =  (eta_n + 2.*ij_dp*eta_T - 2.*eta_B*(ij_dp+1.) )
-        xphijp1 = -(eta_T - eta_B)*(ij_dp+1.)
+      !! Electrostatic potential pj terms
+      IF (ip .EQ. 1) THEN ! krokecker p0
+        xphij   =  (eta_n + 2._dp*ij_dp*eta_T - 2._dp*eta_B*(ij_dp+1._dp))
+        xphijp1 = -(eta_T - eta_B)*(ij_dp+1._dp)
         xphijm1 = -(eta_T - eta_B)* ij_dp
-      ELSE IF (ip .EQ. 3) THEN !(krokecker delta_p^2)
+      ELSE IF (ip .EQ. 3) THEN !krokecker p2
         xphij   =  (eta_T/SQRT2 - SQRT2*eta_B)
-        xphijp1 = 0.; xphijm1 = 0.
+        xphijp1 = 0._dp; xphijm1 = 0._dp
       ELSE
-        xphij = 0.; xphijp1 = 0.; xphijm1 = 0.
+        xphij = 0._dp; xphijp1 = 0._dp; xphijm1 = 0._dp
+      ENDIF
+
+      ! Recursive factorial
+      IF (ij_dp .GT. 0) THEN
+        factj = factj * ij_dp 
+      ELSE
+        factj = 1._dp
       ENDIF
 
       ! Loop on kspace
@@ -229,64 +267,92 @@ SUBROUTINE moments_eq_rhs
 
           !! Compute moments and mixing terms
           ! term propto N_i^{p,j}
-          TNapj = moments_i(ip,ij,ikr,ikz,updatetlevel) * xNapj
+          TNapj = xNapj * moments_i(ip,ij,ikr,ikz,updatetlevel)
           ! term propto N_i^{p+2,j}
-          IF (ip+2 .LE. pmaxi+1) THEN
-            TNapp2j = moments_i(ip+2,ij,ikr,ikz,updatetlevel) * xNapp2j
+          IF (ip+2 .LE. pmaxi+1) THEN ! OoB check
+            TNapp2j = xNapp2j * moments_i(ip+2,ij,ikr,ikz,updatetlevel)
           ELSE
-            TNapp2j = 0.
+            TNapp2j = 0._dp
           ENDIF
           ! term propto N_i^{p-2,j}
-          IF (ip-2 .GE. 1) THEN
-            TNapm2j = moments_i(ip-2,ij,ikr,ikz,updatetlevel) * xNapm2j
+          IF (ip-2 .GE. 1) THEN ! OoB check
+            TNapm2j = xNapm2j * moments_i(ip-2,ij,ikr,ikz,updatetlevel)
           ELSE
-            TNapm2j = 0.
+            TNapm2j = 0._dp
           ENDIF
           ! xterm propto N_i^{p,j+1}
-          IF (ij+1 .LE. jmaxi+1) THEN
-            TNapjp1 = moments_i(ip,ij+1,ikr,ikz,updatetlevel) * xNapjp1
+          IF (ij+1 .LE. jmaxi+1) THEN ! OoB check
+            TNapjp1 = xNapjp1 * moments_i(ip,ij+1,ikr,ikz,updatetlevel)
           ELSE
-            TNapjp1 = 0.
+            TNapjp1 = 0._dp
           ENDIF
           ! term propto N_i^{p,j-1}
-          IF (ij-1 .GE. 1) THEN
-            TNapjm1 = moments_i(ip,ij-1,ikr,ikz,updatetlevel) * xNapjm1
+          IF (ij-1 .GE. 1) THEN ! OoB check
+            TNapjm1 = xNapjm1 * moments_i(ip,ij-1,ikr,ikz,updatetlevel)
           ELSE
-            TNapjm1 = 0.
+            TNapjm1 = 0._dp
           ENDIF
 
-          ! Dougherty Collision terms
-          IF ( (ip .EQ. 1) .AND. (ij .EQ. 2) .AND. (pmaxi .GE. 2)) THEN ! kronecker p0 * j1
-            TColl01 = 2.0/3.0*(SQRT2*moments_i(3,1,ikr,ikz,updatetlevel)&
-            - 2.0*moments_i(1,2,ikr,ikz,updatetlevel))
-            TColl20 = 0.0; TColl10 = 0.0;
-          ELSEIF ( (ip .EQ. 3) .AND. (ij .EQ. 1) .AND. (jmaxi .GE. 1)) THEN ! kronecker p2 * j0
-            TColl20 = -SQRT2/3.0*(SQRT2*moments_i(3,1,ikr,ikz,updatetlevel)&
-            - 2.0*moments_i(1,2,ikr,ikz,updatetlevel))
-            TColl10 = 0.0; TColl01 = 0.0;
-          ELSEIF ( (ip .EQ. 2) .AND. (ij .EQ. 1) ) THEN ! kronecker p1 * j0
-            TColl10 = moments_i(2,1,ikr,ikz,updatetlevel)
-            TColl20 = 0.0; TColl01 = 0.0;
-          ELSE
-            TColl10 = 0.0; TColl20 = 0.0; TColl01 = 0.0;
-          ENDIF
-          ! Total collisional term
-          TColl = -nu * (xColl * moments_e(ip,ij,ikr,ikz,updatetlevel) &
-                           + TColl01 + TColl10 + TColl20)
+          !! Collision
+          IF (CO .EQ. -2) THEN            ! Dougherty Collision terms
+            IF ( (pmaxi .GE. 2) ) THEN ! OoB check
+              TColl20 = xCa20 * moments_i(3,1,ikr,ikz,updatetlevel)
+            ELSE
+              TColl20 = 0._dp
+            ENDIF
+            IF ( (jmaxi .GE. 1) ) THEN ! OoB check
+              TColl01 = xCa01 * moments_i(1,2,ikr,ikz,updatetlevel)
+            ELSE
+              TColl01 = 0._dp
+            ENDIF
+            IF ( (pmaxi .GE. 1) ) THEN ! OoB check
+              TColl10 = xCa10 * moments_i(2,1,ikr,ikz,updatetlevel)
+            ELSE
+              TColl10 = 0._dp
+            ENDIF
 
+            ! Total collisional term
+            TColl =  xCapj* moments_i(ip,ij,ikr,ikz,updatetlevel)&
+                   + TColl20 + TColl01 + TColl10
+
+            ELSEIF (CO .EQ. -1) THEN !!! Full Coulomb (COSOlver matrix) !!!
+
+              TColl = 0._dp ! Initialization
+
+              ploopii: DO ip2 = 1,pmaxi ! sum the electron-self and electron-ion test terms
+                jloopii: DO ij2 = 1,jmaxi
+                  TColl = TColl - moments_i(ip2,ij2,ikr,ikz,updatetlevel) &
+                      *( nu_ie * CiepjT(bari(ip-1,ij-1), bari(ip2-1,ij2-1)) &
+                        +nu_i  *  Ciipj(bari(ip-1,ij-1), bari(ip2-1,ij2-1)))
+                ENDDO jloopii
+              ENDDO ploopii
+
+              ploopie: DO ip2 = 1,pmaxe ! sum the electron-ion field terms
+                jloopie: DO ij2 = 1,jmaxe
+                  TColl = TColl - moments_e(ip2,ij2,ikr,ikz,updatetlevel) &
+                    *(nu_ie * CiepjF(bari(ip-1,ij-1), bare(ip2-1,ij2-1)))
+                ENDDO jloopie
+              ENDDO ploopie
+
+            ELSE ! Lenhard Bernstein
+              TColl = xCapj * moments_e(ip,ij,ikr,ikz,updatetlevel)
+            ENDIF
+  
           !! Electrical potential term
-          IF ( (ip .eq. 1) .or. (ip .eq. 3) ) THEN ! kronecker delta_p^0, delta_p^2
+          IF ( (ip .EQ. 1) .OR. (ip .EQ. 3) ) THEN ! kronecker p0 or p2
             kernelj    = b_i2**(ij-1) * exp(-b_i2)/factj
-            kerneljp1  = kernelj * b_i2  /(ij_dp + 1.)
+            kerneljp1  = kernelj * b_i2  /(ij_dp + 1._dp)
             kerneljm1  = kernelj * ij_dp / b_i2
             Tphi = (xphij*kernelj + xphijp1*kerneljp1 + xphijm1*kerneljm1) * phi(ikr,ikz)
           ELSE
-            Tphi = 0
+            Tphi = 0._dp
           ENDIF
+
           ! Sum of all precomputed terms
           moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
-              imagu * kz * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 + Tphi) + TColl
-        
+              -imagu * kz * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 + Tphi)&
+               + TColl
+
         END DO kzloopi
       END DO krloopi
 

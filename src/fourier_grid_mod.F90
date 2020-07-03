@@ -20,6 +20,7 @@ MODULE fourier_grid
   ! Indices of s -> start , e-> END
   INTEGER, PUBLIC, PROTECTED ::  ips_e,ipe_e, ijs_e,ije_e
   INTEGER, PUBLIC, PROTECTED ::  ips_i,ipe_i, ijs_i,ije_i
+  INTEGER, PUBLIC, PROTECTED ::  ns_e,ne_e, ns_i,ne_i     !start/end indices for coll. mat.
   INTEGER, PUBLIC, PROTECTED ::  ikrs, ikre, ikzs, ikze
 
   ! Toroidal direction
@@ -39,6 +40,7 @@ MODULE fourier_grid
   ! Public Functions
   PUBLIC :: set_krgrid, set_kzgrid, set_pj
   PUBLIC :: fourier_grid_readinputs, fourier_grid_outputinputs
+  PUBLIC :: bare, bari
 
 CONTAINS
 
@@ -91,6 +93,10 @@ CONTAINS
     ALLOCATE(jarray_i(ijs_i:ije_i))
     DO ij = ijs_e,ije_e; jarray_e(ij) = ij-1; END DO
     DO ij = ijs_i,ije_i; jarray_i(ij) = ij-1; END DO
+
+    ns_e = bare(ips_e,ijs_e); ne_e = bare(ipe_e,ije_e)
+    ns_i = bari(ips_i,ijs_i); ne_i = bari(ipe_i,ije_i)
+
   END SUBROUTINE set_pj
 
   SUBROUTINE fourier_grid_readinputs
@@ -131,5 +137,19 @@ CONTAINS
     CALL attach(fidres, TRIM(str), "kzmin", kzmin)
     CALL attach(fidres, TRIM(str), "kzmax", kzmax)
   END SUBROUTINE fourier_grid_outputinputs
+
+  
+  FUNCTION bare(ip,ij)
+    IMPLICIT NONE
+    INTEGER :: bare, ip, ij
+    bare = (jmaxe+1)*ip + ij + 1
+  END FUNCTION
+
+  FUNCTION bari(ip,ij)
+    IMPLICIT NONE
+    INTEGER :: bari, ip, ij
+    bari = bare(pmaxe,jmaxe) + (jmaxi+1)*ip + ij + 1
+  END FUNCTION
+
 
 END MODULE fourier_grid

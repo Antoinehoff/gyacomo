@@ -20,6 +20,10 @@ MODULE initial_par
   REAL(dp), PUBLIC, PROTECTED ::  init_ampli_density=0.1_dp ! Oscillation amplitude
   REAL(dp), PUBLIC, PROTECTED ::  init_ampli_temp=0.1_dp 
 
+  CHARACTER(len=128), PUBLIC :: selfmat_file  ! COSOlver matrix file names
+  CHARACTER(len=128), PUBLIC :: iemat_file  ! COSOlver matrix file names
+  CHARACTER(len=128), PUBLIC :: eimat_file  ! COSOlver matrix file names
+
   PUBLIC :: initial_outputinputs, initial_readinputs
 
 CONTAINS
@@ -35,6 +39,9 @@ CONTAINS
     NAMELIST /INITIAL_CON/ initback_moments
     NAMELIST /INITIAL_CON/ initnoise_moments
     NAMELIST /INITIAL_CON/ iseed
+    NAMELIST /INITIAL_CON/ selfmat_file
+    NAMELIST /INITIAL_CON/ iemat_file
+    NAMELIST /INITIAL_CON/ eimat_file
 
     READ(lu_in,initial_con)
     WRITE(*,initial_con)
