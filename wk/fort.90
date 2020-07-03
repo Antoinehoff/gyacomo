@@ -1,13 +1,13 @@
 &BASIC
   nrun=100000
-  dt=0.05
-  tmax=100    ! time normalized to 1/omega_pe
+  dt=0.01
+  tmax=5    ! time normalized to 1/omega_pe
 /
 &GRID
-  pmaxe =20    ! Electron Hermite moments 
-  jmaxe = 10     ! Electron Laguerre moments 
-  pmaxi = 20    ! Ion Hermite moments 
-  jmaxi = 10     ! Ion Laguerre moments
+  pmaxe =6    ! Electron Hermite moments 
+  jmaxe = 6     ! Electron Laguerre moments 
+  pmaxi = 6    ! Ion Hermite moments 
+  jmaxi = 6     ! Ion Laguerre moments
   nkr   = 1
   krmin = 0
   krmax = 0
@@ -19,7 +19,7 @@
   nsave_0d = 0
   nsave_1d = 0
   nsave_2d = 1
-  nsave_5d = 0
+  nsave_5d = 1
   write_Ni00    = .true.
   write_moments = .true.
   write_phi     = .true.
@@ -28,8 +28,8 @@
 /
 &MODEL_PAR
   ! Collisionality
-  CO      = -1       ! Collision operator (-1:Full Coulomb, 0: Dougherty)
-  nu      = 0       ! Normalized collision frequency normalized to plasma frequency
+  CO      = -2       ! Collision operator (-1:Full Coulomb, 0: Dougherty)
+  nu      = 1       ! Normalized collision frequency normalized to plasma frequency
   tau_e   = 1         ! T_e/T_e
   tau_i   = 1         ! T_i/T_e       temperature ratio
   sigma_e = 0.023338   ! sqrt(m_e/m_i) mass ratio
@@ -37,7 +37,7 @@
   q_e     = -1         ! Electrons charge
   q_i     = 1         ! Ions charge
   eta_n   = 0         ! L_perp / L_n Density gradient
-  eta_T   = 1         ! L_perp / L_T Temperature gradient
+  eta_T   = 0         ! L_perp / L_T Temperature gradient
   eta_B   = 0         ! L_perp / L_B Magnetic gradient and curvature
   lambdaD = 0         ! Debye length
 /
@@ -47,6 +47,9 @@
   ! Noise amplitude
   initnoise_moments=0
   iseed=42
+  selfmat_file='../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_6_Jmaxe_6_Pmaxi_6_Jmaxi_6_pamaxx_10.h5'
+  eimat_file='../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_6_Jmaxe_6_Pmaxi_6_Jmaxi_6_pamaxx_10_tau_1.0000_mu_0.0233.h5'
+  iemat_file='../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_6_Jmaxe_6_Pmaxi_6_Jmaxi_6_pamaxx_10_tau_1.0000_mu_0.0233.h5'
 /
 &TIME_INTEGRATION_PAR
   numerical_scheme='RK4'

@@ -3,9 +3,6 @@ default_plots_options % Script to set up default plot variables
 % with a linear fit of the log evolution
 gammas = zeros(numel(kr),numel(kz));
 shifts = zeros(numel(kr),numel(kz));
-% Linear fit of log(Napj)
-x1    = timeNi;
-itmin = ceil(0.5 * numel(timeNi)); %Take the second half of the time evolution
 
 if K_RICCI
     factor = sqrt(1+MODEL.tau_i);
@@ -14,6 +11,10 @@ else
     factor = 1;
     fchar  = '$';
 end
+
+% Linear fit of log(Napj)
+x1    = timeNi;
+itmin = ceil(0.9 * numel(timeNi)); %Take a subset of the time evolution
 
 for ikz = 1:numel(kz)
     fit = polyfit(x1(itmin:end),log(abs(Nipj(itmin:end,ikr,ikz))),1);
