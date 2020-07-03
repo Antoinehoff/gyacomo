@@ -22,8 +22,9 @@ SUBROUTINE poisson
   COMPLEX(dp) :: gammaD_phi
 
   !Precompute species dependant factors
-  sigmae2_taue_o2 = sigma_e**2 * tau_e/2. ! factor of the Kernel argument
-  sigmai2_taui_o2 = sigma_i**2 * tau_i/2.
+  sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the Kernel argument
+  sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp ! (b_a/2)^2 = (kperp sqrt(2 tau_a) sigma_a/2)^2
+                                             !           = kperp^2 tau_a sigma_a^2/2
   qe2_taue        = (q_e**2)/tau_e ! factor of the gammaD sum
   qi2_taui        = (q_i**2)/tau_i
 
@@ -37,9 +38,11 @@ SUBROUTINE poisson
       b_e2  =  kperp2 * sigmae2_taue_o2 ! non dim kernel argument (kperp2 sigma_a sqrt(2 tau_a))
 
       ! Initialization for n = 0 (ine = 1)
-      Kne  = exp(-b_e2) 
+      Kne  = exp(-b_e2)
       sum_kernel_mom_e = Kne*moments_e(1, 1, ikr, ikz, updatetlevel)
       sum_kernel2_e    = Kne**2
+
+!write(*,*) 'K0e = ', Kne
 
       ! loop over n only if the max polynomial degree is 1 or more
       if (jmaxe .GT. 0) then
@@ -50,6 +53,7 @@ SUBROUTINE poisson
 
           sum_kernel_mom_e  = sum_kernel_mom_e  + Kne * moments_e(1, ine, ikr, ikz, updatetlevel)
           sum_kernel2_e     = sum_kernel2_e     + Kne**2 ! ... sum recursively ...
+!write(*,*) 'K',ine-1,'e = ', Kne
         END DO
       endif
 
@@ -57,9 +61,11 @@ SUBROUTINE poisson
       b_i2  = kperp2 * sigmai2_taui_o2
 
       ! Initialization for n = 0 (ini = 1)
-      Kni  = exp(-b_i2) 
+      Kni  = exp(-b_i2)
       sum_kernel_mom_i = Kni*moments_i(1, 1, ikr, ikz, updatetlevel)
       sum_kernel2_i    = Kni**2
+
+!write(*,*) 'K0i = ', Kni
 
       ! loop over n only if the max polynomial degree is 1 or more
       if (jmaxi .GT. 0) then
@@ -70,18 +76,20 @@ SUBROUTINE poisson
 
           sum_kernel_mom_i  = sum_kernel_mom_i  + Kni * moments_i(1, ini, ikr, ikz, updatetlevel)
           sum_kernel2_i     = sum_kernel2_i     + Kni**2 ! ... sum recursively ...
+!write(*,*) 'K',ini-1,'i = ', Kni
         END DO
       endif
-
       !!! Assembling the poisson equation
       alphaD   = kperp2 * lambdaD**2
-      gammaD   = alphaD + qe2_taue * (1. - sum_kernel2_e) &
-                        + qi2_taui * (1. - sum_kernel2_i)
-      gammaD_phi = q_e * sum_kernel_mom_e + q_i * sum_kernel_mom_i ! gamma_D * phi term
-      
+      gammaD   = alphaD + qe2_taue * (1._dp - sum_kernel2_e) & ! Called Poisson_ in MOLI
+                        + qi2_taui * (1._dp - sum_kernel2_i)
+      gammaD_phi = q_e * sum_kernel_mom_e + q_i * sum_kernel_mom_i
+
       phi(ikr, ikz) =  gammaD_phi/gammaD
 
     END DO
   END DO
+
+!write(*,*) 'gammaD =',gammaD
 
 END SUBROUTINE poisson
