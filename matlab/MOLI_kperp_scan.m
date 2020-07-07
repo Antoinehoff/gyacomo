@@ -22,10 +22,10 @@ options.GDI  = 0;   % First/second order
 options.MOLI = 1;    % 1 -> Solve MOLI, 0 -> off
 
 % MOLI Solver
-options.solver.solver = 2;
+options.solver.solver = 3;
 
 % MOLI Linear Fit Solver
-options.LinFitSolver = 0;
+options.LinFitSolver = 2;
 
 %% Main parameter scan
 
