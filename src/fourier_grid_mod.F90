@@ -52,7 +52,11 @@ CONTAINS
     ikrs = 1
     ikre = nkr    
     ! Grid spacings, precompute some inverses
-    deltakr = (krmax - krmin) / REAL(nkr,dp)
+    IF ( nkr .GT. 1 ) THEN ! To avoid case with 0 intervals
+      deltakr = (krmax - krmin) / REAL(nkr-1,dp)
+    ELSE
+      deltakr = 0;
+    ENDIF
     ! Discretized kr positions
     ALLOCATE(krarray(ikrs:ikre))
     DO ikr = ikrs,ikre
@@ -68,7 +72,11 @@ CONTAINS
     ikzs = 1
     ikze = nkz    
     ! Grid spacings, precompute some inverses
-    deltakz = (kzmax - kzmin) / REAL(nkz,dp)
+    IF ( nkz .GT. 1 ) THEN
+      deltakz = (kzmax - kzmin) / REAL(nkz-1,dp)
+    ELSE
+      deltakz = 0;
+    ENDIF
     ! Discretized kz positions
     ALLOCATE(kzarray(ikzs:ikze))
     DO ikz = ikzs,ikze
