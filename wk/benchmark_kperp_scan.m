@@ -12,19 +12,19 @@ OUTPUTS.write_phi     = '.true.';
 OUTPUTS.write_doubleprecision = '.true.';
 OUTPUTS.resfile0      = '''results''';
 %% Grid parameters
-GRID.pmaxe = 15;
-GRID.jmaxe = 6;
-GRID.pmaxi = 15;
-GRID.jmaxi = 6;
+GRID.pmaxe = 12;
+GRID.jmaxe = 7;
+GRID.pmaxi = 12;
+GRID.jmaxi = 7;
 GRID.nkr   = 1;
 GRID.krmin = 0.;
 GRID.krmax = 0.;
 GRID.nkz   = 20;
 GRID.kzmin = 0.1;
-GRID.kzmax = 1.5;
+GRID.kzmax = 2.0;
 %% Model parameters
 MODEL.CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
-MODEL.nu      = 0.1; % collisionality nu*L_perp/Cs0
+MODEL.nu      = 0.01; % collisionality nu*L_perp/Cs0
 % temperature ratio T_a/T_e
 MODEL.tau_e   = 1.0;
 MODEL.tau_i   = 1.0;
@@ -48,7 +48,18 @@ BASIC.tmax                = 100.0;
 INITIAL.initback_moments  = 0.01;
 INITIAL.initnoise_moments = 0.;
 INITIAL.iseed             = 42;
-
+INITIAL.selfmat_file = ...
+    ['''../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_',num2str(GRID.pmaxe),...
+    '_Jmaxe_',num2str(GRID.jmaxe),'_Pmaxi_',num2str(GRID.pmaxi),'_Jmaxi_',...
+    num2str(GRID.jmaxi),'_pamaxx_10.h5'''];
+INITIAL.eimat_file = ...
+    ['''../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_',num2str(GRID.pmaxe),...
+    '_Jmaxe_',num2str(GRID.jmaxe),'_Pmaxi_',num2str(GRID.pmaxi),'_Jmaxi_',...
+    num2str(GRID.jmaxi),'_pamaxx_10_tau_1.0000_mu_0.0233.h5'''];
+INITIAL.iemat_file = ...
+    ['''../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_',num2str(GRID.pmaxe),...
+    '_Jmaxe_',num2str(GRID.jmaxe),'_Pmaxi_',num2str(GRID.pmaxi),'_Jmaxi_',...
+    num2str(GRID.jmaxi),'_pamaxx_10_tau_1.0000_mu_0.0233.h5'''];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Write input file
 INPUT = write_fort90(OUTPUTS,GRID,MODEL,INITIAL,TIME_INTEGRATION,BASIC);
@@ -72,63 +83,58 @@ end
 %% Analysis and basic figures
 SAVEFIG = 1;
 filename = 'results_00.h5';
-
-if     MODEL.CO == -1; CONAME = 'FC';
-elseif MODEL.CO == -2; CONAME = 'DC';
-elseif MODEL.CO ==  0; CONAME = 'LB'; end;
-
-TITLE  = [];
-TITLE = [TITLE,'$\eta_n=',num2str(MODEL.eta_n),'$, '];
-TITLE = [TITLE,'$\eta_B=',num2str(MODEL.eta_B),'$, '];
-TITLE = [TITLE,'$\eta_T=',num2str(MODEL.eta_T),'$, '];
-TITLE = [TITLE,   '$\nu=',num2str(MODEL.nu),'$, '];
-TITLE = [TITLE, '$(P,J)=(',num2str(GRID.pmaxe),',',num2str(GRID.jmaxe),')$'];
+default_plots_options
 
 %% Growth rate analysis
-gammas = zeros(numel(kr),numel(kz));
-shifts = zeros(numel(kr),numel(kz));
-
 moment = 'Ni00';
 
 kr       = h5read(filename,['/data/var2d/' moment '/coordkr']);
 kz       = h5read(filename,['/data/var2d/' moment '/coordkz']);
-timeNi   = h5read(filename,'/data/var2d/time');
-Nipj     = zeros(numel(timeNi),numel(kr),numel(kz));
+timeNi   = squeeze(h5read(filename,'/data/var2d/time'));
+Ni00     = zeros(numel(kr),numel(kz),numel(timeNi));
 
 for it = 1:numel(timeNi)
     tmp          = h5read(filename,['/data/var2d/', moment,'/', num2str(it,'%06d')]);
-    Nipj(it,:,:) = tmp.real + 1i * tmp.imaginary; 
+    Ni00(:,:,it) = tmp.real + 1i * tmp.imaginary; 
 end
 
-% Linear fit of log(Napj)
-x1    = timeNi;
-itmin = ceil(0.5 * numel(timeNi)); %Take the second half of the time evolution
+% Amplitude ratio method
 ikr   = 1;
-
+gammas = zeros(numel(kr),numel(kz));
+Napj  = ones(numel(timeNi),(GRID.pmaxe+1)*(GRID.jmaxe+1)+(GRID.pmaxi+1)*(GRID.jmaxi+1));
 for ikz = 1:numel(kz)
-    fit = polyfit(x1(itmin:end),log(abs(Nipj(itmin:end,ikr,ikz))),1);
-    gammas(ikr,ikz) = fit(1);
-    shifts(ikr,ikz) = fit(2);
+   gammas(ikr,ikz) = LinearFit_s(squeeze(timeNi), squeeze(abs(Ni00(ikr,ikz,:))));
 end
 
 %% Plot
 fig = figure;
 
+X = kz*sqrt(1+MODEL.tau_i); % Convert to Ricci 2006 Normalization
+
+subplot(121) % growth rate
 %HeLaZ results
-X = kz*sqrt(1+MODEL.tau_i);
-Y = gammas(1,:);
-plot(X,Y,'-','DisplayName','HeLaZ')
+Y1 = gammas(1,:);
+plot(X,Y1,'-','DisplayName','HeLaZ')
 hold on
 
 %MOLI results
-X = kz*sqrt(1+MODEL.tau_i);
-Y = results.kperp.Maxgammas;
-plot(X,Y,'--','DisplayName','MOLI');
+Y2 = results.kperp.Maxgammas;
+plot(X,Y2,'--','DisplayName','MOLI');
 title(TITLE);
 grid on
 legend('show')
 xlabel('$k_\perp * (1+\tau)^{1/2}$')
 ylabel('$\gamma L_\perp/c_{s} $')
+
+subplot(122) % Error
+ERR = abs(gammas(1,:)' - results.kperp.Maxgammas);
+
+plot(X,ERR,'-','DisplayName','MOLI relative error');
+grid on
+legend('show')
+xlabel('$k_\perp * (1+\tau)^{1/2}$')
+ylabel('$\epsilon_\gamma $')
+
 if SAVEFIG; FIGNAME = 'g_vs_kz'; save_figure; end;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

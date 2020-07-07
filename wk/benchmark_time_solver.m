@@ -21,11 +21,11 @@ GRID.nkr   = 1;
 GRID.krmin = 0.;
 GRID.krmax = 0.;
 GRID.nkz   = 1;
-GRID.kzmin = 1.0;
-GRID.kzmax = 1.0;
+GRID.kzmin = 0.67;
+GRID.kzmax = 0.67;
 %% Model parameters
 MODEL.CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
-MODEL.nu      = 1.0; % collisionality nu*L_perp/Cs0
+MODEL.nu      = 0.01; % collisionality nu*L_perp/Cs0
 % temperature ratio T_a/T_e
 MODEL.tau_e   = 1.0;
 MODEL.tau_i   = 1.0;
@@ -36,16 +36,16 @@ MODEL.sigma_i = 1.0;
 MODEL.q_e     =-1.0;
 MODEL.q_i     = 1.0;
 % gradients L_perp/L_x
-MODEL.eta_n   = 0.0;        % Density
+MODEL.eta_n   = 1.0;        % Density
 MODEL.eta_T   = 0.0;        % Temperature
-MODEL.eta_B   = 0.0;        % Magnetic
+MODEL.eta_B   = 0.5;        % Magnetic
 % Debye length
 MODEL.lambdaD = 0.0;
 %% Time integration and intialization parameters
 TIME_INTEGRATION.numerical_scheme  = '''RK4''';
 BASIC.nrun                = 100000;
-BASIC.dt                  = 0.01;
-BASIC.tmax                = 5.0;
+BASIC.dt                  = 0.05;
+BASIC.tmax                = 100.0;
 INITIAL.initback_moments  = 0.01;
 INITIAL.initnoise_moments = 0.;
 INITIAL.iseed             = 42;
@@ -85,92 +85,46 @@ end
 default_plots_options
 SAVEFIG = 1;
 filename = 'results_00.h5';
-TITLE  = [];
-TITLE = [TITLE,'$\eta_n=',num2str(MODEL.eta_n),'$, '];
-TITLE = [TITLE,'$\eta_B=',num2str(MODEL.eta_B),'$, '];
-TITLE = [TITLE,'$\eta_T=',num2str(MODEL.eta_T),'$, '];
-TITLE = [TITLE,   '$\nu=',num2str(MODEL.nu),'$, '];
-TITLE = [TITLE, '$(P,J)=(',num2str(GRID.pmaxe),',',num2str(GRID.jmaxe),')$'];
-if     MODEL.CO == -1; CONAME = 'FC';
-elseif MODEL.CO == -2; CONAME = 'DC';
-elseif MODEL.CO ==  0; CONAME = 'LB'; end;
+default_plots_options
+TITLE  = [', $k_z=',num2str(GRID.kzmin)];
 
-bare = @(pp,jj) (GRID.jmaxe +1)*pp + jj+1;                      % electron 1D-index
-bari = @(pp,jj) bare(GRID.pmaxe, GRID.jmaxe)+(GRID.jmaxi +1)*pp + jj+1; % ion 1D-index
-
-%% Nepj
-% 
-% moment = 'moments_e';
-% 
-% kr       = h5read(filename,['/data/var5d/' moment '/coordkr']);
-% kz       = h5read(filename,['/data/var5d/' moment '/coordkz']);
-% time   = h5read(filename,'/data/var5d/time');
-% Nepj     = zeros(GRID.pmaxe+1, GRID.jmaxe+1,numel(kr),numel(kz),numel(time));
-% for it = 1:numel(time)
-%     tmp          = h5read(filename,['/data/var5d/', moment,'/', num2str(it,'%06d')]);
-%     Nepj(:,:,:,:,it) = tmp.real + 1i * tmp.imaginary; 
-% end
-% 
-% fig = figure;
-% 
-% %HeLaZ results
-% x1 = time;
-% y1 = x1;
-% ic = 1;
-% for ikr = 1:GRID.nkr
-%     for ikz = 1:GRID.nkz
-%         for ip = 0:1
-%             for ij = 0:1
-%                 for it = 1:numel(time)
-%                     y1(it) = abs(Nepj(ip+1,ij+1,ikr,ikz,it));
-%                 end
-%                 semilogy(x1,y1,'-','DisplayName',...
-%                     ['HeLaZ $N_e^{',num2str(ip),num2str(ij),'}$'],...
-%                     'color', line_colors(ic,:))
-%                 hold on
-%                 ic = ic + 1;
-%             end
-%         end
-%     end
-% end
-% 
-% %MOLI results
-% x2 = results.time;
-% y2 = x2;
-% ic = 1;
-% for ip = 0:1
-%     for ij = 0:1
-%         for it = 1:numel(x2)
-%             y2(it) = abs(results.Napj(it,bare(ip,ij)));
-%         end
-%         semilogy(x2,y2,'--','DisplayName',...
-%             ['MOLI $N_e^{',num2str(ip),num2str(ij),'}$'],...
-%             'color', line_colors(ic,:))
-%         hold on
-%         ic = ic + 1;
-%     end
-% end
-% 
-% title(TITLE);
-% grid on
-% legend('show')
-% xlabel('$t$')
-% ylabel(['$|N_e^{pj}|$'])
-% if SAVEFIG; FIGNAME = ['Nepj_kz_',num2str(GRID.kzmin)]; save_figure; end;
-% 
 %% Nipj
+
+% load HeLaZ data
+moment = 'Ni00';
+
+kr       = h5read(filename,['/data/var2d/' moment '/coordkr']);
+kz       = h5read(filename,['/data/var2d/' moment '/coordkz']);
+timeNi   = squeeze(h5read(filename,'/data/var2d/time'));
+Ni00     = zeros(numel(kr),numel(kz),numel(timeNi));
+
+for it = 1:numel(timeNi)
+    tmp          = h5read(filename,['/data/var2d/', moment,'/', num2str(it,'%06d')]);
+    Ni00(:,:,it) = tmp.real + 1i * tmp.imaginary; 
+end
 
 moment = 'moments_i';
 
 kr       = h5read(filename,['/data/var5d/' moment '/coordkr']);
 kz       = h5read(filename,['/data/var5d/' moment '/coordkz']);
 time   = h5read(filename,'/data/var5d/time');
-Nipj     = zeros(GRID.pmaxe+1, GRID.jmaxe+1,numel(kr),numel(kz),numel(time));
+Nipj     = zeros(GRID.pmaxi+1, GRID.jmaxi+1,numel(kr),numel(kz),numel(time));
 for it = 1:numel(time)
     tmp          = h5read(filename,['/data/var5d/', moment,'/', num2str(it,'%06d')]);
     Nipj(:,:,:,:,it) = tmp.real + 1i * tmp.imaginary; 
 end
 
+err_ = mean(abs(squeeze(Nipj(1,1,1,1,:))-squeeze((Ni00(1,1,:)))));
+disp(['2D 5D error :',num2str(err_)])
+% growth rate :
+gammaHeLaZ = LinearFit_s(squeeze(time),...
+    squeeze(abs(Nipj(1,1,1,1,:)))) ;
+gammaMOLI  = LinearFit(results.Napj,results.time,params,options);
+disp(['Growth rate HeLaZ : ',num2str(gammaHeLaZ)])
+disp(['Growth rate MOLI  : ',num2str( gammaMOLI)])
+disp(['Error : ',num2str( abs(gammaMOLI-gammaHeLaZ))])
+
+% Plot moments
 fig = figure;
 
 x1 = time;
@@ -284,11 +238,34 @@ plot(timephiMOLI,ERR2,'--','DisplayName','Imag')
 %title(TITLE);
 grid on
 xlabel('$t$')
-ylabel('$|e_\phi|$')
+ylabel('$e(\phi)$')
 legend('show')
 %if SAVEFIG; FIGNAME = ['err_phi_kz_',num2str(GRID.kzmin)]; save_figure; end;
 
+%% Growth rate fit quantity (Ni00)
+subplot(326);
+
+y1 = squeeze(abs(Nipj(1,1,1,1,:))); % HeLaZ
+y2 = squeeze(abs(results.Napj(:,bari(0,0))));
+ERR3  = abs(y2-y1);
+
+yyaxis left
+semilogy(x1,y1,'-','DisplayName','HeLaZ',...
+    'color', line_colors(1,:)); hold on;
+semilogy(x2,y2,'--','DisplayName','MOLI',...
+    'color', 'k')
+grid on
+xlabel('$t$')
+ylabel('$|N_i^{00}|$')
+legend('show')
+
+yyaxis right
+semilogy(x1, ERR3,'color', line_colors(2,:));
+grid on
+xlabel('$t$')
+ylabel('$e(N_i^{00})$')
+
+%% Finish and save
 suptitle(TITLE);
 if SAVEFIG; FIGNAME = ['kz_',num2str(GRID.kzmin)]; save_figure; end;
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
