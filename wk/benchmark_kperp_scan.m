@@ -12,18 +12,18 @@ OUTPUTS.write_phi     = '.true.';
 OUTPUTS.write_doubleprecision = '.true.';
 OUTPUTS.resfile0      = '''results''';
 %% Grid parameters
-GRID.pmaxe = 12;
-GRID.jmaxe = 7;
-GRID.pmaxi = 12;
-GRID.jmaxi = 7;
+GRID.pmaxe = 15;
+GRID.jmaxe = 6;
+GRID.pmaxi = 15;
+GRID.jmaxi = 6;
 GRID.nkr   = 1;
 GRID.krmin = 0.;
 GRID.krmax = 0.;
 GRID.nkz   = 20;
 GRID.kzmin = 0.1;
-GRID.kzmax = 2.0;
+GRID.kzmax = 1.5;
 %% Model parameters
-MODEL.CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
+MODEL.CO      = -1;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
 MODEL.nu      = 0.01; % collisionality nu*L_perp/Cs0
 % temperature ratio T_a/T_e
 MODEL.tau_e   = 1.0;
@@ -44,7 +44,7 @@ MODEL.lambdaD = 0.0;
 TIME_INTEGRATION.numerical_scheme  = '''RK4''';
 BASIC.nrun                = 100000;
 BASIC.dt                  = 0.05;
-BASIC.tmax                = 100.0;
+BASIC.tmax                = 50.0;
 INITIAL.initback_moments  = 0.01;
 INITIAL.initnoise_moments = 0.;
 INITIAL.iseed             = 42;

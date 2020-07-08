@@ -1,19 +1,19 @@
 &BASIC
   nrun=100000
-  dt=0.05
-  tmax=100    ! time normalized to 1/omega_pe
+  dt=0.01
+  tmax=10    ! time normalized to 1/omega_pe
 /
 &GRID
-  pmaxe =12    ! Electron Hermite moments 
-  jmaxe = 7     ! Electron Laguerre moments 
-  pmaxi = 12    ! Ion Hermite moments 
-  jmaxi = 7     ! Ion Laguerre moments
+  pmaxe =15    ! Electron Hermite moments 
+  jmaxe = 6     ! Electron Laguerre moments 
+  pmaxi = 15    ! Ion Hermite moments 
+  jmaxi = 6     ! Ion Laguerre moments
   nkr   = 1
   krmin = 0
   krmax = 0
   nkz   = 20
-  kzmin = 0.1
-  kzmax = 2
+  kzmin = 1.5
+  kzmax = 2.5
 /
 &OUTPUT_PAR
   nsave_0d = 0
@@ -28,7 +28,7 @@
 /
 &MODEL_PAR
   ! Collisionality
-  CO      = -2       ! Collision operator (-1:Full Coulomb, 0: Dougherty)
+  CO      = -1       ! Collision operator (-1:Full Coulomb, 0: Dougherty)
   nu      = 0.01       ! Normalized collision frequency normalized to plasma frequency
   tau_e   = 1         ! T_e/T_e
   tau_i   = 1         ! T_i/T_e       temperature ratio
@@ -47,9 +47,9 @@
   ! Noise amplitude
   initnoise_moments=0
   iseed=42
-  selfmat_file='../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_12_Jmaxe_7_Pmaxi_12_Jmaxi_7_pamaxx_10.h5'
-  eimat_file='../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_12_Jmaxe_7_Pmaxi_12_Jmaxi_7_pamaxx_10_tau_1.0000_mu_0.0233.h5'
-  iemat_file='../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_12_Jmaxe_7_Pmaxi_12_Jmaxi_7_pamaxx_10_tau_1.0000_mu_0.0233.h5'
+  selfmat_file='../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_15_Jmaxe_6_Pmaxi_15_Jmaxi_6_pamaxx_10.h5'
+  eimat_file='../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_15_Jmaxe_6_Pmaxi_15_Jmaxi_6_pamaxx_10_tau_1.0000_mu_0.0233.h5'
+  iemat_file='../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_15_Jmaxe_6_Pmaxi_15_Jmaxi_6_pamaxx_10_tau_1.0000_mu_0.0233.h5'
 /
 &TIME_INTEGRATION_PAR
   numerical_scheme='RK4'
