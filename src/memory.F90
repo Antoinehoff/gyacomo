@@ -5,7 +5,7 @@ SUBROUTINE memory
   USE basic
   USE fields
   USE fourier_grid
-  USE time_integration  
+  USE time_integration
   USE model, ONLY: CO
 
   USE prec_const
@@ -22,14 +22,12 @@ SUBROUTINE memory
 
   ! Collision matrix
   IF (CO .EQ. -1) THEN
-    CALL allocate_array(  Ceepj, ns_e,ne_e, 1,(pmaxe+1)*(jmaxe+1))
-    CALL allocate_array( CeipjT, ns_e,ne_e, 1,(pmaxe+1)*(jmaxe+1))
-    CALL allocate_array( CeipjF, ns_e,ne_e, 1,(pmaxi+1)*(jmaxi+1))
-  
-    CALL allocate_array(  Ciipj, ns_i,ne_i, 1,(pmaxi+1)*(jmaxi+1))
-    CALL allocate_array( CiepjT, ns_i,ne_i, 1,(pmaxi+1)*(jmaxi+1))
-    CALL allocate_array( CiepjF, ns_i,ne_i, 1,(pmaxe+1)*(jmaxe+1))
+    CALL allocate_array(  Ceepj, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1))
+    CALL allocate_array( CeipjT, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1))
+    CALL allocate_array( CeipjF, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxi+1)*(jmaxi+1))
 
-    write(*,*) 'ns_i=',ns_i,', ns_e=',ns_e
+    CALL allocate_array(  Ciipj, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1))
+    CALL allocate_array( CiepjT, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1))
+    CALL allocate_array( CiepjF, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxe+1)*(jmaxe+1))
   ENDIF
 END SUBROUTINE memory
