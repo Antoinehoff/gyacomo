@@ -7,7 +7,7 @@ MODULE fourier_grid
 
   !   GRID Namelist
   INTEGER,  PUBLIC, PROTECTED :: pmaxe = 2      ! The maximal electron Hermite-moment computed
-  INTEGER,  PUBLIC, PROTECTED :: jmaxe = 2      ! The maximal electron Laguerre-moment computed  
+  INTEGER,  PUBLIC, PROTECTED :: jmaxe = 2      ! The maximal electron Laguerre-moment computed
   INTEGER,  PUBLIC, PROTECTED :: pmaxi = 2      ! The maximal ion Hermite-moment computed
   INTEGER,  PUBLIC, PROTECTED :: jmaxi = 2      ! The maximal ion Laguerre-moment computed
   INTEGER,  PUBLIC, PROTECTED :: nkr   = 10     ! Number of total internal grid points in kr
@@ -20,7 +20,6 @@ MODULE fourier_grid
   ! Indices of s -> start , e-> END
   INTEGER, PUBLIC, PROTECTED ::  ips_e,ipe_e, ijs_e,ije_e
   INTEGER, PUBLIC, PROTECTED ::  ips_i,ipe_i, ijs_i,ije_i
-  INTEGER, PUBLIC, PROTECTED ::  ns_e,ne_e, ns_i,ne_i     !start/end indices for coll. mat.
   INTEGER, PUBLIC, PROTECTED ::  ikrs, ikre, ikzs, ikze
 
   ! Toroidal direction
@@ -30,7 +29,7 @@ MODULE fourier_grid
   ! Grids containing position in fourier space
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: kzarray
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: krarray
-  
+
   ! Grid containing the polynomials degrees
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: parray_e
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: parray_i
@@ -47,10 +46,10 @@ CONTAINS
   SUBROUTINE set_krgrid
     USE prec_const
     IMPLICIT NONE
-    INTEGER :: ikr  
+    INTEGER :: ikr
     ! Start and END indices of grid
     ikrs = 1
-    ikre = nkr    
+    ikre = nkr
     ! Grid spacings, precompute some inverses
     IF ( nkr .GT. 1 ) THEN ! To avoid case with 0 intervals
       deltakr = (krmax - krmin) / REAL(nkr-1,dp)
@@ -70,7 +69,7 @@ CONTAINS
     INTEGER :: ikz
     ! Start and END indices of grid
     ikzs = 1
-    ikze = nkz    
+    ikze = nkz
     ! Grid spacings, precompute some inverses
     IF ( nkz .GT. 1 ) THEN
       deltakz = (kzmax - kzmin) / REAL(nkz-1,dp)
@@ -89,7 +88,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER :: ip, ij
     ips_e = 1; ipe_e = pmaxe + 1
-    ips_i = 1; ipe_i = pmaxi + 1    
+    ips_i = 1; ipe_i = pmaxi + 1
     ALLOCATE(parray_e(ips_e:ipe_e))
     ALLOCATE(parray_i(ips_i:ipe_i))
     DO ip = ips_e,ipe_e; parray_e(ip) = ip-1; END DO
@@ -101,9 +100,6 @@ CONTAINS
     ALLOCATE(jarray_i(ijs_i:ije_i))
     DO ij = ijs_e,ije_e; jarray_e(ij) = ij-1; END DO
     DO ij = ijs_i,ije_i; jarray_i(ij) = ij-1; END DO
-
-    ns_e = bare(ips_e,ijs_e); ne_e = bare(ipe_e,ije_e)
-    ns_i = bari(ips_i,ijs_i); ne_i = bari(ipe_i,ije_i)
 
   END SUBROUTINE set_pj
 
@@ -146,17 +142,17 @@ CONTAINS
     CALL attach(fidres, TRIM(str), "kzmax", kzmax)
   END SUBROUTINE fourier_grid_outputinputs
 
-  
-  FUNCTION bare(ip,ij)
+
+  FUNCTION bare(p_,j_)
     IMPLICIT NONE
-    INTEGER :: bare, ip, ij
-    bare = (jmaxe+1)*ip + ij + 1
+    INTEGER :: bare, p_, j_
+    bare = (jmaxe+1)*p_ + j_ + 1
   END FUNCTION
 
-  FUNCTION bari(ip,ij)
+  FUNCTION bari(p_,j_)
     IMPLICIT NONE
-    INTEGER :: bari, ip, ij
-    bari = bare(pmaxe,jmaxe) + (jmaxi+1)*ip + ij + 1
+    INTEGER :: bari, p_, j_
+    bari = (jmaxi+1)*p_ + j_ + 1
   END FUNCTION
 
 
