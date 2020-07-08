@@ -32,7 +32,7 @@ SUBROUTINE moments_eq_rhs
   nu_i  = nu * sigma_e * (tau_i)**(-3._dp/2._dp)/SQRT2 ! ion-ion collision frequ.
   nu_ee  = nu_e/SQRT2 ! e-e coll. frequ.
   nu_ie  = nu*sigma_e**2 ! i-e coll. frequ.
- 
+
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!!!!!!!! Electrons moments RHS !!!!!!!!!
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -56,7 +56,7 @@ SUBROUTINE moments_eq_rhs
       ! N_e^{pj} coeff
       xNapj   = -taue_qe_etaB * 2._dp*(ip_dp + ij_dp + 1._dp)
 
-      !! Collision operator pj terms 
+      !! Collision operator pj terms
       xCapj = -nu_e*(ip_dp + 2._dp*ij_dp) !DK Lenard-Bernstein basis
       ! Dougherty part
       IF ( CO .EQ. -2) THEN
@@ -72,7 +72,7 @@ SUBROUTINE moments_eq_rhs
           xCa20 = 0._dp
           xCa01 = 0._dp
           xCa10 = nu_e
-        ELSE 
+        ELSE
           xCa20 = 0._dp; xCa01 = 0._dp; xCa10 = 0._dp
         ENDIF
       ENDIF
@@ -154,21 +154,21 @@ SUBROUTINE moments_eq_rhs
             TColl =  xCapj* moments_e(ip,ij,ikr,ikz,updatetlevel)&
                    + TColl20 + TColl01 + TColl10
 
-          ELSEIF (CO .EQ. -1) THEN ! Full Coulomb (COSOlver matrix)
+          ELSEIF (CO .EQ. -1) THEN ! Full Coulomb for electrons (COSOlver matrix)
 
             TColl = 0._dp ! Initialization
 
-            ploopee: DO ip2 = 1,pmaxe ! sum the electron-self and electron-ion test terms
-              jloopee: DO ij2 = 1,jmaxe
-                TColl = TColl - moments_e(ip2,ij2,ikr,ikz,updatetlevel) &
+            ploopee: DO ip2 = 1,pmaxe+1 ! sum the electron-self and electron-ion test terms
+              jloopee: DO ij2 = 1,jmaxe+1
+                TColl = TColl + moments_e(ip2,ij2,ikr,ikz,updatetlevel) &
                    *( nu_e  * CeipjT(bare(ip-1,ij-1), bare(ip2-1,ij2-1)) &
-                     +nu_ee *  Ceepj(bare(ip-1,ij-1), bare(ip2-1,ij2-1)))
+                     +nu_ee * Ceepj (bare(ip-1,ij-1), bare(ip2-1,ij2-1)))
               ENDDO jloopee
             ENDDO ploopee
 
-            ploopei: DO ip2 = 1,pmaxi ! sum the electron-ion field terms
-              jloopei: DO ij2 = 1,jmaxi
-                TColl = TColl - moments_i(ip2,ij2,ikr,ikz,updatetlevel) &
+            ploopei: DO ip2 = 1,pmaxi+1 ! sum the electron-ion field terms
+              jloopei: DO ij2 = 1,jmaxi+1
+                TColl = TColl + moments_i(ip2,ij2,ikr,ikz,updatetlevel) &
                   *(nu_e * CeipjF(bare(ip-1,ij-1), bari(ip2-1,ij2-1)))
               END DO jloopei
             ENDDO ploopei
@@ -221,7 +221,7 @@ SUBROUTINE moments_eq_rhs
       ! x N_i^{pj} coeff
       xNapj   = -taui_qi_etaB * 2._dp*(ip_dp + ij_dp + 1._dp)
 
-      !! Collision operator pj terms 
+      !! Collision operator pj terms
       xCapj = -nu_i*(ip_dp + 2._dp*ij_dp) !DK Lenard-Bernstein basis
       ! Dougherty part
       IF ( CO .EQ. -2) THEN
@@ -237,7 +237,7 @@ SUBROUTINE moments_eq_rhs
           xCa20 = 0._dp
           xCa01 = 0._dp
           xCa10 = nu_i
-        ELSE 
+        ELSE
           xCa20 = 0._dp; xCa01 = 0._dp; xCa10 = 0._dp
         ENDIF
       ENDIF
@@ -256,7 +256,7 @@ SUBROUTINE moments_eq_rhs
 
       ! Recursive factorial
       IF (ij_dp .GT. 0) THEN
-        factj = factj * ij_dp 
+        factj = factj * ij_dp
       ELSE
         factj = 1._dp
       ENDIF
@@ -319,29 +319,31 @@ SUBROUTINE moments_eq_rhs
             TColl =  xCapj* moments_i(ip,ij,ikr,ikz,updatetlevel)&
                    + TColl20 + TColl01 + TColl10
 
-          ELSEIF (CO .EQ. -1) THEN !!! Full Coulomb (COSOlver matrix) !!!
+          ELSEIF (CO .EQ. -1) THEN !!! Full Coulomb for ions (COSOlver matrix) !!!
 
             TColl = 0._dp ! Initialization
 
-            ploopii: DO ip2 = 1,pmaxi ! sum the electron-self and electron-ion test terms
-              jloopii: DO ij2 = 1,jmaxi
-                TColl = TColl - moments_i(ip2,ij2,ikr,ikz,updatetlevel) &
+            ploopii: DO ip2 = 1,pmaxi+1 ! sum the ion-self and ion-electron test terms
+              jloopii: DO ij2 = 1,jmaxi+1
+                TColl = TColl + moments_i(ip2,ij2,ikr,ikz,updatetlevel) &
                     *( nu_ie * CiepjT(bari(ip-1,ij-1), bari(ip2-1,ij2-1)) &
-                      +nu_i  *  Ciipj(bari(ip-1,ij-1), bari(ip2-1,ij2-1)))
+                      +nu_i  * Ciipj (bari(ip-1,ij-1), bari(ip2-1,ij2-1)))
               ENDDO jloopii
             ENDDO ploopii
 
-            ploopie: DO ip2 = 1,pmaxe ! sum the electron-ion field terms
-              jloopie: DO ij2 = 1,jmaxe
-                TColl = TColl - moments_e(ip2,ij2,ikr,ikz,updatetlevel) &
+            ploopie: DO ip2 = 1,pmaxe+1 ! sum the ion-electron field terms
+              jloopie: DO ij2 = 1,jmaxe+1
+                TColl = TColl + moments_e(ip2,ij2,ikr,ikz,updatetlevel) &
                   *(nu_ie * CiepjF(bari(ip-1,ij-1), bare(ip2-1,ij2-1)))
               ENDDO jloopie
             ENDDO ploopie
 
+            write(25,*) TColl
+
           ELSEIF (CO .EQ. 0) THEN! Lenhard Bernstein
             TColl = xCapj * moments_i(ip,ij,ikr,ikz,updatetlevel)
           ENDIF
-  
+
           !! Electrical potential term
           IF ( (ip .EQ. 1) .OR. (ip .EQ. 3) ) THEN ! kronecker p0 or p2
             kernelj    = b_i2**(ij-1) * exp(-b_i2)/factj
