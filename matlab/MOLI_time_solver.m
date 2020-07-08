@@ -25,7 +25,7 @@ options.MOLI = 1;    % 1 -> Solve MOLI, 0 -> off
 options.solver.solver = 3;
 
 % MOLI Linear Fit Solver
-options.LinFitSolver = 2;
+options.LinFitSolver = 0;
 
 %% Main parameter scan
 
