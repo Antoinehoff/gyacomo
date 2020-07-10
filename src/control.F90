@@ -52,10 +52,10 @@ SUBROUTINE control
      CALL stepon
      time  = time  + dt
 
+     CALL diagnose(step)
+
      CALL tesend
      IF( nlend ) EXIT ! exit do loop
-
-     CALL diagnose(step)
 
      ! CALL write_restart ! if want to write a restart file every so often (in case of crash)
   END DO
