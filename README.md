@@ -21,7 +21,10 @@ Roadmap :
 	0.6 Benchmarks now include Dougherty, Lenard-Bernstein and Full Coulomb collision operators
 	    Note : for full Coulomb, one must store a precomputed matrix from COSOlver in the iCa folder
 
-1. Implementation of the non linear Poisson brackets term 
+1. Implementation of the non linear Poisson brackets term
 
-	1.0 use MKL FFT library and Orzag rule to compute the convolution in the non linear term as a product
+	1.0 FFTW3 has been used to treat the convolution as a product and discrete fourier transform
 
+	1.1 Methods in fourier_mod.f90 have been validated by tests on Hasegawa Wakatani system
+
+	1.1 Qualitative test : find similar turbulences as Hasegawa Wakatani system with few moments
