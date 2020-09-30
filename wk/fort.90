@@ -1,16 +1,59 @@
 &BASIC
-  nrun=100000
-  dt=0.01
-  tmax=200
+  nrun   = 100000000
+  dt     = 0.001
+  tmax   = 200
+  RESTART = .true.
 /
 &GRID
-  pmaxe =5
-  jmaxe = 3
-  pmaxi = 5
-  jmaxi = 3
-  nkr   = 1
-  krmin = 0
-  krmax = 0
-  nkz   = 1
-  kzmin = 0.1
-  kzmax = 0.1
+  pmaxe =1
+  jmaxe = 0
+  pmaxi = 1
+  jmaxi = 0
+  Nr   = 64
+  Lr = 20
+  Nz   = 64
+  Lz = 20
+/
+&OUTPUT_PAR
+  nsave_0d = 0
+  nsave_1d = 0
+  nsave_2d = 1000
+  nsave_5d = 1000
+  write_Ni00    = .true.
+  write_moments = .true.
+  write_phi     = .true.
+  write_non_lin     = .true.
+  write_doubleprecision = .true.
+  resfile0      = 'SwoK_32x64_L_20_P_1_J_0_nB_0.5_nN_1_mu_1e-04_'
+  rstfile0      = '../checkpoint/cp_SwoK_32x64_L_20_P_1_J_0_nB_0.5_nN_1_mu_1e-04_'
+  job2load      = 0
+/
+&MODEL_PAR
+  ! Collisionality
+  CO      = 0
+  NON_LIN = .true.
+  mu      = 0.0001
+  nu      = 0
+  tau_e   = 1
+  tau_i   = 1
+  sigma_e = 0.023338
+  sigma_i = 1
+  q_e     = -1
+  q_i     = 1
+  eta_n   = 1
+  eta_T   = 0
+  eta_B   = 0.5
+  lambdaD = 0
+/
+&INITIAL_CON
+  only_Na00         =.false.
+  initback_moments  =0.0001
+  initnoise_moments =5e-05
+  iseed             =42
+  selfmat_file      ='../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_1_Jmaxe_0_Pmaxi_1_Jmaxi_0_pamaxx_10.h5'
+  eimat_file        ='../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_1_Jmaxe_0_Pmaxi_1_Jmaxi_0_pamaxx_10_tau_1.0000_mu_0.0233.h5'
+  iemat_file        ='../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_1_Jmaxe_0_Pmaxi_1_Jmaxi_0_pamaxx_10_tau_1.0000_mu_0.0233.h5'
+/
+&TIME_INTEGRATION_PAR
+  numerical_scheme='RK4'
+/

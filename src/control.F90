@@ -27,7 +27,7 @@ SUBROUTINE control
   CALL readinputs
   WRITE(*,'(a/)') '...input parameters read'
 
-  !                   1.4     Set auxiliary values (allocate arrays, set laplace operator, ...)
+  !                   1.4     Set auxiliary values (allocate arrays, set grid, ...)
   WRITE(*,*) 'Calculate auxval...'
   CALL auxval
   WRITE(*,'(a/)') '...auxval calculated'

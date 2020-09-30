@@ -7,6 +7,7 @@ SUBROUTINE moments_eq_rhs
   USE grid
   USE model
   USE prec_const
+  USE utility, ONLY : is_nan
   IMPLICIT NONE
 
   INTEGER     :: ip2, ij2 ! loops indices
@@ -20,8 +21,8 @@ SUBROUTINE moments_eq_rhs
   REAL(dp)    :: xCapj,   xCa20,   xCa01, xCa10 ! Coll. factors depending on the pj loop
   COMPLEX(dp) :: TNapj, TNapp2j, TNapm2j, TNapjp1, TNapjm1, Tphi
   COMPLEX(dp) :: TColl, TColl20, TColl01, TColl10 ! terms of the rhs
+  COMPLEX(dp) :: test_nan
   REAL(dp)    :: nu_e, nu_i, nu_ee, nu_ie ! Species collisional frequency
-!write(*,*) '----------------------------------------'
 
   !Precompute species dependant factors
   taue_qe_etaB    = tau_e/q_e * eta_B ! factor of the magnetic moment coupling
@@ -181,7 +182,11 @@ SUBROUTINE moments_eq_rhs
           IF ( (ip .EQ. 1) .OR. (ip .EQ. 3) ) THEN ! kronecker p0 or  p2
             kernelj    = b_e2**(ij-1) * exp(-b_e2)/factj
             kerneljp1  = kernelj * b_e2  /(ij_dp + 1._dp)
-            kerneljm1  = kernelj * ij_dp / b_e2
+            IF ( b_e2 .NE. 0 ) THEN
+              kerneljm1  = kernelj * ij_dp / b_e2
+            ELSE
+              kerneljm1 = 0.5_dp
+            ENDIF
             Tphi = (xphij*kernelj + xphijp1*kerneljp1 + xphijm1*kerneljm1) * phi(ikr,ikz)
           ELSE
             Tphi = 0._dp
@@ -192,10 +197,11 @@ SUBROUTINE moments_eq_rhs
               -imagu * kz * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
                + TColl
 
-          ! Adding non linearity
+          ! Adding non linearity and Hyperdiffusivity
           IF ( NON_LIN ) THEN
             moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
-              moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) - Sepj(ip,ij,ikr,ikz)
+              moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) - Sepj(ip,ij,ikr,ikz) &
+              - mu*kperp2**2 * moments_rhs_e(ip,ij,ikr,ikz,updatetlevel)
           ENDIF
 
         END DO kzloope
@@ -352,7 +358,11 @@ SUBROUTINE moments_eq_rhs
           IF ( (ip .EQ. 1) .OR. (ip .EQ. 3) ) THEN ! kronecker p0 or p2
             kernelj    = b_i2**(ij-1) * exp(-b_i2)/factj
             kerneljp1  = kernelj * b_i2  /(ij_dp + 1._dp)
-            kerneljm1  = kernelj * ij_dp / b_i2
+            IF ( b_i2 .NE. 0 ) THEN
+              kerneljm1  = kernelj * ij_dp / b_i2
+            ELSE
+              kerneljm1 = 0.5_dp
+            ENDIF
             Tphi = (xphij*kernelj + xphijp1*kerneljp1 + xphijm1*kerneljm1) * phi(ikr,ikz)
           ELSE
             Tphi = 0._dp
@@ -363,10 +373,11 @@ SUBROUTINE moments_eq_rhs
               -imagu * kz * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
                + TColl
 
-          ! Adding non linearity
+          ! Adding non linearity and Hyperdiffusivity
           IF ( NON_LIN ) THEN
            moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
-             moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) - Sipj(ip,ij,ikr,ikz)
+             moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) - Sipj(ip,ij,ikr,ikz)&
+             - mu*kperp2**2 * moments_rhs_i(ip,ij,ikr,ikz,updatetlevel)
           ENDIF
         END DO kzloopi
       END DO krloopi

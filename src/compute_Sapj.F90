@@ -1,6 +1,6 @@
-SUBROUTINE compute_Sapj(Sepj, Sipj)
+SUBROUTINE compute_Sapj
 
-  USE array, ONLY : dnjs
+  USE array, ONLY : dnjs, Sepj, Sipj
   USE basic
   USE fourier
   USE fields!, ONLY : phi, moments_e, moments_i
@@ -11,8 +11,8 @@ SUBROUTINE compute_Sapj(Sepj, Sipj)
   IMPLICIT NONE
 
   COMPLEX(dp), DIMENSION(Nkr,Nkz) :: F_, G_, CONV
-  COMPLEX(dp), DIMENSION(ips_e:ipe_e, ijs_e:ije_e, Nkr, Nkz) :: Sepj
-  COMPLEX(dp), DIMENSION(ips_i:ipe_i, ijs_i:ije_i, Nkr, Nkz) :: Sipj
+  ! COMPLEX(dp), DIMENSION(ips_e:ipe_e, ijs_e:ije_e, Nkr, Nkz) :: Sepj
+  ! COMPLEX(dp), DIMENSION(ips_i:ipe_i, ijs_i:ije_i, Nkr, Nkz) :: Sipj
   INTEGER :: in, is
   REAL(dp):: kr, kz, kernel, be_2, bi_2, factn
   REAL(dp):: sigmae2_taue_o2, sigmai2_taui_o2
@@ -34,7 +34,7 @@ SUBROUTINE compute_Sapj(Sepj, Sipj)
             kernel = be_2**(in-1)/factn * EXP(-be_2)
 
             ! First convolution term
-            F_(ikr,ikz) = (kz - kr)  * phi(ikr,ikz) * kernel
+            F_(ikr,ikz) = (kz - kr)  * phi(ikr,ikz) !* kernel
             ! Second convolution term
             G_(ikr,ikz) = 0._dp ! initialization of the sum
             DO is = 1, MIN( in+ij-1, jmaxe+1 ) ! sum truncation on number of moments
@@ -78,7 +78,7 @@ SUBROUTINE compute_Sapj(Sepj, Sipj)
             bi_2   = sigmai2_taui_o2 * (kr**2 + kz**2)
             kernel = bi_2**(in-1)/factn * EXP(-bi_2)
 
-            F_(ikr,ikz) = (kz - kr)  * phi(ikr,ikz) * kernel
+            F_(ikr,ikz) = (kz - kr)  * phi(ikr,ikz) !* kernel
 
             G_(ikr,ikz) = 0._dp ! initialization of the sum
             DO is = 1, MIN( in+ij-1, jmaxi+1 )

@@ -7,6 +7,7 @@ MODULE model
 
   INTEGER,  PUBLIC, PROTECTED ::      CO =  0         ! Collision Operator
   LOGICAL,  PUBLIC, PROTECTED :: NON_LIN =  .true.    ! To turn on non linear bracket term
+  REAL(dp), PUBLIC, PROTECTED ::      mu =  0._dp     ! Hyperdiffusivity coefficient (for num. stability)
   REAL(dp), PUBLIC, PROTECTED ::      nu =  1._dp     ! Collision frequency
   REAL(dp), PUBLIC, PROTECTED ::   tau_e =  1._dp     ! Temperature
   REAL(dp), PUBLIC, PROTECTED ::   tau_i =  1._dp     !
@@ -30,7 +31,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /MODEL_PAR/ CO, NON_LIN, nu, tau_e, tau_i, sigma_e, sigma_i, &
+    NAMELIST /MODEL_PAR/ CO, NON_LIN, mu, nu, tau_e, tau_i, sigma_e, sigma_i, &
                          q_e, q_i, eta_n, eta_T, eta_B, lambdaD
 
     READ(lu_in,model_par)

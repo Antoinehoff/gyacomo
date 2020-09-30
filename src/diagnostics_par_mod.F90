@@ -12,15 +12,16 @@ MODULE diagnostics_par
   LOGICAL, PUBLIC, PROTECTED :: write_doubleprecision=.FALSE.
 
   INTEGER, PUBLIC, PROTECTED :: nsave_0d , nsave_1d , nsave_2d , nsave_5d
-  INTEGER, PUBLIC, PROTECTED :: nsave_cp = 1e3
+  INTEGER, PUBLIC, PROTECTED :: nsave_cp = 1e4
 
   !  HDF5 file
-  CHARACTER(len=64), PUBLIC :: resfile0 = "results"   ! Head of main result file name
-  CHARACTER(len=64), PUBLIC :: resfile                ! Main result file
-  INTEGER, PUBLIC           :: fidres                 ! FID for resfile
-  CHARACTER(len=64), PUBLIC :: rstfile0 = "restart"   ! Head of restart file name
-  CHARACTER(len=64), PUBLIC :: rstfile                ! Full restart file
-  INTEGER, PUBLIC           :: fidrst                 ! FID for restart file
+  CHARACTER(len=128), PUBLIC :: resfile0 = "results"   ! Head of main result file name
+  CHARACTER(len=128), PUBLIC :: resfile                ! Main result file
+  INTEGER, PUBLIC            :: job2load               ! jobnum of the checkpoint to load
+  INTEGER, PUBLIC            :: fidres                 ! FID for resfile
+  CHARACTER(len=128), PUBLIC :: rstfile0 = "restart"   ! Head of restart file name
+  CHARACTER(len=128), PUBLIC :: rstfile                ! Full restart file
+  INTEGER, PUBLIC            :: fidrst                 ! FID for restart file
 
   PUBLIC :: output_par_readinputs, output_par_outputinputs
 
@@ -36,7 +37,7 @@ CONTAINS
 
     NAMELIST /OUTPUT_PAR/ nsave_0d , nsave_1d , nsave_2d , nsave_5d
     NAMELIST /OUTPUT_PAR/ write_Ni00, write_moments, write_phi, write_non_lin, write_doubleprecision
-    NAMELIST /OUTPUT_PAR/ resfile0, rstfile0
+    NAMELIST /OUTPUT_PAR/ resfile0, rstfile0, job2load
 
     READ(lu_in,output_par)
 

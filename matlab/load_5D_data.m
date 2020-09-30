@@ -5,9 +5,15 @@ function [ data, p, j, kr, kz, time ] = load_5D_data( filename, variablename )
     j     = h5read(filename,['/data/var5d/',variablename,'/coordj']);
     kr    = h5read(filename,['/data/var5d/',variablename,'/coordkr']);
     kz    = h5read(filename,['/data/var5d/',variablename,'/coordkz']);
+
+    dt    = h5readatt(filename,'/data/input','dt');
+    nsave = h5readatt(filename,'/data/input','nsave_5d'); 
+    cstart= time(1)/dt/nsave;
+    
     data  = zeros(numel(p),numel(j),numel(kr),numel(kz),numel(time));
+    
     for it = 1:numel(time)
-        tmp          = h5read(filename,['/data/var5d/', variablename,'/', num2str(it,'%06d')]);
+        tmp          = h5read(filename,['/data/var5d/', variablename,'/', num2str(cstart+it,'%06d')]);
         data(:,:,:,:,it) = tmp.real + 1i * tmp.imaginary;
     end
 end

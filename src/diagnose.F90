@@ -173,6 +173,11 @@ SUBROUTINE diagnose(kstep)
   !
   IF (kstep .GE. 0) THEN
 
+    ! Terminal info
+    IF (MOD(cstep, INT(1.0/dt)) == 0) THEN
+     WRITE(*,"(F4.0,A,F4.0)") time,"/",tmax
+    ENDIF
+
      !                       2.1   0d history arrays
      IF (nsave_0d .NE. 0) THEN
         IF ( MOD(cstep, nsave_0d) == 0 ) THEN
@@ -187,9 +192,6 @@ SUBROUTINE diagnose(kstep)
      IF (nsave_2d .NE. 0) THEN
         IF (MOD(cstep, nsave_2d) == 0) THEN
            CALL diagnose_2d
-           IF (MOD(cstep, nsave_2d*10) == 0) THEN
-            WRITE(*,"(F4.0,A,F4.0)") time,"/",tmax
-           ENDIF
         END IF
      END IF
 
@@ -360,7 +362,7 @@ SUBROUTINE checkpoint_save
   USE time_integration
   IMPLICIT NONE
 
-  WRITE(rstfile,'(a,a3)') TRIM(rstfile0),'.h5'
+  WRITE(rstfile,'(a,a1,i2.2,a3)') TRIM(rstfile0),'_',jobnum,'.h5'
 
   CALL creatf(rstfile, fidrst, real_prec='d')
   CALL creatg(fidrst, '/Basic', 'Basic data')
@@ -377,6 +379,6 @@ SUBROUTINE checkpoint_save
   CALL putarr(fidrst, '/Basic/moments_i', moments_i(ips_i:ipe_i,ijs_i:ije_i,&
                                                     ikrs:ikre,ikzs:ikze,1),ionode=0)
   CALL closef(fidrst)
-  WRITE(*,'(3x,a)') "Checkpoint file "//TRIM(rstfile)//" saved!"
+  WRITE(*,'(3x,a)') "Checkpoint file "//TRIM(rstfile)//" saved"
 
 END SUBROUTINE checkpoint_save

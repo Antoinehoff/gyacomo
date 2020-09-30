@@ -7,20 +7,27 @@ SUBROUTINE inital
   USE model, ONLY : CO, NON_LIN
   USE prec_const
   USE coeff
+  USE time_integration
   USE array, ONLY : Sepj,Sipj
 
   implicit none
+
+  CALL set_updatetlevel(1)
   !!!!!! Set the moments arrays Nepj, Nipj !!!!!!
+  write(*,*) 'Init moments'
   IF ( RESTART ) THEN
-    CALL init_moments
+    CALL load_cp
   ELSE
-    CALL load_moments
+    CALL init_moments
   ENDIF
   !!!!!! Set phi !!!!!!
+  write(*,*) 'Init phi'
   CALL poisson
   !!!!!! Set Sepj, Sipj and dnjs coeff table !!!!!!
   IF ( NON_LIN ) THEN;
-    CALL compute_Sapj(Sepj,Sipj)
+    write(*,*) 'Init Sapj'
+    CALL compute_Sapj
+    WRITE(*,*) 'Building Dnjs table'
     CALL build_dnjs_table
   ENDIF
   !!!!!! Load the full coulomb collision operator coefficients !!!!!!
@@ -38,19 +45,18 @@ SUBROUTINE init_moments
   USE basic
   USE grid
   USE fields
-  USE initial_par
-  USE time_integration
   USE prec_const
+  USE utility, ONLY: checkfield
+  USE initial_par
   IMPLICIT NONE
 
-  INTEGER, DIMENSION(12) :: iseedarr
   REAL(dp) :: noise
+  REAL(dp) :: kr, kz, sigma, gain
+  INTEGER, DIMENSION(12) :: iseedarr
 
   ! Seed random number generator
   iseedarr(:)=iseed
   CALL RANDOM_SEED(PUT=iseedarr)
-
-  CALL set_updatetlevel(1)
 
   IF ( only_Na00 ) THEN ! Spike initialization on density only
 
@@ -61,30 +67,42 @@ SUBROUTINE init_moments
       END DO
     END DO
 
-  ELSE ! Broad noise initialization
-
-    DO ikr=ikrs,ikre
-      DO ikz=ikzs,ikze
-        DO ip=ips_e,ipe_e
-          DO ij=ijs_e,ije_e
-            CALL RANDOM_NUMBER(noise)
-            moments_e( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
-            moments_e( ip,ij, Nkz-ikz,    ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
-            moments_e( ip,ij,     ikz,Nkr-ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
-            moments_e( ip,ij, Nkz-ikz,Nkr-ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
-          END DO
-        END DO
-        DO ip=ips_i,ipe_i
-          DO ij=ijs_i,ije_i
-            CALL RANDOM_NUMBER(noise)
-            moments_i( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
-            moments_i( ip,ij, Nkz-ikz,    ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
-            moments_i( ip,ij,     ikz,Nkr-ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
-            moments_i( ip,ij, Nkz-ikz,Nkr-ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
-          END DO
+  ELSE
+    sigma = 2._dp
+    gain  = 0.5_dp
+    !**** Gaussian initialization (Hakim 2017)
+    moments_i = 0; moments_e = 0;
+      DO ikr=ikrs,ikre
+        kr = krarray(ikr)
+        DO ikz=ikzs,ikze
+          kz = kzarray(ikz)
+          moments_i( 1,1, ikr,ikz, :) = gain*sigma/SQRT2 * EXP(-(kr**2+kz**2)*sigma**2/4._dp)
+          moments_e( 1,1, ikr,ikz, :) = gain*sigma/SQRT2 * EXP(-(kr**2+kz**2)*sigma**2/4._dp)
         END DO
       END DO
-    END DO
+    ! Broad noise initialization
+    ! DO ikr=ikrs,ikre
+    !   DO ikz=ikzs,ikze
+    !     DO ip=ips_e,ipe_e
+    !       DO ij=ijs_e,ije_e
+    !         CALL RANDOM_NUMBER(noise)
+    !         moments_e( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
+    !         moments_e( ip,ij, Nkz-ikz,    ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
+    !         moments_e( ip,ij,     ikz,Nkr-ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
+    !         moments_e( ip,ij, Nkz-ikz,Nkr-ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
+    !       END DO
+    !     END DO
+    !     DO ip=ips_i,ipe_i
+    !       DO ij=ijs_i,ije_i
+    !         CALL RANDOM_NUMBER(noise)
+    !         moments_i( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
+    !         moments_i( ip,ij, Nkz-ikz,    ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
+    !         moments_i( ip,ij,     ikz,Nkr-ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
+    !         moments_i( ip,ij, Nkz-ikz,Nkr-ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
+    !       END DO
+    !     END DO
+    !   END DO
+    ! END DO
   ENDIF
 END SUBROUTINE init_moments
 !******************************************************************************!
@@ -92,21 +110,36 @@ END SUBROUTINE init_moments
 !******************************************************************************!
 !!!!!!! Load moments from a previous save
 !******************************************************************************!
-SUBROUTINE load_moments
-!  USE basic
-!  USE initial_par
-!  USE fields, ONLY : moments_e, moments_i
-!  USE futils, ONLY : openf, getarr, closef
-!  IMPLICIT NONE
-!
-!  INTEGER :: fid
-!
-!  CALL openf(backup_file,fid, 'r', 'D');
-!  CALL getarr(fid, '/moments_e', moments_e) ! Nepj
-!  CALL getarr(fid, '/moments_i', moments_i) ! Nipj
-!  CALL getarr(fid, '/time', time) ! time
-!  CALL closef(fid)
-END SUBROUTINE
+SUBROUTINE load_cp
+  USE basic
+  USE futils,          ONLY: openf, closef, getarr, getatt
+  USE grid
+  USE fields
+  USE diagnostics_par
+  USE time_integration
+  IMPLICIT NONE
+
+  WRITE(rstfile,'(a,a1,i2.2,a3)') TRIM(rstfile0),'_',job2load,'.h5'
+
+  WRITE(*,'(3x,a)') "Resume from previous run"
+
+  CALL openf(rstfile, fidrst)
+  CALL getatt(fidrst, '/Basic', 'cstep', cstep)
+  CALL getatt(fidrst, '/Basic', 'time', time)
+  CALL getatt(fidrst, '/Basic', 'jobnum', jobnum)
+  jobnum = jobnum+1
+  CALL getatt(fidrst, '/Basic', 'iframe2d',iframe2d)
+  CALL getatt(fidrst, '/Basic', 'iframe5d',iframe5d)
+  iframe2d = iframe2d-1; iframe5d = iframe5d-1
+
+  ! Read state of system from restart file
+  CALL getarr(fidrst, '/Basic/moments_e', moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),ionode=0)
+  CALL getarr(fidrst, '/Basic/moments_i', moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),ionode=0)
+  CALL closef(fidrst)
+
+  WRITE(*,'(3x,a)') "Reading from restart file "//TRIM(rstfile)//" completed!"
+
+END SUBROUTINE load_cp
 !******************************************************************************!
 
 !******************************************************************************!

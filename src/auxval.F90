@@ -11,6 +11,8 @@ subroutine auxval
   INTEGER :: irows,irowe, irow, icol
   WRITE(*,*) '=== Set auxiliary values ==='
 
+  call set_rgrid
+  call set_zgrid
   call set_krgrid
   call set_kzgrid
   call set_pj

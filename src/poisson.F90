@@ -42,8 +42,6 @@ SUBROUTINE poisson
       sum_kernel_mom_e = Kne*moments_e(1, 1, ikr, ikz, updatetlevel)
       sum_kernel2_e    = Kne**2
 
-!write(*,*) 'K0e = ', Kne
-
       ! loop over n only if the max polynomial degree is 1 or more
       if (jmaxe .GT. 0) then
         DO ine=2,jmaxe+1 ! ine = n+1
@@ -53,7 +51,6 @@ SUBROUTINE poisson
 
           sum_kernel_mom_e  = sum_kernel_mom_e  + Kne * moments_e(1, ine, ikr, ikz, updatetlevel)
           sum_kernel2_e     = sum_kernel2_e     + Kne**2 ! ... sum recursively ...
-!write(*,*) 'K',ine-1,'e = ', Kne
         END DO
       endif
 
@@ -65,8 +62,6 @@ SUBROUTINE poisson
       sum_kernel_mom_i = Kni*moments_i(1, 1, ikr, ikz, updatetlevel)
       sum_kernel2_i    = Kni**2
 
-!write(*,*) 'K0i = ', Kni
-
       ! loop over n only if the max polynomial degree is 1 or more
       if (jmaxi .GT. 0) then
         DO ini=2,jmaxi+1
@@ -76,7 +71,6 @@ SUBROUTINE poisson
 
           sum_kernel_mom_i  = sum_kernel_mom_i  + Kni * moments_i(1, ini, ikr, ikz, updatetlevel)
           sum_kernel2_i     = sum_kernel2_i     + Kni**2 ! ... sum recursively ...
-!write(*,*) 'K',ini-1,'i = ', Kni
         END DO
       endif
       !!! Assembling the poisson equation
@@ -85,12 +79,7 @@ SUBROUTINE poisson
                         + qi2_taui * (1._dp - sum_kernel2_i)
       gammaD_phi = q_e * sum_kernel_mom_e + q_i * sum_kernel_mom_i
 
-      IF ( (alphaD .EQ. 0._dp) .AND. (gammaD .EQ. 0._dp) ) THEN
-        write(*,*) "Warning : 0/0 occuring"
-        phi(ikr,ikz) = 0._dp
-      ELSE
-        phi(ikr, ikz) =  gammaD_phi/gammaD
-      ENDIF
+      phi(ikr, ikz) =  gammaD_phi/gammaD
 
     END DO
   END DO
