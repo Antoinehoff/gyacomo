@@ -36,14 +36,13 @@ END SUBROUTINE inital
 !******************************************************************************!
 SUBROUTINE init_moments
   USE basic
-  USE fourier_grid
+  USE grid
   USE fields
   USE initial_par
   USE time_integration
   USE prec_const
   IMPLICIT NONE
 
-  INTEGER :: ip,ij, ikr,ikz
   INTEGER, DIMENSION(12) :: iseedarr
   REAL(dp) :: noise
 
@@ -116,7 +115,7 @@ END SUBROUTINE
 SUBROUTINE build_dnjs_table
   USE basic
   USE array, Only : dnjs
-  USE fourier_grid, Only : jmaxe, jmaxi
+  USE grid, Only : jmaxe, jmaxi
   USE coeff
   IMPLICIT NONE
 
@@ -150,14 +149,14 @@ END SUBROUTINE
 !******************************************************************************!
 SUBROUTINE load_FC_mat ! Works only for a partiular file for now with P,J <= 15,6
   USE basic
-  USE fourier_grid
+  USE grid
   USE initial_par
   USE array
   use model
   USE futils, ONLY : openf, getarr, closef
   IMPLICIT NONE
 
-  INTEGER :: ip,ij, ip2,ij2
+  INTEGER :: ip2,ij2
   INTEGER :: fid1, fid2, fid3, fid4
 
   !!!!!!!!!!!! Electron matrices !!!!!!!!!!!!

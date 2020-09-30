@@ -53,7 +53,7 @@ CONTAINS
 
   FUNCTION checkfield(field,str) RESULT(mlend)
 
-    USE fourier_grid
+    USE grid
 
     use prec_const
     IMPLICIT NONE

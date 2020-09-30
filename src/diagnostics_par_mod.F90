@@ -12,15 +12,15 @@ MODULE diagnostics_par
   LOGICAL, PUBLIC, PROTECTED :: write_doubleprecision=.FALSE.
 
   INTEGER, PUBLIC, PROTECTED :: nsave_0d , nsave_1d , nsave_2d , nsave_5d
-
+  INTEGER, PUBLIC, PROTECTED :: nsave_cp = 1e3
 
   !  HDF5 file
   CHARACTER(len=64), PUBLIC :: resfile0 = "results"   ! Head of main result file name
   CHARACTER(len=64), PUBLIC :: resfile                ! Main result file
-  INTEGER, PUBLIC :: fidres                           ! FID for resfile
+  INTEGER, PUBLIC           :: fidres                 ! FID for resfile
   CHARACTER(len=64), PUBLIC :: rstfile0 = "restart"   ! Head of restart file name
   CHARACTER(len=64), PUBLIC :: rstfile                ! Full restart file
-  INTEGER, PUBLIC :: fidrst                           ! FID for restart file
+  INTEGER, PUBLIC           :: fidrst                 ! FID for restart file
 
   PUBLIC :: output_par_readinputs, output_par_outputinputs
 

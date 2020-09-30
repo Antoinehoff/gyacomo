@@ -4,22 +4,22 @@ MODULE basic
   use prec_const
   IMPLICIT none
 
-  LOGICAL  :: RESTART=.true.    ! To restart the simulation or look for saved state
-  INTEGER  :: nrun=1            ! Number of time steps to run
-  real(dp) :: tmax=100000.0     ! Maximum simulation time
-  real(dp) :: dt=1.0            ! Time step
-  real(dp) :: time=0            ! Current simulation time (Init from restart file)
+  INTEGER  :: nrun   = 1           ! Number of time steps to run
+  real(dp) :: tmax   = 100000.0    ! Maximum simulation time
+  real(dp) :: dt     = 1.0         ! Time step
+  real(dp) :: time   = 0           ! Current simulation time (Init from restart file)
 
-  INTEGER :: jobnum=0                  ! Job number
-  INTEGER :: step=0                    ! Calculation step of this run
-  INTEGER :: cstep=0                   ! Current step number (Init from restart file)
-  LOGICAL :: nlend=.FALSE.             ! Signal end of run
+  INTEGER :: jobnum  = 0           ! Job number
+  INTEGER :: step    = 0           ! Calculation step of this run
+  INTEGER :: cstep   = 0           ! Current step number (Init from restart file)
+  LOGICAL :: RESTART = .FALSE.     ! Signal end of run
+  LOGICAL :: nlend   = .FALSE.     ! Signal end of run
 
-  INTEGER :: ierr                      ! flag for MPI error
-  INTEGER :: iframe1d                  ! counting the number of times 1d datasets are outputed (for diagnose)
-  INTEGER :: iframe2d                  ! counting the number of times 2d datasets are outputed (for diagnose)
-  INTEGER :: iframe3d                  ! counting the number of times 3d datasets are outputed (for diagnose)
-  INTEGER :: iframe5d                  ! counting the number of times 5d datasets are outputed (for diagnose)
+  INTEGER :: ierr                  ! flag for MPI error
+  INTEGER :: iframe1d              ! counting the number of times 1d datasets are outputed (for diagnose)
+  INTEGER :: iframe2d              ! counting the number of times 2d datasets are outputed (for diagnose)
+  INTEGER :: iframe3d              ! counting the number of times 3d datasets are outputed (for diagnose)
+  INTEGER :: iframe5d              ! counting the number of times 5d datasets are outputed (for diagnose)
 
   !  List of logical file units
   INTEGER :: lu_in   = 90              ! File duplicated from STDIN
@@ -43,10 +43,9 @@ CONTAINS
     use prec_const
     IMPLICIT NONE
 
-    NAMELIST /BASIC/  nrun, dt, tmax
+    NAMELIST /BASIC/  nrun, dt, tmax, RESTART
 
     READ(lu_in,basic)
-    !WRITE(*,basic)
 
   END SUBROUTINE basic_data
   !================================================================================

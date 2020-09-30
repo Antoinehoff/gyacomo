@@ -23,17 +23,17 @@ CONTAINS
     USE basic
     USE time_integration
     USE array
-    USE fourier_grid
+    USE grid
     use prec_const
     IMPLICIT NONE
 
     COMPLEX(dp), DIMENSION ( ikrs:ikre, ikzs:ikze, ntimelevel ) :: f
     COMPLEX(dp), DIMENSION ( ikrs:ikre, ikzs:ikze, ntimelevel ) :: f_rhs
-    INTEGER :: ikr, ikz, istage
+    INTEGER :: istage
 
-    SELECT CASE (updatetlevel)   
+    SELECT CASE (updatetlevel)
     CASE(1)
-      DO ikz=ikzs,ikze  
+      DO ikz=ikzs,ikze
         DO ikr=ikrs,ikre
           DO istage=1,ntimelevel
             f(ikr,ikz,1) = f(ikr,ikz,1) + dt*b_E(istage)*f_rhs(ikr,ikz,istage)
@@ -41,7 +41,7 @@ CONTAINS
         END DO
       END DO
     CASE DEFAULT
-      DO ikz=ikzs,ikze  
+      DO ikz=ikzs,ikze
         DO ikr=ikrs,ikre
           f(ikr,ikz,updatetlevel) = f(ikr,ikz,1);
           DO istage=1,updatetlevel-1

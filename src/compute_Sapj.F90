@@ -2,9 +2,9 @@ SUBROUTINE compute_Sapj(Sepj, Sipj)
 
   USE array, ONLY : dnjs
   USE basic
-  USE convolution
+  USE fourier
   USE fields!, ONLY : phi, moments_e, moments_i
-  USE fourier_grid
+  USE grid
   USE model
   USE prec_const
   USE time_integration!, ONLY : updatetlevel
@@ -13,7 +13,7 @@ SUBROUTINE compute_Sapj(Sepj, Sipj)
   COMPLEX(dp), DIMENSION(Nkr,Nkz) :: F_, G_, CONV
   COMPLEX(dp), DIMENSION(ips_e:ipe_e, ijs_e:ije_e, Nkr, Nkz) :: Sepj
   COMPLEX(dp), DIMENSION(ips_i:ipe_i, ijs_i:ije_i, Nkr, Nkz) :: Sipj
-  INTEGER :: ip, ij, in, is, ikr, ikz
+  INTEGER :: in, is
   REAL(dp):: kr, kz, kernel, be_2, bi_2, factn
   REAL(dp):: sigmae2_taue_o2, sigmai2_taui_o2
 
@@ -32,7 +32,7 @@ SUBROUTINE compute_Sapj(Sepj, Sipj)
             kz     = kzarray(ikz)
             be_2   = sigmae2_taue_o2 * (kr**2 + kz**2)
             kernel = be_2**(in-1)/factn * EXP(-be_2)
-            
+
             ! First convolution term
             F_(ikr,ikz) = (kz - kr)  * phi(ikr,ikz) * kernel
             ! Second convolution term
@@ -105,5 +105,5 @@ SUBROUTINE compute_Sapj(Sepj, Sipj)
     ENDDO jloopi
   ENDDO ploopi
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- 
+
 END SUBROUTINE compute_Sapj

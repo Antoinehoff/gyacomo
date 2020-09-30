@@ -4,13 +4,13 @@ SUBROUTINE poisson
   USE time_integration, ONLY: updatetlevel
   USE array
   USE fields
-  USE fourier_grid
+  USE grid
   use model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, lambdaD
 
   USE prec_const
   IMPLICIT NONE
 
-  INTEGER     :: ikr,ikz, ini,ine, i0j
+  INTEGER     :: ini,ine, i0j
   REAL(dp)    :: ini_dp, ine_dp
   REAL(dp)    :: kr, kz, kperp2
   REAL(dp)    :: Kne, Kni ! sub kernel factor for recursive build

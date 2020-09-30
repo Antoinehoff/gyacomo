@@ -4,12 +4,12 @@ SUBROUTINE moments_eq_rhs
   USE time_integration
   USE array
   USE fields
-  USE fourier_grid
+  USE grid
   USE model
   USE prec_const
   IMPLICIT NONE
 
-  INTEGER     :: ip,ij, ikr,ikz, ip2, ij2 ! loops indices
+  INTEGER     :: ip2, ij2 ! loops indices
   REAL(dp)    :: ip_dp, ij_dp
   REAL(dp)    :: kr, kz, kperp2
   REAL(dp)    :: taue_qe_etaB, taui_qi_etaB

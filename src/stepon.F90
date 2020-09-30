@@ -5,14 +5,14 @@ SUBROUTINE stepon
   USE time_integration
   USE fields, ONLY: moments_e, moments_i, phi
   USE array , ONLY: moments_rhs_e, moments_rhs_i, Sepj, Sipj
-  USE fourier_grid
+  USE grid
   USE advance_field_routine, ONLY: advance_time_level, advance_field
   USE model
   USE utility, ONLY: checkfield
   use prec_const
   IMPLICIT NONE
 
-  INTEGER :: num_step, ip,ij, ikr, ikz
+  INTEGER :: num_step
 
 
    DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4

@@ -129,6 +129,12 @@ ifdef MKL_LIB
 
 endif
 
+ifdef FFTW3DIR
+      LIBS  += -lfftw3
+      LDIRS += -L/usr/local/fftw3/lib
+      IDIRS += -I/usr/local/fftw3/include
+endif
+
 #
 # Add mumps libraries if preprocessor set
 #

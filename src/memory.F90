@@ -4,7 +4,7 @@ SUBROUTINE memory
   USE array
   USE basic
   USE fields
-  USE fourier_grid
+  USE grid
   USE time_integration
   USE model, ONLY: CO, NON_LIN
 

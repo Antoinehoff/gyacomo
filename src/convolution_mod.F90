@@ -9,7 +9,7 @@ MODULE convolution
   SUBROUTINE convolve_2D_F2F( F_2D, G_2D, C_2D )
 
       USE prec_const
-      USE fourier_grid, ONLY : Nkr, Nkz, Pad
+      USE grid, ONLY : Nkr, Nkz, Pad
       USE MKL_DFTI
 
       IMPLICIT NONE
@@ -53,7 +53,7 @@ MODULE convolution
 
       !CALL backward_FFT( F_2D )
       !CALL backward_FFT( G_2D )
-      
+
       !WRITE(*,*) 'C =  F/(Mkr *Mkz) x G/(Mkr *Mkz)..'
       DO ix=1,Mkr*Mkz
         C_1D(ix) = F_1D(ix)/Mkr/Mkz * G_1D(ix)/Mkr/Mkz
@@ -81,7 +81,7 @@ MODULE convolution
   SUBROUTINE convolve_2D_F2R( F_2D, G_2D, C_2D )
 
     USE prec_const
-    USE fourier_grid, ONLY : Nkr, Nkz, Pad
+    USE grid, ONLY : Nkr, Nkz, Pad
     USE MKL_DFTI
 
     IMPLICIT NONE
@@ -125,12 +125,12 @@ MODULE convolution
   END SUBROUTINE convolve_2D_F2R
 
 
-  !! Compute a forward FFT to go back to Fourier space 
+  !! Compute a forward FFT to go back to Fourier space
   !  - used to save computation after the sum of convolution_2D_F2R in compute_Sapj
   SUBROUTINE forward_FFT( C_2D )
 
     USE prec_const
-    USE fourier_grid, ONLY : Nkr, Nkz, Pad
+    USE grid, ONLY : Nkr, Nkz, Pad
     USE MKL_DFTI
 
     IMPLICIT NONE
@@ -177,7 +177,7 @@ MODULE convolution
   SUBROUTINE backward_FFT( C_2D )
 
     USE prec_const
-    USE fourier_grid, ONLY : Nkr, Nkz, Pad
+    USE grid, ONLY : Nkr, Nkz, Pad
     USE MKL_DFTI
 
     IMPLICIT NONE
