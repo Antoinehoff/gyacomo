@@ -40,9 +40,9 @@ SUBROUTINE moments_eq_rhs
     ip_dp = REAL(ip-1,dp) ! REAL index is one minus the loop index (0 to pmaxe)
 
     ! N_e^{p+2,j} coeff
-    xNapp2j = -taue_qe_etaB * SQRT((ip_dp + 1._dp) * (ip_dp + 2._dp))
+    xNapp2j = taue_qe_etaB * SQRT((ip_dp + 1._dp) * (ip_dp + 2._dp))
     ! N_e^{p-2,j} coeff
-    xNapm2j = -taue_qe_etaB * SQRT(ip_dp * (ip_dp - 1._dp))
+    xNapm2j = taue_qe_etaB * SQRT(ip_dp * (ip_dp - 1._dp))
 
     factj = 1.0 ! Start of the recursive factorial
 
@@ -50,11 +50,11 @@ SUBROUTINE moments_eq_rhs
       ij_dp = REAL(ij-1,dp) ! REAL index is one minus the loop index (0 to jmaxe)
 
       ! N_e^{p,j+1} coeff
-      xNapjp1 = taue_qe_etaB * (ij_dp + 1._dp)
+      xNapjp1 = -taue_qe_etaB * (ij_dp + 1._dp)
       ! N_e^{p,j-1} coeff
-      xNapjm1 = taue_qe_etaB * ij_dp
+      xNapjm1 = -taue_qe_etaB * ij_dp
       ! N_e^{pj} coeff
-      xNapj   = -taue_qe_etaB * 2._dp*(ip_dp + ij_dp + 1._dp)
+      xNapj   = taue_qe_etaB * 2._dp*(ip_dp + ij_dp + 1._dp)
 
       !! Collision operator pj terms
       xCapj = -nu_e*(ip_dp + 2._dp*ij_dp) !DK Lenard-Bernstein basis
@@ -187,10 +187,16 @@ SUBROUTINE moments_eq_rhs
             Tphi = 0._dp
           ENDIF
 
-          ! Sum of all precomputed terms
+          ! Sum of all linear terms
           moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
-              -imagu * kz * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 + Tphi)&
+              -imagu * kz * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
                + TColl
+
+          ! Adding non linearity
+          IF ( NON_LIN ) THEN
+            moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
+              moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) - Sepj(ip,ij,ikr,ikz)
+          ENDIF
 
         END DO kzloope
       END DO krloope
@@ -205,9 +211,9 @@ SUBROUTINE moments_eq_rhs
     ip_dp = REAL(ip-1,dp) ! REAL index is one minus the loop index (0 to pmaxi)
 
     ! x N_i^{p+2,j} coeff
-    xNapp2j = -taui_qi_etaB * SQRT((ip_dp + 1._dp) * (ip_dp + 2._dp))
+    xNapp2j = taui_qi_etaB * SQRT((ip_dp + 1._dp) * (ip_dp + 2._dp))
     ! x N_i^{p-2,j} coeff
-    xNapm2j = -taui_qi_etaB * SQRT(ip_dp * (ip_dp - 1._dp))
+    xNapm2j = taui_qi_etaB * SQRT(ip_dp * (ip_dp - 1._dp))
 
     factj = 1._dp ! Start of the recursive factorial
 
@@ -215,11 +221,11 @@ SUBROUTINE moments_eq_rhs
       ij_dp = REAL(ij-1,dp) ! REAL index is one minus the loop index (0 to jmaxi)
 
       ! x N_i^{p,j+1} coeff
-      xNapjp1 = taui_qi_etaB * (ij_dp + 1._dp)
+      xNapjp1 = -taui_qi_etaB * (ij_dp + 1._dp)
       ! x N_i^{p,j-1} coeff
-      xNapjm1 = taui_qi_etaB * ij_dp
+      xNapjm1 = -taui_qi_etaB * ij_dp
       ! x N_i^{pj} coeff
-      xNapj   = -taui_qi_etaB * 2._dp*(ip_dp + ij_dp + 1._dp)
+      xNapj   = taui_qi_etaB * 2._dp*(ip_dp + ij_dp + 1._dp)
 
       !! Collision operator pj terms
       xCapj = -nu_i*(ip_dp + 2._dp*ij_dp) !DK Lenard-Bernstein basis
@@ -338,8 +344,6 @@ SUBROUTINE moments_eq_rhs
               ENDDO jloopie
             ENDDO ploopie
 
-            write(25,*) TColl
-
           ELSEIF (CO .EQ. 0) THEN! Lenhard Bernstein
             TColl = xCapj * moments_i(ip,ij,ikr,ikz,updatetlevel)
           ENDIF
@@ -354,11 +358,16 @@ SUBROUTINE moments_eq_rhs
             Tphi = 0._dp
           ENDIF
 
-          ! Sum of all precomputed terms
+          ! Sum of linear terms
           moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
-              -imagu * kz * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 + Tphi)&
+              -imagu * kz * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
                + TColl
 
+          ! Adding non linearity
+          IF ( NON_LIN ) THEN
+           moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
+             moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) - Sipj(ip,ij,ikr,ikz)
+          ENDIF
         END DO kzloopi
       END DO krloopi
 

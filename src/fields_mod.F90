@@ -10,7 +10,6 @@ MODULE fields
 !------------------ELECTROSTATIC POTENTIAL------------------
 
   ! Normalized electric potential: \hat{\phi} ! (kr,kz)
-  COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: phi 
+  COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: phi
 
 END MODULE fields
-

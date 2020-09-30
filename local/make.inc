@@ -43,7 +43,7 @@ ifeq ($(OPTLEVEL), O) #optimized
      	  F90FLAGS += -O3 -xHOST
      endif
      ifeq ($(COMPTYPE), g) #gnu
-     	  F90FLAGS += -ffree-line-length-0 -O3 
+     	  F90FLAGS += -ffree-line-length-0 -O3
      endif
      ifeq ($(COMPTYPE), c) #cray
      	  F90FLAGS +=
@@ -56,7 +56,7 @@ ifeq ($(OPTLEVEL), g) #debug
      	  F90FLAGS += -g -traceback -CB
      endif
      ifeq ($(COMPTYPE), g) #gnu
-     	  F90FLAGS += -ffree-line-length-0 -g -fbacktrace -fcheck=all -pedantic -Wall 
+     	  F90FLAGS += -ffree-line-length-0 -g -fbacktrace -fcheck=all -pedantic -Wall
      endif
      ifeq ($(COMPTYPE), c) #cray
      	  F90FLAGS += -g -O0
@@ -86,13 +86,16 @@ IDIRS := -I$(SPC_LOCAL)/include/$(OPTLEVEL)
 
 #LIBS := -lbsplines -lfutils -lpppack -lpputils2 \
 #        -lhdf5_fortran -lhdf5 -lz -ldl -lpthread
-LIBS  := -lfutils -lhdf5_fortran -lhdf5 -lz -ldl -lpthread     
+LIBS  := -lfutils -lhdf5_fortran -lhdf5 -lz -ldl -lpthread
 LDIRS := -L$(SPC_LOCAL)/lib/$(OPTLEVEL) -L$(HDF5)/lib
+
+# Add Multiple-Precision Library
+LIBS += -lfm
 
 #
 # setup of MKL library
 # working well with intel compiler and intelmpi
-# MKL_LIB has to be set in .bashrc 
+# MKL_LIB has to be set in .bashrc
 #
 ifdef MKL_LIB
 
@@ -121,7 +124,7 @@ ifdef MKL_LIB
 	endif
      endif
 
-     LDIRS += -L$(MKL_LIB) 
+     LDIRS += -L$(MKL_LIB)
      IDIRS += -I$(MKL_LIB)/../../include
 
 endif
@@ -134,11 +137,11 @@ ifeq ($(USEMUMPS),1)
      IDIRS += -I$(MUMPS)/include
      LDIRS += -L$(MUMPS)/lib
      ifdef PARMETIS
-     	   LIBS  += -lparmetis -lmetis 
+     	   LIBS  += -lparmetis -lmetis
 	   LDIRS += -L$(PARMETIS)/lib -L$(METIS)/lib
      endif
      ifdef SCOTCH
-     	   LIBS  += -lesmumps -lscotch -lscotcherr 
+     	   LIBS  += -lesmumps -lscotch -lscotcherr
            LDIRS += -L$(SCOTCH)/lib
      endif
 endif
@@ -194,5 +197,5 @@ endif
 #Flag for finding external libraries in LDIR
 EXTLIBS   = $(LDIRS) -Wl,--start-group $(LIBS) -Wl,--end-group
 
-#Flag for finding external include files 
+#Flag for finding external include files
 EXTINC    = $(IDIRS)

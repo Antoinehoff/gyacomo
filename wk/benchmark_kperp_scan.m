@@ -9,6 +9,7 @@ OUTPUTS.nsave_5d = 0;
 OUTPUTS.write_Ni00    = '.true.';
 OUTPUTS.write_moments = '.true.';
 OUTPUTS.write_phi     = '.true.';
+OUTPUTS.write_non_lin = '.false.';
 OUTPUTS.write_doubleprecision = '.true.';
 OUTPUTS.resfile0      = '''results''';
 %% Grid parameters
@@ -24,6 +25,7 @@ GRID.kzmin = 0.1;
 GRID.kzmax = 1.5;
 %% Model parameters
 MODEL.CO      = -1;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
+MODEL.NON_LIN = 0;   % Non linear term
 MODEL.nu      = 0.01; % collisionality nu*L_perp/Cs0
 % temperature ratio T_a/T_e
 MODEL.tau_e   = 1.0;

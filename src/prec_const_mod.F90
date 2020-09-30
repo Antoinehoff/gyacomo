@@ -40,7 +40,7 @@ MODULE prec_const
   REAL(dp), PARAMETER :: onesixteenth=0.0625_dp
   REAL(dp), PARAMETER :: ninesixteenths=0.5625_dp
   REAL(dp), PARAMETER :: thirteentwelfths = 1.083333333333333333333333333333333333333333333_dp
-  COMPLEX(dp),  PARAMETER :: imagu = (0,-1)
+  COMPLEX(dp),  PARAMETER :: imagu = (0,1)
   CONTAINS
 
     SUBROUTINE INIT_PREC_CONST

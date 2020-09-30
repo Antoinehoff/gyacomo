@@ -92,8 +92,8 @@ params.nu               = MODEL.nu;    % electron/ion collision frequency ... on
 params.nuoveromegapemax = inf;         % Maximum ratio between electron/ion collision frequency and electron plasma frequency [See Banks et al. (2017)]. Set to inf if not desired !!!
 params.mu               = MODEL.sigma_e;   % sqrt(m_e/m_i)
 params.kpar             = 0.0;         % normalized parallel wave number to the major radius
-params.kperp            = GRID.kzmin;  % normalized perpendicular toroidal wave number to the soundLarmor radius. Note: If ions ==0 (e.g. EPW), kperp --> b
-params.kr               = GRID.krmin;  % Radial component of perpendicular vector
+params.kperp            = kz_MOLI;  % normalized perpendicular toroidal wave number to the soundLarmor radius. Note: If ions ==0 (e.g. EPW), kperp --> b
+params.kr               = kr_MOLI;  % Radial component of perpendicular vector
 params.alphaD           = 0.0;         % (k*Debye length)^2
 params.Rn               = MODEL.eta_n; % Major Radius / Background density gradient length
 params.RTe              = MODEL.eta_T; % Major Radius * normalized kperp / Background electron temperature gradient length

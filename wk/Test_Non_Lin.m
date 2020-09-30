@@ -11,22 +11,24 @@ OUTPUTS.nsave_5d = 1;
 OUTPUTS.write_Ni00    = '.true.';
 OUTPUTS.write_moments = '.true.';
 OUTPUTS.write_phi     = '.true.';
+OUTPUTS.write_non_lin = '.true.';
 OUTPUTS.write_doubleprecision = '.true.';
 OUTPUTS.resfile0      = '''results''';
 %% Grid parameters
-GRID.pmaxe = 2;
-GRID.jmaxe = 2;
-GRID.pmaxi = 2;
-GRID.jmaxi = 2;
-GRID.nkr   = 10;
-GRID.krmin = 0.0;
-GRID.krmax = 0.;
-GRID.nkz   = 10;
-GRID.kzmin = 0.1;
+GRID.pmaxe = 1;
+GRID.jmaxe = 1;
+GRID.pmaxi = 1;
+GRID.jmaxi = 1;
+GRID.nkr   = 2;
+GRID.krmin =-1.0;
+GRID.krmax = 1.0;
+GRID.nkz   = 2;
+GRID.kzmin =-1.0;
 GRID.kzmax = 1.0;
 %% Model parameters
 MODEL.CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
-MODEL.nu      = 0.01; % collisionality nu*L_perp/Cs0
+MODEL.NON_LIN = 1;   % Non linear term
+MODEL.nu      = 0.001; % collisionality nu*L_perp/Cs0
 % temperature ratio T_a/T_e
 MODEL.tau_e   = 1.0;
 MODEL.tau_i   = 1.0;
@@ -44,9 +46,9 @@ MODEL.eta_B   = 0.5;        % Magnetic
 MODEL.lambdaD = 0.0;
 %% Time integration and intialization parameters
 TIME_INTEGRATION.numerical_scheme  = '''RK4''';
-BASIC.nrun                = 100000;
-BASIC.dt                  = 0.05;
-BASIC.tmax                = 1.0;
+BASIC.nrun                = 1;
+BASIC.dt                  = 0.1;
+BASIC.tmax                = 0.1;
 INITIAL.initback_moments  = 0.01;
 INITIAL.initnoise_moments = 0.;
 INITIAL.iseed             = 42;
@@ -66,91 +68,46 @@ INITIAL.iemat_file = ...
 %% Write input file and run HeLaZ
 INPUT = write_fort90(OUTPUTS,GRID,MODEL,INITIAL,TIME_INTEGRATION,BASIC);
 nproc = 1;
+MAKE  = 'cd ..; make; cd wk';
+system(MAKE)
 EXEC  = ' ../bin/helaz ';
 RUN   = ['mpirun -np ' num2str(nproc)];
 CMD   = [RUN, EXEC, INPUT];
-system(CMD);
+system(CMD); % RUN HeLaZ
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Run MOLI for each grid point and save the moments evolution
-kr_scan = linspace(GRID.krmin,GRID.krmax,GRID.nkr);
-kz_scan = linspace(GRID.kzmin,GRID.kzmax,GRID.nkz);
-Nmtot   = (GRID.pmaxe+1) * (GRID.jmaxe+1) + (GRID.pmaxi+1) * (GRID.jmaxi+1);
-Nt      = floor(BASIC.tmax/BASIC.dt)+1;
-Napj_2D = zeros(GRID.nkr,GRID.nkz,Nt,Nmtot);
-params.RK4 = 1;
-for ikr = 1:GRID.nkr
-    for ikz = 1:GRID.nkz
-        kr = kr_scan(ikr); % used by MOLI_time_solver_2D directly
-        kz = kz_scan(ikz); 
-        run ../matlab/MOLI_time_solver_2D
-        Napj_2D(ikr,ikz,:,:) = results.Napj;
+%% Load results
+filename = 'results_00.h5';
+[Nepj, pi, ji, kr, kz, time] = load_5D_data(filename,'moments_e');
+[Nipj, pe, je, kr, kz, time] = load_5D_data(filename,'moments_i');
+[Sepj, pe, je, kr, kz, time] = load_5D_data(filename,'Sepj');
+[Sipj, pi, ji, kr, kz, time] = load_5D_data(filename,'Sipj');
+[phi, kr, kz, time] = load_2D_data(filename,'phi');
+
+%% Compute non linear term with a Matlab method
+it = 1; p = 0; j = 0;
+for p = 0:1
+    for j = 0:1
+Sepj_mat = compute_Sapj(p, j, kr, kz, Nepj(:,:,:,:,end), 'e', phi(:,:,end), MODEL, GRID);
     end
 end
-%% Compute non linear term
-
+Sepj_for = squeeze(Sepj(p+1,j+1,:,:,it+1));
+% Comparison between Matlab and Fortran method
+disp(mean(mean(Sepj_mat - Sepj_for)))
+disp(mean(mean(Sepj_for)))
+disp(mean(mean(Sepj_mat)))
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Analysis and basic figures
 default_plots_options
 SAVEFIG = 1;
 filename = 'results_00.h5';
 default_plots_options
-TITLE  = [TITLE,', $k_z=',num2str(GRID.kzmin),'$'];
-if params.RK4; MOLIsolvername = 'RK4';
-else;          MOLIsolvername = 'ode15i';
-end
-bare = @(p_,j_) (GRID.jmaxe+1)*p_ + j_ + 1;
-bari = @(p_,j_) bare(GRID.pmaxe, GRID.jmaxe) + (GRID.jmaxi+1)*p_ + j_ + 1;
-
-%% Convert MOLI moments into HeLaZ format
-Nepj_MOLI = zeros(GRID.pmaxe+1, GRID.jmaxe+1,GRID.nkr,GRID.nkz,Nt);
-for ip = 1:GRID.pmaxe+1
-    for ij = 1:GRID.jmaxe+1
-        Nepj_MOLI(ip,ij,:,:,:) = Napj_2D(:,:,:,bare(ip-1,ij-1));
-    end
-end
-Nipj_MOLI = zeros(GRID.pmaxi+1, GRID.jmaxi+1,GRID.nkr,GRID.nkz,Nt);
-for ip = 1:GRID.pmaxi+1
-    for ij = 1:GRID.jmaxi+1
-        Nipj_MOLI(ip,ij,:,:,:) = Napj_2D(:,:,:,bari(ip-1,ij-1));
-    end
-end
-%% Load HeLaZ moments
-
-moment = 'moments_i';
-
-kr     = h5read(filename,['/data/var5d/' moment '/coordkr']);
-kz     = h5read(filename,['/data/var5d/' moment '/coordkz']);
-time   = h5read(filename,'/data/var5d/time');
-Nipj_HeLaZ   = zeros(GRID.pmaxi+1, GRID.jmaxi+1,numel(kr),numel(kz),numel(time));
-for it = 1:numel(time)
-    tmp          = h5read(filename,['/data/var5d/', moment,'/', num2str(it,'%06d')]);
-    Nipj_HeLaZ(:,:,:,:,it) = tmp.real + 1i * tmp.imaginary;
-end
-
-moment = 'moments_e';
-
-kr     = h5read(filename,['/data/var5d/' moment '/coordkr']);
-kz     = h5read(filename,['/data/var5d/' moment '/coordkz']);
-time   = h5read(filename,'/data/var5d/time');
-Nepj_HeLaZ   = zeros(GRID.pmaxe+1, GRID.jmaxe+1,numel(kr),numel(kz),numel(time));
-for it = 1:numel(time)
-    tmp          = h5read(filename,['/data/var5d/', moment,'/', num2str(it,'%06d')]);
-    Nepj_HeLaZ(:,:,:,:,it) = tmp.real + 1i * tmp.imaginary;
-end
-
-%% Check coherence of linear results
-disp('MOLI - HeLaZ differences :');
-disp(sum(sum(sum(sum(sum(Nipj_MOLI-Nipj_HeLaZ)))))...
-     / sum(sum(sum(sum(sum(Nipj_MOLI))))));
- 
-%% Non linear term computation
-%get phi
-phiHeLaZ  = zeros(numel(timephi),numel(kr),numel(kz));
-for it = 1:numel(time)
-    tmp  = h5read(filename,['/data/var2d/phi/' num2str(it,'%06d')]);
-    phiHeLaZ(it,:,:) = tmp.real + 1i * tmp.imaginary;
-end
-
-compute_Sapj
-
+TITLE  = [TITLE,', $Sapj=',num2str(GRID.kzmin),'$'];
+fig = figure;
+subplot(121)
+plot(kz,Sepj_mat)
+hold on
+plot(kz,Sepj_for,'--')
+subplot(122)
+plot(time,squeeze(Sepj(p+1,j+1,1,1,:)))
+FIGNAME = 'out';
+SIMID = BASIC.SIMID; save_figure

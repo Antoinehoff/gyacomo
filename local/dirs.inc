@@ -5,4 +5,6 @@ BINDIR   = $(PREFIX)/bin
 OBJDIR   = $(PREFIX)/obj
 LIBDIR   = $(PREFIX)/lib
 MODDIR   = $(PREFIX)/mod
-
+FMDIR    = $(PREFIX)/FM
+FFTWDIR  = /usr/local/fftw-3.3.5
+BACKUPDIR  = $(PREFIX)/backup

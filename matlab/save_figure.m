@@ -1,6 +1,6 @@
 %% Auxiliary script to save figure using a dir (FIGDIR), name (FIGNAME) 
 %  and parameters
-FIGDIR = ['../results/', SIMID,'/'];
+FIGDIR = ['../results/', BASIC.SIMID,'/'];
 if ~exist(FIGDIR, 'dir')
    mkdir(FIGDIR)
 end

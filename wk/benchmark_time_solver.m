@@ -1,31 +1,36 @@
+% Run linear/nonlin simulation on a kr,kz grid and compare with linear MOLI 
 clear all; close all;
-SIMID = 'test_full_coulomb'; % Name of the simulations
+SIMID = 'non_lin_benchmark_time_solver'; % Name of the simulations
 addpath(genpath('../matlab')) % ... add
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% outputs options
 OUTPUTS.nsave_0d = 0;
 OUTPUTS.nsave_1d = 0;
-OUTPUTS.nsave_2d = 1;
-OUTPUTS.nsave_5d = 1;
-OUTPUTS.write_Ni00    = '.true.';
+OUTPUTS.nsave_2d = 20;
+OUTPUTS.nsave_5d = 20;
+OUTPUTS.write_Ni00    = '.false.';
 OUTPUTS.write_moments = '.true.';
 OUTPUTS.write_phi     = '.true.';
+OUTPUTS.write_non_lin = '.false.';
 OUTPUTS.write_doubleprecision = '.true.';
 OUTPUTS.resfile0      = '''results''';
+OUTPUTS.rstfile0      = '''restart''';
 %% Grid parameters
-GRID.pmaxe = 15;
-GRID.jmaxe = 6;
-GRID.pmaxi = 15;
-GRID.jmaxi = 6;
-GRID.nkr   = 1;
-GRID.krmin = 0.;
-GRID.krmax = 0.;
-GRID.nkz   = 1;
-GRID.kzmin = 1.0;
-GRID.kzmax = 1.0;
+GRID.pmaxe = 8;
+GRID.jmaxe = 4;
+GRID.pmaxi = 8;
+GRID.jmaxi = 4;
+GRID.nkr   = 8;
+GRID.krmin =-2.0;
+GRID.krmax = 2.0;
+GRID.nkz   = 8;
+GRID.kzmin =-2.0;
+GRID.kzmax = 2.0;
+GRID.Pad   = 2.0;
 %% Model parameters
-MODEL.CO      = -1;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
-MODEL.nu      = 1.0; % collisionality nu*L_perp/Cs0
+MODEL.CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
+MODEL.NON_LIN = '.true.';   % Non linear term
+MODEL.nu      = 0.01; % collisionality nu*L_perp/Cs0 (~10^2 bigger than Ricci 2006)
 % temperature ratio T_a/T_e
 MODEL.tau_e   = 1.0;
 MODEL.tau_i   = 1.0;
@@ -36,18 +41,21 @@ MODEL.sigma_i = 1.0;
 MODEL.q_e     =-1.0;
 MODEL.q_i     = 1.0;
 % gradients L_perp/L_x
-MODEL.eta_n   = 0.0;        % Density
+MODEL.eta_n   = 1.0;        % Density
 MODEL.eta_T   = 0.0;        % Temperature
-MODEL.eta_B   = 0.0;        % Magnetic
+MODEL.eta_B   = 0.5;        % Magnetic
 % Debye length
 MODEL.lambdaD = 0.0;
 %% Time integration and intialization parameters
 TIME_INTEGRATION.numerical_scheme  = '''RK4''';
 BASIC.nrun                = 100000;
-BASIC.dt                  = 0.05;
-BASIC.tmax                = 10.0;
-INITIAL.initback_moments  = 0.01;
-INITIAL.initnoise_moments = 0.;
+BASIC.dt                  = 0.01;
+BASIC.tmax                = 50.0;
+INITIAL.RESTART           = '.true.';
+INITIAL.backup_file      = '''restart''';
+INITIAL.only_Na00         = '.true.';
+INITIAL.initback_moments  = 1.0e-2;
+INITIAL.initnoise_moments = 0.0e-5;
 INITIAL.iseed             = 42;
 INITIAL.selfmat_file = ...
     ['''../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_',num2str(GRID.pmaxe),...
@@ -62,19 +70,29 @@ INITIAL.iemat_file = ...
     '_Jmaxe_',num2str(GRID.jmaxe),'_Pmaxi_',num2str(GRID.pmaxi),'_Jmaxi_',...
     num2str(GRID.jmaxi),'_pamaxx_10_tau_1.0000_mu_0.0233.h5'''];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Write input file
-INPUT = write_fort90(OUTPUTS,GRID,MODEL,INITIAL,TIME_INTEGRATION,BASIC);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Run HeLaZ
+INPUT = write_fort90(OUTPUTS,GRID,MODEL,INITIAL,TIME_INTEGRATION,BASIC);
 nproc = 1;
+MAKE  = 'cd ..; make; cd wk';
+system(MAKE);
 EXEC  = ' ../bin/helaz ';
 RUN   = ['mpirun -np ' num2str(nproc)];
 CMD   = [RUN, EXEC, INPUT];
 system(CMD);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Run MOLI with same input parameters
+% Load results
+filename = [OUTPUTS.resfile0(2:end-1),'_00.h5'];
+[ Nipj, pgrid_i, jgrid_i, kr, kz, time5d ] = load_5D_data( filename, 'moments_i' );
+[ Nepj, pgrid_e, jgrid_e, ~,  ~,  ~ ]      = load_5D_data( filename, 'moments_e' );
+[ phiHeLaZ ,~, ~, time2d ]                 = load_2D_data( filename, 'phi' );
+if strcmp(OUTPUTS.write_non_lin,'.true.') && strcmp(MODEL.NON_LIN,'.true.')
+[ Sepj, ~,  ~, ~,  ~, ~ ]                  = load_5D_data( filename, 'Sepj' );
+[ Sipj, ~,  ~, ~,  ~, ~ ]                  = load_5D_data( filename, 'Sipj' );
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%^
+%% Run MOLI with same input parameters and a given position on k grid
+%ikr = ceil(GRID.nkr/2); ikz = ceil(GRID.nkz/2);
+ikr = GRID.nkr; ikz = GRID.nkz;
+kr_MOLI = kr(ikr); kz_MOLI = kz(ikz);
 params.RK4 = 1;
 run ../matlab/MOLI_time_solver
 if params.RK4; MOLIsolvername = 'RK4';
@@ -84,179 +102,163 @@ end
 %% Analysis and basic figures
 default_plots_options
 SAVEFIG = 1;
-filename = 'results_00.h5';
 default_plots_options
-TITLE  = [TITLE,', $k_z=',num2str(GRID.kzmin),'$'];
-
 bare = @(p_,j_) (GRID.jmaxe+1)*p_ + j_ + 1;
 bari = @(p_,j_) bare(GRID.pmaxe, GRID.jmaxe) + (GRID.jmaxi+1)*p_ + j_ + 1;
-%% Load moments
-
-moment = 'moments_i';
-
-kr     = h5read(filename,['/data/var5d/' moment '/coordkr']);
-kz     = h5read(filename,['/data/var5d/' moment '/coordkz']);
-time   = h5read(filename,'/data/var5d/time');
-Nipj   = zeros(GRID.pmaxi+1, GRID.jmaxi+1,numel(kr),numel(kz),numel(time));
-for it = 1:numel(time)
-    tmp          = h5read(filename,['/data/var5d/', moment,'/', num2str(it,'%06d')]);
-    Nipj(:,:,:,:,it) = tmp.real + 1i * tmp.imaginary;
-end
-
-moment = 'moments_e';
-
-kr     = h5read(filename,['/data/var5d/' moment '/coordkr']);
-kz     = h5read(filename,['/data/var5d/' moment '/coordkz']);
-time   = h5read(filename,'/data/var5d/time');
-Nepj   = zeros(GRID.pmaxe+1, GRID.jmaxe+1,numel(kr),numel(kz),numel(time));
-for it = 1:numel(time)
-    tmp          = h5read(filename,['/data/var5d/', moment,'/', num2str(it,'%06d')]);
-    Nepj(:,:,:,:,it) = tmp.real + 1i * tmp.imaginary;
-end
-
-
 %% Plot moments
 fig = figure;
-
-x1 = time;
-x2 = results.time;
-ic = 1;
-
-% Electrons
-subplot(321)
-for ip = 0:1
-    for ij = 0:1
-        y1 = squeeze(real(Nepj(ip+1,ij+1,1,1,:)));
-        plot(x1,y1,'-','DisplayName',...
-            ['HeLaZ $N_e^{',num2str(ip),num2str(ij),'}$'],...
-            'color', line_colors(ic,:))
-        hold on
-        y2 = squeeze(real(results.Napj(:,bare(ip,ij))));
-        plot(x2,y2,'--','DisplayName',...
-            ['MOLI $N_e^{',num2str(ip),num2str(ij),'}$'],...
-            'color', line_colors(ic,:))
-        hold on
-        ic = ic + 1;
+    tH = time5d; tM = results.time;
+    % Electrons Real%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    subplot(331); ic = 1;
+        for ip = 0:1
+            for ij = 0:1
+                yH = squeeze(real(Nepj(ip+1,ij+1,ikr,ikz,:)));
+                plot(tH,yH,'-','DisplayName',...
+                    ['HeLaZ $N_e^{',num2str(ip),num2str(ij),'}$'],...
+                    'color', line_colors(ic,:))
+                hold on
+                yM = squeeze(real(results.Napj(:,bare(ip,ij))));
+                plot(tM,yM,'--','DisplayName',...
+                    ['MOLI $N_e^{',num2str(ip),num2str(ij),'}$'],...
+                    'color', 0.7*line_colors(ic,:))
+                hold on
+                ic = ic + 1;
+            end
+        end
+        grid on
+        xlabel('$t$'); ylabel(['Re$(N_e^{pj})$'])
+    % Electrons Imag%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    subplot(334); ic = 1;
+        for ip = 0:1
+            for ij = 0:1
+                yH = squeeze(imag(Nepj(ip+1,ij+1,ikr,ikz,:)));
+                plot(tH,yH,'-','DisplayName',...
+                    ['HeLaZ $N_e^{',num2str(ip),num2str(ij),'}$'],...
+                    'color', line_colors(ic,:))
+                hold on
+                yM = squeeze(imag(results.Napj(:,bare(ip,ij))));
+                plot(tM,yM,'--','DisplayName',...
+                    ['MOLI $N_e^{',num2str(ip),num2str(ij),'}$'],...
+                    'color', 0.7*line_colors(ic,:))
+                hold on
+                ic = ic + 1;
+            end
+        end
+        grid on
+        xlabel('$t$'); ylabel(['Im$(N_e^{pj})$'])
+    % Error on abs(Ne00)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    yH = squeeze(abs(Nepj(1,1,ikr,ikz,:))); % HeLaZ
+    yM = squeeze(abs(results.Napj(:,bare(0,0))));
+    ERR3  = abs(yM(1:OUTPUTS.nsave_5d:numel(yH)*OUTPUTS.nsave_5d)-yH);
+    subplot(337);
+        yyaxis left
+            semilogy(tH,yH,'-','DisplayName','HeLaZ',...
+                'color', line_colors(1,:)); hold on;
+            semilogy(tM,yM,'--','DisplayName','MOLI',...
+                'color', 'k')
+            grid on
+            xlabel('$t$')
+            ylabel('$|N_e^{00}|$')
+            legend('show')
+        yyaxis right
+            semilogy(tH, ERR3,'color', line_colors(2,:));
+            set(gca, 'YScale', 'log')
+            ylabel('$e(N_i^{00})$')
+    % Ions Real%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    subplot(332); ic = 1;
+        for ip = 0:1
+            for ij = 0:1
+                yH = squeeze(real(Nipj(ip+1,ij+1,ikr,ikz,:)));
+                plot(tH,yH,'-','DisplayName',...
+                    ['HeLaZ $N_i^{',num2str(ip),num2str(ij),'}$'],...
+                    'color', line_colors(ic,:))
+                hold on
+                yM = squeeze(real(results.Napj(:,bari(ip,ij))));
+                plot(tM,yM,'--','DisplayName',...
+                    ['MOLI $N_i^{',num2str(ip),num2str(ij),'}$'],...
+                    'color', 0.7*line_colors(ic,:))
+                hold on
+                ic = ic + 1;
+            end
+        end
+        grid on
+        xlabel('$t$'); ylabel(['Re$(N_i^{pj})$'])
+    % Ions Imag%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    subplot(335); ic = 1;
+        for ip = 0:1
+            for ij = 0:1
+                yH = squeeze(imag(Nipj(ip+1,ij+1,ikr,ikz,:)));
+                plot(tH,yH,'-','DisplayName',...
+                    ['HeLaZ $N_i^{',num2str(ip),num2str(ij),'}$'],...
+                    'color', line_colors(ic,:))
+                hold on
+                yM = squeeze(imag(results.Napj(:,bari(ip,ij))));
+                plot(tM,yM,'--','DisplayName',...
+                    ['MOLI $N_i^{',num2str(ip),num2str(ij),'}$'],...
+                    'color', 0.7*line_colors(ic,:))
+                hold on
+                ic = ic + 1;
+            end
+        end
+        grid on
+        xlabel('$t$'); ylabel(['Im$(N_i^{pj})$'])
+    % Error on abs(Ni00)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    yH = squeeze(abs(Nipj(1,1,ikr,ikz,:))); % HeLaZ
+    yM = squeeze(abs(results.Napj(:,bari(0,0))));
+    ERR3  = abs(yM(1:OUTPUTS.nsave_5d:numel(yH)*OUTPUTS.nsave_5d)-yH);
+    subplot(338);
+        yyaxis left
+            semilogy(tH,yH,'-','DisplayName','HeLaZ',...
+                'color', line_colors(1,:)); hold on;
+            semilogy(tM,yM,'--','DisplayName','MOLI',...
+                'color', 'k')
+            grid on
+            xlabel('$t$')
+            ylabel('$|N_i^{00}|$')
+            legend('show')
+        yyaxis right
+            semilogy(tH, ERR3,'color', line_colors(2,:));
+            set(gca, 'YScale', 'log')
+            ylabel('$e(N_i^{00})$')
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% Phi
+    timephiMOLI = results.time;
+    phiMOLI     = zeros(size(timephiMOLI));
+    phiHeLaZ_rz = squeeze(phiHeLaZ(ikr,ikz,:));
+    for it = 1:numel(timephiMOLI)
+        phiMOLI(it) = get_phi(results.Napj(it,:),params,options);
     end
-end
-grid on
-xlabel('$t$')
-ylabel(['Re$(N_e^{pj})$'])
-
-% Ions
-ic = 1;
-subplot(322)
-for ip = 0:1
-    for ij = 0:1
-        y1 = squeeze(real(Nipj(ip+1,ij+1,1,1,:)));
-        plot(x1,y1,'-','DisplayName',...
-            ['HeLaZ $N_i^{',num2str(ip),num2str(ij),'}$'],...
-            'color', line_colors(ic,:))
+    subplot(333)
+        plot(time2d,real(phiHeLaZ_rz),'-','DisplayName','HeLaZ RK4')
         hold on
-        y2 = squeeze(real(results.Napj(:,bari(ip,ij))));
-        plot(x2,y2,'--','DisplayName',...
-            ['MOLI $N_i^{',num2str(ip),num2str(ij),'}$'],...
-            'color', line_colors(ic,:))
+        plot(timephiMOLI,real(phiMOLI),'--','DisplayName',['MOLI ',MOLIsolvername])
+        grid on
+        xlabel('$t$')
+        ylabel('Re$(\phi)$')
+    %Imag
+    subplot(336)
+        plot(time2d,imag(phiHeLaZ_rz),'-','DisplayName','HeLaZ RK4')
         hold on
-        ic = ic + 1;
-    end
-end
-grid on
-xlabel('$t$')
-ylabel(['Re$(N_i^{pj})$'])
-%suptitle(TITLE);
-%if SAVEFIG; FIGNAME = ['Nipj_kz_',num2str(GRID.kzmin)]; save_figure; end;
-
-% phi
-timephi  = h5read(filename,'/data/var2d/time');
-kr       = h5read(filename,'/data/var2d/phi/coordkr');
-kz       = h5read(filename,'/data/var2d/phi/coordkz');
-phiHeLaZ      = zeros(numel(timephi),numel(kr),numel(kz));
-for it = 1:numel(timephi)
-    tmp         = h5read(filename,['/data/var2d/phi/' num2str(it,'%06d')]);
-    phiHeLaZ(it,:,:) = tmp.real + 1i * tmp.imaginary;
-end
-
-timephiMOLI = results.time;
-phiMOLI  = zeros(size(timephiMOLI));
-for it = 1:numel(timephiMOLI)
-    phiMOLI(it) = get_phi(results.Napj(it,:),params,options);
-end
-
-%fig = figure;
-%Real
-subplot(323)
-plot(timephi,real(phiHeLaZ),'-','DisplayName','HeLaZ RK4')
-hold on
-plot(timephiMOLI,real(phiMOLI),'--','DisplayName',['MOLI ',MOLIsolvername])
-grid on
-xlabel('$t$')
-ylabel('Re$(\phi)$')
-%Imag
-subplot(324)
-plot(timephi,imag(phiHeLaZ),'-','DisplayName','HeLaZ RK4')
-hold on
-plot(timephiMOLI,imag(phiMOLI),'--','DisplayName',['MOLI ',MOLIsolvername])
-grid on
-xlabel('$t$')
-ylabel('Im$(\phi)$')
-%if SAVEFIG; FIGNAME = ['phi_kz_',num2str(GRID.kzmin)]; save_figure; end;
-
-%% phi error
-timephi  = h5read(filename,'/data/var2d/time');
-kr       = h5read(filename,'/data/var2d/phi/coordkr');
-kz       = h5read(filename,'/data/var2d/phi/coordkz');
-phiHeLaZ      = zeros(numel(timephi),numel(kr),numel(kz));
-for it = 1:numel(timephi)
-    tmp         = h5read(filename,['/data/var2d/phi/' num2str(it,'%06d')]);
-    phiHeLaZ(it,:,:) = tmp.real + 1i * tmp.imaginary;
-end
-
-timephiMOLI = results.time;
-phiMOLI  = zeros(size(timephiMOLI));
-for it = 1:numel(timephiMOLI)
-    phiMOLI(it) = get_phi(results.Napj(it,:),params,options);
-end
-
-ERR1 = abs(real(phiMOLI(1:numel(timephi)) - phiHeLaZ));
-ERR2 = abs(imag(phiMOLI(1:numel(timephi)) - phiHeLaZ));
-
-%fig = figure;
-subplot(325);
-plot(timephi,ERR1,'-','DisplayName','Real')
-hold on
-plot(timephi,ERR2,'--','DisplayName','Imag')
-%title(TITLE);
-grid on
-xlabel('$t$')
-ylabel('$e(\phi)$')
-legend('show')
-%if SAVEFIG; FIGNAME = ['err_phi_kz_',num2str(GRID.kzmin)]; save_figure; end;
-
-% Growth rate fit quantity (Ni00)
-subplot(326);
-
-y1 = squeeze(abs(Nipj(1,1,1,1,:))); % HeLaZ
-y2 = squeeze(abs(results.Napj(:,bari(0,0))));
-ERR3  = abs(y2(1:numel(timephi))-y1);
-
-yyaxis left
-semilogy(x1,y1,'-','DisplayName','HeLaZ',...
-    'color', line_colors(1,:)); hold on;
-semilogy(x2,y2,'--','DisplayName','MOLI',...
-    'color', 'k')
-grid on
-xlabel('$t$')
-ylabel('$|N_i^{00}|$')
-legend('show')
-
-yyaxis right
-semilogy(x1, ERR3,'color', line_colors(2,:));
-grid on
-xlabel('$t$')
-ylabel('$e(N_i^{00})$')
-
-% Finish and save
+        plot(timephiMOLI,imag(phiMOLI),'--','DisplayName',['MOLI ',MOLIsolvername])
+        grid on
+        xlabel('$t$')
+        ylabel('Im$(\phi)$')
+    % phi error
+    ERR1 = abs(real(phiMOLI(1:OUTPUTS.nsave_2d:numel(phiHeLaZ_rz)*OUTPUTS.nsave_2d) - phiHeLaZ_rz));
+    ERR2 = abs(imag(phiMOLI(1:OUTPUTS.nsave_2d:numel(phiHeLaZ_rz)*OUTPUTS.nsave_2d) - phiHeLaZ_rz));
+    subplot(339);
+        semilogy(time2d,ERR1,'-','DisplayName','Real')
+        hold on
+        semilogy(time2d,ERR2,'--','DisplayName','Imag')
+        grid on
+        xlabel('$t$')
+        ylabel('$e(\phi)$')
+        legend('show')
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Finish and save
+TITLE  = ['$(k_r,k_z)=(',num2str(kr(ikr)),',',num2str(kz(ikz)),')$, ', TITLE];
 suptitle(TITLE);
-if SAVEFIG; FIGNAME = ['kz_',num2str(GRID.kzmin)]; save_figure; end;
+if strcmp(MODEL.NON_LIN,'.true.'); LINEARITY = 'nl';
+else; LINEARITY = 'lin'; end;
+if SAVEFIG; FIGNAME = LINEARITY; save_figure; end;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

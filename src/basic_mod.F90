@@ -4,16 +4,17 @@ MODULE basic
   use prec_const
   IMPLICIT none
 
-  INTEGER :: nrun=1             ! Number of time steps to run
+  LOGICAL  :: RESTART=.true.    ! To restart the simulation or look for saved state
+  INTEGER  :: nrun=1            ! Number of time steps to run
   real(dp) :: tmax=100000.0     ! Maximum simulation time
   real(dp) :: dt=1.0            ! Time step
   real(dp) :: time=0            ! Current simulation time (Init from restart file)
-  
+
   INTEGER :: jobnum=0                  ! Job number
   INTEGER :: step=0                    ! Calculation step of this run
   INTEGER :: cstep=0                   ! Current step number (Init from restart file)
   LOGICAL :: nlend=.FALSE.             ! Signal end of run
-  
+
   INTEGER :: ierr                      ! flag for MPI error
   INTEGER :: iframe1d                  ! counting the number of times 1d datasets are outputed (for diagnose)
   INTEGER :: iframe2d                  ! counting the number of times 2d datasets are outputed (for diagnose)
@@ -23,6 +24,8 @@ MODULE basic
   !  List of logical file units
   INTEGER :: lu_in   = 90              ! File duplicated from STDIN
   INTEGER :: lu_job  = 91              ! myjob file
+
+  real :: start, finish ! To measure computation time
 
   INTERFACE allocate_array
     MODULE PROCEDURE allocate_array_dp1,allocate_array_dp2,allocate_array_dp3,allocate_array_dp4
@@ -39,11 +42,11 @@ CONTAINS
 
     use prec_const
     IMPLICIT NONE
-    
-    NAMELIST /BASIC/  nrun, dt, tmax 
-    
+
+    NAMELIST /BASIC/  nrun, dt, tmax
+
     READ(lu_in,basic)
-    WRITE(*,basic)
+    !WRITE(*,basic)
 
   END SUBROUTINE basic_data
   !================================================================================
@@ -52,7 +55,7 @@ CONTAINS
 
     use prec_const
     IMPLICIT NONE
-    
+
     CHARACTER(len=*) , INTENT(in) :: str
     CHARACTER(len=16) :: d, t, dat, time
     !________________________________________________________________________________
@@ -78,7 +81,7 @@ CONTAINS
   SUBROUTINE allocate_array_dp2(a,is1,ie1,is2,ie2)
     IMPLICIT NONE
     real(dp), DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
-    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2   
+    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2
     ALLOCATE(a(is1:ie1,is2:ie2))
     a=0.0_dp
   END SUBROUTINE allocate_array_dp2
@@ -120,7 +123,7 @@ CONTAINS
   SUBROUTINE allocate_array_dc2(a,is1,ie1,is2,ie2)
     IMPLICIT NONE
     DOUBLE COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
-    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2   
+    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2
     ALLOCATE(a(is1:ie1,is2:ie2))
     a=CMPLX(0.0_dp,0.0_dp)
   END SUBROUTINE allocate_array_dc2
@@ -162,7 +165,7 @@ CONTAINS
   SUBROUTINE allocate_array_i2(a,is1,ie1,is2,ie2)
     IMPLICIT NONE
     INTEGER, DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
-    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2   
+    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2
     ALLOCATE(a(is1:ie1,is2:ie2))
     a=0
   END SUBROUTINE allocate_array_i2
@@ -189,7 +192,7 @@ CONTAINS
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
     a=0
-  END SUBROUTINE allocate_array_i5  
+  END SUBROUTINE allocate_array_i5
 
   !========================================
 
@@ -232,16 +235,5 @@ CONTAINS
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
     a=.false.
   END SUBROUTINE allocate_array_l5
-
-  RECURSIVE FUNCTION Factorial(n) RESULT(Fact)
-  IMPLICIT NONE
-  INTEGER :: Fact
-  INTEGER, INTENT(IN) :: n
-  IF (n == 0) THEN
-    Fact = 1
-  ELSE
-    Fact = n * Factorial(n-1)
-  END IF
-  END FUNCTION Factorial
 
 END MODULE basic

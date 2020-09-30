@@ -5,7 +5,8 @@ MODULE model
   IMPLICIT NONE
   PRIVATE
 
-  INTEGER(dp), PUBLIC, PROTECTED ::   CO =  0         ! Collision Operator
+  INTEGER,  PUBLIC, PROTECTED ::      CO =  0         ! Collision Operator
+  LOGICAL,  PUBLIC, PROTECTED :: NON_LIN =  .true.    ! To turn on non linear bracket term
   REAL(dp), PUBLIC, PROTECTED ::      nu =  1._dp     ! Collision frequency
   REAL(dp), PUBLIC, PROTECTED ::   tau_e =  1._dp     ! Temperature
   REAL(dp), PUBLIC, PROTECTED ::   tau_i =  1._dp     !
@@ -29,11 +30,11 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /MODEL_PAR/ CO, nu, tau_e, tau_i, sigma_e, sigma_i, &
+    NAMELIST /MODEL_PAR/ CO, NON_LIN, nu, tau_e, tau_i, sigma_e, sigma_i, &
                          q_e, q_i, eta_n, eta_T, eta_B, lambdaD
 
     READ(lu_in,model_par)
-    WRITE(*,model_par)
+    !WRITE(*,model_par)
 
     ! Collision Frequency Normalization ... to match fluid limit
     nu = nu*0.532_dp
@@ -51,6 +52,7 @@ CONTAINS
     INTEGER, INTENT(in) :: fidres
     CHARACTER(len=256), INTENT(in) :: str
     CALL attach(fidres, TRIM(str),      "CO",      CO)
+    CALL attach(fidres, TRIM(str), "NON_LIN", NON_LIN)
     CALL attach(fidres, TRIM(str),      "nu",      nu)
     CALL attach(fidres, TRIM(str),   "tau_e",   tau_e)
     CALL attach(fidres, TRIM(str),   "tau_i",   tau_i)

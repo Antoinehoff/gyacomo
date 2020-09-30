@@ -6,7 +6,7 @@ SUBROUTINE memory
   USE fields
   USE fourier_grid
   USE time_integration
-  USE model, ONLY: CO
+  USE model, ONLY: CO, NON_LIN
 
   USE prec_const
   IMPLICIT NONE
@@ -30,4 +30,12 @@ SUBROUTINE memory
     CALL allocate_array( CiepjT, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1))
     CALL allocate_array( CiepjF, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxe+1)*(jmaxe+1))
   ENDIF
+
+  ! Non linear terms and dnjs table
+  IF ( NON_LIN ) THEN
+    CALL allocate_array( Sepj, ips_e,ipe_e, ijs_e,ije_e, ikrs,ikre, ikzs,ikze )
+    CALL allocate_array( Sipj, ips_i,ipe_i, ijs_i,ije_i, ikrs,ikre, ikzs,ikze )
+    CALL allocate_array( dnjs, 1,maxj+1, 1,maxj+1, 1,maxj+1)
+  ENDIF
+
 END SUBROUTINE memory

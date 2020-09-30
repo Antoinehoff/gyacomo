@@ -1,56 +1,16 @@
 &BASIC
   nrun=100000
   dt=0.01
-  tmax=100    ! time normalized to 1/omega_pe
+  tmax=200
 /
 &GRID
-  pmaxe =8    ! Electron Hermite moments 
-  jmaxe = 4     ! Electron Laguerre moments 
-  pmaxi = 8    ! Ion Hermite moments 
-  jmaxi = 4     ! Ion Laguerre moments
-  nkr   = 16
-  krmin = 0.1
-  krmax = 1
-  nkz   = 16
+  pmaxe =5
+  jmaxe = 3
+  pmaxi = 5
+  jmaxi = 3
+  nkr   = 1
+  krmin = 0
+  krmax = 0
+  nkz   = 1
   kzmin = 0.1
-  kzmax = 1
-/
-&OUTPUT_PAR
-  nsave_0d = 0
-  nsave_1d = 0
-  nsave_2d = 1
-  nsave_5d = 0
-  write_Ni00    = .true.
-  write_moments = .true.
-  write_phi     = .true.
-  write_doubleprecision = .true.
-  resfile0      = 'results'
-/
-&MODEL_PAR
-  ! Collisionality
-  CO      = -2       ! Collision operator (-1:Full Coulomb, 0: Dougherty)
-  nu      = 0.01       ! Normalized collision frequency normalized to plasma frequency
-  tau_e   = 1         ! T_e/T_e
-  tau_i   = 1         ! T_i/T_e       temperature ratio
-  sigma_e = 0.023338   ! sqrt(m_e/m_i) mass ratio
-  sigma_i = 1         ! sqrt(m_i/m_i)
-  q_e     = -1         ! Electrons charge
-  q_i     = 1         ! Ions charge
-  eta_n   = 0         ! L_perp / L_n Density gradient
-  eta_T   = 0         ! L_perp / L_T Temperature gradient
-  eta_B   = 1         ! L_perp / L_B Magnetic gradient and curvature
-  lambdaD = 0         ! Debye length
-/
-&INITIAL_CON
-  ! Background value
-  initback_moments=0.01 ! x 1e-3
-  ! Noise amplitude
-  initnoise_moments=0
-  iseed=42
-  selfmat_file='../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_8_Jmaxe_4_Pmaxi_8_Jmaxi_4_pamaxx_10.h5'
-  eimat_file='../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_8_Jmaxe_4_Pmaxi_8_Jmaxi_4_pamaxx_10_tau_1.0000_mu_0.0233.h5'
-  iemat_file='../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_8_Jmaxe_4_Pmaxi_8_Jmaxi_4_pamaxx_10_tau_1.0000_mu_0.0233.h5'
-/
-&TIME_INTEGRATION_PAR
-  numerical_scheme='RK4'
-/
+  kzmax = 0.1

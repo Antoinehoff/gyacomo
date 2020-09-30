@@ -85,7 +85,12 @@ SUBROUTINE poisson
                         + qi2_taui * (1._dp - sum_kernel2_i)
       gammaD_phi = q_e * sum_kernel_mom_e + q_i * sum_kernel_mom_i
 
-      phi(ikr, ikz) =  gammaD_phi/gammaD
+      IF ( (alphaD .EQ. 0._dp) .AND. (gammaD .EQ. 0._dp) ) THEN
+        write(*,*) "Warning : 0/0 occuring"
+        phi(ikr,ikz) = 0._dp
+      ELSE
+        phi(ikr, ikz) =  gammaD_phi/gammaD
+      ENDIF
 
     END DO
   END DO

@@ -1,6 +1,5 @@
 MODULE array
 
-  !USE mumps_bsplines
   use prec_const
   implicit none
 
@@ -13,6 +12,12 @@ MODULE array
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: CeipjF
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: Ciipj, CiepjT
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: CiepjF
-  
-END MODULE array
 
+  ! dnjs coefficient storage (in, ij, is)
+  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: dnjs
+
+  ! Non linear term array (ip,ij,ikr,ikz)
+  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Sepj ! electron
+  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Sipj ! ion
+
+END MODULE array

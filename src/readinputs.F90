@@ -10,7 +10,7 @@ SUBROUTINE readinputs
   USE prec_const
   IMPLICIT NONE
 
-  WRITE(*,'(a/)') '=== Define additional data for a new run ==='
+  !WRITE(*,'(a/)') '=== Define additional data for a new run ==='
   
   ! The input file must be in the same order as the following read routines commands (eg spacegrid then output then model)
 

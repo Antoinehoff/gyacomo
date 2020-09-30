@@ -13,10 +13,10 @@ OUTPUTS.write_phi     = '.true.';
 OUTPUTS.write_doubleprecision = '.true.';
 OUTPUTS.resfile0      = '''results''';
 %% Grid parameters
-GRID.pmaxe = 25;
-GRID.jmaxe = 10;
-GRID.pmaxi = 25;
-GRID.jmaxi = 10;
+GRID.pmaxe = 5;
+GRID.jmaxe = 3;
+GRID.pmaxi = 5;
+GRID.jmaxi = 3;
 GRID.nkr   = 1;
 GRID.krmin = 0.;
 GRID.krmax = 0.;

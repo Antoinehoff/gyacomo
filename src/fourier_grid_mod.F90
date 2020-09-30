@@ -10,12 +10,14 @@ MODULE fourier_grid
   INTEGER,  PUBLIC, PROTECTED :: jmaxe = 2      ! The maximal electron Laguerre-moment computed
   INTEGER,  PUBLIC, PROTECTED :: pmaxi = 2      ! The maximal ion Hermite-moment computed
   INTEGER,  PUBLIC, PROTECTED :: jmaxi = 2      ! The maximal ion Laguerre-moment computed
+  INTEGER,  PUBLIC, PROTECTED :: maxj  = 2      ! The maximal ion Laguerre-moment computed
   INTEGER,  PUBLIC, PROTECTED :: nkr   = 10     ! Number of total internal grid points in kr
   REAL(dp), PUBLIC, PROTECTED :: krmin = 0._dp  ! kr coordinate for left boundary
   REAL(dp), PUBLIC, PROTECTED :: krmax = 1._dp  ! kr coordinate for right boundary
   INTEGER,  PUBLIC, PROTECTED :: nkz   = 10     ! Number of total internal grid points in kz
   REAL(dp), PUBLIC, PROTECTED :: kzmin = 0._dp  ! kz coordinate for left boundary
   REAL(dp), PUBLIC, PROTECTED :: kzmax = 1._dp  ! kz coordinate for right boundary
+  INTEGER,  PUBLIC, PROTECTED :: Pad   = 2      ! Zero padding parameter for convolution
 
   ! Indices of s -> start , e-> END
   INTEGER, PUBLIC, PROTECTED ::  ips_e,ipe_e, ijs_e,ije_e
@@ -27,14 +29,14 @@ MODULE fourier_grid
   REAL(dp), PUBLIC, PROTECTED ::  deltakz
 
   ! Grids containing position in fourier space
-  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: kzarray
-  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: krarray
+  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: krarray
+  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: kzarray
 
   ! Grid containing the polynomials degrees
-  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: parray_e
-  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: parray_i
-  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: jarray_e
-  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: jarray_i
+  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_e
+  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_i
+  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: jarray_e
+  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: jarray_i
 
   ! Public Functions
   PUBLIC :: set_krgrid, set_kzgrid, set_pj
@@ -100,7 +102,7 @@ CONTAINS
     ALLOCATE(jarray_i(ijs_i:ije_i))
     DO ij = ijs_e,ije_e; jarray_e(ij) = ij-1; END DO
     DO ij = ijs_i,ije_i; jarray_i(ij) = ij-1; END DO
-
+    maxj  = MAX(jmaxi, jmaxe)
   END SUBROUTINE set_pj
 
   SUBROUTINE fourier_grid_readinputs
@@ -112,10 +114,11 @@ CONTAINS
     IMPLICIT NONE
 
     NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, &
-                    nkr, krmin, krmax, nkz, kzmin, kzmax
+                    nkr, krmin, krmax, nkz, kzmin, kzmax, &
+                    Pad
 
     READ(lu_in,grid)
-    WRITE(*,grid)
+    !WRITE(*,grid)
 
   END SUBROUTINE fourier_grid_readinputs
 
@@ -140,6 +143,7 @@ CONTAINS
     CALL attach(fidres, TRIM(str),   "nkz",   nkz)
     CALL attach(fidres, TRIM(str), "kzmin", kzmin)
     CALL attach(fidres, TRIM(str), "kzmax", kzmax)
+    CALL attach(fidres, TRIM(str), "Pad", Pad)
   END SUBROUTINE fourier_grid_outputinputs
 
 

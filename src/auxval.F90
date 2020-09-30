@@ -9,7 +9,7 @@ subroutine auxval
   IMPLICIT NONE
   
   INTEGER :: irows,irowe, irow, icol
-  WRITE(*,'(a/)') '=== Set auxiliary values ==='
+  WRITE(*,*) '=== Set auxiliary values ==='
 
   call set_krgrid
   call set_kzgrid

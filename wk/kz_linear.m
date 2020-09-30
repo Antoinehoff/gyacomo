@@ -12,6 +12,7 @@ OUTPUTS.write_moments = '.true.';
 OUTPUTS.write_phi     = '.true.';
 OUTPUTS.write_doubleprecision = '.true.';
 OUTPUTS.resfile0      = '''results''';
+OUTPUTS.rstfile0      = ['''../backup/',SIMID,''''];
 %% Grid parameters
 GRID.pmaxe = 25;
 GRID.jmaxe = 9;
