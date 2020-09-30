@@ -95,6 +95,7 @@ SUBROUTINE poisson
     END DO
   END DO
 
-!write(*,*) 'gammaD =',gammaD
+! Cancel origin singularity
+phi(ikr_0,ikz_0) = 0
 
 END SUBROUTINE poisson
