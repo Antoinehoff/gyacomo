@@ -21,10 +21,11 @@ fig  = figure;
     colorbar
     axis tight manual % this ensures that getframe() returns a consistent size
     shading interp;
+    xlabel(XNAME); ylabel(YNAME);
     hold on
   
     in      = 1;
-    nbytes = fprintf(2,'frame %d/%d',n,numel(FIELD(1,1,:)));
+    nbytes = fprintf(2,'frame %d/%d',in,numel(FIELD(1,1,:)));
     for n = FRAMES % loop over selected frames
         pclr = pcolor(X,Y,FIELD(:,:,n)); shading interp; % frame plot
         set(pclr, 'edgecolor','none');

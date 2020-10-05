@@ -206,7 +206,7 @@ FMT = '.fig'; save_figure
 
 if 0
 %% Show frame
-it = min(50,numel(Ts));
+it = min(70,numel(Ts));
 fig = figure; FIGNAME = ['frame',sprintf('_%.2d',JOBNUM)];
     subplot(221); plt = @(x) fftshift((real(x)));
         pclr = pcolor(fftshift(KR),fftshift(KZ),plt(PH(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
@@ -225,24 +225,28 @@ end
 FMT = '.fig'; save_figure
 end
 %%
-DELAY = 0.07; skip_ = 1;
-FRAMES = 200:skip_:numel(Ts);
-if 1
+DELAY = 0.07; skip_ = 10;
+FRAMES = 1:skip_:numel(Ts);
+if 0
 %% GIFS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Density electron
-GIFNAME = ['ne',sprintf('_%.2d',JOBNUM)]; FIELDNAME = '$n_e^{00}$';
+GIFNAME = ['ne',sprintf('_%.2d',JOBNUM)];
 FIELD = real(ne); X = XX; Y = YY; T = Ts;
+FIELDNAME = '$n_e^{00}$'; XNAME = '$r$'; YNAME = '$z$';
 create_gif
 %% Density ion
-GIFNAME = ['ni',sprintf('_%.2d',JOBNUM)]; FIELDNAME = '$n_i^{00}$';
+GIFNAME = ['ni',sprintf('_%.2d',JOBNUM)]; 
 FIELD = real(ni); X = XX; Y = YY; T = Ts;
+FIELDNAME = '$n_i^{00}$'; XNAME = '$r$'; YNAME = '$z$';
 create_gif
 %% Phi
-GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)]; FIELDNAME = '$\phi$';
+GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)]; 
 FIELD = real(phi); X = XX; Y = YY; T = Ts;
+FIELDNAME = '$\phi$'; XNAME = '$r$'; YNAME = '$z$';
 create_gif
 %% Density electron frequency
-GIFNAME = ['Ni',sprintf('_%.2d',JOBNUM)]; FIELDNAME = '$N_i^{00}$';
-FIELD = real(Ni); X = KR; Y = KZ; T = Ts;
+GIFNAME = ['Ni',sprintf('_%.2d',JOBNUM)]; 
+FIELD = fftshift(real(Ni)); X = fftshift(KR); Y = fftshift(KZ); T = Ts;
+FIELDNAME = '$N_i^{00}$'; XNAME = '$k_r$'; YNAME = '$k_z$';
 create_gif
 end

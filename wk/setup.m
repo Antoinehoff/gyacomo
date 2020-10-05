@@ -15,19 +15,19 @@ LAMBDAD = 0.0;
 %% GRID PARAMETERS
 N       = 64;     % Frequency gridpoints (Nkr = N/2)
 L       = 10;      % Size of the squared frequency domain
-PMAXE   = 05;     % Highest electron Hermite polynomial degree
-JMAXE   = 02;     % Highest ''       Laguerre ''
-PMAXI   = 05;     % Highest ion      Hermite polynomial degree
-JMAXI   = 02;     % Highest ''       Laguerre ''
+PMAXE   = 01;     % Highest electron Hermite polynomial degree
+JMAXE   = 00;     % Highest ''       Laguerre ''
+PMAXI   = 01;     % Highest ion      Hermite polynomial degree
+JMAXI   = 00;     % Highest ''       Laguerre ''
 KPAR    = 0.0;    % Parellel wave vector component
 %% TIME PARAMETERS 
-TMAX    = 100.0;    % Maximal time unit
-DT      = 1e-4;   % Time step
+TMAX    = 10.0;    % Maximal time unit
+DT      = 1e-2;   % Time step
 SPS     = 10;     % Sampling per time unit
-RESTART = 1;      % To restart from last checkpoint
+RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
-SIMID   = 'gvskr';  % Name of the simulation
+SIMID   = 'test_kzpos';  % Name of the simulation
 NON_LIN = 0;   % activate non-linearity (is cancelled if KREQ0 = 1)
 CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
 DK      = 0;   % Drift kinetic model (put every kernel to 1)

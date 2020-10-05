@@ -128,7 +128,8 @@ CONTAINS
     IMPLICIT NONE
     INTEGER :: ikr
 
-    Nkr = Nr/2+1 ! Defined only on positive kr since fields are real
+    ! Nkr = Nr/2+1 ! Defined only on positive kr since fields are real
+    Nkr = Nr
     ! Start and END indices of grid
     ikrs = 1
     ikre = Nkr
@@ -138,11 +139,13 @@ CONTAINS
     ! Discretized kr positions ordered as dk*(0 1 2)
     ALLOCATE(krarray(ikrs:ikre))
     DO ikr = ikrs,ikre
-      krarray(ikr) = REAL(ikr-1,dp) * deltakr
+      ! krarray(ikr) = REAL(ikr-1,dp) * deltakr
+      krarray(ikr) = deltakr*(MODULO(ikr-1,Nkr/2)-Nkr/2*FLOOR(2.*real(ikr-1)/real(Nkr)))
       if (krarray(ikr) .EQ. 0) THEN
         ikr_0 = ikr
       ENDIF
     END DO
+    krarray(Nr/2+1) = -krarray(Nr/2+1)
 
     ! Orszag 2/3 filter
     two_third_krmax = 2._dp/3._dp*deltakr*Nkr
@@ -160,22 +163,24 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    Nkz = Nz;
+    ! Nkz = Nz;
+    Nkz = Nz/2 + 1; ! Defined only on positive kz since fields are real
     ! Start and END indices of grid
     ikzs = 1
     ikze = Nkz
     ! Grid spacings
-    deltakz = 2._dp*PI/Nkz/deltaz
+    deltakz = 2._dp*PI/Nz/deltaz
 
     ! Discretized kz positions ordered as dk*(0 1 2 -3 -2 -1)
     ALLOCATE(kzarray(ikzs:ikze))
     DO ikz = ikzs,ikze
-      kzarray(ikz) = deltakz*(MODULO(ikz-1,Nkz/2)-Nkz/2*FLOOR(2.*real(ikz-1)/real(Nkz)))
+      ! kzarray(ikz) = deltakz*(MODULO(ikz-1,Nkz/2)-Nkz/2*FLOOR(2.*real(ikz-1)/real(Nkz)))
+      kzarray(ikz) = REAL(ikz-1,dp) * deltakz
       if (kzarray(ikz) .EQ. 0) THEN
         ikz_0 = ikz
       ENDIF
     END DO
-    kzarray(Nz/2+1) = -kzarray(Nz/2+1)
+    ! kzarray(Nz/2+1) = -kzarray(Nz/2+1)
 
     ! Orszag 2/3 filter
     two_third_kzmax = 2._dp/3._dp*deltakz*(Nkz/2);
