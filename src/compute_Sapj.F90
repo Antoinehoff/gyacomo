@@ -78,7 +78,12 @@ SUBROUTINE compute_Sapj
         ENDIF
       ENDDO nloope
 
-      !CALL forward_FFT(Sepj(ip,ij,:,:)) !**then put the sum back to fourier space (spares n FFT)
+      !! Antialiasing
+      DO ikr = ikrs,ikre
+        DO ikz = ikzs, ikze
+          Sepj(ip,ij,ikr,ikz) = Sepj(ip,ij,ikr,ikz) * AA_r(ikr) * AA_z(ikz)
+        ENDDO
+      ENDDO
 
     ENDDO jloope
   ENDDO ploope
@@ -146,10 +151,14 @@ SUBROUTINE compute_Sapj
 
       ENDDO nloopi
 
-      !CALL forward_FFT(Sipj(ip,ij,:,:)) ! **then put the sum back to fourier space (spares n FFT)
+      !! Antialiasing
+      DO ikr = ikrs,ikre
+        DO ikz = ikzs, ikze
+          Sipj(ip,ij,ikr,ikz) = Sipj(ip,ij,ikr,ikz) * AA_r(ikr) * AA_z(ikz)
+        ENDDO
+      ENDDO
 
     ENDDO jloopi
   ENDDO ploopi
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 END SUBROUTINE compute_Sapj
