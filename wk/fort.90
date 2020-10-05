@@ -1,18 +1,18 @@
 &BASIC
   nrun   = 100000000
   dt     = 0.01
-  tmax   = 10
+  tmax   = 30
   RESTART = .false.
 /
 &GRID
-  pmaxe =1
-  jmaxe = 0
-  pmaxi = 1
-  jmaxi = 0
+  pmaxe =0
+  jmaxe = 1
+  pmaxi = 0
+  jmaxi = 1
   Nr   = 64
-  Lr = 10
+  Lr = 150
   Nz   = 64
-  Lz = 10
+  Lz = 150
   kpar = 0
 /
 &OUTPUT_PAR
@@ -25,8 +25,8 @@
   write_phi     = .true.
   write_non_lin     = .false.
   write_doubleprecision = .true.
-  resfile0      = 'test_kzpos_32x64_L_10_lin_P_1_J_0_nB_0.1_nN_1_mu_1e-02_'
-  rstfile0      = '../checkpoint/cp_test_kzpos_32x64_L_10_lin_P_1_J_0_nB_0.1_nN_1_mu_1e-02_'
+  resfile0      = 'Turbulences_64x32_L_150_lin_P_0_J_1_nB_0.5_nN_1_nu_1e-01__mu_1e-01_'
+  rstfile0      = '../checkpoint/cp_Turbulences_64x32_L_150_lin_P_0_J_1_nB_0.5_nN_1_nu_1e-01__mu_1e-01_'
   job2load      = 0
 /
 &MODEL_PAR
@@ -34,8 +34,8 @@
   CO      = -2
   DK      = .false.
   NON_LIN = .false.
-  mu      = 0.01
-  nu      = 0.01
+  mu      = 0.1
+  nu      = 0.1
   tau_e   = 1
   tau_i   = 1
   sigma_e = 0.023338
@@ -44,7 +44,7 @@
   q_i     = 1
   eta_n   = 1
   eta_T   = 0
-  eta_B   = 0.1
+  eta_B   = 0.5
   lambdaD = 0
 /
 &INITIAL_CON
@@ -52,9 +52,9 @@
   initback_moments  =0.0001
   initnoise_moments =5e-05
   iseed             =42
-  selfmat_file      ='../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_1_Jmaxe_0_Pmaxi_1_Jmaxi_0_pamaxx_10.h5'
-  eimat_file        ='../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_1_Jmaxe_0_Pmaxi_1_Jmaxi_0_pamaxx_10_tau_1.0000_mu_0.0233.h5'
-  iemat_file        ='../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_1_Jmaxe_0_Pmaxi_1_Jmaxi_0_pamaxx_10_tau_1.0000_mu_0.0233.h5'
+  selfmat_file      ='../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_0_Jmaxe_1_Pmaxi_0_Jmaxi_1_pamaxx_10.h5'
+  eimat_file        ='../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_0_Jmaxe_1_Pmaxi_0_Jmaxi_1_pamaxx_10_tau_1.0000_mu_0.0233.h5'
+  iemat_file        ='../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_0_Jmaxe_1_Pmaxi_0_Jmaxi_1_pamaxx_10_tau_1.0000_mu_0.0233.h5'
 /
 &TIME_INTEGRATION_PAR
   numerical_scheme='RK4'
