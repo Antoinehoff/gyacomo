@@ -203,6 +203,7 @@ SUBROUTINE diagnose(kstep)
      END IF
 
      !                       2.5   Backups
+     nsave_cp = INT(5/dt)
      IF (MOD(cstep, nsave_cp) == 0) THEN
        CALL checkpoint_save
      ENDIF

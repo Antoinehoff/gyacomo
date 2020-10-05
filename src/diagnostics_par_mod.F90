@@ -12,7 +12,7 @@ MODULE diagnostics_par
   LOGICAL, PUBLIC, PROTECTED :: write_doubleprecision=.FALSE.
 
   INTEGER, PUBLIC, PROTECTED :: nsave_0d , nsave_1d , nsave_2d , nsave_5d
-  INTEGER, PUBLIC, PROTECTED :: nsave_cp = 1e4
+  INTEGER, PUBLIC :: nsave_cp = 1e4
 
   !  HDF5 file
   CHARACTER(len=128), PUBLIC :: resfile0 = "results"   ! Head of main result file name
