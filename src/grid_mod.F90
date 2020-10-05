@@ -94,10 +94,14 @@ CONTAINS
     ENDIF
     ! Discretized r positions ordered as dx*(0 1 2 -3 -2 -1)
     ALLOCATE(rarray(irs:ire))
-    DO ir = irs,ire
-      rarray(ir) = deltar*(MODULO(ir-1,Nr/2)-Nr/2*FLOOR(2.*real(ir-1)/real(Nr)))
-    END DO
-    rarray(Nr/2+1) = -rarray(Nr/2+1)
+    IF (NR .GT. 1) THEN
+      DO ir = irs,ire
+        rarray(ir) = deltar*(MODULO(ir-1,Nr/2)-Nr/2*FLOOR(2.*real(ir-1)/real(Nr)))
+      END DO
+      rarray(Nr/2+1) = -rarray(Nr/2+1)
+    ELSE
+      rarray(1) = 0._dp
+    ENDIF
 
   END SUBROUTINE set_rgrid
 
@@ -134,21 +138,29 @@ CONTAINS
     ikrs = 1
     ikre = Nkr
     ! Grid spacings
-    deltakr = 2._dp*PI/Nr/deltar
-
+    IF ( Nr .GT. 1 ) THEN ! To avoid case with 0 intervals
+      deltakr = 2._dp*PI/Nr/deltar
+    ELSE
+      deltakr = 0;
+    ENDIF
     ! Discretized kr positions ordered as dk*(0 1 2)
     ALLOCATE(krarray(ikrs:ikre))
-    DO ikr = ikrs,ikre
-      ! krarray(ikr) = REAL(ikr-1,dp) * deltakr
-      krarray(ikr) = deltakr*(MODULO(ikr-1,Nkr/2)-Nkr/2*FLOOR(2.*real(ikr-1)/real(Nkr)))
-      if (krarray(ikr) .EQ. 0) THEN
-        ikr_0 = ikr
-      ENDIF
-    END DO
-    krarray(Nr/2+1) = -krarray(Nr/2+1)
+    IF ( Nr .GT. 1 ) THEN
+      DO ikr = ikrs,ikre
+        ! krarray(ikr) = REAL(ikr-1,dp) * deltakr
+        krarray(ikr) = deltakr*(MODULO(ikr-1,Nkr/2)-Nkr/2*FLOOR(2.*real(ikr-1)/real(Nkr)))
+        if (krarray(ikr) .EQ. 0) THEN
+          ikr_0 = ikr
+        ENDIF
+      END DO
+      krarray(Nr/2+1) = -krarray(Nr/2+1)
+    ELSE
+      krarray(1) = 0._dp
+      ikr_0 = 1
+    ENDIF
 
     ! Orszag 2/3 filter
-    two_third_krmax = 2._dp/3._dp*deltakr*Nkr
+    two_third_krmax = 2._dp/3._dp*deltakr*(Nkr/2)
     ALLOCATE(AA_r(ikrs:ikre))
     DO ikr = ikrs,ikre
       IF ( (krarray(ikr) .GT. -two_third_krmax) .AND. (krarray(ikr) .LT. two_third_krmax) ) THEN
@@ -183,7 +195,7 @@ CONTAINS
     ! kzarray(Nz/2+1) = -kzarray(Nz/2+1)
 
     ! Orszag 2/3 filter
-    two_third_kzmax = 2._dp/3._dp*deltakz*(Nkz/2);
+    two_third_kzmax = 2._dp/3._dp*deltakz*Nkz;
     ALLOCATE(AA_z(ikzs:ikze))
     DO ikz = ikzs,ikze
       IF ( (kzarray(ikz) .GT. -two_third_kzmax) .AND. (kzarray(ikz) .LT. two_third_kzmax) ) THEN
