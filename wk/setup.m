@@ -13,7 +13,7 @@ ETAT    = 0.0;    % Temperature gradient
 MU      = 1e-2;   % Hyper diffusivity coefficient
 LAMBDAD = 0.0;
 %% GRID PARAMETERS
-N       = 64;     % Frequency gridpoints (Nr = N/2)
+N       = 64;     % Frequency gridpoints (Nkr = N/2)
 L       = 10;      % Size of the squared frequency domain
 PMAXE   = 05;     % Highest electron Hermite polynomial degree
 JMAXE   = 02;     % Highest ''       Laguerre ''
