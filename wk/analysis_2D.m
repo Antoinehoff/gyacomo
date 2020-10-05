@@ -27,7 +27,7 @@ dr = 2*pi/Lk; dz = 2*pi/Lk;
 Nr = max(Nkr,Nkz);         Nz = Nr;
 r = dr*(-Nr/2:(Nr/2-1)); Lr = max(r)-min(r);
 z = dz*(-Nz/2:(Nz/2-1)); Lz = max(z)-min(z);
-[YY,XX] = meshgrid(z,r);
+[ZZ,RR] = meshgrid(z,r);
 % Analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % IFFT
 ne   = zeros(Nr,Nz);
@@ -127,22 +127,7 @@ if strcmp(OUTPUTS.write_non_lin,'.true.')
 end
 FMT = '.fig'; save_figure
 
-%% Spectra energy
-% fig = figure; FIGNAME = ['Energy_kin_KZ',sprintf('_%.2d',JOBNUM)];
-%     semilogy(kr(floor(end/2)+1:end),E_kin_KR(floor(end/2)+1:end),'o','DisplayName','$\sum_y\langle|ik\tilde\phi_i|^2\rangle_t$')
-%     hold on;
-%     loglog(kz(floor(end/2)+1:end),E_kin_KZ(floor(end/2)+1:end),'o','DisplayName','$\sum_x\langle|ik\tilde\phi_i|^2\rangle_t$')
-%     grid on; xlabel('$k$');  legend('show');
-% FMT = '.fig'; save_figure
-
-%% CFL condition
-fig = figure; FIGNAME = ['CFL',sprintf('_%.2d',JOBNUM)];
-    semilogy(Ts,dz./ExB,'-','DisplayName','$|\nabla \phi|\Delta y$');
-    hold on;
-    plot(Ts,dt*ones(1,numel(Ts)),'--k','DisplayName','$\Delta t$');
-    grid on; xlabel('$t$'); ylabel('$\Delta t$'); legend('show');
-FMT = '.fig'; save_figure
-
+if 0
 %% Space-Time diagrams at z = 0
 plt = @(x) real(x);
 fig = figure; FIGNAME = ['r_space_time_diag',sprintf('_%.2d',JOBNUM)];
@@ -157,7 +142,9 @@ subplot(223)% density
     pclr = pcolor(TX,TY,(plt(phi_ST_r))); set(pclr, 'edgecolor','none'); colorbar;
     xlabel('$r\,(z=0)$'); ylabel('$t$'); title('$\phi$');
 FMT = '.fig'; save_figure
+end
 
+if 0
 %% Space-Time diagrams at r = 0
 plt = @(x) real(x);
 fig = figure; FIGNAME = ['z_space_time_diag',sprintf('_%.2d',JOBNUM)];
@@ -172,7 +159,9 @@ subplot(223)% density
     pclr = pcolor(TX,TY,(plt(phi_ST_z))); set(pclr, 'edgecolor','none'); colorbar;
     xlabel('$z\,(r=0)$'); ylabel('$t$'); title('$\phi$');
 FMT = '.fig'; save_figure
+end
 
+if 0
 %% Space-Time diagrams for max_kz(Real)
 plt = @(x) (x);
 fig = figure; FIGNAME = ['kr_space_time_diag',sprintf('_%.2d',JOBNUM)];
@@ -187,7 +176,9 @@ subplot(223)% density
     pclr = pcolor(TX,TY,(plt(PH_ST_kr))); set(pclr, 'edgecolor','none'); colorbar;
     xlabel('$kr$'); ylabel('$t$'); title('$\max_{k_z}(\textrm{Re}(\tilde\phi$))');
 FMT = '.fig'; save_figure
+end
 
+if 0
 %% Space-Time diagrams at max_kr(Real)
 plt = @(x) (x);
 fig = figure; FIGNAME = ['kz_space_time_diag',sprintf('_%.2d',JOBNUM)];
@@ -202,12 +193,28 @@ subplot(223)% density
     pclr = pcolor(TX,TY,(plt(PH_ST_kz))); set(pclr, 'edgecolor','none'); colorbar;
     xlabel('$kz$'); ylabel('$t$'); title('$\max_{k_r}(\textrm{Re}(\tilde\phi))$');
 FMT = '.fig'; save_figure
+end
 
+if 1
+%% Show frame in real space
+it = min(1,numel(Ts));
+fig = figure; FIGNAME = ['rz_frame',sprintf('_%.2d',JOBNUM)];
+    subplot(221); plt = @(x) (((x)));
+        pclr = pcolor((RR),(ZZ),plt(phi(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts(it))); legend('$|\hat\phi|$');
+    subplot(222); plt = @(x) ((x));
+        pclr = pcolor((RR),(ZZ),plt(ni(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts(it))); legend('$|\hat n_i^{00}|$');
+    subplot(223); plt = @(x) ((x));
+        pclr = pcolor((RR),(ZZ),plt(ne(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts(it))); legend('$|\hat n_e^{00}|$');
+FMT = '.fig'; save_figure
+end
 
-if 0
-%% Show frame
-it = min(250,numel(Ts));
-fig = figure; FIGNAME = ['frame',sprintf('_%.2d',JOBNUM)];
+if 1
+%% Show frame in kspace
+it = min(1,numel(Ts));
+fig = figure; FIGNAME = ['krkz_frame',sprintf('_%.2d',JOBNUM)];
     subplot(221); plt = @(x) fftshift((abs(x)));
         pclr = pcolor(fftshift(KR),fftshift(KZ),plt(PH(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
         xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('t=%.3d',Ts(it))); legend('$|\hat\phi|$');
@@ -224,6 +231,7 @@ if strcmp(OUTPUTS.write_non_lin,'.true.')
 end
 FMT = '.fig'; save_figure
 end
+
 %%
 DELAY = 0.07; skip_ = 10;
 FRAMES = 1:skip_:numel(Ts);
@@ -231,17 +239,17 @@ if 0
 %% GIFS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Density electron
 GIFNAME = ['ne',sprintf('_%.2d',JOBNUM)];
-FIELD = real(ne); X = XX; Y = YY; T = Ts;
+FIELD = real(ne); X = RR; Y = ZZ; T = Ts;
 FIELDNAME = '$n_e^{00}$'; XNAME = '$r$'; YNAME = '$z$';
 create_gif
 %% Density ion
 GIFNAME = ['ni',sprintf('_%.2d',JOBNUM)]; 
-FIELD = real(ni); X = XX; Y = YY; T = Ts;
+FIELD = real(ni); X = RR; Y = ZZ; T = Ts;
 FIELDNAME = '$n_i^{00}$'; XNAME = '$r$'; YNAME = '$z$';
 create_gif
 %% Phi
 GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)]; 
-FIELD = real(phi); X = XX; Y = YY; T = Ts;
+FIELD = real(phi); X = RR; Y = ZZ; T = Ts;
 FIELDNAME = '$\phi$'; XNAME = '$r$'; YNAME = '$z$';
 create_gif
 %% Density electron frequency

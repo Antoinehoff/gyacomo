@@ -13,8 +13,8 @@ ETAT    = 0.0;    % Temperature gradient
 MU      = 1e-1;   % Hyper diffusivity coefficient
 LAMBDAD = 0.0;
 %% GRID PARAMETERS
-N       = 64;     % Frequency gridpoints (Nkr = N/2)
-L       = 150;     % Size of the squared frequency domain
+N       = 128;     % Frequency gridpoints (Nkr = N/2)
+L       = 50;     % Size of the squared frequency domain
 KREQ0   = 0;      % put kr = 0
 PMAXE   = 00;     % Highest electron Hermite polynomial degree
 JMAXE   = 01;     % Highest ''       Laguerre ''
@@ -22,13 +22,13 @@ PMAXI   = 00;     % Highest ion      Hermite polynomial degree
 JMAXI   = 01;     % Highest ''       Laguerre ''
 KPAR    = 0.0;    % Parellel wave vector component
 %% TIME PARAMETERS 
-TMAX    = 30.0;    % Maximal time unit
+TMAX    = 100.0;    % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS     = 10;     % Sampling per time unit
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
-SIMID   = 'Turbulences';  % Name of the simulation
+SIMID   = 'shifted_init';  % Name of the simulation
 NON_LIN = 0 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
 CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
 DK      = 0;   % Drift kinetic model (put every kernel to 1)

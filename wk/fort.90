@@ -1,7 +1,7 @@
 &BASIC
   nrun   = 100000000
   dt     = 0.01
-  tmax   = 30
+  tmax   = 100
   RESTART = .false.
 /
 &GRID
@@ -9,10 +9,10 @@
   jmaxe = 1
   pmaxi = 0
   jmaxi = 1
-  Nr   = 64
-  Lr = 150
-  Nz   = 64
-  Lz = 150
+  Nr   = 128
+  Lr = 50
+  Nz   = 128
+  Lz = 50
   kpar = 0
 /
 &OUTPUT_PAR
@@ -25,8 +25,8 @@
   write_phi     = .true.
   write_non_lin     = .false.
   write_doubleprecision = .true.
-  resfile0      = 'Turbulences_64x32_L_150_lin_P_0_J_1_nB_0.5_nN_1_nu_1e-01__mu_1e-01_'
-  rstfile0      = '../checkpoint/cp_Turbulences_64x32_L_150_lin_P_0_J_1_nB_0.5_nN_1_nu_1e-01__mu_1e-01_'
+  resfile0      = 'shifted_init_128x64_L_50_lin_P_0_J_1_nB_0.5_nN_1_nu_1e-01__mu_1e-01_'
+  rstfile0      = '../checkpoint/cp_shifted_init_128x64_L_50_lin_P_0_J_1_nB_0.5_nN_1_nu_1e-01__mu_1e-01_'
   job2load      = 0
 /
 &MODEL_PAR
