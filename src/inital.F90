@@ -68,7 +68,7 @@ SUBROUTINE init_moments
     END DO
 
   ELSE
-    sigma = 2._dp
+    sigma = 5._dp
     gain  = 0.5_dp
     !**** Gaussian initialization (Hakim 2017)
     moments_i = 0; moments_e = 0;
