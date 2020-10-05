@@ -18,6 +18,7 @@ MODULE grid
   REAL(dp), PUBLIC, PROTECTED :: Lkr   = 1._dp  ! horizontal length of the fourier box
   INTEGER,  PUBLIC, PROTECTED :: Nkz   = 16     ! Number of total internal grid points in kz
   REAL(dp), PUBLIC, PROTECTED :: Lkz   = 1._dp  ! vertical length of the fourier box
+  REAL(dp), PUBLIC, PROTECTED :: kpar  = 0_dp   ! parallel wave vector component
 
   ! For Orszag filter
   REAL(dp), PUBLIC, PROTECTED :: two_third_krmax
@@ -195,7 +196,7 @@ CONTAINS
     INTEGER :: lu_in   = 90              ! File duplicated from STDIN
 
     NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, &
-                    Nr,  Lr,  Nz,  Lz
+                    Nr,  Lr,  Nz,  Lz, kpar
     READ(lu_in,grid)
 
   END SUBROUTINE grid_readinputs

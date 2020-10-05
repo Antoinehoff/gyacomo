@@ -5,7 +5,7 @@ SUBROUTINE poisson
   USE array
   USE fields
   USE grid
-  use model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, lambdaD
+  use model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, lambdaD, DK
 
   USE prec_const
   IMPLICIT NONE
@@ -35,7 +35,11 @@ SUBROUTINE poisson
       kperp2 = kr**2 + kz**2
 
       !! Electrons sum(Kernel * Ne0n)  (skm) and sum(Kernel**2) (sk2)
-      b_e2  =  kperp2 * sigmae2_taue_o2 ! non dim kernel argument (kperp2 sigma_a sqrt(2 tau_a))
+      IF ( DK ) THEN
+        b_e2 = 0.0_dp
+      ELSE
+        b_e2  =  kperp2 * sigmae2_taue_o2 ! non dim kernel argument (kperp2 sigma_a sqrt(2 tau_a))
+      ENDIF
 
       ! Initialization for n = 0 (ine = 1)
       Kne  = exp(-b_e2)
@@ -55,7 +59,11 @@ SUBROUTINE poisson
       endif
 
       !! Ions sum(Kernel * Ni0n)  (skm) and sum(Kernel**2) (sk2)
-      b_i2  = kperp2 * sigmai2_taui_o2
+      IF ( DK ) THEN
+        b_i2 = 0._dp
+      ELSE
+        b_i2  = kperp2 * sigmai2_taui_o2
+      ENDIF
 
       ! Initialization for n = 0 (ini = 1)
       Kni  = exp(-b_i2)

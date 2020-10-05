@@ -19,6 +19,7 @@ fprintf(fid,['  Nr   = ', num2str(GRID.Nr),'\n']);
 fprintf(fid,['  Lr = ', num2str(GRID.Lr),'\n']);
 fprintf(fid,['  Nz   = ', num2str(GRID.Nz),'\n']);
 fprintf(fid,['  Lz = ', num2str(GRID.Lz),'\n']);
+fprintf(fid,['  kpar = ', num2str(GRID.kpar),'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&OUTPUT_PAR\n');
@@ -39,6 +40,7 @@ fprintf(fid,'/\n');
 fprintf(fid,'&MODEL_PAR\n');
 fprintf(fid,'  ! Collisionality\n');
 fprintf(fid,['  CO      = ', num2str(MODEL.CO),'\n']);
+fprintf(fid,['  DK      = ', num2str(MODEL.DK),'\n']);
 fprintf(fid,['  NON_LIN = ', MODEL.NON_LIN,'\n']);
 fprintf(fid,['  mu      = ', num2str(MODEL.mu),'\n']);
 fprintf(fid,['  nu      = ', num2str(MODEL.nu),'\n']);
