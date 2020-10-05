@@ -23,9 +23,9 @@ fig  = figure;
     shading interp;
     hold on
   
-    n      = 0;
+    in      = 1;
     nbytes = fprintf(2,'frame %d/%d',n,numel(FIELD(1,1,:)));
-    for n = 1:numel(FIELD(1,1,:)) % time loop
+    for n = FRAMES % loop over selected frames
         pclr = pcolor(X,Y,FIELD(:,:,n)); shading interp; % frame plot
         set(pclr, 'edgecolor','none');
         title([FIELDNAME,', $t \approx$', sprintf('%.3d',ceil(T(n)))]);
@@ -35,7 +35,7 @@ fig  = figure;
         im = frame2im(frame); 
         [imind,cm] = rgb2ind(im,64); 
         % Write to the GIF File 
-        if n == 1 
+        if in == 1 
           imwrite(imind,cm,GIFNAME,'gif', 'Loopcount',inf); 
         else 
           imwrite(imind,cm,GIFNAME,'gif','WriteMode','append', 'DelayTime',DELAY); 
@@ -46,6 +46,7 @@ fig  = figure;
           nbytes = nbytes - 1;
         end
         nbytes = fprintf(2,'frame %d/%d',n,numel(FIELD(1,1,:)));
+        in = in + 1;
     end
     disp(' ')
     disp(['Gif saved @ : ',GIFNAME])

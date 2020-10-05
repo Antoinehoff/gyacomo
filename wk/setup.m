@@ -5,29 +5,32 @@ default_plots_options
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.0;    % Collision frequency
+NU      = 1e-2;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-ETAB    = 0.5;    % Magnetic gradient
+ETAB    = 0.1;    % Magnetic gradient
 ETAN    = 1.0;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
-MU      = 1e-4;   % Hyper diffusivity coefficient
+MU      = 1e-2;   % Hyper diffusivity coefficient
+LAMBDAD = 0.0;
 %% GRID PARAMETERS
-N       = 64;     % Frequency gridpoints
-L       = 20;     % Size of the squared frequency domain
-PMAXE   = 01;     % Highest electron Hermite polynomial degree
-JMAXE   = 00;     % Highest ''       Laguerre ''
-PMAXI   = 01;     % Highest ion      Hermite polynomial degree
-JMAXI   = 00;     % Highest ''       Laguerre ''
+N       = 64;     % Frequency gridpoints (Nr = N/2)
+L       = 10;      % Size of the squared frequency domain
+PMAXE   = 05;     % Highest electron Hermite polynomial degree
+JMAXE   = 02;     % Highest ''       Laguerre ''
+PMAXI   = 05;     % Highest ion      Hermite polynomial degree
+JMAXI   = 02;     % Highest ''       Laguerre ''
+KPAR    = 0.0;    % Parellel wave vector component
 %% TIME PARAMETERS 
-TMAX    = 200.0;    % Maximal time unit
-DT      = 1e-3;   % Time step
-SPS     = 1;     % Sampling per time unit
+TMAX    = 100.0;    % Maximal time unit
+DT      = 1e-4;   % Time step
+SPS     = 10;     % Sampling per time unit
 RESTART = 1;      % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
-SIMID   = 'SwoK';  % Name of the simulation
-NON_LIN = 1; % activate non-linearity 
-CO      = 0;
+SIMID   = 'gvskr';  % Name of the simulation
+NON_LIN = 0;   % activate non-linearity (is cancelled if KREQ0 = 1)
+CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
+DK      = 0;   % Drift kinetic model (put every kernel to 1)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -37,6 +40,7 @@ params   = ['P_',num2str(PMAXE),'_J_',num2str(JMAXE),...
     '_nB_',num2str(ETAB),'_nN_',num2str(ETAN),'_mu_%0.0e_'];
 params   = sprintf(params,MU);
 if ~NON_LIN; params = ['lin_',params]; end;
+if  DK;      params = ['DK_',params]; end;
 resolution = ['_',num2str(N/2),'x',num2str(N),'_'];
 gridname   = ['L_',num2str(L),'_'];
 BASIC.SIMID = [SIMID,resolution,gridname,params];
@@ -66,8 +70,10 @@ GRID.Nr    = N; % r grid resolution
 GRID.Lr    = L; % r length
 GRID.Nz    = N; % z ''
 GRID.Lz    = L; % z ''
+GRID.kpar  = KPAR;
 % Model parameters
 MODEL.CO      = CO;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
+if DK;      MODEL.DK      = '.true.'; else; MODEL.DK      = '.false.';end;
 if NON_LIN; MODEL.NON_LIN = '.true.'; else; MODEL.NON_LIN = '.false.';end;
 MODEL.mu      = MU;
 MODEL.nu      = NU; % hyper diffusive coefficient nu for HW
@@ -84,7 +90,7 @@ MODEL.q_i     = 1.0;
 MODEL.eta_n   = ETAN;        % source term kappa for HW
 MODEL.eta_T   = ETAT;        % Temperature
 MODEL.eta_B   = ETAB;        % Magnetic
-MODEL.lambdaD = 0.0;
+MODEL.lambdaD = LAMBDAD;
 % Time integration and intialization parameters
 TIME_INTEGRATION.numerical_scheme  = '''RK4''';
 INITIAL.only_Na00         = '.false.';

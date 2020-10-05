@@ -6,6 +6,7 @@ MODULE model
   PRIVATE
 
   INTEGER,  PUBLIC, PROTECTED ::      CO =  0         ! Collision Operator
+  LOGICAL,  PUBLIC, PROTECTED ::      DK =  0         ! Drift kinetic model
   LOGICAL,  PUBLIC, PROTECTED :: NON_LIN =  .true.    ! To turn on non linear bracket term
   REAL(dp), PUBLIC, PROTECTED ::      mu =  0._dp     ! Hyperdiffusivity coefficient (for num. stability)
   REAL(dp), PUBLIC, PROTECTED ::      nu =  1._dp     ! Collision frequency
@@ -31,7 +32,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /MODEL_PAR/ CO, NON_LIN, mu, nu, tau_e, tau_i, sigma_e, sigma_i, &
+    NAMELIST /MODEL_PAR/ CO, DK, NON_LIN, mu, nu, tau_e, tau_i, sigma_e, sigma_i, &
                          q_e, q_i, eta_n, eta_T, eta_B, lambdaD
 
     READ(lu_in,model_par)

@@ -175,7 +175,7 @@ SUBROUTINE diagnose(kstep)
 
     ! Terminal info
     IF (MOD(cstep, INT(1.0/dt)) == 0) THEN
-     WRITE(*,"(F4.0,A,F4.0)") time,"/",tmax
+     WRITE(*,"(F5.0,A,F5.0)") time,"/",tmax
     ENDIF
 
      !                       2.1   0d history arrays

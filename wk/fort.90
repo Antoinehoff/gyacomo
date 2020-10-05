@@ -1,18 +1,19 @@
 &BASIC
   nrun   = 100000000
-  dt     = 0.001
-  tmax   = 200
+  dt     = 0.0001
+  tmax   = 100
   RESTART = .true.
 /
 &GRID
-  pmaxe =1
-  jmaxe = 0
-  pmaxi = 1
-  jmaxi = 0
+  pmaxe =5
+  jmaxe = 2
+  pmaxi = 5
+  jmaxi = 2
   Nr   = 64
-  Lr = 20
+  Lr = 10
   Nz   = 64
-  Lz = 20
+  Lz = 10
+  kpar = 0
 /
 &OUTPUT_PAR
   nsave_0d = 0
@@ -22,18 +23,19 @@
   write_Ni00    = .true.
   write_moments = .true.
   write_phi     = .true.
-  write_non_lin     = .true.
+  write_non_lin     = .false.
   write_doubleprecision = .true.
-  resfile0      = 'SwoK_32x64_L_20_P_1_J_0_nB_0.5_nN_1_mu_1e-04_'
-  rstfile0      = '../checkpoint/cp_SwoK_32x64_L_20_P_1_J_0_nB_0.5_nN_1_mu_1e-04_'
+  resfile0      = 'gvskr_32x64_L_10_lin_P_5_J_2_nB_0.1_nN_1_mu_1e-02_'
+  rstfile0      = '../checkpoint/cp_gvskr_32x64_L_10_lin_P_5_J_2_nB_0.1_nN_1_mu_1e-02_'
   job2load      = 0
 /
 &MODEL_PAR
   ! Collisionality
-  CO      = 0
-  NON_LIN = .true.
-  mu      = 0.0001
-  nu      = 0
+  CO      = -2
+  DK      = .false.
+  NON_LIN = .false.
+  mu      = 0.01
+  nu      = 0.01
   tau_e   = 1
   tau_i   = 1
   sigma_e = 0.023338
@@ -42,7 +44,7 @@
   q_i     = 1
   eta_n   = 1
   eta_T   = 0
-  eta_B   = 0.5
+  eta_B   = 0.1
   lambdaD = 0
 /
 &INITIAL_CON
@@ -50,9 +52,9 @@
   initback_moments  =0.0001
   initnoise_moments =5e-05
   iseed             =42
-  selfmat_file      ='../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_1_Jmaxe_0_Pmaxi_1_Jmaxi_0_pamaxx_10.h5'
-  eimat_file        ='../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_1_Jmaxe_0_Pmaxi_1_Jmaxi_0_pamaxx_10_tau_1.0000_mu_0.0233.h5'
-  iemat_file        ='../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_1_Jmaxe_0_Pmaxi_1_Jmaxi_0_pamaxx_10_tau_1.0000_mu_0.0233.h5'
+  selfmat_file      ='../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_5_Jmaxe_2_Pmaxi_5_Jmaxi_2_pamaxx_10.h5'
+  eimat_file        ='../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_5_Jmaxe_2_Pmaxi_5_Jmaxi_2_pamaxx_10_tau_1.0000_mu_0.0233.h5'
+  iemat_file        ='../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_5_Jmaxe_2_Pmaxi_5_Jmaxi_2_pamaxx_10_tau_1.0000_mu_0.0233.h5'
 /
 &TIME_INTEGRATION_PAR
   numerical_scheme='RK4'

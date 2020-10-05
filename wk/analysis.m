@@ -2,14 +2,14 @@
 JOBNUM = 00;
 filename = [BASIC.SIMID,'_','%.2d.h5'];
 filename = sprintf(filename,JOBNUM); disp(['Analysing ',filename])
-[Nipj, p_, j_, kr, kz, Ts] = load_5D_data(filename, 'moments_i');
-Nepj                       = load_5D_data(filename, 'moments_e');
+[Nipj, p_, j_, kr, kz, Ts, dt] = load_5D_data(filename, 'moments_i');
+Nepj                           = load_5D_data(filename, 'moments_e');
 Ni      = squeeze(Nipj(1,1,:,:,:));
 Ne      = squeeze(Nepj(1,1,:,:,:));
 PH      = load_2D_data(filename, 'phi');
 Ts      = Ts';
 Ns      = numel(Ts);
-dt      = mean(diff(Ts));
+dt_samp = mean(diff(Ts));
 if strcmp(OUTPUTS.write_non_lin,'.true.')
     Sipj    = load_5D_data(filename, 'Sipj');
     Sepj    = load_5D_data(filename, 'Sepj');
@@ -45,36 +45,54 @@ for it = 1:numel(PH(1,1,:))
 end
 
 %% Post processing
-phi_ST_r = zeros(Nr,Ns);   % Space-Time diagram of ES potential
-ne_ST_r  = zeros(Nr,Ns);   % Space-Time diagram of density
-ni_ST_r  = zeros(Nr,Ns);   % Space-Time diagram of density
-phi_ST_z = zeros(Nz,Ns);   % Space-Time diagram of ES potential
-ne_ST_z  = zeros(Nz,Ns);   % Space-Time diagram of density
-ni_ST_z  = zeros(Nz,Ns);   % Space-Time diagram of density
-phi_00 = zeros(1,Ns);    % Time evolution of ES potential at origin
-ne_00  = zeros(1,Ns);    % Time evolution of density at origin
-ni_00  = zeros(1,Ns);    % Time evolution of density at origin
-[~,ir0] = min(abs(r)); [~,iz0] = min(abs(z));
-Ne_11  = zeros(1,Ns);    % Time evolution of F density at 1,1
-Ni_11  = zeros(1,Ns);    % Time evolution of F density at 1,1
-[~,ikr1] = min(abs(kr-round(1/dkr)*dkr)); [~,ikz1] = min(abs(kz-round(1/dkz)*dkz));
-Sni_norm= zeros(1,Ns);   % Time evolution of the amp of density nonlin term
-Sne_norm= zeros(1,Ns);   % Time evolution of the amp of vorti. nonlin term
-E_pot  = zeros(1,Ns);    % Potential energy n^2
-E_kin  = zeros(1,Ns);    % Kinetic energy grad(phi)^2
-ExB    = zeros(1,Ns);    % ExB drift intensity \propto |\grad \phi|
-CFL    = zeros(1,Ns);    % CFL time step
+Ne_ST_kr = zeros(Nkr,Ns);   % Space-Time of max_kz Ne(k)
+Ne_ST_kz = zeros(Nkz,Ns);   % ''            max_kr Ne(k)
+ne_ST_r  = zeros(Nr,Ns);   % Space-Time of ne(z==0)
+ne_ST_z  = zeros(Nz,Ns);   % ''               r==0
+ne_00    = zeros(1,Ns);    % Time evolution of ne(r,z) at origin
+Ne_gm    = zeros(1,Ns);    % Time evolution of Ne(k) max gamma (max real)
+Ni_ST_kr = zeros(Nkr,Ns);   % same for ions
+Ni_ST_kz = zeros(Nkz,Ns);   % .
+ni_ST_r  = zeros(Nr,Ns);   % . 
+ni_ST_z  = zeros(Nz,Ns);   % .
+ni_00    = zeros(1,Ns);    % .
+Ni_gm    = zeros(1,Ns);    % .
+PH_ST_kr = zeros(Nkr,Ns);   % same for ES-potential
+PH_ST_kz = zeros(Nkz,Ns);   % . 
+phi_ST_r = zeros(Nr,Ns);   % .
+phi_ST_z = zeros(Nz,Ns);   % .
+phi_00   = zeros(1,Ns);    % .
+Sne_norm = zeros(1,Ns);    % Time evolution of the amp of e nonlin term
+Sni_norm = zeros(1,Ns);    % Time evolution of the amp of i nonlin term
+E_pot    = zeros(1,Ns);    % Potential energy n^2
+E_kin    = zeros(1,Ns);    % Kinetic energy grad(phi)^2
+ExB      = zeros(1,Ns);    % ExB drift intensity \propto |\grad \phi|
+CFL      = zeros(1,Ns);    % CFL time step
 Ddr = 1i*KR; Ddz = 1i*KZ; lapl   = Ddr.^2 + Ddz.^2; 
+[~,ir0]  = min(abs(r)); % index of r==0
+[~,iz0]  = min(abs(z)); % index of z==0
+[~,ikr1] = min(abs(kr-round(1/dkr)*dkr)); % index of kr==1 
+[~,ikz1] = min(abs(kz-round(1/dkz)*dkz)); % index of kz==1
 for it = 1:numel(PH(1,1,:))
     NE_ = Ne(:,:,it); NN_ = Ni(:,:,it); PH_ = PH(:,:,it);
-    phi_ST_r(:,it) = phi(:,iz0,it); phi_ST_z(:,it) = phi(ir0,:,it);
+
     ne_ST_r  (:,it)= ne(:,iz0,it);  ne_ST_z  (:,it)= ne(ir0,:,it);
+    Ne_ST_kr (:,it)= max(real(Ne(:,:,it)),[],2); 
+    Ne_ST_kz (:,it)= max(real(Ne(:,:,it)),[],1);
+    ne_00(it)      = ne(ir0,iz0,it);
+    Ne_gm(it)      = max(max(real(Ne(:,:,it))));
+    
     ni_ST_r  (:,it)= ni(:,iz0,it);  ni_ST_z  (:,it)= ni(ir0,:,it);
-    phi_00(it)   = phi(ir0,iz0,it);
-    ne_00(it)    = ne(ir0,iz0,it);
-    ni_00(it)    = ni(ir0,iz0,it);
-    Ne_11(it)    = Ne(ikr1,ikz1,it);
-    Ni_11(it)    = Ni(ikr1,ikz1,it);
+    Ni_ST_kr (:,it)= max(real(Ni(:,:,it)),[],2); 
+    Ni_ST_kz (:,it)= max(real(Ni(:,:,it)),[],1);
+    ni_00(it)      = ni(ir0,iz0,it);
+    Ni_gm(it)      = max(max(real(Ni(:,:,it))));
+    
+    phi_ST_r(:,it) = phi(:,iz0,it); phi_ST_z(:,it) = phi(ir0,:,it);
+    PH_ST_kr(:,it) = max(real(PH(:,:,it)),[],2); 
+    PH_ST_kz(:,it) = max(real(PH(:,:,it)),[],1);
+    phi_00(it)     = phi(ir0,iz0,it);
+    
 if strcmp(OUTPUTS.write_non_lin,'.true.')
     Sni_norm(it) = sum(sum(abs(SNi(:,:,it))));
     Sne_norm(it) = sum(sum(abs(SNe(:,:,it))));
@@ -94,7 +112,7 @@ fig = figure; FIGNAME = ['t_evolutions',sprintf('_%.2d',JOBNUM)];
         semilogy(Ts,abs(ni_00),'-','DisplayName','$n_i^{00}$');
         grid on; xlabel('$t$'); ylabel('$|n_a(x=0,y=0)|$');
     subplot(222)
-        semilogy(Ts,abs(Ni_11),'-','DisplayName','$\phi$')
+        semilogy(Ts,abs(Ni_gm),'-','DisplayName','$\phi$')
         grid on; xlabel('$t$'); ylabel('$|\tilde n(k_r\approx 1,k_z\approx 1)|$');
     subplot(223)
         semilogy(Ts,E_kin+E_pot,'-','DisplayName','$\sum|ik\tilde\phi_i|^2+\sum|\tilde n_i|^2$')
@@ -110,12 +128,12 @@ end
 FMT = '.fig'; save_figure
 
 %% Spectra energy
-fig = figure; FIGNAME = ['Energy_kin_KZ',sprintf('_%.2d',JOBNUM)];
-    semilogy(kr(floor(end/2)+1:end),E_kin_KR(floor(end/2)+1:end),'o','DisplayName','$\sum_y\langle|ik\tilde\phi_i|^2\rangle_t$')
-    hold on;
-    loglog(kz(floor(end/2)+1:end),E_kin_KZ(floor(end/2)+1:end),'o','DisplayName','$\sum_x\langle|ik\tilde\phi_i|^2\rangle_t$')
-    grid on; xlabel('$k$');  legend('show');
-FMT = '.fig'; save_figure
+% fig = figure; FIGNAME = ['Energy_kin_KZ',sprintf('_%.2d',JOBNUM)];
+%     semilogy(kr(floor(end/2)+1:end),E_kin_KR(floor(end/2)+1:end),'o','DisplayName','$\sum_y\langle|ik\tilde\phi_i|^2\rangle_t$')
+%     hold on;
+%     loglog(kz(floor(end/2)+1:end),E_kin_KZ(floor(end/2)+1:end),'o','DisplayName','$\sum_x\langle|ik\tilde\phi_i|^2\rangle_t$')
+%     grid on; xlabel('$k$');  legend('show');
+% FMT = '.fig'; save_figure
 
 %% CFL condition
 fig = figure; FIGNAME = ['CFL',sprintf('_%.2d',JOBNUM)];
@@ -155,17 +173,41 @@ subplot(223)% density
     xlabel('$z\,(r=0)$'); ylabel('$t$'); title('$\phi$');
 FMT = '.fig'; save_figure
 
-%% phi
-fig = figure; FIGNAME = ['phi_ST',sprintf('_%.2d',JOBNUM)];
-    [TY,TX] = meshgrid(Ts,z);
-    pclr = pcolor(TX,TY,(plt(phi_ST_r))); set(pclr, 'edgecolor','none'); colorbar;
-    xlabel('$x\,(y=0)$'); ylabel('$t$'); title('$\phi$');
+%% Space-Time diagrams for max_kz(Real)
+plt = @(x) (x);
+fig = figure; FIGNAME = ['kr_space_time_diag',sprintf('_%.2d',JOBNUM)];
+    [TY,TX] = meshgrid(Ts,kr);
+subplot(221)% density
+    pclr = pcolor(TX,TY,(plt(Ne_ST_kr))); set(pclr, 'edgecolor','none'); colorbar;
+    xlabel('$kr$'); ylabel('$t$'); title('$\max_{k_z}(\textrm{Re}(N_e^{00}))$');
+subplot(222)% density
+    pclr = pcolor(TX,TY,(plt(Ni_ST_kr))); set(pclr, 'edgecolor','none'); colorbar;
+    xlabel('$kr$'); ylabel('$t$'); title('$\max_{k_z}(\textrm{Re}(N_i^{00}))$');
+subplot(223)% density
+    pclr = pcolor(TX,TY,(plt(PH_ST_kr))); set(pclr, 'edgecolor','none'); colorbar;
+    xlabel('$kr$'); ylabel('$t$'); title('$\max_{k_z}(\textrm{Re}(\tilde\phi$))');
 FMT = '.fig'; save_figure
+
+%% Space-Time diagrams at max_kr(Real)
+plt = @(x) (x);
+fig = figure; FIGNAME = ['kz_space_time_diag',sprintf('_%.2d',JOBNUM)];
+    [TY,TX] = meshgrid(Ts,kz);
+subplot(221)% density
+    pclr = pcolor(TX,TY,(plt(Ne_ST_kz))); set(pclr, 'edgecolor','none'); colorbar;
+    xlabel('$kz$'); ylabel('$t$'); title('$\max_{k_r}(\textrm{Re}(N_e^{00}))$');
+subplot(222)% density
+    pclr = pcolor(TX,TY,(plt(Ni_ST_kz))); set(pclr, 'edgecolor','none'); colorbar;
+    xlabel('$kz$'); ylabel('$t$'); title('$\max_{k_r}(\textrm{Re}(N_i^{00}))$');
+subplot(223)% density
+    pclr = pcolor(TX,TY,(plt(PH_ST_kz))); set(pclr, 'edgecolor','none'); colorbar;
+    xlabel('$kz$'); ylabel('$t$'); title('$\max_{k_r}(\textrm{Re}(\tilde\phi))$');
+FMT = '.fig'; save_figure
+
 
 if 0
 %% Show frame
-it = min(1,numel(Ts));
-fig = figure; FIGNAME = ['frame',sprintf('_%.2d',SID)];
+it = min(50,numel(Ts));
+fig = figure; FIGNAME = ['frame',sprintf('_%.2d',JOBNUM)];
     subplot(221); plt = @(x) fftshift((real(x)));
         pclr = pcolor(fftshift(KR),fftshift(KZ),plt(PH(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
         xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('t=%.3d',Ts(it))); legend('$\hat\phi$');
@@ -183,19 +225,24 @@ end
 FMT = '.fig'; save_figure
 end
 %%
-DELAY = 0.1; skip_ = 2;
-if 0
+DELAY = 0.07; skip_ = 1;
+FRAMES = 200:skip_:numel(Ts);
+if 1
 %% GIFS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Density electron
 GIFNAME = ['ne',sprintf('_%.2d',JOBNUM)]; FIELDNAME = '$n_e^{00}$';
-FIELD = real(ne(:,:,1:skip_:end)); X = XX; Y = YY; T = Ts(1:skip_:end);
+FIELD = real(ne); X = XX; Y = YY; T = Ts;
 create_gif
 %% Density ion
 GIFNAME = ['ni',sprintf('_%.2d',JOBNUM)]; FIELDNAME = '$n_i^{00}$';
-FIELD = real(ni(:,:,1:skip_:end)); X = XX; Y = YY; T = Ts(1:skip_:end);
+FIELD = real(ni); X = XX; Y = YY; T = Ts;
 create_gif
 %% Phi
 GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)]; FIELDNAME = '$\phi$';
-FIELD = real(phi(:,:,1:skip_:end)); X = XX; Y = YY; T = Ts(1:skip_:end);
+FIELD = real(phi); X = XX; Y = YY; T = Ts;
+create_gif
+%% Density electron frequency
+GIFNAME = ['Ni',sprintf('_%.2d',JOBNUM)]; FIELDNAME = '$N_i^{00}$';
+FIELD = real(Ni); X = KR; Y = KZ; T = Ts;
 create_gif
 end

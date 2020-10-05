@@ -1,4 +1,4 @@
-function [ data, kr, kz, time ] = load_2D_data( filename, variablename )
+function [ data, kr, kz, time, dt ] = load_2D_data( filename, variablename )
 %LOAD_2D_DATA load a 2D variable stored in a hdf5 result file from HeLaZ
     time     = h5read(filename,'/data/var2d/time');
     kr       = h5read(filename,['/data/var2d/',variablename,'/coordkr']);
