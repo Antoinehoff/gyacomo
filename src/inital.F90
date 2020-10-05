@@ -51,7 +51,7 @@ SUBROUTINE init_moments
   IMPLICIT NONE
 
   REAL(dp) :: noise
-  REAL(dp) :: kr, kz, sigma, gain
+  REAL(dp) :: kr, kz, sigma, gain, kz_shift
   INTEGER, DIMENSION(12) :: iseedarr
 
   ! Seed random number generator
@@ -68,16 +68,17 @@ SUBROUTINE init_moments
     END DO
 
   ELSE
-    sigma = 5._dp
-    gain  = 0.5_dp
+    sigma    = 5._dp     ! Gaussian sigma
+    gain     = 0.5_dp    ! Gaussian mean
+    kz_shift = 0.5_dp    ! Gaussian z shift
     !**** Gaussian initialization (Hakim 2017)
     moments_i = 0; moments_e = 0;
       DO ikr=ikrs,ikre
         kr = krarray(ikr)
         DO ikz=ikzs,ikze
           kz = kzarray(ikz)
-          moments_i( 1,1, ikr,ikz, :) = gain*sigma/SQRT2 * EXP(-(kr**2+kz**2)*sigma**2/4._dp)
-          moments_e( 1,1, ikr,ikz, :) = gain*sigma/SQRT2 * EXP(-(kr**2+kz**2)*sigma**2/4._dp)
+          moments_i( 1,1, ikr,ikz, :) = gain*sigma/SQRT2 * EXP(-(kr**2+(kz-kz_shift)**2)*sigma**2/4._dp)
+          moments_e( 1,1, ikr,ikz, :) = gain*sigma/SQRT2 * EXP(-(kr**2+(kz-kz_shift)**2)*sigma**2/4._dp)
         END DO
       END DO
     ! Broad noise initialization
