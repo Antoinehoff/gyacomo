@@ -68,7 +68,11 @@ SUBROUTINE diagnose(kstep)
      CALL creatd(fidres, rank, dims,  "/data/var2d/time",     "Time t*c_s/R")
      CALL creatd(fidres, rank, dims, "/data/var2d/cstep", "iteration number")
 
-     IF (write_Ni00) THEN
+     IF (write_Na00) THEN
+       CALL creatg(fidres, "/data/var2d/Ne00", "Ne00")
+       CALL putarr(fidres, "/data/var2d/Ne00/coordkr", krarray(ikrs:ikre), "kr*rho_s0",ionode=0)
+       CALL putarr(fidres, "/data/var2d/Ne00/coordkz", kzarray(ikzs:ikze), "kz*rho_s0",ionode=0)
+
        CALL creatg(fidres, "/data/var2d/Ni00", "Ni00")
        CALL putarr(fidres, "/data/var2d/Ni00/coordkr", krarray(ikrs:ikre), "kr*rho_s0",ionode=0)
        CALL putarr(fidres, "/data/var2d/Ni00/coordkz", kzarray(ikzs:ikze), "kz*rho_s0",ionode=0)
@@ -129,6 +133,8 @@ SUBROUTINE diagnose(kstep)
      CALL attach(fidres, TRIM(str),        "host",     HOST) !defined in srcinfo.h
      CALL attach(fidres, TRIM(str),  "start_time",     time)
      CALL attach(fidres, TRIM(str), "start_cstep",    cstep-1)
+     CALL attach(fidres, TRIM(str), "start_iframe2d", iframe2d)
+     CALL attach(fidres, TRIM(str), "start_iframe5d", iframe5d)
      CALL attach(fidres, TRIM(str),          "dt",       dt)
      CALL attach(fidres, TRIM(str),        "tmax",     tmax)
      CALL attach(fidres, TRIM(str),        "nrun",     nrun)
@@ -258,8 +264,9 @@ SUBROUTINE diagnose_2d
      CALL write_field2d(phi(:,:), 'phi')
   END IF
 
-  IF (write_Ni00) THEN
-     CALL write_field2d(moments_i(1,1,:,:,updatetlevel), 'Ni00')
+  IF (write_Na00) THEN
+    CALL write_field2d(moments_e(1,1,:,:,updatetlevel), 'Ne00')
+    CALL write_field2d(moments_i(1,1,:,:,updatetlevel), 'Ni00')
   END IF
 CONTAINS
 

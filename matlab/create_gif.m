@@ -18,17 +18,20 @@ else
 fig  = figure;
     pcolor(X,Y,FIELD(:,:,1)); % to set up
     colormap jet
-    colorbar
     axis tight manual % this ensures that getframe() returns a consistent size
-    shading interp;
-    xlabel(XNAME); ylabel(YNAME);
-    hold on
-  
+    if INTERP
+        shading interp;
+    end
     in      = 1;
     nbytes = fprintf(2,'frame %d/%d',in,numel(FIELD(1,1,:)));
     for n = FRAMES % loop over selected frames
-        pclr = pcolor(X,Y,FIELD(:,:,n)); shading interp; % frame plot
+        pclr = pcolor(X,Y,FIELD(:,:,n)); % frame plot
+        if INTERP
+            shading interp; 
+        end
         set(pclr, 'edgecolor','none');
+        caxis([min(min(FIELD(:,:,n))),max(max(FIELD(:,:,n)))]);
+        xlabel(XNAME); ylabel(YNAME); colorbar;
         title([FIELDNAME,', $t \approx$', sprintf('%.3d',ceil(T(n)))]);
         drawnow 
         % Capture the plot as an image 

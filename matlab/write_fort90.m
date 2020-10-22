@@ -27,7 +27,7 @@ fprintf(fid,['  nsave_0d = ', num2str(OUTPUTS.nsave_0d),'\n']);
 fprintf(fid,['  nsave_1d = ', num2str(OUTPUTS.nsave_1d),'\n']);
 fprintf(fid,['  nsave_2d = ', num2str(OUTPUTS.nsave_2d),'\n']);
 fprintf(fid,['  nsave_5d = ', num2str(OUTPUTS.nsave_5d),'\n']);
-fprintf(fid,['  write_Ni00    = ', OUTPUTS.write_Ni00,'\n']);
+fprintf(fid,['  write_Na00    = ', OUTPUTS.write_Na00,'\n']);
 fprintf(fid,['  write_moments = ', OUTPUTS.write_moments,'\n']);
 fprintf(fid,['  write_phi     = ', OUTPUTS.write_phi,'\n']);
 fprintf(fid,['  write_non_lin     = ', OUTPUTS.write_non_lin,'\n']);
@@ -54,6 +54,8 @@ fprintf(fid,['  eta_n   = ', num2str(MODEL.eta_n),'\n']);
 fprintf(fid,['  eta_T   = ', num2str(MODEL.eta_T),'\n']);
 fprintf(fid,['  eta_B   = ', num2str(MODEL.eta_B),'\n']);
 fprintf(fid,['  lambdaD = ', num2str(MODEL.lambdaD),'\n']);
+fprintf(fid,['  kr0KH   = ', num2str(MODEL.kr0KH),'\n']);
+fprintf(fid,['  A0KH    = ', num2str(MODEL.A0KH),'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&INITIAL_CON\n');

@@ -1,60 +1,62 @@
 &BASIC
   nrun   = 100000000
-  dt     = 0.01
-  tmax   = 100
+  dt     = 0.0001
+  tmax   = 20
   RESTART = .false.
 /
 &GRID
   pmaxe =0
-  jmaxe = 1
+  jmaxe = 6
   pmaxi = 0
-  jmaxi = 1
-  Nr   = 128
-  Lr = 50
-  Nz   = 128
-  Lz = 50
+  jmaxi = 6
+  Nr   = 64
+  Lr = 40
+  Nz   = 64
+  Lz = 40
   kpar = 0
 /
 &OUTPUT_PAR
   nsave_0d = 0
   nsave_1d = 0
-  nsave_2d = 10
-  nsave_5d = 10
-  write_Ni00    = .true.
+  nsave_2d = 10000
+  nsave_5d = 10000
+  write_Na00    = .true.
   write_moments = .true.
   write_phi     = .true.
   write_non_lin     = .false.
   write_doubleprecision = .true.
-  resfile0      = 'shifted_init_128x64_L_50_lin_P_0_J_1_nB_0.5_nN_1_nu_1e-01__mu_1e-01_'
-  rstfile0      = '../checkpoint/cp_shifted_init_128x64_L_50_lin_P_0_J_1_nB_0.5_nN_1_nu_1e-01__mu_1e-01_'
+  resfile0      = 'KH_lin_mode_Nz_16_A_1.25_64x32_L_40_lin_Pe_0_Je_6_Pi_0_Ji_6_nB_0_nN_0_nu_0e+00__mu_1e-04_'
+  rstfile0      = '../checkpoint/cp_KH_lin_mode_Nz_16_A_1.25_64x32_L_40_lin_Pe_0_Je_6_Pi_0_Ji_6_nB_0_nN_0_nu_0e+00__mu_1e-04_'
   job2load      = 0
 /
 &MODEL_PAR
   ! Collisionality
-  CO      = -2
+  CO      = 0
   DK      = .false.
   NON_LIN = .false.
-  mu      = 0.1
-  nu      = 0.1
+  mu      = 0.0001
+  nu      = 0
   tau_e   = 1
   tau_i   = 1
   sigma_e = 0.023338
   sigma_i = 1
   q_e     = -1
   q_i     = 1
-  eta_n   = 1
+  eta_n   = 0
   eta_T   = 0
-  eta_B   = 0.5
+  eta_B   = 0
   lambdaD = 0
+  kr0KH   = 2.5133
+  A0KH    = 1.25
 /
 &INITIAL_CON
   only_Na00         =.false.
-  initback_moments  =0.0001
-  initnoise_moments =5e-05
+  initback_moments  =0
+  initnoise_moments =0.0001
   iseed             =42
-  selfmat_file      ='../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_0_Jmaxe_1_Pmaxi_0_Jmaxi_1_pamaxx_10.h5'
-  eimat_file        ='../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_0_Jmaxe_1_Pmaxi_0_Jmaxi_1_pamaxx_10_tau_1.0000_mu_0.0233.h5'
-  iemat_file        ='../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_0_Jmaxe_1_Pmaxi_0_Jmaxi_1_pamaxx_10_tau_1.0000_mu_0.0233.h5'
+  selfmat_file      ='../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_0_Jmaxe_6_Pmaxi_0_Jmaxi_6_pamaxx_10.h5'
+  eimat_file        ='../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_0_Jmaxe_6_Pmaxi_0_Jmaxi_6_pamaxx_10_tau_1.0000_mu_0.0233.h5'
+  iemat_file        ='../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_0_Jmaxe_6_Pmaxi_0_Jmaxi_6_pamaxx_10_tau_1.0000_mu_0.0233.h5'
 /
 &TIME_INTEGRATION_PAR
   numerical_scheme='RK4'

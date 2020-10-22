@@ -14,7 +14,7 @@ SUBROUTINE poisson
   REAL(dp)    :: ini_dp, ine_dp
   REAL(dp)    :: kr, kz, kperp2
   REAL(dp)    :: Kne, Kni ! sub kernel factor for recursive build
-  REAL(dp)    :: b_e2, b_i2, alphaD
+  REAL(dp)    :: be_2, bi_2, alphaD
   REAL(dp)    :: sigmae2_taue_o2, sigmai2_taui_o2, qe2_taue, qi2_taui ! To avoid redondant computation
   REAL(dp)    :: sum_kernel2_e,    sum_kernel2_i    ! Store sum Kn^2
   COMPLEX(dp) :: sum_kernel_mom_e, sum_kernel_mom_i ! Store sum Kn*Napn
@@ -33,61 +33,104 @@ SUBROUTINE poisson
       kr     = krarray(ikr)
       kz     = kzarray(ikz)
       kperp2 = kr**2 + kz**2
+      ! non dim kernel argument (kperp2 sigma_a sqrt(2 tau_a))
+      be_2  =  kperp2 * sigmae2_taue_o2
+      bi_2  =  kperp2 * sigmai2_taui_o2
 
-      !! Electrons sum(Kernel * Ne0n)  (skm) and sum(Kernel**2) (sk2)
-      IF ( DK ) THEN
-        b_e2 = 0.0_dp
-      ELSE
-        b_e2  =  kperp2 * sigmae2_taue_o2 ! non dim kernel argument (kperp2 sigma_a sqrt(2 tau_a))
-      ENDIF
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!! Electrons sum(Kernel * Ne0n)  (skm) and sum(Kernel**2) (sk2)
+      !! Sum(kernel * Moments_0n)
+      ! IF ( DK ) THEN
+      !   sum_kernel_mom_e = moments_e(1, 1, ikr, ikz, updatetlevel)
+      ! ELSE
+        ! Initialization for n = 0 (ine = 1)
+        Kne  = exp(-be_2)
+        sum_kernel_mom_e = Kne*moments_e(1, 1, ikr, ikz, updatetlevel)
+        ! loop over n only if the max polynomial degree is 1 or more
+        if (jmaxe .GT. 0) then
+          DO ine=2,jmaxe+1 ! ine = n+1
+            ine_dp = REAL(ine-1,dp)
+            ! We update iteratively the kernel functions (to spare factorial computations)
+            Kne  = Kne  * be_2/ine_dp
+            sum_kernel_mom_e  = sum_kernel_mom_e  + Kne * moments_e(1, ine, ikr, ikz, updatetlevel)
+          END DO
+        endif
+      ! ENDIF
+      !! Sum(kernel**2)
+      ! IF ( DK ) THEN
+      !   sum_kernel2_e = 1._dp - 2._dp*be_2 + be_2**2!(1._dp-be_2)**2
+      ! ELSE
+        ! Initialization for n = 0 (ine = 1)
+        Kne  = exp(-be_2)
+        sum_kernel2_e = Kne**2
+        ! loop over n only without caring of jmax since no moment dependency
+        ! DO ine=2,10
+        if (jmaxe .GT. 0) then
+          DO ine=2,jmaxe+1 ! ine = n+1
+            ine_dp        = REAL(ine-1,dp)         ! Real index (0 to jmax)
+            Kne           = Kne  * be_2/ine_dp     ! update kernel_n
+            sum_kernel2_e = sum_kernel2_e + Kne**2 ! ... sum recursively ...
+          END DO
+        ENDIF
 
-      ! Initialization for n = 0 (ine = 1)
-      Kne  = exp(-b_e2)
-      sum_kernel_mom_e = Kne*moments_e(1, 1, ikr, ikz, updatetlevel)
-      sum_kernel2_e    = Kne**2
-
-      ! loop over n only if the max polynomial degree is 1 or more
-      if (jmaxe .GT. 0) then
-        DO ine=2,jmaxe+1 ! ine = n+1
-          ine_dp = REAL(ine-1,dp)
-
-          Kne  = Kne  * b_e2/ine_dp       ! We update iteratively the kernel functions (to spare factorial computations)
-
-          sum_kernel_mom_e  = sum_kernel_mom_e  + Kne * moments_e(1, ine, ikr, ikz, updatetlevel)
-          sum_kernel2_e     = sum_kernel2_e     + Kne**2 ! ... sum recursively ...
-        END DO
-      endif
-
-      !! Ions sum(Kernel * Ni0n)  (skm) and sum(Kernel**2) (sk2)
-      IF ( DK ) THEN
-        b_i2 = 0._dp
-      ELSE
-        b_i2  = kperp2 * sigmai2_taui_o2
-      ENDIF
-
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!!!! Ions sum(Kernel * Ni0n)  (skm) and sum(Kernel**2) (sk2)
+      !! Sum(kernel * Moments_0n)
       ! Initialization for n = 0 (ini = 1)
-      Kni  = exp(-b_i2)
-      sum_kernel_mom_i = Kni*moments_i(1, 1, ikr, ikz, updatetlevel)
-      sum_kernel2_i    = Kni**2
+      ! IF ( DK ) THEN
+      !   sum_kernel_mom_i = moments_i(1, 1, ikr, ikz, updatetlevel)
+      ! ELSE
+        Kni  = exp(-bi_2)
+        sum_kernel_mom_i = Kni*moments_i(1, 1, ikr, ikz, updatetlevel)
+        ! loop over n only if the max polynomial degree is 1 or more
+        if (jmaxi .GT. 0) then
+          DO ini=2,jmaxi+1
+            ini_dp = REAL(ini-1,dp) ! Real index (0 to jmax)
+            ! We update iteratively to spare factorial computations
+            Kni  = Kni  * bi_2/ini_dp
+            sum_kernel_mom_i  = sum_kernel_mom_i  + Kni * moments_i(1, ini, ikr, ikz, updatetlevel)
+          END DO
+        endif
+      ! ENDIF
+      !! Sum(kernel**2)
+      ! IF ( DK ) THEN
+      !   sum_kernel2_i = 1._dp - 2._dp*bi_2 + bi_2**2 !(1._dp-bi_2)**2
+      ! ELSE
+        ! Initialization for n = 0 (ini = 1)
+        Kni  = exp(-bi_2)
+        sum_kernel2_i = Kni**2
+        ! loop over n only without caring of jmax since no moment dependency
+        if (jmaxi .GT. 0) then
+          DO ini=2,jmaxi+1
+            ini_dp        = REAL(ini-1,dp)         ! Real index (0 to jmax)
+            Kni           = Kni  * bi_2/ini_dp     ! update kernel_n
+            sum_kernel2_i = sum_kernel2_i + Kni**2 ! ... sum recursively ...
+          END DO
+        ENDIF
 
-      ! loop over n only if the max polynomial degree is 1 or more
-      if (jmaxi .GT. 0) then
-        DO ini=2,jmaxi+1
-          ini_dp = REAL(ini-1,dp) ! Real index (0 to jmax)
-
-          Kni  = Kni  * b_i2/ini_dp       ! We update iteratively the kernel functions this time for ions ...
-
-          sum_kernel_mom_i  = sum_kernel_mom_i  + Kni * moments_i(1, ini, ikr, ikz, updatetlevel)
-          sum_kernel2_i     = sum_kernel2_i     + Kni**2 ! ... sum recursively ...
-        END DO
-      endif
-      !!! Assembling the poisson equation
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !!!!!!!!!!!!!!! Assembling the poisson equation !!!!!!!!!!!!!!!!!!!!!!!!!!
       alphaD   = kperp2 * lambdaD**2
       gammaD   = alphaD + qe2_taue * (1._dp - sum_kernel2_e) & ! Called Poisson_ in MOLI
                         + qi2_taui * (1._dp - sum_kernel2_i)
+      ! ! Adiabatic electron response
+      ! IF ( q_e .EQ. 0 ) THEN
+      !   gammaD = gammaD + 1._dp
+      ! ENDIF
+
       gammaD_phi = q_e * sum_kernel_mom_e + q_i * sum_kernel_mom_i
 
+      IF ( (gammaD .EQ. 0) .AND. (abs(kr)+abs(kz) .NE. 0._dp) ) THEN
+        write(*,*) 'Warning gammaD = 0', sum_kernel2_i
+      ENDIF
+
       phi(ikr, ikz) =  gammaD_phi/gammaD
+      ! write(*,*) -2._dp*gammaD,' ',-kperp2
+      ! phi(ikr, ikz) =  -gammaD_phi/kperp2
+      ! write(*,*) 'gD = ', gammaD,', kperp = ',-kperp2
+      ! write(*,*) 'sum_kernel2_i = ', sum_kernel2_i, ', sum_kernel2_e', sum_kernel2_e
+      ! phi(ikr, ikz) =  gammaD_phi/(qi2_taui * (sum_kernel2_i))
+      ! phi(ikr, ikz) =  -moments_i(1,1,ikr,ikz,1)/kperp2
 
     END DO
   END DO

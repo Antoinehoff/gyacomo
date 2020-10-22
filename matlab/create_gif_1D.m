@@ -17,8 +17,6 @@ else
 fig  = figure;
     plot(X,FIELD(:,1)); % to set up
     axis tight manual % this ensures that getframe() returns a consistent size
-    xlabel(XNAME); ylabel(FIELDNAME);
-  
     in      = 1;
     nbytes = fprintf(2,'frame %d/%d',in,numel(FIELD(1,1,:)));
     for n = FRAMES % loop over selected frames
@@ -26,6 +24,7 @@ fig  = figure;
         plot(X,FIELD(:,n)/scale);
         ylim([YMIN,YMAX]); xlim([XMIN,XMAX]);
         title(['$t \approx$', sprintf('%.3d',ceil(T(n))), ', scaling = ',sprintf('%.1e',scale)]);
+        xlabel(XNAME); ylabel(FIELDNAME);
         drawnow 
         % Capture the plot as an image 
         frame = getframe(fig); 

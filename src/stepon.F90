@@ -35,7 +35,7 @@ SUBROUTINE stepon
       ! Update electrostatic potential
       CALL poisson
       ! Update nonlinear term
-      IF ( NON_LIN ) THEN
+      IF ( NON_LIN .OR. (A0KH .NE. 0) ) THEN
         CALL compute_Sapj
       ENDIF
       !(The two routines above are called in inital for t=0)

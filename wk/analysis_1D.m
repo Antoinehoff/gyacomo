@@ -5,8 +5,8 @@ filename = [BASIC.SIMID,'_','%.2d.h5'];
 filename = sprintf(filename,JOBNUM); disp(['Analysing ',filename])
 [Nipj, p_, j_, kr, kz, Ts, dt] = load_5D_data(filename, 'moments_i');
 Nepj                           = load_5D_data(filename, 'moments_e');
-Ni      = squeeze(Nipj(1,1,:,:,:));
-Ne      = squeeze(Nepj(1,1,:,:,:));
+Ni00    = squeeze(Nipj(1,1,:,:,:));
+Ne00    = squeeze(Nepj(1,1,:,:,:));
 PH      = squeeze(load_2D_data(filename, 'phi'));
 Ts      = Ts';
 Ns      = numel(Ts);
@@ -25,16 +25,16 @@ z = dz*(-Nz/2:(Nz/2-1)); Lz = max(z)-min(z);
 [YY,XX] = meshgrid(z,r);
 % Analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % IFFT
-ne   = zeros(Nz, Ns);
-ni   = zeros(Nz, Ns);
+ne00 = zeros(Nz, Ns);
+ni00 = zeros(Nz, Ns);
 phi  = zeros(Nz, Ns);
 
 for it = 1:numel(PH(1,:))
-    NE_ = Ne(:,it); NN_ = Ni(:,it); PH_ = PH(:,it);
+    NE_ = Ne00(:,it); NN_ = Ni00(:,it); PH_ = PH(:,it);
     F_          = (ifft((NE_),Nz));
-    ne(:,it)= real(fftshift(F_));
+    ne00(:,it)= real(fftshift(F_));
     F_          = (ifft((NN_),Nz));
-    ni(:,it)  = real(fftshift(F_));
+    ni00(:,it)  = real(fftshift(F_));
     F_          = (ifft((PH_),Nz));
     phi(:,it) = real(fftshift(F_));
 end
@@ -53,13 +53,13 @@ Ddz = 1i*kz;
 [~,iz0]  = min(abs(z)); % index of z==0
 [~,ikz1] = min(abs(kz-round(1/dkz)*dkz)); % index of kz==1
 for it = 1:numel(PH(1,:))
-    NE_ = squeeze(Ne(:,it)); NN_ = squeeze(Ni(:,it)); PH_ = squeeze(PH(:,it));
+    NE_ = squeeze(Ne00(:,it)); NN_ = squeeze(Ni00(:,it)); PH_ = squeeze(PH(:,it));
 
-    ne_00(it)      = ne(iz0,it);
-    Ne_gm(it)      = max(real(Ne(:,it)));
+    ne_00(it)      = ne00(iz0,it);
+    Ne_gm(it)      = max(real(Ne00(:,it)));
     
-    ni_00(it)      = ni(iz0,it);
-    Ni_gm(it)      = max(real(Ni(:,it)));
+    ni_00(it)      = ni00(iz0,it);
+    Ni_gm(it)      = max(real(Ni00(:,it)));
     
     phi_00(it)     = phi(iz0,it);
     
@@ -75,11 +75,13 @@ gamma_Ne = zeros(1,Nkz);
 gamma_Ni = zeros(1,Nkz);
 gamma_PH = zeros(1,Nkz);
 for ikz = 1:Nkz
-    gamma_Ne(ikz) = real(LinearFit_s(Ts,Ne(ikz,:)));
-    gamma_Ni(ikz) = real(LinearFit_s(Ts,Ni(ikz,:)));
-    gamma_PH(ikz) = real(LinearFit_s(Ts,PH(ikz,:)));
+    gamma_Ne(ikz) = real(LinearFit_s(Ts,Ne00(ikz,:),-1,-1));
+    gamma_Ni(ikz) = real(LinearFit_s(Ts,Ni00(ikz,:),-1,-1));
+    gamma_PH(ikz) = real(LinearFit_s(Ts,PH(ikz,:),-1,-1));
 end
-
+gamma_Ne = gamma_Ne .* (gamma_Ne>=0.0);
+gamma_Ni = gamma_Ni .* (gamma_Ni>=0.0);
+gamma_PH = gamma_PH .* (gamma_PH>=0.0);
 %% PLOTS
 %% Time evolutions
 fig = figure; FIGNAME = ['t_evolutions',sprintf('_%.2d',JOBNUM)];
@@ -110,31 +112,34 @@ fig = figure; FIGNAME = ['growth_rate',sprintf('_%.2d',JOBNUM)];
 FMT = '.fig'; save_figure
 
 %% GIFS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-DELAY = 0.07; skip_ = 10;
-FRAMES = 1:skip_:numel(Ts);
+t0    = 0;
+skip_ = 1; 
+DELAY = 0.01*skip_;
+FRAMES = floor(t0/dt_samp)+1:skip_:numel(Ts);
 if 0
 %% Density electron
 GIFNAME = ['ne',sprintf('_%.2d',JOBNUM)];
-FIELD = real(ne); X = z; T = Ts;
-FIELDNAME = '$n_e^{00}$'; XNAME = '$z$';
-XMIN = -20; XMAX = 20; YMIN = -0.6; YMAX = 1.1;
+FIELD = real(ne00); X = z; T = Ts;
+FIELDNAME = '$n_e^{00}/\max(n_e^{00})$'; XNAME = '$z$';
+XMIN = -L/2-2; XMAX = L/2+1; YMIN = -1.1; YMAX = 1.1;
 create_gif_1D
 %% Density ion
 GIFNAME = ['ni',sprintf('_%.2d',JOBNUM)]; 
-FIELD = real(ni); X = z; T = Ts;
-FIELDNAME = '$n_i^{00}$'; XNAME = '$z$';
-XMIN = -20; XMAX = 20; YMIN = -0.6; YMAX = 1.1;
+FIELD = real(ni00); X = z; T = Ts;
+FIELDNAME = '$n_i^{00}/\max(n_i^{00})$'; XNAME = '$z$';
+XMIN = -L/2-2; XMAX = L/2+1; YMIN = -1.1; YMAX = 1.1;
 create_gif_1D
 %% Phi
 GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)]; 
 FIELD = real(phi); X = z; T = Ts;
-FIELDNAME = '$\phi$'; XNAME = '$z$';
-XMIN = -20; XMAX = 20; YMIN = -1.1; YMAX = 1.1;
+FIELDNAME = '$\phi/\max(\phi)$'; XNAME = '$z$';
+XMIN = -L/2-2; XMAX = L/2+1; YMIN = -1.1; YMAX = 1.1;
 create_gif_1D
 %% Density electron frequency
 GIFNAME = ['Ni',sprintf('_%.2d',JOBNUM)]; 
-FIELD = fftshift(real(Ni)); X = kr\z; T = Ts;
-FIELDNAME = '$N_i^{00}$'; XNAME = '$k_z$';
+FIELD = (abs(Ni00)); X = (kz); T = Ts;
+FIELDNAME = '$|N_i^{00}|$'; XNAME = '$k_z$';
+XMIN = -0.5; XMAX = max(kz)+.5; YMIN = -0.1; YMAX = 1.1;
 create_gif_1D
 end
 
@@ -144,10 +149,10 @@ plt = @(x) real(x);
 fig = figure; FIGNAME = ['z_space_time_diag',sprintf('_%.2d',JOBNUM)];
     [TY,TX] = meshgrid(Ts,z);
 subplot(221)% density
-    pclr = pcolor(TX,TY,(plt(ne))); set(pclr, 'edgecolor','none'); colorbar;
+    pclr = pcolor(TX,TY,(plt(ne00))); set(pclr, 'edgecolor','none'); colorbar;
     xlabel('$z\,(r=0)$'); ylabel('$t$'); title('$n_e^{00}$');
 subplot(222)% density
-    pclr = pcolor(TX,TY,(plt(ni))); set(pclr, 'edgecolor','none'); colorbar;
+    pclr = pcolor(TX,TY,(plt(ni00))); set(pclr, 'edgecolor','none'); colorbar;
     xlabel('$z\,(r=0)$'); ylabel('$t$'); title('$n_i^{00}$');
 subplot(223)% density
     pclr = pcolor(TX,TY,(plt(phi))); set(pclr, 'edgecolor','none'); colorbar;
@@ -159,10 +164,10 @@ plt = @(x) abs(x);
 fig = figure; FIGNAME = ['kz_space_time_diag',sprintf('_%.2d',JOBNUM)];
     [TY,TX] = meshgrid(Ts,kz);
 subplot(221)% density
-    pclr = pcolor(TX,TY,(plt(Ne))); set(pclr, 'edgecolor','none'); colorbar;
+    pclr = pcolor(TX,TY,(plt(Ne00))); set(pclr, 'edgecolor','none'); colorbar;
     xlabel('$kz$'); ylabel('$t$'); title('$\textrm{Re}(N_e^{00})|_{k_r=0}$');
 subplot(222)% density
-    pclr = pcolor(TX,TY,(plt(Ni))); set(pclr, 'edgecolor','none'); colorbar;
+    pclr = pcolor(TX,TY,(plt(Ni00))); set(pclr, 'edgecolor','none'); colorbar;
     xlabel('$kz$'); ylabel('$t$'); title('$\textrm{Re}(N_i^{00})|_{k_r=0}$');
 subplot(223)% density
     pclr = pcolor(TX,TY,(plt(PH))); set(pclr, 'edgecolor','none'); colorbar;
@@ -187,16 +192,16 @@ fig = figure; FIGNAME = ['frame',sprintf('_%.2d',JOBNUM)];
         semilogy(Ts,abs(PH(ik05,end)).*exp(gamma_PH(ik05).*(Ts-Ts(end))),'--k')
         semilogy(Ts,abs(PH(ik10,end)).*exp(gamma_PH(ik10).*(Ts-Ts(end))),'--k')
     subplot(222); plt = @(x) (abs(x));
-        semilogy(Ts,plt(Ni(ik05,:)),'DisplayName', '$k_z = 0.5$'); hold on
-        semilogy(Ts,plt(Ni(ik10,:)),'DisplayName', '$k_z = 1.0$')
-        semilogy(Ts,plt(Ni(ik15,:)),'DisplayName', '$k_z = 1.5$')
-        semilogy(Ts,plt(Ni(ik20,:)),'DisplayName', '$k_z = 2.0$')        
+        semilogy(Ts,plt(Ni00(ik05,:)),'DisplayName', '$k_z = 0.5$'); hold on
+        semilogy(Ts,plt(Ni00(ik10,:)),'DisplayName', '$k_z = 1.0$')
+        semilogy(Ts,plt(Ni00(ik15,:)),'DisplayName', '$k_z = 1.5$')
+        semilogy(Ts,plt(Ni00(ik20,:)),'DisplayName', '$k_z = 2.0$')        
         xlabel('$t$'); ylabel('$\hat n_i^{00}$'); legend('show');
     subplot(223); plt = @(x) (abs(x));
-        semilogy(Ts,plt(Ne(ik05,:)),'DisplayName', '$k_z = 0.5$'); hold on
-        semilogy(Ts,plt(Ne(ik10,:)),'DisplayName', '$k_z = 1.0$')
-        semilogy(Ts,plt(Ne(ik15,:)),'DisplayName', '$k_z = 1.5$')
-        semilogy(Ts,plt(Ne(ik20,:)),'DisplayName', '$k_z = 2.0$')  
+        semilogy(Ts,plt(Ne00(ik05,:)),'DisplayName', '$k_z = 0.5$'); hold on
+        semilogy(Ts,plt(Ne00(ik10,:)),'DisplayName', '$k_z = 1.0$')
+        semilogy(Ts,plt(Ne00(ik15,:)),'DisplayName', '$k_z = 1.5$')
+        semilogy(Ts,plt(Ne00(ik20,:)),'DisplayName', '$k_z = 2.0$')  
         xlabel('$t$'); ylabel('$\hat n_e^{00}$'); legend('show');
 FMT = '.fig'; save_figure
 end
@@ -209,10 +214,10 @@ fig = figure; FIGNAME = ['frame',sprintf('_%.2d',JOBNUM)];
         plot(kz,plt(PH(:,it)))
         xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('t=%.3d',Ts(it))); legend('$\hat\phi$');
     subplot(222); plt = @(x) (abs(x));
-        plot(kz,plt(Ni(:,it)))
+        plot(kz,plt(Ni00(:,it)))
         xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('t=%.3d',Ts(it))); legend('$\hat n_i^{00}$');
     subplot(223); plt = @(x) (abs(x));
-        plot(kz,plt(Ne(:,it)))
+        plot(kz,plt(Ne00(:,it)))
         xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('t=%.3d',Ts(it))); legend('$\hat n_e^{00}$');
 FMT = '.fig'; save_figure
 end

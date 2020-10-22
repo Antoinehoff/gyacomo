@@ -5,7 +5,7 @@ MODULE diagnostics_par
   IMPLICIT NONE
   PRIVATE
 
-  LOGICAL, PUBLIC, PROTECTED :: write_Ni00=.TRUE.
+  LOGICAL, PUBLIC, PROTECTED :: write_Na00=.TRUE.
   LOGICAL, PUBLIC, PROTECTED :: write_moments=.TRUE.
   LOGICAL, PUBLIC, PROTECTED :: write_phi=.TRUE.
   LOGICAL, PUBLIC, PROTECTED :: write_non_lin=.TRUE.
@@ -36,7 +36,7 @@ CONTAINS
     IMPLICIT NONE
 
     NAMELIST /OUTPUT_PAR/ nsave_0d , nsave_1d , nsave_2d , nsave_5d
-    NAMELIST /OUTPUT_PAR/ write_Ni00, write_moments, write_phi, write_non_lin, write_doubleprecision
+    NAMELIST /OUTPUT_PAR/ write_Na00, write_moments, write_phi, write_non_lin, write_doubleprecision
     NAMELIST /OUTPUT_PAR/ resfile0, rstfile0, job2load
 
     READ(lu_in,output_par)
@@ -54,7 +54,7 @@ CONTAINS
     INTEGER, INTENT(in) :: fidres
     CHARACTER(len=256), INTENT(in) :: str
 
-    CALL attach(fidres, TRIM(str), "write_Ni00", write_Ni00)
+    CALL attach(fidres, TRIM(str), "write_Na00", write_Na00)
     CALL attach(fidres, TRIM(str), "write_moments", write_moments)
     CALL attach(fidres, TRIM(str), "write_phi", write_phi)
     CALL attach(fidres, TRIM(str), "write_non_lin", write_non_lin)

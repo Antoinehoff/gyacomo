@@ -5,8 +5,7 @@ function [ data, kr, kz, time, dt ] = load_2D_data( filename, variablename )
     kz       = h5read(filename,['/data/var2d/',variablename,'/coordkz']);
 
     dt    = h5readatt(filename,'/data/input','dt');
-    nsave = h5readatt(filename,'/data/input','nsave_5d'); 
-    cstart= time(1)/dt/nsave;
+    cstart= h5readatt(filename,'/data/input','start_iframe2d'); 
     
     data     = zeros(numel(kr),numel(kz),numel(time));
     for it = 1:numel(time)

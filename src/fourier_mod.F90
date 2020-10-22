@@ -13,7 +13,6 @@ MODULE fourier
   PUBLIC :: fft2_r2cc
   PUBLIC :: ifft2_cc2r
   PUBLIC :: convolve_2D_F2F
-  PUBLIC :: set_descriptors, free_descriptors ! Temporary to switch easily with MKL DFTI
 
   CONTAINS
 
@@ -87,7 +86,7 @@ MODULE fourier
   !   - Compute the convolution using the convolution theorem and MKL
   SUBROUTINE convolve_2D_F2F( F_2D, G_2D, C_2D )
 
-    USE grid, ONLY : AA_r, AA_z
+    USE grid, ONLY : AA_r, AA_z, Lr, Lz
     IMPLICIT NONE
     COMPLEX(dp), DIMENSION(Nkr,Nkz), INTENT(IN)  :: F_2D, G_2D  ! input fields
     COMPLEX(dp), DIMENSION(Nkr,Nkz), INTENT(OUT) :: C_2D  ! output convolutioned field

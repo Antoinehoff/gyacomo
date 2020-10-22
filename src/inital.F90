@@ -23,8 +23,9 @@ SUBROUTINE inital
   !!!!!! Set phi !!!!!!
   write(*,*) 'Init phi'
   CALL poisson
+
   !!!!!! Set Sepj, Sipj and dnjs coeff table !!!!!!
-  IF ( NON_LIN ) THEN;
+  IF ( NON_LIN .OR. (A0KH .NE. 0)) THEN;
     write(*,*) 'Init Sapj'
     CALL compute_Sapj
     WRITE(*,*) 'Building Dnjs table'
@@ -71,39 +72,65 @@ SUBROUTINE init_moments
     sigma    = 5._dp     ! Gaussian sigma
     gain     = 0.5_dp    ! Gaussian mean
     kz_shift = 0.5_dp    ! Gaussian z shift
-    !**** Gaussian initialization (Hakim 2017)
-    moments_i = 0; moments_e = 0;
-      DO ikr=ikrs,ikre
-        kr = krarray(ikr)
-        DO ikz=ikzs,ikze
-          kz = kzarray(ikz)
-          moments_i( 1,1, ikr,ikz, :) = gain*sigma/SQRT2 * EXP(-(kr**2+(kz-kz_shift)**2)*sigma**2/4._dp)
-          moments_e( 1,1, ikr,ikz, :) = gain*sigma/SQRT2 * EXP(-(kr**2+(kz-kz_shift)**2)*sigma**2/4._dp)
-        END DO
-      END DO
-    ! Broad noise initialization
-    ! DO ikr=ikrs,ikre
-    !   DO ikz=ikzs,ikze
-    !     DO ip=ips_e,ipe_e
-    !       DO ij=ijs_e,ije_e
-    !         CALL RANDOM_NUMBER(noise)
-    !         moments_e( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
-    !         moments_e( ip,ij, Nkz-ikz,    ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
-    !         moments_e( ip,ij,     ikz,Nkr-ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
-    !         moments_e( ip,ij, Nkz-ikz,Nkr-ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
-    !       END DO
-    !     END DO
-    !     DO ip=ips_i,ipe_i
-    !       DO ij=ijs_i,ije_i
-    !         CALL RANDOM_NUMBER(noise)
-    !         moments_i( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
-    !         moments_i( ip,ij, Nkz-ikz,    ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
-    !         moments_i( ip,ij,     ikz,Nkr-ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
-    !         moments_i( ip,ij, Nkz-ikz,Nkr-ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
-    !       END DO
+    !**** Gaussian initialization (Hakim 2017) *********************************
+    ! moments_i = 0; moments_e = 0;
+    !   DO ikr=ikrs,ikre
+    !     kr = krarray(ikr)
+    !     DO ikz=ikzs,ikze
+    !       kz = kzarray(ikz)
+    !       moments_i( 1,1, ikr,ikz, :) = gain*sigma/SQRT2 * EXP(-(kr**2+(kz-kz_shift)**2)*sigma**2/4._dp)
+    !       moments_e( 1,1, ikr,ikz, :) = gain*sigma/SQRT2 * EXP(-(kr**2+(kz-kz_shift)**2)*sigma**2/4._dp)
     !     END DO
     !   END DO
-    ! END DO
+
+    !**** Broad noise initialization *******************************************
+    DO ip=ips_e,ipe_e
+      DO ij=ijs_e,ije_e
+        DO ikr=ikrs,ikre
+          DO ikz=ikzs,ikze
+            CALL RANDOM_NUMBER(noise)
+            moments_e( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
+            ! moments_e( ip,ij, Nkz-ikz,    ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
+            ! moments_e( ip,ij,     ikz,Nkr-ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
+            ! moments_e( ip,ij, Nkz-ikz,Nkr-ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
+          END DO
+        END DO
+      END DO
+    END DO
+    DO ip=ips_i,ipe_i
+      DO ij=ijs_i,ije_i
+        DO ikr=ikrs,ikre
+          DO ikz=ikzs,ikze
+            CALL RANDOM_NUMBER(noise)
+            moments_i( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
+            ! moments_i( ip,ij, Nkz-ikz,    ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
+            ! moments_i( ip,ij,     ikz,Nkr-ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
+            ! moments_i( ip,ij, Nkz-ikz,Nkr-ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
+          END DO
+        END DO
+      END DO
+    END DO
+
+    !**** Sinusoidal phi initialization for Kelvin-Helmholtz *******************
+  !   phi(1,FLOOR(0.5_dp/deltakr)) = 1._dp ! Trigger only mode kr = 1
+  !   ! moments_e( :,:, 1,FLOOR(0.5_dp/deltakr), :) = 1._dp
+  !   ! moments_i( :,:, 1,FLOOR(0.5_dp/deltakr), :) = 1._dp
+  !
+  !   DO ikr=ikrs,ikre
+  !     DO ikz=ikzs,ikze
+  !       CALL RANDOM_NUMBER(noise)
+  !       moments_e( :,:, ikr,ikz, :) = moments_e( :,:, ikr,ikz, :) &
+  !       + initnoise_moments*(noise-0.5_dp) ! adding noise
+  !
+  !       CALL RANDOM_NUMBER(noise)
+  !       moments_i( :,:, ikr,ikz, :) = moments_i( :,:, ikr,ikz, :) &
+  !       + initnoise_moments*(noise-0.5_dp) ! adding noise
+  !
+  !       CALL RANDOM_NUMBER(noise)
+  !       phi(ikr,ikz) = phi(ikr,ikz) + initnoise_moments*(noise-0.5_dp) ! adding noise
+  !     ENDDO
+  !   ENDDO
+  !   CALL moments_eq_rhs
   ENDIF
 END SUBROUTINE init_moments
 !******************************************************************************!

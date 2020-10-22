@@ -6,7 +6,7 @@ SUBROUTINE memory
   USE fields
   USE grid
   USE time_integration
-  USE model, ONLY: CO, NON_LIN
+  USE model, ONLY: CO, NON_LIN, A0KH
 
   USE prec_const
   IMPLICIT NONE
@@ -32,7 +32,7 @@ SUBROUTINE memory
   ENDIF
 
   ! Non linear terms and dnjs table
-  IF ( NON_LIN ) THEN
+  IF ( NON_LIN .OR. (A0KH .NE. 0) ) THEN
     CALL allocate_array( Sepj, ips_e,ipe_e, ijs_e,ije_e, ikrs,ikre, ikzs,ikze )
     CALL allocate_array( Sipj, ips_i,ipe_i, ijs_i,ije_i, ikrs,ikre, ikzs,ikze )
     CALL allocate_array( dnjs, 1,maxj+1, 1,maxj+1, 1,maxj+1)

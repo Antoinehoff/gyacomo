@@ -15,7 +15,7 @@ SUBROUTINE moments_eq_rhs
   REAL(dp)    :: kr, kz, kperp2
   REAL(dp)    :: taue_qe_etaB, taui_qi_etaB
   REAL(dp)    :: sqrtTaue_qe, sqrtTaui_qi, qe_sigmae_sqrtTaue, qi_sigmai_sqrtTaui
-  REAL(dp)    :: kernelj, kerneljp1, kerneljm1, b_e2, b_i2 ! Kernel functions and variable
+  REAL(dp)    :: kernelj, kerneljp1, kerneljm1, be_2, bi_2 ! Kernel functions and variable
   REAL(dp)    :: factj, sigmae2_taue_o2, sigmai2_taui_o2 ! Auxiliary variables
   REAL(dp)    :: xNapj, xNapp1j, xNapm1j, xNapp2j, xNapm2j, xNapjp1, xNapjm1 ! Mom. factors depending on the pj loop
   REAL(dp)    :: xphij, xphijp1, xphijm1, xphijpar ! ESpot. factors depending on the pj loop
@@ -26,10 +26,16 @@ SUBROUTINE moments_eq_rhs
   REAL(dp)    :: nu_e, nu_i, nu_ee, nu_ie ! Species collisional frequency
 
   !Precompute species dependant factors
-  taue_qe_etaB    = tau_e/q_e * eta_B ! factor of the magnetic moment coupling
-  taui_qi_etaB    = tau_i/q_i * eta_B
-  sqrtTaue_qe     = sqrt(tau_e)/q_e   ! factor of parallel moment term
-  sqrtTaui_qi     = sqrt(tau_i)/q_i
+  IF( q_e .NE. 0._dp ) THEN
+    taue_qe_etaB    = tau_e/q_e * eta_B ! factor of the magnetic moment coupling
+    sqrtTaue_qe     = sqrt(tau_e)/q_e   ! factor of parallel moment term
+  ELSE
+    taue_qe_etaB  = 0._dp
+    sqrtTaue_qe   = 0._dp
+  ENDIF
+
+  taui_qi_etaB    = tau_i/q_i * eta_B ! factor of the magnetic moment coupling
+  sqrtTaui_qi     = sqrt(tau_i)/q_i   ! factor of parallel moment term
   qe_sigmae_sqrtTaue = q_e/sigma_e/SQRT(tau_e) ! factor of parallel phi term
   qi_sigmai_sqrtTaui = q_i/sigma_i/SQRT(tau_i)
   sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the Kernel argument
@@ -119,9 +125,9 @@ SUBROUTINE moments_eq_rhs
           kperp2 = kr**2 + kz**2  ! perpendicular wavevector
 
           IF ( DK ) THEN ! Drift kinetic model
-            b_e2   = 0._dp
+            be_2   = 0._dp
           ELSE
-            b_e2   = kperp2 * sigmae2_taue_o2 ! Bessel argument
+            be_2   = kperp2 * sigmae2_taue_o2 ! Bessel argument
           ENDIF
 
           !! Compute moments and mixing terms
@@ -211,10 +217,10 @@ SUBROUTINE moments_eq_rhs
 
           !! Electrical potential term
           IF ( (ip .LE. 3) ) THEN ! kronecker p0 p1 p2
-            kernelj    = b_e2**(ij-1) * exp(-b_e2)/factj
-            kerneljp1  = kernelj * b_e2  /(ij_dp + 1._dp)
-            IF ( b_e2 .NE. 0 ) THEN
-              kerneljm1  = kernelj * ij_dp / b_e2
+            kernelj    = be_2**(ij-1) * exp(-be_2)/factj
+            kerneljp1  = kernelj * be_2  /(ij_dp + 1._dp)
+            IF ( be_2 .NE. 0 ) THEN
+              kerneljm1  = kernelj * ij_dp / be_2
             ELSE
               kerneljm1 = 0._dp
             ENDIF
@@ -227,13 +233,12 @@ SUBROUTINE moments_eq_rhs
           moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
               -imagu * kz * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
               -imagu * kpar*(TNapp1j + TNapm1j + xphijpar*kernelj*phi(ikr,ikz)) &
+              - mu*kperp2**2 * moments_e(ip,ij,ikr,ikz,updatetlevel) &
               + TColl
-
-          ! Adding non linearity and Hyperdiffusivity
-          IF ( NON_LIN ) THEN
+          ! Adding non linearity
+          IF ( NON_LIN .OR. (A0KH .NE. 0) ) THEN
             moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
-              moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) - Sepj(ip,ij,ikr,ikz) &
-              - mu*kperp2**2 * moments_rhs_e(ip,ij,ikr,ikz,updatetlevel)
+              moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) - Sepj(ip,ij,ikr,ikz)*Nkr*Nkz
           ENDIF
 
         END DO kzloope
@@ -322,9 +327,9 @@ SUBROUTINE moments_eq_rhs
           kperp2 = kr**2 + kz**2  ! perpendicular wavevector
 
           IF ( DK ) THEN ! Drift kinetic model
-            b_i2   = 0._dp
+            bi_2   = 0._dp
           ELSE
-            b_i2   = kperp2 * sigmai2_taui_o2 ! Bessel argument
+            bi_2   = kperp2 * sigmai2_taui_o2 ! Bessel argument
           ENDIF
 
           !! Compute moments and mixing terms
@@ -414,10 +419,10 @@ SUBROUTINE moments_eq_rhs
 
           !! Electrical potential term
           IF ( (ip .LE. 3) ) THEN ! kronecker p0 p1 p2
-            kernelj    = b_i2**(ij-1) * exp(-b_i2)/factj
-            kerneljp1  = kernelj * b_i2  /(ij_dp + 1._dp)
-            IF ( b_i2 .NE. 0 ) THEN
-              kerneljm1  = kernelj * ij_dp / b_i2
+            kernelj    = bi_2**(ij-1) * exp(-bi_2)/factj
+            kerneljp1  = kernelj * bi_2  /(ij_dp + 1._dp)
+            IF ( bi_2 .NE. 0 ) THEN
+              kerneljm1  = kernelj * ij_dp / bi_2
             ELSE
               kerneljm1 = 0._dp
             ENDIF
@@ -430,14 +435,14 @@ SUBROUTINE moments_eq_rhs
           moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
               -imagu * kz * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
               -imagu * kpar*(TNapp1j + TNapm1j + xphijpar*kernelj*phi(ikr,ikz)) &
+              - mu*kperp2**2 * moments_i(ip,ij,ikr,ikz,updatetlevel) &
                + TColl
-
-          ! Adding non linearity and Hyperdiffusivity
-          IF ( NON_LIN ) THEN
+          ! Adding non linearity
+          IF ( NON_LIN .OR. (A0KH .NE. 0) ) THEN
            moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
-             moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) - Sipj(ip,ij,ikr,ikz)&
-             - mu*kperp2**2 * moments_rhs_i(ip,ij,ikr,ikz,updatetlevel)
+             moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) - Sipj(ip,ij,ikr,ikz)*Nkr*Nkz
           ENDIF
+
         END DO kzloopi
       END DO krloopi
 
