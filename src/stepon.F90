@@ -40,6 +40,8 @@ SUBROUTINE stepon
       ENDIF
       !(The two routines above are called in inital for t=0)
 
+      CALL enforce_symetry() ! Enforcing symmetry on kr = 0
+
       CALL checkfield_all()
    END DO
 
@@ -61,5 +63,26 @@ SUBROUTINE stepon
            ENDDO
         ENDIF
       END SUBROUTINE checkfield_all
+
+      SUBROUTINE enforce_symetry
+
+        DO ip=ips_e,ipe_e
+          DO ij=ijs_e,ije_e
+            DO ikz=2,Nkz/2 !symmetry at kr = 0
+              moments_e( ip,ij,1,ikz, :) = CONJG(moments_e( ip,ij,1,Nkz+2-ikz, :))
+            END DO
+          END DO
+        END DO
+        DO ip=ips_i,ipe_i
+          DO ij=ijs_i,ije_i
+            DO ikz=2,Nkz/2 !symmetry at kr = 0
+              moments_i( ip,ij,1,ikz, :) = CONJG(moments_i( ip,ij,1,Nkz+2-ikz, :))
+            END DO
+          END DO
+        END DO
+        DO ikz=2,Nkz/2 !symmetry at kr = 0
+          phi(1,ikz) = phi(1,Nkz+2-ikz)
+        END DO
+      END SUBROUTINE enforce_symetry
 
 END SUBROUTINE stepon

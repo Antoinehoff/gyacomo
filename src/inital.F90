@@ -89,11 +89,13 @@ SUBROUTINE init_moments
         DO ikr=ikrs,ikre
           DO ikz=ikzs,ikze
             CALL RANDOM_NUMBER(noise)
-            moments_e( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
-            ! moments_e( ip,ij, Nkz-ikz,    ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
-            ! moments_e( ip,ij,     ikz,Nkr-ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
-            ! moments_e( ip,ij, Nkz-ikz,Nkr-ikr, :) = moments_e( ip,ij,     ikr,    ikz, :) ! Symmetry
+            moments_e( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp) &
+                                                    * AA_r(ikr) * AA_z(ikz)
           END DO
+        END DO
+        DO ikz=2,Nkz/2 !symmetry at kr = 0
+          CALL RANDOM_NUMBER(noise)
+          moments_e( ip,ij,1,ikz, :) = moments_e( ip,ij,1,Nkz+2-ikz, :)
         END DO
       END DO
     END DO
@@ -102,11 +104,13 @@ SUBROUTINE init_moments
         DO ikr=ikrs,ikre
           DO ikz=ikzs,ikze
             CALL RANDOM_NUMBER(noise)
-            moments_i( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
-            ! moments_i( ip,ij, Nkz-ikz,    ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
-            ! moments_i( ip,ij,     ikz,Nkr-ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
-            ! moments_i( ip,ij, Nkz-ikz,Nkr-ikr, :) = moments_i( ip,ij,     ikr,    ikz, :) ! Symmetry
+            moments_i( ip,ij,ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp) &
+                                                    * AA_r(ikr) * AA_z(ikz)
           END DO
+        END DO
+        DO ikz=2,Nkz/2 !symmetry at kr = 0
+          CALL RANDOM_NUMBER(noise)
+          moments_i( ip,ij,1,ikz, :) = moments_i( ip,ij,1,Nkz+2-ikz, :)
         END DO
       END DO
     END DO

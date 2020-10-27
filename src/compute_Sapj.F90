@@ -24,31 +24,31 @@ SUBROUTINE compute_Sapj
   sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the kerneln argument
 
   ploope: DO ip = ips_e,ipe_e ! Loop over Hermite moments
-  ! ploope: DO ip = 1,1
     jloope: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
-    ! jloope: DO ij = 1,1
       Sepj(ip,ij,:,:)  = 0._dp
       factn = 1
 
       nloope: DO in = 1,jmaxe+1 ! Loop over laguerre for the sum
-      ! nloope: DO in = 1,1
 
         krloope1: DO ikr = 1,Nkr ! Loop over kr
           kzloope1: DO ikz = 1,Nkz ! Loop over kz
             kr     = krarray(ikr)
             kz     = kzarray(ikz)
-            IF ( DK ) THEN
-              be_2    = 0._dp
-            ELSE
-              be_2    = sigmae2_taue_o2 * (kr**2 + kz**2)
-            ENDIF
+            be_2    = sigmae2_taue_o2 * (kr**2 + kz**2)
             kerneln = be_2**(in-1)/factn * EXP(-be_2)
-
             ! First convolution term
             IF ( NON_LIN ) THEN
               F_(ikr,ikz) = imagu*kr* phi(ikr,ikz) * kerneln
             ELSE
               F_(ikr,ikz) = 0._dp
+            ENDIF
+            ! Background sinusoidal electrostatic potential phi_0 for KH inst.
+            IF ( q_e .NE. 0._dp ) THEN ! If electron are not removed
+              IF ( kz .EQ. 0._dp ) THEN ! Kronecker kz=0
+                IF ( ABS(kr) .EQ. ABS(kr0KH) ) THEN ! kronecker kr=kr0
+                  F_(ikr,ikz) = -A0KH/2._dp + F_(ikr,ikz)
+                ENDIF
+              ENDIF
             ENDIF
             ! Second convolution term
             G_(ikr,ikz) = 0._dp ! initialization of the sum
@@ -57,14 +57,6 @@ SUBROUTINE compute_Sapj
                dnjs(in,ij,is) * moments_e(ip,is,ikr,ikz,updatetlevel)
             ENDDO
             G_(ikr,ikz) = imagu*kz*G_(ikr,ikz)
-            ! G_(ikr,ikz) = imagu*kz* moments_e(ip,ij,ikr,ikz,updatetlevel)
-
-            ! Background sinusoidal electrostatic potential phi_0 for KH inst.
-            IF ( (kz .EQ. 0._dp) .AND. (q_e .NE. 0._dp) ) THEN ! Kronecker kz=0
-              IF ( ABS(kr) .EQ. ABS(kr0KH) ) THEN ! kronecker kr=kr0
-                F_(ikr,ikz) = -A0KH/2._dp + F_(ikr,ikz)
-              ENDIF
-            ENDIF
 
           ENDDO kzloope1
         ENDDO krloope1
@@ -72,23 +64,15 @@ SUBROUTINE compute_Sapj
         CALL convolve_2D_F2F( F_, G_, CONV ) ! Convolve Fourier to Fourier
         Sepj(ip,ij,:,:) = Sepj(ip,ij,:,:) + CONV ! Add it to Sepj
 
-        IF ( NON_LIN ) THEN
+        IF ( NON_LIN ) THEN ! Fully non linear term ikz phi * ikr Napj
           krloope2: DO ikr = 1,Nkr ! Loop over kr
             kzloope2: DO ikz = 1,Nkz ! Loop over kz
               kr     = krarray(ikr)
               kz     = kzarray(ikz)
-
-              IF ( DK ) THEN
-                be_2    = 0._dp
-              ELSE
-                be_2    = sigmae2_taue_o2 * (kr**2 + kz**2)
-              ENDIF
-
+              be_2    = sigmae2_taue_o2 * (kr**2 + kz**2)
               kerneln = be_2**(in-1)/factn * EXP(-be_2)
-
               ! First convolution term
-                F_(ikr,ikz) = imagu*kz* phi(ikr,ikz) * kerneln
-
+              F_(ikr,ikz) = imagu*kz* phi(ikr,ikz) * kerneln
               ! Second convolution term
               G_(ikr,ikz) = 0._dp ! initialization of the sum
               DO is = 1, MIN( in+ij-1, jmaxe+1 ) ! sum truncation on number of moments
@@ -117,26 +101,17 @@ SUBROUTINE compute_Sapj
   sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp
 
   ploopi: DO ip = ips_i,ipe_i ! Loop over Hermite moments
-  ! ploopi: DO ip = 1,1 ! Loop over Hermite moments
     jloopi: DO ij = ijs_i, ije_i ! Loop over Laguerre moments
-    ! jloopi: DO ij = 1,1 ! Loop over Laguerre moments
       Sipj(ip,ij,:,:)  = 0._dp
       factn = 1
 
       nloopi: DO in = 1,jmaxi+1 ! Loop over laguerre for the sum
-      ! nloopi: DO in = 1,1 ! Loop over laguerre for the sum
 
         krloopi1: DO ikr = 1,Nkr ! Loop over kr
           kzloopi1: DO ikz = 1,Nkz ! Loop over kz
             kr      = krarray(ikr)
             kz      = kzarray(ikz)
-
-            IF ( DK ) THEN
-              bi_2    = 0._dp
-            ELSE
-              bi_2    = sigmai2_taui_o2 * (kr**2 + kz**2)
-            ENDIF
-
+            bi_2    = sigmai2_taui_o2 * (kr**2 + kz**2)
             kerneln = bi_2**(in-1)/factn * EXP(-bi_2)
 
             ! First convolution term
@@ -145,6 +120,12 @@ SUBROUTINE compute_Sapj
             ELSE
               F_(ikr,ikz) = 0._dp
             ENDIF
+            ! Background sinusoidal electrostatic potential phi_0 for KH inst.
+            IF ( kz .EQ. 0._dp ) THEN ! Kronecker kz=0
+              IF ( ABS(kr) .EQ. ABS(kr0KH) ) THEN ! kronecker kr=kr0
+                F_(ikr,ikz) = -A0KH/2._dp + F_(ikr,ikz)
+              ENDIF
+            ENDIF
             ! Second convolution term
             G_(ikr,ikz) = 0._dp ! initialization of the sum
             DO is = 1, MIN( in+ij-1, jmaxi+1 )
@@ -152,14 +133,6 @@ SUBROUTINE compute_Sapj
                dnjs(in,ij,is) * moments_i(ip,is,ikr,ikz,updatetlevel)
             ENDDO
             G_(ikr,ikz) = imagu*kz*G_(ikr,ikz)
-            ! G_(ikr,ikz) = imagu*kz* moments_i(ip,ij,ikr,ikz,updatetlevel)
-
-            ! Background sinusoidal electrostatic potential phi_0 for KH inst.
-            IF ( kz .EQ. 0._dp ) THEN ! Kronecker kz=0
-              IF ( ABS(kr) .EQ. ABS(kr0KH) ) THEN ! kronecker kr=kr0
-                F_(ikr,ikz) = -A0KH/2._dp + F_(ikr,ikz)
-              ENDIF
-            ENDIF
 
           ENDDO kzloopi1
         ENDDO krloopi1
@@ -171,18 +144,10 @@ SUBROUTINE compute_Sapj
           kzloopi2: DO ikz = 1,Nkz ! Loop over kz
             kr      = krarray(ikr)
             kz      = kzarray(ikz)
-
-            IF ( DK ) THEN
-              bi_2    = 0._dp
-            ELSE
-              bi_2    = sigmai2_taui_o2 * (kr**2 + kz**2)
-            ENDIF
-
+            bi_2    = sigmai2_taui_o2 * (kr**2 + kz**2)
             kerneln = bi_2**(in-1)/factn * EXP(-bi_2)
-
             ! First convolution term
             F_(ikr,ikz) = imagu*kz*phi(ikr,ikz) * kerneln
-
             ! Second convolution term
             G_(ikr,ikz) = 0._dp ! initialization of the sum
             IF ( NON_LIN ) THEN
@@ -192,7 +157,6 @@ SUBROUTINE compute_Sapj
               ENDDO
               G_(ikr,ikz) = imagu*kr*G_(ikr,ikz)
             ENDIF
-
             ! Background sinusoidal ion denstiy n_i0 for KH inst.
             IF ( kz .EQ. 0._dp ) THEN ! Kronecker kz=0
               IF ( ABS(kr) .EQ. ABS(kr0KH) ) THEN ! kronecker kr=+-kr0
@@ -209,6 +173,7 @@ SUBROUTINE compute_Sapj
         IF ( in + 1 .LE. jmaxi+1 ) THEN
           factn = real(in,dp) * factn ! factorial(n+1)
         ENDIF
+
       ENDDO nloopi
 
     ENDDO jloopi

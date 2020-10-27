@@ -219,6 +219,7 @@ SUBROUTINE diagnose(kstep)
 
   ELSEIF (kstep .EQ. -1) THEN
      CALL cpu_time(finish)
+     CALL attach(fidres, "/data/input","cpu_time",finish-start)
      !   Close all diagnostic files
      CALL closef(fidres)
   END IF
