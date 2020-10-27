@@ -1,6 +1,6 @@
 HeLaZ (Hermite-Laguerre Z-pinch solver, 2020)
 
-![] (phi_demo.gif)
+![] (demo_phi_00.gif)
 
 Roadmap : (Current version 1.4)
 
