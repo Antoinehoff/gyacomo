@@ -1,7 +1,5 @@
 HeLaZ (Hermite-Laguerre Z-pinch solver, 2020)
 
-{img https://c4scdn.ch/file/data/fzljxlro5kbuv2wzw33h/PHID-FILE-zxq6uphjr3ziakuyjpxo/demo_phi_00.gif}
-
 Roadmap : (Current version 1.4)
 
 0. Write MOLI matlab solver in Fortran using Monli1D as starting point
