@@ -5,16 +5,16 @@ default_plots_options
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 1e-2;   % Collision frequency
+NU      = 1e-3;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
 ETAB    = 0.5;    % Magnetic gradient
 ETAN    = 1.0;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
-MU      = 5e-4;   % Hyper diffusivity coefficient
+MU      = 1e-4;   % Hyper diffusivity coefficient
 LAMBDAD = 0.0; 
 NOISE0  = 5.0e-5;
 %% GRID PARAMETERS
-N       = 100;     % Frequency gridpoints (Nkr = N/2)
+N       = 256;     % Frequency gridpoints (Nkr = N/2)
 L       = 40;     % Size of the squared frequency domain
 KREQ0   = 0;      % put kr = 0
 PMAXE   = 02;     % Highest electron Hermite polynomial degree
@@ -32,7 +32,7 @@ JOB2LOAD= 00;
 %% OPTIONS
 SIMID   = 'ZP_forced_sym';  % Name of the simulation
 NON_LIN = 1 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
-CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
+CO      = 0;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % unused

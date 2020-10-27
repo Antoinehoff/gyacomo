@@ -30,12 +30,12 @@ z = dz*(-Nz/2:(Nz/2-1)); Lz = max(z)-min(z);
 disp('Analysis :')
 disp('- iFFT')
 % IFFT (Lower case = real space, upper case = frequency space)
-ne00   = zeros(Nr,Nz);
-ni00   = zeros(Nr,Nz);
-si00   = zeros(Nr,Nz);
-phi    = zeros(Nr,Nz);
-drphi  = zeros(Nr,Nz);
-dzphi  = zeros(Nr,Nz);
+ne00   = zeros(Nr,Nz,Ns2D);
+ni00   = zeros(Nr,Nz,Ns2D);
+si00   = zeros(Nr,Nz,Ns5D);
+phi    = zeros(Nr,Nz,Ns2D);
+drphi  = zeros(Nr,Nz,Ns2D);
+dzphi  = zeros(Nr,Nz,Ns2D);
 
 for it = 1:numel(Ts2D)
     NE_ = Ne00(:,:,it); NI_ = Ni00(:,:,it); PH_ = PHI(:,:,it);
@@ -46,6 +46,11 @@ for it = 1:numel(Ts2D)
     dzphi(:,:,it) = real(fftshift(ifft2(1i*KZ.*(PH_),Nr,Nz)));
 end
 
+if strcmp(OUTPUTS.write_non_lin,'.true.')
+for it = 1:numel(Ts5D)
+    si00(:,:,it)      = real(fftshift(ifft2(squeeze(Si00(:,:,it)),Nr,Nz)));
+end
+end
 % Post processing
 disp('- post processing')
 E_pot    = zeros(1,Ns2D);      % Potential energy n^2
@@ -160,7 +165,7 @@ save_figure
 t0    = 0;
 skip_ = 1; 
 DELAY = 0.01*skip_;
-FRAMES = floor(t0/dt2D)+1:skip_:numel(Ts2D);
+FRAMES = floor(t0/(Ts2D(2)-Ts2D(1)))+1:skip_:numel(Ts2D);
 if 0
 %% GIFS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Density ion
@@ -288,21 +293,21 @@ end
 %%
 if 0
 %% Show frame in real space
-tf = 20; [~,it] = min(abs(Ts5D-tf));
+tf = 100; [~,it] = min(abs(Ts2D-tf)); [~,it5D] = min(abs(Ts5D-tf));
 fig = figure; FIGNAME = ['rz_frame',sprintf('_%.2d',JOBNUM)];
     subplot(221); plt = @(x) (((x)));
         pclr = pcolor((RR),(ZZ),plt(ne00(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts5D(it))); legend('$|\hat n_e^{00}|$');
+        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts2D(it))); legend('$|\hat n_e^{00}|$');
     subplot(222); plt = @(x) ((x));
         pclr = pcolor((RR),(ZZ),plt(ni00(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts5D(it))); legend('$|\hat n_i^{00}|$');
+        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts2D(it))); legend('$|\hat n_i^{00}|$');
     subplot(223); plt = @(x) ((x));
         pclr = pcolor((RR),(ZZ),plt(phi(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts5D(it))); legend('$|\hat\phi|$');
+        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts2D(it))); legend('$|\hat\phi|$');
 if strcmp(OUTPUTS.write_non_lin,'.true.')
     subplot(224); plt = @(x) fftshift((abs(x)),2);
-        pclr = pcolor((RR),(ZZ),plt(si00(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts5D(it))); legend('$|S_i^{00}|$');
+        pclr = pcolor((RR),(ZZ),plt(si00(:,:,it5D))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts5D(it5D))); legend('$|S_i^{00}|$');
 end
 save_figure
 end

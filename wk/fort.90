@@ -9,9 +9,9 @@
   jmaxe = 1
   pmaxi = 2
   jmaxi = 1
-  Nr   = 100
+  Nr   = 256
   Lr = 40
-  Nz   = 100
+  Nz   = 256
   Lz = 40
   kpar = 0
 /
@@ -25,17 +25,17 @@
   write_phi     = .true.
   write_non_lin     = .true.
   write_doubleprecision = .true.
-  resfile0      = 'ZP_forced_sym_100x50_L_40_Pe_2_Je_1_Pi_2_Ji_1_nB_0.5_nN_1_nu_1e-02_DG_mu_5e-04_'
-  rstfile0      = '../checkpoint/cp_ZP_forced_sym_100x50_L_40_Pe_2_Je_1_Pi_2_Ji_1_nB_0.5_nN_1_nu_1e-02_DG_mu_5e-04_'
+  resfile0      = 'ZP_forced_sym_256x128_L_40_Pe_2_Je_1_Pi_2_Ji_1_nB_0.5_nN_1_nu_1e-03__mu_1e-04_'
+  rstfile0      = '../checkpoint/cp_ZP_forced_sym_256x128_L_40_Pe_2_Je_1_Pi_2_Ji_1_nB_0.5_nN_1_nu_1e-03__mu_1e-04_'
   job2load      = 0
 /
 &MODEL_PAR
   ! Collisionality
-  CO      = -2
+  CO      = 0
   DK      = .false.
   NON_LIN = .true.
-  mu      = 0.0005
-  nu      = 0.01
+  mu      = 0.0001
+  nu      = 0.001
   tau_e   = 1
   tau_i   = 1
   sigma_e = 0.023338
