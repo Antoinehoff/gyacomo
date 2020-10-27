@@ -1,5 +1,12 @@
 HeLaZ (Hermite-Laguerre Z-pinch solver, 2020)
 
+How to run it :
+
+1. Be sure to have correct paths in local/dirs.inc for the different libraries
+2. You can compile from HeLaZ/ using make and launch from HeLaZ/wk using ./../bin/HeLaZ
+3. To have a better interface, open a script HeLaZ/wk/parameters*.m and run it to set up a wanted simulation.
+4. You can obtain various plots and gifs using HeLaZ/wk/analysis_2D.m once the simulation is done. To select the correct output file, run parameters*.m with the corresponding simulation parameters and then run analysis_2D.m (everything with matlab from wk/)
+
 Roadmap : (Current version 1.4)
 
 0. Write MOLI matlab solver in Fortran using Monli1D as starting point
