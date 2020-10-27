@@ -1,6 +1,10 @@
 HeLaZ (Hermite-Laguerre Z-pinch solver, 2020)
 
+<<<<<<< HEAD
 {demo_phi_00.gif, layout=left, float, size=full, alt="a duckling"}
+=======
+![] (demo_phi_00.gif)
+>>>>>>> c771f993830de3832803cd5cc3b5eda2f3e46d43
 
 Roadmap : (Current version 1.4)
 
