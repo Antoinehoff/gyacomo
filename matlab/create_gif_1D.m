@@ -21,7 +21,7 @@ fig  = figure;
     nbytes = fprintf(2,'frame %d/%d',in,numel(FIELD(1,1,:)));
     for n = FRAMES % loop over selected frames
         scale = max(FIELD(:,n));
-        plot(X,FIELD(:,n)/scale);
+        plot(X,FIELD(:,n)/scale,linestyle);
         ylim([YMIN,YMAX]); xlim([XMIN,XMAX]);
         title(['$t \approx$', sprintf('%.3d',ceil(T(n))), ', scaling = ',sprintf('%.1e',scale)]);
         xlabel(XNAME); ylabel(FIELDNAME);
