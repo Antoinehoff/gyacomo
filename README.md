@@ -1,7 +1,8 @@
 HeLaZ (Hermite-Laguerre Z-pinch solver, 2020)
-Current version : 0.6
 
-Roadmap :
+![] (phi_demo.gif)
+
+Roadmap : (Current version 1.4)
 
 0. Write MOLI matlab solver in Fortran using Monli1D as starting point
 
@@ -29,18 +30,16 @@ Roadmap :
 
 	1.1 Qualitative test : find similar turbulences as Hasegawa Wakatani system with few moments
 
-2. HeLaZ is now working with a non linear term and shows good qualitative turbulences
+	1.2 Zonal flows are observed in a similar way to Ricci Rogers 2006 with GS2
 
-	2.1 Zonal flows are observed in a similar way to Ricci Rogers 2006 with GS2
+	1.3 Linear analysis showed that a certain amount of PJ are recquired to trigger mode
 
-	2.2 Linear analysis showed that a certain amount of PJ are recquired to trigger mode
+		1.3.1 The \eta_B = 0.5 case is easier since it converged better in linear analysis than \eta_B = 1.0
 
-		2.2.1 The \eta_B = 0.5 case is easier since it converged better in linear analysis than \eta_B = 1.0
+		1.3.2 Collisionality helps
 
-		2.2.2 Collisionality helps
+	1.4 Quantitative study with stationary average particle flux \Gamma_\infty
 
-	2.3 Quantitative study with stationary average particle flux \Gamma_\infty
+		1.4.1 Convergence study of \Gamma_\infty w.r.t. P and J
 
-		2.3.1 Convergence study of \Gamma_\infty w.r.t. P and J
-
-		2.3.2 Direct comparison with GS2 results of Ricci,Rogers 2006
+		1.4.2 Direct comparison with GS2 results of Ricci,Rogers 2006
