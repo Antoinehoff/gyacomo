@@ -1,43 +1,3 @@
-clear all;
-addpath(genpath('../matlab')) % ... add
-default_plots_options
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Set Up parameters
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% PHYSICAL PARAMETERS
-NU      = 1e-3;   % Collision frequency
-TAU     = 1.0;    % e/i temperature ratio
-ETAB    = 0.5;    % Magnetic gradient
-ETAN    = 1.0;    % Density gradient
-ETAT    = 0.0;    % Temperature gradient
-MU      = 1e-4;   % Hyper diffusivity coefficient
-LAMBDAD = 0.0; 
-NOISE0  = 5.0e-5;
-%% GRID PARAMETERS
-N       = 64;     % Frequency gridpoints (Nkr = N/2)
-L       = 20;     % Size of the squared frequency domain
-KR0KH   = 4*2*pi/L; A0KH = 0.0; % Background phi mode to drive Ray-Tay inst.
-KREQ0   = 0;      % put kr = 0
-PMAXE   = 02;     % Highest electron Hermite polynomial degree
-JMAXE   = 01;     % Highest ''       Laguerre ''
-PMAXI   = 02;     % Highest ion      Hermite polynomial degree
-JMAXI   = 01;     % Highest ''       Laguerre ''
-KPAR    = 0.0;    % Parellel wave vector component
-%% TIME PARAMETERS 
-TMAX    = 50;  % Maximal time unit
-DT      = 1e-2;   % Time step
-SPS     = 5;      % Sampling per time unit
-RESTART = 0;      % To restart from last checkpoint
-JOB2LOAD= 00;
-%% OPTIONS
-SIMID   = 'ZP';  % Name of the simulation
-NON_LIN = 1 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
-CO      = 0;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
-% DK    = 0;  % Drift kinetic model (put every kernel_n to 0 except n=0 to 1)
-NO_E    = 0;  % Remove electrons dynamic
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 %% ________________________________________________________________________
 % Grid parameters
 GRID.pmaxe = PMAXE;  % Electron Hermite moments
@@ -93,13 +53,16 @@ INITIAL.iemat_file = ...
     '_Jmaxe_',num2str(GRID.jmaxe),'_Pmaxi_',num2str(GRID.pmaxi),'_Jmaxi_',...
     num2str(GRID.jmaxi),'_pamaxx_10_tau_1.0000_mu_0.0233.h5'''];
 % Naming and creating input file
+if    (CO == 0); CONAME = '';
+elseif(CO == -1); CONAME = 'FC';
+elseif(CO == -2); CONAME = 'DG';
+end
 params   = ['Pe_',num2str(PMAXE),'_Je_',num2str(JMAXE),...
     '_Pi_',num2str(PMAXI),'_Ji_',num2str(JMAXI),...
     '_nB_',num2str(ETAB),'_nN_',num2str(ETAN),'_nu_%0.0e_',...
-    '_mu_%0.0e_'];
+    CONAME,'_mu_%0.0e_'];
 params   = sprintf(params,[NU,MU]);
-if ~NON_LIN; params = ['lin_',params]; end;
-if  0;      params = ['DK_',params]; end;
+if ~NON_LIN; params = ['lin_',params]; end
 resolution = ['_',num2str(GRID.Nr),'x',num2str(GRID.Nz/2),'_'];
 gridname   = ['L_',num2str(L),'_'];
 BASIC.SIMID = [SIMID,resolution,gridname,params];
@@ -110,12 +73,12 @@ BASIC.tmax       = TMAX;    %time normalized to 1/omega_pe
 if RESTART; BASIC.RESTART = '.true.'; else; BASIC.RESTART = '.false.';end;
 OUTPUTS.nsave_0d = 0;
 OUTPUTS.nsave_1d = 0;
-OUTPUTS.nsave_2d = floor(1.0/SPS/DT);
-OUTPUTS.nsave_5d = floor(1.0/SPS/DT);
+OUTPUTS.nsave_2d = floor(1.0/SPS2D/DT);
+OUTPUTS.nsave_5d = floor(1.0/SPS5D/DT);
 OUTPUTS.write_Na00    = '.true.';
 OUTPUTS.write_moments = '.true.';
 OUTPUTS.write_phi     = '.true.';
-OUTPUTS.write_non_lin = '.true.';
+OUTPUTS.write_non_lin = OUTPUTS.write_moments;
 if NON_LIN == 0; OUTPUTS.write_non_lin = '.false.'; end;
 OUTPUTS.write_doubleprecision = '.true.';
 OUTPUTS.resfile0      = ['''',BASIC.SIMID,''''];
