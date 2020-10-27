@@ -43,6 +43,7 @@ SUBROUTINE poisson
       ! Initialization for n = 0 (ine = 1)
       Kne  = exp(-be_2)
       sum_kernel_mom_e = Kne*moments_e(1, 1, ikr, ikz, updatetlevel)
+      sum_kernel2_e = Kne**2
       ! loop over n only if the max polynomial degree is 1 or more
       if (jmaxe .GT. 0) then
         DO ine=2,jmaxe+1 ! ine = n+1
@@ -50,27 +51,16 @@ SUBROUTINE poisson
           ! We update iteratively the kernel functions (to spare factorial computations)
           Kne  = Kne  * be_2/ine_dp
           sum_kernel_mom_e  = sum_kernel_mom_e  + Kne * moments_e(1, ine, ikr, ikz, updatetlevel)
-        END DO
-      endif
-      ! Initialization for n = 0 (ine = 1)
-      Kne  = exp(-be_2)
-      sum_kernel2_e = Kne**2
-      ! loop over n only without caring of jmax since no moment dependency
-      ! DO ine=2,10
-      if (jmaxe .GT. 0) then
-        DO ine=2,jmaxe+1 ! ine = n+1
-          ine_dp        = REAL(ine-1,dp)         ! Real index (0 to jmax)
-          Kne           = Kne  * be_2/ine_dp     ! update kernel_n
-          sum_kernel2_e = sum_kernel2_e + Kne**2 ! ... sum recursively ...
+          sum_kernel2_e     = sum_kernel2_e     + Kne**2 ! ... sum recursively ...
         END DO
       ENDIF
-
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !!!!!!!!!!!!!!!!! Ions sum(Kernel * Ni0n)  (skm) and sum(Kernel**2) (sk2)
       !! Sum(kernel * Moments_0n)
       ! Initialization for n = 0 (ini = 1)
         Kni  = exp(-bi_2)
         sum_kernel_mom_i = Kni*moments_i(1, 1, ikr, ikz, updatetlevel)
+        sum_kernel2_i = Kni**2
         ! loop over n only if the max polynomial degree is 1 or more
         if (jmaxi .GT. 0) then
           DO ini=2,jmaxi+1
@@ -78,21 +68,9 @@ SUBROUTINE poisson
             ! We update iteratively to spare factorial computations
             Kni  = Kni  * bi_2/ini_dp
             sum_kernel_mom_i  = sum_kernel_mom_i  + Kni * moments_i(1, ini, ikr, ikz, updatetlevel)
-          END DO
-        endif
-
-        ! Initialization for n = 0 (ini = 1)
-        Kni  = exp(-bi_2)
-        sum_kernel2_i = Kni**2
-        ! loop over n only without caring of jmax since no moment dependency
-        if (jmaxi .GT. 0) then
-          DO ini=2,jmaxi+1
-            ini_dp        = REAL(ini-1,dp)         ! Real index (0 to jmax)
-            Kni           = Kni  * bi_2/ini_dp     ! update kernel_n
-            sum_kernel2_i = sum_kernel2_i + Kni**2 ! ... sum recursively ...
+            sum_kernel2_i     = sum_kernel2_i     + Kni**2 ! ... sum recursively ...
           END DO
         ENDIF
-
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !!!!!!!!!!!!!!! Assembling the poisson equation !!!!!!!!!!!!!!!!!!!!!!!!!!
       alphaD   = kperp2 * lambdaD**2

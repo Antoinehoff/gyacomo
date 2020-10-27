@@ -123,12 +123,7 @@ SUBROUTINE moments_eq_rhs
           kr     = krarray(ikr)   ! Poloidal wavevector
           kz     = kzarray(ikz)   ! Toroidal wavevector
           kperp2 = kr**2 + kz**2  ! perpendicular wavevector
-
-          IF ( DK ) THEN ! Drift kinetic model
-            be_2   = 0._dp
-          ELSE
-            be_2   = kperp2 * sigmae2_taue_o2 ! Bessel argument
-          ENDIF
+          be_2   = kperp2 * sigmae2_taue_o2 ! Kernel argument
 
           !! Compute moments and mixing terms
           ! term propto N_e^{p,j}
@@ -235,6 +230,7 @@ SUBROUTINE moments_eq_rhs
               -imagu * kpar*(TNapp1j + TNapm1j + xphijpar*kernelj*phi(ikr,ikz)) &
               - mu*kperp2**2 * moments_e(ip,ij,ikr,ikz,updatetlevel) &
               + TColl
+
           ! Adding non linearity
           IF ( NON_LIN .OR. (A0KH .NE. 0) ) THEN
             moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
@@ -325,12 +321,7 @@ SUBROUTINE moments_eq_rhs
           kr     = krarray(ikr)   ! Poloidal wavevector
           kz     = kzarray(ikz)   ! Toroidal wavevector
           kperp2 = kr**2 + kz**2  ! perpendicular wavevector
-
-          IF ( DK ) THEN ! Drift kinetic model
-            bi_2   = 0._dp
-          ELSE
-            bi_2   = kperp2 * sigmai2_taui_o2 ! Bessel argument
-          ENDIF
+          bi_2   = kperp2 * sigmai2_taui_o2 ! Kernel argument
 
           !! Compute moments and mixing terms
           ! term propto N_i^{p,j}
@@ -437,6 +428,7 @@ SUBROUTINE moments_eq_rhs
               -imagu * kpar*(TNapp1j + TNapm1j + xphijpar*kernelj*phi(ikr,ikz)) &
               - mu*kperp2**2 * moments_i(ip,ij,ikr,ikz,updatetlevel) &
                + TColl
+               
           ! Adding non linearity
           IF ( NON_LIN .OR. (A0KH .NE. 0) ) THEN
            moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
