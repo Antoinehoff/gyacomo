@@ -220,6 +220,18 @@ SUBROUTINE diagnose(kstep)
   ELSEIF (kstep .EQ. -1) THEN
      CALL cpu_time(finish)
      CALL attach(fidres, "/data/input","cpu_time",finish-start)
+
+     ! Display computational time cost
+     IF     ( FLOOR((finish-start)/3600.) .GT. 0 ) THEN !display h min s
+       WRITE(*,*) 'CPU Time = ', FLOOR((finish-start)/3600.), '[h]', &
+       FLOOR((finish-start)/3600. - FLOOR((finish-start)/3600.))*60., '[min]',&
+       FLOOR((finish-start)/60.   - FLOOR((finish-start)/3600. - FLOOR((finish-start)/3600.))*60.)*60, '[s]'
+     ELSEIF ( FLOOR((finish-start)/60.)   .GT. 0 ) THEN !display min s
+       WRITE(*,*) 'CPU Time = ', FLOOR((finish-start)/60.), '[min]', &
+       FLOOR((finish-start) - FLOOR(finish-start))*60., '[s]'
+     ELSE ! display s
+       WRITE(*,*) 'CPU Time = ', FLOOR((finish-start)), '[s]'
+     ENDIF
      !   Close all diagnostic files
      CALL closef(fidres)
   END IF
