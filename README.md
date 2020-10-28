@@ -1,4 +1,4 @@
-HeLaZ (Hermite-Laguerre Z-pinch solver, 2020)
+# HeLaZ (Hermite-Laguerre Z-pinch solver, 2020)
 
 How to run it :
 
