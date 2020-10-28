@@ -228,7 +228,7 @@ SUBROUTINE diagnose(kstep)
        FLOOR((finish-start)/60.   - FLOOR((finish-start)/3600. - FLOOR((finish-start)/3600.))*60.)*60, '[s]'
      ELSEIF ( FLOOR((finish-start)/60.)   .GT. 0 ) THEN !display min s
        WRITE(*,*) 'CPU Time = ', FLOOR((finish-start)/60.), '[min]', &
-       FLOOR((finish-start) - FLOOR(finish-start))*60., '[s]'
+       FLOOR((finish-start)/60. - FLOOR(finish-start)/60.)*60., '[s]'
      ELSE ! display s
        WRITE(*,*) 'CPU Time = ', FLOOR((finish-start)), '[s]'
      ENDIF
