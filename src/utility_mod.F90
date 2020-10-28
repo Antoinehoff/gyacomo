@@ -45,7 +45,7 @@ CONTAINS
        isi=.TRUE.
     END IF
     IF((isi).AND.(str.NE.'')) THEN
-       WRITE(*,'(a20,a25,i6.6,a20,i1)') str,' = Inf at timestep',cstep, ' and substep',updatetlevel
+       !WRITE(*,'(a20,a25,i6.6,a20,i1)') str,' = Inf at timestep',cstep, ' and substep',updatetlevel
        CALL FLUSH(stdout)
     END IF
 
@@ -70,5 +70,3 @@ CONTAINS
   END FUNCTION checkfield
 
 END MODULE utility
-
-
