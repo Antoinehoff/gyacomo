@@ -90,7 +90,7 @@ CONTAINS
     IF ( Nr .GT. 1 ) THEN ! To avoid case with 0 intervals
       deltar = Lr / REAL(Nr-1,dp)
     ELSE
-      deltar = 0;
+      deltar = 1;
     ENDIF
     ! Discretized r positions ordered as dx*(0 1 2 -3 -2 -1)
     ALLOCATE(rarray(irs:ire))
@@ -116,7 +116,7 @@ CONTAINS
     IF ( Nz .GT. 1 ) THEN ! To avoid case with 0 intervals
       deltaz = Lz / REAL(Nz-1,dp)
     ELSE
-      deltaz = 0;
+      deltaz = 1;
     ENDIF
     ! Discretized r positions ordered as dx*(0 1 2 -3 -2 -1)
     ALLOCATE(zarray(irs:ire))
