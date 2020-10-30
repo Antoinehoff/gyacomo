@@ -26,6 +26,7 @@ MODULE basic
   INTEGER :: lu_job  = 91              ! myjob file
 
   real :: start, finish ! To measure computation time
+  real :: start_est, finish_est, time_est
 
   INTERFACE allocate_array
     MODULE PROCEDURE allocate_array_dp1,allocate_array_dp2,allocate_array_dp3,allocate_array_dp4
@@ -66,9 +67,36 @@ CONTAINS
     !
   END SUBROUTINE daytim
   !================================================================================
+  SUBROUTINE display_h_min_s(time)
+    real :: time
+    integer :: days, hours, mins, secs
+    days = FLOOR(time/24./3600.);
+    hours= FLOOR(time/3600.);
+    mins = FLOOR(time/60.);
+    secs = FLOOR(time);
+
+    IF ( days .GT. 0 ) THEN !display day h min s
+      hours = (time/3600./24. - days) * 24
+      mins  = (time/3600. - days*24. - hours) * 60
+      secs  = (time/60. - days*24.*60 - hours*60 - mins) * 60
+      WRITE(*,*) 'CPU Time = ', days, '[day]', hours, '[h]', mins, '[min]', secs, '[s]'
+
+    ELSEIF ( hours .GT. 0 ) THEN !display h min s
+      mins  = (time/3600. - hours) * 60
+      secs  = (time/60. - hours*60 - mins) * 60
+      WRITE(*,*) 'CPU Time = ', hours, '[h]', mins, '[min]', secs, '[s]'
+
+    ELSEIF ( mins .GT. 0 ) THEN !display min s
+      secs  = (time/60. - mins) * 60
+      WRITE(*,*) 'CPU Time = ', mins, '[min]', secs, '[s]'
+
+    ELSE ! display s
+      WRITE(*,*) 'CPU Time = ', FLOOR(time), '[s]'
+    ENDIF
+  END SUBROUTINE display_h_min_s
+  !================================================================================
 
 ! To allocate arrays of doubles, integers, etc. at run time
-
   SUBROUTINE allocate_array_dp1(a,is1,ie1)
     IMPLICIT NONE
     real(dp), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a

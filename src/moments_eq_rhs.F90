@@ -234,7 +234,7 @@ SUBROUTINE moments_eq_rhs
           ! Adding non linearity
           IF ( NON_LIN .OR. (A0KH .NE. 0) ) THEN
             moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
-              moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) - Sepj(ip,ij,ikr,ikz)*Nkr*Nkz
+              moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) - Sepj(ip,ij,ikr,ikz)
           ENDIF
 
         END DO kzloope
@@ -428,11 +428,11 @@ SUBROUTINE moments_eq_rhs
               -imagu * kpar*(TNapp1j + TNapm1j + xphijpar*kernelj*phi(ikr,ikz)) &
               - mu*kperp2**2 * moments_i(ip,ij,ikr,ikz,updatetlevel) &
                + TColl
-               
+
           ! Adding non linearity
           IF ( NON_LIN .OR. (A0KH .NE. 0) ) THEN
            moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
-             moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) - Sipj(ip,ij,ikr,ikz)*Nkr*Nkz
+             moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) - Sipj(ip,ij,ikr,ikz)
           ENDIF
 
         END DO kzloopi

@@ -5,7 +5,7 @@ SUBROUTINE control
   use prec_const
   IMPLICIT NONE
 
-  call cpu_time(start)
+  CALL cpu_time(start)
   !________________________________________________________________________________
   !              1.   Prologue
   !                   1.1     Initialize the parallel environment
@@ -14,7 +14,7 @@ SUBROUTINE control
   WRITE(*,'(a/)') '...MPI initialized'
 
 
-  call daytim('Start at ')
+  CALL daytim('Start at ')
 
   !                   1.2     Define data specific to run
   WRITE(*,*) 'Load basic data...'
@@ -36,6 +36,18 @@ SUBROUTINE control
   WRITE(*,*) 'Create initial state...'
   CALL inital
   WRITE(*,'(a/)') '...initial state created'
+
+  ! !                   1.5.1   Computation time estimation
+  ! WRITE(*,*) 'Estimation of computation time...'
+  ! CALL cpu_time(start_est)
+  ! CALL stepon
+  ! CALL cpu_time(finish_est)
+  ! time_est = 4.*tmax/dt*(finish_est-start_est)
+  ! CALL display_h_min_s(time_est)
+  ! WRITE(*,*) '... reinitializing'
+  ! CALL inital
+  ! WRITE(*,'(a/)') '... done'
+
 
   !                   1.6     Initial diagnostics
   WRITE(*,*) 'Initial diagnostics...'

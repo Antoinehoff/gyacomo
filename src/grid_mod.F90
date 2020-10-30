@@ -196,8 +196,8 @@ CONTAINS
     ! Put kz0RT to the nearest grid point on kz
     ikz0KH = NINT(kr0KH/deltakr)+1
     kr0KH  = kzarray(ikz0KH)
-    write(*,*) 'ikz0KH = ', ikz0KH
-    write(*,*) 'kr0KH = ', kr0KH
+    WRITE(*,*) 'ikz0KH = ', ikz0KH
+    WRITE(*,*) 'kr0KH = ', kr0KH
 
   END SUBROUTINE set_kzgrid
 

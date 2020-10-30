@@ -16,17 +16,22 @@ SUBROUTINE readinputs
 
   ! Load grid data from input file
   CALL grid_readinputs
+  WRITE(*,*) 'check'
 
   ! Load diagnostic options from input file
   CALL output_par_readinputs
+  WRITE(*,*) 'check'
 
   ! Load model parameters from input file
   CALL model_readinputs
+  WRITE(*,*) 'check'
 
   ! Load initial condition parameters from input file
   CALL initial_readinputs
+  WRITE(*,*) 'check'
 
   ! Load parameters for time integration from input file
   CALL time_integration_readinputs
+  WRITE(*,*) 'check'
 
 END SUBROUTINE readinputs

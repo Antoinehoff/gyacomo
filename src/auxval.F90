@@ -11,11 +11,11 @@ subroutine auxval
   INTEGER :: irows,irowe, irow, icol
   WRITE(*,*) '=== Set auxiliary values ==='
 
-  call set_rgrid
-  call set_zgrid
-  call set_krgrid
-  call set_kzgrid
-  call set_pj
+  CALL set_rgrid
+  CALL set_zgrid
+  CALL set_krgrid
+  CALL set_kzgrid
+  CALL set_pj
 
   CALL memory ! Allocate memory for global arrays
 END SUBROUTINE auxval

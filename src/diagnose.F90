@@ -40,7 +40,7 @@ SUBROUTINE diagnose(kstep)
 
 
      WRITE(*,'(3x,a,a)') TRIM(resfile), ' created'
-     call flush(6)
+     CALL flush(6)
 
 
      !  Data group
@@ -222,16 +222,10 @@ SUBROUTINE diagnose(kstep)
      CALL attach(fidres, "/data/input","cpu_time",finish-start)
 
      ! Display computational time cost
-     IF     ( FLOOR((finish-start)/3600.) .GT. 0 ) THEN !display h min s
-       WRITE(*,*) 'CPU Time = ', FLOOR((finish-start)/3600.), '[h]', &
-       FLOOR((finish-start)/3600. - FLOOR((finish-start)/3600.))*60., '[min]',&
-       FLOOR((finish-start)/60.   - FLOOR((finish-start)/3600. - FLOOR((finish-start)/3600.))*60.)*60, '[s]'
-     ELSEIF ( FLOOR((finish-start)/60.)   .GT. 0 ) THEN !display min s
-       WRITE(*,*) 'CPU Time = ', FLOOR((finish-start)/60.), '[min]', &
-       FLOOR((finish-start)/60. - FLOOR(finish-start)/60.)*60., '[s]'
-     ELSE ! display s
-       WRITE(*,*) 'CPU Time = ', FLOOR((finish-start)), '[s]'
-     ENDIF
+     CALL display_h_min_s(finish-start)
+     ! WRITE(*,*) 'Time estimated :'
+     ! CALL display_h_min_s(time_est)
+
      !   Close all diagnostic files
      CALL closef(fidres)
   END IF
@@ -251,7 +245,7 @@ SUBROUTINE diagnose_0d
           '*** Timestep (this run/total) =', step, '/', cstep, 'Time =', time, 'dt =', dt
   WRITE(*,*)
 
-  ! flush stdout of all ranks. Usually ONLY rank 0 should write, but error messages might be written from other ranks as well
+  ! flush stdout of all ranks. Usually ONLY rank 0 should WRITE, but error messages might be written from other ranks as well
   CALL FLUSH(stdout)
 
 END SUBROUTINE diagnose_0d

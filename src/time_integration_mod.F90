@@ -71,7 +71,7 @@ CONTAINS
        WRITE(*,*) 'Cannot initialize time integration scheme. Name invalid.'
     END SELECT
 
-    write(*,*) " Time integration with ", numerical_scheme
+    WRITE(*,*) " Time integration with ", numerical_scheme
 
   END SUBROUTINE set_numerical_scheme
 

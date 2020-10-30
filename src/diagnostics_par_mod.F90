@@ -15,12 +15,12 @@ MODULE diagnostics_par
   INTEGER, PUBLIC :: nsave_cp = 1e4
 
   !  HDF5 file
-  CHARACTER(len=128), PUBLIC :: resfile0 = "results"   ! Head of main result file name
-  CHARACTER(len=128), PUBLIC :: resfile                ! Main result file
+  CHARACTER(len=256), PUBLIC :: resfile0 = "results"   ! Head of main result file name
+  CHARACTER(len=256), PUBLIC :: resfile                ! Main result file
   INTEGER, PUBLIC            :: job2load               ! jobnum of the checkpoint to load
   INTEGER, PUBLIC            :: fidres                 ! FID for resfile
-  CHARACTER(len=128), PUBLIC :: rstfile0 = "restart"   ! Head of restart file name
-  CHARACTER(len=128), PUBLIC :: rstfile                ! Full restart file
+  CHARACTER(len=256), PUBLIC :: rstfile0 = "restart"   ! Head of restart file name
+  CHARACTER(len=256), PUBLIC :: rstfile                ! Full restart file
   INTEGER, PUBLIC            :: fidrst                 ! FID for restart file
 
   PUBLIC :: output_par_readinputs, output_par_outputinputs

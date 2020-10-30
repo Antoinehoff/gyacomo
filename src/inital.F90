@@ -12,30 +12,34 @@ SUBROUTINE inital
 
   implicit none
 
+  real :: start_init, end_init, time_estimation
+
   CALL set_updatetlevel(1)
   !!!!!! Set the moments arrays Nepj, Nipj !!!!!!
-  write(*,*) 'Init moments'
+  ! WRITE(*,*) 'Init moments'
   IF ( RESTART ) THEN
     CALL load_cp
   ELSE
     CALL init_moments
   ENDIF
   !!!!!! Set phi !!!!!!
-  write(*,*) 'Init phi'
+  ! WRITE(*,*) 'Init phi'
   CALL poisson
 
   !!!!!! Set Sepj, Sipj and dnjs coeff table !!!!!!
   IF ( NON_LIN .OR. (A0KH .NE. 0)) THEN;
-    write(*,*) 'Init Sapj'
+    ! WRITE(*,*) 'Init Sapj'
     CALL compute_Sapj
-    WRITE(*,*) 'Building Dnjs table'
+
+    ! WRITE(*,*) 'Building Dnjs table'
     CALL build_dnjs_table
   ENDIF
   !!!!!! Load the full coulomb collision operator coefficients !!!!!!
   IF (CO .EQ. -1) THEN
-    WRITE(*,*) '=== Load Full Coulomb matrix ==='
+    ! WRITE(*,*) '=== Load Full Coulomb matrix ==='
     CALL load_FC_mat
   ENDIF
+
 END SUBROUTINE inital
 !******************************************************************************!
 
@@ -69,10 +73,10 @@ SUBROUTINE init_moments
     END DO
 
   ELSE
-    sigma    = 5._dp     ! Gaussian sigma
-    gain     = 0.5_dp    ! Gaussian mean
-    kz_shift = 0.5_dp    ! Gaussian z shift
     !**** Gaussian initialization (Hakim 2017) *********************************
+    ! sigma    = 5._dp     ! Gaussian sigma
+    ! gain     = 0.5_dp    ! Gaussian mean
+    ! kz_shift = 0.5_dp    ! Gaussian z shift
     ! moments_i = 0; moments_e = 0;
     !   DO ikr=ikrs,ikre
     !     kr = krarray(ikr)
@@ -89,8 +93,8 @@ SUBROUTINE init_moments
         DO ikr=ikrs,ikre
           DO ikz=ikzs,ikze
             CALL RANDOM_NUMBER(noise)
-            moments_e( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp) &
-                                                    * AA_r(ikr) * AA_z(ikz)
+            moments_e( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp) !&
+                                                    ! * AA_r(ikr) * AA_z(ikz)
           END DO
         END DO
         DO ikz=2,Nkz/2 !symmetry at kr = 0
@@ -104,8 +108,8 @@ SUBROUTINE init_moments
         DO ikr=ikrs,ikre
           DO ikz=ikzs,ikze
             CALL RANDOM_NUMBER(noise)
-            moments_i( ip,ij,ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp) &
-                                                    * AA_r(ikr) * AA_z(ikz)
+            moments_i( ip,ij,ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp) !&
+                                                    ! * AA_r(ikr) * AA_z(ikz)
           END DO
         END DO
         DO ikz=2,Nkz/2 !symmetry at kr = 0
@@ -115,26 +119,6 @@ SUBROUTINE init_moments
       END DO
     END DO
 
-    !**** Sinusoidal phi initialization for Kelvin-Helmholtz *******************
-  !   phi(1,FLOOR(0.5_dp/deltakr)) = 1._dp ! Trigger only mode kr = 1
-  !   ! moments_e( :,:, 1,FLOOR(0.5_dp/deltakr), :) = 1._dp
-  !   ! moments_i( :,:, 1,FLOOR(0.5_dp/deltakr), :) = 1._dp
-  !
-  !   DO ikr=ikrs,ikre
-  !     DO ikz=ikzs,ikze
-  !       CALL RANDOM_NUMBER(noise)
-  !       moments_e( :,:, ikr,ikz, :) = moments_e( :,:, ikr,ikz, :) &
-  !       + initnoise_moments*(noise-0.5_dp) ! adding noise
-  !
-  !       CALL RANDOM_NUMBER(noise)
-  !       moments_i( :,:, ikr,ikz, :) = moments_i( :,:, ikr,ikz, :) &
-  !       + initnoise_moments*(noise-0.5_dp) ! adding noise
-  !
-  !       CALL RANDOM_NUMBER(noise)
-  !       phi(ikr,ikz) = phi(ikr,ikz) + initnoise_moments*(noise-0.5_dp) ! adding noise
-  !     ENDDO
-  !   ENDDO
-  !   CALL moments_eq_rhs
   ENDIF
 END SUBROUTINE init_moments
 !******************************************************************************!

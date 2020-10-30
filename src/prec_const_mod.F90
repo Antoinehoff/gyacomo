@@ -58,11 +58,11 @@ MODULE prec_const
       dp_r = range(b)
       dp_p = precision(b)
 
-      call mpi_comm_rank(MPI_COMM_WORLD,me,ierr)
+      CALL mpi_comm_rank(MPI_COMM_WORLD,me,ierr)
 
       !Create MPI datatypes that support the specific size
-      call MPI_Type_create_f90_real(sp_p,sp_r,MPI_sp,ierr)
-      call MPI_Type_create_f90_real(dp_p,dp_r,MPI_dp,ierr)
+      CALL MPI_Type_create_f90_real(sp_p,sp_r,MPI_sp,ierr)
+      CALL MPI_Type_create_f90_real(dp_p,dp_r,MPI_dp,ierr)
 
     END SUBROUTINE INIT_PREC_CONST
 

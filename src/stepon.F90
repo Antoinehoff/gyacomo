@@ -14,9 +14,7 @@ SUBROUTINE stepon
 
   INTEGER :: num_step
 
-
    DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
-
       ! Compute right hand side of moments hierarchy equation
       CALL moments_eq_rhs
       ! Advance from updatetlevel to updatetlevel+1 (according to num. scheme)

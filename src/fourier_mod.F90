@@ -23,9 +23,9 @@ MODULE fourier
     COMPLEX(dp), DIMENSION(Nkr), INTENT(OUT):: Fk_out
     integer*8 plan
 
-    call dfftw_plan_dft_r2c_1d(plan,Nr,fx_in,Fk_out,FFTW_FORWARD,FFTW_ESTIMATE)
-    call dfftw_execute_dft_r2c(plan, fx_in, Fk_out)
-    call dfftw_destroy_plan(plan)
+    CALL dfftw_plan_dft_r2c_1d(plan,Nr,fx_in,Fk_out,FFTW_FORWARD,FFTW_ESTIMATE)
+    CALL dfftw_execute_dft_r2c(plan, fx_in, Fk_out)
+    CALL dfftw_destroy_plan(plan)
 
   END SUBROUTINE fft_r2cc
 
@@ -38,9 +38,9 @@ MODULE fourier
     REAL(dp),    DIMENSION(Nr),   INTENT(OUT):: fx_out
     integer*8 plan
 
-    call dfftw_plan_dft_c2r_1d(plan,Nr,Fk_in,fx_out,FFTW_BACKWARD,FFTW_ESTIMATE)
-    call dfftw_execute_dft_c2r(plan, Fk_in, fx_out)
-    call dfftw_destroy_plan(plan)
+    CALL dfftw_plan_dft_c2r_1d(plan,Nr,Fk_in,fx_out,FFTW_BACKWARD,FFTW_ESTIMATE)
+    CALL dfftw_execute_dft_c2r(plan, Fk_in, fx_out)
+    CALL dfftw_destroy_plan(plan)
     fx_out = fx_out/Nr
 
   END SUBROUTINE ifft_cc2r
@@ -55,9 +55,9 @@ MODULE fourier
       integer*8 plan
 
       !!! 2D Forward FFT ________________________!
-      call dfftw_plan_dft_r2c_2d(plan,Nr,Nz,ffx_in,FFk_out,FFTW_FORWARD,FFTW_ESTIMATE)
-      call dfftw_execute_dft_r2c(plan,ffx_in,FFk_out)
-      call dfftw_destroy_plan(plan)
+      CALL dfftw_plan_dft_r2c_2d(plan,Nr,Nz,ffx_in,FFk_out,FFTW_FORWARD,FFTW_ESTIMATE)
+      CALL dfftw_execute_dft_r2c(plan,ffx_in,FFk_out)
+      CALL dfftw_destroy_plan(plan)
 
   END SUBROUTINE fft2_r2cc
 
@@ -73,9 +73,9 @@ MODULE fourier
 
       tmp_c = FFk_in
       !!! 2D Backward FFT ________________________!
-      call dfftw_plan_dft_c2r_2d(plan,Nr,Nz,tmp_c,ffx_out,FFTW_BACKWARD,FFTW_ESTIMATE)
-      call dfftw_execute_dft_c2r(plan,tmp_c,ffx_out)
-      call dfftw_destroy_plan(plan)
+      CALL dfftw_plan_dft_c2r_2d(plan,Nr,Nz,tmp_c,ffx_out,FFTW_BACKWARD,FFTW_ESTIMATE)
+      CALL dfftw_execute_dft_c2r(plan,tmp_c,ffx_out)
+      CALL dfftw_destroy_plan(plan)
       ffx_out = ffx_out/Nr/Nz
 
   END SUBROUTINE ifft2_cc2r

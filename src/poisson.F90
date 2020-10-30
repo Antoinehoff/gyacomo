@@ -80,7 +80,7 @@ SUBROUTINE poisson
       gammaD_phi = q_e * sum_kernel_mom_e + q_i * sum_kernel_mom_i
 
       IF ( (gammaD .EQ. 0) .AND. (abs(kr)+abs(kz) .NE. 0._dp) ) THEN
-        write(*,*) 'Warning gammaD = 0', sum_kernel2_i
+        WRITE(*,*) 'Warning gammaD = 0', sum_kernel2_i
       ENDIF
 
       phi(ikr, ikz) =  gammaD_phi/gammaD
