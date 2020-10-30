@@ -1,8 +1,6 @@
 %% load results %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-JOBNUM = 00;
-FMT = '.fig';
-filename = [BASIC.SIMID,'_','%.2d.h5'];
-filename = sprintf(filename,JOBNUM); disp(['Loading ',filename])
+filename = sprintf([BASIC.RESDIR,'outputs_%.2d.h5'],JOBNUM);
+disp(['Loading ',filename])
 % Loading from output file
 % CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
 if strcmp(OUTPUTS.write_moments,'.true.') 

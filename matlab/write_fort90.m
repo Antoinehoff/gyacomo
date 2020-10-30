@@ -1,6 +1,6 @@
 function [INPUT] = write_fort90(OUTPUTS,GRID,MODEL,INITIAL,TIME_INTEGRATION,BASIC)
 % Write the input script "fort.90" with desired parameters
-INPUT = '../wk/fort.90';
+INPUT = 'fort.90';
 fid = fopen(INPUT,'wt');
 
 fprintf(fid,'&BASIC\n');
@@ -73,4 +73,5 @@ fprintf(fid,['  numerical_scheme=', TIME_INTEGRATION.numerical_scheme,'\n']);
 fprintf(fid,'/');
 
 fclose(fid);
+system(['cp fort.90 ',BASIC.RESDIR,'/.']);
 end

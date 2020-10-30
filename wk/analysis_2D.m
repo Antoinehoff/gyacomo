@@ -1,5 +1,5 @@
 %% Load results
-load_results
+compile_results
 
 %% Retrieving max polynomial degree and sampling info
 Npe = numel(Pe); Nje = numel(Je); [JE,PE] = meshgrid(Je,Pe);
@@ -76,10 +76,10 @@ for it = 1:numel(Ts2D) % Loop over 2D arrays
     E_pot(it)   = pi/Lr/Lz*sum(sum(abs(NI_).^2))/Nkr/Nkr; % integrate through Parseval id
     E_kin(it)   = pi/Lr/Lz*sum(sum(abs(Ddr.*PH_).^2+abs(Ddz.*PH_).^2))/Nkr/Nkr;
     ExB(it)     = max(max(max(abs(phi(3:end,:,it)-phi(1:end-2,:,it))/(2*dr))),max(max(abs(phi(:,3:end,it)-phi(:,1:end-2,it))'/(2*dz))));
-    Flux_ri(it)  = sum(sum(ni00(:,:,it).*drphi(:,:,it)))*dr*dz;
-    Flux_zi(it)  = sum(sum(ni00(:,:,it).*dzphi(:,:,it)))*dr*dz;
-    Flux_re(it)  = sum(sum(ne00(:,:,it).*drphi(:,:,it)))*dr*dz;
-    Flux_ze(it)  = sum(sum(ne00(:,:,it).*dzphi(:,:,it)))*dr*dz;
+    Flux_ri(it)  = sum(sum(ni00(:,:,it).*dzphi(:,:,it)))*dr*dz/Lr/Lz;
+    Flux_zi(it)  = sum(sum(-ni00(:,:,it).*drphi(:,:,it)))*dr*dz/Lr/Lz;
+    Flux_re(it)  = sum(sum(ne00(:,:,it).*dzphi(:,:,it)))*dr*dz/Lr/Lz;
+    Flux_ze(it)  = sum(sum(-ne00(:,:,it).*drphi(:,:,it)))*dr*dz/Lr/Lz;
 end
 
 E_kin_KZ = mean(mean(abs(Ddr.*PHI(:,:,it)).^2+abs(Ddz.*PHI(:,:,it)).^2,3),2);
@@ -88,18 +88,18 @@ dEdt     = diff(E_pot+E_kin)./dt2D;
 
 for it = 1:numel(Ts5D) % Loop over 5D arrays
     NE_ = Ne00(:,:,it); NI_ = Ni00(:,:,it); PH_ = PHI(:,:,it);
-    Ne_norm(:,:,it)= sum(sum(abs(Nepj(:,:,:,:,it)),3),4);
-    Ni_norm(:,:,it)= sum(sum(abs(Nipj(:,:,:,:,it)),3),4);
+    Ne_norm(:,:,it)= sum(sum(abs(Nepj(:,:,:,:,it)),3),4)/Nkr/Nkz;
+    Ni_norm(:,:,it)= sum(sum(abs(Nipj(:,:,:,:,it)),3),4)/Nkr/Nkz;
 if strcmp(OUTPUTS.write_non_lin,'.true.')   
-    Se_norm(:,:,it)= sum(sum(abs(Sepj(:,:,:,:,it)),3),4);
-    Sne00_norm(it) = sum(sum(abs(Se00(:,:,it))));
-    Si_norm(:,:,it)= sum(sum(abs(Sipj(:,:,:,:,it)),3),4);
-    Sni00_norm(it) = sum(sum(abs(Si00(:,:,it))));
+    Se_norm(:,:,it)= sum(sum(abs(Sepj(:,:,:,:,it)),3),4)/Nkr/Nkz;
+    Sne00_norm(it) = sum(sum(abs(Se00(:,:,it))))/Nkr/Nkz;
+    Si_norm(:,:,it)= sum(sum(abs(Sipj(:,:,:,:,it)),3),4)/Nkr/Nkz;
+    Sni00_norm(it) = sum(sum(abs(Si00(:,:,it))))/Nkr/Nkz;
 end
 end
 
 
-%% Growth rate
+%% Compute growth rate
 disp('- growth rate')
 tend   = Ts2D(end); tstart   = 0.6*tend; 
 g_          = zeros(Nkr,Nkz);
@@ -114,6 +114,7 @@ gkr0kz_Ni00 = real(g_(ikr0KH,:));
 
 %% PLOTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Plots')
+FMT = '.fig';
 %% Time evolutions
 fig = figure; FIGNAME = ['t_evolutions',sprintf('_%.2d',JOBNUM)];
     subplot(221); 
@@ -151,7 +152,7 @@ if strcmp(OUTPUTS.write_non_lin,'.true.')
     end
     grid on; xlabel('$t$'); ylabel('$S$'); %legend('show');
 else
-    %% Growth rate
+%% Growth rate
     subplot(224)    
         [~,ikr0KH] = min(abs(kr-KR0KH));
         plot(kz(1:ikr0KH)/kr(ikr0KH),gkr0kz_Ni00(1:ikr0KH)/(KR0KH*A0KH),...
@@ -162,32 +163,62 @@ end
 save_figure
 
 %%
+if 1
+%% Show frame in real space
+tf = 100; [~,it] = min(abs(Ts2D-tf)); [~,it5D] = min(abs(Ts5D-tf));
+fig = figure; FIGNAME = ['rz_frame',sprintf('_%.2d',JOBNUM)];
+    subplot(221); plt = @(x) (((x)));
+        pclr = pcolor((RR),(ZZ),plt(ne00(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts2D(it))); legend('$|\hat n_e^{00}|$');
+    subplot(222); plt = @(x) ((x));
+        pclr = pcolor((RR),(ZZ),plt(ni00(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts2D(it))); legend('$|\hat n_i^{00}|$');
+    subplot(223); plt = @(x) ((x));
+        pclr = pcolor((RR),(ZZ),plt(phi(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts2D(it))); legend('$|\hat\phi|$');
+if strcmp(OUTPUTS.write_non_lin,'.true.')
+    subplot(224); plt = @(x) fftshift((abs(x)),2);
+        pclr = pcolor((RR),(ZZ),plt(si00(:,:,it5D))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts5D(it5D))); legend('$|S_i^{00}|$');
+end
+save_figure
+end
+
+%%
 t0    = 0;
 skip_ = 1; 
 DELAY = 0.01*skip_;
 FRAMES = floor(t0/(Ts2D(2)-Ts2D(1)))+1:skip_:numel(Ts2D);
-if 0
 %% GIFS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if 0
 %% Density ion
 GIFNAME = ['ni00',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
 FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D;
 FIELDNAME = '$n_i^{00}$'; XNAME = '$r$'; YNAME = '$z$';
 create_gif
+end
+if 0
 %% Density electron
 GIFNAME = ['ne00',sprintf('_%.2d',JOBNUM)]; INTERP = 1;
 FIELD = real(ne00); X = RR; Y = ZZ; T = Ts2D;
 FIELDNAME = '$n_e^{00}$'; XNAME = '$r$'; YNAME = '$z$';
 create_gif
+end
+if 0
 %% Phi
 GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)];INTERP = 1;
 FIELD = real(phi); X = RR; Y = ZZ; T = Ts2D;
 FIELDNAME = '$\phi$'; XNAME = '$r$'; YNAME = '$z$';
 create_gif
+end
+if 0
 %% Density ion frequency
 GIFNAME = ['Ni00',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
 FIELD =ifftshift((abs(Ni00)),2); X = fftshift(KR,2); Y = fftshift(KZ,2); T = Ts2D;
 FIELDNAME = '$N_i^{00}$'; XNAME = '$k_r$'; YNAME = '$k_z$';
 create_gif
+end
+if 0
 %% Density ion frequency @ kr = 0
 GIFNAME = ['Ni00_kr0',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
 FIELD =(squeeze(abs(Ni00(1,:,:)))); linestyle = 'o-.';
@@ -292,28 +323,6 @@ end
 
 %%
 if 0
-%% Show frame in real space
-tf = 100; [~,it] = min(abs(Ts2D-tf)); [~,it5D] = min(abs(Ts5D-tf));
-fig = figure; FIGNAME = ['rz_frame',sprintf('_%.2d',JOBNUM)];
-    subplot(221); plt = @(x) (((x)));
-        pclr = pcolor((RR),(ZZ),plt(ne00(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts2D(it))); legend('$|\hat n_e^{00}|$');
-    subplot(222); plt = @(x) ((x));
-        pclr = pcolor((RR),(ZZ),plt(ni00(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts2D(it))); legend('$|\hat n_i^{00}|$');
-    subplot(223); plt = @(x) ((x));
-        pclr = pcolor((RR),(ZZ),plt(phi(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts2D(it))); legend('$|\hat\phi|$');
-if strcmp(OUTPUTS.write_non_lin,'.true.')
-    subplot(224); plt = @(x) fftshift((abs(x)),2);
-        pclr = pcolor((RR),(ZZ),plt(si00(:,:,it5D))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$r$'); ylabel('$z$'); title(sprintf('t=%.3d',Ts5D(it5D))); legend('$|S_i^{00}|$');
-end
-save_figure
-end
-
-%%
-if 0
 %% Show frame in kspace
 tf = 20; [~,it] = min(abs(Ts5D-tf));
 fig = figure; FIGNAME = ['krkz_frame',sprintf('_%.2d',JOBNUM)];
@@ -332,13 +341,4 @@ if strcmp(OUTPUTS.write_non_lin,'.true.')
         xlabel('$k_r$'); ylabel('$k_z$');legend('$\hat S_i^{00}$');
 end
 save_figure
-end
-
-
-if 0
-%% Check time evolution of higher moments
-p = 0; j = 0;
-if strcmp(OUTPUTS.write_moments,'.true.') 
-
-end
 end

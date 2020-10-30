@@ -1,5 +1,5 @@
 title1 = GIFNAME;
-FIGDIR = ['../results/',BASIC.SIMID,'/'];
+FIGDIR = BASIC.RESDIR;
 if ~exist(FIGDIR, 'dir')
    mkdir(FIGDIR)
 end

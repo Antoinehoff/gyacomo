@@ -23,6 +23,7 @@ srcinfo
 srcinfo.h
 logs/
 results/
+results_old/
 mod/
 obj/
 bin/

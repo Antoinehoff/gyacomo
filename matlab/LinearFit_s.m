@@ -22,7 +22,7 @@ function [gamma,fit] = LinearFit_s(time,Na00abs, tstart, tend)
 
 
     Na00absshifted = circshift(Na00abs,-1);    % ... shift by -1 the time position 
-    gammaoft = log(Na00absshifted(1:end-1)./Na00abs(1:end-1))./transpose(diff(time)); % ... evaluate growth rate
+    gammaoft = log(Na00absshifted(1:end-1)./Na00abs(1:end-1))./squeeze(diff(time)); % ... evaluate growth rate
 
     % Get gamma
     gamma = mean(gammaoft(Tstart_ind:Tend_ind-1)); % ... take the mean of gamma over the time window

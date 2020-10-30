@@ -1,9 +1,5 @@
 title1 = GIFNAME;
-FIGDIR = ['../results/',BASIC.SIMID,'/'];
-if ~exist(FIGDIR, 'dir')
-   mkdir(FIGDIR)
-end
-
+FIGDIR = BASIC.RESDIR;
 GIFNAME = [FIGDIR, GIFNAME,'.gif'];
 
 % Set colormap boundaries

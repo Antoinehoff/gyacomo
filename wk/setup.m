@@ -1,4 +1,5 @@
 %% ________________________________________________________________________
+SIMDIR = ['../results/',SIMID,'/'];
 % Grid parameters
 GRID.pmaxe = PMAXE;  % Electron Hermite moments
 GRID.jmaxe = JMAXE;  % Electron Laguerre moments 
@@ -53,19 +54,20 @@ INITIAL.iemat_file = ...
     '_Jmaxe_',num2str(GRID.jmaxe),'_Pmaxi_',num2str(GRID.pmaxi),'_Jmaxi_',...
     num2str(GRID.jmaxi),'_pamaxx_10_tau_1.0000_mu_0.0233.h5'''];
 % Naming and creating input file
-if    (CO == 0); CONAME = '';
+if    (CO == 0); CONAME = 'LB';
 elseif(CO == -1); CONAME = 'FC';
 elseif(CO == -2); CONAME = 'DG';
 end
-params   = ['Pe_',num2str(PMAXE),'_Je_',num2str(JMAXE),...
+degngrad   = ['Pe_',num2str(PMAXE),'_Je_',num2str(JMAXE),...
     '_Pi_',num2str(PMAXI),'_Ji_',num2str(JMAXI),...
     '_nB_',num2str(ETAB),'_nN_',num2str(ETAN),'_nu_%0.0e_',...
-    CONAME,'_mu_%0.0e_'];
-params   = sprintf(params,[NU,MU]);
-if ~NON_LIN; params = ['lin_',params]; end
-resolution = ['_',num2str(GRID.Nr),'x',num2str(GRID.Nz/2),'_'];
+    CONAME,'_mu_%0.0e'];
+degngrad   = sprintf(degngrad,[NU,MU]);
+if ~NON_LIN; degngrad = ['lin_',degngrad]; end
+resolution = [num2str(GRID.Nr),'x',num2str(GRID.Nz/2),'_'];
 gridname   = ['L_',num2str(L),'_'];
-BASIC.SIMID = [SIMID,resolution,gridname,params];
+PARAMS = [resolution,gridname,degngrad];
+BASIC.RESDIR = [SIMDIR,PARAMS,'/'];
 BASIC.nrun       = 1e8;
 BASIC.dt         = DT;   
 BASIC.tmax       = TMAX;    %time normalized to 1/omega_pe
@@ -81,16 +83,24 @@ OUTPUTS.write_phi     = '.true.';
 OUTPUTS.write_non_lin = OUTPUTS.write_moments;
 if NON_LIN == 0; OUTPUTS.write_non_lin = '.false.'; end;
 OUTPUTS.write_doubleprecision = '.true.';
-OUTPUTS.resfile0      = ['''',BASIC.SIMID,''''];
-OUTPUTS.rstfile0      = ['''','../checkpoint/cp_',BASIC.SIMID,''''];
+OUTPUTS.resfile0      = ['''',BASIC.RESDIR,'outputs',''''];
+OUTPUTS.rstfile0      = ['''',BASIC.RESDIR,'checkpoint',''''];
 OUTPUTS.job2load      = JOB2LOAD;
-%% Compile and write input file
+%% Create directories
+if ~exist(SIMDIR, 'dir')
+   mkdir(SIMDIR)
+end
+if ~exist(BASIC.RESDIR, 'dir')
+mkdir(BASIC.RESDIR)
+end
+%% Compile and WRITE input file
 INPUT = write_fort90(OUTPUTS,GRID,MODEL,INITIAL,TIME_INTEGRATION,BASIC);
 nproc = 1;
 MAKE  = 'cd ..; make; cd wk';
 system(MAKE);
 %%
-disp(['Set up ', BASIC.SIMID]);
+disp(['Set up ',SIMID]);
+disp([resolution,gridname,degngrad]);
 if RESTART
 	disp(['- restarting from JOBNUM = ',num2str(JOB2LOAD)]); else
 	disp(['- starting from T = 0']);
