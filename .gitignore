@@ -19,8 +19,6 @@
 *.h5
 *.o
 *.a
-srcinfo
-srcinfo.h
 logs/
 results/
 results_old/
