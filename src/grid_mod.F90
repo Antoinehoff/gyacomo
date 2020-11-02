@@ -53,7 +53,6 @@ MODULE grid
 
   ! Public Functions
   PUBLIC :: set_pj
-  PUBLIC :: set_rgrid,  set_zgrid
   PUBLIC :: set_krgrid, set_kzgrid
   PUBLIC :: grid_readinputs, grid_outputinputs
   PUBLIC :: bare, bari
@@ -79,54 +78,6 @@ CONTAINS
     maxj  = MAX(jmaxi, jmaxe)
   END SUBROUTINE set_pj
 
-  SUBROUTINE set_rgrid
-    USE prec_const
-    IMPLICIT NONE
-    INTEGER :: ir
-    ! Start and END indices of grid
-    irs = 1
-    ire = Nr
-    ! Grid spacing
-    IF ( Nr .GT. 1 ) THEN ! To avoid case with 0 intervals
-      deltar = Lr / REAL(Nr-1,dp)
-    ELSE
-      deltar = 1;
-    ENDIF
-    ! Discretized r positions ordered as dx*(0 1 2 -3 -2 -1)
-    ALLOCATE(rarray(irs:ire))
-    IF (NR .GT. 1) THEN
-      DO ir = irs,ire
-        rarray(ir) = deltar*(MODULO(ir-1,Nr/2)-Nr/2*FLOOR(2.*real(ir-1)/real(Nr)))
-      END DO
-      rarray(Nr/2+1) = -rarray(Nr/2+1)
-    ELSE
-      rarray(1) = 0._dp
-    ENDIF
-
-  END SUBROUTINE set_rgrid
-
-  SUBROUTINE set_zgrid
-    USE prec_const
-    IMPLICIT NONE
-    INTEGER :: iz
-    ! Start and END indices of grid
-    izs = 1
-    ize = Nr
-    ! Grid spacing
-    IF ( Nz .GT. 1 ) THEN ! To avoid case with 0 intervals
-      deltaz = Lz / REAL(Nz-1,dp)
-    ELSE
-      deltaz = 1;
-    ENDIF
-    ! Discretized r positions ordered as dx*(0 1 2 -3 -2 -1)
-    ALLOCATE(zarray(irs:ire))
-    DO iz = izs,ize
-      zarray(iz) = deltaz*(MODULO(iz-1,Nz/2)-Nz/2*FLOOR(2.*real(iz-1)/real(Nz)))
-    END DO
-    zarray(Nz/2+1) = -zarray(Nz/2+1)
-
-  END SUBROUTINE set_zgrid
-
   SUBROUTINE set_krgrid
     USE prec_const
     IMPLICIT NONE
@@ -137,7 +88,7 @@ CONTAINS
     ikrs = 1
     ikre = Nkr
     ! Grid spacings
-    deltakr = 2._dp*PI/Nr/deltar
+    deltakr = 2._dp*PI/Lr
 
     ! Discretized kr positions ordered as dk*(0 1 2)
     ALLOCATE(krarray(ikrs:ikre))
@@ -170,7 +121,7 @@ CONTAINS
     ikzs = 1
     ikze = Nkz
     ! Grid spacings
-    deltakz = 2._dp*PI/Nkz/deltaz
+    deltakz = 2._dp*PI/Lz
 
     ! Discretized kz positions ordered as dk*(0 1 2 -3 -2 -1)
     ALLOCATE(kzarray(ikzs:ikze))
