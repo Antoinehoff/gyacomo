@@ -20,6 +20,7 @@
 *.o
 *.a
 *.png
+fort.90
 logs/
 results/
 results_old/
