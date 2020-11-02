@@ -13,7 +13,7 @@ else
 % Setup figure frame
 fig  = figure('Color','white','Position', [100, 100, 400, 400]);
     pcolor(X,Y,FIELD(:,:,1)); % to set up
-    colormap jet
+    colormap gray
     axis tight manual % this ensures that getframe() returns a consistent size
     if INTERP
         shading interp;

@@ -1,7 +1,7 @@
 &BASIC
   nrun   = 100000000
   dt     = 0.01
-  tmax   = 200
+  tmax   = 300
   RESTART = .false.
 /
 &GRID
@@ -25,9 +25,9 @@
   write_phi     = .true.
   write_non_lin     = .true.
   write_doubleprecision = .true.
-  resfile0      = '../results/ZP/256x128_L_66_Pe_2_Je_1_Pi_2_Ji_1_nB_0.5_nN_1_nu_1e-02_DG_mu_5e-04/outputs'
-  rstfile0      = '../results/ZP/256x128_L_66_Pe_2_Je_1_Pi_2_Ji_1_nB_0.5_nN_1_nu_1e-02_DG_mu_5e-04/checkpoint'
-  job2load      = 1
+  resfile0      = '../results/ZP/256x128_L_66_Pe_2_Je_1_Pi_2_Ji_1_nB_0.4_nN_1_nu_1e-02_DG_mu_5e-04/outputs'
+  rstfile0      = '../results/ZP/256x128_L_66_Pe_2_Je_1_Pi_2_Ji_1_nB_0.4_nN_1_nu_1e-02_DG_mu_5e-04/checkpoint'
+  job2load      = 0
 /
 &MODEL_PAR
   ! Collisionality
@@ -44,7 +44,7 @@
   q_i     = 1
   eta_n   = 1
   eta_T   = 0
-  eta_B   = 0.5
+  eta_B   = 0.4
   lambdaD = 0
   kr0KH   = 0
   A0KH    = 0

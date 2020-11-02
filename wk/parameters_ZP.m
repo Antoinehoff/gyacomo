@@ -1,13 +1,12 @@
 clear all;
 addpath(genpath('../matlab')) % ... add
-default_plots_options
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
 NU      = 1e-2;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-ETAB    = 0.5;    % Magnetic gradient
+ETAB    = 0.4;    % Magnetic gradient
 ETAN    = 1.0;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
 MU      = 5e-4;   % Hyper diffusivity coefficient
@@ -20,12 +19,12 @@ JMAXE   = 1;     % Highest ''       Laguerre ''
 PMAXI   = 2;     % Highest ion      Hermite polynomial degree
 JMAXI   = 1;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS 
-TMAX    = 200;  % Maximal time unit
+TMAX    = 300;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS2D   = 2;      % Sampling per time unit for 2D arrays
 SPS5D   = 0.1;    % Sampling per time unit for 5D arrays
 RESTART = 0;      % To restart from last checkpoint
-JOB2LOAD= 01;
+JOB2LOAD= 0;
 %% OPTIONS
 SIMID   = 'ZP';  % Name of the simulation
 CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)

@@ -1,4 +1,5 @@
 %% Load results
+% JOBNUM = 0; load_results;
 compile_results
 
 %% Retrieving max polynomial degree and sampling info
@@ -165,7 +166,7 @@ save_figure
 %%
 if 1
 %% Show frame in real space
-tf = 100; [~,it] = min(abs(Ts2D-tf)); [~,it5D] = min(abs(Ts5D-tf));
+tf = 1000; [~,it] = min(abs(Ts2D-tf)); [~,it5D] = min(abs(Ts5D-tf));
 fig = figure; FIGNAME = ['rz_frame',sprintf('_%.2d',JOBNUM)];
     subplot(221); plt = @(x) (((x)));
         pclr = pcolor((RR),(ZZ),plt(ne00(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;

@@ -10,7 +10,6 @@ fig  = figure('Color','white','Position', [100, 100, 400, 400]);
     scale_z = max(abs(plt(Z(:,:,1))));
     plot3(plt(X)/scale_x,plt(Y)/scale_y,plt(Z)/scale_z,'.k','MarkerSize',MARKERSIZE);
     view(VIEW);
-    colormap jet
     axis tight manual % this ensures that getframe() returns a consistent size
     in      = 1;
     nbytes = fprintf(2,'frame %d/%d',in,numel(FRAMES));

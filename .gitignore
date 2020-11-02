@@ -19,6 +19,7 @@
 *.h5
 *.o
 *.a
+*.png
 logs/
 results/
 results_old/

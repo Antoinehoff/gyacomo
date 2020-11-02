@@ -2,7 +2,8 @@
 filename = sprintf([BASIC.RESDIR,'outputs_%.2d.h5'],JOBNUM);
 disp(['Loading ',filename])
 % Loading from output file
-% CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
+CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
+DT_SIM    = h5readatt(filename,'/data/input','dt');
 if strcmp(OUTPUTS.write_moments,'.true.') 
 [Nipj, Pi, Ji, kr, kz, Ts5D, dt5D] = load_5D_data(filename, 'moments_i');
 [Nepj, Pe, Je                    ] = load_5D_data(filename, 'moments_e');
