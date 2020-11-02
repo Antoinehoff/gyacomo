@@ -48,3 +48,5 @@ Roadmap : (Current version 1.4)
 		1.4.1 Convergence study of \Gamma_\infty w.r.t. P and J
 
 		1.4.2 Direct comparison with GS2 results of Ricci,Rogers 2006
+
+2. MPI parallel version
