@@ -20,6 +20,9 @@ SUBROUTINE compute_Sapj
   REAL(dp):: kr, kz, kerneln, be_2, bi_2, factn
   REAL(dp):: sigmae2_taue_o2, sigmai2_taui_o2
 
+  ! Execution time start
+  CALL cpu_time(t0_Sapj)
+
   !!!!!!!!!!!!!!!!!!!! ELECTRON non linear term computation (Sepj)!!!!!!!!!!
   sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the kerneln argument
 
@@ -30,8 +33,8 @@ SUBROUTINE compute_Sapj
 
       nloope: DO in = 1,jmaxe+1 ! Loop over laguerre for the sum
 
-        krloope1: DO ikr = 1,Nkr ! Loop over kr
-          kzloope1: DO ikz = 1,Nkz ! Loop over kz
+        krloope1: DO ikr = ikrs,ikre ! Loop over kr
+          kzloope1: DO ikz = ikzs,ikze ! Loop over kz
             kr     = krarray(ikr)
             kz     = kzarray(ikz)
             be_2    = sigmae2_taue_o2 * (kr**2 + kz**2)
@@ -65,8 +68,8 @@ SUBROUTINE compute_Sapj
         Sepj(ip,ij,:,:) = Sepj(ip,ij,:,:) + CONV ! Add it to Sepj
 
         IF ( NON_LIN ) THEN ! Fully non linear term ikz phi * ikr Napj
-          krloope2: DO ikr = 1,Nkr ! Loop over kr
-            kzloope2: DO ikz = 1,Nkz ! Loop over kz
+          krloope2: DO ikr = ikrs,ikre ! Loop over kr
+            kzloope2: DO ikz = ikzs,ikze ! Loop over kz
               kr     = krarray(ikr)
               kz     = kzarray(ikz)
               be_2    = sigmae2_taue_o2 * (kr**2 + kz**2)
@@ -107,8 +110,8 @@ SUBROUTINE compute_Sapj
 
       nloopi: DO in = 1,jmaxi+1 ! Loop over laguerre for the sum
 
-        krloopi1: DO ikr = 1,Nkr ! Loop over kr
-          kzloopi1: DO ikz = 1,Nkz ! Loop over kz
+        krloopi1: DO ikr = ikrs,ikre ! Loop over kr
+          kzloopi1: DO ikz = ikzs,ikze ! Loop over kz
             kr      = krarray(ikr)
             kz      = kzarray(ikz)
             bi_2    = sigmai2_taui_o2 * (kr**2 + kz**2)
@@ -140,8 +143,8 @@ SUBROUTINE compute_Sapj
         CALL convolve_2D_F2F( F_, G_, CONV ) ! Convolve Fourier to Fourier
         Sipj(ip,ij,:,:) = Sipj(ip,ij,:,:) + CONV ! Add it to Sipj
 
-        krloopi2: DO ikr = 1,Nkr ! Loop over kr
-          kzloopi2: DO ikz = 1,Nkz ! Loop over kz
+        krloopi2: DO ikr = ikrs,ikre ! Loop over kr
+          kzloopi2: DO ikz = ikzs,ikze ! Loop over kz
             kr      = krarray(ikr)
             kz      = kzarray(ikz)
             bi_2    = sigmai2_taui_o2 * (kr**2 + kz**2)
@@ -179,4 +182,9 @@ SUBROUTINE compute_Sapj
     ENDDO jloopi
   ENDDO ploopi
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! Execution time end
+  CALL cpu_time(t1_Sapj)
+  tc_Sapj = tc_Sapj + (t1_Sapj - t0_Sapj)
+
 END SUBROUTINE compute_Sapj

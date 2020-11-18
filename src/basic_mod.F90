@@ -4,6 +4,8 @@ MODULE basic
   use prec_const
   IMPLICIT none
 
+  ! INCLUDE 'fftw3-mpi.f03'
+
   INTEGER  :: nrun   = 1           ! Number of time steps to run
   real(dp) :: tmax   = 100000.0    ! Maximum simulation time
   real(dp) :: dt     = 1.0         ! Time step
@@ -16,6 +18,11 @@ MODULE basic
   LOGICAL :: nlend   = .FALSE.     ! Signal end of run
 
   INTEGER :: ierr                  ! flag for MPI error
+  INTEGER :: my_id                 ! identification number of current process
+  INTEGER :: num_procs             ! number of MPI processes
+  INTEGER :: grp_world             ! world communicator
+  INTEGER :: comm_world
+
   INTEGER :: iframe1d              ! counting the number of times 1d datasets are outputed (for diagnose)
   INTEGER :: iframe2d              ! counting the number of times 2d datasets are outputed (for diagnose)
   INTEGER :: iframe3d              ! counting the number of times 3d datasets are outputed (for diagnose)
@@ -25,8 +32,11 @@ MODULE basic
   INTEGER :: lu_in   = 90              ! File duplicated from STDIN
   INTEGER :: lu_job  = 91              ! myjob file
 
-  real :: start, finish ! To measure computation time
-  real :: start_est, finish_est, time_est
+  ! To measure computation time
+  real :: start, finish
+  real(dp) :: t0_rhs, t0_adv_field, t0_poisson, t0_Sapj, t0_diag, t0_checkfield, t0_step
+  real(dp) :: t1_rhs, t1_adv_field, t1_poisson, t1_Sapj, t1_diag, t1_checkfield, t1_step
+  real(dp) :: tc_rhs, tc_adv_field, tc_poisson, tc_Sapj, tc_diag, tc_checkfield, tc_step
 
   INTERFACE allocate_array
     MODULE PROCEDURE allocate_array_dp1,allocate_array_dp2,allocate_array_dp3,allocate_array_dp4
@@ -47,6 +57,10 @@ CONTAINS
     NAMELIST /BASIC/  nrun, dt, tmax, RESTART
 
     READ(lu_in,basic)
+
+    !Init cumulative timers
+    tc_rhs       = 0.;tc_adv_field = 0.; tc_poisson  = 0.
+    tc_Sapj      = 0.; tc_diag     = 0.; tc_checkfield = 0.
 
   END SUBROUTINE basic_data
   !================================================================================

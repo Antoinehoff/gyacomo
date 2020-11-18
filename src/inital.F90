@@ -36,8 +36,9 @@ SUBROUTINE inital
   ENDIF
   !!!!!! Load the full coulomb collision operator coefficients !!!!!!
   IF (CO .EQ. -1) THEN
-    ! WRITE(*,*) '=== Load Full Coulomb matrix ==='
+    IF (my_id .EQ. 0) WRITE(*,*) '=== Load Full Coulomb matrix ==='
     CALL load_FC_mat
+    IF (my_id .EQ. 0) WRITE(*,*) '..done'
   ENDIF
 
 END SUBROUTINE inital
@@ -72,6 +73,12 @@ SUBROUTINE init_moments
       END DO
     END DO
 
+    DO ikz=2,Nkz/2 !symmetry at kr = 0
+      CALL RANDOM_NUMBER(noise)
+      moments_e( 1,1,1,ikz, :) = moments_e( 1,1,1,Nkz+2-ikz, :)
+      moments_i( 1,1,1,ikz, :) = moments_i( 1,1,1,Nkz+2-ikz, :)
+    END DO
+
   ELSE
     !**** Gaussian initialization (Hakim 2017) *********************************
     ! sigma    = 5._dp     ! Gaussian sigma
@@ -90,32 +97,40 @@ SUBROUTINE init_moments
     !**** Broad noise initialization *******************************************
     DO ip=ips_e,ipe_e
       DO ij=ijs_e,ije_e
+
         DO ikr=ikrs,ikre
           DO ikz=ikzs,ikze
             CALL RANDOM_NUMBER(noise)
-            moments_e( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp) !&
-                                                    ! * AA_r(ikr) * AA_z(ikz)
+            moments_e( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
           END DO
         END DO
-        DO ikz=2,Nkz/2 !symmetry at kr = 0
-          CALL RANDOM_NUMBER(noise)
-          moments_e( ip,ij,1,ikz, :) = moments_e( ip,ij,1,Nkz+2-ikz, :)
-        END DO
+
+        ! IF ( ikrs .EQ. 1 ) THEN
+          DO ikz=2,Nkz/2 !symmetry at kr = 0
+            CALL RANDOM_NUMBER(noise)
+            moments_e( ip,ij,1,ikz, :) = moments_e( ip,ij,1,Nkz+2-ikz, :)
+          END DO
+        ! ENDIF
+
       END DO
     END DO
     DO ip=ips_i,ipe_i
       DO ij=ijs_i,ije_i
+
         DO ikr=ikrs,ikre
           DO ikz=ikzs,ikze
             CALL RANDOM_NUMBER(noise)
-            moments_i( ip,ij,ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp) !&
-                                                    ! * AA_r(ikr) * AA_z(ikz)
+            moments_i( ip,ij,ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
           END DO
         END DO
-        DO ikz=2,Nkz/2 !symmetry at kr = 0
-          CALL RANDOM_NUMBER(noise)
-          moments_i( ip,ij,1,ikz, :) = moments_i( ip,ij,1,Nkz+2-ikz, :)
-        END DO
+
+        ! IF ( ikrs .EQ. 1 ) THEN
+          DO ikz=2,Nkz/2 !symmetry at kr = 0
+            CALL RANDOM_NUMBER(noise)
+            moments_i( ip,ij,1,ikz, :) = moments_i( ip,ij,1,Nkz+2-ikz, :)
+          END DO
+        ! ENDIF
+
       END DO
     END DO
 
@@ -128,29 +143,59 @@ END SUBROUTINE init_moments
 !******************************************************************************!
 SUBROUTINE load_cp
   USE basic
-  USE futils,          ONLY: openf, closef, getarr, getatt
+  USE futils,          ONLY: openf, closef, getarr, getatt, isgroup, isdataset
   USE grid
   USE fields
   USE diagnostics_par
   USE time_integration
   IMPLICIT NONE
 
+  INTEGER :: rank, sz_, n_
+  INTEGER ::  dims(1) = (/0/)
+  CHARACTER(LEN=50) :: dset_name
+
   WRITE(rstfile,'(a,a1,i2.2,a3)') TRIM(rstfile0),'_',job2load,'.h5'
 
   WRITE(*,'(3x,a)') "Resume from previous run"
 
   CALL openf(rstfile, fidrst)
-  CALL getatt(fidrst, '/Basic', 'cstep', cstep)
-  CALL getatt(fidrst, '/Basic', 'time', time)
-  CALL getatt(fidrst, '/Basic', 'jobnum', jobnum)
-  jobnum = jobnum+1
-  CALL getatt(fidrst, '/Basic', 'iframe2d',iframe2d)
-  CALL getatt(fidrst, '/Basic', 'iframe5d',iframe5d)
-  iframe2d = iframe2d-1; iframe5d = iframe5d-1
 
-  ! Read state of system from restart file
-  CALL getarr(fidrst, '/Basic/moments_e', moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),ionode=0)
-  CALL getarr(fidrst, '/Basic/moments_i', moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),ionode=0)
+  IF (isgroup(fidrst,'/Basic/moments_e')) THEN
+    n_ = 0
+    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
+    DO WHILE (isdataset(fidrst, dset_name))
+      n_ = n_ + 1
+      WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
+    ENDDO
+    n_ = n_ - 1
+    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
+    CALL getatt(fidrst, dset_name, 'cstep', cstep)
+    CALL getatt(fidrst, dset_name, 'time', time)
+    CALL getatt(fidrst, dset_name, 'jobnum', jobnum)
+    jobnum = jobnum+1
+    CALL getatt(fidrst, dset_name, 'iframe2d',iframe2d)
+    CALL getatt(fidrst, dset_name, 'iframe5d',iframe5d)
+    iframe2d = iframe2d-1; iframe5d = iframe5d-1
+
+    ! Read state of system from restart file
+    CALL getarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),ionode=0)
+    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", n_
+    CALL getarr(fidrst, dset_name, moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),ionode=0)
+
+  ELSE
+    CALL getatt(fidrst, '/Basic', 'cstep', cstep)
+    CALL getatt(fidrst, '/Basic', 'time', time)
+    CALL getatt(fidrst, '/Basic', 'jobnum', jobnum)
+    jobnum = jobnum+1
+    CALL getatt(fidrst, '/Basic', 'iframe2d',iframe2d)
+    CALL getatt(fidrst, '/Basic', 'iframe5d',iframe5d)
+    iframe2d = iframe2d-1; iframe5d = iframe5d-1
+
+    ! Read state of system from restart file
+    CALL getarr(fidrst, '/Basic/moments_e', moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),ionode=0)
+    CALL getarr(fidrst, '/Basic/moments_i', moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),ionode=0)
+  ENDIF
+
   CALL closef(fidrst)
 
   WRITE(*,'(3x,a)') "Reading from restart file "//TRIM(rstfile)//" completed!"

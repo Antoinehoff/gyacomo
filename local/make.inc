@@ -15,7 +15,7 @@ else
 endif
 
 #0/1 = turn parallel MG solver off/on
-USEPARMG=1
+USEPARMG=0
 
 #0/1 = turn OpenMP compilation off/on
 USEOPENMP=0
@@ -24,7 +24,7 @@ USEOPENMP=0
 USEVERIFICATION=0
 
 #Please set precompiler flags here
-FPPFLAGS=-DPARDISO=$(PARDISO) -DMUMPS=$(USEMUMPS) -DPARMG=$(USEPARMG) -DVERIFICATION=$(USEVERIFICATION)
+#FPPFLAGS=-DPARDISO=$(PARDISO) -DMUMPS=$(USEMUMPS) -DPARMG=$(USEPARMG) -DVERIFICATION=$(USEVERIFICATION)
 
 ################################################################
 #
@@ -83,11 +83,13 @@ endif
 ################################################################
 
 IDIRS := -I$(SPC_LOCAL)/include/$(OPTLEVEL)
+#IDIRS := -I$(FUTILS)/include/$(OPTLEVEL) -I$(HDF5)/include -I$(ZLIB)/include
 
 #LIBS := -lbsplines -lfutils -lpppack -lpputils2 \
 #        -lhdf5_fortran -lhdf5 -lz -ldl -lpthread
 LIBS  := -lfutils -lhdf5_fortran -lhdf5 -lz -ldl -lpthread
 LDIRS := -L$(SPC_LOCAL)/lib/$(OPTLEVEL) -L$(HDF5)/lib
+#LDIRS := -L$(FUTILS)/lib -L$(HDF5)/lib -L$(ZLIB)/lib
 
 # Add Multiple-Precision Library
 LIBS += -lfm
@@ -131,8 +133,8 @@ endif
 
 ifdef FFTW3DIR
       LIBS  += -lfftw3
-      LDIRS += -L/usr/local/fftw3/lib
-      IDIRS += -I/usr/local/fftw3/include
+      LDIRS += -L$(FFTW3DIR)/lib64
+      IDIRS += -I$(FFTW3DIR)/include
 endif
 
 #

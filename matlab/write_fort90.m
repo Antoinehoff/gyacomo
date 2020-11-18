@@ -20,6 +20,7 @@ fprintf(fid,['  Lr = ', num2str(GRID.Lr),'\n']);
 fprintf(fid,['  Nz   = ', num2str(GRID.Nz),'\n']);
 fprintf(fid,['  Lz = ', num2str(GRID.Lz),'\n']);
 fprintf(fid,['  kpar = ', num2str(GRID.kpar),'\n']);
+fprintf(fid,['  CANCEL_ODD_P = ', num2str(GRID.CANCEL_ODD_P),'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&OUTPUT_PAR\n');

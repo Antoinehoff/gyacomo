@@ -1,29 +1,40 @@
 if 0
 %% ni ne phase space for different time windows
 fig = figure;
-    t0 = 20; t1 = 20; [~,it0] = min(abs(t0-Ts2D)); [~,it1] = min(abs(t1-Ts2D)); 
-    plt = @(x) squeeze(reshape(x(:,:,it0:it1),[],1));
-    plot(plt(ni00),plt(ne00),'.');
+    t0 = 80; t1 = 100; [~,it0] = min(abs(t0-Ts2D)); [~,it1] = min(abs(t1-Ts2D)); 
+    plt = @(x) abs(squeeze(reshape(x(2,:,it0:it1),[],1)));
+    plot(plt(Ni00),plt(Ne00),'.');
     title(['$',num2str(Ts2D(it0)),'\leq t \leq',num2str(Ts2D(it1)),'$']);
     xlabel('$n_i$'); ylabel('$n_e$');
 end
 
 if 0
 %% histograms
+t0  = 200; t1 = 300; [~,it0] = min(abs(t0-Ts2D)); [~,it1] = min(abs(t1-Ts2D)); 
+plt = @(x) squeeze(reshape(x(:,:,it0:it1),[],1));
 fig = figure;
-    t0 = 100; t1 = 100; [~,it0] = min(abs(t0-Ts2D)); [~,it1] = min(abs(t1-Ts2D)); 
-    plt = @(x) squeeze(reshape(x(:,:,it0:it1),[],1));
+subplot(221)
+    hist(plt(ne00),100); hold on
+    title(['$',num2str(Ts2D(it0)),'\leq t \leq',num2str(Ts2D(it1)),'$']);
+    xlabel('$n_e$');
+subplot(222)
     hist(plt(ni00),100); hold on
     title(['$',num2str(Ts2D(it0)),'\leq t \leq',num2str(Ts2D(it1)),'$']);
     xlabel('$n_i$');
+subplot(223)
+    hist(plt(phi),100); hold on
+    title(['$',num2str(Ts2D(it0)),'\leq t \leq',num2str(Ts2D(it1)),'$']);
+    xlabel('$\phi$');
+FIGNAME = ['histograms_ne_ni_phi'];
+save_figure
 end
 
 if 0
 %% ni ne phi 3D phase space
 fig = figure;
-    t0 = 20; t1 = 20; [~,it0] = min(abs(t0-Ts2D)); [~,it1] = min(abs(t1-Ts2D)); 
-    plt = @(x) squeeze(reshape(x(:,:,it0:it1),[],1));
-    plot3(plt(ni00),plt(ne00),plt(phi),'.','MarkerSize',0.5);
+    t0 = 50; [~,it0] = min(abs(t0-Ts2D));
+    plt = @(x) squeeze(reshape(x(:,:,it0),[],1));
+    plot3(plt(ni00),plt(ne00),plt(phi),'.','MarkerSize',1.9);
     title(['$',num2str(Ts2D(it0)),'\leq t \leq',num2str(Ts2D(it1)),'$']);
     xlabel('$n_i$'); ylabel('$n_e$'); zlabel('$\phi$'); grid on;
 end

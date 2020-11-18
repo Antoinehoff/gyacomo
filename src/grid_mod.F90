@@ -1,6 +1,8 @@
 MODULE grid
   ! Grid module for spatial discretization
   USE prec_const
+  USE basic
+
   IMPLICIT NONE
   PRIVATE
 
@@ -19,7 +21,8 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED :: Nkz   = 16     ! Number of total internal grid points in kz
   REAL(dp), PUBLIC, PROTECTED :: Lkz   = 1._dp  ! vertical length of the fourier box
   REAL(dp), PUBLIC, PROTECTED :: kpar  = 0_dp   ! parallel wave vector component
-
+  LOGICAL,  PUBLIC, PROTECTED :: CANCEL_ODD_P = .false. ! To cancel odd Hermite polynomials
+  INTEGER,  PUBLIC, PROTECTED :: pskip = 0      ! variable to skip p degrees or not
   ! For Orszag filter
   REAL(dp), PUBLIC, PROTECTED :: two_third_krmax
   REAL(dp), PUBLIC, PROTECTED :: two_third_kzmax
@@ -62,12 +65,18 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER :: ip, ij
-    ips_e = 1; ipe_e = pmaxe + 1
-    ips_i = 1; ipe_i = pmaxi + 1
+    IF (CANCEL_ODD_P) THEN
+      pskip = 1
+    ELSE
+      pskip = 0
+    ENDIF
+
+    ips_e = 1; ipe_e = pmaxe/(1+pskip) + 1
+    ips_i = 1; ipe_i = pmaxi/(1+pskip) + 1
     ALLOCATE(parray_e(ips_e:ipe_e))
     ALLOCATE(parray_i(ips_i:ipe_i))
-    DO ip = ips_e,ipe_e; parray_e(ip) = ip-1; END DO
-    DO ip = ips_i,ipe_i; parray_i(ip) = ip-1; END DO
+    DO ip = ips_e,ipe_e; parray_e(ip) = (1+pskip)*(ip-1); END DO
+    DO ip = ips_i,ipe_i; parray_i(ip) = (1+pskip)*(ip-1); END DO
 
     ijs_e = 1; ije_e = jmaxe + 1
     ijs_i = 1; ije_i = jmaxi + 1
@@ -76,6 +85,7 @@ CONTAINS
     DO ij = ijs_e,ije_e; jarray_e(ij) = ij-1; END DO
     DO ij = ijs_i,ije_i; jarray_i(ij) = ij-1; END DO
     maxj  = MAX(jmaxi, jmaxe)
+    
   END SUBROUTINE set_pj
 
   SUBROUTINE set_krgrid
@@ -84,11 +94,25 @@ CONTAINS
     INTEGER :: ikr
 
     Nkr = Nr/2+1 ! Defined only on positive kr since fields are real
-    ! Start and END indices of grid
-    ikrs = 1
-    ikre = Nkr
+    ! ! Start and END indices of grid
+    IF ( Nkr .GT. 1 ) THEN
+      ikrs =    my_id  * (Nkr-1)/num_procs + 1
+      ikre = (my_id+1) * (Nkr-1)/num_procs
+    ELSE
+      ikrs = 1; ikre = Nkr
+    ENDIF
+
+    IF (my_id .EQ. num_procs-1) THEN
+      ikre = Nkr
+    ENDIF
+    WRITE(*,*) 'ID = ',my_id,' ikrs = ', ikrs, ' ikre = ', ikre
+
     ! Grid spacings
-    deltakr = 2._dp*PI/Lr
+    IF (Lr .GT. 0) THEN
+      deltakr = 2._dp*PI/Lr
+    ELSE
+      deltakr = 1.0
+    ENDIF
 
     ! Discretized kr positions ordered as dk*(0 1 2)
     ALLOCATE(krarray(ikrs:ikre))
@@ -120,6 +144,9 @@ CONTAINS
     ! Start and END indices of grid
     ikzs = 1
     ikze = Nkz
+    ! ikzs =    my_id  * Nz/num_procs + 1
+    ! ikze = (my_id+1) * Nz/num_procs
+    WRITE(*,*) 'ID = ',my_id,' ikzs = ', ikzs, ' ikze = ', ikze
     ! Grid spacings
     deltakz = 2._dp*PI/Lz
 
@@ -147,8 +174,6 @@ CONTAINS
     ! Put kz0RT to the nearest grid point on kz
     ikz0KH = NINT(kr0KH/deltakr)+1
     kr0KH  = kzarray(ikz0KH)
-    WRITE(*,*) 'ikz0KH = ', ikz0KH
-    WRITE(*,*) 'kr0KH = ', kr0KH
 
   END SUBROUTINE set_kzgrid
 
@@ -159,7 +184,7 @@ CONTAINS
     INTEGER :: lu_in   = 90              ! File duplicated from STDIN
 
     NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, &
-                    Nr,  Lr,  Nz,  Lz, kpar
+                    Nr,  Lr,  Nz,  Lz, kpar, CANCEL_ODD_P
     READ(lu_in,grid)
 
   END SUBROUTINE grid_readinputs

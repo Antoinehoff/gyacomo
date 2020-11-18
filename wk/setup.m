@@ -10,6 +10,11 @@ GRID.Lr    = L * (1-KREQ0); % r length
 GRID.Nz    = N; % z ''
 GRID.Lz    = L; % z ''
 GRID.kpar  = KPAR;
+if CANCEL_ODD_P
+GRID.CANCEL_ODD_P = '.true.';
+else
+GRID.CANCEL_ODD_P = '.false.';
+end
 % Model parameters
 MODEL.CO      = CO;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
 if 0;      MODEL.DK      = '.true.'; else; MODEL.DK      = '.false.';end;
@@ -73,7 +78,7 @@ BASIC.dt         = DT;
 BASIC.tmax       = TMAX;    %time normalized to 1/omega_pe
 % Outputs parameters
 if RESTART; BASIC.RESTART = '.true.'; else; BASIC.RESTART = '.false.';end;
-OUTPUTS.nsave_0d = 0;
+OUTPUTS.nsave_0d = floor(1.0/SPS0D/DT);
 OUTPUTS.nsave_1d = 0;
 OUTPUTS.nsave_2d = floor(1.0/SPS2D/DT);
 OUTPUTS.nsave_5d = floor(1.0/SPS5D/DT);

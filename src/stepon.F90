@@ -19,7 +19,11 @@ SUBROUTINE stepon
       CALL moments_eq_rhs
       ! Advance from updatetlevel to updatetlevel+1 (according to num. scheme)
       CALL advance_time_level
+
       ! Update the moments with the hierarchy RHS (step by step)
+
+      ! Execution time start
+      CALL cpu_time(t0_adv_field)
       DO ip=ips_e,ipe_e
         DO ij=ijs_e,ije_e
           CALL advance_field(moments_e(ip,ij,:,:,:),moments_rhs_e(ip,ij,:,:,:))
@@ -30,6 +34,10 @@ SUBROUTINE stepon
           CALL advance_field(moments_i(ip,ij,:,:,:),moments_rhs_i(ip,ij,:,:,:))
         ENDDO
       ENDDO
+      ! Execution time end
+      CALL cpu_time(t1_adv_field)
+      tc_adv_field = tc_adv_field + (t1_adv_field - t0_adv_field)
+
       ! Update electrostatic potential
       CALL poisson
       ! Update nonlinear term
@@ -37,15 +45,17 @@ SUBROUTINE stepon
         CALL compute_Sapj
       ENDIF
       !(The two routines above are called in inital for t=0)
-
-      CALL enforce_symetry() ! Enforcing symmetry on kr = 0
-
       CALL checkfield_all()
    END DO
 
    CONTAINS
 
       SUBROUTINE checkfield_all ! Check all the fields for inf or nan
+        ! Execution time start
+        CALL cpu_time(t0_checkfield)
+
+        CALL enforce_symetry() ! Enforcing symmetry on kr = 0
+
         IF(.NOT.nlend) THEN
            nlend=nlend .or. checkfield(phi,' phi')
            DO ip=ips_e,ipe_e
@@ -60,10 +70,12 @@ SUBROUTINE stepon
              ENDDO
            ENDDO
         ENDIF
+        ! Execution time end
+        CALL cpu_time(t1_checkfield)
+        tc_checkfield = tc_checkfield + (t1_checkfield - t0_checkfield)
       END SUBROUTINE checkfield_all
 
       SUBROUTINE enforce_symetry
-
         DO ip=ips_e,ipe_e
           DO ij=ijs_e,ije_e
             DO ikz=2,Nkz/2 !symmetry at kr = 0

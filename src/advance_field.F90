@@ -11,9 +11,7 @@ CONTAINS
     USE time_integration
     use prec_const
     IMPLICIT NONE
-
     CALL set_updatetlevel(mod(updatetlevel,ntimelevel)+1)
-
   END SUBROUTINE advance_time_level
 
 

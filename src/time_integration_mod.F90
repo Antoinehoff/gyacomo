@@ -68,10 +68,10 @@ CONTAINS
     CASE ('DOPRI5_ADAPT')
       CALL DOPRI5_ADAPT
     CASE DEFAULT
-       WRITE(*,*) 'Cannot initialize time integration scheme. Name invalid.'
+       IF (my_id .EQ. 0) WRITE(*,*) 'Cannot initialize time integration scheme. Name invalid.'
     END SELECT
 
-    WRITE(*,*) " Time integration with ", numerical_scheme
+    IF (my_id .EQ. 0) WRITE(*,*) " Time integration with ", numerical_scheme
 
   END SUBROUTINE set_numerical_scheme
 

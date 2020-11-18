@@ -1,6 +1,7 @@
 SUBROUTINE poisson
   ! Solve poisson equation to get phi
 
+  USE basic, ONLY: t0_poisson, t1_poisson, tc_poisson
   USE time_integration, ONLY: updatetlevel
   USE array
   USE fields
@@ -20,6 +21,9 @@ SUBROUTINE poisson
   COMPLEX(dp) :: sum_kernel_mom_e, sum_kernel_mom_i ! Store sum Kn*Napn
   REAL(dp)    :: gammaD
   COMPLEX(dp) :: gammaD_phi
+
+  ! Execution time start
+  CALL cpu_time(t0_poisson)
 
   !Precompute species dependant factors
   sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the Kernel argument
@@ -90,5 +94,9 @@ SUBROUTINE poisson
 
 ! Cancel origin singularity
 phi(ikr_0,ikz_0) = 0
+
+! Execution time end
+CALL cpu_time(t1_poisson)
+tc_poisson = tc_poisson + (t1_poisson - t0_poisson)
 
 END SUBROUTINE poisson

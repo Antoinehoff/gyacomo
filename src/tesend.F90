@@ -9,27 +9,27 @@ SUBROUTINE tesend
   !________________________________________________________________________________
   !                   1.  Some processors had set nlend
   IF( nlend ) THEN
-    WRITE(*,'(/a)') 'rhs are NaN/Inf'  
-    WRITE(*,*) 'Run terminated at cstep=',cstep
+    WRITE(*,'(/a)') 'rhs are NaN/Inf'
+    IF (my_id .EQ. 0) WRITE(*,*) 'Run terminated at cstep=',cstep
     RETURN
   END IF
 
   !________________________________________________________________________________
   !                   2.  Test on NRUN
-  nlend = step .GT. nrun 
-  IF ( nlend ) THEN 
+  nlend = step .GT. nrun
+  IF ( nlend ) THEN
      WRITE(*,'(/a)') 'NRUN steps done'
      RETURN
   END IF
-  
+
 
   !________________________________________________________________________________
   !                   3.  Test on TMAX
   nlend = time .GT. tmax
-  IF ( nlend ) THEN 
-     WRITE(*,'(/a)') 'TMAX reached'
+  IF ( nlend ) THEN
+     IF (my_id .EQ. 0) WRITE(*,'(/a)') 'TMAX reached'
      RETURN
   END IF
-  ! 
+  !
   !
 END SUBROUTINE tesend
