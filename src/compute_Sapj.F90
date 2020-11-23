@@ -13,9 +13,7 @@ SUBROUTINE compute_Sapj
   USE time_integration!, ONLY : updatetlevel
   IMPLICIT NONE
 
-  COMPLEX(dp), DIMENSION(Nkr,Nkz) :: F_, G_, CONV
-  ! COMPLEX(dp), DIMENSION(ips_e:ipe_e, ijs_e:ije_e, Nkr, Nkz) :: Sepj
-  ! COMPLEX(dp), DIMENSION(ips_i:ipe_i, ijs_i:ije_i, Nkr, Nkz) :: Sipj
+  COMPLEX(dp), DIMENSION(ikrs:ikre,ikzs:ikze) :: F_, G_, CONV
   INTEGER :: in, is
   REAL(dp):: kr, kz, kerneln, be_2, bi_2, factn
   REAL(dp):: sigmae2_taue_o2, sigmai2_taui_o2
@@ -65,7 +63,12 @@ SUBROUTINE compute_Sapj
         ENDDO krloope1
 
         CALL convolve_2D_F2F( F_, G_, CONV ) ! Convolve Fourier to Fourier
-        Sepj(ip,ij,:,:) = Sepj(ip,ij,:,:) + CONV ! Add it to Sepj
+
+        DO ikr = ikrs,ikre ! Loop over kr
+          DO ikz = ikzs,ikze ! Loop over kz
+            Sepj(ip,ij,ikr,ikz) = Sepj(ip,ij,ikr,ikz) + CONV(ikr,ikz) ! Add it to Sepj
+          ENDDO
+        ENDDO
 
         IF ( NON_LIN ) THEN ! Fully non linear term ikz phi * ikr Napj
           krloope2: DO ikr = ikrs,ikre ! Loop over kr
@@ -88,7 +91,13 @@ SUBROUTINE compute_Sapj
           ENDDO krloope2
 
           CALL convolve_2D_F2F( F_, G_, CONV )
-          Sepj(ip,ij,:,:) = Sepj(ip,ij,:,:) - CONV ! substract it to Sepj
+
+          DO ikr = ikrs,ikre
+            DO ikz = ikzs,ikze
+              Sepj(ip,ij,ikr,ikz) = Sepj(ip,ij,ikr,ikz) - CONV(ikr,ikz) ! substract it to Sepj
+            ENDDO
+          ENDDO
+
         ENDIF
 
         IF ( in + 1 .LE. jmaxe+1 ) THEN
@@ -141,7 +150,11 @@ SUBROUTINE compute_Sapj
         ENDDO krloopi1
 
         CALL convolve_2D_F2F( F_, G_, CONV ) ! Convolve Fourier to Fourier
-        Sipj(ip,ij,:,:) = Sipj(ip,ij,:,:) + CONV ! Add it to Sipj
+        DO ikr = ikrs,ikre
+          DO ikz = ikzs,ikze
+            Sipj(ip,ij,ikr,ikz) = Sipj(ip,ij,ikr,ikz) + CONV(ikr,ikz) ! add it to Sipj
+          ENDDO
+        ENDDO
 
         krloopi2: DO ikr = ikrs,ikre ! Loop over kr
           kzloopi2: DO ikz = ikzs,ikze ! Loop over kz
@@ -171,7 +184,11 @@ SUBROUTINE compute_Sapj
         ENDDO krloopi2
 
         CALL convolve_2D_F2F( F_, G_, CONV ) ! Convolve and back to Fourier
-        Sipj(ip,ij,:,:) = Sipj(ip,ij,:,:) - CONV! substract it to Sipj
+        DO ikr = ikrs,ikre
+          DO ikz = ikzs,ikze
+            Sipj(ip,ij,ikr,ikz) = Sipj(ip,ij,ikr,ikz) - CONV(ikr,ikz) ! substract it to Sepj
+          ENDDO
+        ENDDO
 
         IF ( in + 1 .LE. jmaxi+1 ) THEN
           factn = real(in,dp) * factn ! factorial(n+1)

@@ -48,7 +48,7 @@ FOBJ=$(OBJDIR)/advance_field.o $(OBJDIR)/array_mod.o $(OBJDIR)/auxval.o $(OBJDIR
 $(OBJDIR)/coeff_mod.o $(OBJDIR)/compute_Sapj.o $(OBJDIR)/control.o $(OBJDIR)/fourier_mod.o \
 $(OBJDIR)/diagnose.o $(OBJDIR)/diagnostics_par_mod.o $(OBJDIR)/endrun.o $(OBJDIR)/fields_mod.o \
 $(OBJDIR)/inital.o $(OBJDIR)/initial_par_mod.o $(OBJDIR)/main.o $(OBJDIR)/memory.o \
-$(OBJDIR)/model_mod.o $(OBJDIR)/mkl_dfti.o $(OBJDIR)/moments_eq_rhs.o $(OBJDIR)/poisson.o \
+$(OBJDIR)/model_mod.o $(OBJDIR)/moments_eq_rhs.o $(OBJDIR)/poisson.o \
 $(OBJDIR)/ppexit.o $(OBJDIR)/ppinit.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/readinputs.o \
 $(OBJDIR)/grid_mod.o $(OBJDIR)/stepon.o $(OBJDIR)/tesend.o $(OBJDIR)/time_integration_mod.o \
 $(OBJDIR)/utility_mod.o
@@ -62,7 +62,7 @@ $(OBJDIR)/utility_mod.o
  $(OBJDIR)/array_mod.o : src/array_mod.F90 $(OBJDIR)/prec_const_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/array_mod.F90 -o $@
 
- $(OBJDIR)/auxval.o : src/auxval.F90 $(OBJDIR)/memory.o $(OBJDIR)/model_mod.o  $(OBJDIR)/grid_mod.o
+ $(OBJDIR)/auxval.o : src/auxval.F90 $(OBJDIR)/fourier_mod.o $(OBJDIR)/memory.o $(OBJDIR)/model_mod.o  $(OBJDIR)/grid_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/auxval.F90 -o $@
 
  $(OBJDIR)/basic_mod.o : src/basic_mod.F90 $(OBJDIR)/prec_const_mod.o

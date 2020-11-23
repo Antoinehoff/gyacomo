@@ -23,14 +23,13 @@ SUBROUTINE inital
     CALL init_moments
   ENDIF
   !!!!!! Set phi !!!!!!
-  ! WRITE(*,*) 'Init phi'
+  IF (my_id .EQ. 1) WRITE(*,*) 'Init phi'
   CALL poisson
 
   !!!!!! Set Sepj, Sipj and dnjs coeff table !!!!!!
   IF ( NON_LIN .OR. (A0KH .NE. 0)) THEN;
-    ! WRITE(*,*) 'Init Sapj'
+    IF (my_id .EQ. 1) WRITE(*,*) 'Init Sapj'
     CALL compute_Sapj
-
     ! WRITE(*,*) 'Building Dnjs table'
     CALL build_dnjs_table
   ENDIF
@@ -105,12 +104,12 @@ SUBROUTINE init_moments
           END DO
         END DO
 
-        ! IF ( ikrs .EQ. 1 ) THEN
+        IF ( ikrs .EQ. 1 ) THEN
           DO ikz=2,Nkz/2 !symmetry at kr = 0
             CALL RANDOM_NUMBER(noise)
             moments_e( ip,ij,1,ikz, :) = moments_e( ip,ij,1,Nkz+2-ikz, :)
           END DO
-        ! ENDIF
+        ENDIF
 
       END DO
     END DO
@@ -124,12 +123,12 @@ SUBROUTINE init_moments
           END DO
         END DO
 
-        ! IF ( ikrs .EQ. 1 ) THEN
+        IF ( ikrs .EQ. 1 ) THEN
           DO ikz=2,Nkz/2 !symmetry at kr = 0
             CALL RANDOM_NUMBER(noise)
             moments_i( ip,ij,1,ikz, :) = moments_i( ip,ij,1,Nkz+2-ikz, :)
           END DO
-        ! ENDIF
+        ENDIF
 
       END DO
     END DO

@@ -85,7 +85,7 @@ CONTAINS
     DO ij = ijs_e,ije_e; jarray_e(ij) = ij-1; END DO
     DO ij = ijs_i,ije_i; jarray_i(ij) = ij-1; END DO
     maxj  = MAX(jmaxi, jmaxe)
-    
+
   END SUBROUTINE set_pj
 
   SUBROUTINE set_krgrid
@@ -95,16 +95,11 @@ CONTAINS
 
     Nkr = Nr/2+1 ! Defined only on positive kr since fields are real
     ! ! Start and END indices of grid
-    IF ( Nkr .GT. 1 ) THEN
-      ikrs =    my_id  * (Nkr-1)/num_procs + 1
-      ikre = (my_id+1) * (Nkr-1)/num_procs
-    ELSE
-      ikrs = 1; ikre = Nkr
-    ENDIF
+    ikrs =    my_id  * Nkr/num_procs + 1
+    ikre = (my_id+1) * Nkr/num_procs
 
-    IF (my_id .EQ. num_procs-1) THEN
-      ikre = Nkr
-    ENDIF
+    IF(my_id .EQ. num_procs) ikre = Nkr
+
     WRITE(*,*) 'ID = ',my_id,' ikrs = ', ikrs, ' ikre = ', ikre
 
     ! Grid spacings
@@ -144,8 +139,6 @@ CONTAINS
     ! Start and END indices of grid
     ikzs = 1
     ikze = Nkz
-    ! ikzs =    my_id  * Nz/num_procs + 1
-    ! ikze = (my_id+1) * Nz/num_procs
     WRITE(*,*) 'ID = ',my_id,' ikzs = ', ikzs, ' ikze = ', ikze
     ! Grid spacings
     deltakz = 2._dp*PI/Lz
@@ -154,12 +147,11 @@ CONTAINS
     ALLOCATE(kzarray(ikzs:ikze))
     DO ikz = ikzs,ikze
       kzarray(ikz) = deltakz*(MODULO(ikz-1,Nkz/2)-Nkz/2*FLOOR(2.*real(ikz-1)/real(Nkz)))
-      if (kzarray(ikz) .EQ. 0) THEN
-        ikz_0 = ikz
-      ENDIF
+      if (kzarray(ikz) .EQ. 0)        ikz_0 = ikz
+      if (ikz .EQ. Nz/2+1)     kzarray(ikz) = -kzarray(ikz)
     END DO
-    kzarray(Nz/2+1) = -kzarray(Nz/2+1)
 
+    IF (my_id .EQ. 1) WRITE(*,*) 'ID = ',my_id,' kz = ',kzarray
     ! Orszag 2/3 filter
     two_third_kzmax = 2._dp/3._dp*deltakz*(Nkz/2);
     ALLOCATE(AA_z(ikzs:ikze))
@@ -173,7 +165,7 @@ CONTAINS
 
     ! Put kz0RT to the nearest grid point on kz
     ikz0KH = NINT(kr0KH/deltakr)+1
-    kr0KH  = kzarray(ikz0KH)
+    IF ( (ikz0KH .GE. ikzs) .AND. (ikz0KH .LE. ikze) ) kr0KH  = kzarray(ikz0KH)
 
   END SUBROUTINE set_kzgrid
 

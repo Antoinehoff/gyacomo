@@ -234,7 +234,7 @@ save_figure
 end
 
 %%
-t0    = 50;
+t0    = 0;
 skip_ = 1; 
 DELAY = 0.01*skip_;
 FRAMES = floor(t0/(Ts2D(2)-Ts2D(1)))+1:skip_:numel(Ts2D);

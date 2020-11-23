@@ -14,11 +14,5 @@ SUBROUTINE ppinit
 
   CALL MPI_COMM_RANK (MPI_COMM_WORLD,     my_id, ierr)
   CALL MPI_COMM_SIZE (MPI_COMM_WORLD, num_procs, ierr)
-  CALL MPI_COMM_GROUP(MPI_COMM_WORLD,grp_world,ierr)
-  ! CALL MPI_COMM_CREATE_GROUP(MPI_COMM_WORLD,grp_world,0,comm_self,ierr)
-
-  ! IF (NON_LIN .AND. (num_procs .GT. 1)) THEN
-  !   CALL fftw_mpi_init
-  ! ENDIF
-
+  
 END SUBROUTINE ppinit

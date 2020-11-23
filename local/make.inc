@@ -1,39 +1,11 @@
 ################################################################
 #
-# Section I: Preprocessor options
-#
-################################################################
-
-#0/1 = turn pardiso off/on
-PARDISO=0
-
-#0/1 = turn MUMPS off/on
-ifdef MUMPS
-  USEMUMPS=1
-else
-  USEMUMPS=0
-endif
-
-#0/1 = turn parallel MG solver off/on
-USEPARMG=0
-
-#0/1 = turn OpenMP compilation off/on
-USEOPENMP=0
-
-#0/1 = turn verification off/on
-USEVERIFICATION=0
-
-#Please set precompiler flags here
-#FPPFLAGS=-DPARDISO=$(PARDISO) -DMUMPS=$(USEMUMPS) -DPARMG=$(USEPARMG) -DVERIFICATION=$(USEVERIFICATION)
-
-################################################################
-#
-# Section II: Compiler options
+# Section I: Compiler options
 #
 ################################################################
 
 #Default optimization level (O=optimized, g=debug)
-OPTLEVEL = O
+OPTLEVEL = g
 
 F90FLAGS =
 CFLAGS =
@@ -78,111 +50,25 @@ endif
 
 ################################################################
 #
-# Section III: Libraries and where to find them
+# Section II: Libraries and where to find them
 #
 ################################################################
 
 IDIRS := -I$(SPC_LOCAL)/include/$(OPTLEVEL)
-#IDIRS := -I$(FUTILS)/include/$(OPTLEVEL) -I$(HDF5)/include -I$(ZLIB)/include
 
-#LIBS := -lbsplines -lfutils -lpppack -lpputils2 \
-#        -lhdf5_fortran -lhdf5 -lz -ldl -lpthread
 LIBS  := -lfutils -lhdf5_fortran -lhdf5 -lz -ldl -lpthread
 LDIRS := -L$(SPC_LOCAL)/lib/$(OPTLEVEL) -L$(HDF5)/lib
-#LDIRS := -L$(FUTILS)/lib -L$(HDF5)/lib -L$(ZLIB)/lib
 
 # Add Multiple-Precision Library
 LIBS += -lfm
 
-#
-# setup of MKL library
-# working well with intel compiler and intelmpi
-# MKL_LIB has to be set in .bashrc
-#
-ifdef MKL_LIB
-
-     # common libraries
-     LIBS += -lmkl_scalapack_lp64 -lmkl_core -lmkl_blacs_intelmpi_lp64 -lm
-
-     # compiler dependent libraries
-     ifeq ($(COMPTYPE), i) #intel
-     	  LIBS += -lmkl_intel_lp64
-     endif
-     ifeq ($(COMPTYPE), g) #gnu
-     	  LIBS += -lmkl_gf_lp64
-     endif
-
-     # different library depending on threaded or sequential
-     ifeq ($(USEOPENMP), 1)
-     	LIBS += -lmkl_intel_thread
-     else
-	LIBS += -lmkl_sequential
-     endif
-
-     # MKL needs intel omp library when compiled with gnu
-     ifeq ($(USEOPENMP), 1)
-	ifeq ($(COMPTYPE), g) #gnu
-     	    LIBS += -liomp5
-	endif
-     endif
-
-     LDIRS += -L$(MKL_LIB)
-     IDIRS += -I$(MKL_LIB)/../../include
-
-endif
 
 ifdef FFTW3DIR
-      LIBS  += -lfftw3
+      LIBS  += -lfftw3 -lfftw3_mpi
       LDIRS += -L$(FFTW3DIR)/lib64
       IDIRS += -I$(FFTW3DIR)/include
 endif
 
-#
-# Add mumps libraries if preprocessor set
-#
-ifeq ($(USEMUMPS),1)
-     LIBS  += -lzmumps -ldmumps -lmumps_common -lpord
-     IDIRS += -I$(MUMPS)/include
-     LDIRS += -L$(MUMPS)/lib
-     ifdef PARMETIS
-     	   LIBS  += -lparmetis -lmetis
-	   LDIRS += -L$(PARMETIS)/lib -L$(METIS)/lib
-     endif
-     ifdef SCOTCH
-     	   LIBS  += -lesmumps -lscotch -lscotcherr
-           LDIRS += -L$(SCOTCH)/lib
-     endif
-endif
-
-#
-# Add parallel multigrid libraries if preprocessor set
-#
-#ifeq ($(USEPARMG),1)
-#  LIBS += -lparmgrid
-#endif
-
-################################################################
-#
-# Section IV: Set up compiler and compiler flags
-#
-################################################################
-
-CC  = $(SPC_MPICC)
-FC  = $(SPC_MPIF90)
-F90 = $(SPC_MPIF90)
-GBS_EXEC = $(BINDIR)/gbs_$(PLAT)_$(COMP)
-LDFLAGS = $(F90FLAGS)
-
-#
-# Intel + Dora + OpenMP needs dynamic linking
-#
-ifeq ($(PLAT), dora)
-    ifeq ($(COMPTYPE), i) #intel
-        ifeq ($(USEOPENMP),1)
-            LDFLAGS += -dynamic
-        endif
-    endif
-endif
 
 ################################################################
 #

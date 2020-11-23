@@ -93,7 +93,7 @@ SUBROUTINE poisson
   END DO
 
 ! Cancel origin singularity
-phi(ikr_0,ikz_0) = 0
+IF ((ikr_0 .GE. ikrs) .AND. (ikr_0 .LE. ikre)) phi(ikr_0,ikz_0) = 0
 
 ! Execution time end
 CALL cpu_time(t1_poisson)

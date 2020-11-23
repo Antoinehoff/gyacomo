@@ -4,7 +4,7 @@ subroutine auxval
   USE basic
   USE grid
   USE array
-  ! use mumps_bsplines, only: putrow_mumps => putrow, updtmat_mumps => updtmat, factor_mumps => factor, bsolve_mumps => bsolve ! from BSPLINES
+  USE fourier, ONLY: initialize_FFT
   use prec_const
   IMPLICIT NONE
 
@@ -12,15 +12,13 @@ subroutine auxval
   IF (my_id .EQ. 0) WRITE(*,*) '=== Set auxiliary values ==='
 
   CALL set_krgrid
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
-  CALL set_kzgrid
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+  CALL set_kzgrid ! Distributed dimension
 
   CALL set_pj
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
   CALL memory ! Allocate memory for global arrays
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+
+  CALL initialize_FFT ! intialization of FFTW plans
 
 END SUBROUTINE auxval

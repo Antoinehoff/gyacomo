@@ -2,6 +2,7 @@ MODULE fourier
 
   USE prec_const
   USE grid
+  USE basic
   use, intrinsic :: iso_c_binding
   implicit none
 
@@ -9,184 +10,109 @@ MODULE fourier
   INCLUDE 'fftw3-mpi.f03'
 
   PRIVATE
-  PUBLIC :: fft_r2cc
-  PUBLIC :: ifft_cc2r
-  PUBLIC :: fft2_r2cc
-  PUBLIC :: ifft2_cc2r
+  type(C_PTR)                        :: planf, planb, real_ptr, cmpx_ptr
+  real(C_DOUBLE),            pointer :: real_data_1(:,:), real_data_2(:,:)
+  complex(C_DOUBLE_complex), pointer :: cmpx_data(:,:)
+  integer (C_INTPTR_T)               :: nx, ny, nh
+
+  PUBLIC :: initialize_FFT, finalize_FFT
   PUBLIC :: convolve_2D_F2F
 
 
   CONTAINS
 
-  SUBROUTINE fft_r2cc(fx_in, Fk_out)
-
-    IMPLICIT NONE
-    REAL(dp),    DIMENSION(Nr),  INTENT(IN) :: fx_in
-    COMPLEX(dp), DIMENSION(Nkr), INTENT(OUT):: Fk_out
-    integer*8 plan
-
-    CALL dfftw_plan_dft_r2c_1d(plan,Nr,fx_in,Fk_out,FFTW_FORWARD,FFTW_ESTIMATE)
-    CALL dfftw_execute_dft_r2c(plan, fx_in, Fk_out)
-    CALL dfftw_destroy_plan(plan)
-
-  END SUBROUTINE fft_r2cc
-
-  SUBROUTINE ifft_cc2r(Fk_in, fx_out)
-
-    IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(Nkr),  INTENT(IN) :: Fk_in
-    REAL(dp),    DIMENSION(Nr),   INTENT(OUT):: fx_out
-    integer*8 plan
-
-    CALL dfftw_plan_dft_c2r_1d(plan,Nr,Fk_in,fx_out,FFTW_BACKWARD,FFTW_ESTIMATE)
-    CALL dfftw_execute_dft_c2r(plan, Fk_in, fx_out)
-    CALL dfftw_destroy_plan(plan)
-    fx_out = fx_out/Nr
-
-  END SUBROUTINE ifft_cc2r
-
-
-
-  SUBROUTINE fft2_r2cc( ffx_in, FFk_out )
-
+    SUBROUTINE initialize_FFT
       IMPLICIT NONE
-      REAL(dp),    DIMENSION(Nr,Nz), INTENT(IN)   :: ffx_in
-      COMPLEX(dp), DIMENSION(Nkr,Nkz), INTENT(OUT):: FFk_out
-      integer*8 plan
+      nx = Nr; ny = Nz; nh = ( nx / 2 ) + 1
 
-      !!! 2D Forward FFT ________________________!
-      CALL dfftw_plan_dft_r2c_2d(plan,Nr,Nz,ffx_in,FFk_out,FFTW_FORWARD,FFTW_ESTIMATE)
-      CALL dfftw_execute_dft_r2c(plan,ffx_in,FFk_out)
-      CALL dfftw_destroy_plan(plan)
+      IF ( my_id .EQ. 1)write(*,*) 'Initialize FFT..'
+      CALL fftw_mpi_init
 
-  END SUBROUTINE fft2_r2cc
+      IF ( my_id .EQ. 1)write(*,*) 'distribution of the array along kr..'
+      alloc_local = fftw_mpi_local_size_2d(nh, ny, MPI_COMM_WORLD, local_nkr, local_kr_start)
+      write(*,*) 'local_nkr', local_nkr, 'local_kr_start', local_kr_start
 
+      real_ptr = fftw_alloc_real(2 * alloc_local)
+      cmpx_ptr = fftw_alloc_complex(alloc_local)
 
+      call c_f_pointer(real_ptr, real_data_1, [2*local_nkr, nx])
+      call c_f_pointer(real_ptr, real_data_2, [2*local_nkr, nx])
+      call c_f_pointer(cmpx_ptr, cmpx_data,   [  local_nkr, nx])
 
-  SUBROUTINE ifft2_cc2r( FFk_in, ffx_out )
+      IF ( my_id .EQ. 1)write(*,*) 'setting FFT iFFT 2D plans..'
+      ! Backward FFT plan
+      planb = fftw_mpi_plan_dft_c2r_2d(ny, nx, cmpx_data, real_data_1, MPI_COMM_WORLD, &
+                                                                 FFTW_PATIENT)
+      ! Forward FFT plan
+      planf = fftw_mpi_plan_dft_r2c_2d(ny, nx, real_data_1, cmpx_data, MPI_COMM_WORLD, &
+                                                                 FFTW_PATIENT)
+    END SUBROUTINE initialize_FFT
 
+    SUBROUTINE finalize_FFT
       IMPLICIT NONE
-      COMPLEX(dp), DIMENSION(Nkr,Nkz), INTENT(IN) :: FFk_in
-      REAL(dp),    DIMENSION(Nr,Nz), INTENT(OUT)  :: ffx_out
-      COMPLEX(dp), DIMENSION(Nkr,Nkz) :: tmp_c
-      integer*8 plan
 
-      tmp_c = FFk_in
-      !!! 2D Backward FFT ________________________!
-      CALL dfftw_plan_dft_c2r_2d(plan,Nr,Nz,tmp_c,ffx_out,FFTW_BACKWARD,FFTW_ESTIMATE)
-      CALL dfftw_execute_dft_c2r(plan,tmp_c,ffx_out)
-      CALL dfftw_destroy_plan(plan)
-      ffx_out = ffx_out/Nr/Nz
+      IF ( my_id .EQ. 0)write(*,*) 'finalize FFTW'
+      CALL dfftw_destroy_plan(planf)
+      CALL dfftw_destroy_plan(planb)
+      call fftw_mpi_cleanup
+      call fftw_free(real_ptr)
+      call fftw_free(cmpx_ptr)
 
-  END SUBROUTINE ifft2_cc2r
+    END SUBROUTINE finalize_FFT
 
 
   !!! Convolution 2D Fourier to Fourier
-  !   - Compute the convolution using the convolution theorem and MKL
+  !   - Compute the convolution using the convolution theorem
   SUBROUTINE convolve_2D_F2F( F_2D, G_2D, C_2D )
-    USE basic
-    USE grid, ONLY : AA_r, AA_z, Lr, Lz
     IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(Nkr,Nkz), INTENT(IN)  :: F_2D, G_2D  ! input fields
-    COMPLEX(dp), DIMENSION(Nkr,Nkz), INTENT(OUT) :: C_2D  ! output convolutioned field
-    REAL(dp), DIMENSION(Nr,Nz) :: ff, gg ! iFFT of input fields
-    REAL(dp), DIMENSION(Nr,Nz) :: ffgg  ! will receive the product of f*g in Real
-    INTEGER :: ikr, ikz
-    REAL    :: a_r
+    COMPLEX(dp), DIMENSION(ikrs:ikre,ikzs:ikze), INTENT(IN)  :: F_2D, G_2D  ! input fields
+    COMPLEX(dp), DIMENSION(ikrs:ikre,ikzs:ikze), INTENT(OUT) :: C_2D  ! output convolutioned field
 
+    ! initialize data to some function my_function(i,j)
+    do ikr = ikrs,ikre
+      do ikz = ikzs,ikze
+      cmpx_data(ikr-local_kr_start, ikz) = F_2D(ikr, ikz)
+      end do
+    end do
+    CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+
+    ! 2D backward Fourier transform
+    ! write(*,*) my_id, 'iFFT(F) ..'
+    call fftw_mpi_execute_dft_c2r(planb, cmpx_data, real_data_1)
+
+    ! initialize data to some function my_function(i,j)
+    do ikr = ikrs,ikre
+      do ikz = ikzs,ikze
+      cmpx_data(ikr-local_kr_start, ikz) = G_2D(ikr, ikz)
+      end do
+    end do
     ! 2D inverse Fourier transform
-    IF ( num_procs .EQ. 1 ) THEN
-      CALL ifft2_cc2r(F_2D,ff)
-      CALL ifft2_cc2r(G_2D,gg)
-    ELSE
-      CALL ifft2_cc2r_mpi(F_2D,ff)
-      CALL ifft2_cc2r_mpi(G_2D,gg)
-    ENDIF
+    ! write(*,*) my_id, 'iFFT(G) ..'
+    call fftw_mpi_execute_dft_c2r(planb, cmpx_data, real_data_2)
 
     ! Product in physical space
-    ffgg = ff * gg;
+    ! write(*,*) 'multply..'
+    real_data_1 = real_data_1 * real_data_2
 
     ! 2D Fourier tranform
-    IF ( num_procs .EQ. 1 ) THEN
-      CALL fft2_r2cc(ffgg,C_2D)
-    ELSE
-      CALL fft2_r2cc_mpi(ffgg,C_2D)
-    ENDIF
+    ! write(*,*) my_id, 'FFT(f*g) ..'
+    call fftw_mpi_execute_dft_r2c(planf, real_data_1, cmpx_data)
+
+    ! COPY TO OUTPUT ARRAY
+    ! write(*,*) my_id, 'out ..'
+    do ikr = ikrs,ikre
+      do ikz = ikzs,ikze
+        cmpx_data(ikr-local_kr_start,ikz) = C_2D(ikr,ikz)
+      end do
+    end do
 
     ! Anti aliasing (2/3 rule)
     DO ikr = ikrs,ikre
-      a_r = AA_r(ikr)
       DO ikz = ikzs,ikze
-         C_2D(ikr,ikz) = C_2D(ikr,ikz) * a_r * AA_z(ikz)
+         C_2D(ikr,ikz) = C_2D(ikr,ikz) * AA_r(ikr) * AA_z(ikz)
       ENDDO
     ENDDO
 
 END SUBROUTINE convolve_2D_F2F
-
-!! MPI routines
-SUBROUTINE fft2_r2cc_mpi( ffx_in, FFk_out )
-
-    IMPLICIT NONE
-    REAL(dp),    DIMENSION(Nr,Nz), INTENT(IN)   :: ffx_in
-    COMPLEX(dp), DIMENSION(Nkr,Nkz), INTENT(OUT):: FFk_out
-    REAL(dp),    DIMENSION(Nkr,Nkz) :: tmp_r
-    type(C_PTR) :: plan
-    integer(C_INTPTR_T) :: L
-    integer(C_INTPTR_T) :: M
-
-    ! L = Nr; M = Nz
-    !
-    ! tmp_r = ffx_in
-    ! !!! 2D Forward FFT ________________________!
-    ! plan = fftw_mpi_plan_dft_r2c_2d(L, M, tmp_r, FFk_out, MPI_COMM_WORLD, FFTW_ESTIMATE)
-    !
-    ! if ((.not. c_associated(plan))) then
-    !  write(*,*) "plan creation error!!"
-    !  stop
-    ! end if
-    !
-    ! CALL fftw_mpi_execute_dft_r2c(plan,tmp_r,FFk_out)
-    ! CALL fftw_destroy_plan(plan)
-
-END SUBROUTINE fft2_r2cc_mpi
-
-
-
-SUBROUTINE ifft2_cc2r_mpi( FFk_in, ffx_out )
-
-    IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(Nkr,Nkz), INTENT(IN) :: FFk_in
-    REAL(dp),    DIMENSION(Nr,Nz), INTENT(OUT)  :: ffx_out
-    COMPLEX(dp), DIMENSION(Nkr,Nkz) :: tmp_c
-    type(C_PTR) :: plan
-    integer(C_INTPTR_T) :: L
-    integer(C_INTPTR_T) :: M
-
-    ! L = Nr; M = Nz
-    !
-    ! tmp_c = FFk_in
-    ! !!! 2D Backward FFT ________________________!
-    ! plan = fftw_mpi_plan_dft_c2r_2d(L, M, tmp_c, ffx_out, MPI_COMM_WORLD, FFTW_ESTIMATE)
-    !
-    ! if ((.not. c_associated(plan))) then
-    !  write(*,*) "plan creation error!!"
-    !  stop
-    ! end if
-    !
-    ! CALL fftw_mpi_execute_dft_c2r(plan,tmp_c,ffx_out)
-    ! CALL fftw_destroy_plan(plan)
-    !
-    ! ffx_out = ffx_out/Nr/Nz
-
-END SUBROUTINE ifft2_cc2r_mpi
-
-! Empty set/free routines to switch easily with MKL DFTI
-SUBROUTINE set_descriptors
-
-END SUBROUTINE set_descriptors
-
-SUBROUTINE free_descriptors
-
-END SUBROUTINE free_descriptors
 
 END MODULE fourier
