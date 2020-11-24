@@ -7,7 +7,8 @@ How to run it :
 3. To have a better interface, open a script HeLaZ/wk/parameters*.m and run it to set up a wanted simulation.
 4. You can obtain various plots and gifs using HeLaZ/wk/analysis_2D.m once the simulation is done. To select the correct output file, run parameters*.m with the corresponding simulation parameters and then run analysis_2D.m (everything with matlab from wk/)
 
-Roadmap : (Current version 1.4)
+# Logbook
+(Current versions : Master 1.4.3; MPI 2.1.1)
 
 0. Write MOLI matlab solver in Fortran using Monli1D as starting point
 
@@ -49,4 +50,18 @@ Roadmap : (Current version 1.4)
 
 		1.4.2 Direct comparison with GS2 results of Ricci,Rogers 2006
 
-2. MPI parallel version
+		1.4.3 Code to expensive in sequential to reach PJ convergence
+
+2. MPI parallel version (branch MPI)
+
+	2.1 First compilable parallel version
+
+		2.1.1 Benchmarks, profiling and portability of the code
+
+	2.2 Allow restart with different P,J values
+	
+	2.3 Implement RK45 adaptive scheme or Adams-Bashforth 3rd order (in discussion)
+
+3. 3D version, kr,kz,kpar for linear device
+
+4. 3D version with curvature
