@@ -89,13 +89,12 @@ E_kin_KR = mean(mean(abs(Ddr.*PHI(:,:,it)).^2+abs(Ddz.*PHI(:,:,it)).^2,3),2);
 dEdt     = diff(E_pot+E_kin)./dt2D;
 
 for it = 1:numel(Ts5D) % Loop over 5D arrays
-    NE_ = Ne00(:,:,it); NI_ = Ni00(:,:,it); PH_ = PHI(:,:,it);
     Ne_norm(:,:,it)= sum(sum(abs(Nepj(:,:,:,:,it)),3),4)/Nkr/Nkz;
     Ni_norm(:,:,it)= sum(sum(abs(Nipj(:,:,:,:,it)),3),4)/Nkr/Nkz;
 if strcmp(OUTPUTS.write_non_lin,'.true.')   
     Se_norm(:,:,it)= sum(sum(abs(Sepj(:,:,:,:,it)),3),4)/Nkr/Nkz;
-    Sne00_norm(it) = sum(sum(abs(Se00(:,:,it))))/Nkr/Nkz;
     Si_norm(:,:,it)= sum(sum(abs(Sipj(:,:,:,:,it)),3),4)/Nkr/Nkz;
+    Sne00_norm(it) = sum(sum(abs(Se00(:,:,it))))/Nkr/Nkz;
     Sni00_norm(it) = sum(sum(abs(Si00(:,:,it))))/Nkr/Nkz;
 end
 end
@@ -173,7 +172,7 @@ end
 %%
 if 0
 %% Photomaton : real space
-tf = 100; [~,it] = min(abs(Ts2D-tf)); [~,it5D] = min(abs(Ts5D-tf));
+tf = 0; [~,it] = min(abs(Ts2D-tf)); [~,it5D] = min(abs(Ts5D-tf));
 fig = figure; FIGNAME = ['photo_real',sprintf('_t=%.0f',Ts2D(it))]; set(gcf, 'Position',  [100, 100, 1500, 500])
     subplot(131); plt = @(x) (((x))); 
         pclr = pcolor((RR),(ZZ),plt(ni00(:,:,it))); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
@@ -294,7 +293,7 @@ fig = figure; FIGNAME = 'space_time_drphi';set(gcf, 'Position',  [100, 100, 1200
 %     title(['$\eta=',num2str(ETAB),'\quad',...
 %         '\nu_{',CONAME,'}=',num2str(NU),'$'])
 %     legend(['$P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'])
-    ylim([-0.01,1.1*max(Flux_ri(it0:it1))]);
+    ylim([0,1.1*max(Flux_ri(it0:it1))]);
     subplot(212)
     [TY,TX] = meshgrid(r,Ts2D(it0:it1));
     pclr = pcolor(TX,TY,squeeze(mean(drphi(:,:,it0:it1),2))'); set(pclr, 'edgecolor','none'); %colorbar;

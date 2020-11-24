@@ -20,9 +20,6 @@ MODULE basic
   INTEGER :: ierr                  ! flag for MPI error
   INTEGER :: my_id                 ! identification number of current process
   INTEGER :: num_procs             ! number of MPI processes
-  integer(C_INTPTR_T) :: alloc_local   ! total local data allocation size (mpi process)
-  integer(C_INTPTR_T) :: local_nkr      ! local size of parallelized kz direction
-  integer(C_INTPTR_T) :: local_kr_start ! local start of parallelized kz direction
 
   INTEGER :: iframe1d              ! counting the number of times 1d datasets are outputed (for diagnose)
   INTEGER :: iframe2d              ! counting the number of times 2d datasets are outputed (for diagnose)

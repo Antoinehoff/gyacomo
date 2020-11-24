@@ -37,6 +37,7 @@ MODULE grid
   REAL(dp), PUBLIC, PROTECTED ::  deltar,  deltaz
   INTEGER,  PUBLIC, PROTECTED  ::  irs,  ire,  izs,  ize
   INTEGER,  PUBLIC :: ir,iz ! counters
+  integer(C_INTPTR_T), PUBLIC :: local_nkr, local_nkr_offset, local_nz, local_nz_offset
 
   ! Grids containing position in fourier space
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: krarray
@@ -88,86 +89,79 @@ CONTAINS
 
   END SUBROUTINE set_pj
 
-  SUBROUTINE set_krgrid
-    USE prec_const
-    IMPLICIT NONE
-    INTEGER :: ikr
 
-    Nkr = Nr/2+1 ! Defined only on positive kr since fields are real
-    ! ! Start and END indices of grid
-    ikrs =    my_id  * Nkr/num_procs + 1
-    ikre = (my_id+1) * Nkr/num_procs
+    SUBROUTINE set_krgrid
+      USE prec_const
+      IMPLICIT NONE
+      INTEGER :: i_
 
-    IF(my_id .EQ. num_procs) ikre = Nkr
+      Nkr = Nr/2+1 ! Defined only on positive kr since fields are real
+      ! Start and END indices of grid
+      ikrs = local_nkr_offset + 1
+      ikre = ikrs + local_nkr - 1
 
-    WRITE(*,*) 'ID = ',my_id,' ikrs = ', ikrs, ' ikre = ', ikre
+      DO i_ = 0,num_procs-1
+        CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+        IF (my_id .EQ. i_) print *, i_,': ikrs = ', ikrs, ' ikre = ', ikre
+        CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+      ENDDO
 
-    ! Grid spacings
-    IF (Lr .GT. 0) THEN
+      IF (my_id .EQ. num_procs-1) ikre = Nkr
+      !WRITE(*,*) 'ID = ',my_id,' ikrs = ', ikrs, ' ikre = ', ikre
+      ! Grid spacings
       deltakr = 2._dp*PI/Lr
-    ELSE
-      deltakr = 1.0
-    ENDIF
 
-    ! Discretized kr positions ordered as dk*(0 1 2)
-    ALLOCATE(krarray(ikrs:ikre))
-    DO ikr = ikrs,ikre
-      krarray(ikr) = REAL(ikr-1,dp) * deltakr
-      if (krarray(ikr) .EQ. 0) THEN
-        ikr_0 = ikr
-      ENDIF
-    END DO
+      ! Discretized kr positions ordered as dk*(0 1 2 3)
+      ALLOCATE(krarray(ikrs:ikre))
+      DO ikr = ikrs,ikre
+        krarray(ikr) = REAL(ikr-1,dp) * deltakr
+        IF (krarray(ikr) .EQ. 0) ikr_0 = ikr
+      END DO
 
-    ! Orszag 2/3 filter
-    two_third_krmax = 2._dp/3._dp*deltakr*Nkr
-    ALLOCATE(AA_r(ikrs:ikre))
-    DO ikr = ikrs,ikre
-      IF ( (krarray(ikr) .GT. -two_third_krmax) .AND. (krarray(ikr) .LT. two_third_krmax) ) THEN
-        AA_r(ikr) = 1._dp;
-      ELSE
-        AA_r(ikr) = 0._dp;
-      ENDIF
-    END DO
-  END SUBROUTINE set_krgrid
+      ! Orszag 2/3 filter
+      two_third_krmax = 2._dp/3._dp*deltakr*Nkr
+      ALLOCATE(AA_r(ikrs:ikre))
+      DO ikr = ikrs,ikre
+        IF ( (krarray(ikr) .LT. two_third_krmax) ) THEN
+          AA_r(ikr) = 1._dp;
+        ELSE
+          AA_r(ikr) = 0._dp;
+        ENDIF
+      END DO
+    END SUBROUTINE set_krgrid
 
-  SUBROUTINE set_kzgrid
-    USE prec_const
-    USE model, ONLY : kr0KH, ikz0KH
-    IMPLICIT NONE
+    SUBROUTINE set_kzgrid
+      USE prec_const
+      IMPLICIT NONE
+      INTEGER :: i_
 
-    Nkz = Nz;
-    ! Start and END indices of grid
-    ikzs = 1
-    ikze = Nkz
-    WRITE(*,*) 'ID = ',my_id,' ikzs = ', ikzs, ' ikze = ', ikze
-    ! Grid spacings
-    deltakz = 2._dp*PI/Lz
+      Nkz = Nz;
+      ! Start and END indices of grid
+      ikzs = 1
+      ikze = Nkz
 
-    ! Discretized kz positions ordered as dk*(0 1 2 -3 -2 -1)
-    ALLOCATE(kzarray(ikzs:ikze))
-    DO ikz = ikzs,ikze
-      kzarray(ikz) = deltakz*(MODULO(ikz-1,Nkz/2)-Nkz/2*FLOOR(2.*real(ikz-1)/real(Nkz)))
-      if (kzarray(ikz) .EQ. 0)        ikz_0 = ikz
-      if (ikz .EQ. Nz/2+1)     kzarray(ikz) = -kzarray(ikz)
-    END DO
+      ! Grid spacings
+      deltakz = 2._dp*PI/Lz
 
-    IF (my_id .EQ. 1) WRITE(*,*) 'ID = ',my_id,' kz = ',kzarray
-    ! Orszag 2/3 filter
-    two_third_kzmax = 2._dp/3._dp*deltakz*(Nkz/2);
-    ALLOCATE(AA_z(ikzs:ikze))
-    DO ikz = ikzs,ikze
-      IF ( (kzarray(ikz) .GT. -two_third_kzmax) .AND. (kzarray(ikz) .LT. two_third_kzmax) ) THEN
-        AA_z(ikz) = 1._dp;
-      ELSE
-        AA_z(ikz) = 0._dp;
-      ENDIF
-    END DO
+      ! Discretized kz positions ordered as dk*(0 1 2 3 -2 -1)
+      ALLOCATE(kzarray(ikzs:ikze))
+      DO ikz = ikzs,ikze
+        kzarray(ikz) = deltakz*(MODULO(ikz-1,Nkz/2)-Nkz/2*FLOOR(2.*real(ikz-1)/real(Nkz)))
+        if (ikz .EQ. Nz/2+1)     kzarray(ikz) = -kzarray(ikz)
+        IF (kzarray(ikz) .EQ. 0) ikz_0 = ikz
+      END DO
 
-    ! Put kz0RT to the nearest grid point on kz
-    ikz0KH = NINT(kr0KH/deltakr)+1
-    IF ( (ikz0KH .GE. ikzs) .AND. (ikz0KH .LE. ikze) ) kr0KH  = kzarray(ikz0KH)
-
-  END SUBROUTINE set_kzgrid
+      ! Orszag 2/3 filter
+      two_third_kzmax = 2._dp/3._dp*deltakz*(Nkz/2);
+      ALLOCATE(AA_z(ikzs:ikze))
+      DO ikz = ikzs,ikze
+        IF ( (kzarray(ikz) .GT. -two_third_kzmax) .AND. (kzarray(ikz) .LT. two_third_kzmax) ) THEN
+          AA_z(ikz) = 1._dp;
+        ELSE
+          AA_z(ikz) = 0._dp;
+        ENDIF
+      END DO
+    END SUBROUTINE set_kzgrid
 
   SUBROUTINE grid_readinputs
     ! Read the input parameters

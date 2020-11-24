@@ -17,11 +17,9 @@ SUBROUTINE stepon
    DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
       ! Compute right hand side of moments hierarchy equation
       CALL moments_eq_rhs
-      CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
       ! Advance from updatetlevel to updatetlevel+1 (according to num. scheme)
       CALL advance_time_level
-      CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
       ! Update the moments with the hierarchy RHS (step by step)
 
@@ -37,27 +35,22 @@ SUBROUTINE stepon
           CALL advance_field(moments_i(ip,ij,:,:,:),moments_rhs_i(ip,ij,:,:,:))
         ENDDO
       ENDDO
-      CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
       ! Execution time end
       CALL cpu_time(t1_adv_field)
       tc_adv_field = tc_adv_field + (t1_adv_field - t0_adv_field)
-      CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
       ! Update electrostatic potential
       CALL poisson
-      CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
       ! Update nonlinear term
       IF ( NON_LIN .OR. (A0KH .NE. 0) ) THEN
         CALL compute_Sapj
       ENDIF
-      CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
       !(The two routines above are called in inital for t=0)
       CALL checkfield_all()
       CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-
    END DO
 
    CONTAINS

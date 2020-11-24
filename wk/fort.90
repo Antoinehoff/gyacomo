@@ -1,7 +1,7 @@
 &BASIC
   nrun   = 100000000
-  dt     = 0.01
-  tmax   = 1
+  dt     = 0.005
+  tmax   = 80
   RESTART = .false.
 /
 &GRID
@@ -9,25 +9,25 @@
   jmaxe = 1
   pmaxi = 2
   jmaxi = 1
-  Nr   = 64
-  Lr = 20
-  Nz   = 64
-  Lz = 20
+  Nr   = 256
+  Lr = 66
+  Nz   = 256
+  Lz = 66
   kpar = 0
   CANCEL_ODD_P = .false.
 /
 &OUTPUT_PAR
-  nsave_0d = 1
+  nsave_0d = 100
   nsave_1d = 0
-  nsave_2d = 1
-  nsave_5d = 1
+  nsave_2d = 100
+  nsave_5d = 200
   write_Na00    = .true.
   write_moments = .true.
   write_phi     = .true.
   write_non_lin     = .true.
   write_doubleprecision = .true.
-  resfile0      = '../results/test_parallel/64x32_L_20_Pe_2_Je_1_Pi_2_Ji_1_nB_0.5_nN_1_nu_1e-02_DG_mu_5e-06/outputs'
-  rstfile0      = '../results/test_parallel/64x32_L_20_Pe_2_Je_1_Pi_2_Ji_1_nB_0.5_nN_1_nu_1e-02_DG_mu_5e-06/checkpoint'
+  resfile0      = '../results/test_parallel/256x128_L_66_Pe_2_Je_1_Pi_2_Ji_1_nB_0.5_nN_1_nu_1e-02_DG_mu_5e-06/outputs'
+  rstfile0      = '../results/test_parallel/256x128_L_66_Pe_2_Je_1_Pi_2_Ji_1_nB_0.5_nN_1_nu_1e-02_DG_mu_5e-06/checkpoint'
   job2load      = 0
 /
 &MODEL_PAR

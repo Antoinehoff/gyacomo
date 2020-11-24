@@ -10,109 +10,112 @@ MODULE fourier
   INCLUDE 'fftw3-mpi.f03'
 
   PRIVATE
-  type(C_PTR)                        :: planf, planb, real_ptr, cmpx_ptr
-  real(C_DOUBLE),            pointer :: real_data_1(:,:), real_data_2(:,:)
-  complex(C_DOUBLE_complex), pointer :: cmpx_data(:,:)
-  integer (C_INTPTR_T)               :: nx, ny, nh
 
-  PUBLIC :: initialize_FFT, finalize_FFT
-  PUBLIC :: convolve_2D_F2F
+  PUBLIC :: init_grid_distr_and_plans, convolve_2D_F2F, finalize_plans
 
+  real(C_DOUBLE), pointer                :: real_data_f(:,:), real_data_g(:,:), real_data_c(:,:)
+  complex(C_DOUBLE_complex), pointer     :: cmpx_data_f(:,:), cmpx_data_g(:,:), cmpx_data_c(:,:)
+  type(C_PTR)                            :: cdatar_f, cdatar_g, cdatar_c
+  type(C_PTR)                            :: cdatac_f, cdatac_g, cdatac_c
+  type(C_PTR)                            :: planf, planb
+  integer(C_INTPTR_T)                    :: i, ix, iy, alloc_local_1, alloc_local_2
+  integer(C_INTPTR_T)                    :: NR_, NZ_
 
   CONTAINS
 
-    SUBROUTINE initialize_FFT
-      IMPLICIT NONE
-      nx = Nr; ny = Nz; nh = ( nx / 2 ) + 1
+  SUBROUTINE init_grid_distr_and_plans(Nr,Nz)
+    IMPLICIT NONE
 
-      IF ( my_id .EQ. 1)write(*,*) 'Initialize FFT..'
-      CALL fftw_mpi_init
+    INTEGER, INTENT(IN) :: Nr,Nz
+    NR_ = Nr; NZ_ = Nz
 
-      IF ( my_id .EQ. 1)write(*,*) 'distribution of the array along kr..'
-      alloc_local = fftw_mpi_local_size_2d(nh, ny, MPI_COMM_WORLD, local_nkr, local_kr_start)
-      write(*,*) 'local_nkr', local_nkr, 'local_kr_start', local_kr_start
+    ! Compute the room to allocate
+    alloc_local_1 = fftw_mpi_local_size_2d(NR_/2 + 1, NZ_, MPI_COMM_WORLD, local_nkr, local_nkr_offset)
+    ! Initalize pointers to this room
+    cdatac_f = fftw_alloc_complex(alloc_local_1)
+    cdatac_g = fftw_alloc_complex(alloc_local_1)
+    cdatac_c = fftw_alloc_complex(alloc_local_1)
+    ! Initalize the arrays with the rooms pointed
+    call c_f_pointer(cdatac_f, cmpx_data_f, [NZ_ ,local_nkr])
+    call c_f_pointer(cdatac_g, cmpx_data_g, [NZ_ ,local_nkr])
+    call c_f_pointer(cdatac_c, cmpx_data_c, [NZ_ ,local_nkr])
 
-      real_ptr = fftw_alloc_real(2 * alloc_local)
-      cmpx_ptr = fftw_alloc_complex(alloc_local)
+    alloc_local_2 = fftw_mpi_local_size_2d(NZ_, NR_/2 + 1, MPI_COMM_WORLD, local_nz, local_nz_offset)
 
-      call c_f_pointer(real_ptr, real_data_1, [2*local_nkr, nx])
-      call c_f_pointer(real_ptr, real_data_2, [2*local_nkr, nx])
-      call c_f_pointer(cmpx_ptr, cmpx_data,   [  local_nkr, nx])
+    cdatar_f = fftw_alloc_real(2*alloc_local_2)
+    cdatar_g = fftw_alloc_real(2*alloc_local_2)
+    cdatar_c = fftw_alloc_real(2*alloc_local_2)
+    call c_f_pointer(cdatar_f, real_data_f, [2*(NR_/2  + 1),local_nz])
+    call c_f_pointer(cdatar_g, real_data_g, [2*(NR_/2  + 1),local_nz])
+    call c_f_pointer(cdatar_c, real_data_c, [2*(NR_/2  + 1),local_nz])
 
-      IF ( my_id .EQ. 1)write(*,*) 'setting FFT iFFT 2D plans..'
-      ! Backward FFT plan
-      planb = fftw_mpi_plan_dft_c2r_2d(ny, nx, cmpx_data, real_data_1, MPI_COMM_WORLD, &
-                                                                 FFTW_PATIENT)
-      ! Forward FFT plan
-      planf = fftw_mpi_plan_dft_r2c_2d(ny, nx, real_data_1, cmpx_data, MPI_COMM_WORLD, &
-                                                                 FFTW_PATIENT)
-    END SUBROUTINE initialize_FFT
+    ! Plan Creation (out-of-place forward and backward FFT)
+    planf = fftw_mpi_plan_dft_r2c_2d(NZ_, NR_, real_data_f, cmpx_data_f, MPI_COMM_WORLD,  ior(FFTW_MEASURE, FFTW_MPI_TRANSPOSED_OUT))
+    planb = fftw_mpi_plan_dft_c2r_2d(NZ_, NR_, cmpx_data_f, real_data_f, MPI_COMM_WORLD,  ior(FFTW_MEASURE, FFTW_MPI_TRANSPOSED_IN))
 
-    SUBROUTINE finalize_FFT
-      IMPLICIT NONE
+   if ((.not. c_associated(planf)) .OR. (.not. c_associated(planb))) then
+      write(*,*) "plan creation error!!"
+      stop
+   end if
 
-      IF ( my_id .EQ. 0)write(*,*) 'finalize FFTW'
-      CALL dfftw_destroy_plan(planf)
-      CALL dfftw_destroy_plan(planb)
-      call fftw_mpi_cleanup
-      call fftw_free(real_ptr)
-      call fftw_free(cmpx_ptr)
+   DO ix = 0,num_procs-1
+     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+     IF (my_id .EQ. ix) print *, my_id,': alloc_local = ', alloc_local_1+alloc_local_2
+     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+     ! IF (my_id .EQ. 0) print *, my_id,': local_nz = ', local_nz, ' loc_nz_of. = ', local_nz_offset
+     ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+   ENDDO
 
-    END SUBROUTINE finalize_FFT
+
+  END SUBROUTINE init_grid_distr_and_plans
 
 
   !!! Convolution 2D Fourier to Fourier
-  !   - Compute the convolution using the convolution theorem
+  !   - Compute the convolution using the convolution theorem and MKL
   SUBROUTINE convolve_2D_F2F( F_2D, G_2D, C_2D )
     IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(ikrs:ikre,ikzs:ikze), INTENT(IN)  :: F_2D, G_2D  ! input fields
-    COMPLEX(dp), DIMENSION(ikrs:ikre,ikzs:ikze), INTENT(OUT) :: C_2D  ! output convolutioned field
 
-    ! initialize data to some function my_function(i,j)
-    do ikr = ikrs,ikre
-      do ikz = ikzs,ikze
-      cmpx_data(ikr-local_kr_start, ikz) = F_2D(ikr, ikz)
-      end do
-    end do
-    CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+    COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(ikrs:ikre,ikzs:ikze), INTENT(IN)  :: F_2D, G_2D  ! input fields
+    COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(ikrs:ikre,ikzs:ikze), INTENT(OUT) :: C_2D  ! output convolutioned field
 
-    ! 2D backward Fourier transform
-    ! write(*,*) my_id, 'iFFT(F) ..'
-    call fftw_mpi_execute_dft_c2r(planb, cmpx_data, real_data_1)
-
-    ! initialize data to some function my_function(i,j)
-    do ikr = ikrs,ikre
-      do ikz = ikzs,ikze
-      cmpx_data(ikr-local_kr_start, ikz) = G_2D(ikr, ikz)
-      end do
-    end do
-    ! 2D inverse Fourier transform
-    ! write(*,*) my_id, 'iFFT(G) ..'
-    call fftw_mpi_execute_dft_c2r(planb, cmpx_data, real_data_2)
-
-    ! Product in physical space
-    ! write(*,*) 'multply..'
-    real_data_1 = real_data_1 * real_data_2
-
-    ! 2D Fourier tranform
-    ! write(*,*) my_id, 'FFT(f*g) ..'
-    call fftw_mpi_execute_dft_r2c(planf, real_data_1, cmpx_data)
-
-    ! COPY TO OUTPUT ARRAY
-    ! write(*,*) my_id, 'out ..'
-    do ikr = ikrs,ikre
-      do ikz = ikzs,ikze
-        cmpx_data(ikr-local_kr_start,ikz) = C_2D(ikr,ikz)
+    do ikr = ikrs, ikre
+      do ikz = ikzs, ikze
+        cmpx_data_f(ikz,ikr-local_nkr_offset) = F_2D(ikr,ikz)
+        cmpx_data_g(ikz,ikr-local_nkr_offset) = G_2D(ikr,ikz)
       end do
     end do
 
-    ! Anti aliasing (2/3 rule)
-    DO ikr = ikrs,ikre
-      DO ikz = ikzs,ikze
-         C_2D(ikr,ikz) = C_2D(ikr,ikz) * AA_r(ikr) * AA_z(ikz)
-      ENDDO
-    ENDDO
+    call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
+
+    call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
+
+    real_data_c = real_data_f/NZ_/NR_  * real_data_g/NZ_/NR_
+
+    call fftw_mpi_execute_dft_r2c(planf, real_data_c, cmpx_data_c)
+
+    ! Retrieve convolution in input format
+    do ikr = ikrs, ikre
+      do ikz = ikzs, ikze
+        C_2D(ikr,ikz) = cmpx_data_c(ikz,ikr-local_nkr_offset)*AA_r(ikr)*AA_z(ikz)
+      end do
+    end do
+
 
 END SUBROUTINE convolve_2D_F2F
+
+SUBROUTINE finalize_plans
+  IMPLICIT NONE
+
+  IF (my_id .EQ. 0) write(*,*) '..plan Destruction.'
+  call fftw_destroy_plan(planb)
+  call fftw_destroy_plan(planf)
+  call fftw_mpi_cleanup()
+  call fftw_free(cdatar_f)
+  call fftw_free(cdatar_g)
+  call fftw_free(cdatar_c)
+  call fftw_free(cdatac_f)
+  call fftw_free(cdatac_g)
+  call fftw_free(cdatac_c)
+END SUBROUTINE finalize_plans
 
 END MODULE fourier

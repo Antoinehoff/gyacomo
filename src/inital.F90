@@ -61,37 +61,7 @@ SUBROUTINE init_moments
 
   ! Seed random number generator
   iseedarr(:)=iseed
-  CALL RANDOM_SEED(PUT=iseedarr)
-
-  IF ( only_Na00 ) THEN ! Spike initialization on density only
-
-    DO ikr=ikrs,ikre
-      DO ikz=ikzs,ikze
-        moments_e( 1,1, ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
-        moments_i( 1,1, ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
-      END DO
-    END DO
-
-    DO ikz=2,Nkz/2 !symmetry at kr = 0
-      CALL RANDOM_NUMBER(noise)
-      moments_e( 1,1,1,ikz, :) = moments_e( 1,1,1,Nkz+2-ikz, :)
-      moments_i( 1,1,1,ikz, :) = moments_i( 1,1,1,Nkz+2-ikz, :)
-    END DO
-
-  ELSE
-    !**** Gaussian initialization (Hakim 2017) *********************************
-    ! sigma    = 5._dp     ! Gaussian sigma
-    ! gain     = 0.5_dp    ! Gaussian mean
-    ! kz_shift = 0.5_dp    ! Gaussian z shift
-    ! moments_i = 0; moments_e = 0;
-    !   DO ikr=ikrs,ikre
-    !     kr = krarray(ikr)
-    !     DO ikz=ikzs,ikze
-    !       kz = kzarray(ikz)
-    !       moments_i( 1,1, ikr,ikz, :) = gain*sigma/SQRT2 * EXP(-(kr**2+(kz-kz_shift)**2)*sigma**2/4._dp)
-    !       moments_e( 1,1, ikr,ikz, :) = gain*sigma/SQRT2 * EXP(-(kr**2+(kz-kz_shift)**2)*sigma**2/4._dp)
-    !     END DO
-    !   END DO
+  CALL RANDOM_SEED(PUT=iseedarr+my_id)
 
     !**** Broad noise initialization *******************************************
     DO ip=ips_e,ipe_e
@@ -106,13 +76,13 @@ SUBROUTINE init_moments
 
         IF ( ikrs .EQ. 1 ) THEN
           DO ikz=2,Nkz/2 !symmetry at kr = 0
-            CALL RANDOM_NUMBER(noise)
             moments_e( ip,ij,1,ikz, :) = moments_e( ip,ij,1,Nkz+2-ikz, :)
           END DO
         ENDIF
 
       END DO
     END DO
+
     DO ip=ips_i,ipe_i
       DO ij=ijs_i,ije_i
 
@@ -125,7 +95,6 @@ SUBROUTINE init_moments
 
         IF ( ikrs .EQ. 1 ) THEN
           DO ikz=2,Nkz/2 !symmetry at kr = 0
-            CALL RANDOM_NUMBER(noise)
             moments_i( ip,ij,1,ikz, :) = moments_i( ip,ij,1,Nkz+2-ikz, :)
           END DO
         ENDIF
@@ -133,7 +102,7 @@ SUBROUTINE init_moments
       END DO
     END DO
 
-  ENDIF
+  ! ENDIF
 END SUBROUTINE init_moments
 !******************************************************************************!
 
@@ -177,9 +146,9 @@ SUBROUTINE load_cp
     iframe2d = iframe2d-1; iframe5d = iframe5d-1
 
     ! Read state of system from restart file
-    CALL getarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),ionode=0)
+    CALL getarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),pardim=3)
     WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", n_
-    CALL getarr(fidrst, dset_name, moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),ionode=0)
+    CALL getarr(fidrst, dset_name, moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),pardim=3)
 
   ELSE
     CALL getatt(fidrst, '/Basic', 'cstep', cstep)
@@ -191,8 +160,8 @@ SUBROUTINE load_cp
     iframe2d = iframe2d-1; iframe5d = iframe5d-1
 
     ! Read state of system from restart file
-    CALL getarr(fidrst, '/Basic/moments_e', moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),ionode=0)
-    CALL getarr(fidrst, '/Basic/moments_i', moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),ionode=0)
+    CALL getarr(fidrst, '/Basic/moments_e', moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),pardim=3)
+    CALL getarr(fidrst, '/Basic/moments_i', moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),pardim=3)
   ENDIF
 
   CALL closef(fidrst)
