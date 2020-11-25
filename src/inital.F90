@@ -126,9 +126,10 @@ SUBROUTINE load_cp
 
   WRITE(*,'(3x,a)') "Resume from previous run"
 
-  CALL openf(rstfile, fidrst)
+  CALL openf(rstfile, fidrst,mpicomm=MPI_COMM_WORLD)
 
-  IF (isgroup(fidrst,'/Basic/moments_e')) THEN
+  ! IF (isgroup(fidrst,'/Basic/moments_e')) THEN
+    ! Getting the last saved checkpoint
     n_ = 0
     WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
     DO WHILE (isdataset(fidrst, dset_name))
@@ -137,6 +138,13 @@ SUBROUTINE load_cp
     ENDDO
     n_ = n_ - 1
     WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
+    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", n_
+
+    ! Read state of system from restart file
+    CALL getarr(fidrst, dset_name, moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),pardim=3)
+    CALL getarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),pardim=3)
+
+    ! Read time dependent attributes
     CALL getatt(fidrst, dset_name, 'cstep', cstep)
     CALL getatt(fidrst, dset_name, 'time', time)
     CALL getatt(fidrst, dset_name, 'jobnum', jobnum)
@@ -145,24 +153,19 @@ SUBROUTINE load_cp
     CALL getatt(fidrst, dset_name, 'iframe5d',iframe5d)
     iframe2d = iframe2d-1; iframe5d = iframe5d-1
 
-    ! Read state of system from restart file
-    CALL getarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),pardim=3)
-    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", n_
-    CALL getarr(fidrst, dset_name, moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),pardim=3)
-
-  ELSE
-    CALL getatt(fidrst, '/Basic', 'cstep', cstep)
-    CALL getatt(fidrst, '/Basic', 'time', time)
-    CALL getatt(fidrst, '/Basic', 'jobnum', jobnum)
-    jobnum = jobnum+1
-    CALL getatt(fidrst, '/Basic', 'iframe2d',iframe2d)
-    CALL getatt(fidrst, '/Basic', 'iframe5d',iframe5d)
-    iframe2d = iframe2d-1; iframe5d = iframe5d-1
-
-    ! Read state of system from restart file
-    CALL getarr(fidrst, '/Basic/moments_e', moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),pardim=3)
-    CALL getarr(fidrst, '/Basic/moments_i', moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),pardim=3)
-  ENDIF
+  ! ELSE
+  !   CALL getatt(fidrst, '/Basic', 'cstep', cstep)
+  !   CALL getatt(fidrst, '/Basic', 'time', time)
+  !   CALL getatt(fidrst, '/Basic', 'jobnum', jobnum)
+  !   jobnum = jobnum+1
+  !   CALL getatt(fidrst, '/Basic', 'iframe2d',iframe2d)
+  !   CALL getatt(fidrst, '/Basic', 'iframe5d',iframe5d)
+  !   iframe2d = iframe2d-1; iframe5d = iframe5d-1
+  !
+  !   ! Read state of system from restart file
+  !   CALL getarr(fidrst, '/Basic/moments_e', moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),pardim=3)
+  !   CALL getarr(fidrst, '/Basic/moments_i', moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),pardim=3)
+  ! ENDIF
 
   CALL closef(fidrst)
 
