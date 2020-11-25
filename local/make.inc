@@ -5,7 +5,7 @@
 ################################################################
 
 #Default optimization level (O=optimized, g=debug)
-OPTLEVEL = g
+OPTLEVEL = O
 
 F90FLAGS =
 CFLAGS =
