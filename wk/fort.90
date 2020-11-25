@@ -1,14 +1,14 @@
 &BASIC
   nrun   = 100000000
-  dt     = 0.005
-  tmax   = 80
+  dt     = 0.01
+  tmax   = 400
   RESTART = .false.
 /
 &GRID
-  pmaxe =2
-  jmaxe = 1
-  pmaxi = 2
-  jmaxi = 1
+  pmaxe =3
+  jmaxe = 2
+  pmaxi = 3
+  jmaxi = 2
   Nr   = 256
   Lr = 66
   Nz   = 256
@@ -17,17 +17,17 @@
   CANCEL_ODD_P = .false.
 /
 &OUTPUT_PAR
-  nsave_0d = 100
+  nsave_0d = 50
   nsave_1d = 0
-  nsave_2d = 100
+  nsave_2d = 50
   nsave_5d = 200
   write_Na00    = .true.
   write_moments = .true.
   write_phi     = .true.
   write_non_lin     = .true.
   write_doubleprecision = .true.
-  resfile0      = '../results/test_parallel/256x128_L_66_Pe_2_Je_1_Pi_2_Ji_1_nB_0.5_nN_1_nu_1e-02_DG_mu_5e-06/outputs'
-  rstfile0      = '../results/test_parallel/256x128_L_66_Pe_2_Je_1_Pi_2_Ji_1_nB_0.5_nN_1_nu_1e-02_DG_mu_5e-06/checkpoint'
+  resfile0      = '../results/test_parallel/256x128_L_66_Pe_3_Je_2_Pi_3_Ji_2_nB_0.5_nN_1_nu_1e-02_DG_mu_5e-06/outputs'
+  rstfile0      = '../results/test_parallel/256x128_L_66_Pe_3_Je_2_Pi_3_Ji_2_nB_0.5_nN_1_nu_1e-02_DG_mu_5e-06/checkpoint'
   job2load      = 0
 /
 &MODEL_PAR
@@ -55,9 +55,9 @@
   initback_moments  =0
   initnoise_moments =1e-05
   iseed             =42
-  selfmat_file      ='../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_2_Jmaxe_1_Pmaxi_2_Jmaxi_1_pamaxx_10.h5'
-  eimat_file        ='../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_2_Jmaxe_1_Pmaxi_2_Jmaxi_1_pamaxx_10_tau_1.0000_mu_0.0233.h5'
-  iemat_file        ='../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_2_Jmaxe_1_Pmaxi_2_Jmaxi_1_pamaxx_10_tau_1.0000_mu_0.0233.h5'
+  selfmat_file      ='../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_3_Jmaxe_2_Pmaxi_3_Jmaxi_2_pamaxx_10.h5'
+  eimat_file        ='../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_3_Jmaxe_2_Pmaxi_3_Jmaxi_2_pamaxx_10_tau_1.0000_mu_0.0233.h5'
+  iemat_file        ='../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_3_Jmaxe_2_Pmaxi_3_Jmaxi_2_pamaxx_10_tau_1.0000_mu_0.0233.h5'
 /
 &TIME_INTEGRATION_PAR
   numerical_scheme='RK4'
