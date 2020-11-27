@@ -31,3 +31,4 @@ wk/fort.90
 .directory
 checkpoint/
 FM/
+*.out

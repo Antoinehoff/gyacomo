@@ -127,9 +127,7 @@ SUBROUTINE load_cp
   WRITE(*,'(3x,a)') "Resume from previous run"
 
   CALL openf(rstfile, fidrst,mpicomm=MPI_COMM_WORLD)
-
-  ! IF (isgroup(fidrst,'/Basic/moments_e')) THEN
-    ! Getting the last saved checkpoint
+  
     n_ = 0
     WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
     DO WHILE (isdataset(fidrst, dset_name))
@@ -152,20 +150,6 @@ SUBROUTINE load_cp
     CALL getatt(fidrst, dset_name, 'iframe2d',iframe2d)
     CALL getatt(fidrst, dset_name, 'iframe5d',iframe5d)
     iframe2d = iframe2d-1; iframe5d = iframe5d-1
-
-  ! ELSE
-  !   CALL getatt(fidrst, '/Basic', 'cstep', cstep)
-  !   CALL getatt(fidrst, '/Basic', 'time', time)
-  !   CALL getatt(fidrst, '/Basic', 'jobnum', jobnum)
-  !   jobnum = jobnum+1
-  !   CALL getatt(fidrst, '/Basic', 'iframe2d',iframe2d)
-  !   CALL getatt(fidrst, '/Basic', 'iframe5d',iframe5d)
-  !   iframe2d = iframe2d-1; iframe5d = iframe5d-1
-  !
-  !   ! Read state of system from restart file
-  !   CALL getarr(fidrst, '/Basic/moments_e', moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),pardim=3)
-  !   CALL getarr(fidrst, '/Basic/moments_i', moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),pardim=3)
-  ! ENDIF
 
   CALL closef(fidrst)
 
@@ -226,7 +210,7 @@ SUBROUTINE load_FC_mat ! Works only for a partiular file for now with P,J <= 15,
 
   !!!!!!!!!!!! Electron matrices !!!!!!!!!!!!
   ! get the self electron colision matrix
-  CALL openf(selfmat_file,fid1, 'r', 'D');
+  CALL openf(selfmat_file,fid1, 'r', 'D',mpicomm=MPI_COMM_WORLD);
   CALL getarr(fid1, '/Caapj/Ceepj', Ceepj) ! get array (moli format)
   CALL closef(fid1)
   ! get the Test and Back field electron ion collision matrix
@@ -237,7 +221,7 @@ SUBROUTINE load_FC_mat ! Works only for a partiular file for now with P,J <= 15,
 
   !!!!!!!!!!!!!!! Ion matrices !!!!!!!!!!!!!!
   ! get the self electron colision matrix
-  CALL openf(selfmat_file, fid3, 'r', 'D');
+  CALL openf(selfmat_file, fid3, 'r', 'D',mpicomm=MPI_COMM_WORLD);
   IF ( (pmaxe .EQ. pmaxi) .AND. (jmaxe .EQ. jmaxi) ) THEN ! if same degrees ion and electron matrices are alike so load Ceepj
     CALL getarr(fid3, '/Caapj/Ceepj', Ciipj) ! get array (moli format)
   ELSE

@@ -14,19 +14,18 @@ NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
 N       = 256;     % Frequency gridpoints (Nkr = N/2)
 L       = 66;     % Size of the squared frequency domain
-PMAXE   = 5;     % Highest electron Hermite polynomial degree
-JMAXE   = 3;     % Highest ''       Laguerre ''
-PMAXI   = 5;     % Highest ion      Hermite polynomial degree
-JMAXI   = 3;     % Highest ''       Laguerre ''
-CANCEL_ODD_P = 0;% Cancels the odd polynomials degree
+PMAXE   = 2;     % Highest electron Hermite polynomial degree
+JMAXE   = 1;     % Highest ''       Laguerre ''
+PMAXI   = 2;     % Highest ion      Hermite polynomial degree
+JMAXI   = 1;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS 
 TMAX    = 400;  % Maximal time unit
-DT      = 4e-3;   % Time step
-SPS0D   = 1.0;      % Sampling per time unit for 2D arrays
+DT      = 1e-2;   % Time step
+SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 0.1;    % Sampling per time unit for 5D arrays
 RESTART = 1;      % To restart from last checkpoint
-JOB2LOAD= 0;
+JOB2LOAD= 1;
 %% OPTIONS
 SIMID   = 'ZP';  % Name of the simulation
 CO      = -1;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
@@ -40,5 +39,6 @@ KREQ0   = 0;      % put kr = 0
 KPAR    = 0.0;    % Parellel wave vector component
 LAMBDAD = 0.0; 
 NON_LIN = 1 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
+CANCEL_ODD_P = 0;% Cancels the odd polynomials degree
 
 setup

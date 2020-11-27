@@ -1,5 +1,5 @@
 default_plots_options
-if 0
+if 1
 %% Compute time average and std of the mean flow
 t0 = 180; t1 = 400; [~,it0] = min(abs(t0-Ts2D)); [~,it1] = min(abs(t1-Ts2D)); 
 range  = it0:it1;
@@ -8,6 +8,7 @@ stdev  = std(Flux_ri(range))^(.5)
 figure
 hist(Flux_ri(range),20); xlabel('$\Gamma$')
 end
+if 0
 %% Handwritten results for nu = 0.01
 % High definition results (256x128)
 Results_256x128.Gamma = [0.02, 0.03, 0.20, 0.037,  2.7, 2.25,    4, 5e-4, 2e-3, 0.03];
@@ -90,3 +91,4 @@ legend('Mix. Length, Ricci 2006','$P=2$, $J=1$','$P=3$, $J=2$','$P=4$, $J=2$')
 FIGNAME = [SIMDIR,'flux_study_nu_1e-2.png'];
 saveas(fig,FIGNAME);
 disp(['Figure saved @ : ',FIGNAME])
+end
