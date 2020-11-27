@@ -57,7 +57,13 @@ endif
 IDIRS := -I$(FUTILS_DIR)/include/$(OPTLEVEL)
 
 LIBS  := -lfutils -lhdf5_fortran -lhdf5 -lz -ldl -lpthread
-LDIRS := -L$(FUTILS_DIR)/lib/$(OPTLEVEL) -L$(HDF5)/lib
+
+ifdef HDF5
+  LDIRS := -L$(FUTILS_DIR)/lib/$(OPTLEVEL) -L$(HDF5)/lib
+else
+  LDIRS := -L$(FUTILS_DIR)/lib/$(OPTLEVEL) -L$(HDF5_LIB)
+endif
+
 
 # Add Multiple-Precision Library
 LIBS += -lfm
