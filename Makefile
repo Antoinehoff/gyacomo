@@ -1,8 +1,6 @@
 include local/dirs.inc
 include local/make.inc
 
-MKLROOT = /usr/local/intel/composerxe/composer_xe_2015/mkl
-
 EXEC = $(BINDIR)/helaz
 
 F90 = mpif90
@@ -23,7 +21,6 @@ dirs:
 	mkdir -p $(BINDIR)
 	mkdir -p $(OBJDIR)
 	mkdir -p $(MODDIR)
-	mkdir -p $(CHCKPTDIR)
 
 src/srcinfo.h:
 	( cd src/srcinfo; $(MAKE);)
@@ -77,7 +74,7 @@ $(OBJDIR)/utility_mod.o
  $(OBJDIR)/control.o : src/control.F90 $(OBJDIR)/auxval.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/ppexit.o $(OBJDIR)/ppinit.o $(OBJDIR)/readinputs.o $(OBJDIR)/tesend.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/control.F90 -o $@
 
- $(OBJDIR)/fourier_mod.o : src/fourier_mod.F90 $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/mkl_dfti.o $(OBJDIR)/grid_mod.o
+ $(OBJDIR)/fourier_mod.o : src/fourier_mod.F90 $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/grid_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/fourier_mod.F90 -o $@
 
  $(OBJDIR)/diagnose.o : src/diagnose.F90 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/diagnostics_par_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/initial_par_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/time_integration_mod.o
@@ -106,9 +103,6 @@ $(OBJDIR)/utility_mod.o
 
  $(OBJDIR)/memory.o : src/memory.F90 $ $(OBJDIR)/array_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)/grid_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/memory.F90 -o $@
-
- $(OBJDIR)/mkl_dfti.o : $(MKLROOT)/include/mkl_dfti.f90
-	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) $(MKLROOT)/include/mkl_dfti.f90 -o $@
 
  $(OBJDIR)/model_mod.o : src/model_mod.F90 $(OBJDIR)/prec_const_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/model_mod.F90 -o $@

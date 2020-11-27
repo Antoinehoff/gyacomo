@@ -7,7 +7,7 @@ LIBDIR   = $(PREFIX)/lib
 MODDIR   = $(PREFIX)/mod
 FMDIR    = $(PREFIX)/FM
 FFTW3DIR = /home/ahoffman/lib/fftw-3.3.8
-CHCKPTDIR  = $(PREFIX)/checkpoint
+INTEL_LOCAL = /home/ahoffman/local/spcpc/intel
 FUTILS   = /home/ahoffman/lib/futils_1.4/src
 
 # Naming ideas : HeLaZ, MoNoLiT (Moment Non Linear Torroidal)

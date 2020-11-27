@@ -54,10 +54,10 @@ endif
 #
 ################################################################
 
-IDIRS := -I$(SPC_LOCAL)/include/$(OPTLEVEL)
+IDIRS := -I$(INTEL_LOCAL)/include/$(OPTLEVEL)
 
 LIBS  := -lfutils -lhdf5_fortran -lhdf5 -lz -ldl -lpthread
-LDIRS := -L$(SPC_LOCAL)/lib/$(OPTLEVEL) -L$(HDF5)/lib
+LDIRS := -L$(INTEL_LOCAL)/lib/$(OPTLEVEL) -L$(HDF5)/lib
 
 # Add Multiple-Precision Library
 LIBS += -lfm
