@@ -5,9 +5,13 @@ BINDIR   = $(PREFIX)/bin
 OBJDIR   = $(PREFIX)/obj
 LIBDIR   = $(PREFIX)/lib
 MODDIR   = $(PREFIX)/mod
+
 FMDIR    = $(PREFIX)/FM
 FFTW3DIR = /home/ahoffman/lib/fftw-3.3.8
-INTEL_LOCAL = /home/ahoffman/local/spcpc/intel
-FUTILS   = /home/ahoffman/lib/futils_1.4/src
+FUTILS_DIR = /home/ahoffman/local/spcpc/intel
+
+#FMDIR    = (HOME)/lib/FM
+#FFTW3DIR = $(HOME)/lib/fftw-3.3.8
+#FUTILS_DIR = $(HOME)/lib/futils
 
 # Naming ideas : HeLaZ, MoNoLiT (Moment Non Linear Torroidal)

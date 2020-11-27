@@ -19,12 +19,12 @@ JMAXE   = 1;     % Highest ''       Laguerre ''
 PMAXI   = 2;     % Highest ion      Hermite polynomial degree
 JMAXI   = 1;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS 
-TMAX    = 100;  % Maximal time unit
-DT      = 1e-2;   % Time step
+TMAX    = 200;  % Maximal time unit
+DT      = 5e-3;   % Time step
 SPS0D   = 1;    % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 0.1;    % Sampling per time unit for 5D arrays
-RESTART = 0;      % To restart from last checkpoint
+RESTART = 1;      % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
 SIMID   = 'test_parallel';  % Name of the simulation

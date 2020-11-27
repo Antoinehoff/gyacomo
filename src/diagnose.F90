@@ -271,9 +271,7 @@ SUBROUTINE diagnose(kstep)
      IF (my_id .EQ. 0) CALL display_h_min_s(finish-start)
 
      !   Close all diagnostic files
-     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
      CALL closef(fidres)
-     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
      CALL closef(fidrst)
      CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   END IF

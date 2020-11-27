@@ -3,7 +3,7 @@ include local/make.inc
 
 EXEC = $(BINDIR)/helaz
 
-F90 = mpif90
+F90 = mpiifort
 
 # Add Multiple-Precision Library
 EXTLIBS += -L$(FMDIR)/lib
