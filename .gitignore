@@ -32,7 +32,7 @@ wk/fort.90
 checkpoint/
 FM/
 *.out
-srcinfo*
+srcinfo.h
 fort.90
 local/
 *.sh
