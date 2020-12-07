@@ -71,7 +71,7 @@ LIBS += -lfm
 
 ifdef FFTW3DIR
       LIBS  += -lfftw3 -lfftw3_mpi
-      LDIRS += -L$(FFTW3DIR)/lib64
+      LDIRS += -L$(FFTW3DIR)/lib
       IDIRS += -I$(FFTW3DIR)/include
 endif
 
