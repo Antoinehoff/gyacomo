@@ -32,3 +32,5 @@ wk/fort.90
 checkpoint/
 FM/
 *.out
+srcinfo*
+fort.90
