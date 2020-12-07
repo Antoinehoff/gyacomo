@@ -35,3 +35,4 @@ FM/
 srcinfo*
 fort.90
 local/
+*.sh
