@@ -26,7 +26,6 @@ results_old/
 mod/
 obj/
 bin/
-.gitignore
 wk/fort.90
 .directory
 checkpoint/
@@ -36,4 +35,3 @@ srcinfo.h
 fort.90
 local/
 *.sh
-srcinfo.h
