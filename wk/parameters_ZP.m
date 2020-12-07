@@ -1,4 +1,4 @@
-clear all;
+%clear all;
 addpath(genpath('../matlab')) % ... add
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
@@ -39,6 +39,7 @@ KREQ0   = 0;      % put kr = 0
 KPAR    = 0.0;    % Parellel wave vector component
 LAMBDAD = 0.0; 
 NON_LIN = 1 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
+LOAD_MARCONI = 0;
 CANCEL_ODD_P = 0;% Cancels the odd polynomials degree
 
 setup

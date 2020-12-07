@@ -1,4 +1,9 @@
 %% Load results
+if LOAD_MARCONI
+    hostfolder = ['/marconi_scratch/userexternal/ahoffman/HeLaZ/results/',BASIC.SIMID,'/',BASIC.PARAMS];
+    localfolder= [BASIC.RESDIR,'..'];
+    system(['scp -r ahoffman@login.marconi.cineca.it:',hostfolder,' ',localfolder])
+end
 % JOBNUM = 0; load_results;
 % JOBNUM = 1; load_results;
 compile_results
@@ -233,7 +238,7 @@ save_figure
 end
 
 %%
-t0    = 0;
+t0    = 50;
 skip_ = 1; 
 DELAY = 0.01*skip_;
 FRAMES = floor(t0/(Ts2D(2)-Ts2D(1)))+1:skip_:numel(Ts2D);
@@ -358,20 +363,20 @@ end
 %%
 if 0
 %% Show frame in kspace
-tf = 20; [~,it] = min(abs(Ts5D-tf));
-fig = figure; FIGNAME = ['krkz_frame',sprintf('_%.2d',JOBNUM)];
+tf = 200; [~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
+fig = figure; FIGNAME = ['krkz_frame',sprintf('t=%.0f',Ts2D(it2))];set(gcf, 'Position',  [100, 100, 700, 600])
     subplot(221); plt = @(x) fftshift((abs(x)),2);
-        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(PHI(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('t=%.3d',Ts5D(it))); legend('$|\hat\phi|$');
+        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(PHI(:,:,it2))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('$t c_s/R=%.0f$',Ts2D(it2))); legend('$|\hat\phi|$');
     subplot(222); plt = @(x) fftshift(abs(x),2);
-        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Ni00(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('t=%.3d',Ts5D(it))); legend('$|\hat n_i^{00}|$');
+        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Ni00(:,:,it2))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$k_r$'); ylabel('$k_z$'); legend('$|\hat n_i^{00}|$');
     subplot(223); plt = @(x) fftshift(abs(x),2);
-        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Ne00(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('t=%.3d',Ts5D(it))); legend('$|\hat n_e^{00}|$');
+        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Ne00(:,:,it2))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$k_r$'); ylabel('$k_z$'); legend('$|\hat n_e^{00}|$');
 if strcmp(OUTPUTS.write_non_lin,'.true.')
     subplot(224); plt = @(x) fftshift((abs(x)),2);
-        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Si00(:,:,it))); set(pclr, 'edgecolor','none'); colorbar;
+        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Si00(:,:,it5))); set(pclr, 'edgecolor','none'); colorbar;
         xlabel('$k_r$'); ylabel('$k_z$');legend('$\hat S_i^{00}$');
 end
 save_figure

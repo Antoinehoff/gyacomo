@@ -88,7 +88,7 @@ end
 end
 grid on; title('$\nu = 0.1$')
 legend('Mix. Length, Ricci 2006','$P=2$, $J=1$','$P=3$, $J=2$','$P=4$, $J=2$')
-FIGNAME = [SIMDIR,'flux_study_nu_1e-2.png'];
+FIGNAME = [SIMDIR,'flux_study_nu_1e-1.png'];
 saveas(fig,FIGNAME);
 disp(['Figure saved @ : ',FIGNAME])
 end
