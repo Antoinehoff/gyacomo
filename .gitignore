@@ -26,7 +26,6 @@ results_old/
 mod/
 obj/
 bin/
-.gitignore
 wk/fort.90
 .directory
 checkpoint/
