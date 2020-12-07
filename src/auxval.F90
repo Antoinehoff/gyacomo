@@ -12,18 +12,13 @@ subroutine auxval
   IF (my_id .EQ. 0) WRITE(*,*) '=== Set auxiliary values ==='
 
   CALL init_grid_distr_and_plans(Nr,Nz)
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
   CALL set_krgrid
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
   CALL set_kzgrid ! Distributed dimension
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
   CALL set_pj
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
   CALL memory ! Allocate memory for global arrays
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
 END SUBROUTINE auxval

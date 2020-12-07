@@ -273,7 +273,7 @@ SUBROUTINE diagnose(kstep)
      !   Close all diagnostic files
      CALL closef(fidres)
      CALL closef(fidrst)
-     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+     
   END IF
 
 END SUBROUTINE diagnose

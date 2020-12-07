@@ -62,8 +62,6 @@ MODULE fourier
      CALL mpi_barrier(MPI_COMM_WORLD, ierr)
      IF (my_id .EQ. ix) print *, my_id,': alloc_local = ', alloc_local_1+alloc_local_2
      CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-     ! IF (my_id .EQ. 0) print *, my_id,': local_nz = ', local_nz, ' loc_nz_of. = ', local_nz_offset
-     ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
    ENDDO
 
 

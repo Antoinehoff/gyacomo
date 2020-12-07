@@ -50,7 +50,8 @@ SUBROUTINE stepon
 
       !(The two routines above are called in inital for t=0)
       CALL checkfield_all()
-      CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+      IF( nlend ) EXIT ! exit do loop
+
    END DO
 
    CONTAINS

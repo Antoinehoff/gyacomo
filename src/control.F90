@@ -21,35 +21,25 @@ SUBROUTINE control
   CALL basic_data
   IF (my_id .EQ. 1) WRITE(*,'(a/)') '...basic data loaded.'
 
-  ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-
   !                   1.3   Read input parameters from input file
   IF (my_id .EQ. 1) WRITE(*,*) 'Read input parameters...'
   CALL readinputs
   IF (my_id .EQ. 1) WRITE(*,'(a/)') '...input parameters read'
-
-  ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
   !                   1.4     Set auxiliary values (allocate arrays, set grid, ...)
   IF (my_id .EQ. 1) WRITE(*,*) 'Calculate auxval...'
   CALL auxval
   IF (my_id .EQ. 1) WRITE(*,'(a/)') '...auxval calculated'
 
-  ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-
   !                   1.5     Initial conditions
   IF (my_id .EQ. 1) WRITE(*,*) 'Create initial state...'
   CALL inital
   IF (my_id .EQ. 1) WRITE(*,'(a/)') '...initial state created'
 
-  ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-
   !                   1.6     Initial diagnostics
   IF (my_id .EQ. 1) WRITE(*,*) 'Initial diagnostics...'
   CALL diagnose(0)
   IF (my_id .EQ. 1) WRITE(*,'(a/)') '...initial diagnostics done'
-
-  ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
   CALL FLUSH(stdout)
   !________________________________________________________________________________
@@ -64,7 +54,6 @@ CALL cpu_time(t0_step) ! Measuring time
      cstep = cstep + 1
 
      CALL stepon
-     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
      time  = time  + dt
 
