@@ -9,7 +9,7 @@ F90 = mpiifort
 EXTLIBS += -L$(FMDIR)/lib
 EXTINC += -I$(FMDIR)/mod
 
-EXTLIBS += -L$(FFTWDIR)/lib64
+EXTLIBS += -L$(FFTWDIR)/lib
 EXTINC += -I$(FFTWDIR)/include
 
 all: dirs src/srcinfo.h $(EXEC)
