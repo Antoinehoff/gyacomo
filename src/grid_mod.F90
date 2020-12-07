@@ -109,7 +109,11 @@ CONTAINS
       IF (my_id .EQ. num_procs-1) ikre = Nkr
       !WRITE(*,*) 'ID = ',my_id,' ikrs = ', ikrs, ' ikre = ', ikre
       ! Grid spacings
-      deltakr = 2._dp*PI/Lr
+      IF (Lr .EQ. 0) THEN
+        deltakr = 1._dp
+      ELSE
+        deltakr = 2._dp*PI/Lr
+      ENDIF
 
       ! Discretized kr positions ordered as dk*(0 1 2 3)
       ALLOCATE(krarray(ikrs:ikre))
@@ -141,8 +145,11 @@ CONTAINS
       ikze = Nkz
 
       ! Grid spacings
-      deltakz = 2._dp*PI/Lz
-
+      IF (Lz .EQ. 0) THEN
+        deltakz = 1._dp
+      ELSE
+        deltakz = 2._dp*PI/Lz
+      ENDIF
       ! Discretized kz positions ordered as dk*(0 1 2 3 -2 -1)
       ALLOCATE(kzarray(ikzs:ikze))
       DO ikz = ikzs,ikze
