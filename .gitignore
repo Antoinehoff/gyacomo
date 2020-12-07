@@ -34,3 +34,4 @@ FM/
 *.out
 srcinfo*
 fort.90
+local/
