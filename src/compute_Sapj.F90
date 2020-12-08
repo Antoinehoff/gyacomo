@@ -12,8 +12,13 @@ SUBROUTINE compute_Sapj
   USE prec_const
   USE time_integration!, ONLY : updatetlevel
   IMPLICIT NONE
+  INCLUDE 'fftw3-mpi.f03'
 
-  COMPLEX(dp), DIMENSION(ikrs:ikre,ikzs:ikze) :: F_, G_, CONV
+  COMPLEX(dp), DIMENSION(ikrs:ikre,ikzs:ikze) :: Fr_cmpx, Gz_cmpx
+  COMPLEX(dp), DIMENSION(ikrs:ikre,ikzs:ikze) :: Fz_cmpx, Gr_cmpx, F_conv_G
+  REAL(dp),    DIMENSION(irs:ire,izs:ize)     :: fr_real, gz_real
+  REAL(dp),    DIMENSION(irs:ire,izs:ize)     :: fz_real, gr_real, f_times_g
+
   INTEGER :: in, is
   REAL(dp):: kr, kz, kerneln, be_2, bi_2, factn
   REAL(dp):: sigmae2_taue_o2, sigmai2_taui_o2
@@ -26,181 +31,158 @@ SUBROUTINE compute_Sapj
 
   ploope: DO ip = ips_e,ipe_e ! Loop over Hermite moments
     jloope: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
-      Sepj(ip,ij,:,:)  = 0._dp
+      real_data_c = 0._dp ! initialize sum over real nonlinear term
       factn = 1
 
       nloope: DO in = 1,jmaxe+1 ! Loop over laguerre for the sum
 
-        krloope1: DO ikr = ikrs,ikre ! Loop over kr
-          kzloope1: DO ikz = ikzs,ikze ! Loop over kz
+        krloope: DO ikr = ikrs,ikre ! Loop over kr
+          kzloope: DO ikz = ikzs,ikze ! Loop over kz
             kr     = krarray(ikr)
             kz     = kzarray(ikz)
             be_2    = sigmae2_taue_o2 * (kr**2 + kz**2)
             kerneln = be_2**(in-1)/factn * EXP(-be_2)
-            ! First convolution term
-            IF ( NON_LIN ) THEN
-              F_(ikr,ikz) = imagu*kr* phi(ikr,ikz) * kerneln
-            ELSE
-              F_(ikr,ikz) = 0._dp
-            ENDIF
-            ! Background sinusoidal electrostatic potential phi_0 for KH inst.
-            IF ( q_e .NE. 0._dp ) THEN ! If electron are not removed
-              IF ( kz .EQ. 0._dp ) THEN ! Kronecker kz=0
-                IF ( ABS(kr) .EQ. ABS(kr0KH) ) THEN ! kronecker kr=kr0
-                  F_(ikr,ikz) = -A0KH/2._dp + F_(ikr,ikz)
-                ENDIF
-              ENDIF
-            ENDIF
-            ! Second convolution term
-            G_(ikr,ikz) = 0._dp ! initialization of the sum
+            ! First convolution terms
+            Fr_cmpx(ikr,ikz) = imagu*kr* phi(ikr,ikz) * kerneln
+            Fz_cmpx(ikr,ikz) = imagu*kz* phi(ikr,ikz) * kerneln
+            ! Second convolution terms
+            Gz_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
+            Gr_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
             DO is = 1, MIN( in+ij-1, jmaxe+1 ) ! sum truncation on number of moments
-              G_(ikr,ikz) = G_(ikr,ikz) + &
+              Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
+               dnjs(in,ij,is) * moments_e(ip,is,ikr,ikz,updatetlevel)
+              Gr_cmpx(ikr,ikz) = Gr_cmpx(ikr,ikz) + &
                dnjs(in,ij,is) * moments_e(ip,is,ikr,ikz,updatetlevel)
             ENDDO
-            G_(ikr,ikz) = imagu*kz*G_(ikr,ikz)
+            Gz_cmpx(ikr,ikz) = imagu*kz*Gz_cmpx(ikr,ikz)
+            Gr_cmpx(ikr,ikz) = imagu*kr*Gr_cmpx(ikr,ikz)
+          ENDDO kzloope
+        ENDDO krloope
 
-          ENDDO kzloope1
-        ENDDO krloope1
-
-        CALL convolve_2D_F2F( F_, G_, CONV ) ! Convolve Fourier to Fourier
-
-        DO ikr = ikrs,ikre ! Loop over kr
-          DO ikz = ikzs,ikze ! Loop over kz
-            Sepj(ip,ij,ikr,ikz) = Sepj(ip,ij,ikr,ikz) + CONV(ikr,ikz) ! Add it to Sepj
+        ! First term drphi x dzf
+        DO ikr = ikrs, ikre
+          DO ikz = ikzs, ikze
+            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fr_cmpx(ikr,ikz)
+            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gz_cmpx(ikr,ikz)
           ENDDO
         ENDDO
 
-        IF ( NON_LIN ) THEN ! Fully non linear term ikz phi * ikr Napj
-          krloope2: DO ikr = ikrs,ikre ! Loop over kr
-            kzloope2: DO ikz = ikzs,ikze ! Loop over kz
-              kr     = krarray(ikr)
-              kz     = kzarray(ikz)
-              be_2    = sigmae2_taue_o2 * (kr**2 + kz**2)
-              kerneln = be_2**(in-1)/factn * EXP(-be_2)
-              ! First convolution term
-              F_(ikr,ikz) = imagu*kz* phi(ikr,ikz) * kerneln
-              ! Second convolution term
-              G_(ikr,ikz) = 0._dp ! initialization of the sum
-              DO is = 1, MIN( in+ij-1, jmaxe+1 ) ! sum truncation on number of moments
-                G_(ikr,ikz) = G_(ikr,ikz) + &
-                 dnjs(in,ij,is) * moments_e(ip,is,ikr,ikz,updatetlevel)
-              ENDDO
-              G_(ikr,ikz) = imagu*kr*G_(ikr,ikz)
+        call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
+        call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
 
-            ENDDO kzloope2
-          ENDDO krloope2
+        real_data_c = real_data_c + real_data_f/Nz/Nr  * real_data_g/Nz/Nr
 
-          CALL convolve_2D_F2F( F_, G_, CONV )
-
-          DO ikr = ikrs,ikre
-            DO ikz = ikzs,ikze
-              Sepj(ip,ij,ikr,ikz) = Sepj(ip,ij,ikr,ikz) - CONV(ikr,ikz) ! substract it to Sepj
-            ENDDO
+        ! Second term -dzphi x drf
+        DO ikr = ikrs, ikre
+          DO ikz = ikzs, ikze
+            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fz_cmpx(ikr,ikz)
+            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gr_cmpx(ikr,ikz)
           ENDDO
+        ENDDO
 
-        ENDIF
+        call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
+        call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
+
+        real_data_c = real_data_c - real_data_f/Nz/Nr  * real_data_g/Nz/Nr
 
         IF ( in + 1 .LE. jmaxe+1 ) THEN
           factn = real(in,dp) * factn ! compute (n+1)!
         ENDIF
       ENDDO nloope
 
+      ! Put the real nonlinear product into k-space
+      call fftw_mpi_execute_dft_r2c(planf, real_data_c, cmpx_data_c)
+
+      ! Retrieve convolution in input format
+      DO ikr = ikrs, ikre
+        DO ikz = ikzs, ikze
+          Sepj(ip,ij,ikr,ikz) = cmpx_data_c(ikz,ikr-local_nkr_offset)*AA_r(ikr)*AA_z(ikz)
+        ENDDO
+      ENDDO
+
     ENDDO jloope
   ENDDO ploope
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   !!!!!!!!!!!!!!!!!!!! ION non linear term computation (Sipj)!!!!!!!!!!
-  sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp
+  sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp ! factor of the kerneln argument
 
-  ploopi: DO ip = ips_i,ipe_i ! Loop over Hermite moments
-    jloopi: DO ij = ijs_i, ije_i ! Loop over Laguerre moments
-      Sipj(ip,ij,:,:)  = 0._dp
+  ploopi: DO ip = ips_e,ipe_e ! Loop over Hermite moments
+    jloopi: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
+      real_data_c = 0._dp ! initialize sum over real nonlinear term
       factn = 1
 
       nloopi: DO in = 1,jmaxi+1 ! Loop over laguerre for the sum
 
-        krloopi1: DO ikr = ikrs,ikre ! Loop over kr
-          kzloopi1: DO ikz = ikzs,ikze ! Loop over kz
+        krloopi: DO ikr = ikrs,ikre ! Loop over kr
+          kzloopi: DO ikz = ikzs,ikze ! Loop over kz
             kr      = krarray(ikr)
             kz      = kzarray(ikz)
             bi_2    = sigmai2_taui_o2 * (kr**2 + kz**2)
             kerneln = bi_2**(in-1)/factn * EXP(-bi_2)
-
-            ! First convolution term
-            IF ( NON_LIN ) THEN
-              F_(ikr,ikz) = imagu*kr* phi(ikr,ikz) * kerneln
-            ELSE
-              F_(ikr,ikz) = 0._dp
-            ENDIF
-            ! Background sinusoidal electrostatic potential phi_0 for KH inst.
-            IF ( kz .EQ. 0._dp ) THEN ! Kronecker kz=0
-              IF ( ABS(kr) .EQ. ABS(kr0KH) ) THEN ! kronecker kr=kr0
-                F_(ikr,ikz) = -A0KH/2._dp + F_(ikr,ikz)
-              ENDIF
-            ENDIF
-            ! Second convolution term
-            G_(ikr,ikz) = 0._dp ! initialization of the sum
-            DO is = 1, MIN( in+ij-1, jmaxi+1 )
-              G_(ikr,ikz) = G_(ikr,ikz) + &
+            ! First convolution terms
+            Fr_cmpx(ikr,ikz) = imagu*kr* phi(ikr,ikz) * kerneln
+            Fz_cmpx(ikr,ikz) = imagu*kz* phi(ikr,ikz) * kerneln
+            ! Second convolution terms
+            Gz_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
+            Gr_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
+            DO is = 1, MIN( in+ij-1, jmaxi+1 ) ! sum truncation on number of moments
+              Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
+               dnjs(in,ij,is) * moments_i(ip,is,ikr,ikz,updatetlevel)
+              Gr_cmpx(ikr,ikz) = Gr_cmpx(ikr,ikz) + &
                dnjs(in,ij,is) * moments_i(ip,is,ikr,ikz,updatetlevel)
             ENDDO
-            G_(ikr,ikz) = imagu*kz*G_(ikr,ikz)
+            Gz_cmpx(ikr,ikz) = imagu*kz*Gz_cmpx(ikr,ikz)
+            Gr_cmpx(ikr,ikz) = imagu*kr*Gr_cmpx(ikr,ikz)
+          ENDDO kzloopi
+        ENDDO krloopi
 
-          ENDDO kzloopi1
-        ENDDO krloopi1
-
-        CALL convolve_2D_F2F( F_, G_, CONV ) ! Convolve Fourier to Fourier
-        DO ikr = ikrs,ikre
-          DO ikz = ikzs,ikze
-            Sipj(ip,ij,ikr,ikz) = Sipj(ip,ij,ikr,ikz) + CONV(ikr,ikz) ! add it to Sipj
+        ! First term drphi x dzf
+        DO ikr = ikrs, ikre
+          DO ikz = ikzs, ikze
+            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fr_cmpx(ikr,ikz)
+            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gz_cmpx(ikr,ikz)
           ENDDO
         ENDDO
 
-        krloopi2: DO ikr = ikrs,ikre ! Loop over kr
-          kzloopi2: DO ikz = ikzs,ikze ! Loop over kz
-            kr      = krarray(ikr)
-            kz      = kzarray(ikz)
-            bi_2    = sigmai2_taui_o2 * (kr**2 + kz**2)
-            kerneln = bi_2**(in-1)/factn * EXP(-bi_2)
-            ! First convolution term
-            F_(ikr,ikz) = imagu*kz*phi(ikr,ikz) * kerneln
-            ! Second convolution term
-            G_(ikr,ikz) = 0._dp ! initialization of the sum
-            IF ( NON_LIN ) THEN
-              DO is = 1, MIN( in+ij-1, jmaxi+1 )
-                G_(ikr,ikz) = G_(ikr,ikz) + &
-                 dnjs(in,ij,is) * moments_i(ip,is,ikr,ikz,updatetlevel)
-              ENDDO
-              G_(ikr,ikz) = imagu*kr*G_(ikr,ikz)
-            ENDIF
-            ! Background sinusoidal ion denstiy n_i0 for KH inst.
-            IF ( kz .EQ. 0._dp ) THEN ! Kronecker kz=0
-              IF ( ABS(kr) .EQ. ABS(kr0KH) ) THEN ! kronecker kr=+-kr0
-                G_(ikr,ikz) = -A0KH*kr0KH**2/2._dp + G_(ikr,ikz)
-              ENDIF
-            ENDIF
+        call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
+        call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
 
-          ENDDO kzloopi2
-        ENDDO krloopi2
+        real_data_c = real_data_c + real_data_f/Nz/Nr  * real_data_g/Nz/Nr
 
-        CALL convolve_2D_F2F( F_, G_, CONV ) ! Convolve and back to Fourier
-        DO ikr = ikrs,ikre
-          DO ikz = ikzs,ikze
-            Sipj(ip,ij,ikr,ikz) = Sipj(ip,ij,ikr,ikz) - CONV(ikr,ikz) ! substract it to Sepj
+        ! Second term -dzphi x drf
+        DO ikr = ikrs, ikre
+          DO ikz = ikzs, ikze
+            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fz_cmpx(ikr,ikz)
+            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gr_cmpx(ikr,ikz)
           ENDDO
         ENDDO
 
-        IF ( in + 1 .LE. jmaxi+1 ) THEN
-          factn = real(in,dp) * factn ! factorial(n+1)
+        call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
+        call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
+
+        real_data_c = real_data_c - real_data_f/Nz/Nr  * real_data_g/Nz/Nr
+
+        IF ( in + 1 .LE. jmaxe+1 ) THEN
+          factn = real(in,dp) * factn ! compute (n+1)!
         ENDIF
-
       ENDDO nloopi
+
+      ! Put the real nonlinear product into k-space
+      call fftw_mpi_execute_dft_r2c(planf, real_data_c, cmpx_data_c)
+
+      ! Retrieve convolution in input format
+      DO ikr = ikrs, ikre
+        DO ikz = ikzs, ikze
+          Sipj(ip,ij,ikr,ikz) = cmpx_data_c(ikz,ikr-local_nkr_offset)*AA_r(ikr)*AA_z(ikz)
+        ENDDO
+      ENDDO
 
     ENDDO jloopi
   ENDDO ploopi
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  ! Execution time end
+  ! Execution time END
   CALL cpu_time(t1_Sapj)
   tc_Sapj = tc_Sapj + (t1_Sapj - t0_Sapj)
 
