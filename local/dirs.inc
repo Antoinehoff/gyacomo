@@ -8,6 +8,7 @@ MODDIR   = $(PREFIX)/mod
 
 FMDIR      = $(HOME)/lib/FM
 FFTW3DIR   = $(HOME)/lib/fftw-3.3.8
+#FFTW3DIR   = $(FFTW_HOME)#for Marconi
 FUTILS_DIR = $(HOME)/lib/futils/src
 
 # Naming ideas : HeLaZ, MoNoLiT (Moment Non Linear Torroidal)
