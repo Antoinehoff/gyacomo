@@ -13,11 +13,11 @@ MODULE fourier
 
   PUBLIC :: init_grid_distr_and_plans, convolve_2D_F2F, finalize_plans
 
-  real(C_DOUBLE), pointer                :: real_data_f(:,:), real_data_g(:,:), real_data_c(:,:)
-  complex(C_DOUBLE_complex), pointer     :: cmpx_data_f(:,:), cmpx_data_g(:,:), cmpx_data_c(:,:)
+  real(C_DOUBLE), pointer, PUBLIC            :: real_data_f(:,:), real_data_g(:,:), real_data_c(:,:)
+  complex(C_DOUBLE_complex), pointer, PUBLIC :: cmpx_data_f(:,:), cmpx_data_g(:,:), cmpx_data_c(:,:)
   type(C_PTR)                            :: cdatar_f, cdatar_g, cdatar_c
   type(C_PTR)                            :: cdatac_f, cdatac_g, cdatac_c
-  type(C_PTR)                            :: planf, planb
+  type(C_PTR) , PUBLIC                   :: planf, planb
   integer(C_INTPTR_T)                    :: i, ix, iy, alloc_local_1, alloc_local_2
   integer(C_INTPTR_T)                    :: NR_, NZ_
 
@@ -97,7 +97,6 @@ MODULE fourier
         C_2D(ikr,ikz) = cmpx_data_c(ikz,ikr-local_nkr_offset)*AA_r(ikr)*AA_z(ikz)
       end do
     end do
-
 
 END SUBROUTINE convolve_2D_F2F
 
