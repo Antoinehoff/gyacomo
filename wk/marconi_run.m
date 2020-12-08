@@ -21,17 +21,17 @@ NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
 N       = 512;     % Frequency gridpoints (Nkr = N/2)
 L       = 100;     % Size of the squared frequency domain
-PMAXE   = 2;     % Highest electron Hermite polynomial degree
-JMAXE   = 1;     % Highest ''       Laguerre ''
-PMAXI   = 2;     % Highest ion      Hermite polynomial degree
-JMAXI   = 1;     % Highest ''       Laguerre ''
+PMAXE   = 4;     % Highest electron Hermite polynomial degree
+JMAXE   = 2;     % Highest ''       Laguerre ''
+PMAXI   = 4;     % Highest ion      Hermite polynomial degree
+JMAXI   = 2;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS 
-TMAX    = 100;  % Maximal time unit
+TMAX    = 250;  % Maximal time unit
 DT      = 5e-3;   % Time step
 SPS0D   = 1/DT/4;    % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 0.1;    % Sampling per time unit for 5D arrays
-RESTART = 0;      % To restart from last checkpoint
+RESTART = 1;      % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
 SIMID   = 'Marconi';  % Name of the simulation

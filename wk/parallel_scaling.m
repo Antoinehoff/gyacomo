@@ -23,25 +23,28 @@ Results_1024_22.np    = [   1,    2,    4,    6,    8,   10,   12,   16,   20];
 Results_1024_22.time  = [2391, 1373, 0654, 0457, 0343, 0297, 0274, 0219, 0206];
 
 % Handwritten results for 1024x512, P,J=6,4, Tmax = 2 dt = 0.05, mu = 0
-Results_1024_22.np    = [   1,    2,    4,    6,    8,   10,   12,   16,   20];
-Results_1024_22.time  = [2391, 1373, 0654, 0457, 0343, 0297, 0274, 0219, 0206];
+Results_1024_64.np    = [   1,    2,    4,    6,    8,   10,   12,   16];
+Results_1024_64.time  =[38957,22675,10886, 7424, 5768, 0000, 3904, 2947];
 
 %
 fig = figure;
 
-plot(1:24,1:24,'--k','DisplayName','Ideal')
+plot(1:24,1:24,'-k','DisplayName','Ideal')
 hold on
-res = Results_256_21;
-plot(res.np,res.time(1)./(res.time),'o-','DisplayName','$256\times128$, $P,J=2,1$');
+% res = Results_256_21;
+% plot(res.np,res.time(1)./(res.time),'o--','DisplayName','$256\times128$, $P,J=2,1$');
 res = Results_512_21;
-plot(res.np,res.time(1)./(res.time),'o-','DisplayName','$512\times256$, $P,J=2,1$');
+plot(res.np,res.time(1)./(res.time),'v-','DisplayName','$512\times256$, $P,J=2,1$');
 res = Results_512_32;
-plot(res.np,res.time(1)./(res.time),'o-','DisplayName','$512\times256$, $P,J=3,2$');
+plot(res.np,res.time(1)./(res.time),'>-','DisplayName','$512\times256$, $P,J=3,2$');
 res = Results_1024_11;
 plot(res.np,res.time(1)./(res.time),'o-','DisplayName','$1024\times512$, $P,J=1,1$');
 res = Results_1024_22;
-plot(res.np,res.time(1)./(res.time),'o-','DisplayName','$1024\times512$, $P,J=2,2$');xlim([1,max(res.np)]);
-xlabel('$N_p$'); ylabel('speedup') 
+plot(res.np,res.time(1)./(res.time),'s-','DisplayName','$1024\times512$, $P,J=2,2$');xlim([1,max(res.np)]);
+res = Results_1024_64;
+plot(res.np,res.time(1)./(res.time),'d-','DisplayName','$1024\times512$, $P,J=6,4$');xlim([1,max(res.np)]);
+xlabel('$N_p$'); ylabel('speedup')
+xlim([1,24]); ylim([1,24])
 legend('show')
 title('Strong scaling')
 grid on  
@@ -51,6 +54,7 @@ FIGNAME = [SIMDIR,'strong_scaling.png'];
 saveas(fig,FIGNAME);
 disp(['Figure saved @ : ',FIGNAME])
 
+if 0
 %% Weak scaling
 % Handwritten results for P,J=2,1, Tmax = 5, dt = 0.01, Nz = Nr
 Results_1_64.np    = [   1,    2,    4,    8];
@@ -87,3 +91,4 @@ grid on
 FIGNAME = [SIMDIR,'weak_scaling.png'];
 saveas(fig,FIGNAME);
 disp(['Figure saved @ : ',FIGNAME])
+end

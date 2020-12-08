@@ -7,7 +7,7 @@ addpath(genpath('../matlab')) % ... add
 CLUSTER.TIME  = '12:00:00'; % allocation time hh:mm:ss
 CLUSTER.NODES = '1';        % MPI process
 CLUSTER.CPUPT = '1';        % CPU per task
-CLUSTER.NTPN  = '20';       % N tasks per node
+CLUSTER.NTPN  = '32';       % N tasks per node
 CLUSTER.PART  = 'prod';      % dbg or prod
 CLUSTER.MEM   = '10GB';     % Memory
 %% PHYSICAL PARAMETERS

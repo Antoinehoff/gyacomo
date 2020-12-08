@@ -4,9 +4,9 @@ if LOAD_MARCONI
     localfolder= [BASIC.RESDIR,'..'];
     system(['scp -r ahoffman@login.marconi.cineca.it:',hostfolder,' ',localfolder])
 end
-% JOBNUM = 0; load_results;
+JOBNUM = 0; load_results;
 % JOBNUM = 1; load_results;
-compile_results
+% compile_results
 
 %% Retrieving max polynomial degree and sampling info
 Npe = numel(Pe); Nje = numel(Je); [JE,PE] = meshgrid(Je,Pe);
