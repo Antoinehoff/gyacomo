@@ -7,9 +7,9 @@ addpath(genpath('../matlab')) % ... add
 CLUSTER.TIME  = '12:00:00'; % allocation time hh:mm:ss
 CLUSTER.NODES = '1';        % MPI process
 CLUSTER.CPUPT = '1';        % CPU per task
-CLUSTER.NTPN  = '32';       % N tasks per node
+CLUSTER.NTPN  = '20';       % N tasks per node
 CLUSTER.PART  = 'prod';      % dbg or prod
-CLUSTER.MEM   = '10GB';     % Memory
+CLUSTER.MEM   = '16GB';     % Memory
 %% PHYSICAL PARAMETERS
 NU      = 1e-1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
@@ -21,14 +21,14 @@ NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
 N       = 1024;     % Frequency gridpoints (Nkr = N/2)
 L       = 100;     % Size of the squared frequency domain
-PMAXE   = 6;     % Highest electron Hermite polynomial degree
-JMAXE   = 4;     % Highest ''       Laguerre ''
-PMAXI   = 6;     % Highest ion      Hermite polynomial degree
-JMAXI   = 4;     % Highest ''       Laguerre ''
+PMAXE   = 1;     % Highest electron Hermite polynomial degree
+JMAXE   = 1;     % Highest ''       Laguerre ''
+PMAXI   = 1;     % Highest ion      Hermite polynomial degree
+JMAXI   = 1;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS 
-TMAX    = 1;  % Maximal time unit
-DT      = 1e-2;   % Time step
-SPS0D   = 0;    % Sampling per time unit for profiler
+TMAX    = 5;  % Maximal time unit
+DT      = 5e-2;   % Time step
+SPS0D   = 1/DT;    % Sampling per time unit for profiler
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS5D   = 0;    % Sampling per time unit for 5D arrays
 RESTART = 0;      % To restart from last checkpoint
