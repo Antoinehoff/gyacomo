@@ -273,7 +273,7 @@ SUBROUTINE diagnose(kstep)
      !   Close all diagnostic files
      CALL closef(fidres)
      CALL closef(fidrst)
-     
+
   END IF
 
 END SUBROUTINE diagnose
@@ -442,10 +442,10 @@ SUBROUTINE checkpoint_save(cp_step)
   WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", cp_step
   IF (num_procs .EQ. 1) THEN
     CALL putarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,&
-                                                      ikrs:ikre,ikzs:ikze,1), ionode=0)
+                                                      ikrs:ikre,ikzs:ikze,updatetlevel), ionode=0)
   ELSE
     CALL putarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,&
-                                                      ikrs:ikre,ikzs:ikze,1), pardim=3)
+                                                      ikrs:ikre,ikzs:ikze,updatetlevel), pardim=3)
   ENDIF
 
   CALL attach(fidrst, dset_name, 'cstep', cstep)
@@ -458,10 +458,10 @@ SUBROUTINE checkpoint_save(cp_step)
   WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", cp_step
   IF (num_procs .EQ. 1) THEN
     CALL putarr(fidrst, dset_name, moments_i(ips_i:ipe_i,ijs_i:ije_i,&
-                                                      ikrs:ikre,ikzs:ikze,1), ionode=0)
+                                                      ikrs:ikre,ikzs:ikze,updatetlevel), ionode=0)
   ELSE
     CALL putarr(fidrst, dset_name, moments_i(ips_i:ipe_i,ijs_i:ije_i,&
-                                                      ikrs:ikre,ikzs:ikze,1), pardim=3)
+                                                      ikrs:ikre,ikzs:ikze,updatetlevel), pardim=3)
   ENDIF
 
   CALL attach(fidrst, dset_name, 'cstep', cstep)

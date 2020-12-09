@@ -127,7 +127,7 @@ SUBROUTINE load_cp
   WRITE(*,'(3x,a)') "Resume from previous run"
 
   CALL openf(rstfile, fidrst,mpicomm=MPI_COMM_WORLD)
-  
+
     n_ = 0
     WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
     DO WHILE (isdataset(fidrst, dset_name))
@@ -139,8 +139,8 @@ SUBROUTINE load_cp
     WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", n_
 
     ! Read state of system from restart file
-    CALL getarr(fidrst, dset_name, moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),pardim=3)
-    CALL getarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),pardim=3)
+    CALL getarr(fidrst, dset_name, moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,updatetlevel),pardim=3)
+    CALL getarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,updatetlevel),pardim=3)
 
     ! Read time dependent attributes
     CALL getatt(fidrst, dset_name, 'cstep', cstep)
