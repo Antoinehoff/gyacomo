@@ -43,6 +43,7 @@ SUBROUTINE diagnose(kstep)
      CALL creatg(fidrst, '/Basic', 'Basic data')
      CALL creatg(fidrst, '/Basic/moments_e', 'electron moments')
      CALL creatg(fidrst, '/Basic/moments_i', 'ion moments')
+     CALL creatg(fidrst, '/Basic/phi', 'ES potential')
 
      IF (my_id .EQ. 0) WRITE(*,'(3x,a,a)') TRIM(rstfile), ' created'
      CALL flush(6)
@@ -442,10 +443,10 @@ SUBROUTINE checkpoint_save(cp_step)
   WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", cp_step
   IF (num_procs .EQ. 1) THEN
     CALL putarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,&
-                                                      ikrs:ikre,ikzs:ikze,updatetlevel), ionode=0)
+                                                      ikrs:ikre,ikzs:ikze,1), ionode=0)
   ELSE
     CALL putarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,&
-                                                      ikrs:ikre,ikzs:ikze,updatetlevel), pardim=3)
+                                                      ikrs:ikre,ikzs:ikze,1), pardim=3)
   ENDIF
 
   CALL attach(fidrst, dset_name, 'cstep', cstep)
@@ -458,10 +459,25 @@ SUBROUTINE checkpoint_save(cp_step)
   WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", cp_step
   IF (num_procs .EQ. 1) THEN
     CALL putarr(fidrst, dset_name, moments_i(ips_i:ipe_i,ijs_i:ije_i,&
-                                                      ikrs:ikre,ikzs:ikze,updatetlevel), ionode=0)
+                                                      ikrs:ikre,ikzs:ikze,1), ionode=0)
   ELSE
     CALL putarr(fidrst, dset_name, moments_i(ips_i:ipe_i,ijs_i:ije_i,&
-                                                      ikrs:ikre,ikzs:ikze,updatetlevel), pardim=3)
+                                                      ikrs:ikre,ikzs:ikze,1), pardim=3)
+  ENDIF
+
+  CALL attach(fidrst, dset_name, 'cstep', cstep)
+  CALL attach(fidrst, dset_name, 'time', time)
+  CALL attach(fidrst, dset_name, 'jobnum', jobnum)
+  CALL attach(fidrst, dset_name, 'dt', dt)
+  CALL attach(fidrst, dset_name, 'iframe2d', iframe2d)
+  CALL attach(fidrst, dset_name, 'iframe5d', iframe5d)
+
+  ! Write state of system to restart file
+  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/phi", cp_step
+  IF (num_procs .EQ. 1) THEN
+    CALL putarr(fidrst, dset_name, phi(ikrs:ikre,ikzs:ikze), ionode=0)
+  ELSE
+    CALL putarr(fidrst, dset_name, phi(ikrs:ikre,ikzs:ikze), pardim=1)
   ENDIF
 
   CALL attach(fidrst, dset_name, 'cstep', cstep)

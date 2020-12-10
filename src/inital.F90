@@ -21,10 +21,11 @@ SUBROUTINE inital
     CALL load_cp
   ELSE
     CALL init_moments
+    !!!!!! Set phi !!!!!!
+    IF (my_id .EQ. 1) WRITE(*,*) 'Init phi'
+    CALL poisson
   ENDIF
-  !!!!!! Set phi !!!!!!
-  IF (my_id .EQ. 1) WRITE(*,*) 'Init phi'
-  CALL poisson
+
 
   !!!!!! Set Sepj, Sipj and dnjs coeff table !!!!!!
   IF ( NON_LIN .OR. (A0KH .NE. 0)) THEN;
@@ -124,7 +125,7 @@ SUBROUTINE load_cp
 
   WRITE(rstfile,'(a,a1,i2.2,a3)') TRIM(rstfile0),'_',job2load,'.h5'
 
-  WRITE(*,'(3x,a)') "Resume from previous run"
+  IF (my_id .EQ. 0) WRITE(*,'(3x,a)') "Resume from previous run"
 
   CALL openf(rstfile, fidrst,mpicomm=MPI_COMM_WORLD)
 
@@ -139,9 +140,13 @@ SUBROUTINE load_cp
     WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", n_
 
     ! Read state of system from restart file
-    CALL getarr(fidrst, dset_name, moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,updatetlevel),pardim=3)
-    CALL getarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,updatetlevel),pardim=3)
-
+    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", n_
+    CALL getarr(fidrst, dset_name, moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),pardim=3)
+    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
+    CALL getarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),pardim=3)
+    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/phi", n_
+    CALL getarr(fidrst, dset_name, phi(ikrs:ikre,ikzs:ikze),pardim=1)
+    
     ! Read time dependent attributes
     CALL getatt(fidrst, dset_name, 'cstep', cstep)
     CALL getatt(fidrst, dset_name, 'time', time)
@@ -153,7 +158,7 @@ SUBROUTINE load_cp
 
   CALL closef(fidrst)
 
-  WRITE(*,'(3x,a)') "Reading from restart file "//TRIM(rstfile)//" completed!"
+  IF (my_id .EQ. 0) WRITE(*,'(3x,a)') "Reading from restart file "//TRIM(rstfile)//" completed!"
 
 END SUBROUTINE load_cp
 !******************************************************************************!
