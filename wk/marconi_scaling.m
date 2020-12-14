@@ -4,10 +4,10 @@ addpath(genpath('../matlab')) % ... add
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% CLUSTER PARAMETERS
-CLUSTER.TIME  = '12:00:00'; % allocation time hh:mm:ss
+CLUSTER.TIME  = '01:30:00'; % allocation time hh:mm:ss
 CLUSTER.NODES = '1';        % MPI process
 CLUSTER.CPUPT = '1';        % CPU per task
-CLUSTER.NTPN  = '20';       % N tasks per node
+CLUSTER.NTPN  = '4';       % N tasks per node
 CLUSTER.PART  = 'prod';      % dbg or prod
 CLUSTER.MEM   = '16GB';     % Memory
 %% PHYSICAL PARAMETERS
@@ -21,15 +21,15 @@ NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
 N       = 1024;     % Frequency gridpoints (Nkr = N/2)
 L       = 100;     % Size of the squared frequency domain
-PMAXE   = 1;     % Highest electron Hermite polynomial degree
+PMAXE   = 2;     % Highest electron Hermite polynomial degree
 JMAXE   = 1;     % Highest ''       Laguerre ''
-PMAXI   = 1;     % Highest ion      Hermite polynomial degree
+PMAXI   = 2;     % Highest ion      Hermite polynomial degree
 JMAXI   = 1;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS 
-TMAX    = 5;  % Maximal time unit
+TMAX    = 10;  % Maximal time unit
 DT      = 5e-2;   % Time step
 SPS0D   = 1/DT;    % Sampling per time unit for profiler
-SPS2D   = 0;      % Sampling per time unit for 2D arrays
+SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 0;    % Sampling per time unit for 5D arrays
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 0;
