@@ -184,6 +184,7 @@ SUBROUTINE diagnose(kstep)
      CALL attach(fidres, TRIM(str),        "tmax",     tmax)
      CALL attach(fidres, TRIM(str),        "nrun",     nrun)
      CALL attach(fidres, TRIM(str),    "cpu_time",       -1)
+     CALL attach(fidres, TRIM(str),       "Nproc",num_procs)
 
      CALL grid_outputinputs(fidres, str)
 
