@@ -1,11 +1,26 @@
 default_plots_options
 
+NPS = [01 02 04 08 12 16 20 24];
+TIMES = NPS;
+if 0
+%% Load times
+i_ = 1;
+for np = NPS
+    SIM_NAME = sprintf('Scaling_np%02d',np);
+    hostfile = ['/marconi_scratch/userexternal/ahoffman/HeLaZ/results/',SIM_NAME,'/',BASIC.PARAMS,'/outputs_00.h5'];
+    localfile= ['../results/',SIM_NAME,'/',BASIC.PARAMS,'/.'];
+    system(['scp -p ahoffman@login.marconi.cineca.it:',hostfile,' ',localfile]);
+    filename = ['../results/',SIM_NAME,'/',BASIC.PARAMS,'/outputs_00.h5'];
+    TIMES(i_)   = h5readatt(filename,'/data/input','cpu_time');
+    i_ = i_ + 1;
+end
+end
 %% Strong scaling measurement
 
 % Handwritten results for 512x256, P,J=2,1, Tmax = 10, mu=0, dt = 5e-2
-Results_512_21.np    = [   1,    2,    4,    8,    12,   16,   20,   24];
-% Results_512_21.time  = [0162, 0108, 0055, 0032,  0030, 0045, 0061, 0084]; %tmax 10
-Results_512_21.time  = [0799, 0436, 0207, 0116,  0135, 0200, 0237, 0246];
+Results_512_21.np    = NPS;
+Results_512_21.time  = [789   422   206   106    81    72    66    82]; %tmax 10
+% Results_512_21.time  = [0162, 0108, 0055, 0032,  0030, 0045, 0061, 0084]; %tmax 2
 
 % Handwritten results for 512x256, P,J=3,2, Tmax = 5, mu=0, dt 5e-2
 Results_512_32.np    = [   1,    2,    4,    8,    12,   16,   20,   24];
