@@ -255,12 +255,12 @@ SUBROUTINE diagnose(kstep)
      END IF
 
      !                       2.5   Backups
-     nsave_cp = INT(5/dt)
-     IF (MOD(cstep, nsave_cp) == 0) THEN
-       CALL checkpoint_save(cp_counter)
-       cp_counter = cp_counter + 1
+     IF (nsave_cp .NE. 0) THEN
+       IF (MOD(cstep, nsave_cp) == 0) THEN
+         CALL checkpoint_save(cp_counter)
+         cp_counter = cp_counter + 1
+       ENDIF
      ENDIF
-
   !_____________________________________________________________________________
   !                   3.   Final diagnostics
 

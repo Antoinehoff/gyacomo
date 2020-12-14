@@ -84,6 +84,7 @@ OUTPUTS.nsave_0d = floor(1.0/SPS0D/DT);
 OUTPUTS.nsave_1d = 0;
 OUTPUTS.nsave_2d = floor(1.0/SPS2D/DT);
 OUTPUTS.nsave_5d = floor(1.0/SPS5D/DT);
+OUTPUTS.nsave_cp = floor(1.0/SPSCP/DT);
 OUTPUTS.write_Na00    = '.true.';
 OUTPUTS.write_moments = '.true.';
 OUTPUTS.write_phi     = '.true.';

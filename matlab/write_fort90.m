@@ -28,6 +28,7 @@ fprintf(fid,['  nsave_0d = ', num2str(OUTPUTS.nsave_0d),'\n']);
 fprintf(fid,['  nsave_1d = ', num2str(OUTPUTS.nsave_1d),'\n']);
 fprintf(fid,['  nsave_2d = ', num2str(OUTPUTS.nsave_2d),'\n']);
 fprintf(fid,['  nsave_5d = ', num2str(OUTPUTS.nsave_5d),'\n']);
+fprintf(fid,['  nsave_cp = ', num2str(OUTPUTS.nsave_cp),'\n']);
 fprintf(fid,['  write_Na00    = ', OUTPUTS.write_Na00,'\n']);
 fprintf(fid,['  write_moments = ', OUTPUTS.write_moments,'\n']);
 fprintf(fid,['  write_phi     = ', OUTPUTS.write_phi,'\n']);

@@ -11,8 +11,7 @@ MODULE diagnostics_par
   LOGICAL, PUBLIC, PROTECTED :: write_non_lin=.TRUE.
   LOGICAL, PUBLIC, PROTECTED :: write_doubleprecision=.FALSE.
 
-  INTEGER, PUBLIC, PROTECTED :: nsave_0d , nsave_1d , nsave_2d , nsave_5d
-  INTEGER, PUBLIC :: nsave_cp = 1e4
+  INTEGER, PUBLIC, PROTECTED :: nsave_0d , nsave_1d , nsave_2d , nsave_5d, nsave_cp
 
   !  HDF5 file
   CHARACTER(len=256), PUBLIC :: resfile0 = "results"   ! Head of main result file name
@@ -35,7 +34,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /OUTPUT_PAR/ nsave_0d , nsave_1d , nsave_2d , nsave_5d
+    NAMELIST /OUTPUT_PAR/ nsave_0d , nsave_1d , nsave_2d , nsave_5d, nsave_cp
     NAMELIST /OUTPUT_PAR/ write_Na00, write_moments, write_phi, write_non_lin, write_doubleprecision
     NAMELIST /OUTPUT_PAR/ resfile0, rstfile0, job2load
 
