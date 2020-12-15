@@ -85,7 +85,7 @@ SUBROUTINE diagnose(kstep)
      CALL creatd(fidres, rank, dims,  "/data/var2d/time",     "Time t*c_s/R")
      CALL creatd(fidres, rank, dims, "/data/var2d/cstep", "iteration number")
 
-     IF (write_Na00) THEN
+     IF (nsave_2d .NE. 0) THEN
        CALL creatg(fidres, "/data/var2d/Ne00", "Ne00")
        IF (num_procs .EQ. 1) THEN
          CALL putarr(fidres, "/data/var2d/Ne00/coordkr", krarray(ikrs:ikre), "kr*rho_s0", ionode=0)
@@ -103,7 +103,7 @@ SUBROUTINE diagnose(kstep)
        CALL putarr(fidres, "/data/var2d/Ni00/coordkz", kzarray(ikzs:ikze), "kz*rho_s0", ionode=0)
      END IF
 
-     IF (write_phi) THEN
+     IF (nsave_2d .NE. 0) THEN
        CALL creatg(fidres, "/data/var2d/phi", "phi")
        IF (num_procs .EQ. 1) THEN
          CALL putarr(fidres, "/data/var2d/phi/coordkr", krarray(ikrs:ikre), "kr*rho_s0", ionode=0)
@@ -117,7 +117,7 @@ SUBROUTINE diagnose(kstep)
      rank = 0
      CALL creatd(fidres, rank, dims,  "/data/var5d/time",     "Time t*c_s/R")
      CALL creatd(fidres, rank, dims, "/data/var5d/cstep", "iteration number")
-     IF (write_moments) THEN
+     IF (nsave_5d .NE. 0) THEN
        CALL creatg(fidres, "/data/var5d/moments_e", "moments_e")
        CALL putarr(fidres,  "/data/var5d/moments_e/coordp", parray_e(ips_e:ipe_e),       "p_e", ionode=0)
        CALL putarr(fidres,  "/data/var5d/moments_e/coordj", jarray_e(ijs_e:ije_e),       "j_e", ionode=0)
@@ -139,7 +139,7 @@ SUBROUTINE diagnose(kstep)
        CALL putarr(fidres, "/data/var5d/moments_i/coordkz",    kzarray(ikzs:ikze), "kz*rho_s0", ionode=0)
      END IF
 
-     IF (write_non_lin) THEN
+     IF (nsave_5d .NE. 0) THEN
        CALL creatg(fidres, "/data/var5d/Sepj", "Sepj")
        CALL putarr(fidres,  "/data/var5d/Sepj/coordp", parray_e(ips_e:ipe_e),       "p_e", ionode=0)
        CALL putarr(fidres,  "/data/var5d/Sepj/coordj", jarray_e(ijs_e:ije_e),       "j_e", ionode=0)
