@@ -318,14 +318,10 @@ SUBROUTINE diagnose_2d
   iframe2d=iframe2d+1
   CALL attach(fidres,"/data/var2d/" , "frames", iframe2d)
 
-  IF (write_phi) THEN
-     CALL write_field2d(phi(:,:), 'phi')
-  END IF
+  CALL write_field2d(phi(:,:), 'phi')
+  CALL write_field2d(moments_e(1,1,:,:,updatetlevel), 'Ne00')
+  CALL write_field2d(moments_i(1,1,:,:,updatetlevel), 'Ni00')
 
-  IF (write_Na00) THEN
-    CALL write_field2d(moments_e(1,1,:,:,updatetlevel), 'Ne00')
-    CALL write_field2d(moments_i(1,1,:,:,updatetlevel), 'Ni00')
-  END IF
 CONTAINS
 
   SUBROUTINE write_field2d(field, text)
@@ -371,15 +367,11 @@ SUBROUTINE diagnose_5d
    iframe5d=iframe5d+1
    CALL attach(fidres,"/data/var5d/" , "frames", iframe5d)
 
-   IF (write_moments) THEN
-      CALL write_field5d_e(moments_e(:,:,:,:,updatetlevel), 'moments_e')
-      CALL write_field5d_i(moments_i(:,:,:,:,updatetlevel), 'moments_i')
-   END IF
+   CALL write_field5d_e(moments_e(:,:,:,:,updatetlevel), 'moments_e')
+   CALL write_field5d_i(moments_i(:,:,:,:,updatetlevel), 'moments_i')
 
-   IF (write_non_lin) THEN
-      CALL write_field5d_e(Sepj, 'Sepj')
-      CALL write_field5d_i(Sipj, 'Sipj')
-   END IF
+   CALL write_field5d_e(Sepj, 'Sepj')
+   CALL write_field5d_i(Sipj, 'Sipj')
 
  CONTAINS
 
