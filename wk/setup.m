@@ -2,7 +2,7 @@
 SIMDIR = ['../results/',SIMID,'/'];
 % Grid parameters
 GRID.pmaxe = PMAXE;  % Electron Hermite moments
-GRID.jmaxe = JMAXE;  % Electron Laguerre moments 
+GRID.jmaxe = JMAXE;  % Electron Laguerre moments
 GRID.pmaxi = PMAXI;  % Ion Hermite moments
 GRID.jmaxi = JMAXI;  % Ion Laguerre moments
 GRID.Nr    = N * (1-KREQ0) + KREQ0; % r grid resolution
@@ -10,11 +10,7 @@ GRID.Lr    = L * (1-KREQ0); % r length
 GRID.Nz    = N; % z ''
 GRID.Lz    = L; % z ''
 GRID.kpar  = KPAR;
-if CANCEL_ODD_P
-GRID.CANCEL_ODD_P = '.true.';
-else
-GRID.CANCEL_ODD_P = '.false.';
-end
+
 % Model parameters
 MODEL.CO      = CO;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
 if 0;      MODEL.DK      = '.true.'; else; MODEL.DK      = '.false.';end;
@@ -36,9 +32,6 @@ MODEL.eta_n   = ETAN;        % source term kappa for HW
 MODEL.eta_T   = ETAT;        % Temperature
 MODEL.eta_B   = ETAB;        % Magnetic
 MODEL.lambdaD = LAMBDAD;
-% background phi drive for Kelvin-Helmholtz instability
-MODEL.kr0KH   = KR0KH;
-MODEL.A0KH    = A0KH;
 if A0KH ~= 0; SIMID = [SIMID,'_Nz_',num2str(L/2/pi*KR0KH),'_A_',num2str(A0KH)]; end;
 % Time integration and intialization parameters
 TIME_INTEGRATION.numerical_scheme  = '''RK4''';
@@ -76,8 +69,11 @@ BASIC.RESDIR = [SIMDIR,PARAMS,'/'];
 BASIC.PARAMS = PARAMS;
 BASIC.SIMID  = SIMID;
 BASIC.nrun       = 1e8;
-BASIC.dt         = DT;   
+BASIC.dt         = DT;
 BASIC.tmax       = TMAX;    %time normalized to 1/omega_pe
+BASIC.maxruntime = str2num(CLUSTER.TIME(1:2))*3600 ...
+                   + str2num(CLUSTER.TIME(4:5))*60 ...
+                   + str2num(CLUSTER.TIME(7:8));
 % Outputs parameters
 if RESTART; BASIC.RESTART = '.true.'; else; BASIC.RESTART = '.false.';end;
 OUTPUTS.nsave_0d = floor(1.0/SPS0D/DT);

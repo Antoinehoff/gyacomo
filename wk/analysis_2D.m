@@ -1,12 +1,12 @@
 %% Load results
-if LOAD_MARCONI
+if LOAD_MARCONI==1
     hostfolder = ['/marconi_scratch/userexternal/ahoffman/HeLaZ/results/',BASIC.SIMID,'/',BASIC.PARAMS];
     localfolder= [BASIC.RESDIR,'..'];
     system(['scp -r ahoffman@login.marconi.cineca.it:',hostfolder,' ',localfolder])
 end
-JOBNUM = 0; load_results;
+% JOBNUM = 0; load_results;
 % JOBNUM = 1; load_results;
-% compile_results
+compile_results
 
 %% Retrieving max polynomial degree and sampling info
 Npe = numel(Pe); Nje = numel(Je); [JE,PE] = meshgrid(Je,Pe);
@@ -106,6 +106,7 @@ end
 
 
 %% Compute growth rate
+if NON_LIN == 0
 disp('- growth rate')
 tend   = Ts2D(end); tstart   = 0.6*tend; 
 g_          = zeros(Nkr,Nkz);
@@ -117,7 +118,7 @@ for ikr = 1:Nkr
 end
 % gkr0kz_Ni00 = max(real(g_(:,:)),[],1);
 gkr0kz_Ni00 = real(g_(ikr0KH,:));
-
+end
 %% PLOTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 default_plots_options
 disp('Plots')
@@ -203,33 +204,35 @@ suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB), sprin
 save_figure
 end
 
-if 1
+if 0
 %% Photomaton : real space
-% FIELD = ni00; FNAME = 'ni';
-FIELD = phi; FNAME = 'phi';
-tf = 60;  [~,it1] = min(abs(Ts2D-tf));
-tf = 65;  [~,it2] = min(abs(Ts2D-tf)); 
-tf = 200; [~,it3] = min(abs(Ts2D-tf));
-tf = 400; [~,it4] = min(abs(Ts2D-tf));
+FIELD = ni00; FNAME = 'ni';
+% FIELD = ne00; FNAME = 'ne';
+% FIELD = phi; FNAME = 'phi';
+tf = 19;  [~,it1] = min(abs(Ts2D-tf));
+tf = 20;  [~,it2] = min(abs(Ts2D-tf)); 
+tf = 21; [~,it3] = min(abs(Ts2D-tf));
+tf = 22; [~,it4] = min(abs(Ts2D-tf));
 fig = figure; FIGNAME = [FNAME,'_snaps']; set(gcf, 'Position',  [100, 100, 1500, 400])
-    subplot(141); plt = @(x) ((x));
+plt = @(x) x;%./max(max(x));
+    subplot(141)
         DATA = plt(FIELD(:,:,it1));
-        pclr = pcolor((RR),(ZZ),DATA./max(max(DATA))); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
+        pclr = pcolor((RR),(ZZ),DATA); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
         xlabel('$r/\rho_s$'); ylabel('$z/\rho_s$');set(gca,'ytick',[]); 
         title(sprintf('$t c_s/R=%.0f$',Ts2D(it1)));
-    subplot(142); plt = @(x) ((x));
+    subplot(142)
         DATA = plt(FIELD(:,:,it2));
-        pclr = pcolor((RR),(ZZ),DATA./max(max(DATA))); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
+        pclr = pcolor((RR),(ZZ),DATA); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
         xlabel('$r/\rho_s$');ylabel('$z/\rho_s$'); set(gca,'ytick',[]); 
         title(sprintf('$t c_s/R=%.0f$',Ts2D(it2)));
-    subplot(143); plt = @(x) ((x));
+    subplot(143)
         DATA = plt(FIELD(:,:,it3));
-        pclr = pcolor((RR),(ZZ),DATA./max(max(DATA))); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
+        pclr = pcolor((RR),(ZZ),DATA); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
         xlabel('$r/\rho_s$');ylabel('$z/\rho_s$');set(gca,'ytick',[]); 
         title(sprintf('$t c_s/R=%.0f$',Ts2D(it3)));
-    subplot(144); plt = @(x) ((x));
+    subplot(144)
         DATA = plt(FIELD(:,:,it4));
-        pclr = pcolor((RR),(ZZ),DATA./max(max(DATA))); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
+        pclr = pcolor((RR),(ZZ),DATA); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
         xlabel('$r/\rho_s$');ylabel('$z/\rho_s$'); set(gca,'ytick',[]); 
         title(sprintf('$t c_s/R=%.0f$',Ts2D(it4)));
 % suptitle(['$\',FNAME,'$, $\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB),...
@@ -363,7 +366,7 @@ end
 %%
 if 0
 %% Show frame in kspace
-tf = 200; [~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
+tf = 100; [~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
 fig = figure; FIGNAME = ['krkz_frame',sprintf('t=%.0f',Ts2D(it2))];set(gcf, 'Position',  [100, 100, 700, 600])
     subplot(221); plt = @(x) fftshift((abs(x)),2);
         pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(PHI(:,:,it2))); set(pclr, 'edgecolor','none'); colorbar;

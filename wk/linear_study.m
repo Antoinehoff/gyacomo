@@ -11,17 +11,17 @@ ETAB    = 0.5;
 ETAN    = 1.0;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
 MU      = 0e-4;   % Hyper diffusivity coefficient
-LAMBDAD = 0.0; 
+LAMBDAD = 0.0;
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
 N       = 50;     % Frequency gridpoints (Nkr = N/2)
 L       = 100;     % Size of the squared frequency domain
 PMAXE   = 12;
-JMAXE   = 6; 
+JMAXE   = 6;
 PMAXI   = 12;
 JMAXI   = 6;
 KREQ0   = 1;      % put kr = 0
-%% TIME PARAMETERS 
+%% TIME PARAMETERS
 TMAX    = 300;  % Maximal time unit
 DT      = 1e-3;   % Time step
 SPS0D   = 0.5;      % Sampling per time unit for 2D arrays
@@ -36,12 +36,10 @@ CO      = -1;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Do
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % unused
-KR0KH   = 0; A0KH = 0; % Background phi mode to drive Ray-Tay inst.
 NO_E    = 0;  % Remove electrons dynamic
 % DK    = 0;  % Drift kinetic model (put every kernel_n to 0 except n=0 to 1)
 JOBNUM = 00;
-CANCEL_ODD_P = 0;% Cancels the odd polynomials degree
-KPAR    = 0.0 * (1-CANCEL_ODD_P);    % Parellel wave vector component
+KPAR    = 0.0;    % Parellel wave vector component
 
 %% PARAMETER SCANS
 if 1
@@ -70,7 +68,7 @@ for i = 1:Nparam
     system('./../bin/helaz');
     % Load and process results
     load_results
-    tend   = Ts2D(end); tstart   = 0.4*tend; 
+    tend   = Ts2D(end); tstart   = 0.4*tend;
     for ikz = 1:N
         gamma_Ni(i,ikz) = LinearFit_s(Ts2D,squeeze(abs(Ni00(1,ikz,:))),tstart,tend);
         Ni00_ST(i,ikz,1:numel(Ts2D)) = squeeze((Ni00(1,ikz,:)));
@@ -83,7 +81,7 @@ end
 % %% Plot
 % fig = figure; FIGNAME = 'space_time_Ni00';
 % i = 1;
-% 
+%
 % [YY, XX] = meshgrid(Ts2D,kz);
 % plt = @(x) squeeze(log(abs(x)))
 % pclr = pcolor(XX,YY,plt(Ni00_ST(i,:,:)));set(pclr, 'edgecolor','none');
@@ -149,7 +147,7 @@ for i = 1:Nparam
     run
     % Load and process results
     load_results
-    tend   = Ts2D(end); tstart   = 0.6*tend; 
+    tend   = Ts2D(end); tstart   = 0.6*tend;
     for ikz = 1:N
         gamma_Ni(i,ikz) = LinearFit_s(Ts2D,squeeze(abs(Ni00(1,ikz,:))),tstart,tend);
     end

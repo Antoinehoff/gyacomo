@@ -2,6 +2,7 @@ clear all;
 addpath(genpath('../matlab')) % ... add
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
+CLUSTER.TIME  = '00:00:10'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
 NU      = 1e-1;   % Collision frequency
@@ -18,16 +19,17 @@ PMAXE   = 2;     % Highest electron Hermite polynomial degree
 JMAXE   = 1;     % Highest ''       Laguerre ''
 PMAXI   = 2;     % Highest ion      Hermite polynomial degree
 JMAXI   = 1;     % Highest ''       Laguerre ''
-%% TIME PARAMETERS 
-TMAX    = 40;  % Maximal time unit
+%% TIME PARAMETERS
+TMAX    = 20;  % Maximal time unit
 DT      = 2e-2;   % Time step
 SPS0D   = 1/DT;    % Sampling per time unit for profiler
 SPS2D   = 2;      % Sampling per time unit for 2D arrays
 SPS5D   = 2;    % Sampling per time unit for 5D arrays
+SPSCP   = 1/10;    % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
-JOB2LOAD= 1;
+JOB2LOAD= 0;
 %% OPTIONS
-SIMID   = 'test_sapj_opt';  % Name of the simulation
+SIMID   = 'test_runtime';  % Name of the simulation
 CO      = -1;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -37,9 +39,8 @@ NO_E    = 0;  % Remove electrons dynamic
 % DK    = 0;  % Drift kinetic model (put every kernel_n to 0 except n=0 to 1)
 KREQ0   = 0;      % put kr = 0
 KPAR    = 0.0;    % Parellel wave vector component
-LAMBDAD = 0.0; 
-NON_LIN = 1 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
-CANCEL_ODD_P = 0;% Cancels the odd polynomials degree
+LAMBDAD = 0.0;
+NON_LIN = 0 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
 LOAD_MARCONI = 0;
 
 setup
