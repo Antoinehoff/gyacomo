@@ -32,4 +32,15 @@ SUBROUTINE tesend
   END IF
   !
   !
+
+  !________________________________________________________________________________
+  !                   4.  Test on rune time
+  CALL cpu_time(finish)
+  nlend = (finish-start) .GT. maxruntime
+  IF ( nlend ) THEN
+     IF (my_id .EQ. 0) WRITE(*,'(/a)') 'Max run time reached'
+     RETURN
+  END IF
+  !
+  !
 END SUBROUTINE tesend

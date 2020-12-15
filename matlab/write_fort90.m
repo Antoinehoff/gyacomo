@@ -8,6 +8,7 @@ fprintf(fid,['  nrun   = ', num2str(BASIC.nrun),'\n']);
 fprintf(fid,['  dt     = ', num2str(BASIC.dt),'\n']);
 fprintf(fid,['  tmax   = ', num2str(BASIC.tmax),'\n']);
 fprintf(fid,['  RESTART = ', num2str(BASIC.RESTART),'\n']);
+fprintf(fid,['  maxruntime = ', num2str(BASIC.maxruntime),'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&GRID\n');
@@ -20,7 +21,6 @@ fprintf(fid,['  Lr = ', num2str(GRID.Lr),'\n']);
 fprintf(fid,['  Nz   = ', num2str(GRID.Nz),'\n']);
 fprintf(fid,['  Lz = ', num2str(GRID.Lz),'\n']);
 fprintf(fid,['  kpar = ', num2str(GRID.kpar),'\n']);
-fprintf(fid,['  CANCEL_ODD_P = ', num2str(GRID.CANCEL_ODD_P),'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&OUTPUT_PAR\n');
@@ -56,8 +56,6 @@ fprintf(fid,['  eta_n   = ', num2str(MODEL.eta_n),'\n']);
 fprintf(fid,['  eta_T   = ', num2str(MODEL.eta_T),'\n']);
 fprintf(fid,['  eta_B   = ', num2str(MODEL.eta_B),'\n']);
 fprintf(fid,['  lambdaD = ', num2str(MODEL.lambdaD),'\n']);
-fprintf(fid,['  kr0KH   = ', num2str(MODEL.kr0KH),'\n']);
-fprintf(fid,['  A0KH    = ', num2str(MODEL.A0KH),'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&INITIAL_CON\n');

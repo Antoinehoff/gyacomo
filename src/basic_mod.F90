@@ -35,6 +35,7 @@ MODULE basic
   real(dp) :: t0_rhs, t0_adv_field, t0_poisson, t0_Sapj, t0_diag, t0_checkfield, t0_step
   real(dp) :: t1_rhs, t1_adv_field, t1_poisson, t1_Sapj, t1_diag, t1_checkfield, t1_step
   real(dp) :: tc_rhs, tc_adv_field, tc_poisson, tc_Sapj, tc_diag, tc_checkfield, tc_step
+  real(dp):: maxruntime = 1e9 ! Maximum simulation CPU time
 
   INTERFACE allocate_array
     MODULE PROCEDURE allocate_array_dp1,allocate_array_dp2,allocate_array_dp3,allocate_array_dp4
@@ -52,7 +53,7 @@ CONTAINS
     use prec_const
     IMPLICIT NONE
 
-    NAMELIST /BASIC/  nrun, dt, tmax, RESTART
+    NAMELIST /BASIC/  nrun, dt, tmax, RESTART, maxruntime
 
     READ(lu_in,basic)
 

@@ -48,7 +48,7 @@ SUBROUTINE control
   !________________________________________________________________________________
   !              2.   Main loop
   DO
-CALL cpu_time(t0_step) ! Measuring time
+     CALL cpu_time(t0_step) ! Measuring time
 
      step  = step  + 1
      cstep = cstep + 1
@@ -64,8 +64,8 @@ CALL cpu_time(t0_step) ! Measuring time
      CALL diagnose(step)
      CALL cpu_time(t1_diag); tc_diag = tc_diag + (t1_diag - t0_diag)
 
-
     CALL cpu_time(t1_step); tc_step = tc_step + (t1_step - t0_step)
+    
   END DO
   IF (my_id .EQ. 1) WRITE(*,'(a/)') '...time integration done'
   !________________________________________________________________________________
