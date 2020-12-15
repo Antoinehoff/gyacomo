@@ -77,7 +77,7 @@ BASIC.maxruntime = str2num(CLUSTER.TIME(1:2))*3600 ...
 % Outputs parameters
 if RESTART; BASIC.RESTART = '.true.'; else; BASIC.RESTART = '.false.';end;
 OUTPUTS.nsave_0d = floor(1.0/SPS0D/DT);
-OUTPUTS.nsave_1d = 0;
+OUTPUTS.nsave_1d = -1;
 OUTPUTS.nsave_2d = floor(1.0/SPS2D/DT);
 OUTPUTS.nsave_5d = floor(1.0/SPS5D/DT);
 OUTPUTS.nsave_cp = floor(1.0/SPSCP/DT);

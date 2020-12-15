@@ -7,8 +7,8 @@ addpath(genpath('../matlab')) % ... add
 CLUSTER.TIME  = '01:00:00'; % allocation time hh:mm:ss
 CLUSTER.NODES = '01';       % MPI process
 CLUSTER.CPUPT = '01';       % CPU per task
-CLUSTER.NTPN  = '01';       % N tasks per node (openMP)
-CLUSTER.PART  = 'dbg';      % dbg or prod
+CLUSTER.NTPN  = '24';       % N tasks per node (openMP)
+CLUSTER.PART  = 'prod';      % dbg or prod
 CLUSTER.MEM   = '16GB';     % Memory
 %% PHYSICAL PARAMETERS
 NU      = 1e-1;   % Collision frequency
@@ -19,23 +19,23 @@ ETAT    = 0.0;    % Temperature gradient
 MU      = 0e-4;   % Hyper diffusivity coefficient
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
-N       = 512;     % Frequency gridpoints (Nkr = N/2)
-L       = 100;     % Size of the squared frequency domain
-PMAXE   = 2;     % Highest electron Hermite polynomial degree
-JMAXE   = 1;     % Highest ''       Laguerre ''
-PMAXI   = 2;     % Highest ion      Hermite polynomial degree
-JMAXI   = 1;     % Highest ''       Laguerre ''
+N       = 128;     % Frequency gridpoints (Nkr = N/2)
+L       = 10;     % Size of the squared frequency domain
+PMAXE   = 6;     % Highest electron Hermite polynomial degree
+JMAXE   = 4;     % Highest ''       Laguerre ''
+PMAXI   = 6;     % Highest ion      Hermite polynomial degree
+JMAXI   = 4;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS
-TMAX    = 5;  % Maximal time unit
+TMAX    = 2;  % Maximal time unit
 DT      = 5e-2;   % Time step
 SPS0D   = 1/DT;    % Sampling per time unit for profiler
-SPS2D   = 0;      % Sampling per time unit for 2D arrays
-SPS5D   = 0;      % Sampling per time unit for 5D arrays
-SPSCP   = 0;      % Sampling per time unit for checkpoints
+SPS2D   = -1;      % Sampling per time unit for 2D arrays
+SPS5D   = -1;      % Sampling per time unit for 5D arrays
+SPSCP   = -1;      % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
-SIMID   = ['Scaling__np',num2str(CLUSTER.NTPN)];  % Name of the simulation
+SIMID   = ['Scaling_np',num2str(CLUSTER.NTPN)];  % Name of the simulation
 CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
