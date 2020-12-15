@@ -8,7 +8,7 @@ How to run it :
 4. You can obtain various plots and gifs using HeLaZ/wk/analysis_2D.m once the simulation is done. To select the correct output file, run parameters*.m with the corresponding simulation parameters and then run analysis_2D.m (everything with matlab from wk/)
 
 # Logbook
-(Current versions : Master 1.4.3; MPI 2.1.1)
+(Current versions : 2.1.1)
 
 0. Write MOLI matlab solver in Fortran using Monli1D as starting point
 
@@ -59,9 +59,15 @@ How to run it :
 		2.1.1 Benchmarks, profiling and portability of the code
 
 	2.2 Allow restart with different P,J values
-	
-	2.3 Implement RK45 adaptive scheme or Adams-Bashforth 3rd order (in discussion)
 
-3. 3D version, kr,kz,kpar for linear device
+	2.3 Data distribution along P (under consideration)
+
+	2.4 GK Coulomb operator
+
+3. GK 3D version, kr,kz,kpar for linear device
+
+3. DK 3D version, kr,kz,kpar for linear device
+
+4. DK+GK 3D version, kr,kz,kpar for linear device
 
 4. 3D version with curvature
