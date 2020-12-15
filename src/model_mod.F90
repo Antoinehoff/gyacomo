@@ -20,9 +20,6 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED ::   eta_T =  1._dp     ! Temperature gradient
   REAL(dp), PUBLIC, PROTECTED ::   eta_B =  1._dp     ! Magnetic gradient
   REAL(dp), PUBLIC, PROTECTED :: lambdaD =  1._dp     ! Debye length
-  REAL(dp), PUBLIC            ::   kr0KH =  0._dp     ! background wave frequ. for Rayleigh Taylor instability
-  INTEGER,  PUBLIC            ::  ikz0KH =  0         ! '' index
-  REAL(dp), PUBLIC, PROTECTED ::    A0KH =  0._dp     ! background amplitude
 
   PUBLIC :: model_readinputs, model_outputinputs
 
@@ -36,7 +33,7 @@ CONTAINS
     IMPLICIT NONE
 
     NAMELIST /MODEL_PAR/ CO, DK, NON_LIN, mu, nu, tau_e, tau_i, sigma_e, sigma_i, &
-                         q_e, q_i, eta_n, eta_T, eta_B, lambdaD, kr0KH, A0KH
+                         q_e, q_i, eta_n, eta_T, eta_B, lambdaD
 
     READ(lu_in,model_par)
     !WRITE(*,model_par)

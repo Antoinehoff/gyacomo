@@ -134,13 +134,13 @@ SUBROUTINE moments_eq_rhs
           ! term propto N_e^{p,j}
           TNapj = xNapj * moments_e(ip,ij,ikr,ikz,updatetlevel)
           ! term propto N_e^{p+1,j} and kparallel
-          IF ( (ip+1 .LE. pmaxe+1) .AND. (.NOT. CANCEL_ODD_P) ) THEN ! OoB check
+          IF ( (ip+1 .LE. pmaxe+1) ) THEN ! OoB check
             TNapp1j = xNapp1j * moments_e(ip+1,ij,ikr,ikz,updatetlevel)
           ELSE
             TNapp1j = 0._dp
           ENDIF
           ! term propto N_e^{p-1,j} and kparallel
-          IF ( (ip-1 .GE. 1) .AND. (.NOT. CANCEL_ODD_P) ) THEN ! OoB check
+          IF ( (ip-1 .GE. 1) ) THEN ! OoB check
             TNapm1j = xNapm1j * moments_e(ip-1,ij,ikr,ikz,updatetlevel)
           ELSE
             TNapm1j = 0._dp
@@ -182,7 +182,7 @@ SUBROUTINE moments_eq_rhs
             ELSE
               TColl01 = 0._dp
             ENDIF
-            IF ( (pmaxe .GE. 1) .AND. (.NOT. CANCEL_ODD_P) ) THEN ! OoB + odd number for Hermite degrees check
+            IF ( (pmaxe .GE. 1) ) THEN ! OoB + odd number for Hermite degrees check
               TColl10 = xCa10 * moments_e(2,1,ikr,ikz,updatetlevel)
             ELSE
               TColl10 = 0._dp
@@ -245,7 +245,7 @@ SUBROUTINE moments_eq_rhs
               + TColl
 
           ! Adding non linearity
-          IF ( NON_LIN .OR. (A0KH .NE. 0) ) THEN
+          IF ( NON_LIN ) THEN
             moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
               moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) - Sepj(ip,ij,ikr,ikz)
           ENDIF
@@ -345,13 +345,13 @@ SUBROUTINE moments_eq_rhs
           ! term propto N_i^{p,j}
           TNapj = xNapj * moments_i(ip,ij,ikr,ikz,updatetlevel)
           ! term propto N_i^{p+1,j}
-          IF ( (ip+1 .LE. pmaxi+1)  .AND. (.NOT. CANCEL_ODD_P) ) THEN ! OoB check
+          IF ( (ip+1 .LE. pmaxi+1) ) THEN ! OoB check
             TNapp1j = xNapp1j * moments_i(ip+1,ij,ikr,ikz,updatetlevel)
           ELSE
             TNapp1j = 0._dp
           ENDIF
           ! term propto N_i^{p-1,j}
-          IF ( (ip-1 .GE. 1) .AND. (.NOT. CANCEL_ODD_P) ) THEN ! OoB check
+          IF ( (ip-1 .GE. 1) ) THEN ! OoB check
             TNapm1j = xNapm1j * moments_i(ip-1,ij,ikr,ikz,updatetlevel)
           ELSE
             TNapm1j = 0._dp
@@ -393,7 +393,7 @@ SUBROUTINE moments_eq_rhs
             ELSE
               TColl01 = 0._dp
             ENDIF
-            IF ( (pmaxi .GE. 1) .AND. (.NOT. CANCEL_ODD_P) ) THEN ! OoB check
+            IF ( (pmaxi .GE. 1) ) THEN ! OoB check
               TColl10 = xCa10 * moments_i(2,1,ikr,ikz,updatetlevel)
             ELSE
               TColl10 = 0._dp
@@ -456,7 +456,7 @@ SUBROUTINE moments_eq_rhs
                + TColl
 
           ! Adding non linearity
-          IF ( NON_LIN .OR. (A0KH .NE. 0) ) THEN
+          IF ( NON_LIN ) THEN
            moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
              moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) - Sipj(ip,ij,ikr,ikz)
           ENDIF

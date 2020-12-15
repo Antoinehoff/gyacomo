@@ -28,7 +28,7 @@ SUBROUTINE inital
 
 
   !!!!!! Set Sepj, Sipj and dnjs coeff table !!!!!!
-  IF ( NON_LIN .OR. (A0KH .NE. 0)) THEN;
+  IF ( NON_LIN ) THEN;
     IF (my_id .EQ. 1) WRITE(*,*) 'Init Sapj'
     CALL compute_Sapj
     ! WRITE(*,*) 'Building Dnjs table'
@@ -146,7 +146,7 @@ SUBROUTINE load_cp
     CALL getarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),pardim=3)
     WRITE(dset_name, "(A, '/', i6.6)") "/Basic/phi", n_
     CALL getarr(fidrst, dset_name, phi(ikrs:ikre,ikzs:ikze),pardim=1)
-    
+
     ! Read time dependent attributes
     CALL getatt(fidrst, dset_name, 'cstep', cstep)
     CALL getatt(fidrst, dset_name, 'time', time)

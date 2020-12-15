@@ -21,7 +21,6 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED :: Nkz   = 16     ! Number of total internal grid points in kz
   REAL(dp), PUBLIC, PROTECTED :: Lkz   = 1._dp  ! vertical length of the fourier box
   REAL(dp), PUBLIC, PROTECTED :: kpar  = 0_dp   ! parallel wave vector component
-  LOGICAL,  PUBLIC, PROTECTED :: CANCEL_ODD_P = .false. ! To cancel odd Hermite polynomials
   INTEGER,  PUBLIC, PROTECTED :: pskip = 0      ! variable to skip p degrees or not
   ! For Orszag filter
   REAL(dp), PUBLIC, PROTECTED :: two_third_krmax
@@ -66,18 +65,13 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER :: ip, ij
-    IF (CANCEL_ODD_P) THEN
-      pskip = 1
-    ELSE
-      pskip = 0
-    ENDIF
 
     ips_e = 1; ipe_e = pmaxe/(1+pskip) + 1
     ips_i = 1; ipe_i = pmaxi/(1+pskip) + 1
     ALLOCATE(parray_e(ips_e:ipe_e))
     ALLOCATE(parray_i(ips_i:ipe_i))
-    DO ip = ips_e,ipe_e; parray_e(ip) = (1+pskip)*(ip-1); END DO
-    DO ip = ips_i,ipe_i; parray_i(ip) = (1+pskip)*(ip-1); END DO
+    DO ip = ips_e,ipe_e; parray_e(ip) = (ip-1); END DO
+    DO ip = ips_i,ipe_i; parray_i(ip) = (ip-1); END DO
 
     ijs_e = 1; ije_e = jmaxe + 1
     ijs_i = 1; ije_i = jmaxi + 1
@@ -177,7 +171,7 @@ CONTAINS
     INTEGER :: lu_in   = 90              ! File duplicated from STDIN
 
     NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, &
-                    Nr,  Lr,  Nz,  Lz, kpar, CANCEL_ODD_P
+                    Nr,  Lr,  Nz,  Lz, kpar
     READ(lu_in,grid)
 
   END SUBROUTINE grid_readinputs

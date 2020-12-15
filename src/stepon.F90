@@ -44,7 +44,7 @@ SUBROUTINE stepon
       CALL poisson
 
       ! Update nonlinear term
-      IF ( NON_LIN .OR. (A0KH .NE. 0) ) THEN
+      IF ( NON_LIN ) THEN
         CALL compute_Sapj
       ENDIF
 
