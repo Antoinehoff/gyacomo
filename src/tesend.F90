@@ -5,9 +5,12 @@ SUBROUTINE tesend
 
   use prec_const
   IMPLICIT NONE
+  LOGICAL :: mlend
 
   !________________________________________________________________________________
   !                   1.  Some processors had set nlend
+  CALL mpi_allreduce(nlend, mlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, &
+     &             ierr)
   IF( nlend ) THEN
     WRITE(*,'(/a)') 'rhs are NaN/Inf'
     IF (my_id .EQ. 0) WRITE(*,*) 'Run terminated at cstep=',cstep
