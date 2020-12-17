@@ -65,8 +65,10 @@ SUBROUTINE control
      CALL cpu_time(t1_diag); tc_diag = tc_diag + (t1_diag - t0_diag)
 
     CALL cpu_time(t1_step); tc_step = tc_step + (t1_step - t0_step)
-    
+
   END DO
+
+  CALL mpi_barrier(MPI_COMM_WORLD,ierr)
   IF (my_id .EQ. 1) WRITE(*,'(a/)') '...time integration done'
   !________________________________________________________________________________
   !              9.   Epilogue

@@ -6,13 +6,15 @@ SUBROUTINE tesend
   use prec_const
   IMPLICIT NONE
   LOGICAL :: mlend
+  real    :: tnow
 
   !________________________________________________________________________________
   !                   1.  Some processors had set nlend
   CALL mpi_allreduce(nlend, mlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, &
      &             ierr)
-  IF( nlend ) THEN
-    WRITE(*,'(/a)') 'rhs are NaN/Inf'
+  IF( mlend ) THEN
+    nlend = .TRUE.
+    IF (my_id .EQ. 0) WRITE(*,'(/a)') 'rhs are NaN/Inf'
     IF (my_id .EQ. 0) WRITE(*,*) 'Run terminated at cstep=',cstep
     RETURN
   END IF
@@ -38,12 +40,15 @@ SUBROUTINE tesend
 
   !________________________________________________________________________________
   !                   4.  Test on rune time
-  CALL cpu_time(finish)
-  nlend = 1.1*(finish-start) .GT. maxruntime
+  CALL cpu_time(tnow)
+  mlend = (1.2*(tnow-start)) .GT. maxruntime
+  CALL mpi_allreduce(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, &
+       &    ierr)
   IF ( nlend ) THEN
-     IF (my_id .EQ. 0) WRITE(*,'(/a)') 'Max run time reached'
+     WRITE(*,'(/a)') 'Max run time reached'
      RETURN
   END IF
   !
+  RETURN
   !
 END SUBROUTINE tesend
