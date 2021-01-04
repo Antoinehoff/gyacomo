@@ -22,14 +22,14 @@ SUBROUTINE inital
   ELSE
     CALL init_moments
     !!!!!! Set phi !!!!!!
-    IF (my_id .EQ. 1) WRITE(*,*) 'Init phi'
+    IF (my_id .EQ. 0) WRITE(*,*) 'Init phi'
     CALL poisson
   ENDIF
 
 
   !!!!!! Set Sepj, Sipj and dnjs coeff table !!!!!!
   IF ( NON_LIN ) THEN;
-    IF (my_id .EQ. 1) WRITE(*,*) 'Init Sapj'
+    IF (my_id .EQ. 0) WRITE(*,*) 'Init Sapj'
     CALL compute_Sapj
     ! WRITE(*,*) 'Building Dnjs table'
     CALL build_dnjs_table

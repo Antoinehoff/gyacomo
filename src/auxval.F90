@@ -13,9 +13,9 @@ subroutine auxval
 
   CALL init_grid_distr_and_plans(Nr,Nz)
 
-  CALL set_krgrid
+  CALL set_krgrid ! MPI Distributed dimension
 
-  CALL set_kzgrid ! Distributed dimension
+  CALL set_kzgrid
 
   CALL set_pj
 
@@ -26,7 +26,6 @@ subroutine auxval
     IF (my_id .EQ. i_) WRITE (*,'(I2,A9,I3,A8,I3,A8,I3,A8,I3,A15,I6)') &
     i_,': ikrs = ', ikrs, ' ikre = ', ikre, 'ikzs = ', ikzs, ' ikze = ', ikze, &
     'alloc_local = ', alloc_local_1+alloc_local_2
-    CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   ENDDO
 
 END SUBROUTINE auxval

@@ -20,7 +20,12 @@ MODULE fourier
   type(C_PTR) , PUBLIC                   :: planf, planb
   integer(C_INTPTR_T)                    :: i, ix, iy
   integer(C_INTPTR_T), PUBLIC            :: alloc_local_1, alloc_local_2
-  integer(C_INTPTR_T)                    :: NR_, NZ_
+  integer(C_INTPTR_T)                    :: NR_, NZ_, NR_halved
+
+  ! many plan data variables
+  integer(C_INTPTR_T) :: howmany=9 ! numer of eleemnt of the tensor
+  integer :: rank=3                ! rank of the transform
+  integer(C_INTPTR_T), dimension(2) :: fft_dims ! array containing data extent
 
   CONTAINS
 
@@ -29,9 +34,12 @@ MODULE fourier
 
     INTEGER, INTENT(IN) :: Nr,Nz
     NR_ = Nr; NZ_ = Nz
+    NR_halved = NR_/2 + 1
 
+    !! Complex arrays F, G
     ! Compute the room to allocate
-    alloc_local_1 = fftw_mpi_local_size_2d(NR_/2 + 1, NZ_, MPI_COMM_WORLD, local_nkr, local_nkr_offset)
+    alloc_local_1 = fftw_mpi_local_size_2d(NR_halved, NZ_, MPI_COMM_WORLD, local_nkr, local_nkr_offset)
+    ! alloc_local_1 = fftw_mpi_local_size_2d_many(2, NR_halved, NZ_, MPI_COMM_WORLD, local_nkr, local_nkr_offset)
     ! Initalize pointers to this room
     cdatac_f = fftw_alloc_complex(alloc_local_1)
     cdatac_g = fftw_alloc_complex(alloc_local_1)
@@ -41,11 +49,15 @@ MODULE fourier
     call c_f_pointer(cdatac_g, cmpx_data_g, [NZ_ ,local_nkr])
     call c_f_pointer(cdatac_c, cmpx_data_c, [NZ_ ,local_nkr])
 
-    alloc_local_2 = fftw_mpi_local_size_2d(NZ_, NR_/2 + 1, MPI_COMM_WORLD, local_nz, local_nz_offset)
-
+    !! Real arrays iFFT(F), iFFT(G)
+    ! Compute the room to allocate
+    alloc_local_2 = fftw_mpi_local_size_2d(NZ_, NR_halved, MPI_COMM_WORLD, local_nz, local_nz_offset)
+    ! alloc_local_2 = fftw_mpi_local_size_2d_many(2, NZ_, NR_halved, MPI_COMM_WORLD, local_nz, local_nz_offset)
+    ! Initalize pointers to this room
     cdatar_f = fftw_alloc_real(2*alloc_local_2)
     cdatar_g = fftw_alloc_real(2*alloc_local_2)
     cdatar_c = fftw_alloc_real(2*alloc_local_2)
+    ! Initalize the arrays with the rooms pointed
     call c_f_pointer(cdatar_f, real_data_f, [2*(NR_/2  + 1),local_nz])
     call c_f_pointer(cdatar_g, real_data_g, [2*(NR_/2  + 1),local_nz])
     call c_f_pointer(cdatar_c, real_data_c, [2*(NR_/2  + 1),local_nz])
@@ -58,13 +70,6 @@ MODULE fourier
       write(*,*) "plan creation error!!"
       stop
    end if
-
-   DO ix = 0,num_procs-1
-     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-     IF (my_id .EQ. ix) print *, my_id,': alloc_local = ', alloc_local_1+alloc_local_2
-     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-   ENDDO
-
 
   END SUBROUTINE init_grid_distr_and_plans
 

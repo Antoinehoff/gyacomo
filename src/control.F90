@@ -9,42 +9,48 @@ SUBROUTINE control
   !________________________________________________________________________________
   !              1.   Prologue
   !                   1.1     Initialize the parallel environment
-  IF (my_id .EQ. 1) WRITE(*,*) 'Initialize MPI...'
+  IF (my_id .EQ. 0) WRITE(*,*) 'Initialize MPI...'
   CALL ppinit
-  IF (my_id .EQ. 1) WRITE(*,'(a/)') '...MPI initialized'
+  IF (my_id .EQ. 0) WRITE(*,'(a/)') '...MPI initialized'
 
 
   CALL daytim('Start at ')
 
   !                   1.2     Define data specific to run
-  IF (my_id .EQ. 1) WRITE(*,*) 'Load basic data...'
+  IF (my_id .EQ. 0) WRITE(*,*) 'Load basic data...'
   CALL basic_data
-  IF (my_id .EQ. 1) WRITE(*,'(a/)') '...basic data loaded.'
+  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+  IF (my_id .EQ. 0) WRITE(*,'(a/)') '...basic data loaded.'
 
   !                   1.3   Read input parameters from input file
-  IF (my_id .EQ. 1) WRITE(*,*) 'Read input parameters...'
+  IF (my_id .EQ. 0) WRITE(*,*) 'Read input parameters...'
   CALL readinputs
-  IF (my_id .EQ. 1) WRITE(*,'(a/)') '...input parameters read'
+  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+  IF (my_id .EQ. 0) WRITE(*,'(a/)') '...input parameters read'
 
   !                   1.4     Set auxiliary values (allocate arrays, set grid, ...)
-  IF (my_id .EQ. 1) WRITE(*,*) 'Calculate auxval...'
+  IF (my_id .EQ. 0) WRITE(*,*) 'Calculate auxval...'
   CALL auxval
-  IF (my_id .EQ. 1) WRITE(*,'(a/)') '...auxval calculated'
+  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+  IF (my_id .EQ. 0) WRITE(*,'(a/)') '...auxval calculated'
 
   !                   1.5     Initial conditions
-  IF (my_id .EQ. 1) WRITE(*,*) 'Create initial state...'
+  IF (my_id .EQ. 0) WRITE(*,*) 'Create initial state...'
   CALL inital
-  IF (my_id .EQ. 1) WRITE(*,'(a/)') '...initial state created'
+  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+  IF (my_id .EQ. 0) WRITE(*,'(a/)') '...initial state created'
 
   !                   1.6     Initial diagnostics
-  IF (my_id .EQ. 1) WRITE(*,*) 'Initial diagnostics...'
+  IF (my_id .EQ. 0) WRITE(*,*) 'Initial diagnostics...'
   CALL diagnose(0)
-  IF (my_id .EQ. 1) WRITE(*,'(a/)') '...initial diagnostics done'
+  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+  IF (my_id .EQ. 0) WRITE(*,'(a/)') '...initial diagnostics done'
 
   CALL FLUSH(stdout)
+  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   !________________________________________________________________________________
 
-  IF (my_id .EQ. 1) WRITE(*,*) 'Time integration loop..'
+  IF (my_id .EQ. 0) WRITE(*,*) 'Time integration loop..'
   !________________________________________________________________________________
   !              2.   Main loop
   DO
@@ -68,15 +74,14 @@ SUBROUTINE control
 
   END DO
 
-  CALL mpi_barrier(MPI_COMM_WORLD,ierr)
-  IF (my_id .EQ. 1) WRITE(*,'(a/)') '...time integration done'
+  IF (my_id .EQ. 0) WRITE(*,'(a/)') '...time integration done'
   !________________________________________________________________________________
   !              9.   Epilogue
 
   CALL diagnose(-1)
   CALL endrun
 
-  IF (my_id .EQ. 1) CALL daytim('Done at ')
+  IF (my_id .EQ. 0) CALL daytim('Done at ')
 
   CALL ppexit
 
