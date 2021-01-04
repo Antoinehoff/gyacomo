@@ -13,6 +13,7 @@ SUBROUTINE stepon
   IMPLICIT NONE
 
   INTEGER :: num_step
+  LOGICAL :: mlend
 
    DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
       ! Compute right hand side of moments hierarchy equation
@@ -62,20 +63,22 @@ SUBROUTINE stepon
 
         IF ( ikrs .EQ. 1 ) CALL enforce_symetry() ! Enforcing symmetry on kr = 0
 
+        mlend=.FALSE.
         IF(.NOT.nlend) THEN
-           nlend=nlend .or. checkfield(phi,' phi')
+           mlend=mlend .or. checkfield(phi,' phi')
            DO ip=ips_e,ipe_e
              DO ij=ijs_e,ije_e
-              nlend=nlend .or. checkfield(moments_e(ip,ij,:,:,updatetlevel),' moments_e')
+              mlend=mlend .or. checkfield(moments_e(ip,ij,:,:,updatetlevel),' moments_e')
              ENDDO
            ENDDO
-
            DO ip=ips_i,ipe_i
              DO ij=ijs_i,ije_i
-              nlend=nlend .or. checkfield(moments_i(ip,ij,:,:,updatetlevel),' moments_i')
+              mlend=mlend .or. checkfield(moments_i(ip,ij,:,:,updatetlevel),' moments_i')
              ENDDO
            ENDDO
+           CALL MPI_ALLREDUCE(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierr)
         ENDIF
+
         ! Execution time end
         CALL cpu_time(t1_checkfield)
         tc_checkfield = tc_checkfield + (t1_checkfield - t0_checkfield)
