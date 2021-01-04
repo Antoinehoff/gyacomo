@@ -2,7 +2,7 @@ clear all;
 addpath(genpath('../matlab')) % ... add
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
-CLUSTER.TIME  = '00:00:10'; % allocation time hh:mm:ss
+CLUSTER.TIME  = '00:10:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
 NU      = 1e-1;   % Collision frequency
@@ -29,18 +29,17 @@ SPSCP   = 1/10;    % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
-SIMID   = 'test_runtime';  % Name of the simulation
-CO      = -1;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
+SIMID   = 'debug';  % Name of the simulation
+CO      = 0;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% unused
 KR0KH   = 0; A0KH = 0; % Background phi mode to drive Ray-Tay inst.
 NO_E    = 0;  % Remove electrons dynamic
-% DK    = 0;  % Drift kinetic model (put every kernel_n to 0 except n=0 to 1)
 KREQ0   = 0;      % put kr = 0
 KPAR    = 0.0;    % Parellel wave vector component
 LAMBDAD = 0.0;
-NON_LIN = 0 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
+NON_LIN = 1 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
 LOAD_MARCONI = 0;
 
 setup

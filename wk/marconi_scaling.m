@@ -5,11 +5,12 @@ addpath(genpath('../matlab')) % ... add
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% CLUSTER PARAMETERS
 CLUSTER.TIME  = '01:00:00'; % allocation time hh:mm:ss
-CLUSTER.NODES = '01';       % MPI process
+CLUSTER.NODES = '02';       % MPI process
 CLUSTER.CPUPT = '01';       % CPU per task
-CLUSTER.NTPN  = '24';       % N tasks per node (openMP)
-CLUSTER.PART  = 'prod';      % dbg or prod
-CLUSTER.MEM   = '16GB';     % Memory
+CLUSTER.NTPN  = '14';       % N tasks per node (openMP)
+CLUSTER.PART  = 'dbg';      % dbg or prod
+CLUSTER.MEM   = '8GB';     % Memory
+CLUSTER.JNAME = 'scaling';     % Job name
 %% PHYSICAL PARAMETERS
 NU      = 1e-1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
@@ -19,14 +20,14 @@ ETAT    = 0.0;    % Temperature gradient
 MU      = 0e-4;   % Hyper diffusivity coefficient
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
-N       = 128;     % Frequency gridpoints (Nkr = N/2)
+N       = 1024;     % Frequency gridpoints (Nkr = N/2)
 L       = 10;     % Size of the squared frequency domain
-PMAXE   = 6;     % Highest electron Hermite polynomial degree
-JMAXE   = 4;     % Highest ''       Laguerre ''
-PMAXI   = 6;     % Highest ion      Hermite polynomial degree
-JMAXI   = 4;     % Highest ''       Laguerre ''
+PMAXE   = 2;     % Highest electron Hermite polynomial degree
+JMAXE   = 1;     % Highest ''       Laguerre ''
+PMAXI   = 2;     % Highest ion      Hermite polynomial degree
+JMAXI   = 1;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS
-TMAX    = 2;  % Maximal time unit
+TMAX    = 5;  % Maximal time unit
 DT      = 5e-2;   % Time step
 SPS0D   = 1/DT;    % Sampling per time unit for profiler
 SPS2D   = -1;      % Sampling per time unit for 2D arrays
@@ -35,7 +36,7 @@ SPSCP   = -1;      % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
-SIMID   = ['Scaling_np',num2str(CLUSTER.NTPN)];  % Name of the simulation
+SIMID   = ['nn',num2str(CLUSTER.NODES),'_np',num2str(CLUSTER.NTPN)];  % Name of the simulation
 CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -52,5 +53,9 @@ NON_LIN = 1 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
 setup
 
 write_sbash
+
+system(['mkdir -p ../results/Scaling']);
+system(['cp -r ../results/',SIMID,' ../results/Scaling/']);
+system(['rm -r ../results/',SIMID]);
 
 MARCONI = 1;

@@ -8,26 +8,27 @@ CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
 CLUSTER.NODES = '1';        % MPI process
 CLUSTER.CPUPT = '1';        % CPU per task
 CLUSTER.NTPN  = '20';       % N tasks per node
-CLUSTER.PART  = 'prod';      % dbg or prod
-CLUSTER.MEM   = '32GB';     % Memory
+CLUSTER.PART  = 'prod';     % dbg or prod
+CLUSTER.MEM   = '16GB';     % Memory
+CLUSTER.JNAME = 'gamma_inf';     % Job name
 %% PHYSICAL PARAMETERS
 NU      = 1e-1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-ETAB    = 0.4;    % Magnetic gradient
+ETAB    = 0.66;    % Magnetic gradient
 ETAN    = 1.0;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
 MU      = 5e-4;   % Hyper diffusivity coefficient
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
 N       = 512;     % Frequency gridpoints (Nkr = N/2)
-L       = 150;     % Size of the squared frequency domain
-PMAXE   = 2;     % Highest electron Hermite polynomial degree
-JMAXE   = 1;     % Highest ''       Laguerre ''
-PMAXI   = 2;     % Highest ion      Hermite polynomial degree
-JMAXI   = 1;     % Highest ''       Laguerre ''
+L       = 100;     % Size of the squared frequency domain
+PMAXE   = 8;    % Highest electron Hermite polynomial degree
+JMAXE   = 4;     % Highest ''       Laguerre ''
+PMAXI   = 8;     % Highest ion      Hermite polynomial degree
+JMAXI   = 4;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS
-TMAX    = 200;  % Maximal time unit
-DT      = 5e-3;   % Time step
+TMAX    = 400;  % Maximal time unit
+DT      = 1e-2;   % Time step
 SPS0D   = 10;    % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 1/10;    % Sampling per time unit for 5D arrays

@@ -94,12 +94,6 @@ CONTAINS
       ikrs = local_nkr_offset + 1
       ikre = ikrs + local_nkr - 1
 
-      DO i_ = 0,num_procs-1
-        CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-        IF (my_id .EQ. i_) print *, i_,': ikrs = ', ikrs, ' ikre = ', ikre
-        CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-      ENDDO
-
       IF (my_id .EQ. num_procs-1) ikre = Nkr
       !WRITE(*,*) 'ID = ',my_id,' ikrs = ', ikrs, ' ikre = ', ikre
       ! Grid spacings

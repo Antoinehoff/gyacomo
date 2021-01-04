@@ -18,7 +18,8 @@ MODULE fourier
   type(C_PTR)                            :: cdatar_f, cdatar_g, cdatar_c
   type(C_PTR)                            :: cdatac_f, cdatac_g, cdatac_c
   type(C_PTR) , PUBLIC                   :: planf, planb
-  integer(C_INTPTR_T)                    :: i, ix, iy, alloc_local_1, alloc_local_2
+  integer(C_INTPTR_T)                    :: i, ix, iy
+  integer(C_INTPTR_T), PUBLIC            :: alloc_local_1, alloc_local_2
   integer(C_INTPTR_T)                    :: NR_, NZ_
 
   CONTAINS

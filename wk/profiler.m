@@ -1,5 +1,5 @@
 %% load profiling
-filename = sprintf([BASIC.RESDIR,'outputs_%.2d.h5'],00);
+% filename = sprintf([BASIC.RESDIR,'outputs_%.2d.h5'],00);
 
 CPUTIME   = double(h5readatt(filename,'/data/input','cpu_time'));
 DT_SIM    = h5readatt(filename,'/data/input','dt');

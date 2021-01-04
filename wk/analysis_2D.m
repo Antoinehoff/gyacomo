@@ -1,12 +1,14 @@
 %% Load results
-if LOAD_MARCONI==1
-    hostfolder = ['/marconi_scratch/userexternal/ahoffman/HeLaZ/results/',BASIC.SIMID,'/',BASIC.PARAMS];
-    localfolder= [BASIC.RESDIR,'..'];
-    system(['scp -r ahoffman@login.marconi.cineca.it:',hostfolder,' ',localfolder])
+if 0
+    %%
+    outfile = '/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi/512x256_L_100_Pe_6_Je_3_Pi_6_Ji_3_nB_0.8_nN_1_nu_1e-01_FC_mu_5e-04/out.txt';
+    BASIC.RESDIR = load_marconi(outfile);
 end
+%%
 % JOBNUM = 0; load_results;
 % JOBNUM = 1; load_results;
 compile_results
+load_params
 
 %% Retrieving max polynomial degree and sampling info
 Npe = numel(Pe); Nje = numel(Je); [JE,PE] = meshgrid(Je,Pe);
@@ -16,10 +18,8 @@ Ns2D      = numel(Ts2D);
 % renaming and reshaping quantity of interest
 Ts5D      = Ts5D';
 Ts2D      = Ts2D';
-if strcmp(OUTPUTS.write_non_lin,'.true.')
-    Si00      = squeeze(Sipj(1,1,:,:,:));
-    Se00      = squeeze(Sepj(1,1,:,:,:));
-end
+Si00      = squeeze(Sipj(1,1,:,:,:));
+Se00      = squeeze(Sepj(1,1,:,:,:));
 %% Build grids
 Nkr = numel(kr); Nkz = numel(kz);
 [KZ,KR] = meshgrid(kz,kr);
@@ -53,11 +53,10 @@ for it = 1:numel(Ts2D)
     dzphi(:,:,it) = real(fftshift(ifft2(1i*KZ.*(PH_),Nr,Nz)));
 end
 
-if strcmp(OUTPUTS.write_non_lin,'.true.')
 for it = 1:numel(Ts5D)
     si00(:,:,it)      = real(fftshift(ifft2(squeeze(Si00(:,:,it)),Nr,Nz)));
 end
-end
+
 % Post processing
 disp('- post processing')
 E_pot    = zeros(1,Ns2D);      % Potential energy n^2
@@ -69,12 +68,11 @@ Flux_re  = zeros(1,Ns2D);      % Particle flux Gamma = <ne drphi>
 Flux_ze  = zeros(1,Ns2D);      % Particle flux Gamma = <ne dzphi>
 Ne_norm  = zeros(Npe,Nje,Ns5D);% Time evol. of the norm of Napj
 Ni_norm  = zeros(Npi,Nji,Ns5D);% .
-if strcmp(OUTPUTS.write_non_lin,'.true.')
 Se_norm  = zeros(Npe,Nje,Ns5D);% Time evol. of the norm of Sapj
 Si_norm  = zeros(Npi,Nji,Ns5D);% .
 Sne00_norm = zeros(1,Ns2D);    % Time evol. of the amp of e nonlin term
 Sni00_norm = zeros(1,Ns2D);    %
-end
+
 
 Ddr = 1i*KR; Ddz = 1i*KZ; lapl   = Ddr.^2 + Ddz.^2; 
 
@@ -96,14 +94,11 @@ dEdt     = diff(E_pot+E_kin)./dt2D;
 for it = 1:numel(Ts5D) % Loop over 5D arrays
     Ne_norm(:,:,it)= sum(sum(abs(Nepj(:,:,:,:,it)),3),4)/Nkr/Nkz;
     Ni_norm(:,:,it)= sum(sum(abs(Nipj(:,:,:,:,it)),3),4)/Nkr/Nkz;
-if strcmp(OUTPUTS.write_non_lin,'.true.')   
     Se_norm(:,:,it)= sum(sum(abs(Sepj(:,:,:,:,it)),3),4)/Nkr/Nkz;
     Si_norm(:,:,it)= sum(sum(abs(Sipj(:,:,:,:,it)),3),4)/Nkr/Nkz;
     Sne00_norm(it) = sum(sum(abs(Se00(:,:,it))))/Nkr/Nkz;
     Sni00_norm(it) = sum(sum(abs(Si00(:,:,it))))/Nkr/Nkz;
 end
-end
-
 
 %% Compute growth rate
 if NON_LIN == 0
@@ -241,7 +236,7 @@ save_figure
 end
 
 %%
-t0    = 0;
+t0    = 1;
 skip_ = 1; 
 DELAY = 0.01*skip_;
 FRAMES = floor(t0/(Ts2D(2)-Ts2D(1)))+1:skip_:numel(Ts2D);
@@ -310,56 +305,29 @@ fig = figure; FIGNAME = 'space_time_drphi';set(gcf, 'Position',  [100, 100, 1200
 save_figure
 end
 
-if 0
-%% Flow
-skip = 10;
-plt  = @(x) x(1:skip:end,1:skip:end);
-tf = 120; [~,it] = min(abs(Ts2D-tf));
-
-fig = figure; FIGNAME = 'space_time_drphi';
-    quiver(plt(RR),plt(ZZ),plt(dzphi(:,:,it)),plt(-drphi(:,:,it)),0);
-    xlabel('$r$'), ylabel('$z$')
-    title(sprintf('$v_E$, $t=%.0f c_s/R$',Ts2D(it)));
-end
-
-if 0
-%% Growth rate
-fig = figure; FIGNAME = ['growth_rate',sprintf('_%.2d',JOBNUM)];
-    [~,ikr0KH] = min(abs(kr-KR0KH));
-    plot(kz/kr(ikr0KH),gkr0kz_Ni00/(kr(ikr0KH)*A0KH),'DisplayName',['J = ',num2str(JMAXI)])
-    xlabel('$k_z/k_{r0}$'); ylabel('$\gamma_{Ni}/(A_0k_{r0})$');
-    xlim([0. 1.0]); ylim([0. 0.6]);
-save_figure
-
-end
 %%
 if 0
 %% Mode time evolution
+[~,ikr ] = min(abs(kr-dkr));
 [~,ik00] = min(abs(kz));
 [~,idk]  = min(abs(kz-dkz));
-[~,ik50] = min(abs(kz-0.5*KR0KH));
-[~,ik75] = min(abs(kz-0.7*KR0KH));
-[~,ik10] = min(abs(kz-1.00*KR0KH));
+[~,ik50] = min(abs(kz-0.1*max(kz)));
+[~,ik75] = min(abs(kz-0.2*max(kz)));
+[~,ik10] = min(abs(kz-0.3*max(kz)));
 plt = @(x) abs(squeeze(x));
 fig = figure; FIGNAME = ['mode_time_evolution',sprintf('_%.2d',JOBNUM)];
-        semilogy(Ts2D,plt(Ni00(ikr0KH,ik00,:)),'DisplayName', ...
-            ['$k_z/k_{r0} = $',num2str(kz(ik00)/KR0KH)]); hold on
-        semilogy(Ts2D,plt(Ni00(ikr0KH,idk,:)),'DisplayName', ...
-            ['$k_z/k_{r0} = $',num2str(kz(idk)/KR0KH)]); hold on
-        semilogy(Ts2D,plt(Ni00(ikr0KH,ik50,:)),'DisplayName', ...
-            ['$k_z/k_{r0} = $',num2str(kz(ik50)/KR0KH)]); hold on
-        semilogy(Ts2D,plt(Ni00(ikr0KH,ik75,:)),'DisplayName', ...
-            ['$k_z/k_{r0} = $',num2str(kz(ik75)/KR0KH)]); hold on
-        semilogy(Ts2D,plt(Ni00(ikr0KH,ik10,:)),'DisplayName', ...
-            ['$k_z/k_{r0} = $',num2str(kz(ik10)/KR0KH)]); hold on
+        semilogy(Ts2D,plt(Ni00(ikr,ik00,:)),'DisplayName', ...
+            ['$k_z = $',num2str(kz(ik00))]); hold on
+        semilogy(Ts2D,plt(Ni00(ikr,idk,:)),'DisplayName', ...
+            ['$k_z = $',num2str(kz(idk))]); hold on
+        semilogy(Ts2D,plt(Ni00(ikr,ik50,:)),'DisplayName', ...
+            ['$k_z = $',num2str(kz(ik50))]); hold on
+        semilogy(Ts2D,plt(Ni00(ikr,ik75,:)),'DisplayName', ...
+            ['$k_z = $',num2str(kz(ik75))]); hold on
+        semilogy(Ts2D,plt(Ni00(ikr,ik10,:)),'DisplayName', ...
+            ['$k_z = $',num2str(kz(ik10))]); hold on
         xlabel('$t$'); ylabel('$\hat n_i^{00}$'); legend('show');
-        semilogy(Ts2D,plt(Ni00(ikr0KH,ik00,end))*exp(gkr0kz_Ni00(ik00)*(Ts2D-Ts2D(end))),'k--')
-        semilogy(Ts2D,plt(Ni00(ikr0KH,idk,end))*exp(gkr0kz_Ni00(idk)*(Ts2D-Ts2D(end))),'k--')
-        semilogy(Ts2D,plt(Ni00(ikr0KH,ik50,end))*exp(gkr0kz_Ni00(ik50)*(Ts2D-Ts2D(end))),'k--')
-        semilogy(Ts2D,plt(Ni00(ikr0KH,ik75,end))*exp(gkr0kz_Ni00(ik75)*(Ts2D-Ts2D(end))),'k--')
-        semilogy(Ts2D,plt(Ni00(ikr0KH,ik10,end))*exp(gkr0kz_Ni00(ik10)*(Ts2D-Ts2D(end))),'k--')
-        plot(tstart*[1 1],ylim,'k-','LineWidth',0.5);
-        plot(tend*[1 1],ylim,'k-','LineWidth',0.5);
+title(sprintf('$k_r=$ %1.1f',kr(ikr)))
 save_figure
 end
 
@@ -384,3 +352,37 @@ if strcmp(OUTPUTS.write_non_lin,'.true.')
 end
 save_figure
 end
+
+%% Phase space distribution function
+% M_ = 25;
+% spar = linspace(0,4,M_); xperp = spar;
+% 
+% PSDF_e = zeros(numel(kr),numel(kz),M_,M_,numel(Ts5D));
+% for ikr = 1:numel(kr)
+%     for ikz = 1:numel(kz)
+%         for it = 1:numel(Ts5D)
+%         PSDF_e(ikr,ikz,:,:,it) = compute_fa(Nepj(:,:,ikr,ikz,it), spar, xperp);
+%         end
+%     end
+% end
+% 
+% ktarget = 0.3*max(kz);
+% ttarget = 310;
+% 
+% [~,ik10] = min(abs(kz-ktarget));
+% [~,it]   = min(abs(Ts5D-ttarget));
+% if 0
+%     %%
+% plt = @(x) real(x(ik10,ik10,:,:,it));
+% pclr = pcolor(spar,xperp,plt(PSDF_e)); set(pclr, 'edgecolor','none'); colorbar;
+% xlabel('$s_\parallel$'); ylabel('$x_\perp$'); title(sprintf('$t c_s/R=%.0f$',Ts5D(it))); 
+% legend(['$Re(f_e),k_\perp \approx$',sprintf('%01.0f',norm([kr(ik10),kz(ik10)]))]);
+% end
+% if 0
+% %% Phase space distribution function time evolution
+% GIFNAME = ['f_e',sprintf('_%.2d',JOBNUM)]; INTERP = 1;
+% FIELD = real(ni00+ne00); X = RR; Y = ZZ; T = Ts5D;
+% FIELDNAME = '$n_i-n_e$'; XNAME = '$r\rho_s$'; YNAME = '$z\rho_s$';
+% create_gif
+% end
+
