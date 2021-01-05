@@ -245,26 +245,26 @@ if 0
 %% Density ion
 GIFNAME = ['ni',sprintf('_%.2d',JOBNUM)]; INTERP = 1;
 FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D;
-FIELDNAME = '$n_i$'; XNAME = '$r\rho_s$'; YNAME = '$z\rho_s$';
+FIELDNAME = '$n_i$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
 if 0
 %% Density electron
 GIFNAME = ['ne',sprintf('_%.2d',JOBNUM)]; INTERP = 1;
 FIELD = real(ne00); X = RR; Y = ZZ; T = Ts2D;
-FIELDNAME = '$n_e$'; XNAME = '$r\rho_s$'; YNAME = '$z\rho_s$';
+FIELDNAME = '$n_e$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
 if 0
 %% Density ion - electron
 GIFNAME = ['ni-ne',sprintf('_%.2d',JOBNUM)]; INTERP = 1;
 FIELD = real(ni00+ne00); X = RR; Y = ZZ; T = Ts2D;
-FIELDNAME = '$n_i-n_e$'; XNAME = '$r\rho_s$'; YNAME = '$z\rho_s$';
+FIELDNAME = '$n_i-n_e$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
 if 0
 %% Phi
-GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)];INTERP = 0;
+GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)];INTERP = 1;
 FIELD = real(phi); X = RR; Y = ZZ; T = Ts2D;
 FIELDNAME = '$\phi$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
