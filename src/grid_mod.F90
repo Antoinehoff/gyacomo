@@ -94,8 +94,6 @@ CONTAINS
       ikrs = local_nkr_offset + 1
       ikre = ikrs + local_nkr - 1
 
-      IF (my_id .EQ. num_procs-1) ikre = Nkr
-      !WRITE(*,*) 'ID = ',my_id,' ikrs = ', ikrs, ' ikre = ', ikre
       ! Grid spacings
       IF (Lr .EQ. 0) THEN
         deltakr = 1._dp
