@@ -23,9 +23,12 @@ subroutine auxval
 
   DO i_ = 0,num_procs-1
     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-    IF (my_id .EQ. i_) WRITE (*,'(I2,A9,I3,A8,I3,A8,I3,A8,I3,A15,I6)') &
-    i_,': ikrs = ', ikrs, ' ikre = ', ikre, 'ikzs = ', ikzs, ' ikze = ', ikze, &
-    'alloc_local = ', alloc_local_1+alloc_local_2
+    IF (my_id .EQ. i_) THEN
+      WRITE (*,'(I2,A9,I3,A8,I3,A8,I3,A8,I3,A15,I6)') &
+        i_,': ikrs = ', ikrs, ' ikre = ', ikre, 'ikzs = ', ikzs, ' ikze = ', ikze
+      WRITE (*,'(A14,I4,A10,I4,A15,I6)') &
+        '  local_nkr = ',local_nkr,' offset = ',local_nkr_offset,' alloc_local = ', alloc_local_1+alloc_local_2
+    ENDIF
   ENDDO
 
 END SUBROUTINE auxval
