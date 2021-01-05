@@ -1,7 +1,7 @@
 %% Load results
-if 0
+if 1
     %%
-    outfile = '/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi/512x256_L_100_Pe_6_Je_3_Pi_6_Ji_3_nB_0.8_nN_1_nu_1e-01_FC_mu_5e-04/out.txt';
+    outfile = '/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi/200x100_L_100_Pe_2_Je_1_Pi_2_Ji_1_nB_0.66_nN_1_nu_1e-01_FC_mu_1e-03/out.txt';
     BASIC.RESDIR = load_marconi(outfile);
 end
 %%
@@ -236,7 +236,7 @@ save_figure
 end
 
 %%
-t0    = 1;
+t0    = 40;
 skip_ = 1; 
 DELAY = 0.01*skip_;
 FRAMES = floor(t0/(Ts2D(2)-Ts2D(1)))+1:skip_:numel(Ts2D);
@@ -264,7 +264,7 @@ create_gif
 end
 if 0
 %% Phi
-GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)];INTERP = 1;
+GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)];INTERP = 0;
 FIELD = real(phi); X = RR; Y = ZZ; T = Ts2D;
 FIELDNAME = '$\phi$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
@@ -334,7 +334,7 @@ end
 %%
 if 0
 %% Show frame in kspace
-tf = 100; [~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
+tf = 300; [~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
 fig = figure; FIGNAME = ['krkz_frame',sprintf('t=%.0f',Ts2D(it2))];set(gcf, 'Position',  [100, 100, 700, 600])
     subplot(221); plt = @(x) fftshift((abs(x)),2);
         pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(PHI(:,:,it2))); set(pclr, 'edgecolor','none'); colorbar;
@@ -345,11 +345,9 @@ fig = figure; FIGNAME = ['krkz_frame',sprintf('t=%.0f',Ts2D(it2))];set(gcf, 'Pos
     subplot(223); plt = @(x) fftshift(abs(x),2);
         pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Ne00(:,:,it2))); set(pclr, 'edgecolor','none'); colorbar;
         xlabel('$k_r$'); ylabel('$k_z$'); legend('$|\hat n_e^{00}|$');
-if strcmp(OUTPUTS.write_non_lin,'.true.')
     subplot(224); plt = @(x) fftshift((abs(x)),2);
         pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Si00(:,:,it5))); set(pclr, 'edgecolor','none'); colorbar;
         xlabel('$k_r$'); ylabel('$k_z$');legend('$\hat S_i^{00}$');
-end
 save_figure
 end
 

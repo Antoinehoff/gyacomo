@@ -10,24 +10,24 @@ TAU     = 1.0;    % e/i temperature ratio
 ETAB    = 0.5;    % Magnetic gradient
 ETAN    = 1.0;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
-MU      = 5e-4;   % Hyper diffusivity coefficient
+HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
 N       = 128;     % Frequency gridpoints (Nkr = N/2)
-L       = 33;     % Size of the squared frequency domain
+L       = 66;     % Size of the squared frequency domain
 PMAXE   = 2;     % Highest electron Hermite polynomial degree
 JMAXE   = 1;     % Highest ''       Laguerre ''
 PMAXI   = 2;     % Highest ion      Hermite polynomial degree
 JMAXI   = 1;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS
-TMAX    = 20;  % Maximal time unit
-DT      = 2e-2;   % Time step
+TMAX    = 500;  % Maximal time unit
+DT      = 1e-2;   % Time step
 SPS0D   = 1/DT;    % Sampling per time unit for profiler
 SPS2D   = 2;      % Sampling per time unit for 2D arrays
 SPS5D   = 2;    % Sampling per time unit for 5D arrays
 SPSCP   = 1/10;    % Sampling per time unit for checkpoints
-RESTART = 0;      % To restart from last checkpoint
-JOB2LOAD= 0;
+RESTART = 1;      % To restart from last checkpoint
+JOB2LOAD= 1;
 %% OPTIONS
 SIMID   = 'debug';  % Name of the simulation
 CO      = 0;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
@@ -41,5 +41,6 @@ KPAR    = 0.0;    % Parellel wave vector component
 LAMBDAD = 0.0;
 NON_LIN = 1 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
 LOAD_MARCONI = 0;
-
+kmax    = N*pi/L;% Highest fourier mode
+MU      = 0.1/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
 setup
