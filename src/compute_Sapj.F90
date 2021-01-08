@@ -62,8 +62,8 @@ SUBROUTINE compute_Sapj
         ! First term drphi x dzf
         DO ikr = ikrs, ikre
           DO ikz = ikzs, ikze
-            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fr_cmpx(ikr,ikz)
-            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gz_cmpx(ikr,ikz)
+            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fr_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
+            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gz_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
           ENDDO
         ENDDO
 
@@ -75,8 +75,8 @@ SUBROUTINE compute_Sapj
         ! Second term -dzphi x drf
         DO ikr = ikrs, ikre
           DO ikz = ikzs, ikze
-            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fz_cmpx(ikr,ikz)
-            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gr_cmpx(ikr,ikz)
+            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fz_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
+            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gr_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
           ENDDO
         ENDDO
 
@@ -140,8 +140,8 @@ SUBROUTINE compute_Sapj
         ! First term drphi x dzf
         DO ikr = ikrs, ikre
           DO ikz = ikzs, ikze
-            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fr_cmpx(ikr,ikz)
-            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gz_cmpx(ikr,ikz)
+            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fr_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
+            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gz_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
           ENDDO
         ENDDO
 
@@ -153,8 +153,8 @@ SUBROUTINE compute_Sapj
         ! Second term -dzphi x drf
         DO ikr = ikrs, ikre
           DO ikz = ikzs, ikze
-            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fz_cmpx(ikr,ikz)
-            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gr_cmpx(ikr,ikz)
+            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fz_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
+            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gr_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
           ENDDO
         ENDDO
 

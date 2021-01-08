@@ -9,12 +9,16 @@ SUBROUTINE inital
   USE coeff
   USE time_integration
   USE array, ONLY : Sepj,Sipj
+  USE collision
 
   implicit none
 
   real :: start_init, end_init, time_estimation
 
   CALL set_updatetlevel(1)
+
+  CALL evaluate_kernels
+
   !!!!!! Set the moments arrays Nepj, Nipj !!!!!!
   ! WRITE(*,*) 'Init moments'
   IF ( RESTART ) THEN
@@ -34,6 +38,7 @@ SUBROUTINE inital
     ! WRITE(*,*) 'Building Dnjs table'
     CALL build_dnjs_table
   ENDIF
+
   !!!!!! Load the full coulomb collision operator coefficients !!!!!!
   IF (CO .EQ. -1) THEN
     IF (my_id .EQ. 0) WRITE(*,*) '=== Load Full Coulomb matrix ==='
@@ -71,7 +76,7 @@ SUBROUTINE init_moments
         DO ikr=ikrs,ikre
           DO ikz=ikzs,ikze
             CALL RANDOM_NUMBER(noise)
-            moments_e( ip,ij,     ikr,    ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
+            moments_e( ip,ij,     ikr,    ikz, :) = (initback_moments + initnoise_moments*(noise-0.5_dp))*AA_r(ikr)*AA_z(ikz)
           END DO
         END DO
 
@@ -90,7 +95,7 @@ SUBROUTINE init_moments
         DO ikr=ikrs,ikre
           DO ikz=ikzs,ikze
             CALL RANDOM_NUMBER(noise)
-            moments_i( ip,ij,ikr,ikz, :) = initback_moments + initnoise_moments*(noise-0.5_dp)
+            moments_i( ip,ij,ikr,ikz, :) = (initback_moments + initnoise_moments*(noise-0.5_dp))*AA_r(ikr)*AA_z(ikz)
           END DO
         END DO
 
@@ -164,7 +169,7 @@ END SUBROUTINE load_cp
 !******************************************************************************!
 
 !******************************************************************************!
-!!!!!!! Build the Laguerre-Laguerre coupling coefficient table
+!!!!!!! Build the Laguerre-Laguerre coupling coefficient table for nonlin
 !******************************************************************************!
 SUBROUTINE build_dnjs_table
   USE basic
@@ -195,48 +200,77 @@ SUBROUTINE build_dnjs_table
       ENDDO
     ENDDO
   ENDDO
-END SUBROUTINE
+END SUBROUTINE build_dnjs_table
 !******************************************************************************!
 
 !******************************************************************************!
-!!!!!!! Load the Full coulomb coefficient table from COSOlver results
+!!!!!!! Evaluate the kernels once for all
 !******************************************************************************!
-SUBROUTINE load_FC_mat ! Works only for a partiular file for now with P,J <= 15,6
+SUBROUTINE evaluate_kernels
   USE basic
+  USE array, Only : kernel_e, kernel_i
   USE grid
-  USE initial_par
-  USE array
-  use model
-  USE futils, ONLY : openf, getarr, closef
+  use model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, lambdaD, DK
   IMPLICIT NONE
 
-  INTEGER :: ip2,ij2
-  INTEGER :: fid1, fid2, fid3, fid4
+  REAL(dp)    :: factj, j_dp, j_int
+  REAL(dp)    :: sigmae2_taue_o2, sigmai2_taui_o2
+  REAL(dp)    :: be_2, bi_2, alphaD
+  REAL(dp)    :: kr, kz, kperp2
 
-  !!!!!!!!!!!! Electron matrices !!!!!!!!!!!!
-  ! get the self electron colision matrix
-  CALL openf(selfmat_file,fid1, 'r', 'D',mpicomm=MPI_COMM_WORLD);
-  CALL getarr(fid1, '/Caapj/Ceepj', Ceepj) ! get array (moli format)
-  CALL closef(fid1)
-  ! get the Test and Back field electron ion collision matrix
-  CALL openf(eimat_file,fid2, 'r', 'D');
-  CALL getarr(fid2, '/Ceipj/CeipjT', CeipjT)
-  CALL getarr(fid2, '/Ceipj/CeipjF', CeipjF)
-  CALL closef(fid2)
+  !!!!! Electron kernels !!!!!
+  !Precompute species dependant factors
+  sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the Kernel argument
 
-  !!!!!!!!!!!!!!! Ion matrices !!!!!!!!!!!!!!
-  ! get the self electron colision matrix
-  CALL openf(selfmat_file, fid3, 'r', 'D',mpicomm=MPI_COMM_WORLD);
-  IF ( (pmaxe .EQ. pmaxi) .AND. (jmaxe .EQ. jmaxi) ) THEN ! if same degrees ion and electron matrices are alike so load Ceepj
-    CALL getarr(fid3, '/Caapj/Ceepj', Ciipj) ! get array (moli format)
-  ELSE
-    CALL getarr(fid3, '/Caapj/Ciipj', Ciipj) ! get array (moli format)
-  ENDIF
-  CALL closef(fid3)
-  ! get the Test and Back field ion electron collision matrix
-  CALL openf(iemat_file, fid4, 'r', 'D');
-  CALL getarr(fid4, '/Ciepj/CiepjT', CiepjT)
-  CALL getarr(fid4, '/Ciepj/CiepjF', CiepjF)
-  CALL closef(fid4)
-END SUBROUTINE load_FC_mat
+  factj = 1.0 ! Start of the recursive factorial
+  DO ij = ijs_e, ije_e
+    j_int = jarray_e(ij)
+    j_dp = REAL(j_int,dp) ! REAL of degree
+
+    ! Recursive factorial
+    IF (j_dp .GT. 0) THEN
+      factj = factj * j_dp
+    ELSE
+      factj = 1._dp
+    ENDIF
+
+    DO ikr = ikrs,ikre
+      kr     = krarray(ikr)
+      DO ikz = ikzs,ikze
+        kz    = kzarray(ikz)
+        be_2  =  (kr**2 + kz**2) * sigmae2_taue_o2
+
+        kernel_e(ij, ikr, ikz) = be_2**(ij)/factj * exp(-be_2)
+
+      ENDDO
+    ENDDO
+  ENDDO
+
+  !!!!! Ion kernels !!!!!
+  sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp ! (b_a/2)^2 = (kperp sqrt(2 tau_a) sigma_a/2)^2
+  factj = 1.0 ! Start of the recursive factorial
+  DO ij = ijs_i, ije_i
+    j_int = jarray_e(ij)
+    j_dp = REAL(j_int,dp) ! REAL of degree
+
+    ! Recursive factorial
+    IF (j_dp .GT. 0) THEN
+      factj = factj * j_dp
+    ELSE
+      factj = 1._dp
+    ENDIF
+
+    DO ikr = ikrs,ikre
+      kr     = krarray(ikr)
+      DO ikz = ikzs,ikze
+        kz    = kzarray(ikz)
+        bi_2  =  (kr**2 + kz**2) * sigmai2_taui_o2
+
+        kernel_i(ij, ikr, ikz) = bi_2**(ij)/factj * exp(-bi_2)
+
+      ENDDO
+    ENDDO
+  ENDDO
+
+END SUBROUTINE evaluate_kernels
 !******************************************************************************!
