@@ -5,9 +5,6 @@ MODULE initial_par
   IMPLICIT NONE
   PRIVATE
 
-  ! To restart the simulation or look for saved state
-  LOGICAL,  PUBLIC, PROTECTED :: RESTART=.true.
-  CHARACTER(len=128), PUBLIC  :: backup_file
   ! Initial background level
   REAL(dp), PUBLIC, PROTECTED :: initback_moments=0._dp
   ! Initial background level
@@ -39,8 +36,6 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /INITIAL_CON/ RESTART
-    NAMELIST /INITIAL_CON/ backup_file
     NAMELIST /INITIAL_CON/ only_Na00
     NAMELIST /INITIAL_CON/ initback_moments
     NAMELIST /INITIAL_CON/ initnoise_moments
