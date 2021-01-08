@@ -5,10 +5,10 @@ GRID.pmaxe = PMAXE;  % Electron Hermite moments
 GRID.jmaxe = JMAXE;  % Electron Laguerre moments
 GRID.pmaxi = PMAXI;  % Ion Hermite moments
 GRID.jmaxi = JMAXI;  % Ion Laguerre moments
-GRID.Nr    = N * (1-KREQ0) + KREQ0; % r grid resolution
-GRID.Lr    = L * (1-KREQ0); % r length
-GRID.Nz    = N; % z ''
-GRID.Lz    = L; % z ''
+GRID.Nr    = N; % r grid resolution
+GRID.Lr    = L; % r length
+GRID.Nz    = N * (1-KREQ0) + KREQ0; % z ''
+GRID.Lz    = L * (1-KREQ0); % z ''
 GRID.kpar  = KPAR;
 
 % Model parameters

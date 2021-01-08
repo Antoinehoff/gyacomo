@@ -5,28 +5,25 @@ default_plots_options
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 1e0;   % Collision frequency
+NU      = 1e-1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-ETAB    = 0.5;
+ETAB    = 0.66;
 ETAN    = 1.0;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
-MU      = 0e-4;   % Hyper diffusivity coefficient
+MU      = 1e-3;   % Hyper diffusivity coefficient
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
-N       = 50;     % Frequency gridpoints (Nkr = N/2)
+N       = 100;     % Frequency gridpoints (Nkr = N/2)
 L       = 100;     % Size of the squared frequency domain
-PMAXE   = 12;
-JMAXE   = 6;
-PMAXI   = 12;
-JMAXI   = 6;
 KREQ0   = 1;      % put kr = 0
 %% TIME PARAMETERS
-TMAX    = 300;  % Maximal time unit
-DT      = 1e-3;   % Time step
+TMAX    = 100;  % Maximal time unit
+DT      = 1e-2;   % Time step
 SPS0D   = 0.5;      % Sampling per time unit for 2D arrays
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 0.1;    % Sampling per time unit for 5D arrays
+SPSCP   = 0;    % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 00;
 %% OPTIONS
@@ -44,34 +41,29 @@ KPAR    = 0.0;    % Parellel wave vector component
 %% PARAMETER SCANS
 if 1
 %% Parameter scan over PJ
-NU    = 1e-2;   % Collision frequency
-ETAB  = 0.5;
-ETAN  = 1.0;
-TMAX  = 400;
-PA = [2, 8, 12, 20, 40];
-JA = [1, 4,  6, 10, 20];
-%  PA = [40];
-%  JA = [20];
+PA = [2, 6, 8, 12];
+JA = [1, 3, 4,  6];
+% PA = [2];
+% JA = [1];
 Nparam = numel(PA);
-param_name = 'PJ';
-CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
-DT      = 5e-3;   % Time step
 
-gamma_Ni = zeros(Nparam,N);
-Ni00_ST  = zeros(Nparam,N,TMAX);
+gamma_Ni = zeros(Nparam,N/2+1);
+Ni00_ST  = zeros(Nparam,N/2+1,TMAX);
 for i = 1:Nparam
     % Change scan parameter
     PMAXE = PA(i); PMAXI = PA(i);
     JMAXE = JA(i); JMAXI = JA(i);
     setup
     % Run linear simulation
-    system('./../bin/helaz');
+    system(...
+        ['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 8 ./../../../bin/helaz; cd ../../../wk']...
+    )
     % Load and process results
     load_results
     tend   = Ts2D(end); tstart   = 0.4*tend;
-    for ikz = 1:N
-        gamma_Ni(i,ikz) = LinearFit_s(Ts2D,squeeze(abs(Ni00(1,ikz,:))),tstart,tend);
-        Ni00_ST(i,ikz,1:numel(Ts2D)) = squeeze((Ni00(1,ikz,:)));
+    for ikr = 1:N/2+1
+        gamma_Ni(i,ikr) = LinearFit_s(Ts2D,squeeze(abs(Ni00(ikr,1,:))),tstart,tend);
+        Ni00_ST(i,ikr,1:numel(Ts2D)) = squeeze((Ni00(ikr,1,:)));
     end
     gamma_Ni(i,:) = real(gamma_Ni(i,:) .* (gamma_Ni(i,:)>=0.0));
     % Clean output
@@ -96,9 +88,9 @@ if 0
 fig = figure; FIGNAME = 'space_time_Ni00';
 i = 3;
 plt = @(x) squeeze((abs(x)));
-for ikz=1:4:numel(kz)/2+1
-    NAME = ['$k_z=',num2str(kz(ikz)),'$'];
-    semilogy(1:TMAX,plt(Ni00_ST(i,ikz,1:TMAX)), 'DisplayName', NAME); hold on;
+for ikr=1:4:numel(kr)/2+1
+    NAME = ['$k_z=',num2str(kr(ikr)),'$'];
+    semilogy(1:TMAX,plt(Ni00_ST(i,ikr,1:TMAX)), 'DisplayName', NAME); hold on;
 end
 grid on; xlabel('$t c_s/\rho_s$'); ylabel('$|Ni^{00}|$');
 title(['$\eta_B=',num2str(ETAB),'$; $P,J=',num2str(PA(i)),',',num2str(JA(i)),'$, $\nu=',num2str(NU),'$'])
@@ -109,17 +101,17 @@ end
 if 1
 %% Plot
 fig = figure; FIGNAME = 'linear_study';
-plt = @(x) circshift(x,N/2-1);
+plt = @(x) x;
 for i = 1:Nparam
     clr       = line_colors(mod(i-1,numel(line_colors(:,1)))+1,:);
     linestyle = line_styles(floor((i-1)/numel(line_colors(:,1)))+1);
-    plot(plt(kz),plt(gamma_Ni(i,:)),...
+    plot(plt(kr),plt(gamma_Ni(i,:)),...
         'Color',clr,...
         'LineStyle',linestyle{1},...
         'DisplayName',['$P=$',num2str(PA(i)),', $J=$',num2str(JA(i))]);
     hold on;
 end
-grid on; xlabel('$k_z$'); ylabel('$\gamma(N_i^{00})$'); xlim([0.0,max(kz)]);
+grid on; xlabel('$k_z$'); ylabel('$\gamma(N_i^{00})$'); xlim([0.0,max(kr)]);
 title(['$\eta_B=',num2str(ETAB),'$, $\nu=',num2str(NU),'$'])
 legend('show')
 saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.fig']);
