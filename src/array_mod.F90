@@ -16,6 +16,10 @@ MODULE array
   ! dnjs coefficient storage (in, ij, is)
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: dnjs
 
+  ! Kernel function evaluation
+  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: kernel_e
+  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: kernel_i
+
   ! Non linear term array (ip,ij,ikr,ikz)
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Sepj ! electron
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Sipj ! ion
