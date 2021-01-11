@@ -59,6 +59,7 @@ SUBROUTINE init_moments
   USE prec_const
   USE utility, ONLY: checkfield
   USE initial_par
+  USE model, ONLY : NON_LIN
   IMPLICIT NONE
 
   REAL(dp) :: noise
@@ -76,7 +77,7 @@ SUBROUTINE init_moments
         DO ikr=ikrs,ikre
           DO ikz=ikzs,ikze
             CALL RANDOM_NUMBER(noise)
-            moments_e( ip,ij,     ikr,    ikz, :) = (initback_moments + initnoise_moments*(noise-0.5_dp))*AA_r(ikr)*AA_z(ikz)
+            moments_e( ip,ij,     ikr,    ikz, :) = (initback_moments + initnoise_moments*(noise-0.5_dp))
           END DO
         END DO
 
@@ -95,7 +96,7 @@ SUBROUTINE init_moments
         DO ikr=ikrs,ikre
           DO ikz=ikzs,ikze
             CALL RANDOM_NUMBER(noise)
-            moments_i( ip,ij,ikr,ikz, :) = (initback_moments + initnoise_moments*(noise-0.5_dp))*AA_r(ikr)*AA_z(ikz)
+            moments_i( ip,ij,ikr,ikz, :) = (initback_moments + initnoise_moments*(noise-0.5_dp))
           END DO
         END DO
 
@@ -108,7 +109,28 @@ SUBROUTINE init_moments
       END DO
     END DO
 
-  ! ENDIF
+    ! Putting to zero modes that are not in the 2/3 Orszag rule
+    IF (NON_LIN) THEN
+      DO ip=ips_e,ipe_e
+      DO ij=ijs_e,ije_e
+      DO ikr=ikrs,ikre
+      DO ikz=ikzs,ikze
+        moments_e( ip,ij,ikr,ikz, :) = moments_e( ip,ij,ikr,ikz, :)*AA_r(ikr)*AA_z(ikz)
+      ENDDO
+      ENDDO
+      ENDDO
+      ENDDO
+      DO ip=ips_i,ipe_i
+      DO ij=ijs_i,ije_i
+      DO ikr=ikrs,ikre
+      DO ikz=ikzs,ikze
+        moments_i( ip,ij,ikr,ikz, :) = moments_i( ip,ij,ikr,ikz, :)*AA_r(ikr)*AA_z(ikz)
+      ENDDO
+      ENDDO
+      ENDDO
+      ENDDO
+    ENDIF
+
 END SUBROUTINE init_moments
 !******************************************************************************!
 
@@ -238,9 +260,10 @@ SUBROUTINE evaluate_kernels
       kr     = krarray(ikr)
       DO ikz = ikzs,ikze
         kz    = kzarray(ikz)
+
         be_2  =  (kr**2 + kz**2) * sigmae2_taue_o2
 
-        kernel_e(ij, ikr, ikz) = be_2**(ij)/factj * exp(-be_2)
+        kernel_e(ij, ikr, ikz) = be_2**j_int * exp(-be_2)/factj
 
       ENDDO
     ENDDO
@@ -248,6 +271,7 @@ SUBROUTINE evaluate_kernels
 
   !!!!! Ion kernels !!!!!
   sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp ! (b_a/2)^2 = (kperp sqrt(2 tau_a) sigma_a/2)^2
+
   factj = 1.0 ! Start of the recursive factorial
   DO ij = ijs_i, ije_i
     j_int = jarray_e(ij)
@@ -264,9 +288,10 @@ SUBROUTINE evaluate_kernels
       kr     = krarray(ikr)
       DO ikz = ikzs,ikze
         kz    = kzarray(ikz)
+
         bi_2  =  (kr**2 + kz**2) * sigmai2_taui_o2
 
-        kernel_i(ij, ikr, ikz) = bi_2**(ij)/factj * exp(-bi_2)
+        kernel_i(ij, ikr, ikz) = bi_2**j_int * exp(-bi_2)/factj
 
       ENDDO
     ENDDO

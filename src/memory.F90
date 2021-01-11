@@ -20,6 +20,11 @@ SUBROUTINE memory
   ! Electrostatic potential
   CALL allocate_array(phi, ikrs,ikre, ikzs,ikze)
 
+  ! Electron kernel evaluation
+  CALL allocate_array(Kernel_e, ijs_e,ije_e, ikrs,ikre, ikzs,ikze)
+  ! Ion kernel evaluation
+  CALL allocate_array(Kernel_i, ijs_i,ije_i, ikrs,ikre, ikzs,ikze)
+
   ! Collision matrix
   IF (CO .EQ. -1) THEN
     CALL allocate_array(  Ceepj, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1))
@@ -32,7 +37,7 @@ SUBROUTINE memory
   ENDIF
 
   ! Non linear terms and dnjs table
-  IF ( NON_LIN ) THEN
+  IF ( .true. ) THEN
     CALL allocate_array( Sepj, ips_e,ipe_e, ijs_e,ije_e, ikrs,ikre, ikzs,ikze )
     CALL allocate_array( Sipj, ips_i,ipe_i, ijs_i,ije_i, ikrs,ikre, ikzs,ikze )
     CALL allocate_array( dnjs, 1,maxj+1, 1,maxj+1, 1,maxj+1)
