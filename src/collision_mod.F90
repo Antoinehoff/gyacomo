@@ -18,7 +18,7 @@ CONTAINS
 !******************************************************************************!
 !!!!!!! Load the Full coulomb coefficient table from COSOlver results
 !******************************************************************************!
-SUBROUTINE load_FC_mat ! Works only for a partiular file for now with P,J <= 15,6
+SUBROUTINE load_FC_mat ! Load a sub matrix from iCa files (works for pmaxa,jmaxa<=P_full,J_full)
   IMPLICIT NONE
 
   INTEGER :: irow_sub, irow_full, icol_sub, icol_full
@@ -175,45 +175,5 @@ SUBROUTINE load_FC_mat ! Works only for a partiular file for now with P,J <= 15,
 
 END SUBROUTINE load_FC_mat
 !******************************************************************************!
-
-SUBROUTINE load_FC_mat_old
-	  USE basic
-	  USE grid
-	  USE initial_par
-	  USE array
-	  use model
-	  USE futils, ONLY : openf, getarr, closef
-	  IMPLICIT NONE
-
-	  INTEGER :: ip2,ij2
-	  INTEGER :: fid1, fid2, fid3, fid4
-
-	  !!!!!!!!!!!! Electron matrices !!!!!!!!!!!!
-	  ! get the self electron colision matrix
-	  CALL openf(selfmat_file,fid1, 'r', 'D',mpicomm=MPI_COMM_WORLD);
-	  CALL getarr(fid1, '/Caapj/Ceepj', Ceepj) ! get array (moli format)
-	  CALL closef(fid1)
-	  ! get the Test and Back field electron ion collision matrix
-	  CALL openf(eimat_file,fid2, 'r', 'D');
-	  CALL getarr(fid2, '/Ceipj/CeipjT', CeipjT)
-	  CALL getarr(fid2, '/Ceipj/CeipjF', CeipjF)
-	  CALL closef(fid2)
-
-	  !!!!!!!!!!!!!!! Ion matrices !!!!!!!!!!!!!!
-	  ! get the self electron colision matrix
-	  CALL openf(selfmat_file, fid3, 'r', 'D',mpicomm=MPI_COMM_WORLD);
-	  IF ( (pmaxe .EQ. pmaxi) .AND. (jmaxe .EQ. jmaxi) ) THEN ! if same degrees ion and electron matrices are alike so load Ceepj
-	    CALL getarr(fid3, '/Caapj/Ceepj', Ciipj) ! get array (moli format)
-	  ELSE
-	    CALL getarr(fid3, '/Caapj/Ciipj', Ciipj) ! get array (moli format)
-	  ENDIF
-	  CALL closef(fid3)
-	  ! get the Test and Back field ion electron collision matrix
-	  CALL openf(iemat_file, fid4, 'r', 'D');
-	  CALL getarr(fid4, '/Ciepj/CiepjT', CiepjT)
-	  CALL getarr(fid4, '/Ciepj/CiepjF', CiepjF)
-	  CALL closef(fid4)
-	END SUBROUTINE load_FC_mat_old
-	!******************************************************************************!
 
 end module collision
