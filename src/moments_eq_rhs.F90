@@ -15,14 +15,14 @@ SUBROUTINE moments_eq_rhs
   REAL(dp)    :: kr, kz, kperp2
   REAL(dp)    :: taue_qe_etaB, taui_qi_etaB
   REAL(dp)    :: sqrtTaue_qe, sqrtTaui_qi, qe_sigmae_sqrtTaue, qi_sigmai_sqrtTaui
-  REAL(dp)    :: kernelj, kerneljp1, kerneljm1, be_2, bi_2 ! Kernel functions and variable
+  REAL(dp)    :: kernelj, kerneljp1, kerneljm1 ! Kernel functions and variable
   REAL(dp)    :: factj, sigmae2_taue_o2, sigmai2_taui_o2 ! Auxiliary variables
   REAL(dp)    :: xNapj, xNapp1j, xNapm1j, xNapp2j, xNapm2j, xNapjp1, xNapjm1 ! Mom. factors depending on the pj loop
   REAL(dp)    :: xphij, xphijp1, xphijm1, xphijpar ! ESpot. factors depending on the pj loop
   REAL(dp)    :: xCapj,   xCa20,   xCa01, xCa10 ! Coll. factors depending on the pj loop
   COMPLEX(dp) :: TNapj, TNapp1j, TNapm1j, TNapp2j, TNapm2j, TNapjp1, TNapjm1, Tphi
   COMPLEX(dp) :: TColl, TColl20, TColl01, TColl10 ! terms of the rhs
-  COMPLEX(dp) :: test_nan
+  COMPLEX(dp) :: test_nan, i_kz
   REAL(dp)    :: nu_e, nu_i, nu_ee, nu_ie ! Species collisional frequency
 
   ! Measuring execution time
@@ -127,10 +127,11 @@ SUBROUTINE moments_eq_rhs
         kzloope : DO ikz = ikzs,ikze
           kr     = krarray(ikr)   ! Poloidal wavevector
           kz     = kzarray(ikz)   ! Toroidal wavevector
-          IF (Nkz .EQ. 1) kz = krarray(ikr) ! If 1D simulation we put kr as kz
+          i_kz   = imagu * kz     ! Ddz derivative
+          ! If 1D simulation we put kr as kz since this dim is halved
+          IF (Nkz .EQ. 1) i_kz = imagu * krarray(ikr)
 
           kperp2 = kr**2 + kz**2  ! perpendicular wavevector
-          be_2   = kperp2 * sigmae2_taue_o2 ! Kernel argument
 
           !! Compute moments and mixing terms
           ! term propto N_e^{p,j}
@@ -226,14 +227,20 @@ SUBROUTINE moments_eq_rhs
           ENDIF
 
           !! Electrical potential term
-          IF ( (p_int .LE. 2) ) THEN ! kronecker p0 p1 p2
-            kernelj    = be_2**j_int * exp(-be_2)/factj
-            kerneljp1  = kernelj * be_2  /(j_dp + 1._dp)
-            IF ( be_2 .NE. 0 ) THEN
-              kerneljm1  = kernelj * j_dp / be_2
+          IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
+            kernelj    = kernel_e(ij, ikr, ikz)
+            IF ( j_int+1 .LE. jmaxe ) THEN
+              kerneljp1  = kernel_e(ij+1, ikr, ikz)
+            ELSE
+              kerneljp1  = 0._dp
+            ENDIF
+
+            IF ( j_int-1 .GE. 0 ) THEN
+              kerneljm1  = kernel_e(ij-1, ikr, ikz)
             ELSE
               kerneljm1 = 0._dp
             ENDIF
+
             Tphi = (xphij*kernelj + xphijp1*kerneljp1 + xphijm1*kerneljm1) * phi(ikr,ikz)
           ELSE
             Tphi = 0._dp
@@ -241,7 +248,7 @@ SUBROUTINE moments_eq_rhs
 
           ! Sum of all linear terms
           moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
-              -imagu * kz * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
+              -i_kz  * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
               -imagu * kpar*(TNapp1j + TNapm1j + xphijpar*kernelj*phi(ikr,ikz)) &
               - mu*kperp2**2 * moments_e(ip,ij,ikr,ikz,updatetlevel) &
               + TColl
@@ -340,10 +347,9 @@ SUBROUTINE moments_eq_rhs
         kzloopi : DO ikz = ikzs,ikze
           kr     = krarray(ikr)   ! Poloidal wavevector
           kz     = kzarray(ikz)   ! Toroidal wavevector
-          IF (Nkz .EQ. 1) kz = krarray(ikr) ! If 1D simulation we put kr as kz
-          
+          i_kz   = imagu * kz     ! Ddz derivative
+          IF (Nkz .EQ. 1) i_kz = imagu * krarray(ikr) ! If 1D simulation we put kr as kz
           kperp2 = kr**2 + kz**2  ! perpendicular wavevector
-          bi_2   = kperp2 * sigmai2_taui_o2 ! Kernel argument
 
           !! Compute moments and mixing terms
           ! term propto N_i^{p,j}
@@ -439,11 +445,15 @@ SUBROUTINE moments_eq_rhs
           ENDIF
 
           !! Electrical potential term
-          IF ( (p_int .LE. 2) ) THEN ! kronecker p0 p1 p2
-            kernelj    = bi_2**j_int * exp(-bi_2)/factj
-            kerneljp1  = kernelj * bi_2  /(j_dp + 1._dp)
-            IF ( bi_2 .NE. 0 ) THEN
-              kerneljm1  = kernelj * j_dp / bi_2
+          IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
+            kernelj    = kernel_i(ij, ikr, ikz)
+            IF (j_int+1 .LE. jmaxi) THEN
+              kerneljp1  = kernel_i(ij+1, ikr, ikz)
+            ELSE
+              kerneljp1 = 0.0_dp
+            ENDIF
+            IF ( j_int-1 .GE. 0 ) THEN
+              kerneljm1  = kernel_i(ij-1, ikr, ikz)
             ELSE
               kerneljm1 = 0._dp
             ENDIF
@@ -454,7 +464,7 @@ SUBROUTINE moments_eq_rhs
 
           ! Sum of linear terms
           moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
-              -imagu * kz * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
+              -i_kz  * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
               -imagu * kpar*(TNapp1j + TNapm1j + xphijpar*kernelj*phi(ikr,ikz)) &
               - mu*kperp2**2 * moments_i(ip,ij,ikr,ikz,updatetlevel) &
                + TColl

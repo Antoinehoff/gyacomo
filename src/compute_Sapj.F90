@@ -3,7 +3,7 @@ SUBROUTINE compute_Sapj
   !! In real space Sapj ~ b*(grad(phi) x grad(g)) which in moments in fourier becomes
   !! Sapj = Sum_n (ikr Kn phi)#(ikz Sum_s d_njs Naps) - (ikz Kn phi)#(ikr Sum_s d_njs Naps)
   !! where # denotes the convolution.
-  USE array, ONLY : dnjs, Sepj, Sipj
+  USE array, ONLY : dnjs, Sepj, Sipj, kernel_i, kernel_e
   USE basic
   USE fourier
   USE fields!, ONLY : phi, moments_e, moments_i
@@ -20,7 +20,7 @@ SUBROUTINE compute_Sapj
   REAL(dp),    DIMENSION(irs:ire,izs:ize)     :: fz_real, gr_real, f_times_g
 
   INTEGER :: in, is
-  REAL(dp):: kr, kz, kerneln, be_2, bi_2, factn
+  REAL(dp):: kr, kz, kerneln
   REAL(dp):: sigmae2_taue_o2, sigmai2_taui_o2
 
   ! Execution time start
@@ -32,7 +32,6 @@ SUBROUTINE compute_Sapj
   ploope: DO ip = ips_e,ipe_e ! Loop over Hermite moments
     jloope: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
       real_data_c = 0._dp ! initialize sum over real nonlinear term
-      factn = 1
 
       nloope: DO in = 1,jmaxe+1 ! Loop over laguerre for the sum
 
@@ -40,8 +39,8 @@ SUBROUTINE compute_Sapj
           kzloope: DO ikz = ikzs,ikze ! Loop over kz
             kr     = krarray(ikr)
             kz     = kzarray(ikz)
-            be_2    = sigmae2_taue_o2 * (kr**2 + kz**2)
-            kerneln = be_2**(in-1)/factn * EXP(-be_2)
+            kerneln = kernel_e(in, ikr, ikz)
+
             ! First convolution terms
             Fr_cmpx(ikr,ikz) = imagu*kr* phi(ikr,ikz) * kerneln
             Fz_cmpx(ikr,ikz) = imagu*kz* phi(ikr,ikz) * kerneln
@@ -85,9 +84,6 @@ SUBROUTINE compute_Sapj
 
         real_data_c = real_data_c - real_data_f/Nz/Nr  * real_data_g/Nz/Nr
 
-        IF ( in + 1 .LE. jmaxe+1 ) THEN
-          factn = real(in,dp) * factn ! compute (n+1)!
-        ENDIF
       ENDDO nloope
 
       ! Put the real nonlinear product into k-space
@@ -110,7 +106,6 @@ SUBROUTINE compute_Sapj
   ploopi: DO ip = ips_e,ipe_e ! Loop over Hermite moments
     jloopi: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
       real_data_c = 0._dp ! initialize sum over real nonlinear term
-      factn = 1
 
       nloopi: DO in = 1,jmaxi+1 ! Loop over laguerre for the sum
 
@@ -118,8 +113,8 @@ SUBROUTINE compute_Sapj
           kzloopi: DO ikz = ikzs,ikze ! Loop over kz
             kr      = krarray(ikr)
             kz      = kzarray(ikz)
-            bi_2    = sigmai2_taui_o2 * (kr**2 + kz**2)
-            kerneln = bi_2**(in-1)/factn * EXP(-bi_2)
+            kerneln = kernel_i(in, ikr, ikz)
+
             ! First convolution terms
             Fr_cmpx(ikr,ikz) = imagu*kr* phi(ikr,ikz) * kerneln
             Fz_cmpx(ikr,ikz) = imagu*kz* phi(ikr,ikz) * kerneln
@@ -163,9 +158,6 @@ SUBROUTINE compute_Sapj
 
         real_data_c = real_data_c - real_data_f/Nz/Nr  * real_data_g/Nz/Nr
 
-        IF ( in + 1 .LE. jmaxe+1 ) THEN
-          factn = real(in,dp) * factn ! compute (n+1)!
-        ENDIF
       ENDDO nloopi
 
       ! Put the real nonlinear product into k-space
