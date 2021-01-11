@@ -5,9 +5,9 @@ addpath(genpath('../matlab')) % ... add
 CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 1e2;   % Collision frequency
+NU      = 0e2;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-ETAB    = 0.5;    % Magnetic gradient
+ETAB    = 0.4;    % Magnetic gradient
 ETAN    = 1.0;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
 HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
@@ -20,7 +20,7 @@ JMAXE   = 1;     % Highest ''       Laguerre ''
 PMAXI   = 2;     % Highest ion      Hermite polynomial degree
 JMAXI   = 1;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS
-TMAX    = 200;  % Maximal time unit
+TMAX    = 100;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1/DT;    % Sampling per time unit for profiler
 SPS2D   = 2;      % Sampling per time unit for 2D arrays

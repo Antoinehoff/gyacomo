@@ -7,7 +7,6 @@ fprintf(fid,'&BASIC\n');
 fprintf(fid,['  nrun   = ', num2str(BASIC.nrun),'\n']);
 fprintf(fid,['  dt     = ', num2str(BASIC.dt),'\n']);
 fprintf(fid,['  tmax   = ', num2str(BASIC.tmax),'\n']);
-fprintf(fid,['  RESTART = ', num2str(BASIC.RESTART),'\n']);
 fprintf(fid,['  maxruntime = ', num2str(BASIC.maxruntime),'\n']);
 fprintf(fid,'/\n');
 

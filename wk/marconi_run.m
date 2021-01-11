@@ -11,21 +11,18 @@ CLUSTER.NTPN  = '24';       % N tasks per node
 CLUSTER.PART  = 'prod';     % dbg or prod
 CLUSTER.MEM   = '16GB';     % Memory
 CLUSTER.JNAME = 'gamma_inf';     % Job name
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
 NU      = 1e-1;   % Collision frequency
-TAU     = 1.0;    % e/i temperature ratio
-ETAB    = 0.66;    % Magnetic gradient
-ETAN    = 1.0;    % Density gradient
-ETAT    = 0.0;    % Temperature gradient
-HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
-NOISE0  = 1.0e-5;
+ETAB    = 0.66;   % Magnetic gradient
+NU_HYP  = 0.1;   % Hyperdiffusivity coefficient
 %% GRID PARAMETERS
 N       = 200;     % Frequency gridpoints (Nkr = N/2)
 L       = 100;     % Size of the squared frequency domain
-P       = 4;       % Electron and Ion highest Hermite polynomial degree
-J       = 2;       % Electron and Ion highest Laguerre polynomial degree
+P       = 8;       % Electron and Ion highest Hermite polynomial degree
+J       = 4;       % Electron and Ion highest Laguerre polynomial degree
 %% TIME PARAMETERS
-TMAX    = 500;  % Maximal time unit
+TMAX    = 400;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 10;    % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
@@ -34,11 +31,13 @@ SPSCP   = 1/10;    % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
-SIMID   = 'Marconi';  % Name of the simulation
+SIMID   = 'Marconi_new_AA';  % Name of the simulation
 CO      = -1;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% unused
+%% fixed parameters (for current study)
 KR0KH   = 0; A0KH = 0; % Background phi mode to drive Ray-Tay inst.
 NO_E    = 0;  % Remove electrons dynamic
 % DK    = 0;  % Drift kinetic model (put every kernel_n to 0 except n=0 to 1)
@@ -51,7 +50,12 @@ JMAXE   = J;     % Highest ''       Laguerre ''
 PMAXI   = P;     % Highest ion      Hermite polynomial degree
 JMAXI   = J;     % Highest ''       Laguerre ''
 kmax    = N*pi/L;% Highest fourier mode
-MU      = 0.1/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
+HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
+MU      = NU_HYP/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
+NOISE0  = 1.0e-5;
+ETAT    = 0.0;    % Temperature gradient
+ETAN    = 1.0;    % Density gradient
+TAU     = 1.0;    % e/i temperature ratio
 %% Run following scripts
 setup
 

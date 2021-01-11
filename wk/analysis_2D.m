@@ -1,7 +1,10 @@
 %% Load results
-if 1
+if 0
     %%
-    outfile = '/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi/200x100_L_100_Pe_2_Je_1_Pi_2_Ji_1_nB_0.66_nN_1_nu_1e-01_FC_mu_1e-03/out.txt';
+    outfile ='';
+    outfile ='';
+    outfile ='';
+    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi/200x100_L_100_Pe_2_Je_1_Pi_2_Ji_1_nB_0.4_nN_1_nu_1e-01_FC_mu_1e-03/out.txt';
     BASIC.RESDIR = load_marconi(outfile);
 end
 %%
@@ -25,6 +28,7 @@ Nkr = numel(kr); Nkz = numel(kz);
 [KZ,KR] = meshgrid(kz,kr);
 Lkr = max(kr)-min(kr); Lkz = max(kz)-min(kz);
 dkr = Lkr/(Nkr-1); dkz = Lkz/(Nkz-1);
+KPERP2 = KZ.^2+KR.^2;
 
 Lk = max(Lkr,Lkz);
 dr = 2*pi/Lk; dz = 2*pi/Lk;
@@ -37,11 +41,13 @@ z = dz*(-Nz/2:(Nz/2-1)); Lz = max(z)-min(z);
 disp('Analysis :')
 disp('- iFFT')
 % IFFT (Lower case = real space, upper case = frequency space)
-ne00   = zeros(Nr,Nz,Ns2D);
+ne00   = zeros(Nr,Nz,Ns2D);         % Gyrocenter density
 ni00   = zeros(Nr,Nz,Ns2D);
+np_i   = zeros(Nr,Nz,Ns5D); % Ion particle density
 si00   = zeros(Nr,Nz,Ns5D);
 phi    = zeros(Nr,Nz,Ns2D);
 drphi  = zeros(Nr,Nz,Ns2D);
+dr2phi = zeros(Nr,Nz,Ns2D);
 dzphi  = zeros(Nr,Nz,Ns2D);
 
 for it = 1:numel(Ts2D)
@@ -50,11 +56,20 @@ for it = 1:numel(Ts2D)
     ni00(:,:,it)  = real(fftshift(ifft2((NI_),Nr,Nz)));
     phi (:,:,it)  = real(fftshift(ifft2((PH_),Nr,Nz)));
     drphi(:,:,it) = real(fftshift(ifft2(1i*KR.*(PH_),Nr,Nz)));
+    dr2phi(:,:,it)= real(fftshift(ifft2(-KR.^2.*(PH_),Nr,Nz)));
     dzphi(:,:,it) = real(fftshift(ifft2(1i*KZ.*(PH_),Nr,Nz)));
 end
 
 for it = 1:numel(Ts5D)
+    [~, it2D] = min(abs(Ts2D-Ts5D(it)));
     si00(:,:,it)      = real(fftshift(ifft2(squeeze(Si00(:,:,it)),Nr,Nz)));
+    
+    Np_i = zeros(Nkr,Nkz); % Ion particle density in Fourier space
+    for ij = 1:Nji
+        Kn = (KPERP2/2.).^(ij-1) .* exp(-KPERP2/2)/(factorial(ij-1));
+        Np_i = Np_i + Kn.*squeeze(Nipj(1,ij,:,:,it));
+    end
+    np_i(:,:,it)      = real(fftshift(ifft2(squeeze(Np_i(:,:)),Nr,Nz)));
 end
 
 % Post processing
@@ -62,10 +77,11 @@ disp('- post processing')
 E_pot    = zeros(1,Ns2D);      % Potential energy n^2
 E_kin    = zeros(1,Ns2D);      % Kinetic energy grad(phi)^2
 ExB      = zeros(1,Ns2D);      % ExB drift intensity \propto |\grad \phi|
-Flux_ri  = zeros(1,Ns2D);      % Particle flux Gamma = <ni drphi>
-Flux_zi  = zeros(1,Ns2D);      % Particle flux Gamma = <ni dzphi>
-Flux_re  = zeros(1,Ns2D);      % Particle flux Gamma = <ne drphi>
-Flux_ze  = zeros(1,Ns2D);      % Particle flux Gamma = <ne dzphi>
+GFlux_ri  = zeros(1,Ns2D);      % Gyrocenter flux Gamma = <ni drphi>
+GFlux_zi  = zeros(1,Ns2D);      % Gyrocenter flux Gamma = <ni dzphi>
+GFlux_re  = zeros(1,Ns2D);      % Gyrocenter flux Gamma = <ne drphi>
+GFlux_ze  = zeros(1,Ns2D);      % Gyrocenter flux Gamma = <ne dzphi>
+PFlux_ri  = zeros(1,Ns5D);      % Particle   flux
 Ne_norm  = zeros(Npe,Nje,Ns5D);% Time evol. of the norm of Napj
 Ni_norm  = zeros(Npi,Nji,Ns5D);% .
 Se_norm  = zeros(Npe,Nje,Ns5D);% Time evol. of the norm of Sapj
@@ -81,10 +97,10 @@ for it = 1:numel(Ts2D) % Loop over 2D arrays
     E_pot(it)   = pi/Lr/Lz*sum(sum(abs(NI_).^2))/Nkr/Nkr; % integrate through Parseval id
     E_kin(it)   = pi/Lr/Lz*sum(sum(abs(Ddr.*PH_).^2+abs(Ddz.*PH_).^2))/Nkr/Nkr;
     ExB(it)     = max(max(max(abs(phi(3:end,:,it)-phi(1:end-2,:,it))/(2*dr))),max(max(abs(phi(:,3:end,it)-phi(:,1:end-2,it))'/(2*dz))));
-    Flux_ri(it)  = sum(sum(ni00(:,:,it).*dzphi(:,:,it)))*dr*dz/Lr/Lz;
-    Flux_zi(it)  = sum(sum(-ni00(:,:,it).*drphi(:,:,it)))*dr*dz/Lr/Lz;
-    Flux_re(it)  = sum(sum(ne00(:,:,it).*dzphi(:,:,it)))*dr*dz/Lr/Lz;
-    Flux_ze(it)  = sum(sum(-ne00(:,:,it).*drphi(:,:,it)))*dr*dz/Lr/Lz;
+    GFlux_ri(it)  = sum(sum(ni00(:,:,it).*dzphi(:,:,it)))*dr*dz/Lr/Lz;
+    GFlux_zi(it)  = sum(sum(-ni00(:,:,it).*drphi(:,:,it)))*dr*dz/Lr/Lz;
+    GFlux_re(it)  = sum(sum(ne00(:,:,it).*dzphi(:,:,it)))*dr*dz/Lr/Lz;
+    GFlux_ze(it)  = sum(sum(-ne00(:,:,it).*drphi(:,:,it)))*dr*dz/Lr/Lz;
 end
 
 E_kin_KZ = mean(mean(abs(Ddr.*PHI(:,:,it)).^2+abs(Ddz.*PHI(:,:,it)).^2,3),2);
@@ -92,12 +108,15 @@ E_kin_KR = mean(mean(abs(Ddr.*PHI(:,:,it)).^2+abs(Ddz.*PHI(:,:,it)).^2,3),2);
 dEdt     = diff(E_pot+E_kin)./dt2D;
 
 for it = 1:numel(Ts5D) % Loop over 5D arrays
+    [~, it2D] = min(abs(Ts2D-Ts5D(it)));
     Ne_norm(:,:,it)= sum(sum(abs(Nepj(:,:,:,:,it)),3),4)/Nkr/Nkz;
     Ni_norm(:,:,it)= sum(sum(abs(Nipj(:,:,:,:,it)),3),4)/Nkr/Nkz;
     Se_norm(:,:,it)= sum(sum(abs(Sepj(:,:,:,:,it)),3),4)/Nkr/Nkz;
     Si_norm(:,:,it)= sum(sum(abs(Sipj(:,:,:,:,it)),3),4)/Nkr/Nkz;
     Sne00_norm(it) = sum(sum(abs(Se00(:,:,it))))/Nkr/Nkz;
     Sni00_norm(it) = sum(sum(abs(Si00(:,:,it))))/Nkr/Nkz;
+    % Particle flux
+    PFlux_ri(it)   = sum(sum(np_i(:,:,it).*dzphi(:,:,it2D)))*dr*dz/Lr/Lz;
 end
 
 %% Compute growth rate
@@ -147,7 +166,6 @@ set(gcf, 'Position',  [100, 100, 900, 800])
         plot(Ts2D,Flux_re,'-','DisplayName','$\Gamma_{re}$')
         plot(Ts2D,Flux_ze,'-','DisplayName','$\Gamma_{ze}$')
         grid on; xlabel('$t c_s/R$'); ylabel('$\Gamma$'); %legend('show');
-if strcmp(OUTPUTS.write_non_lin,'.true.')
     subplot(224)
     for ip = 1:Npi
         for ij = 1:Nji
@@ -157,15 +175,6 @@ if strcmp(OUTPUTS.write_non_lin,'.true.')
         end
     end
     grid on; xlabel('$t c_s/R$'); ylabel('$\sum_{k_r,k_z}|S_i^{pj}|$'); %legend('show');
-else
-%% Growth rate
-    subplot(224)    
-        [~,ikr0KH] = min(abs(kr-KR0KH));
-        plot(kz(1:Nz/2),gkr0kz_Ni00(1:Nz/2),...
-            'DisplayName',['J = ',num2str(JMAXI)]);
-        xlabel('$k_z$'); ylabel('$\gamma_{Ni}$');
-        xlim([0. 1.0]); %ylim([0. 0.04]);
-end
 suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB)]);
 save_figure
 end
@@ -236,7 +245,7 @@ save_figure
 end
 
 %%
-t0    = 40;
+t0    = 0;
 skip_ = 1; 
 DELAY = 0.01*skip_;
 FRAMES = floor(t0/(Ts2D(2)-Ts2D(1)))+1:skip_:numel(Ts2D);
@@ -256,18 +265,19 @@ FIELDNAME = '$n_e$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
 if 0
-%% Density ion - electron
-GIFNAME = ['ni-ne',sprintf('_%.2d',JOBNUM)]; INTERP = 1;
-FIELD = real(ni00+ne00); X = RR; Y = ZZ; T = Ts2D;
-FIELDNAME = '$n_i-n_e$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
-create_gif
-end
-if 0
 %% Phi
 GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)];INTERP = 1;
 FIELD = real(phi); X = RR; Y = ZZ; T = Ts2D;
 FIELDNAME = '$\phi$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
+end
+if 0
+%% phi @ z = 0
+GIFNAME = ['phi_r0',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
+FIELD =(squeeze(real(phi(:,1,:)))); linestyle = '-.';
+X = (r); T = Ts2D; YMIN = -1.1; YMAX = 1.1; XMIN = min(r); XMAX = max(r);
+FIELDNAME = '$\phi(r=0)$'; XNAME = '$r/\rho_s$';
+create_gif_1D
 end
 if 0
 %% Density ion frequency
@@ -288,18 +298,22 @@ end
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-t0  = 1; t1 = 400; [~,it0] = min(abs(t0-Ts2D)); [~,it1] = min(abs(t1-Ts2D)); 
 fig = figure; FIGNAME = 'space_time_drphi';set(gcf, 'Position',  [100, 100, 1200, 400])
     subplot(211)
-    plot(Ts2D(it0:it1),Flux_ri(it0:it1));
+    yyaxis left
+    plot(Ts2D,GFlux_ri); hold on
+    plot(Ts5D,PFlux_ri,'o');
     ylabel('$\Gamma_r$'); grid on
-%     title(['$\eta=',num2str(ETAB),'\quad',...
-%         '\nu_{',CONAME,'}=',num2str(NU),'$'])
-%     legend(['$P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'])
-    ylim([0,1.1*max(Flux_ri(it0:it1))]);
+    ylim([0,1.1*max(GFlux_ri)]);
+    yyaxis right
+    plot(Ts2D,squeeze(mean(max(dr2phi))))
+    ylabel('$s\sim\langle\partial_r^2\phi\rangle_z$'); grid on
+    title(['$\eta=',num2str(ETAB),'\quad',...
+        '\nu_{',CONAME,'}=',num2str(NU),'$'])
+    legend(['$P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'])
     subplot(212)
-    [TY,TX] = meshgrid(r,Ts2D(it0:it1));
-    pclr = pcolor(TX,TY,squeeze(mean(drphi(:,:,it0:it1),2))'); set(pclr, 'edgecolor','none'); %colorbar;
+    [TY,TX] = meshgrid(r,Ts2D);
+    pclr = pcolor(TX,TY,squeeze(mean(drphi(:,:,:),2))'); set(pclr, 'edgecolor','none'); %colorbar;
     xlabel('$t c_s/R$'), ylabel('$r/\rho_s$')
     legend('$\langle\partial_r \phi\rangle_z$')
 save_figure
