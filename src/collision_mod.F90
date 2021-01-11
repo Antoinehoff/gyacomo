@@ -8,12 +8,29 @@ use grid
 use basic
 use futils
 use initial_par
+use model
 
 implicit none
 
-PUBLIC :: load_FC_mat, load_FC_mat_old
+PUBLIC :: load_FC_mat
 
 CONTAINS
+
+!******************************************************************************!
+SUBROUTINE LenardBernsteinDK
+
+END SUBROUTINE LenardBernsteinDK
+
+!******************************************************************************!
+SUBROUTINE DoughertyDK
+
+END SUBROUTINE DoughertyDK
+
+!******************************************************************************!
+SUBROUTINE FullCoulombDK
+
+END SUBROUTINE FullCoulombDK
+
 
 !******************************************************************************!
 !!!!!!! Load the Full coulomb coefficient table from COSOlver results
@@ -63,7 +80,6 @@ SUBROUTINE load_FC_mat ! Load a sub matrix from iCa files (works for pmaxa,jmaxa
 
   CALL closef(fid1)
   DEALLOCATE(Ceepj_full)
-  IF (my_id .EQ. 0) WRITE(*,*) '..done'
 
   IF (my_id .EQ. 0) WRITE(*,*) 'Load ei FC mat...'
   ! get the Test and Back field electron ion collision matrix
@@ -104,7 +120,6 @@ SUBROUTINE load_FC_mat ! Load a sub matrix from iCa files (works for pmaxa,jmaxa
   CALL closef(fid2)
   DEALLOCATE(CeipjF_full)
   DEALLOCATE(CeipjT_full)
-  IF (my_id .EQ. 0) WRITE(*,*) '..done'
 
   !!!!!!!!!!!!!!! Ion matrices !!!!!!!!!!!!!!
   IF (my_id .EQ. 0) WRITE(*,*) 'Load ii FC mat...'

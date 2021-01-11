@@ -5,9 +5,9 @@ default_plots_options
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 1e-1;   % Collision frequency
+NU      = 1e+0;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-ETAB    = 0.66;
+ETAB    = 0.5;
 ETAN    = 1.0;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
 MU      = 1e-3;   % Hyper diffusivity coefficient
@@ -17,9 +17,9 @@ NOISE0  = 1.0e-5;
 N       = 100;     % Frequency gridpoints (Nkr = N/2)
 L       = 100;     % Size of the squared frequency domain
 KREQ0   = 1;      % put kr = 0
-%% TIME PARAMETERS
+%% TIME PARMETERS
 TMAX    = 100;  % Maximal time unit
-DT      = 1e-2;   % Time step
+DT      = 5e-2;   % Time step
 SPS0D   = 0.5;      % Sampling per time unit for 2D arrays
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 0.1;    % Sampling per time unit for 5D arrays
@@ -41,12 +41,12 @@ KPAR    = 0.0;    % Parellel wave vector component
 %% PARAMETER SCANS
 if 1
 %% Parameter scan over PJ
-PA = [2, 6, 8, 12];
-JA = [1, 3, 4,  6];
-% PA = [2];
-% JA = [1];
+% PA = [2, 6, 8, 12];
+% JA = [1, 3, 4,  6];
+PA = [4];
+JA = [2];
 Nparam = numel(PA);
-
+param_name = 'PJ';
 gamma_Ni = zeros(Nparam,N/2+1);
 Ni00_ST  = zeros(Nparam,N/2+1,TMAX);
 for i = 1:Nparam
@@ -56,7 +56,7 @@ for i = 1:Nparam
     setup
     % Run linear simulation
     system(...
-        ['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 8 ./../../../bin/helaz; cd ../../../wk']...
+        ['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ./../../../bin/helaz; cd ../../../wk']...
     )
     % Load and process results
     load_results

@@ -210,13 +210,13 @@ end
 
 if 0
 %% Photomaton : real space
-FIELD = ni00; FNAME = 'ni';
+% FIELD = ni00; FNAME = 'ni';
 % FIELD = ne00; FNAME = 'ne';
-% FIELD = phi; FNAME = 'phi';
-tf = 19;  [~,it1] = min(abs(Ts2D-tf));
-tf = 20;  [~,it2] = min(abs(Ts2D-tf)); 
-tf = 21; [~,it3] = min(abs(Ts2D-tf));
-tf = 22; [~,it4] = min(abs(Ts2D-tf));
+FIELD = phi; FNAME = 'phi';
+tf = 60;  [~,it1] = min(abs(Ts2D-tf));
+tf = 120;  [~,it2] = min(abs(Ts2D-tf)); 
+tf = 250; [~,it3] = min(abs(Ts2D-tf));
+tf = 400; [~,it4] = min(abs(Ts2D-tf));
 fig = figure; FIGNAME = [FNAME,'_snaps']; set(gcf, 'Position',  [100, 100, 1500, 400])
 plt = @(x) x;%./max(max(x));
     subplot(141)

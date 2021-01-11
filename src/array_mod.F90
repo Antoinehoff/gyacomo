@@ -17,8 +17,8 @@ MODULE array
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: dnjs
 
   ! Kernel function evaluation
-  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: kernel_e
-  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: kernel_i
+  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: kernel_e
+  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: kernel_i
 
   ! Non linear term array (ip,ij,ikr,ikz)
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Sepj ! electron
