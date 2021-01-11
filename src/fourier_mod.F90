@@ -84,8 +84,8 @@ MODULE fourier
 
     do ikr = ikrs, ikre
       do ikz = ikzs, ikze
-        cmpx_data_f(ikz,ikr-local_nkr_offset) = F_2D(ikr,ikz)
-        cmpx_data_g(ikz,ikr-local_nkr_offset) = G_2D(ikr,ikz)
+        cmpx_data_f(ikz,ikr-local_nkr_offset) = F_2D(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
+        cmpx_data_g(ikz,ikr-local_nkr_offset) = G_2D(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
       end do
     end do
 
