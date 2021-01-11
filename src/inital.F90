@@ -13,10 +13,9 @@ SUBROUTINE inital
 
   implicit none
 
-  real :: start_init, end_init, time_estimation
-
   CALL set_updatetlevel(1)
 
+  IF (my_id .EQ. 0) WRITE(*,*) 'Evaluate kernels'
   CALL evaluate_kernels
 
   !!!!!! Set the moments arrays Nepj, Nipj !!!!!!
