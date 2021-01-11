@@ -127,6 +127,8 @@ SUBROUTINE moments_eq_rhs
         kzloope : DO ikz = ikzs,ikze
           kr     = krarray(ikr)   ! Poloidal wavevector
           kz     = kzarray(ikz)   ! Toroidal wavevector
+          IF (Nkz .EQ. 1) kz = krarray(ikr) ! If 1D simulation we put kr as kz
+
           kperp2 = kr**2 + kz**2  ! perpendicular wavevector
           be_2   = kperp2 * sigmae2_taue_o2 ! Kernel argument
 
@@ -338,6 +340,8 @@ SUBROUTINE moments_eq_rhs
         kzloopi : DO ikz = ikzs,ikze
           kr     = krarray(ikr)   ! Poloidal wavevector
           kz     = kzarray(ikz)   ! Toroidal wavevector
+          IF (Nkz .EQ. 1) kz = krarray(ikr) ! If 1D simulation we put kr as kz
+          
           kperp2 = kr**2 + kz**2  ! perpendicular wavevector
           bi_2   = kperp2 * sigmai2_taui_o2 ! Kernel argument
 
