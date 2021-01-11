@@ -61,7 +61,7 @@ SUBROUTINE stepon
         ! Execution time start
         CALL cpu_time(t0_checkfield)
 
-        IF ( ikrs .EQ. 1 ) CALL enforce_symetry() ! Enforcing symmetry on kr = 0
+        IF ( (ikrs .EQ. 1) .AND. (NON_LIN) ) CALL enforce_symetry() ! Enforcing symmetry on kr = 0
 
         mlend=.FALSE.
         IF(.NOT.nlend) THEN

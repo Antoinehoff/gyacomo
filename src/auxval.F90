@@ -4,6 +4,7 @@ subroutine auxval
   USE basic
   USE grid
   USE array
+  USE model
   USE fourier, ONLY: init_grid_distr_and_plans, alloc_local_1, alloc_local_2
   use prec_const
   IMPLICIT NONE
@@ -11,13 +12,17 @@ subroutine auxval
   INTEGER :: irows,irowe, irow, icol, i_
   IF (my_id .EQ. 0) WRITE(*,*) '=== Set auxiliary values ==='
 
-  CALL init_grid_distr_and_plans(Nr,Nz)
+  IF (NON_LIN) THEN
+    CALL init_grid_distr_and_plans(Nr,Nz)
+  ELSE
+    CALL init_1Dgrid_distr
+  ENDIF
+
+  CALL set_pgrid
+  CALL set_jgrid
 
   CALL set_krgrid ! MPI Distributed dimension
-
   CALL set_kzgrid
-
-  CALL set_pj
 
   CALL memory ! Allocate memory for global arrays
 
