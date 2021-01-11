@@ -2,16 +2,16 @@ clear all;
 addpath(genpath('../matlab')) % ... add
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
-CLUSTER.TIME  = '00:10:00'; % allocation time hh:mm:ss
+CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 1e-1;   % Collision frequency
+NU      = 1e2;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
 ETAB    = 0.5;    % Magnetic gradient
 ETAN    = 1.0;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
 HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
-NOISE0  = 1.0e-5;
+NU_HYP  = 0.1;
 %% GRID PARAMETERS
 N       = 128;     % Frequency gridpoints (Nkr = N/2)
 L       = 66;     % Size of the squared frequency domain
@@ -20,17 +20,17 @@ JMAXE   = 1;     % Highest ''       Laguerre ''
 PMAXI   = 2;     % Highest ion      Hermite polynomial degree
 JMAXI   = 1;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS
-TMAX    = 500;  % Maximal time unit
+TMAX    = 200;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1/DT;    % Sampling per time unit for profiler
 SPS2D   = 2;      % Sampling per time unit for 2D arrays
-SPS5D   = 2;    % Sampling per time unit for 5D arrays
+SPS5D   = 1/5;    % Sampling per time unit for 5D arrays
 SPSCP   = 1/10;    % Sampling per time unit for checkpoints
-RESTART = 1;      % To restart from last checkpoint
-JOB2LOAD= 1;
+RESTART = 0;      % To restart from last checkpoint
+JOB2LOAD= 0;
 %% OPTIONS
-SIMID   = 'debug';  % Name of the simulation
-CO      = 0;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
+SIMID   = 'test_load_FC';  % Name of the simulation
+CO      = -1;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty, -3 : GK Dougherty)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% unused
@@ -42,5 +42,6 @@ LAMBDAD = 0.0;
 NON_LIN = 1 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
 LOAD_MARCONI = 0;
 kmax    = N*pi/L;% Highest fourier mode
-MU      = 0.1/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
+MU      = NU_HYP/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
+NOISE0  = 1.0e-5;
 setup
