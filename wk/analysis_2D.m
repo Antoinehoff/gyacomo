@@ -3,8 +3,8 @@ if 0
     %%
     outfile ='';
     outfile ='';
-    outfile ='';
-    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi/200x100_L_100_Pe_2_Je_1_Pi_2_Ji_1_nB_0.4_nN_1_nu_1e-01_FC_mu_1e-03/out.txt';
+    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi/200x100_L_100_Pe_2_Je_1_Pi_2_Ji_1_nB_0.66_nN_1_nu_1e-01_FC_mu_1e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi/200x100_L_100_Pe_8_Je_4_Pi_8_Ji_4_nB_0.66_nN_1_nu_1e-01_FC_mu_1e-04/out.txt';
     BASIC.RESDIR = load_marconi(outfile);
 end
 %%

@@ -4,7 +4,7 @@ addpath(genpath('../matlab')) % ... add
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% CLUSTER PARAMETERS
-CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
+CLUSTER.TIME  = '02:00:00'; % allocation time hh:mm:ss
 CLUSTER.NODES = '1';        % MPI process
 CLUSTER.CPUPT = '1';        % CPU per task
 CLUSTER.NTPN  = '24';       % N tasks per node
@@ -19,8 +19,8 @@ NU_HYP  = 0.1;   % Hyperdiffusivity coefficient
 %% GRID PARAMETERS
 N       = 200;     % Frequency gridpoints (Nkr = N/2)
 L       = 100;     % Size of the squared frequency domain
-P       = 8;       % Electron and Ion highest Hermite polynomial degree
-J       = 4;       % Electron and Ion highest Laguerre polynomial degree
+P       = 2;       % Electron and Ion highest Hermite polynomial degree
+J       = 1;       % Electron and Ion highest Laguerre polynomial degree
 %% TIME PARAMETERS
 TMAX    = 400;  % Maximal time unit
 DT      = 1e-2;   % Time step
@@ -31,7 +31,7 @@ SPSCP   = 1/10;    % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
-SIMID   = 'Marconi_new_AA';  % Name of the simulation
+SIMID   = 'Marconi_new_truncation';  % Name of the simulation
 CO      = -1;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
 
 

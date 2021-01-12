@@ -3,8 +3,10 @@ if CONAME == -1
     CONAME = 'FC';
 elseif CONAME == 0
     CONAME = 'LB';
-elseif CONAME == 1
+elseif CONAME == -2
     CONAME = 'DG';
+elseif CONAME == -3
+    CONAME = 'DGGK';
 end
 ETAB = h5readatt(filename,'/data/input','eta_B');
 ETAN = h5readatt(filename,'/data/input','eta_n');
