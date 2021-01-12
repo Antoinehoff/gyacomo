@@ -16,19 +16,21 @@ CONTAINS
   !******************************************************************************!
   !! Doughtery gyrokinetic collision operator for electrons
   SUBROUTINE DoughertyGK_e(ip,ij,ikr,ikz,TColl)
-    USE fields
-    USE array, ONLY : Kernel_e
+    USE fields,           ONLY: moments_e, phi
+    USE array,            ONLY: Kernel_e
     USE basic
-    USE grid, ONLY : jmaxe, parray_e, jarray_e, krarray, kzarray
+    USE grid,             ONLY: jmaxe, parray_e, jarray_e, krarray, kzarray
     USE prec_const
-    USE time_integration
-    USE model
+    USE time_integration, ONLY: updatetlevel
+    USE model,            ONLY: sigmae2_taue_o2, tau_e, nu_e
     IMPLICIT NONE
     INTEGER, INTENT(IN)      :: ip,ij,ikr,ikz
     COMPLEX(dp), INTENT(INOUT) :: TColl
 
     COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_
     COMPLEX(dp) :: Dpj, Ppj, T_, ibe_
+    COMPLEX(dp) :: adiab_moment_0j, adiab_moment_0jp1, adiab_moment_0jm1
+    COMPLEX(dp) :: adiab_moment_pj
     INTEGER     :: in_
     REAL        :: n_dp, j_dp, p_dp, be_2
 
@@ -36,69 +38,83 @@ CONTAINS
     p_dp  = REAL(parray_e(ij),dp)
     j_dp  = REAL(jarray_e(ij),dp)
     be_2  =  (krarray(ikr)**2 + kzarray(ikz)**2) * sigmae2_taue_o2
-    ibe_  = imagu*SQRT(be_2)
+    ibe_  = imagu*2._dp*SQRT(be_2)
 
     !** build fluid moments used for collison operator **
     n_     = 0._dp
-    upar_  = 0._dp
-    uperp_ = 0._dp
-    Tpar_  = 0._dp
-    Tperp_ = 0._dp
+    upar_  = 0._dp; uperp_ = 0._dp
+    Tpar_  = 0._dp; Tperp_ = 0._dp
     DO in_ = 1,jmaxe+1
       n_dp = REAL(in_-1,dp)
-      n_     = n_     + Kernel_e(in_,ikr,ikz) * moments_e(1,in_,ikr,ikz,updatetlevel)
+
+      ! Adiabatic moments (only different from moments when p=0)
+      adiab_moment_0j = moments_e(1,in_,ikr,ikz,updatetlevel) + kernel_e(in_,ikr,ikz)*phi(ikr,ikz)/tau_e
+      adiab_moment_0jp1 = 0._dp; adiab_moment_0jm1 = 0._dp
+      IF (n_dp+1 .LE. jmaxe)&
+        adiab_moment_0jp1 = moments_e(1,in_+1,ikr,ikz,updatetlevel) + kernel_e(in_+1,ikr,ikz)*phi(ikr,ikz)/tau_e
+      IF (n_dp-1 .GE. 0)&
+        adiab_moment_0jm1 = moments_e(1,in_-1,ikr,ikz,updatetlevel) + kernel_e(in_-1,ikr,ikz)*phi(ikr,ikz)/tau_e
+
+      ! Density
+      n_     = n_     + Kernel_e(in_,ikr,ikz) * adiab_moment_0j
+      ! Parallel velocity
       upar_  = upar_  + Kernel_e(in_,ikr,ikz) * moments_e(2,in_,ikr,ikz,updatetlevel)
-      uperp_ = uperp_ + ibe_*0.5_dp*Kernel_e(in_,ikr,ikz) * (moments_e(1,in_,ikr,ikz,updatetlevel) -moments_e(1,in_+1,ikr,ikz,updatetlevel))
-      Tpar_  = Tpar_  + Kernel_e(in_,ikr,ikz) * (SQRT2*moments_e(3,in_,ikr,ikz,updatetlevel) + moments_e(1,in_,ikr,ikz,updatetlevel))
-      Tperp_ = Tperp_ + Kernel_e(in_,ikr,ikz) * ((2._dp*n_dp+1._dp)*moments_e(1,in_,ikr,ikz,updatetlevel) - n_dp*moments_e(1,in_-1,ikr,ikz,updatetlevel) - (n_dp+1)*moments_e(1,in_+1,ikr,ikz,updatetlevel))
+      ! Perpendicular velocity
+      uperp_ = uperp_ + ibe_*0.5_dp*Kernel_e(in_,ikr,ikz) * (adiab_moment_0j -adiab_moment_0jp1)
+      ! Parallel temperature
+      Tpar_  = Tpar_  + Kernel_e(in_,ikr,ikz) * (SQRT2*moments_e(3,in_,ikr,ikz,updatetlevel) + adiab_moment_0j)
+      ! Perpendicular temperature
+      Tperp_ = Tperp_ + Kernel_e(in_,ikr,ikz) * ((2._dp*n_dp+1._dp)*adiab_moment_0j - n_dp*adiab_moment_0jm1 - (n_dp+1)*adiab_moment_0jp1)
+
     ENDDO
     T_    = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
 
+    !** Assembling collison operator **
     ! Velocity-space diffusion
     TColl = -(2._dp*p_dp + j_dp + be_2)*moments_e(ip,ij,ikr,ikz,updatetlevel)
+    IF( p_dp .EQ. 0 ) & ! Get adiabatic moment
+      TColl = TColl - (2._dp*p_dp + j_dp + be_2) * Kernel_e(ij,ikr,ikz)*phi(ikr,ikz)/tau_e
 
     ! Add energy restoring term
-    IF( ip .eq. 0 ) THEN
-      TColl = TColl &
-      + T_*( 2._dp*((2_dp*j_dp + 1._dp)*Kernel_e(ij,ikr,ikz) &
-            -(j_dp + 1._dp)*Kernel_e(ij+1,ikr,ikz) &
-            - j_dp*Kernel_e(ij-1,ikr,ikz)) &
-            - 2._dp*Kernel_e(ij,ikr,ikz))
+    IF( p_dp .eq. 0 ) THEN
+      TColl = TColl + T_* 4._dp*j_dp * Kernel_e(ij,ikr,ikz)
+      IF( j_dp+1 .LE. jmaxe ) &
+        TColl = TColl - T_*2._dp*(j_dp + 1._dp)*Kernel_e(ij+1,ikr,ikz)
+      IF( j_dp-1 .GE. 0 )  &
+        TColl = TColl - T_*2._dp*j_dp*Kernel_e(ij-1,ikr,ikz)
     ENDIF
-
-    IF( ip .eq. 2 ) THEN
-       TColl = TColl + T_*SQRT2*Kernel_e(ij,ikr,ikz)
-    ENDIF
+    IF( p_dp .eq. 2 ) &
+      TColl = TColl + T_*SQRT2*Kernel_e(ij,ikr,ikz)
 
     !Add momentum restoring term
-    IF( ip .eq. 1) THEN
-       TColl = TColl + upar_*Kernel_e(ij,ikr,ikz)
-    ENDIF
+    IF( p_dp .eq. 1 ) &
+      TColl = TColl + upar_*Kernel_e(ij,ikr,ikz)
+    IF( p_dp .eq. 0 ) &
+      TColl = TColl + uperp_*ibe_*( (j_dp + 1._dp)*Kernel_e(ij,ikr,ikz) - j_dp*Kernel_e(ij-1,ikr,ikz))
 
-    IF(ip .eq. 0 ) THEN
-       TColl = TColl + uperp_*ibe_*( (j_dp + 1._dp)*Kernel_e(ij,ikr,ikz) - j_dp*Kernel_e(ij-1,ikr,ikz))
-    ENDIF
-
-    TColl = TColl*nu_e
+    ! Multiply by electron-ion collision coefficient
+    TColl = nu_e * TColl
 
   END SUBROUTINE DoughertyGK_e
 
   !******************************************************************************!
   !! Doughtery gyrokinetic collision operator for ions
   SUBROUTINE DoughertyGK_i(ip,ij,ikr,ikz,TColl)
-    USE fields
-    USE array, ONLY : Kernel_i
+    USE fields,           ONLY: moments_i, phi
+    USE array,            ONLY: Kernel_i
     USE basic
-    USE grid, ONLY : jmaxi, parray_i, jarray_i, krarray, kzarray
+    USE grid,             ONLY: jmaxi, parray_i, jarray_i, krarray, kzarray
     USE prec_const
-    USE time_integration
-    USE model
+    USE time_integration, ONLY: updatetlevel
+    USE model,            ONLY: sigmai2_taui_o2, tau_i, nu_i
     IMPLICIT NONE
     INTEGER, INTENT(IN)      :: ip,ij,ikr,ikz
     COMPLEX(dp), INTENT(INOUT) :: TColl
 
     COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_
     COMPLEX(dp) :: Dpj, Ppj, T_, ibi_
+    COMPLEX(dp) :: adiab_moment_0j, adiab_moment_0jp1, adiab_moment_0jm1
+    COMPLEX(dp) :: adiab_moment_pj
     INTEGER     :: in_
     REAL        :: n_dp, j_dp, p_dp, bi_2
 
@@ -106,50 +122,62 @@ CONTAINS
     p_dp  = REAL(parray_i(ij),dp)
     j_dp  = REAL(jarray_i(ij),dp)
     bi_2  =  (krarray(ikr)**2 + kzarray(ikz)**2) * sigmai2_taui_o2
-    ibi_  = imagu*SQRT(bi_2)
+    ibi_  = imagu*2._dp*SQRT(bi_2)
 
     !** build fluid moments used for collison operator **
     n_     = 0._dp
-    upar_  = 0._dp
-    uperp_ = 0._dp
-    Tpar_  = 0._dp
-    Tperp_ = 0._dp
+    upar_  = 0._dp; uperp_ = 0._dp
+    Tpar_  = 0._dp; Tperp_ = 0._dp
     DO in_ = 1,jmaxi+1
       n_dp = REAL(in_-1,dp)
-      n_     = n_     + Kernel_i(in_,ikr,ikz) * moments_i(1,in_,ikr,ikz,updatetlevel)
+
+      ! Adiabatic moments (only different from moments when j=0)
+      adiab_moment_0j = moments_i(1,in_,ikr,ikz,updatetlevel) + Kernel_i(in_  ,ikr,ikz)*phi(ikr,ikz)/tau_i
+      adiab_moment_0jp1 = 0._dp; adiab_moment_0jm1 = 0._dp
+      IF (n_dp+1 .LE. jmaxi)&
+       adiab_moment_0jp1 = moments_i(1,in_+1,ikr,ikz,updatetlevel) + Kernel_i(in_+1,ikr,ikz)*phi(ikr,ikz)/tau_i
+      IF (n_dp-1 .GE. 0)&
+       adiab_moment_0jm1 = moments_i(1,in_-1,ikr,ikz,updatetlevel) + Kernel_i(in_-1,ikr,ikz)*phi(ikr,ikz)/tau_i
+
+      ! Density
+      n_     = n_     + Kernel_i(in_,ikr,ikz) * adiab_moment_0j
+      ! Parallel velocity
       upar_  = upar_  + Kernel_i(in_,ikr,ikz) * moments_i(2,in_,ikr,ikz,updatetlevel)
-      uperp_ = uperp_ + 0.5_dp*Kernel_i(in_,ikr,ikz) * (moments_i(1,in_,ikr,ikz,updatetlevel) -moments_i(1,in_+1,ikr,ikz,updatetlevel))
-      Tpar_  = Tpar_  + Kernel_i(in_,ikr,ikz) * (SQRT2*moments_i(3,in_,ikr,ikz,updatetlevel) + moments_i(1,in_,ikr,ikz,updatetlevel))
-      Tperp_ = Tperp_ + Kernel_i(in_,ikr,ikz) * ((2._dp*n_dp+1._dp)*moments_i(1,in_,ikr,ikz,updatetlevel) - n_dp*moments_i(1,in_-1,ikr,ikz,updatetlevel) - (n_dp+1)*moments_i(1,in_+1,ikr,ikz,updatetlevel))
+      ! Perpendicular velocity
+      uperp_ = uperp_ + ibi_*0.5_dp*Kernel_i(in_,ikr,ikz) * (adiab_moment_0j -adiab_moment_0jp1)
+      ! Parallel temperature
+      Tpar_  = Tpar_  + Kernel_i(in_,ikr,ikz) * (SQRT2*moments_i(3,in_,ikr,ikz,updatetlevel) + adiab_moment_0j)
+      ! Perpendicular temperature
+      Tperp_ = Tperp_ + Kernel_i(in_,ikr,ikz) * ((2._dp*n_dp+1._dp)*adiab_moment_0j - n_dp*adiab_moment_0jm1 - (n_dp+1)*adiab_moment_0jp1)
+
     ENDDO
     T_    = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
 
+
+    !** Assembling collison operator **
     ! Velocity-space diffusion
     TColl = -(2._dp*p_dp + j_dp + bi_2)*moments_i(ip,ij,ikr,ikz,updatetlevel)
+    IF( p_dp .EQ. 0 ) & ! Get adiabatic moment
+      TColl = TColl - (2._dp*p_dp + j_dp + bi_2) * Kernel_i(ij,ikr,ikz)*phi(ikr,ikz)/tau_i
 
     ! Add energy restoring term
-    IF( ip .eq. 0 ) THEN
-      TColl = TColl &
-      + T_*( 2._dp*((2_dp*j_dp + 1._dp)*Kernel_i(ij,ikr,ikz) &
-            -(j_dp + 1._dp)*Kernel_i(ij+1,ikr,ikz) &
-            - j_dp*Kernel_i(ij-1,ikr,ikz)) &
-            - 2._dp*Kernel_i(ij,ikr,ikz))
+    IF( p_dp .EQ. 0 ) THEN
+      TColl = TColl + T_* 4._dp*j_dp * Kernel_i(ij,ikr,ikz)
+      IF( j_dp+1 .LE. jmaxi ) &
+        TColl = TColl - T_*2._dp*(j_dp + 1._dp)*Kernel_i(ij+1,ikr,ikz)
+      IF( j_dp-1 .GE. 0 )     &
+        TColl = TColl - T_*2._dp*j_dp*Kernel_i(ij-1,ikr,ikz)
     ENDIF
+    IF( p_dp .eq. 2 ) &
+      TColl = TColl + T_*SQRT2*Kernel_i(ij,ikr,ikz)
 
-    IF( ip .eq. 2 ) THEN
-       TColl = TColl + T_*SQRT2*Kernel_i(ij,ikr,ikz)
-    ENDIF
-
-    !Add momentum restoring term
-    IF( ip .eq. 1) THEN
-       TColl = TColl + upar_*Kernel_i(ij,ikr,ikz)
-    ENDIF
-
-    IF(ip .eq. 0 ) THEN
-       TColl = TColl + uperp_*imagu*SQRT(bi_2)*( (j_dp + 1._dp)*Kernel_i(ij,ikr,ikz) - j_dp*Kernel_i(ij-1,ikr,ikz))
-    ENDIF
-
-    TColl = TColl*nu_i
+    ! Add momentum restoring term
+    IF( p_dp .eq. 1 ) &
+      TColl = TColl + upar_*Kernel_i(ij,ikr,ikz)
+    IF( p_dp .eq. 0 ) &
+      TColl = TColl + uperp_*ibi_*( (j_dp + 1._dp)*Kernel_i(ij,ikr,ikz) - j_dp*Kernel_i(ij-1,ikr,ikz))
+    ! Multiply by ion-ion collision coefficient
+    TColl = nu_i * TColl
 
   END SUBROUTINE DoughertyGK_i
 
