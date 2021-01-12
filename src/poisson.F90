@@ -6,7 +6,7 @@ SUBROUTINE poisson
   USE array
   USE fields
   USE grid
-  use model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, lambdaD, DK
+  use model, ONLY : qe2_taue, qi2_taui, q_e, q_i, lambdaD
 
   USE prec_const
   IMPLICIT NONE
@@ -14,7 +14,6 @@ SUBROUTINE poisson
   INTEGER     :: ini,ine
   REAL(dp)    :: Kne, Kni ! sub kernel factor for recursive build
   REAL(dp)    :: alphaD
-  REAL(dp)    :: qe2_taue, qi2_taui ! To avoid redondant computation
   REAL(dp)    :: sum_kernel2_e,    sum_kernel2_i    ! Store sum Kn^2
   COMPLEX(dp) :: sum_kernel_mom_e, sum_kernel_mom_i ! Store sum Kn*Napn
   REAL(dp)    :: gammaD
@@ -22,10 +21,6 @@ SUBROUTINE poisson
 
   ! Execution time start
   CALL cpu_time(t0_poisson)
-
-  !Precompute species dependant factors
-  qe2_taue        = (q_e**2)/tau_e ! factor of the gammaD sum
-  qi2_taui        = (q_i**2)/tau_i
 
   DO ikr=ikrs,ikre
     DO ikz=ikzs,ikze

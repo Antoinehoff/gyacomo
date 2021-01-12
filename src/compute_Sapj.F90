@@ -21,14 +21,11 @@ SUBROUTINE compute_Sapj
 
   INTEGER :: in, is
   REAL(dp):: kr, kz, kerneln
-  REAL(dp):: sigmae2_taue_o2, sigmai2_taui_o2
 
   ! Execution time start
   CALL cpu_time(t0_Sapj)
 
   !!!!!!!!!!!!!!!!!!!! ELECTRON non linear term computation (Sepj)!!!!!!!!!!
-  sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the kerneln argument
-
   ploope: DO ip = ips_e,ipe_e ! Loop over Hermite moments
     jloope: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
       real_data_c = 0._dp ! initialize sum over real nonlinear term
@@ -101,8 +98,6 @@ SUBROUTINE compute_Sapj
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   !!!!!!!!!!!!!!!!!!!! ION non linear term computation (Sipj)!!!!!!!!!!
-  sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp ! factor of the kerneln argument
-
   ploopi: DO ip = ips_e,ipe_e ! Loop over Hermite moments
     jloopi: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
       real_data_c = 0._dp ! initialize sum over real nonlinear term

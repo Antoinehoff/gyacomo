@@ -21,6 +21,18 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED ::   eta_B =  1._dp     ! Magnetic gradient
   REAL(dp), PUBLIC, PROTECTED :: lambdaD =  1._dp     ! Debye length
 
+  REAL(dp), PUBLIC, PROTECTED :: taue_qe_etaB         ! factor of the magnetic moment coupling
+  REAL(dp), PUBLIC, PROTECTED :: taui_qi_etaB         !
+  REAL(dp), PUBLIC, PROTECTED :: sqrtTaue_qe          ! factor of parallel moment term
+  REAL(dp), PUBLIC, PROTECTED :: sqrtTaui_qi          !
+  REAL(dp), PUBLIC, PROTECTED :: qe_sigmae_sqrtTaue   ! factor of parallel phi term
+  REAL(dp), PUBLIC, PROTECTED :: qi_sigmai_sqrtTaui   !
+  REAL(dp), PUBLIC, PROTECTED :: sigmae2_taue_o2      ! factor of the Kernel argument
+  REAL(dp), PUBLIC, PROTECTED :: sigmai2_taui_o2      !
+  REAL(dp), PUBLIC, PROTECTED :: nu_e,  nu_i          ! electron-ion, ion-ion collision frequency
+  REAL(dp), PUBLIC, PROTECTED :: nu_ee, nu_ie         ! e-e, i-e coll. frequ.
+  REAL(dp), PUBLIC, PROTECTED :: qe2_taue, qi2_taui   ! factor of the gammaD sum
+
   PUBLIC :: model_readinputs, model_outputinputs
 
 CONTAINS
@@ -40,6 +52,28 @@ CONTAINS
 
     ! Collision Frequency Normalization ... to match fluid limit
     nu = nu*0.532_dp
+
+    !Precompute species dependant factors
+    IF( q_e .NE. 0._dp ) THEN
+      taue_qe_etaB    = tau_e/q_e * eta_B ! factor of the magnetic moment coupling
+      sqrtTaue_qe     = sqrt(tau_e)/q_e   ! factor of parallel moment term
+    ELSE
+      taue_qe_etaB  = 0._dp
+      sqrtTaue_qe   = 0._dp
+    ENDIF
+
+    taui_qi_etaB    = tau_i/q_i * eta_B ! factor of the magnetic moment coupling
+    sqrtTaui_qi     = sqrt(tau_i)/q_i   ! factor of parallel moment term
+    qe_sigmae_sqrtTaue = q_e/sigma_e/SQRT(tau_e) ! factor of parallel phi term
+    qi_sigmai_sqrtTaui = q_i/sigma_i/SQRT(tau_i)
+    qe2_taue        = (q_e**2)/tau_e ! factor of the gammaD sum
+    qi2_taui        = (q_i**2)/tau_i
+    sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the Kernel argument
+    sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp
+    nu_e            = nu ! electron-ion collision frequency (where already multiplied by 0.532)
+    nu_i            = nu * sigma_e * (tau_i)**(-3._dp/2._dp)/SQRT2 ! ion-ion collision frequ.
+    nu_ee           = nu_e/SQRT2 ! e-e coll. frequ.
+    nu_ie           = nu*sigma_e**2 ! i-e coll. frequ.
 
   END SUBROUTINE model_readinputs
 
