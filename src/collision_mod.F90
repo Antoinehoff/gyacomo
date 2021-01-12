@@ -50,9 +50,9 @@ CONTAINS
       ! Adiabatic moments (only different from moments when p=0)
       adiab_moment_0j = moments_e(1,in_,ikr,ikz,updatetlevel) + kernel_e(in_,ikr,ikz)*phi(ikr,ikz)/tau_e
       adiab_moment_0jp1 = 0._dp; adiab_moment_0jm1 = 0._dp
-      IF (n_dp+1 .LE. jmaxe)&
+      IF (n_dp+1 .LE. jmaxe)& ! Truncation
         adiab_moment_0jp1 = moments_e(1,in_+1,ikr,ikz,updatetlevel) + kernel_e(in_+1,ikr,ikz)*phi(ikr,ikz)/tau_e
-      IF (n_dp-1 .GE. 0)&
+      IF (n_dp-1 .GE. 0)& ! Truncation
         adiab_moment_0jm1 = moments_e(1,in_-1,ikr,ikz,updatetlevel) + kernel_e(in_-1,ikr,ikz)*phi(ikr,ikz)/tau_e
 
       ! Density
@@ -76,20 +76,20 @@ CONTAINS
       TColl = TColl - (2._dp*p_dp + j_dp + be_2) * Kernel_e(ij,ikr,ikz)*phi(ikr,ikz)/tau_e
 
     ! Add energy restoring term
-    IF( p_dp .eq. 0 ) THEN
+    IF( p_dp .eq. 0 ) THEN ! kronecker p0
       TColl = TColl + T_* 4._dp*j_dp * Kernel_e(ij,ikr,ikz)
-      IF( j_dp+1 .LE. jmaxe ) &
+      IF( j_dp+1 .LE. jmaxe ) & ! Truncation
         TColl = TColl - T_*2._dp*(j_dp + 1._dp)*Kernel_e(ij+1,ikr,ikz)
-      IF( j_dp-1 .GE. 0 )  &
+      IF( j_dp-1 .GE. 0 )  & ! Truncation
         TColl = TColl - T_*2._dp*j_dp*Kernel_e(ij-1,ikr,ikz)
     ENDIF
-    IF( p_dp .eq. 2 ) &
+    IF( p_dp .eq. 2 ) & ! kronecker p2
       TColl = TColl + T_*SQRT2*Kernel_e(ij,ikr,ikz)
 
     !Add momentum restoring term
-    IF( p_dp .eq. 1 ) &
+    IF( p_dp .eq. 1 ) & ! kronecker p1
       TColl = TColl + upar_*Kernel_e(ij,ikr,ikz)
-    IF( p_dp .eq. 0 ) &
+    IF( p_dp .eq. 0 ) & ! kronecker p0
       TColl = TColl + uperp_*ibe_*( (j_dp + 1._dp)*Kernel_e(ij,ikr,ikz) - j_dp*Kernel_e(ij-1,ikr,ikz))
 
     ! Multiply by electron-ion collision coefficient
