@@ -1,194 +1,329 @@
 module collision
 ! contains the Hermite-Laguerre collision operators. Solved using COSOlver.
 
-use prec_const
-use fields
-use array
-use grid
-use basic
-use futils
-use initial_par
-use model
-
 implicit none
 
 PUBLIC :: load_FC_mat
+PUBLIC :: DoughertyGK_e, DoughertyGK_i
 
 CONTAINS
 
-!******************************************************************************!
-SUBROUTINE LenardBernsteinDK
+  !******************************************************************************!
+  SUBROUTINE LenardBernsteinDK
 
-END SUBROUTINE LenardBernsteinDK
+  END SUBROUTINE LenardBernsteinDK
 
-!******************************************************************************!
-SUBROUTINE DoughertyDK
+  !******************************************************************************!
+  !! Doughtery gyrokinetic collision operator for electrons
+  SUBROUTINE DoughertyGK_e(ip,ij,ikr,ikz,TColl)
+    USE fields
+    USE array, ONLY : Kernel_e
+    USE basic
+    USE grid, ONLY : jmaxe, parray_e, jarray_e, krarray, kzarray
+    USE prec_const
+    USE time_integration
+    USE model
+    IMPLICIT NONE
+    INTEGER, INTENT(IN)      :: ip,ij,ikr,ikz
+    COMPLEX(dp), INTENT(INOUT) :: TColl
 
-END SUBROUTINE DoughertyDK
+    COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_
+    COMPLEX(dp) :: Dpj, Ppj, T_, ibe_
+    INTEGER     :: in_
+    REAL        :: n_dp, j_dp, p_dp, be_2
 
-!******************************************************************************!
-SUBROUTINE FullCoulombDK
+    !** Auxiliary variables **
+    p_dp  = REAL(parray_e(ij),dp)
+    j_dp  = REAL(jarray_e(ij),dp)
+    be_2  =  (krarray(ikr)**2 + kzarray(ikz)**2) * sigmae2_taue_o2
+    ibe_  = imagu*SQRT(be_2)
 
-END SUBROUTINE FullCoulombDK
+    !** build fluid moments used for collison operator **
+    n_     = 0._dp
+    upar_  = 0._dp
+    uperp_ = 0._dp
+    Tpar_  = 0._dp
+    Tperp_ = 0._dp
+    DO in_ = 1,jmaxe+1
+      n_dp = REAL(in_-1,dp)
+      n_     = n_     + Kernel_e(in_,ikr,ikz) * moments_e(1,in_,ikr,ikz,updatetlevel)
+      upar_  = upar_  + Kernel_e(in_,ikr,ikz) * moments_e(2,in_,ikr,ikz,updatetlevel)
+      uperp_ = uperp_ + ibe_*0.5_dp*Kernel_e(in_,ikr,ikz) * (moments_e(1,in_,ikr,ikz,updatetlevel) -moments_e(1,in_+1,ikr,ikz,updatetlevel))
+      Tpar_  = Tpar_  + Kernel_e(in_,ikr,ikz) * (SQRT2*moments_e(3,in_,ikr,ikz,updatetlevel) + moments_e(1,in_,ikr,ikz,updatetlevel))
+      Tperp_ = Tperp_ + Kernel_e(in_,ikr,ikz) * ((2._dp*n_dp+1._dp)*moments_e(1,in_,ikr,ikz,updatetlevel) - n_dp*moments_e(1,in_-1,ikr,ikz,updatetlevel) - (n_dp+1)*moments_e(1,in_+1,ikr,ikz,updatetlevel))
+    ENDDO
+    T_    = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
+
+    ! Velocity-space diffusion
+    TColl = -(2._dp*p_dp + j_dp + be_2)*moments_e(ip,ij,ikr,ikz,updatetlevel)
+
+    ! Add energy restoring term
+    IF( ip .eq. 0 ) THEN
+      TColl = TColl &
+      + T_*( 2._dp*((2_dp*j_dp + 1._dp)*Kernel_e(ij,ikr,ikz) &
+            -(j_dp + 1._dp)*Kernel_e(ij+1,ikr,ikz) &
+            - j_dp*Kernel_e(ij-1,ikr,ikz)) &
+            - 2._dp*Kernel_e(ij,ikr,ikz))
+    ENDIF
+
+    IF( ip .eq. 2 ) THEN
+       TColl = TColl + T_*SQRT2*Kernel_e(ij,ikr,ikz)
+    ENDIF
+
+    !Add momentum restoring term
+    IF( ip .eq. 1) THEN
+       TColl = TColl + upar_*Kernel_e(ij,ikr,ikz)
+    ENDIF
+
+    IF(ip .eq. 0 ) THEN
+       TColl = TColl + uperp_*ibe_*( (j_dp + 1._dp)*Kernel_e(ij,ikr,ikz) - j_dp*Kernel_e(ij-1,ikr,ikz))
+    ENDIF
+
+    TColl = TColl*nu_e
+
+  END SUBROUTINE DoughertyGK_e
+
+  !******************************************************************************!
+  !! Doughtery gyrokinetic collision operator for ions
+  SUBROUTINE DoughertyGK_i(ip,ij,ikr,ikz,TColl)
+    USE fields
+    USE array, ONLY : Kernel_i
+    USE basic
+    USE grid, ONLY : jmaxi, parray_i, jarray_i, krarray, kzarray
+    USE prec_const
+    USE time_integration
+    USE model
+    IMPLICIT NONE
+    INTEGER, INTENT(IN)      :: ip,ij,ikr,ikz
+    COMPLEX(dp), INTENT(INOUT) :: TColl
+
+    COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_
+    COMPLEX(dp) :: Dpj, Ppj, T_, ibi_
+    INTEGER     :: in_
+    REAL        :: n_dp, j_dp, p_dp, bi_2
+
+    !** Auxiliary variables **
+    p_dp  = REAL(parray_i(ij),dp)
+    j_dp  = REAL(jarray_i(ij),dp)
+    bi_2  =  (krarray(ikr)**2 + kzarray(ikz)**2) * sigmai2_taui_o2
+    ibi_  = imagu*SQRT(bi_2)
+
+    !** build fluid moments used for collison operator **
+    n_     = 0._dp
+    upar_  = 0._dp
+    uperp_ = 0._dp
+    Tpar_  = 0._dp
+    Tperp_ = 0._dp
+    DO in_ = 1,jmaxi+1
+      n_dp = REAL(in_-1,dp)
+      n_     = n_     + Kernel_i(in_,ikr,ikz) * moments_i(1,in_,ikr,ikz,updatetlevel)
+      upar_  = upar_  + Kernel_i(in_,ikr,ikz) * moments_i(2,in_,ikr,ikz,updatetlevel)
+      uperp_ = uperp_ + 0.5_dp*Kernel_i(in_,ikr,ikz) * (moments_i(1,in_,ikr,ikz,updatetlevel) -moments_i(1,in_+1,ikr,ikz,updatetlevel))
+      Tpar_  = Tpar_  + Kernel_i(in_,ikr,ikz) * (SQRT2*moments_i(3,in_,ikr,ikz,updatetlevel) + moments_i(1,in_,ikr,ikz,updatetlevel))
+      Tperp_ = Tperp_ + Kernel_i(in_,ikr,ikz) * ((2._dp*n_dp+1._dp)*moments_i(1,in_,ikr,ikz,updatetlevel) - n_dp*moments_i(1,in_-1,ikr,ikz,updatetlevel) - (n_dp+1)*moments_i(1,in_+1,ikr,ikz,updatetlevel))
+    ENDDO
+    T_    = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
+
+    ! Velocity-space diffusion
+    TColl = -(2._dp*p_dp + j_dp + bi_2)*moments_i(ip,ij,ikr,ikz,updatetlevel)
+
+    ! Add energy restoring term
+    IF( ip .eq. 0 ) THEN
+      TColl = TColl &
+      + T_*( 2._dp*((2_dp*j_dp + 1._dp)*Kernel_i(ij,ikr,ikz) &
+            -(j_dp + 1._dp)*Kernel_i(ij+1,ikr,ikz) &
+            - j_dp*Kernel_i(ij-1,ikr,ikz)) &
+            - 2._dp*Kernel_i(ij,ikr,ikz))
+    ENDIF
+
+    IF( ip .eq. 2 ) THEN
+       TColl = TColl + T_*SQRT2*Kernel_i(ij,ikr,ikz)
+    ENDIF
+
+    !Add momentum restoring term
+    IF( ip .eq. 1) THEN
+       TColl = TColl + upar_*Kernel_i(ij,ikr,ikz)
+    ENDIF
+
+    IF(ip .eq. 0 ) THEN
+       TColl = TColl + uperp_*imagu*SQRT(bi_2)*( (j_dp + 1._dp)*Kernel_i(ij,ikr,ikz) - j_dp*Kernel_i(ij-1,ikr,ikz))
+    ENDIF
+
+    TColl = TColl*nu_i
+
+  END SUBROUTINE DoughertyGK_i
+
+  !******************************************************************************!
+  SUBROUTINE FullCoulombDK
+
+  END SUBROUTINE FullCoulombDK
 
 
-!******************************************************************************!
-!!!!!!! Load the Full coulomb coefficient table from COSOlver results
-!******************************************************************************!
-SUBROUTINE load_FC_mat ! Load a sub matrix from iCa files (works for pmaxa,jmaxa<=P_full,J_full)
-  IMPLICIT NONE
+  !******************************************************************************!
+  !!!!!!! Load the Full coulomb coefficient table from COSOlver results
+  !******************************************************************************!
+  SUBROUTINE load_FC_mat ! Load a sub matrix from iCa files (works for pmaxa,jmaxa<=P_full,J_full)
+    use prec_const
+    use fields
+    use array
+    use grid
+    use basic
+    use futils
+    use initial_par
+    use model
+    IMPLICIT NONE
 
-  INTEGER :: irow_sub, irow_full, icol_sub, icol_full
-  INTEGER :: fid1, fid2, fid3, fid4
+    INTEGER :: irow_sub, irow_full, icol_sub, icol_full
+    INTEGER :: fid1, fid2, fid3, fid4
 
-  INTEGER :: ip_e, ij_e, il_e, ik_e
-  INTEGER :: pdime, jdime
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: Ceepj_full, CeipjT_full
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: CeipjF_full
-  INTEGER :: ip_i, ij_i, il_i, ik_i
-  INTEGER :: pdimi, jdimi
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: Ciipj_full, CiepjT_full
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: CiepjF_full
+    INTEGER :: ip_e, ij_e, il_e, ik_e
+    INTEGER :: pdime, jdime
+    REAL(dp), DIMENSION(:,:), ALLOCATABLE :: Ceepj_full, CeipjT_full
+    REAL(dp), DIMENSION(:,:), ALLOCATABLE :: CeipjF_full
+    INTEGER :: ip_i, ij_i, il_i, ik_i
+    INTEGER :: pdimi, jdimi
+    REAL(dp), DIMENSION(:,:), ALLOCATABLE :: Ciipj_full, CiepjT_full
+    REAL(dp), DIMENSION(:,:), ALLOCATABLE :: CiepjF_full
 
-  !!!!!!!!!!!! Electron matrices !!!!!!!!!!!!
-  IF (my_id .EQ. 0) WRITE(*,*) 'Load ee FC mat...'
-  ! get the self electron colision matrix
-  CALL openf(selfmat_file,fid1, 'r', 'D',mpicomm=MPI_COMM_WORLD)
+    !!!!!!!!!!!! Electron matrices !!!!!!!!!!!!
+    IF (my_id .EQ. 0) WRITE(*,*) 'Load ee FC mat...'
+    ! get the self electron colision matrix
+    CALL openf(selfmat_file,fid1, 'r', 'D',mpicomm=MPI_COMM_WORLD)
 
-  CALL getatt(fid1,'/Caapj/Ceepj/','Pmaxe',pdime)
-  CALL getatt(fid1,'/Caapj/Ceepj/','Jmaxe',jdime)
+    CALL getatt(fid1,'/Caapj/Ceepj/','Pmaxe',pdime)
+    CALL getatt(fid1,'/Caapj/Ceepj/','Jmaxe',jdime)
 
-  IF ( ((pdime .LT. pmaxe) .OR. (jdime .LT. jmaxe)) .AND. (my_id .EQ. 0)) WRITE(*,*) '!! FC Matrix too small !!'
+    IF ( ((pdime .LT. pmaxe) .OR. (jdime .LT. jmaxe)) .AND. (my_id .EQ. 0)) WRITE(*,*) '!! FC Matrix too small !!'
 
-  CALL allocate_array(  Ceepj_full, 1,(pdime+1)*(jdime+1), 1,(pdime+1)*(jdime+1))
-  CALL getarr(fid1, '/Caapj/Ceepj', Ceepj_full) ! get array (moli format)
+    CALL allocate_array(  Ceepj_full, 1,(pdime+1)*(jdime+1), 1,(pdime+1)*(jdime+1))
+    CALL getarr(fid1, '/Caapj/Ceepj', Ceepj_full) ! get array (moli format)
 
-  ! Fill sub array with only usefull polynmials degree
-  DO ip_e = 0,pmaxe ! Loop over rows
-  DO ij_e = 0,jmaxe
-        irow_sub  = (jmaxe +1)*ip_e + ij_e +1
-        irow_full = (jdime +1)*ip_e + ij_e +1
-        DO il_e = 0,pmaxe ! Loop over columns
-        DO ik_e = 0,jmaxe
-              icol_sub  = (jmaxe +1)*il_e + ik_e +1
-              icol_full = (jdime +1)*il_e + ik_e +1
-              Ceepj (irow_sub,icol_sub) = Ceepj_full (irow_full,icol_full)
-        ENDDO
-        ENDDO
-  ENDDO
-  ENDDO
+    ! Fill sub array with only usefull polynmials degree
+    DO ip_e = 0,pmaxe ! Loop over rows
+    DO ij_e = 0,jmaxe
+          irow_sub  = (jmaxe +1)*ip_e + ij_e +1
+          irow_full = (jdime +1)*ip_e + ij_e +1
+          DO il_e = 0,pmaxe ! Loop over columns
+          DO ik_e = 0,jmaxe
+                icol_sub  = (jmaxe +1)*il_e + ik_e +1
+                icol_full = (jdime +1)*il_e + ik_e +1
+                Ceepj (irow_sub,icol_sub) = Ceepj_full (irow_full,icol_full)
+          ENDDO
+          ENDDO
+    ENDDO
+    ENDDO
 
-  CALL closef(fid1)
-  DEALLOCATE(Ceepj_full)
+    CALL closef(fid1)
+    DEALLOCATE(Ceepj_full)
 
-  IF (my_id .EQ. 0) WRITE(*,*) 'Load ei FC mat...'
-  ! get the Test and Back field electron ion collision matrix
-  CALL openf(eimat_file,fid2, 'r', 'D');
+    IF (my_id .EQ. 0) WRITE(*,*) 'Load ei FC mat...'
+    ! get the Test and Back field electron ion collision matrix
+    CALL openf(eimat_file,fid2, 'r', 'D');
 
-  CALL getatt(fid2,'/Ceipj/CeipjT/','Pmaxi',pdimi)
-  CALL getatt(fid2,'/Ceipj/CeipjT/','Jmaxi',jdimi)
-  IF ( (pdimi .LT. pmaxi) .OR. (jdimi .LT. jmaxi) ) WRITE(*,*) '!! FC Matrix too small !!'
+    CALL getatt(fid2,'/Ceipj/CeipjT/','Pmaxi',pdimi)
+    CALL getatt(fid2,'/Ceipj/CeipjT/','Jmaxi',jdimi)
+    IF ( (pdimi .LT. pmaxi) .OR. (jdimi .LT. jmaxi) ) WRITE(*,*) '!! FC Matrix too small !!'
 
-  CALL allocate_array( CeipjT_full, 1,(pdime+1)*(jdime+1), 1,(pdime+1)*(jdime+1))
-  CALL allocate_array( CeipjF_full, 1,(pdime+1)*(jdime+1), 1,(pdimi+1)*(jdimi+1))
+    CALL allocate_array( CeipjT_full, 1,(pdime+1)*(jdime+1), 1,(pdime+1)*(jdime+1))
+    CALL allocate_array( CeipjF_full, 1,(pdime+1)*(jdime+1), 1,(pdimi+1)*(jdimi+1))
 
-  CALL getarr(fid2, '/Ceipj/CeipjT', CeipjT_full)
-  CALL getarr(fid2, '/Ceipj/CeipjF', CeipjF_full)
+    CALL getarr(fid2, '/Ceipj/CeipjT', CeipjT_full)
+    CALL getarr(fid2, '/Ceipj/CeipjF', CeipjF_full)
 
-  ! Fill sub array with only usefull polynmials degree
-  DO ip_e = 0,pmaxe ! Loop over rows
-  DO ij_e = 0,jmaxe
-        irow_sub  = (jmaxe +1)*ip_e + ij_e +1
-        irow_full = (jdime +1)*ip_e + ij_e +1
-        DO il_e = 0,pmaxe ! Loop over columns
-        DO ik_e = 0,jmaxe
-              icol_sub  = (jmaxe +1)*il_e + ik_e +1
-              icol_full = (jdime +1)*il_e + ik_e +1
-              CeipjT(irow_sub,icol_sub) = CeipjT_full(irow_full,icol_full)
-        ENDDO
-        ENDDO
-        DO il_i = 0,pmaxi ! Loop over columns
-        DO ik_i = 0,jmaxi
-              icol_sub  = (Jmaxi +1)*il_i + ik_i +1
-              icol_full = (jdimi +1)*il_i + ik_i +1
-              CeipjF(irow_sub,icol_sub) = CeipjF_full(irow_full,icol_full)
-        ENDDO
-        ENDDO
-  ENDDO
-  ENDDO
+    ! Fill sub array with only usefull polynmials degree
+    DO ip_e = 0,pmaxe ! Loop over rows
+    DO ij_e = 0,jmaxe
+          irow_sub  = (jmaxe +1)*ip_e + ij_e +1
+          irow_full = (jdime +1)*ip_e + ij_e +1
+          DO il_e = 0,pmaxe ! Loop over columns
+          DO ik_e = 0,jmaxe
+                icol_sub  = (jmaxe +1)*il_e + ik_e +1
+                icol_full = (jdime +1)*il_e + ik_e +1
+                CeipjT(irow_sub,icol_sub) = CeipjT_full(irow_full,icol_full)
+          ENDDO
+          ENDDO
+          DO il_i = 0,pmaxi ! Loop over columns
+          DO ik_i = 0,jmaxi
+                icol_sub  = (Jmaxi +1)*il_i + ik_i +1
+                icol_full = (jdimi +1)*il_i + ik_i +1
+                CeipjF(irow_sub,icol_sub) = CeipjF_full(irow_full,icol_full)
+          ENDDO
+          ENDDO
+    ENDDO
+    ENDDO
 
-  CALL closef(fid2)
-  DEALLOCATE(CeipjF_full)
-  DEALLOCATE(CeipjT_full)
+    CALL closef(fid2)
+    DEALLOCATE(CeipjF_full)
+    DEALLOCATE(CeipjT_full)
 
-  !!!!!!!!!!!!!!! Ion matrices !!!!!!!!!!!!!!
-  IF (my_id .EQ. 0) WRITE(*,*) 'Load ii FC mat...'
-  ! get the self electron colision matrix
-  CALL openf(selfmat_file, fid3, 'r', 'D',mpicomm=MPI_COMM_WORLD);
+    !!!!!!!!!!!!!!! Ion matrices !!!!!!!!!!!!!!
+    IF (my_id .EQ. 0) WRITE(*,*) 'Load ii FC mat...'
+    ! get the self electron colision matrix
+    CALL openf(selfmat_file, fid3, 'r', 'D',mpicomm=MPI_COMM_WORLD);
 
-  CALL allocate_array(  Ciipj_full, 1,(pdimi+1)*(jdimi+1), 1,(pdimi+1)*(jdimi+1))
+    CALL allocate_array(  Ciipj_full, 1,(pdimi+1)*(jdimi+1), 1,(pdimi+1)*(jdimi+1))
 
-  IF ( (pmaxe .EQ. pmaxi) .AND. (jmaxe .EQ. jmaxi) ) THEN ! if same degrees ion and electron matrices are alike so load Ceepj
-    CALL getarr(fid3, '/Caapj/Ceepj', Ciipj_full) ! get array (moli format)
-  ELSE
-    CALL getarr(fid3, '/Caapj/Ciipj', Ciipj_full) ! get array (moli format)
-  ENDIF
+    IF ( (pmaxe .EQ. pmaxi) .AND. (jmaxe .EQ. jmaxi) ) THEN ! if same degrees ion and electron matrices are alike so load Ceepj
+      CALL getarr(fid3, '/Caapj/Ceepj', Ciipj_full) ! get array (moli format)
+    ELSE
+      CALL getarr(fid3, '/Caapj/Ciipj', Ciipj_full) ! get array (moli format)
+    ENDIF
 
-  ! Fill sub array with only usefull polynmials degree
-  DO ip_i = 0,Pmaxi ! Loop over rows
-  DO ij_i = 0,Jmaxi
-        irow_sub  = (Jmaxi +1)*ip_i + ij_i +1
-        irow_full = (jdimi +1)*ip_i + ij_i +1
-        DO il_i = 0,Pmaxi ! Loop over columns
-        DO ik_i = 0,Jmaxi
-              icol_sub  = (Jmaxi +1)*il_i + ik_i +1
-              icol_full = (jdimi +1)*il_i + ik_i +1
-              Ciipj (irow_sub,icol_sub) = Ciipj_full (irow_full,icol_full)
-        ENDDO
-        ENDDO
-  ENDDO
-  ENDDO
+    ! Fill sub array with only usefull polynmials degree
+    DO ip_i = 0,Pmaxi ! Loop over rows
+    DO ij_i = 0,Jmaxi
+          irow_sub  = (Jmaxi +1)*ip_i + ij_i +1
+          irow_full = (jdimi +1)*ip_i + ij_i +1
+          DO il_i = 0,Pmaxi ! Loop over columns
+          DO ik_i = 0,Jmaxi
+                icol_sub  = (Jmaxi +1)*il_i + ik_i +1
+                icol_full = (jdimi +1)*il_i + ik_i +1
+                Ciipj (irow_sub,icol_sub) = Ciipj_full (irow_full,icol_full)
+          ENDDO
+          ENDDO
+    ENDDO
+    ENDDO
 
-  CALL closef(fid3)
-  DEALLOCATE(Ciipj_full)
+    CALL closef(fid3)
+    DEALLOCATE(Ciipj_full)
 
-  ! get the Test and Back field electron ion collision matrix
-  CALL openf(iemat_file,fid4, 'r', 'D');
+    ! get the Test and Back field electron ion collision matrix
+    CALL openf(iemat_file,fid4, 'r', 'D');
 
-  CALL allocate_array( CiepjT_full, 1,(pdimi+1)*(jdimi+1), 1,(pdimi+1)*(jdimi+1))
-  CALL allocate_array( CiepjF_full, 1,(pdimi+1)*(jdimi+1), 1,(pdime+1)*(jdime+1))
+    CALL allocate_array( CiepjT_full, 1,(pdimi+1)*(jdimi+1), 1,(pdimi+1)*(jdimi+1))
+    CALL allocate_array( CiepjF_full, 1,(pdimi+1)*(jdimi+1), 1,(pdime+1)*(jdime+1))
 
-  IF (my_id .EQ. 0) WRITE(*,*) 'Load ie FC mat...'
-  CALL getarr(fid4, '/Ciepj/CiepjT', CiepjT_full)
-  CALL getarr(fid4, '/Ciepj/CiepjF', CiepjF_full)
+    IF (my_id .EQ. 0) WRITE(*,*) 'Load ie FC mat...'
+    CALL getarr(fid4, '/Ciepj/CiepjT', CiepjT_full)
+    CALL getarr(fid4, '/Ciepj/CiepjF', CiepjF_full)
 
-  ! Fill sub array with only usefull polynmials degree
-  DO ip_i = 0,Pmaxi ! Loop over rows
-  DO ij_i = 0,Jmaxi
-        irow_sub  = (Jmaxi +1)*ip_i + ij_i +1
-        irow_full = (jdimi +1)*ip_i + ij_i +1
-        DO il_i = 0,Pmaxi ! Loop over columns
-        DO ik_i = 0,Jmaxi
-              icol_sub  = (Jmaxi +1)*il_i + ik_i +1
-              icol_full = (jdimi +1)*il_i + ik_i +1
-              CiepjT(irow_sub,icol_sub) = CiepjT_full(irow_full,icol_full)
-        ENDDO
-        ENDDO
-        DO il_e = 0,pmaxe ! Loop over columns
-        DO ik_e = 0,jmaxe
-              icol_sub  = (jmaxe +1)*il_e + ik_e +1
-              icol_full = (jdime +1)*il_e + ik_e +1
-              CiepjF(irow_sub,icol_sub) = CiepjF_full(irow_full,icol_full)
-        ENDDO
-        ENDDO
-  ENDDO
-  ENDDO
+    ! Fill sub array with only usefull polynmials degree
+    DO ip_i = 0,Pmaxi ! Loop over rows
+    DO ij_i = 0,Jmaxi
+          irow_sub  = (Jmaxi +1)*ip_i + ij_i +1
+          irow_full = (jdimi +1)*ip_i + ij_i +1
+          DO il_i = 0,Pmaxi ! Loop over columns
+          DO ik_i = 0,Jmaxi
+                icol_sub  = (Jmaxi +1)*il_i + ik_i +1
+                icol_full = (jdimi +1)*il_i + ik_i +1
+                CiepjT(irow_sub,icol_sub) = CiepjT_full(irow_full,icol_full)
+          ENDDO
+          ENDDO
+          DO il_e = 0,pmaxe ! Loop over columns
+          DO ik_e = 0,jmaxe
+                icol_sub  = (jmaxe +1)*il_e + ik_e +1
+                icol_full = (jdime +1)*il_e + ik_e +1
+                CiepjF(irow_sub,icol_sub) = CiepjF_full(irow_full,icol_full)
+          ENDDO
+          ENDDO
+    ENDDO
+    ENDDO
 
-  CALL closef(fid4)
-  DEALLOCATE(CiepjF_full)
-  DEALLOCATE(CiepjT_full)
+    CALL closef(fid4)
+    DEALLOCATE(CiepjF_full)
+    DEALLOCATE(CiepjT_full)
 
-END SUBROUTINE load_FC_mat
-!******************************************************************************!
+  END SUBROUTINE load_FC_mat
+  !******************************************************************************!
 
 end module collision
