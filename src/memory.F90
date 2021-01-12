@@ -37,10 +37,8 @@ SUBROUTINE memory
   ENDIF
 
   ! Non linear terms and dnjs table
-  IF ( .true. ) THEN
-    CALL allocate_array( Sepj, ips_e,ipe_e, ijs_e,ije_e, ikrs,ikre, ikzs,ikze )
-    CALL allocate_array( Sipj, ips_i,ipe_i, ijs_i,ije_i, ikrs,ikre, ikzs,ikze )
-    CALL allocate_array( dnjs, 1,maxj+1, 1,maxj+1, 1,maxj+1)
-  ENDIF
+  CALL allocate_array( Sepj, ips_e,ipe_e, ijs_e,ije_e, ikrs,ikre, ikzs,ikze )
+  CALL allocate_array( Sipj, ips_i,ipe_i, ijs_i,ije_i, ikrs,ikre, ikzs,ikze )
+  CALL allocate_array( dnjs, 1,maxj+1, 1,maxj+1, 1,maxj+1)
 
 END SUBROUTINE memory
