@@ -153,7 +153,6 @@ CONTAINS
     ENDDO
     T_    = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
 
-
     !** Assembling collison operator **
     ! Velocity-space diffusion
     TColl = -(2._dp*p_dp + j_dp + bi_2)*moments_i(ip,ij,ikr,ikz,updatetlevel)
@@ -182,9 +181,87 @@ CONTAINS
   END SUBROUTINE DoughertyGK_i
 
   !******************************************************************************!
-  SUBROUTINE FullCoulombDK
+  !!!!!!! Compute ion Full Coulomb collision operator
+  !******************************************************************************!
+  SUBROUTINE FullCoulombDK_e(p_int,j_int,ikr,ikz,TColl)
+    USE basic
+    USE fields,           ONLY: moments_i, moments_e
+    USE array,            ONLY: Ceepj, CeipjT, CeipjF
+    USE grid,             ONLY: pmaxe,jmaxe, pmaxi,jmaxi, parray_e, parray_i, &
+                                jarray_e, jarray_i, bari, bare
+    USE prec_const
+    USE time_integration, ONLY: updatetlevel
+    USE model,            ONLY: nu_e, nu_ee
+    IMPLICIT NONE
 
-  END SUBROUTINE FullCoulombDK
+    INTEGER,     INTENT(IN)    :: p_int,j_int ,ikr,ikz
+    COMPLEX(dp), INTENT(INOUT) :: TColl
+
+    INTEGER     :: ip2,ij2, p2_int,j2_int
+
+    TColl = 0._dp ! Initialization
+
+    ploopee: DO ip2 = 1,pmaxe+1 ! sum the electron-self and electron-ion test terms
+      p2_int = parray_e(ip2)
+      jloopee: DO ij2 = 1,jmaxe+1
+        j2_int = jarray_e(ij2)
+        TColl = TColl + moments_e(ip2,ij2,ikr,ikz,updatetlevel) &
+           *( nu_e  * CeipjT(bare(p_int,j_int), bare(p2_int,j2_int)) &
+             +nu_ee * Ceepj (bare(p_int,j_int), bare(p2_int,j2_int)))
+      ENDDO jloopee
+    ENDDO ploopee
+    ploopei: DO ip2 = 1,pmaxi+1 ! sum the electron-ion field terms
+      p2_int = parray_i(ip2)
+      jloopei: DO ij2 = 1,jmaxi+1
+        j2_int = jarray_i(ij2)
+        TColl = TColl + moments_i(ip2,ij2,ikr,ikz,updatetlevel) &
+          *(nu_e * CeipjF(bare(p_int,j_int), bari(p2_int,j2_int)))
+      END DO jloopei
+    ENDDO ploopei
+
+  END SUBROUTINE FullCoulombDK_e
+
+  !******************************************************************************!
+  !!!!!!! Compute ion Full Coulomb collision operator
+  !******************************************************************************!
+  SUBROUTINE FullCoulombDK_i(p_int,j_int,ikr,ikz,TColl)
+    USE basic
+    USE fields,           ONLY: moments_i, moments_e
+    USE array,            ONLY: Ciipj, CiepjT, CiepjF
+    USE grid,             ONLY: pmaxe,jmaxe, pmaxi,jmaxi, parray_e, parray_i, &
+                                jarray_e, jarray_i, bari, bare
+    USE prec_const
+    USE time_integration, ONLY: updatetlevel
+    USE model,            ONLY: nu_i, nu_ie
+    IMPLICIT NONE
+
+    INTEGER,     INTENT(IN)    :: p_int,j_int,ikr,ikz
+    COMPLEX(dp), INTENT(INOUT) :: TColl
+
+    INTEGER     :: ip2,ij2, p2_int,j2_int
+
+    TColl = 0._dp ! Initialization
+
+    ploopii: DO ip2 = 1,pmaxi+1 ! sum the ion-self and ion-electron test terms
+      p2_int = parray_i(ip2)
+      jloopii: DO ij2 = 1,jmaxi+1
+        j2_int = jarray_i(ij2)
+        TColl = TColl + moments_i(ip2,ij2,ikr,ikz,updatetlevel) &
+            *( nu_ie * CiepjT(bari(p_int,j_int), bari(p2_int,j2_int)) &
+              +nu_i  * Ciipj (bari(p_int,j_int), bari(p2_int,j2_int)))
+      ENDDO jloopii
+    ENDDO ploopii
+
+    ploopie: DO ip2 = 1,pmaxe+1 ! sum the ion-electron field terms
+      p2_int = parray_e(ip2)
+      jloopie: DO ij2 = 1,jmaxe+1
+        j2_int = jarray_e(ij2)
+        TColl = TColl + moments_e(ip2,ij2,ikr,ikz,updatetlevel) &
+          *(nu_ie * CiepjF(bari(p_int,j_int), bare(p2_int,j2_int)))
+      ENDDO jloopie
+    ENDDO ploopie
+
+  END SUBROUTINE FullCoulombDK_i
 
 
   !******************************************************************************!
@@ -214,7 +291,6 @@ CONTAINS
     REAL(dp), DIMENSION(:,:), ALLOCATABLE :: CiepjF_full
 
     !!!!!!!!!!!! Electron matrices !!!!!!!!!!!!
-    IF (my_id .EQ. 0) WRITE(*,*) 'Load ee FC mat...'
     ! get the self electron colision matrix
     CALL openf(selfmat_file,fid1, 'r', 'D',mpicomm=MPI_COMM_WORLD)
 
@@ -244,7 +320,6 @@ CONTAINS
     CALL closef(fid1)
     DEALLOCATE(Ceepj_full)
 
-    IF (my_id .EQ. 0) WRITE(*,*) 'Load ei FC mat...'
     ! get the Test and Back field electron ion collision matrix
     CALL openf(eimat_file,fid2, 'r', 'D');
 
@@ -285,7 +360,6 @@ CONTAINS
     DEALLOCATE(CeipjT_full)
 
     !!!!!!!!!!!!!!! Ion matrices !!!!!!!!!!!!!!
-    IF (my_id .EQ. 0) WRITE(*,*) 'Load ii FC mat...'
     ! get the self electron colision matrix
     CALL openf(selfmat_file, fid3, 'r', 'D',mpicomm=MPI_COMM_WORLD);
 
@@ -321,7 +395,6 @@ CONTAINS
     CALL allocate_array( CiepjT_full, 1,(pdimi+1)*(jdimi+1), 1,(pdimi+1)*(jdimi+1))
     CALL allocate_array( CiepjF_full, 1,(pdimi+1)*(jdimi+1), 1,(pdime+1)*(jdime+1))
 
-    IF (my_id .EQ. 0) WRITE(*,*) 'Load ie FC mat...'
     CALL getarr(fid4, '/Ciepj/CiepjT', CiepjT_full)
     CALL getarr(fid4, '/Ciepj/CiepjF', CiepjF_full)
 

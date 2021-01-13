@@ -137,25 +137,7 @@ SUBROUTINE moments_eq_rhs_e
                    + TColl20 + TColl01 + TColl10
 
           ELSEIF (CO .EQ. -1) THEN ! Full Coulomb for electrons (COSOlver matrix)
-            TColl = 0._dp ! Initialization
-
-            ploopee: DO ip2 = 1,pmaxe+1 ! sum the electron-self and electron-ion test terms
-              p2_int = parray_e(ip2)
-              jloopee: DO ij2 = 1,jmaxe+1
-                j2_int = jarray_e(ij2)
-                TColl = TColl + moments_e(ip2,ij2,ikr,ikz,updatetlevel) &
-                   *( nu_e  * CeipjT(bare(p_int,j_int), bare(p2_int,j2_int)) &
-                     +nu_ee * Ceepj (bare(p_int,j_int), bare(p2_int,j2_int)))
-              ENDDO jloopee
-            ENDDO ploopee
-            ploopei: DO ip2 = 1,pmaxi+1 ! sum the electron-ion field terms
-              p2_int = parray_i(ip2)
-              jloopei: DO ij2 = 1,jmaxi+1
-                j2_int = jarray_i(ij2)
-                TColl = TColl + moments_i(ip2,ij2,ikr,ikz,updatetlevel) &
-                  *(nu_e * CeipjF(bare(p_int,j_int), bari(p2_int,j2_int)))
-              END DO jloopei
-            ENDDO ploopei
+            CALL FullCoulombDK_e(p_int,j_int,ikr,ikz,TColl)
 
           ELSEIF (CO .EQ. 0) THEN ! Lenard Bernstein
             TColl = xCapj * moments_e(ip,ij,ikr,ikz,updatetlevel)
@@ -333,24 +315,7 @@ SUBROUTINE moments_eq_rhs_i
                    + TColl20 + TColl01 + TColl10
 
           ELSEIF (CO .EQ. -1) THEN !!! Full Coulomb for ions (COSOlver matrix) !!!
-            TColl = 0._dp ! Initialization
-            ploopii: DO ip2 = 1,pmaxi+1 ! sum the ion-self and ion-electron test terms
-              p2_int = parray_i(ip2)
-              jloopii: DO ij2 = 1,jmaxi+1
-                j2_int = jarray_i(ij2)
-                TColl = TColl + moments_i(ip2,ij2,ikr,ikz,updatetlevel) &
-                    *( nu_ie * CiepjT(bari(p_int,j_int), bari(p2_int,j2_int)) &
-                      +nu_i  * Ciipj (bari(p_int,j_int), bari(p2_int,j2_int)))
-              ENDDO jloopii
-            ENDDO ploopii
-            ploopie: DO ip2 = 1,pmaxe+1 ! sum the ion-electron field terms
-              p2_int = parray_e(ip2)
-              jloopie: DO ij2 = 1,jmaxe+1
-                j2_int = jarray_e(ij2)
-                TColl = TColl + moments_e(ip2,ij2,ikr,ikz,updatetlevel) &
-                  *(nu_ie * CiepjF(bari(p_int,j_int), bare(p2_int,j2_int)))
-              ENDDO jloopie
-            ENDDO ploopie
+            CALL FullCoulombDK_i(p_int,j_int,ikr,ikz,TColl)
 
           ELSEIF (CO .EQ. 0) THEN! Lenhard Bernstein
             TColl = xCapj * moments_i(ip,ij,ikr,ikz,updatetlevel)
