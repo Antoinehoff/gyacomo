@@ -3,8 +3,11 @@ if 0
     %%
     outfile ='';
     outfile ='';
-    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi/200x100_L_100_Pe_2_Je_1_Pi_2_Ji_1_nB_0.66_nN_1_nu_1e-01_FC_mu_1e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi/200x100_L_100_Pe_8_Je_4_Pi_8_Ji_4_nB_0.66_nN_1_nu_1e-01_FC_mu_1e-04/out.txt';
+    outfile ='';
+    outfile ='';
+    outfile ='';
+    outfile ='';
+    outfile ='';
     BASIC.RESDIR = load_marconi(outfile);
 end
 %%
@@ -161,10 +164,10 @@ set(gcf, 'Position',  [100, 100, 900, 800])
     end
     grid on; ylabel('$\sum_{k_r,k_z}|N_i^{pj}|$');
     subplot(223)
-        plot(Ts2D,Flux_ri,'-','DisplayName','$\Gamma_{ri}$'); hold on;
-        plot(Ts2D,Flux_zi,'-','DisplayName','$\Gamma_{zi}$'); hold on;
-        plot(Ts2D,Flux_re,'-','DisplayName','$\Gamma_{re}$')
-        plot(Ts2D,Flux_ze,'-','DisplayName','$\Gamma_{ze}$')
+        plot(Ts2D,GFlux_ri,'-','DisplayName','$\Gamma_{ri}$'); hold on;
+        plot(Ts2D,GFlux_zi,'-','DisplayName','$\Gamma_{zi}$'); hold on;
+        plot(Ts2D,GFlux_re,'-','DisplayName','$\Gamma_{re}$')
+        plot(Ts2D,GFlux_ze,'-','DisplayName','$\Gamma_{ze}$')
         grid on; xlabel('$t c_s/R$'); ylabel('$\Gamma$'); %legend('show');
     subplot(224)
     for ip = 1:Npi
@@ -176,35 +179,6 @@ set(gcf, 'Position',  [100, 100, 900, 800])
     end
     grid on; xlabel('$t c_s/R$'); ylabel('$\sum_{k_r,k_z}|S_i^{pj}|$'); %legend('show');
 suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB)]);
-save_figure
-end
-
-%%
-if 0
-%% Photomaton : real space
-tf = 0; [~,it] = min(abs(Ts2D-tf)); [~,it5D] = min(abs(Ts5D-tf));
-fig = figure; FIGNAME = ['photo_real',sprintf('_t=%.0f',Ts2D(it))]; set(gcf, 'Position',  [100, 100, 1500, 500])
-    subplot(131); plt = @(x) (((x))); 
-        pclr = pcolor((RR),(ZZ),plt(ni00(:,:,it))); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
-        xlabel('$r/\rho_s$'); ylabel('$z/\rho_s$'); legend('$n_i$');
-        
-    subplot(132); plt = @(x) ((x));
-        DATA = plt(ni00(:,:,it))-plt(ne00(:,:,it));
-        pclr = pcolor((RR),(ZZ),DATA./max(max(DATA))); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
-        xlabel('$r/\rho_s$'); legend('$n_i-n_e$'); set(gca,'ytick',[]);
-        
-        
-    subplot(133); plt = @(x) ((x));
-        DATA = plt(phi(:,:,it));
-        pclr = pcolor((RR),(ZZ),DATA./max(max(DATA))); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
-        xlabel('$r/\rho_s$'); set(gca,'ytick',[]); legend('$\phi$');
-        
-% if strcmp(OUTPUTS.write_non_lin,'.true.')
-%     subplot(133); plt = @(x) fftshift((abs(x)),2);
-%         pclr = pcolor((RR),(ZZ),plt(si00(:,:,it5D))); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
-%         xlabel('$r/\rho_s$'); legend('$|S_i^{00}|$'); set(gca,'ytick',[])
-% end
-suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB), sprintf(', $t c_s/R=%.0f$',Ts2D(it))]);
 save_figure
 end
 
@@ -365,36 +339,4 @@ fig = figure; FIGNAME = ['krkz_frame',sprintf('t=%.0f',Ts2D(it2))];set(gcf, 'Pos
 save_figure
 end
 
-%% Phase space distribution function
-% M_ = 25;
-% spar = linspace(0,4,M_); xperp = spar;
-% 
-% PSDF_e = zeros(numel(kr),numel(kz),M_,M_,numel(Ts5D));
-% for ikr = 1:numel(kr)
-%     for ikz = 1:numel(kz)
-%         for it = 1:numel(Ts5D)
-%         PSDF_e(ikr,ikz,:,:,it) = compute_fa(Nepj(:,:,ikr,ikz,it), spar, xperp);
-%         end
-%     end
-% end
-% 
-% ktarget = 0.3*max(kz);
-% ttarget = 310;
-% 
-% [~,ik10] = min(abs(kz-ktarget));
-% [~,it]   = min(abs(Ts5D-ttarget));
-% if 0
-%     %%
-% plt = @(x) real(x(ik10,ik10,:,:,it));
-% pclr = pcolor(spar,xperp,plt(PSDF_e)); set(pclr, 'edgecolor','none'); colorbar;
-% xlabel('$s_\parallel$'); ylabel('$x_\perp$'); title(sprintf('$t c_s/R=%.0f$',Ts5D(it))); 
-% legend(['$Re(f_e),k_\perp \approx$',sprintf('%01.0f',norm([kr(ik10),kz(ik10)]))]);
-% end
-% if 0
-% %% Phase space distribution function time evolution
-% GIFNAME = ['f_e',sprintf('_%.2d',JOBNUM)]; INTERP = 1;
-% FIELD = real(ni00+ne00); X = RR; Y = ZZ; T = Ts5D;
-% FIELDNAME = '$n_i-n_e$'; XNAME = '$r\rho_s$'; YNAME = '$z\rho_s$';
-% create_gif
-% end
 

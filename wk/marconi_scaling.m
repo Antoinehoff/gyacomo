@@ -42,7 +42,6 @@ CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Do
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% unused
 KR0KH   = 0; A0KH = 0; % Background phi mode to drive Ray-Tay inst.
-NO_E    = 0;  % Remove electrons dynamic
 % DK    = 0;  % Drift kinetic model (put every kernel_n to 0 except n=0 to 1)
 KREQ0   = 0;      % put kr = 0
 KPAR    = 0.0;    % Parellel wave vector component

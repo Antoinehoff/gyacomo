@@ -24,7 +24,7 @@ MODEL.tau_i   = TAU;
 MODEL.sigma_e = 0.0233380;
 MODEL.sigma_i = 1.0;
 % charge q_a/e
-MODEL.q_e     =-1.0 * (1-NO_E);
+MODEL.q_e     =-1.0;
 MODEL.q_i     = 1.0;
 if MODEL.q_e == 0; SIMID = [SIMID,'_i']; end;
 % gradients L_perp/L_x

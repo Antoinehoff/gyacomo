@@ -19,7 +19,7 @@ JMAXE   = 2;     % Highest ''       Laguerre ''
 PMAXI   = 3;     % Highest ion      Hermite polynomial degree
 JMAXI   = 2;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS
-TMAX    = 150;  % Maximal time unit
+TMAX    = 100;  % Maximal time unit
 DT      = 3e-2;   % Time step
 SPS0D   = 1/DT;    % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
@@ -28,13 +28,12 @@ SPSCP   = 1/10;    % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
-SIMID   = 'test_DGGK';  % Name of the simulation
-CO      = -3;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty, -3 : GK Dougherty)
+SIMID   = 'test_cleaning';  % Name of the simulation
+CO      = -1;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty, -3 : GK Dougherty)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% unused
 KR0KH   = 0; A0KH = 0; % Background phi mode to drive Ray-Tay inst.
-NO_E    = 0;  % Remove electrons dynamic
 KREQ0   = 0;      % put kr = 0
 KPAR    = 0.0;    % Parellel wave vector component
 LAMBDAD = 0.0;
@@ -43,4 +42,7 @@ LOAD_MARCONI = 0;
 kmax    = N*pi/L;% Highest fourier mode
 MU      = NU_HYP/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
 NOISE0  = 1.0e-5;
+
+%% Setup and file management
 setup
+system('rm fort.90');

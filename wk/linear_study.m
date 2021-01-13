@@ -33,7 +33,6 @@ CO      = -1;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Do
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % unused
-NO_E    = 0;  % Remove electrons dynamic
 % DK    = 0;  % Drift kinetic model (put every kernel_n to 0 except n=0 to 1)
 JOBNUM = 00;
 KPAR    = 0.0;    % Parellel wave vector component
