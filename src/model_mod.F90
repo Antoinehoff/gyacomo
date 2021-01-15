@@ -6,7 +6,8 @@ MODULE model
   PRIVATE
 
   INTEGER,  PUBLIC, PROTECTED ::      CO =  0         ! Collision Operator
-  LOGICAL,  PUBLIC, PROTECTED ::      DK =  0         ! Drift kinetic model
+  INTEGER,  PUBLIC, PROTECTED :: CLOS =  0         ! Truncation method
+  INTEGER,  PUBLIC, PROTECTED ::    KERN =  0         ! Kernel model
   LOGICAL,  PUBLIC, PROTECTED :: NON_LIN =  .true.    ! To turn on non linear bracket term
   REAL(dp), PUBLIC, PROTECTED ::      mu =  0._dp     ! Hyperdiffusivity coefficient (for num. stability)
   REAL(dp), PUBLIC, PROTECTED ::      nu =  1._dp     ! Collision frequency
@@ -44,7 +45,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /MODEL_PAR/ CO, DK, NON_LIN, mu, nu, tau_e, tau_i, sigma_e, sigma_i, &
+    NAMELIST /MODEL_PAR/ CO, CLOS, KERN, NON_LIN, mu, nu, tau_e, tau_i, sigma_e, sigma_i, &
                          q_e, q_i, eta_n, eta_T, eta_B, lambdaD
 
     READ(lu_in,model_par)
@@ -88,6 +89,8 @@ CONTAINS
     INTEGER, INTENT(in) :: fidres
     CHARACTER(len=256), INTENT(in) :: str
     CALL attach(fidres, TRIM(str),      "CO",      CO)
+    CALL attach(fidres, TRIM(str),   "CLOS",   CLOS)
+    CALL attach(fidres, TRIM(str),    "KERN",    KERN)
     CALL attach(fidres, TRIM(str), "NON_LIN", NON_LIN)
     CALL attach(fidres, TRIM(str),      "nu",      nu)
     CALL attach(fidres, TRIM(str),   "tau_e",   tau_e)
