@@ -13,7 +13,7 @@ GRID.kpar  = KPAR;
 
 % Model parameters
 MODEL.CO      = CO;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
-if 0;      MODEL.DK      = '.true.'; else; MODEL.DK      = '.false.';end;
+MODEL.CLOS   = CLOS;
 if NON_LIN; MODEL.NON_LIN = '.true.'; else; MODEL.NON_LIN = '.false.';end;
 MODEL.mu      = MU;
 MODEL.nu      = NU; % hyper diffusive coefficient nu for HW
@@ -61,10 +61,19 @@ elseif(CO == -1); CONAME = 'FC';
 elseif(CO == -2); CONAME = 'DG';
 elseif(CO == -3); CONAME = 'DGGK';
 end
-degngrad   = ['Pe_',num2str(PMAXE),'_Je_',num2str(JMAXE),...
-    '_Pi_',num2str(PMAXI),'_Ji_',num2str(JMAXI),...
-    '_nB_',num2str(ETAB),'_nN_',num2str(ETAN),'_nu_%0.0e_',...
-    CONAME,'_mu_%0.0e'];
+if    (CLOS == 0); CLOSNAME = 'Trunc.';
+elseif(CLOS == 1); CLOSNAME = 'Clos. 1';
+elseif(CLOS == 2); CLOSNAME = 'Clos. 2';
+end
+if (PMAXE == PMAXI) && (JMAXE == JMAXI)
+    degngrad   = ['P_',num2str(PMAXE),'_J_',num2str(JMAXE)];
+else
+    degngrad   = ['Pe_',num2str(PMAXE),'_Je_',num2str(JMAXE),...
+        '_Pi_',num2str(PMAXI),'_Ji_',num2str(JMAXI)];
+end
+degngrad = [degngrad,'_eta_',num2str(ETAB/ETAN),'_nu_%0.0e_',...
+        CONAME,'_CLOS_',num2str(CLOS),'_mu_%0.0e'];
+    
 degngrad   = sprintf(degngrad,[NU,MU]);
 if ~NON_LIN; degngrad = ['lin_',degngrad]; end
 resolution = [num2str(GRID.Nr),'x',num2str(GRID.Nz/2),'_'];

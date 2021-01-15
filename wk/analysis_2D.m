@@ -6,8 +6,7 @@ if 0
     outfile ='';
     outfile ='';
     outfile ='';
-    outfile ='';
-    outfile ='';
+    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK/200x100_L_100_Pe_8_Je_4_Pi_8_Ji_4_nB_0.66_nN_1_nu_1e-01_DGGK_mu_1e-03/out.txt';
     BASIC.RESDIR = load_marconi(outfile);
 end
 %%
@@ -150,7 +149,10 @@ set(gcf, 'Position',  [100, 100, 900, 800])
         for ij = 1:Nje
             plt      = @(x) squeeze(x(ip,ij,:));
             plotname = ['$N_e^{',num2str(Pe(ip)),num2str(Je(ij)),'}$'];
-            semilogy(Ts5D,plt(Ne_norm),'DisplayName',plotname); hold on;
+            clr      = line_colors(ip,:);
+            lstyle   = line_styles(ij);
+            semilogy(Ts5D,plt(Ne_norm),'DisplayName',plotname,...
+                'Color',clr,'LineStyle',lstyle{1}); hold on;
         end
     end
     grid on; ylabel('$\sum_{k_r,k_z}|N_e^{pj}|$');
@@ -159,7 +161,10 @@ set(gcf, 'Position',  [100, 100, 900, 800])
         for ij = 1:Nji
             plt      = @(x) squeeze(x(ip,ij,:));
             plotname = ['$N_i^{',num2str(Pi(ip)),num2str(Ji(ij)),'}$'];
-            semilogy(Ts5D,plt(Ni_norm),'DisplayName',plotname); hold on;
+             clr      = line_colors(ip,:);
+            lstyle   = line_styles(ij);
+            semilogy(Ts5D,plt(Ni_norm),'DisplayName',plotname,...
+                'Color',clr,'LineStyle',lstyle{1}); hold on;
         end
     end
     grid on; ylabel('$\sum_{k_r,k_z}|N_i^{pj}|$');
@@ -174,7 +179,10 @@ set(gcf, 'Position',  [100, 100, 900, 800])
         for ij = 1:Nji
             plt      = @(x) squeeze(x(ip,ij,:));
             plotname = ['$S_i^{',num2str(ip-1),num2str(ij-1),'}$'];
-            semilogy(Ts5D,plt(Si_norm),'DisplayName',plotname); hold on;
+            clr      = line_colors(ip,:);
+            lstyle   = line_styles(ij);
+            semilogy(Ts5D,plt(Si_norm),'DisplayName',plotname,...
+                'Color',clr,'LineStyle',lstyle{1}); hold on;
         end
     end
     grid on; xlabel('$t c_s/R$'); ylabel('$\sum_{k_r,k_z}|S_i^{pj}|$'); %legend('show');
@@ -187,10 +195,10 @@ if 0
 % FIELD = ni00; FNAME = 'ni';
 % FIELD = ne00; FNAME = 'ne';
 FIELD = phi; FNAME = 'phi';
-tf = 60;  [~,it1] = min(abs(Ts2D-tf));
-tf = 120;  [~,it2] = min(abs(Ts2D-tf)); 
-tf = 250; [~,it3] = min(abs(Ts2D-tf));
-tf = 400; [~,it4] = min(abs(Ts2D-tf));
+tf = 200;  [~,it1] = min(abs(Ts2D-tf));
+tf = 600;  [~,it2] = min(abs(Ts2D-tf)); 
+tf =1000; [~,it3] = min(abs(Ts2D-tf));
+tf =2000; [~,it4] = min(abs(Ts2D-tf));
 fig = figure; FIGNAME = [FNAME,'_snaps']; set(gcf, 'Position',  [100, 100, 1500, 400])
 plt = @(x) x;%./max(max(x));
     subplot(141)
@@ -276,7 +284,7 @@ fig = figure; FIGNAME = 'space_time_drphi';set(gcf, 'Position',  [100, 100, 1200
     subplot(211)
     yyaxis left
     plot(Ts2D,GFlux_ri); hold on
-    plot(Ts5D,PFlux_ri,'o');
+%     plot(Ts5D,PFlux_ri,'o');
     ylabel('$\Gamma_r$'); grid on
     ylim([0,1.1*max(GFlux_ri)]);
     yyaxis right
@@ -295,34 +303,19 @@ end
 
 %%
 if 0
-%% Mode time evolution
-[~,ikr ] = min(abs(kr-dkr));
-[~,ik00] = min(abs(kz));
-[~,idk]  = min(abs(kz-dkz));
-[~,ik50] = min(abs(kz-0.1*max(kz)));
-[~,ik75] = min(abs(kz-0.2*max(kz)));
-[~,ik10] = min(abs(kz-0.3*max(kz)));
-plt = @(x) abs(squeeze(x));
-fig = figure; FIGNAME = ['mode_time_evolution',sprintf('_%.2d',JOBNUM)];
-        semilogy(Ts2D,plt(Ni00(ikr,ik00,:)),'DisplayName', ...
-            ['$k_z = $',num2str(kz(ik00))]); hold on
-        semilogy(Ts2D,plt(Ni00(ikr,idk,:)),'DisplayName', ...
-            ['$k_z = $',num2str(kz(idk))]); hold on
-        semilogy(Ts2D,plt(Ni00(ikr,ik50,:)),'DisplayName', ...
-            ['$k_z = $',num2str(kz(ik50))]); hold on
-        semilogy(Ts2D,plt(Ni00(ikr,ik75,:)),'DisplayName', ...
-            ['$k_z = $',num2str(kz(ik75))]); hold on
-        semilogy(Ts2D,plt(Ni00(ikr,ik10,:)),'DisplayName', ...
-            ['$k_z = $',num2str(kz(ik10))]); hold on
-        xlabel('$t$'); ylabel('$\hat n_i^{00}$'); legend('show');
-title(sprintf('$k_r=$ %1.1f',kr(ikr)))
-save_figure
+%% Space time diagram of moments amplitude
+pj_grid_i = 1:((PMAXI+1)*(JMAXI+1));
+[TY,TX] = meshgrid(Ts5D,pj_grid_i);
+Ni_norm_tmp = squeeze(reshape(Ni_norm,[(PMAXI+1)*(JMAXI+1),1,numel(Ts5D)]));
+fig = figure; FIGNAME = 'space_time_Ni_norm';
+% pclr = image(pj_grid_i,flip(Ts5D),Ni_norm_tmp'); hold on;
+pclr = pcolor(TX,TY,log(Ni_norm_tmp)); hold on; set(pclr, 'edgecolor','none'); %colorbar;
 end
 
 %%
 if 0
 %% Show frame in kspace
-tf = 300; [~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
+tf = 1000; [~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
 fig = figure; FIGNAME = ['krkz_frame',sprintf('t=%.0f',Ts2D(it2))];set(gcf, 'Position',  [100, 100, 700, 600])
     subplot(221); plt = @(x) fftshift((abs(x)),2);
         pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(PHI(:,:,it2))); set(pclr, 'edgecolor','none'); colorbar;

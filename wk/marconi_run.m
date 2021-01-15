@@ -19,8 +19,8 @@ NU_HYP  = 0.1;   % Hyperdiffusivity coefficient
 %% GRID PARAMETERS
 N       = 200;     % Frequency gridpoints (Nkr = N/2)
 L       = 100;     % Size of the squared frequency domain
-P       = 8;       % Electron and Ion highest Hermite polynomial degree
-J       = 4;       % Electron and Ion highest Laguerre polynomial degree
+P       = 6;       % Electron and Ion highest Hermite polynomial degree
+J       = 3;       % Electron and Ion highest Laguerre polynomial degree
 %% TIME PARAMETERS
 TMAX    = 150;  % Maximal time unit
 DT      = 1e-2;   % Time step
@@ -28,12 +28,12 @@ SPS0D   = 10;    % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 1/10;    % Sampling per time unit for 5D arrays
 SPSCP   = 1/10;    % Sampling per time unit for checkpoints
-RESTART = 0;      % To restart from last checkpoint
+RESTART = 1;      % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
 SIMID   = 'Marconi_DGGK';  % Name of the simulation
 CO      = -3;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty, -3 : GK Dougherty)
-
+CLOS   = 0;   % Truncation method (0 : =0 closure, 1 : n+j = min(nmax,n+j))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

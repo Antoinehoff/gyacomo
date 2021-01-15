@@ -42,7 +42,8 @@ cleanbin:
 $(OBJDIR)/diagnose.o : src/srcinfo.h
 
 FOBJ=$(OBJDIR)/advance_field.o $(OBJDIR)/array_mod.o $(OBJDIR)/auxval.o $(OBJDIR)/basic_mod.o \
-$(OBJDIR)/coeff_mod.o $(OBJDIR)/collision_mod.o $(OBJDIR)/compute_Sapj.o $(OBJDIR)/control.o $(OBJDIR)/fourier_mod.o \
+$(OBJDIR)/coeff_mod.o $(OBJDIR)/closure_mod.o $(OBJDIR)/collision_mod.o \
+$(OBJDIR)/compute_Sapj.o $(OBJDIR)/control.o $(OBJDIR)/fourier_mod.o \
 $(OBJDIR)/diagnose.o $(OBJDIR)/diagnostics_par_mod.o $(OBJDIR)/endrun.o $(OBJDIR)/fields_mod.o \
 $(OBJDIR)/inital.o $(OBJDIR)/initial_par_mod.o $(OBJDIR)/main.o $(OBJDIR)/memory.o \
 $(OBJDIR)/model_mod.o $(OBJDIR)/moments_eq_rhs.o $(OBJDIR)/poisson.o \
@@ -67,6 +68,9 @@ $(OBJDIR)/utility_mod.o
 
  $(OBJDIR)/coeff_mod.o : src/coeff_mod.F90 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/basic_mod.o
 		$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/coeff_mod.F90 -o $@
+
+ $(OBJDIR)/closure_mod.o : src/closure_mod.F90 $(OBJDIR)/model_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/fields_mod.o
+	 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/closure_mod.F90 -o $@
 
  $(OBJDIR)/collision_mod.o : src/collision_mod.F90 $(OBJDIR)/initial_par_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/grid_mod.o
 	 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/collision_mod.F90 -o $@

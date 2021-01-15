@@ -5,7 +5,7 @@ default_plots_options
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 1e+0;   % Collision frequency
+NU      = 0e-01;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
 ETAB    = 0.5;
 ETAN    = 1.0;    % Density gradient
@@ -14,12 +14,12 @@ MU      = 1e-3;   % Hyper diffusivity coefficient
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
-N       = 100;     % Frequency gridpoints (Nkr = N/2)
-L       = 100;     % Size of the squared frequency domain
+N       = 50;     % Frequency gridpoints (Nkr = N/2)
+L       = 10;     % Size of the squared frequency domain
 KREQ0   = 1;      % put kr = 0
 %% TIME PARMETERS
 TMAX    = 100;  % Maximal time unit
-DT      = 5e-2;   % Time step
+DT      = 1e-2;   % Time step
 SPS0D   = 0.5;      % Sampling per time unit for 2D arrays
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 0.1;    % Sampling per time unit for 5D arrays
@@ -29,7 +29,10 @@ JOB2LOAD= 00;
 %% OPTIONS
 SIMID   = 'linear_study';  % Name of the simulation
 NON_LIN = 0 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
-CO      = -1;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
+CO      = -3;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
+CLOS    = 2;   % Closure model (0 : =0 truncation, 1 : n+j = min(nmax,n+j), 2: odd/even adapted)
+KERN    = 0;   % Kernel model (0 : GK)
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % unused
@@ -40,10 +43,11 @@ KPAR    = 0.0;    % Parellel wave vector component
 %% PARAMETER SCANS
 if 1
 %% Parameter scan over PJ
-% PA = [2, 6, 8, 12];
-% JA = [1, 3, 4,  6];
-PA = [4];
-JA = [2];
+PA = [2, 3, 4, 6, 12, 20];
+JA = [1, 2, 2, 3,  6, 10];
+DTA= DT./sqrt(JA);
+% PA = [4];
+% JA = [2];
 Nparam = numel(PA);
 param_name = 'PJ';
 gamma_Ni = zeros(Nparam,N/2+1);
@@ -52,10 +56,11 @@ for i = 1:Nparam
     % Change scan parameter
     PMAXE = PA(i); PMAXI = PA(i);
     JMAXE = JA(i); JMAXI = JA(i);
+    DT = DTA(i);
     setup
     % Run linear simulation
     system(...
-        ['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ./../../../bin/helaz; cd ../../../wk']...
+        ['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ./../../../bin/helaz; cd ../../../wk']...
     )
     % Load and process results
     load_results
@@ -66,36 +71,7 @@ for i = 1:Nparam
     end
     gamma_Ni(i,:) = real(gamma_Ni(i,:) .* (gamma_Ni(i,:)>=0.0));
     % Clean output
-    %system(['rm -r ',BASIC.RESDIR])
-end
-% if 0
-% %% Plot
-% fig = figure; FIGNAME = 'space_time_Ni00';
-% i = 1;
-%
-% [YY, XX] = meshgrid(Ts2D,kz);
-% plt = @(x) squeeze(log(abs(x)))
-% pclr = pcolor(XX,YY,plt(Ni00_ST(i,:,:)));set(pclr, 'edgecolor','none');
-% grid on; xlabel('$k_z$'); ylabel('$t$');
-% title(['$\eta_B=',num2str(ETAB),'$,$P,J=',num2str(PA(i)),',',JA(i),'$'])
-% legend('show')
-% saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.fig']);
-% saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.png']);
-% end
-if 0
-%% Plot
-fig = figure; FIGNAME = 'space_time_Ni00';
-i = 3;
-plt = @(x) squeeze((abs(x)));
-for ikr=1:4:numel(kr)/2+1
-    NAME = ['$k_z=',num2str(kr(ikr)),'$'];
-    semilogy(1:TMAX,plt(Ni00_ST(i,ikr,1:TMAX)), 'DisplayName', NAME); hold on;
-end
-grid on; xlabel('$t c_s/\rho_s$'); ylabel('$|Ni^{00}|$');
-title(['$\eta_B=',num2str(ETAB),'$; $P,J=',num2str(PA(i)),',',num2str(JA(i)),'$, $\nu=',num2str(NU),'$'])
-legend('show');
-saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.fig']);
-saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.png']);
+    system(['rm -r ',BASIC.RESDIR])
 end
 if 1
 %% Plot
@@ -111,7 +87,7 @@ for i = 1:Nparam
     hold on;
 end
 grid on; xlabel('$k_z$'); ylabel('$\gamma(N_i^{00})$'); xlim([0.0,max(kr)]);
-title(['$\eta_B=',num2str(ETAB),'$, $\nu=',num2str(NU),'$'])
+title(['$\eta_B=',num2str(ETAB),'$, $\nu_{',CONAME,'}=',num2str(NU),'$, ', CLOSNAME])
 legend('show')
 saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.fig']);
 saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.png']);
