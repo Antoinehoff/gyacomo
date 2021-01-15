@@ -45,6 +45,13 @@ SUBROUTINE diagnose(kstep)
        CALL creatg(fidrst, '/Basic/moments_e', 'electron moments')
        CALL creatg(fidrst, '/Basic/moments_i', 'ion moments')
        CALL creatg(fidrst, '/Basic/phi', 'ES potential')
+       ! Attaching informations about moments
+       CALL attach(fidrst,"/Basic/moments_e/" , "pmaxe", pmaxe)
+       CALL attach(fidrst,"/Basic/moments_e/" , "jmaxe", jmaxe)
+       CALL attach(fidrst,"/Basic/moments_e/" , "Trunc", CLOS)
+       CALL attach(fidrst,"/Basic/moments_i/" , "pmaxi", pmaxi)
+       CALL attach(fidrst,"/Basic/moments_i/" , "jmaxi", jmaxi)
+       CALL attach(fidrst,"/Basic/moments_i/" , "Trunc", CLOS)
 
        IF (my_id .EQ. 0) WRITE(*,'(3x,a,a)') TRIM(rstfile), ' created'
        CALL flush(6)

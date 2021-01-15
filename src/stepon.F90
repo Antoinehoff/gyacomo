@@ -8,6 +8,7 @@ SUBROUTINE stepon
   USE grid
   USE advance_field_routine, ONLY: advance_time_level, advance_field
   USE model
+  USE closure
   USE utility, ONLY: checkfield
   use prec_const
   IMPLICIT NONE
@@ -37,6 +38,9 @@ SUBROUTINE stepon
           CALL advance_field(moments_i(ip,ij,:,:,:),moments_rhs_i(ip,ij,:,:,:))
         ENDDO
       ENDDO
+
+      ! Closure enforcement
+      CALL apply_closure_model
 
       ! Execution time end
       CALL cpu_time(t1_adv_field)
