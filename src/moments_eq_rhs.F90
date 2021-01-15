@@ -99,29 +99,20 @@ SUBROUTINE moments_eq_rhs_e
           kr     = krarray(ikr)   ! Poloidal wavevector
           kz     = kzarray(ikz)   ! Toroidal wavevector
           i_kz   = imagu * kz     ! Ddz derivative
-          ! If 1D simulation we put kr as kz since this dim is halved
-          IF (Nkz .EQ. 1) i_kz = imagu * krarray(ikr)
-
+          IF (Nkz .EQ. 1) i_kz = imagu * krarray(ikr) ! If 1D simulation we put kr as kz
           kperp2 = kr**2 + kz**2  ! perpendicular wavevector
 
-          !! Compute moments and mixing terms
+          !! Compute moments mixing terms
           ! term propto N_e^{p,j}
-          TNapj = xNapj * moments_e(ip,ij,ikr,ikz,updatetlevel)
-          TNapp1j = 0._dp; TNapm1j = 0._dp
-          TNapp2j = 0._dp; TNapm2j = 0._dp
-          TNapjp1 = 0._dp; TNapjm1 = 0._dp
-          ! term propto N_e^{p+1,j} and kparallel
-          IF ( p_int+1 .LE. pmaxe ) TNapp1j = xNapp1j * moments_e(ip+1,ij,ikr,ikz,updatetlevel)
-          ! term propto N_e^{p-1,j} and kparallel
-          IF ( p_int-1 .GE. 0 )     TNapm1j = xNapm1j * moments_e(ip-1,ij,ikr,ikz,updatetlevel)
+          TNapj    = xNapj   * moments_e(ip,ij,ikr,ikz,updatetlevel)
           ! term propto N_e^{p+2,j}
-          IF ( p_int+2 .LE. pmaxe ) TNapp2j = xNapp2j * moments_e(ip+2,ij,ikr,ikz,updatetlevel)
+          TNapp2j  = xNapp2j * moments_e(ip+2,ij,ikr,ikz,updatetlevel)
           ! term propto N_e^{p-2,j}
-          IF ( p_int-2 .GE. 0 )     TNapm2j = xNapm2j * moments_e(ip-2,ij,ikr,ikz,updatetlevel)
-          ! xterm propto N_e^{p,j+1}
-          IF ( j_int+1 .LE. jmaxe ) TNapjp1 = xNapjp1 * moments_e(ip,ij+1,ikr,ikz,updatetlevel)
+          TNapm2j  = xNapm2j * moments_e(ip-2,ij,ikr,ikz,updatetlevel)
+          ! term propto N_e^{p,j+1}
+          TNapjp1  = xNapjp1 * moments_e(ip,ij+1,ikr,ikz,updatetlevel)
           ! term propto N_e^{p,j-1}
-          IF ( j_int-1 .GE. 0 )     TNapjm1 = xNapjm1 * moments_e(ip,ij-1,ikr,ikz,updatetlevel)
+          TNapjm1  = xNapjm1 * moments_e(ip,ij-1,ikr,ikz,updatetlevel)
 
           !! Collision
           IF (CO .EQ. -3) THEN ! GK Dougherty
@@ -146,11 +137,9 @@ SUBROUTINE moments_eq_rhs_e
 
           !! Electrical potential term
           IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
-            kernelj    = kernel_e(ij, ikr, ikz)
-            kerneljp1  = 0._dp; kerneljm1 = 0._dp
-            IF ( j_int+1 .LE. jmaxe ) kerneljp1  = kernel_e(ij+1, ikr, ikz)
-            IF ( j_int-1 .GE. 0 )     kerneljm1  = kernel_e(ij-1, ikr, ikz)
-            Tphi = (xphij*kernelj + xphijp1*kerneljp1 + xphijm1*kerneljm1) * phi(ikr,ikz)
+            Tphi = phi(ikr,ikz) * (xphij*kernel_e(ij, ikr, ikz) &
+                     + xphijp1*kernel_e(ij+1, ikr, ikz) &
+                     + xphijm1*kernel_e(ij-1, ikr, ikz) )
           ELSE
             Tphi = 0._dp
           ENDIF
@@ -158,7 +147,6 @@ SUBROUTINE moments_eq_rhs_e
           ! Sum of all linear terms
           moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
               -i_kz  * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
-              -imagu * kpar*(TNapp1j + TNapm1j + xphijpar*kernelj*phi(ikr,ikz)) &
               - mu*kperp2**2 * moments_e(ip,ij,ikr,ikz,updatetlevel) &
               + TColl
 
@@ -208,6 +196,9 @@ SUBROUTINE moments_eq_rhs_i
   COMPLEX(dp) :: TNapj, TNapp1j, TNapm1j, TNapp2j, TNapm2j, TNapjp1, TNapjm1, Tphi
   COMPLEX(dp) :: TColl, TColl20, TColl01, TColl10 ! terms of the rhs
   COMPLEX(dp) :: i_kz
+
+  LOGICAL     :: COPY_CLOS = .false. ! To test closures
+  ! LOGICAL     :: COPY_CLOS = .true. ! To test closures
 
   ! Measuring execution time
   CALL cpu_time(t0_rhs)
@@ -282,24 +273,17 @@ SUBROUTINE moments_eq_rhs_i
           IF (Nkz .EQ. 1) i_kz = imagu * krarray(ikr) ! If 1D simulation we put kr as kz
           kperp2 = kr**2 + kz**2  ! perpendicular wavevector
 
-          !! Compute moments and mixing terms
+          !! Compute moments mixing terms
           ! term propto N_i^{p,j}
-          TNapj = xNapj * moments_i(ip,ij,ikr,ikz,updatetlevel)
-          TNapp1j = 0._dp; TNapm1j = 0._dp
-          TNapp2j = 0._dp; TNapm2j = 0._dp
-          TNapjp1 = 0._dp; TNapjm1 = 0._dp
-          ! term propto N_i^{p+1,j}
-          IF ( p_int+1 .LE. pmaxi ) TNapp1j = xNapp1j * moments_i(ip+1,ij,ikr,ikz,updatetlevel)
-          ! term propto N_i^{p-1,j}
-          IF ( p_int-1 .GE. 0 )     TNapm1j = xNapm1j * moments_i(ip-1,ij,ikr,ikz,updatetlevel)
+          TNapj   = xNapj   * moments_i(ip,ij,ikr,ikz,updatetlevel)
           ! term propto N_i^{p+2,j}
-          IF ( p_int+2 .LE. pmaxi ) TNapp2j = xNapp2j * moments_i(ip+2,ij,ikr,ikz,updatetlevel)
+          TNapp2j = xNapp2j * moments_i(ip+2,ij,ikr,ikz,updatetlevel)
           ! term propto N_i^{p-2,j}
-          IF ( p_int-2 .GE. 0 )     TNapm2j = xNapm2j * moments_i(ip-2,ij,ikr,ikz,updatetlevel)
-          ! xterm propto N_i^{p,j+1}
-          IF ( j_int+1 .LE. jmaxi ) TNapjp1 = xNapjp1 * moments_i(ip,ij+1,ikr,ikz,updatetlevel)
+          TNapm2j = xNapm2j * moments_i(ip-2,ij,ikr,ikz,updatetlevel)
+          ! term propto N_i^{p,j+1}
+          TNapjp1 = xNapjp1 * moments_i(ip,ij+1,ikr,ikz,updatetlevel)
           ! term propto N_i^{p,j-1}
-          IF ( j_int-1 .GE. 0 )     TNapjm1 = xNapjm1 * moments_i(ip,ij-1,ikr,ikz,updatetlevel)
+          TNapjm1 = xNapjm1 * moments_i(ip,ij-1,ikr,ikz,updatetlevel)
 
           !! Collision
           IF (CO .EQ. -3) THEN  ! Gyrokin. Dougherty Collision terms
@@ -324,11 +308,9 @@ SUBROUTINE moments_eq_rhs_i
 
           !! Electrical potential term
           IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
-            kernelj    = kernel_i(ij, ikr, ikz)
-            kerneljp1  = 0._dp; kerneljm1 = 0._dp
-            IF ( j_int+1 .LE. jmaxe ) kerneljp1  = kernel_i(ij+1, ikr, ikz)
-            IF ( j_int-1 .GE. 0 )     kerneljm1  = kernel_i(ij-1, ikr, ikz)
-            Tphi = (xphij*kernelj + xphijp1*kerneljp1 + xphijm1*kerneljm1) * phi(ikr,ikz)
+            Tphi = phi(ikr,ikz) * (xphij*kernel_i(ij, ikr, ikz) &
+                     + xphijp1*kernel_i(ij+1, ikr, ikz) &
+                     + xphijm1*kernel_i(ij-1, ikr, ikz) )
           ELSE
             Tphi = 0._dp
           ENDIF
@@ -336,7 +318,6 @@ SUBROUTINE moments_eq_rhs_i
           ! Sum of linear terms
           moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
               -i_kz  * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
-              -imagu * kpar*(TNapp1j + TNapm1j + xphijpar*kernelj*phi(ikr,ikz)) &
               - mu*kperp2**2 * moments_i(ip,ij,ikr,ikz,updatetlevel) &
                + TColl
 
