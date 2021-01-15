@@ -10,6 +10,7 @@ SUBROUTINE inital
   USE time_integration
   USE array, ONLY : Sepj,Sipj
   USE collision
+  USE closure
 
   implicit none
 
@@ -44,6 +45,10 @@ SUBROUTINE inital
     CALL load_FC_mat
     IF (my_id .EQ. 0) WRITE(*,*) '..done'
   ENDIF
+
+  IF (my_id .EQ. 0) WRITE(*,*) 'Set closure model..'
+  CALL apply_closure_model
+  IF (my_id .EQ. 0) WRITE(*,*) '..done'
 
 END SUBROUTINE inital
 !******************************************************************************!
@@ -146,8 +151,11 @@ SUBROUTINE load_cp
   IMPLICIT NONE
 
   INTEGER :: rank, sz_, n_
-  INTEGER ::  dims(1) = (/0/)
+  INTEGER :: dims(1) = (/0/)
   CHARACTER(LEN=50) :: dset_name
+  INTEGER :: pmaxe_cp, jmaxe_cp, pmaxi_cp, jmaxi_cp
+  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_e_cp
+  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_i_cp
 
   WRITE(rstfile,'(a,a1,i2.2,a3)') TRIM(rstfile0),'_',job2load,'.h5'
 
@@ -155,32 +163,54 @@ SUBROUTINE load_cp
 
   CALL openf(rstfile, fidrst,mpicomm=MPI_COMM_WORLD)
 
-    n_ = 0
-    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
-    DO WHILE (isdataset(fidrst, dset_name))
-      n_ = n_ + 1
-      WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
-    ENDDO
-    n_ = n_ - 1
-    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
-    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", n_
+  CALL getatt(fidrst,"/Basic/moments_e/" , "pmaxe", pmaxe_cp)
+  CALL getatt(fidrst,"/Basic/moments_e/" , "jmaxe", jmaxe_cp)
+  CALL getatt(fidrst,"/Basic/moments_i/" , "pmaxi", pmaxi_cp)
+  CALL getatt(fidrst,"/Basic/moments_i/" , "jmaxi", jmaxi_cp)
+  ! pmaxe_cp = 3
+  ! jmaxe_cp = 2
+  ! pmaxi_cp = 3
+  ! jmaxi_cp = 2
+  CALL allocate_array(moments_e_cp, 1,pmaxe_cp+1, 1,jmaxe_cp+1, ikrs,ikre, ikzs,ikze)
+  CALL allocate_array(moments_i_cp, 1,pmaxi_cp+1, 1,jmaxi_cp+1, ikrs,ikre, ikzs,ikze)
 
-    ! Read state of system from restart file
-    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", n_
-    CALL getarr(fidrst, dset_name, moments_i(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze,1),pardim=3)
+  n_ = 0
+  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
+  DO WHILE (isdataset(fidrst, dset_name))
+    n_ = n_ + 1
     WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
-    CALL getarr(fidrst, dset_name, moments_e(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze,1),pardim=3)
-    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/phi", n_
-    CALL getarr(fidrst, dset_name, phi(ikrs:ikre,ikzs:ikze),pardim=1)
+  ENDDO
+  n_ = n_ - 1
+  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
+  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", n_
 
-    ! Read time dependent attributes
-    CALL getatt(fidrst, dset_name, 'cstep', cstep)
-    CALL getatt(fidrst, dset_name, 'time', time)
-    CALL getatt(fidrst, dset_name, 'jobnum', jobnum)
-    jobnum = jobnum+1
-    CALL getatt(fidrst, dset_name, 'iframe2d',iframe2d)
-    CALL getatt(fidrst, dset_name, 'iframe5d',iframe5d)
-    iframe2d = iframe2d-1; iframe5d = iframe5d-1
+  ! Read state of system from restart file
+  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
+  CALL getarr(fidrst, dset_name, moments_e_cp(1:pmaxe_cp+1, 1:jmaxe_cp+1, ikrs:ikre, ikzs:ikze),pardim=3)
+  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", n_
+  CALL getarr(fidrst, dset_name, moments_i_cp(1:pmaxi_cp+1, 1:jmaxi_cp+1, ikrs:ikre, ikzs:ikze),pardim=3)
+  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/phi", n_
+  CALL getarr(fidrst, dset_name, phi(ikrs:ikre,ikzs:ikze),pardim=1)
+  ! Initialize moments array with checkpoints ones
+  moments_e = 0._dp; moments_i = 0._dp
+  DO ip=1,pmaxe_cp+1; DO ij=1,jmaxe_cp+1; DO ikr=ikrs,ikre; DO ikz=ikzs,ikze
+    moments_e(ip,ij,ikr,ikz,1) = moments_e_cp(ip,ij,ikr,ikz)
+  ENDDO; ENDDO; ENDDO; ENDDO
+  DO ip=1,pmaxi_cp+1; DO ij=1,jmaxi_cp+1; DO ikr=ikrs,ikre; DO ikz=ikzs,ikze
+    moments_i(ip,ij,ikr,ikz,1) = moments_i_cp(ip,ij,ikr,ikz)
+  ENDDO; ENDDO; ENDDO; ENDDO
+  ! Deallocate checkpoint arrays
+  DEALLOCATE(moments_e_cp)
+  DEALLOCATE(moments_i_cp)
+
+  ! Read time dependent attributes
+  CALL getatt(fidrst, dset_name, 'cstep', cstep)
+  CALL getatt(fidrst, dset_name, 'time', time)
+  CALL getatt(fidrst, dset_name, 'jobnum', jobnum)
+  jobnum = jobnum+1
+  CALL getatt(fidrst, dset_name, 'iframe2d',iframe2d)
+  CALL getatt(fidrst, dset_name, 'iframe5d',iframe5d)
+  iframe2d = iframe2d-1; iframe5d = iframe5d-1
 
   CALL closef(fidrst)
 
@@ -231,7 +261,7 @@ SUBROUTINE evaluate_kernels
   USE basic
   USE array, Only : kernel_e, kernel_i
   USE grid
-  use model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, lambdaD, DK
+  use model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, lambdaD, CLOS
   IMPLICIT NONE
 
   REAL(dp)    :: factj, j_dp, j_int
