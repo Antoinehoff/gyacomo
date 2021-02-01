@@ -262,7 +262,8 @@ SUBROUTINE diagnose(kstep)
      !   Close all diagnostic files
      CALL closef(fidres)
      IF (nsave_cp .GT. 0) THEN
-       CALL closef(fidrst)
+      CALL checkpoint_save(cp_counter)
+      CALL closef(fidrst)
      ENDIF
 
   END IF
