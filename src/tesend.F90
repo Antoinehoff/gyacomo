@@ -14,6 +14,7 @@ SUBROUTINE tesend
      &             ierr)
   IF( mlend ) THEN
     nlend = .TRUE.
+    crash = .TRUE.
     IF (my_id .EQ. 0) WRITE(*,'(/a)') 'rhs are NaN/Inf'
     IF (my_id .EQ. 0) WRITE(*,*) 'Run terminated at cstep=',cstep
     RETURN

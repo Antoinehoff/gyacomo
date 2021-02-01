@@ -16,6 +16,7 @@ MODULE basic
   INTEGER :: cstep   = 0           ! Current step number (Init from restart file)
   LOGICAL :: RESTART = .FALSE.     ! Signal end of run
   LOGICAL :: nlend   = .FALSE.     ! Signal end of run
+  LOGICAL :: crash   = .FALSE.     ! Signal end of crashed run
 
   INTEGER :: ierr                  ! flag for MPI error
   INTEGER :: my_id                 ! identification number of current process
