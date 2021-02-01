@@ -13,8 +13,8 @@ SUBROUTINE tesend
   CALL mpi_allreduce(nlend, mlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, &
      &             ierr)
   IF( mlend ) THEN
-    nlend = .TRUE.
-    crash = .TRUE.
+    nlend   = .TRUE.
+    crashed = .TRUE.
     IF (my_id .EQ. 0) WRITE(*,'(/a)') 'rhs are NaN/Inf'
     IF (my_id .EQ. 0) WRITE(*,*) 'Run terminated at cstep=',cstep
     RETURN
