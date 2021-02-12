@@ -11,19 +11,20 @@ SUBROUTINE memory
   USE prec_const
   IMPLICIT NONE
 
-  ! Moments and moments rhs
+  ! Moments with ghost degrees for p+2 p-2, j+1, j-1 truncations
   CALL allocate_array(     moments_e, ipsg_e,ipeg_e, ijsg_e,ijeg_e, ikrs,ikre, ikzs,ikze, 1,ntimelevel )
   CALL allocate_array(     moments_i, ipsg_i,ipeg_i, ijsg_i,ijeg_i, ikrs,ikre, ikzs,ikze, 1,ntimelevel )
+
+  ! Moments right-hand-side (contains linear part of hierarchy)
   CALL allocate_array( moments_rhs_e, ips_e,ipe_e, ijs_e,ije_e, ikrs,ikre, ikzs,ikze, 1,ntimelevel )
   CALL allocate_array( moments_rhs_i, ips_i,ipe_i, ijs_i,ije_i, ikrs,ikre, ikzs,ikze, 1,ntimelevel )
 
   ! Electrostatic potential
   CALL allocate_array(phi, ikrs,ikre, ikzs,ikze)
 
-  ! Electron kernel evaluation from ij=0 to jmax+1 for truncation
-  CALL allocate_array(Kernel_e, ijs_e-1,ije_e+1, ikrs,ikre, ikzs,ikze)
-  ! Ion kernel evaluation
-  CALL allocate_array(Kernel_i, ijs_i-1,ije_i+1, ikrs,ikre, ikzs,ikze)
+  ! Kernel evaluation from j= -1 to jmax+1 for truncation
+  CALL allocate_array(Kernel_e, ijsg_e,ijeg_e, ikrs,ikre, ikzs,ikze)
+  CALL allocate_array(Kernel_i, ijsg_i,ijeg_i, ikrs,ikre, ikzs,ikze)
 
   ! Collision matrix
   IF (CO .EQ. -1) THEN

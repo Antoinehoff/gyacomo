@@ -46,9 +46,9 @@ SUBROUTINE inital
     IF (my_id .EQ. 0) WRITE(*,*) '..done'
   ENDIF
 
-  IF (my_id .EQ. 0) WRITE(*,*) 'Set closure model..'
-  CALL apply_closure_model
-  IF (my_id .EQ. 0) WRITE(*,*) '..done'
+  ! IF (my_id .EQ. 0) WRITE(*,*) 'Set closure model..'
+  ! CALL apply_closure_model
+  ! IF (my_id .EQ. 0) WRITE(*,*) '..done'
 
 END SUBROUTINE inital
 !******************************************************************************!
@@ -81,7 +81,7 @@ SUBROUTINE init_moments
         DO ikr=ikrs,ikre
           DO ikz=ikzs,ikze
             CALL RANDOM_NUMBER(noise)
-            moments_e( ip,ij,     ikr,    ikz, :) = (initback_moments + initnoise_moments*(noise-0.5_dp))
+            moments_e( ip,ij, ikr,ikz, :) = (initback_moments + initnoise_moments*(noise-0.5_dp))
           END DO
         END DO
 
@@ -100,7 +100,7 @@ SUBROUTINE init_moments
         DO ikr=ikrs,ikre
           DO ikz=ikzs,ikze
             CALL RANDOM_NUMBER(noise)
-            moments_i( ip,ij,ikr,ikz, :) = (initback_moments + initnoise_moments*(noise-0.5_dp))
+            moments_i( ip,ij, ikr,ikz, :) = (initback_moments + initnoise_moments*(noise-0.5_dp))
           END DO
         END DO
 

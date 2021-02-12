@@ -4,7 +4,7 @@ addpath(genpath('../matlab')) % ... add
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.0;   % Collision frequency
+NU      = 1.0;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
 ETAB    = 0.6;    % Magnetic gradient
 ETAN    = 1.0;    % Density gradient
@@ -19,14 +19,14 @@ JMAXE   = 1;     % Highest ''       Laguerre ''
 PMAXI   = 2;     % Highest ion      Hermite polynomial degree
 JMAXI   = 1;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS
-TMAX    = 60;  % Maximal time unit
+TMAX    = 50;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;    % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 1;    % Sampling per time unit for 5D arrays
-SPSCP   = 1;    % Sampling per time unit for checkpoints/10
-RESTART = 1;      % To restart from last checkpoint
-JOB2LOAD= 1;
+SPSCP   = 1/10;    % Sampling per time unit for checkpoints/10
+RESTART = 0;      % To restart from last checkpoint
+JOB2LOAD= 0;
 %% OPTIONS
 % SIMID   = 'local_nu_%0.0e';  % Name of the simulation
 % SIMID   = sprintf(SIMID,NU);

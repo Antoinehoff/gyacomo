@@ -52,7 +52,7 @@ MODULE grid
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: jarray_i
   INTEGER, PUBLIC, PROTECTED ::  ips_e,ipe_e, ijs_e,ije_e ! Start and end indices for pol. deg.
   INTEGER, PUBLIC, PROTECTED ::  ips_i,ipe_i, ijs_i,ije_i
-  INTEGER, PUBLIC, PROTECTED ::  ipsg_e,ipeg_e, ijsg_e,ijeg_e ! Ghosts start and end
+  INTEGER, PUBLIC, PROTECTED ::  ipsg_e,ipeg_e, ijsg_e,ijeg_e ! Ghosts start and end indices
   INTEGER, PUBLIC, PROTECTED ::  ipsg_i,ipeg_i, ijsg_i,ijeg_i
   ! Public Functions
   PUBLIC :: init_1Dgrid_distr
@@ -85,11 +85,10 @@ CONTAINS
     DO ip = ips_e,ipe_e; parray_e(ip) = (ip-1); END DO
     DO ip = ips_i,ipe_i; parray_i(ip) = (ip-1); END DO
       
-    ! Ghosts indices
+    ! Ghosts boundaries
     ipsg_e = ips_e - 2; ipeg_e = ipe_e + 2;
-    ijsg_e = ijs_e - 1; ijeg_e = ije_e + 1;
     ipsg_i = ips_i - 2; ipeg_i = ipe_i + 2;
-    ijsg_i = ijs_i - 1; ijeg_i = ije_i + 1;
+    
   END SUBROUTINE set_pgrid
 
   SUBROUTINE set_jgrid
@@ -103,8 +102,13 @@ CONTAINS
     ALLOCATE(jarray_i(ijs_i:ije_i))
     DO ij = ijs_e,ije_e; jarray_e(ij) = ij-1; END DO
     DO ij = ijs_i,ije_i; jarray_i(ij) = ij-1; END DO
+
     maxj  = MAX(jmaxi, jmaxe)
 
+    ! Ghosts boundaries
+    ijsg_e = ijs_e - 1; ijeg_e = ije_e + 1;
+    ijsg_i = ijs_i - 1; ijeg_i = ije_i + 1;
+    
   END SUBROUTINE set_jgrid
 
 

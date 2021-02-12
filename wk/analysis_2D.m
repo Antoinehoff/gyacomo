@@ -2,39 +2,7 @@
 if 0
     %%
     outfile ='';
-% nu = 0.5
-    %   Eta = 0.5
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_5e-01/150x75_L_100_P_2_J_1_eta_0.5_nu_5e-01_DGGK_CLOS_0_mu_3e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_5e-01/150x75_L_100_P_4_J_2_eta_0.5_nu_5e-01_DGGK_CLOS_0_mu_3e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_5e-01/150x75_L_100_P_6_J_3_eta_0.5_nu_5e-01_DGGK_CLOS_0_mu_3e-03/out.txt';
-    %   Eta = 0.6
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_5e-01/150x75_L_100_P_2_J_1_eta_0.6_nu_5e-01_DGGK_CLOS_0_mu_3e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_5e-01/150x75_L_100_P_4_J_2_eta_0.6_nu_5e-01_DGGK_CLOS_0_mu_3e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_5e-01/150x75_L_100_P_6_J_3_eta_0.6_nu_5e-01_DGGK_CLOS_0_mu_3e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_5e-01/150x75_L_100_P_8_J_4_eta_0.6_nu_5e-01_DGGK_CLOS_0_mu_3e-03/out.txt';
-
-% nu = 1.0
-    %   Eta = 0.5
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.5_nu_1e+00/150x75_L_100_P_2_J_1_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_3e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.5_nu_1e+00/150x75_L_100_P_4_J_2_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_3e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.5_nu_1e+00/150x75_L_100_P_6_J_3_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_3e-03/out.txt';
-
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/200x100_L_100_P_2_J_1_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_1e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/200x100_L_100_P_4_J_2_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_1e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/200x100_L_100_P_6_J_3_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_1e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/200x100_L_100_P_8_J_4_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_1e-03/out.txt';
-
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.5_nu_1e+00/300x150_L_100_P_2_J_1_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_2e-04/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.5_nu_1e+00/300x150_L_100_P_4_J_2_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_2e-04/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.5_nu_1e+00/300x150_L_100_P_6_J_3_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_2e-04/out.txt';
-
-    %   Eta = 0.6
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.6_nu_1e+00/200x100_L_100_P_2_J_1_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_1e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/200x100_L_100_P_4_J_2_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_1e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.6_nu_1e+00/200x100_L_100_P_6_J_3_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_1e-03/out.txt'; %     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/150x75_L_100_P_8_J_4_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_3e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/150x75_L_100_P_8_J_4_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_3e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/150x75_L_100_P_8_J_5_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_3e-03/out.txt';
-    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/150x75_L_100_P_10_J_5_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_3e-03/out.txt';
+    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_restart/150x75_L_70_P_2_J_1_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_8e-04/out.txt';
 
     BASIC.RESDIR = load_marconi(outfile);
 end
@@ -281,7 +249,7 @@ save_figure
 end
 
 %%
-if 1
+if 0
 %% Show frame in kspace
 tf = 0; [~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
 fig = figure; FIGNAME = ['krkz_',sprintf('t=%.0f',Ts2D(it2))];set(gcf, 'Position',  [100, 100, 700, 600])
@@ -291,9 +259,9 @@ fig = figure; FIGNAME = ['krkz_',sprintf('t=%.0f',Ts2D(it2))];set(gcf, 'Position
     subplot(222); plt = @(x) fftshift(abs(x),2);
         pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Ni00(:,:,it2))); set(pclr, 'edgecolor','none'); colorbar;
         xlabel('$k_r$'); ylabel('$k_z$'); legend('$|\hat n_i^{00}|$');
-    subplot(223); plt = @(x) fftshift((abs(x)),2); FIELD = squeeze(Nipj(1,1,:,:,:));
+    subplot(223); plt = @(x) fftshift((abs(x)),2); FIELD = squeeze(Nipj(1,2,:,:,:));
         pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(FIELD(:,:,it5))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$k_r$'); ylabel('$k_z$'); legend('$|\hat n_i^{pj=00}|$');
+        xlabel('$k_r$'); ylabel('$k_z$'); legend('$|\hat n_i^{pj=01}|$');
     subplot(224); plt = @(x) fftshift((abs(x)),2);
         pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Si00(:,:,it5))); set(pclr, 'edgecolor','none'); colorbar;
         xlabel('$k_r$'); ylabel('$k_z$');legend('$\hat S_i^{00}$');
@@ -304,7 +272,7 @@ end
 if 1
 %% Ion moments max mode vs pj
 % tf = Ts2D(end-3); 
-for tf = [0]
+for tf = [0,1]
 [~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
 % it2 = it2 + 1;
 fig = figure; FIGNAME = ['kmaxp_Nipj_',sprintf('t=%.2f',Ts2D(it2))];set(gcf, 'Position',  [100, 100, 700, 600])
@@ -385,14 +353,6 @@ FIELD =(squeeze(abs(Ni00(1,:,:)))); linestyle = 'o-.'; FRAMES = FRAMES_2D;
 X = (kz); T = Ts2D; YMIN = -.1; YMAX = 1.1; XMIN = min(kz); XMAX = max(kz);
 FIELDNAME = '$N_i^{00}(kr=0)$'; XNAME = '$k_r\rho_s$';
 create_gif_1D
-end
-if 1
-%% kr vs P Ni
-GIFNAME = ['Nip0_kr',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
-plt = @(x) squeeze(max((abs(x)),[],4));
-FIELD =plt(Nipj(:,1,:,:,:)); X = kr'; Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
-FIELDNAME = '$N_i^{p0}$'; XNAME = '$k_{max}\rho_s$'; YNAME = '$P$';
-create_gif_imagesc
 end
 if 0
 %% kr vs P Si

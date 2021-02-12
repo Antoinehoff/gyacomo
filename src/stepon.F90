@@ -17,6 +17,10 @@ SUBROUTINE stepon
   LOGICAL :: mlend
 
    DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
+  
+      ! Closure enforcement
+      CALL apply_closure_model
+      
       ! Compute right hand side of moments hierarchy equation
       CALL moments_eq_rhs_e
       CALL moments_eq_rhs_i
@@ -38,9 +42,6 @@ SUBROUTINE stepon
           CALL advance_field(moments_i(ip,ij,:,:,:),moments_rhs_i(ip,ij,:,:,:))
         ENDDO
       ENDDO
-
-      ! Closure enforcement
-      CALL apply_closure_model
 
       ! Execution time end
       CALL cpu_time(t1_adv_field)

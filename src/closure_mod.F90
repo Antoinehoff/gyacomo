@@ -15,31 +15,56 @@ CONTAINS
   SUBROUTINE apply_closure_model
     IMPLICIT NONE
 
-
     ! Negative out of bounds indices are put to zero (analytically correct)
-    moments_e(ips_e-1,:,:,:,:) = 0._dp
-    moments_e(ips_e-2,:,:,:,:) = 0._dp
-    moments_e(:,ijs_e-1,:,:,:) = 0._dp
-    kernel_e(ijs_e-1,:,:)      = 0._dp
+    DO ikr = ikrs,ikre
+      DO ikz = ikzs,ikze
 
-    moments_i(ips_i-1,:,:,:,:) = 0._dp
-    moments_i(ips_i-2,:,:,:,:) = 0._dp
-    moments_i(:,ijs_i-1,:,:,:) = 0._dp
-    kernel_i(ijs_i-1,:,:)      = 0._dp
+        DO ip = ipsg_e,ipeg_e
+          moments_e(ip,ijs_e-1,ikr,ikz,:) = 0._dp
+        ENDDO
+        DO ij = ijsg_e,ijeg_e
+          moments_e(ips_e-1,ij,ikr,ikz,:) = 0._dp
+          moments_e(ips_e-2,ij,ikr,ikz,:) = 0._dp
+        ENDDO
+        kernel_e(ijs_e-1,ikr,ikz)      = 0._dp
 
+        DO ip = ipsg_i,ipeg_i
+          moments_i(ip,ijs_i-1,ikr,ikz,:) = 0._dp
+        ENDDO
+        DO ij = ijsg_i,ijeg_i
+          moments_i(ips_i-1,ij,ikr,ikz,:) = 0._dp
+          moments_i(ips_i-2,ij,ikr,ikz,:) = 0._dp
+        ENDDO
+        kernel_i(ijs_i-1,ikr,ikz)      = 0._dp
+
+      ENDDO
+    ENDDO
     ! Positive Oob indices are approximated with a model
     IF (CLOS .EQ. 0) THEN
       ! zero truncation, An+1=0 for n+1>nmax
-      moments_e(ipe_e+1,:,:,:,:) = 0._dp
-      moments_e(ipe_e+2,:,:,:,:) = 0._dp
-      moments_e(:,ije_e+1,:,:,:) = 0._dp
-      kernel_e(ije_e+1,:,:)      = 0._dp
+      DO ikr = ikrs,ikre
+        DO ikz = ikzs,ikze
 
-      moments_i(ipe_i+1,:,:,:,:) = 0._dp
-      moments_i(ipe_i+2,:,:,:,:) = 0._dp
-      moments_i(:,ije_i+1,:,:,:) = 0._dp
-      kernel_i(ije_i+1,:,:)      = 0._dp
+          DO ip = ipsg_e,ipeg_e
+            moments_e(ip,ije_e+1,ikr,ikz,:) = 0._dp
+          ENDDO
+          DO ij = ijsg_e,ijeg_e
+            moments_e(ipe_e+1,ij,ikr,ikz,:) = 0._dp
+            moments_e(ipe_e+2,ij,ikr,ikz,:) = 0._dp
+          ENDDO
+          kernel_e(ije_e+1,ikr,ikz)      = 0._dp
 
+          DO ip = ipsg_i,ipeg_i
+            moments_i(ip,ije_i+1,ikr,ikz,:) = 0._dp
+          ENDDO
+          DO ij = ijsg_i,ijeg_i
+            moments_i(ipe_i+1,ij,ikr,ikz,:) = 0._dp
+            moments_i(ipe_i+2,ij,ikr,ikz,:) = 0._dp
+          ENDDO
+          kernel_i(ije_i+1,ikr,ikz)      = 0._dp
+          
+        ENDDO
+      ENDDO
 
     ELSEIF (CLOS .EQ. 1) THEN
       ! Copy truncation with n+1 = min(nmax,n+1)
