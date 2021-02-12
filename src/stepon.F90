@@ -89,6 +89,27 @@ SUBROUTINE stepon
         tc_checkfield = tc_checkfield + (t1_checkfield - t0_checkfield)
       END SUBROUTINE checkfield_all
 
+      SUBROUTINE anti_aliasing
+        DO ip=ips_e,ipe_e
+          DO ij=ijs_e,ije_e
+            DO ikr=ikrs,ikre
+              DO ikz=ikzs,ikze
+                moments_e( ip,ij,ikr,ikz,:) = AA_r(ikr)* AA_z(ikz) * moments_e( ip,ij,ikr,ikz,:)
+              END DO
+            END DO
+          END DO
+        END DO
+        DO ip=ips_i,ipe_i
+          DO ij=ijs_i,ije_i
+            DO ikr=ikrs,ikre
+              DO ikz=ikzs,ikze
+                moments_i( ip,ij,ikr,ikz,:) = AA_r(ikr)* AA_z(ikz) * moments_i( ip,ij,ikr,ikz,:)
+              END DO
+            END DO
+          END DO
+        END DO
+      END SUBROUTINE anti_aliasing
+
       SUBROUTINE enforce_symetry
         DO ip=ips_e,ipe_e
           DO ij=ijs_e,ije_e

@@ -1,13 +1,4 @@
 CONAME = h5readatt(filename,'/data/input','CO');
-if CONAME == -1
-    CONAME = 'FC';
-elseif CONAME == 0
-    CONAME = 'LB';
-elseif CONAME == -2
-    CONAME = 'DG';
-elseif CONAME == -3
-    CONAME = 'DGGK';
-end
 ETAB = h5readatt(filename,'/data/input','eta_B');
 ETAN = h5readatt(filename,'/data/input','eta_n');
 ETAT = h5readatt(filename,'/data/input','eta_T');
@@ -23,13 +14,26 @@ else
     NON_LIN = 0;
 end
 
-degngrad   = ['Pe_',num2str(PMAXE),'_Je_',num2str(JMAXE),...
-    '_Pi_',num2str(PMAXI),'_Ji_',num2str(JMAXI),...
-    '_nB_',num2str(ETAB),'_nN_',num2str(ETAN),'_nu_%0.0e_',...
-    CONAME,'_mu_%0.0e'];
+if    (CO == 0); CONAME = 'LB';
+elseif(CO == -1); CONAME = 'FC';
+elseif(CO == -2); CONAME = 'DG';
+elseif(CO == -3); CONAME = 'DGGK';
+end
+if    (CLOS == 0); CLOSNAME = 'Trunc.';
+elseif(CLOS == 1); CLOSNAME = 'Clos. 1';
+elseif(CLOS == 2); CLOSNAME = 'Clos. 2';
+end
+if (PMAXE == PMAXI) && (JMAXE == JMAXI)
+    degngrad   = ['P_',num2str(PMAXE),'_J_',num2str(JMAXE)];
+else
+    degngrad   = ['Pe_',num2str(PMAXE),'_Je_',num2str(JMAXE),...
+        '_Pi_',num2str(PMAXI),'_Ji_',num2str(JMAXI)];
+end
+degngrad = [degngrad,'_eta_',num2str(ETAB/ETAN),'_nu_%0.0e_',...
+        CONAME,'_CLOS_',num2str(CLOS),'_mu_%0.0e'];
 degngrad   = sprintf(degngrad,[NU,MU]);
 if ~NON_LIN; degngrad = ['lin_',degngrad]; end
 resolution = [num2str(GRID.Nr),'x',num2str(GRID.Nz/2),'_'];
 gridname   = ['L_',num2str(L),'_'];
 PARAMS = [resolution,gridname,degngrad];
-BASIC.RESDIR = [SIMDIR,PARAMS,'/'];
+% BASIC.RESDIR = [SIMDIR,PARAMS,'/'];

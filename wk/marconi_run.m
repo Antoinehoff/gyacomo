@@ -4,42 +4,42 @@ addpath(genpath('../matlab')) % ... add
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% CLUSTER PARAMETERS
-CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
+CLUSTER.TIME  = '01:00:00'; % allocation time hh:mm:ss
 CLUSTER.NODES = '1';        % MPI process
 CLUSTER.CPUPT = '1';        % CPU per task
-CLUSTER.NTPN  = '24';       % N tasks per node
-CLUSTER.PART  = 'prod';     % dbg or prod
+CLUSTER.NTPN  = '8';       % N tasks per node
+CLUSTER.PART  = 'dbg';     % dbg or prod
 CLUSTER.MEM   = '16GB';     % Memory
-CLUSTER.JNAME = 'gamma_inf';     % Job name
+CLUSTER.JNAME = 'gamma_inf';% Job name
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 1e-1;   % Collision frequency
-ETAB    = 0.66;   % Magnetic gradient
+NU      = 1.0;   % Collision frequency
+ETAB    = 0.6;   % Magnetic gradient
 NU_HYP  = 0.1;   % Hyperdiffusivity coefficient
 %% GRID PARAMETERS
-N       = 200;     % Frequency gridpoints (Nkr = N/2)
-L       = 100;     % Size of the squared frequency domain
-P       = 6;       % Electron and Ion highest Hermite polynomial degree
-J       = 3;       % Electron and Ion highest Laguerre polynomial degree
+N       = 150;     % Frequency gridpoints (Nkr = N/2)
+L       = 70;     % Size of the squared frequency domain
+P       = 4;       % Electron and Ion highest Hermite polynomial degree
+J       = 2;       % Electron and Ion highest Laguerre polynomial degree
 %% TIME PARAMETERS
-TMAX    = 150;  % Maximal time unit
-DT      = 1e-2;   % Time step
-SPS0D   = 10;    % Sampling per time unit for profiler
-SPS2D   = 1;      % Sampling per time unit for 2D arrays
-SPS5D   = 1/10;    % Sampling per time unit for 5D arrays
-SPSCP   = 1/10;    % Sampling per time unit for checkpoints
-RESTART = 1;      % To restart from last checkpoint
-JOB2LOAD= 0;
+TMAX    = 500;  % Maximal time unit
+DT      = 2e-2;  % Time step
+SPS0D   = 1;      % Sampling per time unit for profiler
+SPS2D   = 1/2;   % Sampling per time unit for 2D arrays
+SPS5D   = 1/10;  % Sampling per time unit for 5D arrays
+SPSCP   = 1/10;  % Sampling per time unit for checkpoints
+RESTART = 0;     % To restart from last checkpoint
+JOB2LOAD= 1;
 %% OPTIONS
-SIMID   = 'Marconi_DGGK';  % Name of the simulation
+SIMID   = 'Marconi_DGGK_nu_%0.0e';  % Name of the simulation
+SIMID   = sprintf(SIMID,NU);
 CO      = -3;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty, -3 : GK Dougherty)
-CLOS   = 0;   % Truncation method (0 : =0 closure, 1 : n+j = min(nmax,n+j))
-
+CLOS    = 0;   % Closure model (0 : =0 truncation, 1 : n+j = min(nmax,n+j), 2: odd/even adapted)
+KERN    = 0;   % Kernel model (0 : GK)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% fixed parameters (for current study)
 KR0KH   = 0; A0KH = 0; % Background phi mode to drive Ray-Tay inst.
-% DK    = 0;  % Drift kinetic model (put every kernel_n to 0 except n=0 to 1)
 KREQ0   = 0;      % put kr = 0
 KPAR    = 0.0;    % Parellel wave vector component
 LAMBDAD = 0.0;

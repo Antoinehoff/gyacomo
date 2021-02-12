@@ -2,16 +2,45 @@
 if 0
     %%
     outfile ='';
-    outfile ='';
-    outfile ='';
-    outfile ='';
-    outfile ='';
-    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK/200x100_L_100_Pe_8_Je_4_Pi_8_Ji_4_nB_0.66_nN_1_nu_1e-01_DGGK_mu_1e-03/out.txt';
+% nu = 0.5
+    %   Eta = 0.5
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_5e-01/150x75_L_100_P_2_J_1_eta_0.5_nu_5e-01_DGGK_CLOS_0_mu_3e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_5e-01/150x75_L_100_P_4_J_2_eta_0.5_nu_5e-01_DGGK_CLOS_0_mu_3e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_5e-01/150x75_L_100_P_6_J_3_eta_0.5_nu_5e-01_DGGK_CLOS_0_mu_3e-03/out.txt';
+    %   Eta = 0.6
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_5e-01/150x75_L_100_P_2_J_1_eta_0.6_nu_5e-01_DGGK_CLOS_0_mu_3e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_5e-01/150x75_L_100_P_4_J_2_eta_0.6_nu_5e-01_DGGK_CLOS_0_mu_3e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_5e-01/150x75_L_100_P_6_J_3_eta_0.6_nu_5e-01_DGGK_CLOS_0_mu_3e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_5e-01/150x75_L_100_P_8_J_4_eta_0.6_nu_5e-01_DGGK_CLOS_0_mu_3e-03/out.txt';
+
+% nu = 1.0
+    %   Eta = 0.5
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.5_nu_1e+00/150x75_L_100_P_2_J_1_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_3e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.5_nu_1e+00/150x75_L_100_P_4_J_2_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_3e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.5_nu_1e+00/150x75_L_100_P_6_J_3_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_3e-03/out.txt';
+
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/200x100_L_100_P_2_J_1_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_1e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/200x100_L_100_P_4_J_2_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_1e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/200x100_L_100_P_6_J_3_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_1e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/200x100_L_100_P_8_J_4_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_1e-03/out.txt';
+
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.5_nu_1e+00/300x150_L_100_P_2_J_1_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_2e-04/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.5_nu_1e+00/300x150_L_100_P_4_J_2_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_2e-04/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.5_nu_1e+00/300x150_L_100_P_6_J_3_eta_0.5_nu_1e+00_DGGK_CLOS_0_mu_2e-04/out.txt';
+
+    %   Eta = 0.6
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.6_nu_1e+00/200x100_L_100_P_2_J_1_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_1e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/200x100_L_100_P_4_J_2_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_1e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.6_nu_1e+00/200x100_L_100_P_6_J_3_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_1e-03/out.txt'; %     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/150x75_L_100_P_8_J_4_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_3e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/150x75_L_100_P_8_J_4_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_3e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/150x75_L_100_P_8_J_5_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_3e-03/out.txt';
+    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_nu_1e+00/150x75_L_100_P_10_J_5_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_3e-03/out.txt';
+
     BASIC.RESDIR = load_marconi(outfile);
 end
 %%
 % JOBNUM = 0; load_results;
-% JOBNUM = 1; load_results;
+% JOBNUM = 2; load_results;
 compile_results
 load_params
 
@@ -122,9 +151,10 @@ for it = 1:numel(Ts5D) % Loop over 5D arrays
 end
 
 %% Compute growth rate
-if NON_LIN == 0
 disp('- growth rate')
-tend   = Ts2D(end); tstart   = 0.6*tend; 
+% Find max value of transport (end of linear mode)
+[~,itmax] = max(GFlux_ri);
+tstart = 0.1 * Ts2D(itmax); tend = 0.9 * Ts2D(itmax);
 g_          = zeros(Nkr,Nkz);
 [~,ikr0KH] = min(abs(kr-KR0KH));
 for ikr = 1:Nkr
@@ -132,16 +162,16 @@ for ikr = 1:Nkr
         g_(ikr,ikz) = LinearFit_s(Ts2D,squeeze(abs(Ni00(ikr,ikz,:))),tstart,tend);
     end
 end
-% gkr0kz_Ni00 = max(real(g_(:,:)),[],1);
-gkr0kz_Ni00 = real(g_(ikr0KH,:));
-end
-%% PLOTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+[gmax,ikzmax] = max(g_(1,:));
+kzmax = abs(kz(ikzmax));
+Bohm_transport = ETAB/ETAN*gmax/kzmax^2;
+%% PLOTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 default_plots_options
 disp('Plots')
 FMT = '.fig';
 
-if 0
-%% Time evolutions
+if 1
+%% Time evolutions and growth rate
 fig = figure; FIGNAME = ['t_evolutions',sprintf('_%.2d',JOBNUM)];
 set(gcf, 'Position',  [100, 100, 900, 800])
     subplot(221); 
@@ -149,8 +179,8 @@ set(gcf, 'Position',  [100, 100, 900, 800])
         for ij = 1:Nje
             plt      = @(x) squeeze(x(ip,ij,:));
             plotname = ['$N_e^{',num2str(Pe(ip)),num2str(Je(ij)),'}$'];
-            clr      = line_colors(ip,:);
-            lstyle   = line_styles(ij);
+            clr      = line_colors(min(ip,numel(line_colors(:,1))),:);
+            lstyle   = line_styles(min(ij,numel(line_styles)));
             semilogy(Ts5D,plt(Ne_norm),'DisplayName',plotname,...
                 'Color',clr,'LineStyle',lstyle{1}); hold on;
         end
@@ -161,32 +191,56 @@ set(gcf, 'Position',  [100, 100, 900, 800])
         for ij = 1:Nji
             plt      = @(x) squeeze(x(ip,ij,:));
             plotname = ['$N_i^{',num2str(Pi(ip)),num2str(Ji(ij)),'}$'];
-             clr      = line_colors(ip,:);
-            lstyle   = line_styles(ij);
-            semilogy(Ts5D,plt(Ni_norm),'DisplayName',plotname,...
+            clr      = line_colors(min(ip,numel(line_colors(:,1))),:);
+            lstyle   = line_styles(min(ij,numel(line_styles)));
+            plot(Ts5D,plt(Ni_norm),'DisplayName',plotname,...
                 'Color',clr,'LineStyle',lstyle{1}); hold on;
         end
     end
     grid on; ylabel('$\sum_{k_r,k_z}|N_i^{pj}|$');
     subplot(223)
-        plot(Ts2D,GFlux_ri,'-','DisplayName','$\Gamma_{ri}$'); hold on;
-        plot(Ts2D,GFlux_zi,'-','DisplayName','$\Gamma_{zi}$'); hold on;
-        plot(Ts2D,GFlux_re,'-','DisplayName','$\Gamma_{re}$')
-        plot(Ts2D,GFlux_ze,'-','DisplayName','$\Gamma_{ze}$')
-        grid on; xlabel('$t c_s/R$'); ylabel('$\Gamma$'); %legend('show');
+        plot(kz,g_(1,:),'-','DisplayName','$\gamma$'); hold on;
+        grid on; xlabel('$k_z\rho_s$'); ylabel('$\gamma R/c_s$'); %legend('show');
     subplot(224)
     for ip = 1:Npi
         for ij = 1:Nji
             plt      = @(x) squeeze(x(ip,ij,:));
             plotname = ['$S_i^{',num2str(ip-1),num2str(ij-1),'}$'];
-            clr      = line_colors(ip,:);
-            lstyle   = line_styles(ij);
+            clr      = line_colors(min(ip,numel(line_colors(:,1))),:);
+            lstyle   = line_styles(min(ij,numel(line_styles)));
             semilogy(Ts5D,plt(Si_norm),'DisplayName',plotname,...
                 'Color',clr,'LineStyle',lstyle{1}); hold on;
         end
     end
     grid on; xlabel('$t c_s/R$'); ylabel('$\sum_{k_r,k_z}|S_i^{pj}|$'); %legend('show');
 suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB)]);
+save_figure
+end
+
+if 1
+%% Space time diagramm (fig 11 Ivanov 2020)
+fig = figure; FIGNAME = 'space_time_drphi';set(gcf, 'Position',  [100, 100, 1200, 600])
+    subplot(311)
+        plot(Ts2D,GFlux_ri); hold on
+        plot(Ts2D,Bohm_transport*ones(size(Ts2D)),'--'); hold on
+        ylabel('$\Gamma_r$'); grid on
+        title(['$\eta=',num2str(ETAB),'\quad',...
+            '\nu_{',CONAME,'}=',num2str(NU),'$'])
+        legend(['$P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'],'$\eta\gamma_{max}/k_{max}^2$')
+        set(gca,'xticklabel',[])
+    subplot(312)
+        yyaxis left
+        plot(Ts2D,squeeze(max(max((phi)))))
+        ylabel('$\max \phi$')
+        yyaxis right
+        plot(Ts2D,squeeze(mean(max(dr2phi))))
+        ylabel('$s\sim\langle\partial_r^2\phi\rangle_z$'); grid on  
+        set(gca,'xticklabel',[])
+    subplot(313)
+        [TY,TX] = meshgrid(r,Ts2D);
+        pclr = pcolor(TX,TY,squeeze(mean(drphi(:,:,:),2))'); set(pclr, 'edgecolor','none'); %colorbar;
+        xlabel('$t c_s/R$'), ylabel('$r/\rho_s$')
+        legend('$\langle\partial_r \phi\rangle_z$')
 save_figure
 end
 
@@ -227,43 +281,99 @@ save_figure
 end
 
 %%
+if 1
+%% Show frame in kspace
+tf = 0; [~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
+fig = figure; FIGNAME = ['krkz_',sprintf('t=%.0f',Ts2D(it2))];set(gcf, 'Position',  [100, 100, 700, 600])
+    subplot(221); plt = @(x) fftshift((abs(x)),2);
+        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(PHI(:,:,it2))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('$t c_s/R=%.0f$',Ts2D(it2))); legend('$|\hat\phi|$');
+    subplot(222); plt = @(x) fftshift(abs(x),2);
+        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Ni00(:,:,it2))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$k_r$'); ylabel('$k_z$'); legend('$|\hat n_i^{00}|$');
+    subplot(223); plt = @(x) fftshift((abs(x)),2); FIELD = squeeze(Nipj(1,1,:,:,:));
+        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(FIELD(:,:,it5))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$k_r$'); ylabel('$k_z$'); legend('$|\hat n_i^{pj=00}|$');
+    subplot(224); plt = @(x) fftshift((abs(x)),2);
+        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Si00(:,:,it5))); set(pclr, 'edgecolor','none'); colorbar;
+        xlabel('$k_r$'); ylabel('$k_z$');legend('$\hat S_i^{00}$');
+save_figure
+end
+
+%%
+if 1
+%% Ion moments max mode vs pj
+% tf = Ts2D(end-3); 
+for tf = [0]
+[~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
+% it2 = it2 + 1;
+fig = figure; FIGNAME = ['kmaxp_Nipj_',sprintf('t=%.2f',Ts2D(it2))];set(gcf, 'Position',  [100, 100, 700, 600])
+
+plt = @(x) squeeze(max(abs(x),[],4));
+% plt = @(x) squeeze(max(fftshift(abs(x),2),[],4));
+
+for ij_ = 1:numel(Ji)
+    subplot(100+numel(Ji)*10+ij_)
+        pclr = imagesc(kr,Pi,plt(Nipj(:,ij_,:,:,it5)));
+        xlabel('$k_r$');
+        if ij_ == 1
+            ylabel('$P$(max o. $k_z$)');
+        else
+            yticks([])
+        end
+        LEGEND = ['$|\hat n_i^{p',num2str(ij_-1),'}|$']; title(LEGEND);
+end
+save_figure
+end
+end
+
+
+%%
 t0    = 0;
 skip_ = 1; 
 DELAY = 0.01*skip_;
-FRAMES = floor(t0/(Ts2D(2)-Ts2D(1)))+1:skip_:numel(Ts2D);
+FRAMES_2D = floor(t0/(Ts2D(2)-Ts2D(1)))+1:skip_:numel(Ts2D);
+FRAMES_5D = floor(t0/(Ts5D(2)-Ts5D(1)))+1:skip_:numel(Ts5D);
 %% GIFS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if 0
 %% Density ion
 GIFNAME = ['ni',sprintf('_%.2d',JOBNUM)]; INTERP = 1;
-FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D;
+FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$n_i$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
 if 0
 %% Density electron
 GIFNAME = ['ne',sprintf('_%.2d',JOBNUM)]; INTERP = 1;
-FIELD = real(ne00); X = RR; Y = ZZ; T = Ts2D;
+FIELD = real(ne00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$n_e$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
 if 0
-%% Phi
+%% Phi real space
 GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)];INTERP = 1;
-FIELD = real(phi); X = RR; Y = ZZ; T = Ts2D;
+FIELD = real(phi); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$\phi$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
+create_gif
+end
+if 0
+%% Phi fourier
+GIFNAME = ['FFT_phi',sprintf('_%.2d',JOBNUM)];INTERP = 0;
+FIELD = ifftshift((abs(PHI)),2); X = fftshift(KR,2); Y = fftshift(KZ,2); T = Ts2D; FRAMES = FRAMES_2D;
+FIELDNAME = '$|\tilde\phi|$'; XNAME = '$k_r\rho_s$'; YNAME = '$k_z\rho_s$';
 create_gif
 end
 if 0
 %% phi @ z = 0
 GIFNAME = ['phi_r0',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
-FIELD =(squeeze(real(phi(:,1,:)))); linestyle = '-.';
+FIELD =(squeeze(real(phi(:,1,:)))); linestyle = '-.'; FRAMES = FRAMES_2D;
 X = (r); T = Ts2D; YMIN = -1.1; YMAX = 1.1; XMIN = min(r); XMAX = max(r);
 FIELDNAME = '$\phi(r=0)$'; XNAME = '$r/\rho_s$';
 create_gif_1D
 end
-if 0
+if 1
 %% Density ion frequency
-GIFNAME = ['Ni00',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
+GIFNAME = ['Ni00',sprintf('_%.2d',JOBNUM)]; INTERP = 0; FRAMES = FRAMES_2D;
 FIELD =ifftshift((abs(Ni00)),2); X = fftshift(KR,2); Y = fftshift(KZ,2); T = Ts2D;
 FIELDNAME = '$N_i^{00}$'; XNAME = '$k_r\rho_s$'; YNAME = '$k_z\rho_s$';
 create_gif
@@ -271,65 +381,25 @@ end
 if 0
 %% Density ion frequency @ kr = 0
 GIFNAME = ['Ni00_kr0',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
-FIELD =(squeeze(abs(Ni00(1,:,:)))); linestyle = 'o-.';
+FIELD =(squeeze(abs(Ni00(1,:,:)))); linestyle = 'o-.'; FRAMES = FRAMES_2D;
 X = (kz); T = Ts2D; YMIN = -.1; YMAX = 1.1; XMIN = min(kz); XMAX = max(kz);
 FIELDNAME = '$N_i^{00}(kr=0)$'; XNAME = '$k_r\rho_s$';
 create_gif_1D
 end
-%%
-
 if 1
-%% Space time diagramm (fig 11 Ivanov 2020)
-fig = figure; FIGNAME = 'space_time_drphi';set(gcf, 'Position',  [100, 100, 1200, 400])
-    subplot(211)
-    yyaxis left
-    plot(Ts2D,GFlux_ri); hold on
-%     plot(Ts5D,PFlux_ri,'o');
-    ylabel('$\Gamma_r$'); grid on
-    ylim([0,1.1*max(GFlux_ri)]);
-    yyaxis right
-    plot(Ts2D,squeeze(mean(max(dr2phi))))
-    ylabel('$s\sim\langle\partial_r^2\phi\rangle_z$'); grid on
-    title(['$\eta=',num2str(ETAB),'\quad',...
-        '\nu_{',CONAME,'}=',num2str(NU),'$'])
-    legend(['$P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'])
-    subplot(212)
-    [TY,TX] = meshgrid(r,Ts2D);
-    pclr = pcolor(TX,TY,squeeze(mean(drphi(:,:,:),2))'); set(pclr, 'edgecolor','none'); %colorbar;
-    xlabel('$t c_s/R$'), ylabel('$r/\rho_s$')
-    legend('$\langle\partial_r \phi\rangle_z$')
-save_figure
+%% kr vs P Ni
+GIFNAME = ['Nip0_kr',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
+plt = @(x) squeeze(max((abs(x)),[],4));
+FIELD =plt(Nipj(:,1,:,:,:)); X = kr'; Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
+FIELDNAME = '$N_i^{p0}$'; XNAME = '$k_{max}\rho_s$'; YNAME = '$P$';
+create_gif_imagesc
 end
-
-%%
 if 0
-%% Space time diagram of moments amplitude
-pj_grid_i = 1:((PMAXI+1)*(JMAXI+1));
-[TY,TX] = meshgrid(Ts5D,pj_grid_i);
-Ni_norm_tmp = squeeze(reshape(Ni_norm,[(PMAXI+1)*(JMAXI+1),1,numel(Ts5D)]));
-fig = figure; FIGNAME = 'space_time_Ni_norm';
-% pclr = image(pj_grid_i,flip(Ts5D),Ni_norm_tmp'); hold on;
-pclr = pcolor(TX,TY,log(Ni_norm_tmp)); hold on; set(pclr, 'edgecolor','none'); %colorbar;
+%% kr vs P Si
+GIFNAME = ['Sip0_kr',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
+plt = @(x) squeeze(max((abs(x)),[],4));
+FIELD =plt(Sipj(:,1,:,:,:)); X = kr'; Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
+FIELDNAME = '$N_i^{p0}$'; XNAME = '$k_{max}\rho_s$'; YNAME = '$P$';
+create_gif_imagesc
 end
-
 %%
-if 0
-%% Show frame in kspace
-tf = 1000; [~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
-fig = figure; FIGNAME = ['krkz_frame',sprintf('t=%.0f',Ts2D(it2))];set(gcf, 'Position',  [100, 100, 700, 600])
-    subplot(221); plt = @(x) fftshift((abs(x)),2);
-        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(PHI(:,:,it2))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('$t c_s/R=%.0f$',Ts2D(it2))); legend('$|\hat\phi|$');
-    subplot(222); plt = @(x) fftshift(abs(x),2);
-        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Ni00(:,:,it2))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$k_r$'); ylabel('$k_z$'); legend('$|\hat n_i^{00}|$');
-    subplot(223); plt = @(x) fftshift(abs(x),2);
-        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Ne00(:,:,it2))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$k_r$'); ylabel('$k_z$'); legend('$|\hat n_e^{00}|$');
-    subplot(224); plt = @(x) fftshift((abs(x)),2);
-        pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(Si00(:,:,it5))); set(pclr, 'edgecolor','none'); colorbar;
-        xlabel('$k_r$'); ylabel('$k_z$');legend('$\hat S_i^{00}$');
-save_figure
-end
-
-

@@ -12,8 +12,8 @@ SUBROUTINE memory
   IMPLICIT NONE
 
   ! Moments and moments rhs
-  CALL allocate_array(     moments_e, ips_e-2,ipe_e+2, ijs_e-1,ije_e+1, ikrs,ikre, ikzs,ikze, 1,ntimelevel )
-  CALL allocate_array(     moments_i, ips_i-2,ipe_i+2, ijs_i-1,ije_i+1, ikrs,ikre, ikzs,ikze, 1,ntimelevel )
+  CALL allocate_array(     moments_e, ipsg_e,ipeg_e, ijsg_e,ijeg_e, ikrs,ikre, ikzs,ikze, 1,ntimelevel )
+  CALL allocate_array(     moments_i, ipsg_i,ipeg_i, ijsg_i,ijeg_i, ikrs,ikre, ikzs,ikze, 1,ntimelevel )
   CALL allocate_array( moments_rhs_e, ips_e,ipe_e, ijs_e,ije_e, ikrs,ikre, ikzs,ikze, 1,ntimelevel )
   CALL allocate_array( moments_rhs_i, ips_i,ipe_i, ijs_i,ije_i, ikrs,ikre, ikzs,ikze, 1,ntimelevel )
 

@@ -1,16 +1,17 @@
 default_plots_options
 if 1
 %% Compute time average and std of the mean flow
-t0 = 180; t1 = 400; [~,it0] = min(abs(t0-Ts2D)); [~,it1] = min(abs(t1-Ts2D)); 
+t0 = 1000; t1 = 3000; [~,it0] = min(abs(t0-Ts2D)); [~,it1] = min(abs(t1-Ts2D)); 
 range  = it0:it1;
-avg    = mean(Flux_ri(range))
-stdev  = std(Flux_ri(range))^(.5)
+avg    = mean(GFlux_ri(range))
+stdev  = std(GFlux_ri(range))^(.5)
 figure
-hist(Flux_ri(range),20); xlabel('$\Gamma$')
+hist(GFlux_ri(range),20); xlabel('$\Gamma$')
 end
 if 0
 %% Handwritten results for nu = 0.01
 % High definition results (256x128)
+SCALING = 2*sqrt(2);
 Results_256x128.Gamma = [0.02, 0.03, 0.20, 0.037,  2.7, 2.25,    4, 5e-4, 2e-3, 0.03];
 Results_256x128.L     = [  66,   66,   66,    50,   66,   66,   66,   66,   66,   66];
 Results_256x128.P     = [   2,    3,    4,     5,    2,    3,    4,    2,    3,    4];
@@ -39,7 +40,7 @@ semilogy(Ricci_Rogers.etaB,Ricci_Rogers.Gamma,'--','color',[0,0,0]+0.6);
 hold on;
 res = Results_256x128;
 for i = 1:numel(res.Gamma)
-    semilogy(res.etaB(i),res.Gamma(i),...
+    semilogy(res.etaB(i),res.Gamma(i)*SCALING,...
         res.mrkr(i),'DisplayName','256x128', 'color', res.clr(i));
     hold on;
 end
@@ -58,7 +59,9 @@ legend('Mix. Length, Ricci 2006','$P=2$, $J=1$','$P=3$, $J=2$','$P=4$, $J=2$','$
 FIGNAME = [SIMDIR,'flux_study_nu_1e-2.png']; ylim([1e-4, 10])
 saveas(fig,FIGNAME);
 disp(['Figure saved @ : ',FIGNAME])
+end
 
+if 0
 %% Handwritten results for nu = 0.1
 Results_256x128.Gamma = [0.026,0.026, 1e-2,    1,    1,    1, 2e-2,    1, 0.15,    3e-3];
 Results_256x128.P     = [   2,     3,    4,    2,    3,    4,    2,    3,    4,       4];
@@ -73,13 +76,87 @@ Ricci_Rogers.Gamma = [10  1e-1];
 Ricci_Rogers.etaB  = [0.5  1.0];
 
 if 1
+SCALING = 2*sqrt(2);
 % Fig 3 of Ricci Rogers 2006
 fig = figure;
 semilogy(Ricci_Rogers.etaB,Ricci_Rogers.Gamma,'--','color',[0,0,0]+0.6);
 hold on;
 res = Results_256x128;
 for i = 1:numel(res.Gamma)
-    semilogy(res.etaB(i),res.Gamma(i),...
+    semilogy(res.etaB(i),res.Gamma(i)*SCALING,...
+        res.mrkr(i),'DisplayName','256x128', 'color', res.clr(i));
+    hold on;
+end
+
+   xlabel('$\eta_B$'); ylabel('$\Gamma^\infty_{part}$') 
+end
+grid on; title('$\nu = 0.1$')
+legend('Mix. Length, Ricci 2006','$P=2$, $J=1$','$P=3$, $J=2$','$P=4$, $J=2$')
+FIGNAME = [SIMDIR,'flux_study_nu_1e-1.png'];
+saveas(fig,FIGNAME);
+disp(['Figure saved @ : ',FIGNAME])
+end
+
+
+if 0
+%% Handwritten results for nu = 1.0, eta = 0.5, 200x100, L=100
+Results_256x128.Gamma = [0.026,0.026, 1e-2,    1,    1,    1, 2e-2,    1, 0.15,    3e-3];
+Results_256x128.P     = [   2,     3,    4,    2,    3,    4,    2,    3,    4,       4];
+Results_256x128.J     = [   1,     2,    2,    1,    2,    2,    1,    2,    2,       2];
+Results_256x128.etaB  = [ 0.5,   0.5,  0.5,  0.4,  0.4,  0.4,  0.6,  0.6,  0.6,     0.7];
+Results_256x128.mrkr  = [ 'v',   '>',  '^',  'v',  '>',  '^',  'v',  '>',  '^',     '^'];
+Results_256x128.clr   = [ 'k',   'k',  'k',  'b',  'b',  'b',  'r',  'b',  'r',     'r'];
+
+% Ricci_Rogers.Gamma = [2 1e-1];
+% Ricci_Rogers.etaB  = [0.5 1.0];
+Ricci_Rogers.Gamma = [10  1e-1];
+Ricci_Rogers.etaB  = [0.5  1.0];
+
+if 1
+% Fig 3 of Ricci Rogers 2006
+SCALING = 2*sqrt(2);
+fig = figure;
+semilogy(Ricci_Rogers.etaB,Ricci_Rogers.Gamma,'--','color',[0,0,0]+0.6);
+hold on;
+res = Results_256x128;
+for i = 1:numel(res.Gamma)
+    semilogy(res.etaB(i),res.Gamma(i)*SCALING,...
+        res.mrkr(i),'DisplayName','256x128', 'color', res.clr(i));
+    hold on;
+end
+
+   xlabel('$\eta_B$'); ylabel('$\Gamma^\infty_{part}$') 
+end
+grid on; title('$\nu = 0.1$')
+legend('Mix. Length, Ricci 2006','$P=2$, $J=1$','$P=3$, $J=2$','$P=4$, $J=2$')
+FIGNAME = [SIMDIR,'flux_study_nu_1e-1.png'];
+saveas(fig,FIGNAME);
+disp(['Figure saved @ : ',FIGNAME])
+end
+
+if 0
+%% Handwritten results for nu = 1.0, eta = 0.5, 150x75, L=100, DGGK
+Results_150x75.Gamma = [0.026,0.026, 1e-2,    1,    1,    1, 2e-2,    1, 0.15,    3e-3];
+Results_150x75.P     = [   2,     3,    4,    2,    3,    4,    2,    3,    4,       4];
+Results_150x75.J     = [   1,     2,    2,    1,    2,    2,    1,    2,    2,       2];
+Results_150x75.etaB  = [ 0.5,   0.5,  0.5,  0.4,  0.4,  0.4,  0.6,  0.6,  0.6,     0.7];
+Results_150x75.mrkr  = [ 'v',   '>',  '^',  'v',  '>',  '^',  'v',  '>',  '^',     '^'];
+Results_150x75.clr   = [ 'k',   'k',  'k',  'b',  'b',  'b',  'r',  'b',  'r',     'r'];
+
+% Ricci_Rogers.Gamma = [2 1e-1];
+% Ricci_Rogers.etaB  = [0.5 1.0];
+Ricci_Rogers.Gamma = [10  1e-1];
+Ricci_Rogers.etaB  = [0.5  1.0];
+
+if 1
+% Fig 3 of Ricci Rogers 2006
+SCALING = 2*sqrt(2);
+fig = figure;
+semilogy(Ricci_Rogers.etaB,Ricci_Rogers.Gamma,'--','color',[0,0,0]+0.6);
+hold on;
+res = Results_150x75;
+for i = 1:numel(res.Gamma)
+    semilogy(res.etaB(i),res.Gamma(i)*SCALING,...
         res.mrkr(i),'DisplayName','256x128', 'color', res.clr(i));
     hold on;
 end

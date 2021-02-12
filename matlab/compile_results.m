@@ -1,5 +1,5 @@
 CONTINUE = 1;
-JOBNUM   = 0;
+JOBNUM   = 0; JOBFOUND = 0;
 Nipj_    = []; Nepj_    = [];
 Ni00_    = []; Ne00_    = [];
 PHI_     = [];
@@ -44,11 +44,13 @@ while(CONTINUE)
         Sipj_ = cat(5,Sipj_,Sipj);
         Sepj_ = cat(5,Sepj_,Sepj);
 
-        JOBNUM = JOBNUM + 1;
-    else
+        JOBFOUND = JOBFOUND + 1;
+        LASTJOB  = JOBNUM;
+    elseif (JOBNUM > 20)
         CONTINUE = 0;
-        disp(['found ',num2str(JOBNUM),' results']);
+        disp(['found ',num2str(JOBFOUND),' results']);
     end
+    JOBNUM   = JOBNUM + 1;
     Pe_old = Pe_new; Je_old = Je_new;
     Pi_old = Pi_new; Ji_old = Ji_new;
 end
@@ -58,5 +60,5 @@ clear Nipj_ Nepj_ Ni00_ Ne00_ PHI_ Ts2D_ Ts5D_
 
 Sipj = Sipj_; Sepj = Sepj_;
 clear Sipj_ Sepj_
-
-filename = sprintf([BASIC.RESDIR,'outputs_%.2d.h5'],JOBNUM-1);
+JOBNUM = LASTJOB
+filename = sprintf([BASIC.RESDIR,'outputs_%.2d.h5'],JOBNUM);

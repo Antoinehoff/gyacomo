@@ -102,11 +102,11 @@ SUBROUTINE diagnose(kstep)
        IF (num_procs .EQ. 1) THEN
          CALL putarr(fidres, "/data/var2d/Ne00/coordkr", krarray(ikrs:ikre), "kr*rho_s0", ionode=0)
          CALL putarr(fidres, "/data/var2d/Ni00/coordkr", krarray(ikrs:ikre), "kr*rho_s0", ionode=0)
-         CALL putarr(fidres, "/data/var2d/phi/coordkr", krarray(ikrs:ikre), "kr*rho_s0", ionode=0)
+         CALL putarr(fidres, "/data/var2d/phi/coordkr",  krarray(ikrs:ikre), "kr*rho_s0", ionode=0)
        ELSE
          CALL putarr(fidres, "/data/var2d/Ne00/coordkr", krarray(ikrs:ikre), "kr*rho_s0", pardim=1)
          CALL putarr(fidres, "/data/var2d/Ni00/coordkr", krarray(ikrs:ikre), "kr*rho_s0", pardim=1)
-         CALL putarr(fidres, "/data/var2d/phi/coordkr", krarray(ikrs:ikre), "kr*rho_s0", pardim=1)
+         CALL putarr(fidres, "/data/var2d/phi/coordkr",  krarray(ikrs:ikre), "kr*rho_s0", pardim=1)
        ENDIF
        CALL putarr(fidres, "/data/var2d/Ne00/coordkz", kzarray(ikzs:ikze), "kz*rho_s0", ionode=0)
        CALL putarr(fidres, "/data/var2d/Ni00/coordkz", kzarray(ikzs:ikze), "kz*rho_s0", ionode=0)
@@ -357,11 +357,11 @@ SUBROUTINE diagnose_5d
    iframe5d=iframe5d+1
    CALL attach(fidres,"/data/var5d/" , "frames", iframe5d)
 
-   CALL write_field5d_e(moments_e(:,:,:,:,updatetlevel), 'moments_e')
-   CALL write_field5d_i(moments_i(:,:,:,:,updatetlevel), 'moments_i')
+   CALL write_field5d_e(moments_e(ips_e:ipe_e,ijs_e:ije_e,:,:,updatetlevel), 'moments_e')
+   CALL write_field5d_i(moments_i(ips_i:ipe_i,ijs_i:ije_i,:,:,updatetlevel), 'moments_i')
 
-   CALL write_field5d_e(Sepj, 'Sepj')
-   CALL write_field5d_i(Sipj, 'Sipj')
+   CALL write_field5d_e(Sepj(ips_e:ipe_e,ijs_e:ije_e,:,:), 'Sepj')
+   CALL write_field5d_i(Sipj(ips_i:ipe_i,ijs_i:ije_i,:,:), 'Sipj')
 
  CONTAINS
 

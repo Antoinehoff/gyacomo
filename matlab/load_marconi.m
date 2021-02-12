@@ -5,6 +5,8 @@ function [ RESDIR ] = load_marconi( outfilename )
     hostfile    = [hostfolder,'/outputs*'];
     RESDIR      = ['../',outfilename(46:end-8),'/'];
     localfolder = [RESDIR,'.'];
-    system(['scp -r ahoffman@login.marconi.cineca.it:',hostfile,' ',localfolder])
+    CMD = ['scp -r ahoffman@login.marconi.cineca.it:',hostfile,' ',localfolder];
+    disp(CMD);
+    system(CMD);
 end
 

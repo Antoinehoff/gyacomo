@@ -156,54 +156,67 @@ SUBROUTINE load_cp
   INTEGER :: pmaxe_cp, jmaxe_cp, pmaxi_cp, jmaxi_cp
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_e_cp
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_i_cp
-
+  ! Checkpoint filename
   WRITE(rstfile,'(a,a1,i2.2,a3)') TRIM(rstfile0),'_',job2load,'.h5'
 
   IF (my_id .EQ. 0) WRITE(*,'(3x,a)') "Resume from previous run"
-
+  ! Open file
   CALL openf(rstfile, fidrst,mpicomm=MPI_COMM_WORLD)
-
+  ! Get the checkpoint moments degrees to allocate memory
   CALL getatt(fidrst,"/Basic/moments_e/" , "pmaxe", pmaxe_cp)
   CALL getatt(fidrst,"/Basic/moments_e/" , "jmaxe", jmaxe_cp)
   CALL getatt(fidrst,"/Basic/moments_i/" , "pmaxi", pmaxi_cp)
   CALL getatt(fidrst,"/Basic/moments_i/" , "jmaxi", jmaxi_cp)
-  ! pmaxe_cp = 3
-  ! jmaxe_cp = 2
-  ! pmaxi_cp = 3
-  ! jmaxi_cp = 2
+  IF (my_id .EQ. 0) WRITE(*,*) "Pe_cp = ", pmaxe_cp
+  IF (my_id .EQ. 0) WRITE(*,*) "Je_cp = ", jmaxe_cp
+
+  ! Allocate the required size to load checkpoints moments
   CALL allocate_array(moments_e_cp, 1,pmaxe_cp+1, 1,jmaxe_cp+1, ikrs,ikre, ikzs,ikze)
   CALL allocate_array(moments_i_cp, 1,pmaxi_cp+1, 1,jmaxi_cp+1, ikrs,ikre, ikzs,ikze)
-
+  ! Find the last results of the checkpoint file by iteration
   n_ = 0
-  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
-  DO WHILE (isdataset(fidrst, dset_name))
+  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_ ! start with moments_e/000000
+  DO WHILE (isdataset(fidrst, dset_name)) ! If n_ is not a file we stop the loop
     n_ = n_ + 1
-    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
+    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_ ! updtate file number
   ENDDO
-  n_ = n_ - 1
-  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
-  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", n_
+  n_ = n_ - 1 ! n_ is not a file so take the previous one n_-1
 
-  ! Read state of system from restart file
+  ! Read state of system from checkpoint file
   WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
   CALL getarr(fidrst, dset_name, moments_e_cp(1:pmaxe_cp+1, 1:jmaxe_cp+1, ikrs:ikre, ikzs:ikze),pardim=3)
   WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", n_
   CALL getarr(fidrst, dset_name, moments_i_cp(1:pmaxi_cp+1, 1:jmaxi_cp+1, ikrs:ikre, ikzs:ikze),pardim=3)
   WRITE(dset_name, "(A, '/', i6.6)") "/Basic/phi", n_
   CALL getarr(fidrst, dset_name, phi(ikrs:ikre,ikzs:ikze),pardim=1)
-  ! Initialize moments array with checkpoints ones
+
+  ! Initialize simulation moments array with checkpoints ones
+  ! (they may have a larger number of polynomials, set to 0 at the begining)
   moments_e = 0._dp; moments_i = 0._dp
-  DO ip=1,pmaxe_cp+1; DO ij=1,jmaxe_cp+1; DO ikr=ikrs,ikre; DO ikz=ikzs,ikze
-    moments_e(ip,ij,ikr,ikz,1) = moments_e_cp(ip,ij,ikr,ikz)
-  ENDDO; ENDDO; ENDDO; ENDDO
-  DO ip=1,pmaxi_cp+1; DO ij=1,jmaxi_cp+1; DO ikr=ikrs,ikre; DO ikz=ikzs,ikze
-    moments_i(ip,ij,ikr,ikz,1) = moments_i_cp(ip,ij,ikr,ikz)
-  ENDDO; ENDDO; ENDDO; ENDDO
+  DO ip=1,pmaxe_cp+1 
+    DO ij=1,jmaxe_cp+1
+      DO ikr=ikrs,ikre
+        DO ikz=ikzs,ikze
+          moments_e(ip,ij,ikr,ikz,:) = moments_e_cp(ip,ij,ikr,ikz)
+        ENDDO
+      ENDDO
+    ENDDO
+  ENDDO
+
+  DO ip=1,pmaxi_cp+1
+    DO ij=1,jmaxi_cp+1
+      DO ikr=ikrs,ikre
+        DO ikz=ikzs,ikze
+          moments_i(ip,ij,ikr,ikz,:) = moments_i_cp(ip,ij,ikr,ikz)
+        ENDDO
+      ENDDO
+    ENDDO
+  ENDDO
   ! Deallocate checkpoint arrays
   DEALLOCATE(moments_e_cp)
   DEALLOCATE(moments_i_cp)
 
-  ! Read time dependent attributes
+  ! Read time dependent attributes to continue simulation
   CALL getatt(fidrst, dset_name, 'cstep', cstep)
   CALL getatt(fidrst, dset_name, 'time', time)
   CALL getatt(fidrst, dset_name, 'jobnum', jobnum)

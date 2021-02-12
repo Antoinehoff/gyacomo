@@ -21,7 +21,6 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED :: Nkz   = 16     ! Number of total internal grid points in kz
   REAL(dp), PUBLIC, PROTECTED :: Lkz   = 1._dp  ! vertical length of the fourier box
   REAL(dp), PUBLIC, PROTECTED :: kpar  = 0_dp   ! parallel wave vector component
-  INTEGER,  PUBLIC, PROTECTED :: pskip = 0      ! variable to skip p degrees or not
   ! For Orszag filter
   REAL(dp), PUBLIC, PROTECTED :: two_third_krmax
   REAL(dp), PUBLIC, PROTECTED :: two_third_kzmax
@@ -51,9 +50,10 @@ MODULE grid
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_i
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: jarray_e
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: jarray_i
-  INTEGER, PUBLIC, PROTECTED ::  ips_e,ipe_e, ijs_e,ije_e
+  INTEGER, PUBLIC, PROTECTED ::  ips_e,ipe_e, ijs_e,ije_e ! Start and end indices for pol. deg.
   INTEGER, PUBLIC, PROTECTED ::  ips_i,ipe_i, ijs_i,ije_i
-
+  INTEGER, PUBLIC, PROTECTED ::  ipsg_e,ipeg_e, ijsg_e,ijeg_e ! Ghosts start and end
+  INTEGER, PUBLIC, PROTECTED ::  ipsg_i,ipeg_i, ijsg_i,ijeg_i
   ! Public Functions
   PUBLIC :: init_1Dgrid_distr
   PUBLIC :: set_pgrid, set_jgrid
@@ -78,13 +78,18 @@ CONTAINS
     IMPLICIT NONE
     INTEGER :: ip
 
-    ips_e = 1; ipe_e = pmaxe/(1+pskip) + 1
-    ips_i = 1; ipe_i = pmaxi/(1+pskip) + 1
+    ips_e = 1; ipe_e = pmaxe + 1
+    ips_i = 1; ipe_i = pmaxi + 1
     ALLOCATE(parray_e(ips_e:ipe_e))
     ALLOCATE(parray_i(ips_i:ipe_i))
     DO ip = ips_e,ipe_e; parray_e(ip) = (ip-1); END DO
     DO ip = ips_i,ipe_i; parray_i(ip) = (ip-1); END DO
-
+      
+    ! Ghosts indices
+    ipsg_e = ips_e - 2; ipeg_e = ipe_e + 2;
+    ijsg_e = ijs_e - 1; ijeg_e = ije_e + 1;
+    ipsg_i = ips_i - 2; ipeg_i = ipe_i + 2;
+    ijsg_i = ijs_i - 1; ijeg_i = ije_i + 1;
   END SUBROUTINE set_pgrid
 
   SUBROUTINE set_jgrid

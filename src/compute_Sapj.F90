@@ -98,8 +98,8 @@ SUBROUTINE compute_Sapj
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   !!!!!!!!!!!!!!!!!!!! ION non linear term computation (Sipj)!!!!!!!!!!
-  ploopi: DO ip = ips_e,ipe_e ! Loop over Hermite moments
-    jloopi: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
+  ploopi: DO ip = ips_i,ipe_i ! Loop over Hermite moments
+    jloopi: DO ij = ijs_i, ije_i ! Loop over Laguerre moments
       real_data_c = 0._dp ! initialize sum over real nonlinear term
 
       nloopi: DO in = 1,jmaxi+1 ! Loop over laguerre for the sum

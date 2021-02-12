@@ -8,7 +8,7 @@ How to run it :
 4. You can obtain various plots and gifs using HeLaZ/wk/analysis_2D.m once the simulation is done. To select the correct output file, run parameters*.m with the corresponding simulation parameters and then run analysis_2D.m (everything with matlab from wk/)
 
 # Logbook
-(Current versions : 2.1.1)
+(Current versions : 2.3.1.1)
 
 0. Write MOLI matlab solver in Fortran using Monli1D as starting point
 
@@ -50,19 +50,25 @@ How to run it :
 
 		1.4.2 Direct comparison with GS2 results of Ricci,Rogers 2006
 
-		1.4.3 Code to expensive in sequential to reach PJ convergence
+		1.4.3 Code too expensive in sequential to reach PJ convergence
 
 2. MPI parallel version (branch MPI)
 
-	2.1 First compilable parallel version
+	2.1 First compilable parallel version (1D parallel along kr)
 
-		2.1.1 Benchmarks, profiling and portability of the code
+		2.1.1 Benchmarks, profiling and portability of the code, max speed up is arround 10 for 12 proc. when using large enough resolution or polynomials degree. Should be increased with other dimension distribution.
 
 	2.2 Allow restart with different P,J values
 
-	2.3 Data distribution along P (under consideration)
+	2.3 GK Dougherty operator
 
-	2.4 GK Coulomb operator
+		2.3.1 Convergence study of steady radial particle transport
+
+			2.3.1.1 Detailed analysis of numerical stability for P,J = 10,5.
+
+	2.4 Data distribution along P (under consideration)
+
+	2.5 GK Coulomb operator
 
 3. GK 3D version, kr,kz,kpar for linear device
 
