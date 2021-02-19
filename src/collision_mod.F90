@@ -29,8 +29,7 @@ CONTAINS
 
     COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_
     COMPLEX(dp) :: Dpj, Ppj, T_, ibe_
-    COMPLEX(dp) :: adiab_moment_0j, adiab_moment_0jp1, adiab_moment_0jm1
-    COMPLEX(dp) :: adiab_moment_pj
+    COMPLEX(dp) :: nadiab_moment_0j, nadiab_moment_0jp1, nadiab_moment_0jm1
     INTEGER     :: in_
     REAL        :: n_dp, j_dp, p_dp, be_2
 
@@ -47,24 +46,24 @@ CONTAINS
     DO in_ = 1,jmaxe+1
       n_dp = REAL(in_-1,dp)
 
-      ! Adiabatic moments (only different from moments when p=0)
-      adiab_moment_0j = moments_e(1,in_,ikr,ikz,updatetlevel) + kernel_e(in_,ikr,ikz)*phi(ikr,ikz)/tau_e
-      adiab_moment_0jp1 = 0._dp; adiab_moment_0jm1 = 0._dp
+      ! Nonadiabatic moments (only different from moments when p=0)
+      nadiab_moment_0j = moments_e(1,in_,ikr,ikz,updatetlevel) + kernel_e(in_,ikr,ikz)*phi(ikr,ikz)/tau_e
+      nadiab_moment_0jp1 = 0._dp; nadiab_moment_0jm1 = 0._dp
       IF (n_dp+1 .LE. jmaxe)& ! Truncation
-        adiab_moment_0jp1 = moments_e(1,in_+1,ikr,ikz,updatetlevel) + kernel_e(in_+1,ikr,ikz)*phi(ikr,ikz)/tau_e
+        nadiab_moment_0jp1 = moments_e(1,in_+1,ikr,ikz,updatetlevel) + kernel_e(in_+1,ikr,ikz)*phi(ikr,ikz)/tau_e
       IF (n_dp-1 .GE. 0)& ! Truncation
-        adiab_moment_0jm1 = moments_e(1,in_-1,ikr,ikz,updatetlevel) + kernel_e(in_-1,ikr,ikz)*phi(ikr,ikz)/tau_e
+        nadiab_moment_0jm1 = moments_e(1,in_-1,ikr,ikz,updatetlevel) + kernel_e(in_-1,ikr,ikz)*phi(ikr,ikz)/tau_e
 
       ! Density
-      n_     = n_     + Kernel_e(in_,ikr,ikz) * adiab_moment_0j
+      n_     = n_     + Kernel_e(in_,ikr,ikz) * nadiab_moment_0j
       ! Parallel velocity
       upar_  = upar_  + Kernel_e(in_,ikr,ikz) * moments_e(2,in_,ikr,ikz,updatetlevel)
       ! Perpendicular velocity
-      uperp_ = uperp_ + ibe_*0.5_dp*Kernel_e(in_,ikr,ikz) * (adiab_moment_0j -adiab_moment_0jp1)
+      uperp_ = uperp_ + ibe_*0.5_dp*Kernel_e(in_,ikr,ikz) * (nadiab_moment_0j -nadiab_moment_0jp1)
       ! Parallel temperature
-      Tpar_  = Tpar_  + Kernel_e(in_,ikr,ikz) * (SQRT2*moments_e(3,in_,ikr,ikz,updatetlevel) + adiab_moment_0j)
+      Tpar_  = Tpar_  + Kernel_e(in_,ikr,ikz) * (SQRT2*moments_e(3,in_,ikr,ikz,updatetlevel) + nadiab_moment_0j)
       ! Perpendicular temperature
-      Tperp_ = Tperp_ + Kernel_e(in_,ikr,ikz) * ((2._dp*n_dp+1._dp)*adiab_moment_0j - n_dp*adiab_moment_0jm1 - (n_dp+1)*adiab_moment_0jp1)
+      Tperp_ = Tperp_ + Kernel_e(in_,ikr,ikz) * ((2._dp*n_dp+1._dp)*nadiab_moment_0j - n_dp*nadiab_moment_0jm1 - (n_dp+1)*nadiab_moment_0jp1)
 
     ENDDO
     T_    = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
@@ -113,8 +112,7 @@ CONTAINS
 
     COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_
     COMPLEX(dp) :: Dpj, Ppj, T_, ibi_
-    COMPLEX(dp) :: adiab_moment_0j, adiab_moment_0jp1, adiab_moment_0jm1
-    COMPLEX(dp) :: adiab_moment_pj
+    COMPLEX(dp) :: nadiab_moment_0j, nadiab_moment_0jp1, nadiab_moment_0jm1
     INTEGER     :: in_
     REAL        :: n_dp, j_dp, p_dp, bi_2
 
@@ -132,23 +130,23 @@ CONTAINS
       n_dp = REAL(in_-1,dp)
 
       ! Adiabatic moments (only different from moments when j=0)
-      adiab_moment_0j = moments_i(1,in_,ikr,ikz,updatetlevel) + Kernel_i(in_  ,ikr,ikz)*phi(ikr,ikz)/tau_i
-      adiab_moment_0jp1 = 0._dp; adiab_moment_0jm1 = 0._dp
+      nadiab_moment_0j = moments_i(1,in_,ikr,ikz,updatetlevel) + Kernel_i(in_  ,ikr,ikz)*phi(ikr,ikz)/tau_i
+      nadiab_moment_0jp1 = 0._dp; nadiab_moment_0jm1 = 0._dp
       IF (n_dp+1 .LE. jmaxi)&
-       adiab_moment_0jp1 = moments_i(1,in_+1,ikr,ikz,updatetlevel) + Kernel_i(in_+1,ikr,ikz)*phi(ikr,ikz)/tau_i
+       nadiab_moment_0jp1 = moments_i(1,in_+1,ikr,ikz,updatetlevel) + Kernel_i(in_+1,ikr,ikz)*phi(ikr,ikz)/tau_i
       IF (n_dp-1 .GE. 0)&
-       adiab_moment_0jm1 = moments_i(1,in_-1,ikr,ikz,updatetlevel) + Kernel_i(in_-1,ikr,ikz)*phi(ikr,ikz)/tau_i
+       nadiab_moment_0jm1 = moments_i(1,in_-1,ikr,ikz,updatetlevel) + Kernel_i(in_-1,ikr,ikz)*phi(ikr,ikz)/tau_i
 
       ! Density
-      n_     = n_     + Kernel_i(in_,ikr,ikz) * adiab_moment_0j
+      n_     = n_     + Kernel_i(in_,ikr,ikz) * nadiab_moment_0j
       ! Parallel velocity
       upar_  = upar_  + Kernel_i(in_,ikr,ikz) * moments_i(2,in_,ikr,ikz,updatetlevel)
       ! Perpendicular velocity
-      uperp_ = uperp_ + ibi_*0.5_dp*Kernel_i(in_,ikr,ikz) * (adiab_moment_0j -adiab_moment_0jp1)
+      uperp_ = uperp_ + ibi_*0.5_dp*Kernel_i(in_,ikr,ikz) * (nadiab_moment_0j -nadiab_moment_0jp1)
       ! Parallel temperature
-      Tpar_  = Tpar_  + Kernel_i(in_,ikr,ikz) * (SQRT2*moments_i(3,in_,ikr,ikz,updatetlevel) + adiab_moment_0j)
+      Tpar_  = Tpar_  + Kernel_i(in_,ikr,ikz) * (SQRT2*moments_i(3,in_,ikr,ikz,updatetlevel) + nadiab_moment_0j)
       ! Perpendicular temperature
-      Tperp_ = Tperp_ + Kernel_i(in_,ikr,ikz) * ((2._dp*n_dp+1._dp)*adiab_moment_0j - n_dp*adiab_moment_0jm1 - (n_dp+1)*adiab_moment_0jp1)
+      Tperp_ = Tperp_ + Kernel_i(in_,ikr,ikz) * ((2._dp*n_dp+1._dp)*nadiab_moment_0j - n_dp*nadiab_moment_0jm1 - (n_dp+1)*nadiab_moment_0jp1)
 
     ENDDO
     T_    = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
