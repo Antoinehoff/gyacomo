@@ -44,8 +44,9 @@ SUBROUTINE compute_Sapj
             ! Second convolution terms
             Gz_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
             Gr_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
-            DO is = 1, MIN( in+ij-1, jmaxe+1 ) ! sum truncation on number of moments
-              Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
+            ! DO is = 1, MIN( in+ij-1, jmaxe+1 ) ! sum truncation on number of moments
+            DO is = 1, MIN( in+ij-1, 2 ) ! sum truncation on number of moments
+                Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
                dnjs(in,ij,is) * moments_e(ip,is,ikr,ikz,updatetlevel)
               Gr_cmpx(ikr,ikz) = Gr_cmpx(ikr,ikz) + &
                dnjs(in,ij,is) * moments_e(ip,is,ikr,ikz,updatetlevel)
@@ -116,8 +117,9 @@ SUBROUTINE compute_Sapj
             ! Second convolution terms
             Gz_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
             Gr_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
-            DO is = 1, MIN( in+ij-1, jmaxi+1 ) ! sum truncation on number of moments
-              Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
+            ! DO is = 1, MIN( in+ij-1, jmaxi+1 ) ! sum truncation on number of moments
+            DO is = 1, MIN( in+ij-1, 2 ) ! sum truncation on number of moments
+                Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
                dnjs(in,ij,is) * moments_i(ip,is,ikr,ikz,updatetlevel)
               Gr_cmpx(ikr,ikz) = Gr_cmpx(ikr,ikz) + &
                dnjs(in,ij,is) * moments_i(ip,is,ikr,ikz,updatetlevel)
