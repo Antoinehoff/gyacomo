@@ -72,7 +72,7 @@ $(OBJDIR)/utility_mod.o
  $(OBJDIR)/closure_mod.o : src/closure_mod.F90 $(OBJDIR)/model_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/fields_mod.o
 	 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/closure_mod.F90 -o $@
 
- $(OBJDIR)/collision_mod.o : src/collision_mod.F90 $(OBJDIR)/initial_par_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/grid_mod.o
+ $(OBJDIR)/collision_mod.o : src/collision_mod.F90 $(OBJDIR)/initial_par_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/time_integration_mod.o
 	 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/collision_mod.F90 -o $@
 
  $(OBJDIR)/compute_Sapj.o : src/compute_Sapj.F90 $(OBJDIR)/array_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/fourier_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/time_integration_mod.o
