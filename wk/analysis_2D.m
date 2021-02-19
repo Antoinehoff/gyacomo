@@ -8,7 +8,7 @@ if 0
 end
 %%
 % JOBNUM = 0; load_results;
-% JOBNUM = 2; load_results;
+% JOBNUM = 1; load_results;
 compile_results
 load_params
 
@@ -272,7 +272,7 @@ end
 if 1
 %% Ion moments max mode vs pj
 % tf = Ts2D(end-3); 
-for tf = [0,1]
+for tf = []
 [~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
 % it2 = it2 + 1;
 fig = figure; FIGNAME = ['kmaxp_Nipj_',sprintf('t=%.2f',Ts2D(it2))];set(gcf, 'Position',  [100, 100, 700, 600])
@@ -298,10 +298,12 @@ end
 
 %%
 t0    = 0;
+[~, it02D] = min(abs(Ts2D-t0));
+[~, it05D] = min(abs(Ts5D-t0));
 skip_ = 1; 
-DELAY = 0.01*skip_;
-FRAMES_2D = floor(t0/(Ts2D(2)-Ts2D(1)))+1:skip_:numel(Ts2D);
-FRAMES_5D = floor(t0/(Ts5D(2)-Ts5D(1)))+1:skip_:numel(Ts5D);
+DELAY = 0.02*skip_;
+FRAMES_2D = it02D:skip_:numel(Ts2D);
+FRAMES_5D = it05D:skip_:numel(Ts5D);
 %% GIFS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if 0
 %% Density ion
@@ -339,7 +341,7 @@ X = (r); T = Ts2D; YMIN = -1.1; YMAX = 1.1; XMIN = min(r); XMAX = max(r);
 FIELDNAME = '$\phi(r=0)$'; XNAME = '$r/\rho_s$';
 create_gif_1D
 end
-if 1
+if 0
 %% Density ion frequency
 GIFNAME = ['Ni00',sprintf('_%.2d',JOBNUM)]; INTERP = 0; FRAMES = FRAMES_2D;
 FIELD =ifftshift((abs(Ni00)),2); X = fftshift(KR,2); Y = fftshift(KZ,2); T = Ts2D;
@@ -361,5 +363,37 @@ plt = @(x) squeeze(max((abs(x)),[],4));
 FIELD =plt(Sipj(:,1,:,:,:)); X = kr'; Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
 FIELDNAME = '$N_i^{p0}$'; XNAME = '$k_{max}\rho_s$'; YNAME = '$P$';
 create_gif_imagesc
+end
+if 1
+%% maxkz, kr vs p, for all Nipj over time
+GIFNAME = ['Nipj_kr',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
+plt = @(x) squeeze(max((abs(x)),[],4));
+FIELD = plt(Nipj); X = kr'; Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
+FIELDNAME = 'N_i'; XNAME = '$k_r\rho_s$'; YNAME = '$P$, ${k_z}^{max}$';
+create_gif_5D
+end
+if 1
+%% maxkr, kz vs p, for all Nipj over time
+GIFNAME = ['Nipj_kz',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
+plt = @(x) fftshift(squeeze(max((abs(x)),[],3)),3);
+FIELD = plt(Nipj); X = sort(kz'); Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
+FIELDNAME = 'N_i'; XNAME = '$k_z\rho_s$'; YNAME = '$P$, ${k_r}^{max}$';
+create_gif_5D
+end
+if 0
+%% maxkz, kr vs p, for all Nepj over time
+GIFNAME = ['Nepj_kr',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
+plt = @(x) squeeze(max((abs(x)),[],4));
+FIELD = plt(Nepj); X = kr'; Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
+FIELDNAME = 'N_e'; XNAME = '$k_r\rho_s$'; YNAME = '$P$, ${k_z}^{max}$';
+create_gif_5D
+end
+if 0
+%% maxkz, kz vs p, for all Nepj over time
+GIFNAME = ['Nepj_kz',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
+plt = @(x) fftshift(squeeze(max((abs(x)),[],3)),3);
+FIELD = plt(Nepj); X = sort(kz'); Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
+FIELDNAME = 'N_e'; XNAME = '$k_z\rho_s$'; YNAME = '$P$, ${k_r}^{max}$';
+create_gif_5D
 end
 %%

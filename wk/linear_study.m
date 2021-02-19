@@ -5,18 +5,20 @@ default_plots_options
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;   % Collision frequency
+NU      = 1.0;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-ETAB    = 0.5;
+ETAB    = 0.6;
 ETAN    = 1.0;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
-NU_HYP  = 0.1;   % Hyperdiffusivity coefficient
+NU_HYP  = 1.0;   % Hyperdiffusivity coefficient
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
 N       = 150;     % Frequency gridpoints (Nkr = N/2)
 L       = 70;     % Size of the squared frequency domain
 KREQ0   = 1;      % put kr = 0
+P_DAMP  = 0;     % Hermite damping term  -(j/Jmax)^{2*r}Napj (0: no damping, 1: r=1, 2: r=2 etc...)
+J_DAMP  = 0;     % Laguerre damping term -(j/Jmax)^{2*r}Napj (0: no damping, 1: r=1, 2: r=2 etc...)
 %% TIME PARMETERS
 TMAX    = 100;  % Maximal time unit
 DT      = 1e-2;   % Time step
@@ -30,7 +32,7 @@ JOB2LOAD= 00;
 SIMID   = 'linear_study';  % Name of the simulation
 NON_LIN = 0 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
 CO      = -3;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
-CLOS    = 0;   % Closure model (0 : =0 truncation, 1 : n+j = min(nmax,n+j), 2: odd/even adapted)
+CLOS    = 2;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
 KERN    = 0;   % Kernel model (0 : GK)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

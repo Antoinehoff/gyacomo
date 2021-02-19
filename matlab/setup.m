@@ -5,6 +5,8 @@ GRID.pmaxe = PMAXE;  % Electron Hermite moments
 GRID.jmaxe = JMAXE;  % Electron Laguerre moments
 GRID.pmaxi = PMAXI;  % Ion Hermite moments
 GRID.jmaxi = JMAXI;  % Ion Laguerre moments
+GRID.p_damp = P_DAMP;  % Ion Laguerre moments
+GRID.j_damp = J_DAMP;  % Ion Laguerre moments
 GRID.Nr    = N; % r grid resolution
 GRID.Lr    = L; % r length
 GRID.Nz    = N * (1-KREQ0) + KREQ0; % z ''
@@ -16,6 +18,8 @@ MODEL.CO      = CO;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -
 MODEL.CLOS   = CLOS;
 if NON_LIN; MODEL.NON_LIN = '.true.'; else; MODEL.NON_LIN = '.false.';end;
 MODEL.mu      = MU;
+MODEL.mu_p    = MU_P;
+MODEL.mu_j    = MU_J;
 MODEL.nu      = NU; % hyper diffusive coefficient nu for HW
 % temperature ratio T_a/T_e
 MODEL.tau_e   = TAU;

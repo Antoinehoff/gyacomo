@@ -21,6 +21,8 @@ N       = 150;     % Frequency gridpoints (Nkr = N/2)
 L       = 70;     % Size of the squared frequency domain
 P       = 2;       % Electron and Ion highest Hermite polynomial degree
 J       = 1;       % Electron and Ion highest Laguerre polynomial degree
+MU_P    = 0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
+MU_J    = 0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
 TMAX    = 500;  % Maximal time unit
 DT      = 2e-2;  % Time step
@@ -35,7 +37,7 @@ JOB2LOAD= 0;
 SIMID   = 'Marconi_restart';  % Name of the simulation
 SIMID   = sprintf(SIMID,NU);
 CO      = -3;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty, -3 : GK Dougherty)
-CLOS    = 0;   % Closure model (0 : =0 truncation, 1 : n+j = min(nmax,n+j), 2: odd/even adapted)
+CLOS    = 0;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
 KERN    = 0;   % Kernel model (0 : GK)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
