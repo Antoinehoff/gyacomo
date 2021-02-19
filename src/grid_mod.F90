@@ -12,8 +12,6 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED :: pmaxi = 1      ! The maximal ion Hermite-moment computed
   INTEGER,  PUBLIC, PROTECTED :: jmaxi = 1      ! The maximal ion Laguerre-moment computed
   INTEGER,  PUBLIC, PROTECTED :: maxj  = 1      ! The maximal ion Laguerre-moment computed
-  INTEGER, PUBLIC, PROTECTED  :: p_damp= 0      ! Moments damping term -(p/pmax)^2r Napj
-  INTEGER, PUBLIC, PROTECTED  :: j_damp= 0      ! Moments damping term -(j/jmax)^2r Napj
   INTEGER,  PUBLIC, PROTECTED :: Nr    = 16     ! Number of total internal grid points in r
   REAL(dp), PUBLIC, PROTECTED :: Lr    = 1._dp  ! horizontal length of the spatial box
   INTEGER,  PUBLIC, PROTECTED :: Nz    = 16     ! Number of total internal grid points in z
