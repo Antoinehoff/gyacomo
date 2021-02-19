@@ -17,8 +17,8 @@ SUBROUTINE moments_eq_rhs_e
   USE collision
   IMPLICIT NONE
 
-  INTEGER     :: ip2, ij2, p_int, j_int, p2_int, j2_int ! loops indices and polynom. degrees
-  REAL(dp)    :: p_dp, j_dp
+  INTEGER     :: ip2, ij2, il, p_int, j_int, p2_int, j2_int ! loops indices and polynom. degrees
+  REAL(dp)    :: p_dp, j_dp, l_dp
   REAL(dp)    :: kr, kz, kperp2
   REAL(dp)    :: kernelj, kerneljp1, kerneljm1 ! Kernel functions and variable
   REAL(dp)    :: xNapj, xNapp1j, xNapm1j, xNapp2j, xNapm2j, xNapjp1, xNapjm1 ! Mom. factors depending on the pj loop
@@ -26,7 +26,7 @@ SUBROUTINE moments_eq_rhs_e
   REAL(dp)    :: xCapj,   xCa20,   xCa01, xCa10 ! Coll. factors depending on the pj loop
   COMPLEX(dp) :: TNapj, TNapp1j, TNapm1j, TNapp2j, TNapm2j, TNapjp1, TNapjm1, Tphi
   COMPLEX(dp) :: TColl, TColl20, TColl01, TColl10 ! terms of the rhs
-  COMPLEX(dp) :: i_kz
+  COMPLEX(dp) :: i_kz, Hyper_diff_p, Hyper_diff_j
 
   ! Measuring execution time
   CALL cpu_time(t0_rhs)
@@ -144,13 +144,28 @@ SUBROUTINE moments_eq_rhs_e
             Tphi = 0._dp
           ENDIF
 
-          ! Sum of all linear terms
+          !! Kinetic hyperdiffusion
+          Hyper_diff_p = 0._dp
+          IF ( p_int .GE. 4 ) THEN
+            Hyper_diff_p = (2._dp*p_dp)**2 *moments_e(ip-4,ij,ikr,ikz,updatetlevel)
+          ENDIF
+
+          Hyper_diff_j = 0._dp
+          IF ( j_int .GE. 2 ) THEN
+            DO il = 1,(ij-2)
+              l_dp = real(il-1,dp)
+              Hyper_diff_j = Hyper_diff_j + (j_dp-(l_dp+1_dp))*moments_e(ip,il,ikr,ikz,updatetlevel)
+            ENDDO
+          ENDIF
+
+          !! Sum of all linear terms
           moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
               -i_kz  * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
               - mu*kperp2**2 * moments_e(ip,ij,ikr,ikz,updatetlevel) &
+              + mu_p * Hyper_diff_p + mu_j * Hyper_diff_j &
               + TColl
 
-          ! Adding non linearity
+          !! Adding non linearity
           IF ( NON_LIN ) THEN
             moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
               moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) - Sepj(ip,ij,ikr,ikz)
@@ -186,8 +201,8 @@ SUBROUTINE moments_eq_rhs_i
   USE collision
   IMPLICIT NONE
 
-  INTEGER     :: ip2, ij2, p_int, j_int, p2_int, j2_int ! loops indices and polynom. degrees
-  REAL(dp)    :: p_dp, j_dp
+  INTEGER     :: ip2, ij2, il, p_int, j_int, p2_int, j2_int ! loops indices and polynom. degrees
+  REAL(dp)    :: p_dp, j_dp, l_dp
   REAL(dp)    :: kr, kz, kperp2
   REAL(dp)    :: kernelj, kerneljp1, kerneljm1 ! Kernel functions and variable
   REAL(dp)    :: xNapj, xNapp1j, xNapm1j, xNapp2j, xNapm2j, xNapjp1, xNapjm1 ! Mom. factors depending on the pj loop
@@ -195,7 +210,7 @@ SUBROUTINE moments_eq_rhs_i
   REAL(dp)    :: xCapj,   xCa20,   xCa01, xCa10 ! Coll. factors depending on the pj loop
   COMPLEX(dp) :: TNapj, TNapp1j, TNapm1j, TNapp2j, TNapm2j, TNapjp1, TNapjm1, Tphi
   COMPLEX(dp) :: TColl, TColl20, TColl01, TColl10 ! terms of the rhs
-  COMPLEX(dp) :: i_kz
+  COMPLEX(dp) :: i_kz, Hyper_diff_p, Hyper_diff_j
 
   LOGICAL     :: COPY_CLOS = .false. ! To test closures
   ! LOGICAL     :: COPY_CLOS = .true. ! To test closures
@@ -226,7 +241,14 @@ SUBROUTINE moments_eq_rhs_i
       xNapjm1 = -taui_qi_etaB * j_dp
       ! x N_i^{pj} coeff
       xNapj   = taui_qi_etaB * 2._dp*(p_dp + j_dp + 1._dp)
-
+      ! Damping over the moments
+      IF ( p_damp .GT. 0 ) THEN
+        xNapj = xNapj - (p_dp/real(pmaxi,dp))**(2*p_damp)
+      ENDIF
+      IF ( j_damp .GT. 0 ) THEN
+        xNapj = xNapj - (j_dp/real(jmaxi,dp))**(2*j_damp)
+      ENDIF
+      
       !! Collision operator pj terms
       xCapj = -nu_i*(p_dp + 2._dp*j_dp) !DK Lenard-Bernstein basis
       ! Dougherty part
@@ -315,13 +337,28 @@ SUBROUTINE moments_eq_rhs_i
             Tphi = 0._dp
           ENDIF
 
-          ! Sum of linear terms
+          !! Kinetic hyperdiffusion
+          Hyper_diff_p = 0._dp
+          IF ( p_int .GE. 4 ) THEN
+            Hyper_diff_p = (2._dp*p_dp)**2 *moments_i(ip-4,ij,ikr,ikz,updatetlevel)
+          ENDIF
+
+          Hyper_diff_j = 0._dp
+          IF ( j_int .GE. 2 ) THEN
+            DO il = 1,(ij-2)
+              l_dp = real(il-1,dp)
+              Hyper_diff_j = Hyper_diff_j + (j_dp-(l_dp+1_dp))*moments_i(ip,il,ikr,ikz,updatetlevel)
+            ENDDO
+          ENDIF
+
+          !! Sum of linear terms
           moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
               -i_kz  * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
               - mu*kperp2**2 * moments_i(ip,ij,ikr,ikz,updatetlevel) &
-               + TColl
+              + mu_p * Hyper_diff_p + mu_j * Hyper_diff_j &
+              + TColl
 
-          ! Adding non linearity
+          !! Adding non linearity
           IF ( NON_LIN ) THEN
            moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
              moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) - Sipj(ip,ij,ikr,ikz)
