@@ -12,6 +12,8 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED :: pmaxi = 1      ! The maximal ion Hermite-moment computed
   INTEGER,  PUBLIC, PROTECTED :: jmaxi = 1      ! The maximal ion Laguerre-moment computed
   INTEGER,  PUBLIC, PROTECTED :: maxj  = 1      ! The maximal ion Laguerre-moment computed
+  INTEGER, PUBLIC, PROTECTED  :: p_damp= 0      ! Moments damping term -(p/pmax)^2r Napj
+  INTEGER, PUBLIC, PROTECTED  :: j_damp= 0      ! Moments damping term -(j/jmax)^2r Napj
   INTEGER,  PUBLIC, PROTECTED :: Nr    = 16     ! Number of total internal grid points in r
   REAL(dp), PUBLIC, PROTECTED :: Lr    = 1._dp  ! horizontal length of the spatial box
   INTEGER,  PUBLIC, PROTECTED :: Nz    = 16     ! Number of total internal grid points in z
@@ -54,12 +56,17 @@ MODULE grid
   INTEGER, PUBLIC, PROTECTED ::  ips_i,ipe_i, ijs_i,ije_i
   INTEGER, PUBLIC, PROTECTED ::  ipsg_e,ipeg_e, ijsg_e,ijeg_e ! Ghosts start and end indices
   INTEGER, PUBLIC, PROTECTED ::  ipsg_i,ipeg_i, ijsg_i,ijeg_i
+
   ! Public Functions
   PUBLIC :: init_1Dgrid_distr
   PUBLIC :: set_pgrid, set_jgrid
   PUBLIC :: set_krgrid, set_kzgrid
   PUBLIC :: grid_readinputs, grid_outputinputs
   PUBLIC :: bare, bari
+
+  ! Precomputations
+  real(dp), PUBLIC, PROTECTED    :: pmaxe_dp, pmaxi_dp, jmaxe_dp,jmaxi_dp
+
 CONTAINS
 
   SUBROUTINE init_1Dgrid_distr
@@ -88,7 +95,10 @@ CONTAINS
     ! Ghosts boundaries
     ipsg_e = ips_e - 2; ipeg_e = ipe_e + 2;
     ipsg_i = ips_i - 2; ipeg_i = ipe_i + 2;
-    
+    ! Precomputations
+    pmaxe_dp   = real(pmaxe,dp)
+    pmaxi_dp   = real(pmaxi,dp)
+
   END SUBROUTINE set_pgrid
 
   SUBROUTINE set_jgrid
@@ -108,6 +118,9 @@ CONTAINS
     ! Ghosts boundaries
     ijsg_e = ijs_e - 1; ijeg_e = ije_e + 1;
     ijsg_i = ijs_i - 1; ijeg_i = ije_i + 1;
+    ! Precomputations
+    jmaxe_dp   = real(jmaxe,dp)
+    jmaxi_dp   = real(jmaxi,dp)
     
   END SUBROUTINE set_jgrid
 
@@ -191,7 +204,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER :: lu_in   = 90              ! File duplicated from STDIN
 
-    NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, &
+    NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, p_damp, j_damp, &
                     Nr,  Lr,  Nz,  Lz, kpar
     READ(lu_in,grid)
 
