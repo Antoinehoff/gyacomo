@@ -382,7 +382,12 @@ SUBROUTINE diagnose_5d
      ELSE
        CALL putarr(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze), pardim=3)
      ENDIF
-     CALL attach(fidres, dset_name, "time", time)
+     CALL attach(fidres, dset_name, 'cstep', cstep)
+     CALL attach(fidres, dset_name, 'time', time)
+     CALL attach(fidres, dset_name, 'jobnum', jobnum)
+     CALL attach(fidres, dset_name, 'dt', dt)
+     CALL attach(fidres, dset_name, 'iframe2d', iframe2d)
+     CALL attach(fidres, dset_name, 'iframe5d', iframe5d)
 
    END SUBROUTINE write_field5d_e
 
@@ -403,8 +408,13 @@ SUBROUTINE diagnose_5d
       ELSE
         CALL putarr(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze), pardim=3)
       ENDIF
-      CALL attach(fidres, dset_name, "time", time)
-
+     CALL attach(fidres, dset_name, 'cstep', cstep)
+     CALL attach(fidres, dset_name, 'time', time)
+     CALL attach(fidres, dset_name, 'jobnum', jobnum)
+     CALL attach(fidres, dset_name, 'dt', dt)
+     CALL attach(fidres, dset_name, 'iframe2d', iframe2d)
+     CALL attach(fidres, dset_name, 'iframe5d', iframe5d)
+     
     END SUBROUTINE write_field5d_i
 
 END SUBROUTINE diagnose_5d
