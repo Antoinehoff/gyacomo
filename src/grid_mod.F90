@@ -204,7 +204,7 @@ CONTAINS
     IMPLICIT NONE
     INTEGER :: lu_in   = 90              ! File duplicated from STDIN
 
-    NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, p_damp, j_damp, &
+    NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, &
                     Nr,  Lr,  Nz,  Lz, kpar
     READ(lu_in,grid)
 

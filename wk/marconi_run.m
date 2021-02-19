@@ -4,10 +4,10 @@ addpath(genpath('../matlab')) % ... add
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% CLUSTER PARAMETERS
-CLUSTER.TIME  = '01:00:00'; % allocation time hh:mm:ss
+CLUSTER.TIME  = '03:00:00'; % allocation time hh:mm:ss
 CLUSTER.NODES = '1';        % MPI process
 CLUSTER.CPUPT = '1';        % CPU per task
-CLUSTER.NTPN  = '8';       % N tasks per node
+CLUSTER.NTPN  = '24';       % N tasks per node
 CLUSTER.PART  = 'prod';     % dbg or prod
 CLUSTER.MEM   = '16GB';     % Memory
 CLUSTER.JNAME = 'gamma_inf';% Job name
@@ -19,13 +19,13 @@ NU_HYP  = 0.1;   % Hyperdiffusivity coefficient
 %% GRID PARAMETERS
 N       = 150;     % Frequency gridpoints (Nkr = N/2)
 L       = 70;     % Size of the squared frequency domain
-P       = 2;       % Electron and Ion highest Hermite polynomial degree
-J       = 1;       % Electron and Ion highest Laguerre polynomial degree
+P       = 10;       % Electron and Ion highest Hermite polynomial degree
+J       = 5;       % Electron and Ion highest Laguerre polynomial degree
 MU_P    = 0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
 TMAX    = 500;  % Maximal time unit
-DT      = 2e-2;  % Time step
+DT      = 1e-2;  % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1/2;   % Sampling per time unit for 2D arrays
 SPS5D   = 1/10;  % Sampling per time unit for 5D arrays
@@ -34,7 +34,8 @@ RESTART = 0;     % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
 % SIMID   = 'Marconi_DGGK_nu_%0.0e';  % Name of the simulation
-SIMID   = 'Marconi_restart';  % Name of the simulation
+SIMID   = ['Marconi_DGGK_eta_',num2str(ETAB),'_nu_%0.0e'];  % Name of the simulation
+% SIMID   = 'Marconi_restart';  % Name of the simulation
 SIMID   = sprintf(SIMID,NU);
 CO      = -3;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty, -3 : GK Dougherty)
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
