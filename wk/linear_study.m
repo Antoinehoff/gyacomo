@@ -10,15 +10,15 @@ TAU     = 1.0;    % e/i temperature ratio
 ETAB    = 0.6;
 ETAN    = 1.0;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
-NU_HYP  = 1.0;   % Hyperdiffusivity coefficient
+NU_HYP  = 0.1;   % Hyperdiffusivity coefficient
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
 N       = 150;     % Frequency gridpoints (Nkr = N/2)
 L       = 70;     % Size of the squared frequency domain
 KREQ0   = 1;      % put kr = 0
-P_DAMP  = 0;     % Hermite damping term  -(j/Jmax)^{2*r}Napj (0: no damping, 1: r=1, 2: r=2 etc...)
-J_DAMP  = 0;     % Laguerre damping term -(j/Jmax)^{2*r}Napj (0: no damping, 1: r=1, 2: r=2 etc...)
+MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
+MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARMETERS
 TMAX    = 100;  % Maximal time unit
 DT      = 1e-2;   % Time step
@@ -29,10 +29,10 @@ SPSCP   = 0;    % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 00;
 %% OPTIONS
-SIMID   = 'linear_study';  % Name of the simulation
+SIMID   = 'linear_study_test_mu_kin';  % Name of the simulation
 NON_LIN = 0 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
 CO      = -3;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
-CLOS    = 2;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
+CLOS    = 0;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
 KERN    = 0;   % Kernel model (0 : GK)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -51,6 +51,8 @@ if 1
 PA = [2, 3, 4, 6, 8, 10];
 JA = [1, 2, 2, 3, 4,  5];
 DTA= DT./sqrt(JA);
+mup_ = MU_P;
+muj_ = MU_J;
 % PA = [4];
 % JA = [2];
 Nparam = numel(PA);
@@ -64,6 +66,8 @@ for i = 1:Nparam
     PMAXE = PA(i); PMAXI = PA(i);
     JMAXE = JA(i); JMAXI = JA(i);
     DT = DTA(i);
+    MU_P = mup_/PMAXE^2;
+    MU_J = muj_/JMAXE^3;
     setup
     % Run linear simulation
     system(...

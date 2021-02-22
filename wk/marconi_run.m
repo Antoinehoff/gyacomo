@@ -4,7 +4,7 @@ addpath(genpath('../matlab')) % ... add
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% CLUSTER PARAMETERS
-CLUSTER.TIME  = '03:00:00'; % allocation time hh:mm:ss
+CLUSTER.TIME  = '12:00:00'; % allocation time hh:mm:ss
 CLUSTER.NODES = '1';        % MPI process
 CLUSTER.CPUPT = '1';        % CPU per task
 CLUSTER.NTPN  = '24';       % N tasks per node
@@ -30,7 +30,7 @@ SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1/2;   % Sampling per time unit for 2D arrays
 SPS5D   = 1/10;  % Sampling per time unit for 5D arrays
 SPSCP   = 1/10;  % Sampling per time unit for checkpoints
-RESTART = 0;     % To restart from last checkpoint
+RESTART = 1;     % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
 % SIMID   = 'Marconi_DGGK_nu_%0.0e';  % Name of the simulation

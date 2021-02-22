@@ -1,8 +1,9 @@
 %% Load results
-if 0
+if 1
     %%
     outfile ='';
-    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_restart/150x75_L_70_P_2_J_1_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_8e-04/out.txt';
+    outfile ='';
+    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.6_nu_1e+00/150x75_L_70_P_10_J_5_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_8e-04/out.txt';
 
     BASIC.RESDIR = load_marconi(outfile);
 end
