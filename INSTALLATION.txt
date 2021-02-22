@@ -51,5 +51,6 @@ futils:
 
 Compilation of HeLaZ
 1. ensure that HeLaZ/local/dirs.inc contains the right paths to the librairies (Be careful of fftw name)
-2. make
+2. make install
 3. (TODO: test script for installation check)
+4. next times, for compilation, make is sufficient
