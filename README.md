@@ -1,8 +1,8 @@
 # HeLaZ (Hermite-Laguerre Z-pinch solver, 2020)
+To compile it check INSTALLATION.txt
 
-How to run it :
+How to run it
 
-0. Required librairies : hdf5, fftw3-mpi, mpi Fortran compiler (Intel?)
 1. Be sure to have correct paths in local/dirs.inc for the different libraries
 2. You can compile from HeLaZ/ using make and launch from HeLaZ/wk using ./../bin/HeLaZ
 3. To have a better interface, open a script HeLaZ/wk/parameters*.m and run it to set up a wanted simulation.
