@@ -59,8 +59,8 @@ SUBROUTINE compute_Sapj
         ! First term drphi x dzf
         DO ikr = ikrs, ikre
           DO ikz = ikzs, ikze
-            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fr_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
-            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gz_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
+            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fr_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz) !Anti aliasing filter
+            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gz_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz) !Anti aliasing filter
           ENDDO
         ENDDO
 
@@ -72,8 +72,8 @@ SUBROUTINE compute_Sapj
         ! Second term -dzphi x drf
         DO ikr = ikrs, ikre
           DO ikz = ikzs, ikze
-            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fz_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
-            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gr_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
+            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fz_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz) !Anti aliasing filter
+            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gr_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz) !Anti aliasing filter
           ENDDO
         ENDDO
 
@@ -90,7 +90,7 @@ SUBROUTINE compute_Sapj
       ! Retrieve convolution in input format
       DO ikr = ikrs, ikre
         DO ikz = ikzs, ikze
-          Sepj(ip,ij,ikr,ikz) = cmpx_data_c(ikz,ikr-local_nkr_offset)*AA_r(ikr)*AA_z(ikz)
+          Sepj(ip,ij,ikr,ikz) = cmpx_data_c(ikz,ikr-local_nkr_offset)*AA_r(ikr)*AA_z(ikz) !Anti aliasing filter
         ENDDO
       ENDDO
 
