@@ -28,7 +28,7 @@ SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1/2;   % Sampling per time unit for 2D arrays
 SPS5D   = 1/10;  % Sampling per time unit for 5D arrays
 SPSCP   = 1/10;  % Sampling per time unit for checkpoints
-RESTART = 1;     % To restart from last checkpoint
+RESTART = 0;     % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
 SIMID   = 'test';  % Name of the simulation
