@@ -1,4 +1,4 @@
-Cloning the code : 
+Cloning the code :
 
 1. ssh-keygen to generate a public key (press enter to the questions)
 2. copy .ssh/id_rsa.pub in the ssh public key list of c4science with your account
@@ -8,7 +8,7 @@ Installing librairies :
 
 requirements : intel mpi compiler
 
-fftw3-mpi : 
+fftw3-mpi :
 1. download .tar.gz on download page http://www.fftw.org/download.html
 2. move it to the lib folder and unzip it with tar -zxvf fftw-3.x.x.tar.gz
 3. cd into the folder created ffw-3.x.x/
@@ -16,6 +16,7 @@ fftw3-mpi :
 4. ./configure --enable-mpi --prefix="CURRENT PATH"
 5. make
 6. make install (if problems, do make distclean before retrying)
+7. mv lib64 lib in the fftw3 folder so the HeLaZ makefile finds it
 
 FM Multiple-Precision Software Package:
 0. ??? (copy paste...)

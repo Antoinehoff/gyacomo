@@ -12,7 +12,7 @@ EXTINC += -I$(FMDIR)/mod
 EXTLIBS += -L$(FFTWDIR)/lib
 EXTINC += -I$(FFTWDIR)/include
 
-all: dirs src/srcinfo.h $(EXEC)
+all: dirs src/srcinfo.h $(EXEC) mvmod
 
 run: all
 	(cd wk; $(EXEC);)
@@ -38,6 +38,9 @@ cleanmod:
 
 cleanbin:
 	@rm -f $(EXEC)
+
+mvmod:
+	mv *.mod mod/.
 
 $(OBJDIR)/diagnose.o : src/srcinfo.h
 
