@@ -12,7 +12,9 @@ EXTINC += -I$(FMDIR)/mod
 EXTLIBS += -L$(FFTWDIR)/lib
 EXTINC += -I$(FFTWDIR)/include
 
-all: dirs src/srcinfo.h $(EXEC) mvmod
+all: dirs src/srcinfo.h $(EXEC)
+
+install: dirs src/srcinfo.h $(EXEC) mvmod
 
 run: all
 	(cd wk; $(EXEC);)
