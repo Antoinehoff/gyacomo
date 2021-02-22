@@ -144,15 +144,17 @@ SUBROUTINE moments_eq_rhs_e
             Tphi = 0._dp
           ENDIF
 
-          !! Kinetic hyperdiffusion
+          !! Parallel kinetic hyperdiffusion (projection of d/dv^4 f on Hermite basis)
           Hyper_diff_p = 0._dp
           IF ( p_int .GE. 4 ) THEN
-            Hyper_diff_p = (2._dp*p_dp)**2 *moments_e(ip-4,ij,ikr,ikz,updatetlevel)
+            Hyper_diff_p = 4._dp*SQRT(p_dp*(p_dp-1._dp)*(p_dp-2._dp)*(p_dp-3._dp)*(p_dp-4._dp))&
+                          *moments_e(ip-4,ij,ikr,ikz,updatetlevel)
           ENDIF
 
+          !! Perpendicular kinetic hyperdiffusion (projection of d/dv^4 f on Laguerre basis)
           Hyper_diff_j = 0._dp
-          IF ( j_int .GE. 2 ) THEN
-            DO il = 1,(ij-2)
+          IF ( j_int .GE. 4 ) THEN
+            DO il = 1,(ij-4)
               l_dp = real(il-1,dp)
               Hyper_diff_j = Hyper_diff_j + (j_dp-(l_dp+1_dp))*moments_e(ip,il,ikr,ikz,updatetlevel)
             ENDDO
@@ -241,14 +243,7 @@ SUBROUTINE moments_eq_rhs_i
       xNapjm1 = -taui_qi_etaB * j_dp
       ! x N_i^{pj} coeff
       xNapj   = taui_qi_etaB * 2._dp*(p_dp + j_dp + 1._dp)
-      ! Damping over the moments
-      IF ( p_damp .GT. 0 ) THEN
-        xNapj = xNapj - (p_dp/real(pmaxi,dp))**(2*p_damp)
-      ENDIF
-      IF ( j_damp .GT. 0 ) THEN
-        xNapj = xNapj - (j_dp/real(jmaxi,dp))**(2*j_damp)
-      ENDIF
-      
+
       !! Collision operator pj terms
       xCapj = -nu_i*(p_dp + 2._dp*j_dp) !DK Lenard-Bernstein basis
       ! Dougherty part
