@@ -60,6 +60,16 @@ for it = 1:numel(Ts2D)
     dzphi(:,:,it) = real(fftshift(ifft2(1i*KZ.*(PH_),Nr,Nz)));
 end
 
+% Building a version of phi only 5D sampling times
+PHI_Ts5D = zeros(Nkr,Nkz,Ns5D);
+err = 0;
+for it = 1:numel(Ts5D) % Loop over 5D arrays
+    [shift, it2D] = min(abs(Ts2D-Ts5D(it)));
+    if shift > err; err = shift; end;
+    PHI_Ts5D(:,:,it) = PHI(:,:,it2D);
+end
+if err > 0; disp('WARNING Ts2D and Ts5D are shifted'); end;
+
 for it = 1:numel(Ts5D)
     [~, it2D] = min(abs(Ts2D-Ts5D(it)));
     si00(:,:,it)      = real(fftshift(ifft2(squeeze(Si00(:,:,it)),Nr,Nz)));
@@ -77,11 +87,16 @@ disp('- post processing')
 E_pot    = zeros(1,Ns2D);      % Potential energy n^2
 E_kin    = zeros(1,Ns2D);      % Kinetic energy grad(phi)^2
 ExB      = zeros(1,Ns2D);      % ExB drift intensity \propto |\grad \phi|
+% gyrocenter and particle flux from real space
 GFlux_ri  = zeros(1,Ns2D);      % Gyrocenter flux Gamma = <ni drphi>
 GFlux_zi  = zeros(1,Ns2D);      % Gyrocenter flux Gamma = <ni dzphi>
 GFlux_re  = zeros(1,Ns2D);      % Gyrocenter flux Gamma = <ne drphi>
 GFlux_ze  = zeros(1,Ns2D);      % Gyrocenter flux Gamma = <ne dzphi>
 PFlux_ri  = zeros(1,Ns5D);      % Particle   flux
+% gyrocenter and particle flux from fourier coefficients
+GFLUX_RI = real(squeeze(sum(sum(-1i*KZ.*Ni00.*conj(PHI),1),2)))*(2*pi/Nr/Nz)^2;
+PFLUX_RI = real(squeeze(sum(sum(-1i*KZ.*Np_i.*conj(PHI_Ts5D),1),2)))*(2*pi/Nr/Nz)^2;
+
 Ne_norm  = zeros(Npe,Nje,Ns5D);% Time evol. of the norm of Napj
 Ni_norm  = zeros(Npi,Nji,Ns5D);% .
 Se_norm  = zeros(Npe,Nje,Ns5D);% Time evol. of the norm of Sapj
@@ -182,7 +197,30 @@ set(gcf, 'Position',  [100, 100, 900, 800])
         end
     end
     grid on; xlabel('$t c_s/R$'); ylabel('$\sum_{k_r,k_z}|S_i^{pj}|$'); %legend('show');
-suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB)]);
+% suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB)]);
+save_figure
+end
+
+if 1
+%% Particle fluxes
+fig = figure; FIGNAME = ['gamma',sprintf('_%.2d',JOBNUM)];
+set(gcf, 'Position',  [100, 100, 1200, 400])
+    subplot(211)
+        plot(Ts2D,GFlux_ri); hold on
+        plot(Ts5D,PFlux_ri,'--'); hold on
+        ylabel('$\Gamma_r$'); grid on
+        title(['$\eta=',num2str(ETAB),'\quad',...
+            '\nu_{',CONAME,'}=',num2str(NU),'$'])
+        legend(['$P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'],'Particle flux')%'$\eta\gamma_{max}/k_{max}^2$')
+        set(gca,'xticklabel',[])
+    subplot(212)
+        plot(Ts2D,GFLUX_RI); hold on
+        plot(Ts5D,PFLUX_RI,'--'); hold on
+        ylabel('$\Gamma_r$'); grid on
+        title(['$\eta=',num2str(ETAB),'\quad',...
+            '\nu_{',CONAME,'}=',num2str(NU),'$'])
+        legend(['$P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'],'Particle flux')%'$\eta\gamma_{max}/k_{max}^2$')
+        set(gca,'xticklabel',[])
 save_figure
 end
 
@@ -192,6 +230,7 @@ fig = figure; FIGNAME = 'space_time_drphi';set(gcf, 'Position',  [100, 100, 1200
     subplot(311)
         plot(Ts2D,GFlux_ri); hold on
         plot(Ts5D,PFlux_ri,'.'); hold on
+        plot(Ts2D,GFLUX_RI,'--'); hold on
 %         plot(Ts2D,Bohm_transport*ones(size(Ts2D)),'--'); hold on
         ylabel('$\Gamma_r$'); grid on
         title(['$\eta=',num2str(ETAB),'\quad',...
