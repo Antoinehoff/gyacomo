@@ -1,5 +1,5 @@
 %% Load results
-if 1
+if 0
     %%
     outfile ='';
     outfile ='';
@@ -191,11 +191,12 @@ if 1
 fig = figure; FIGNAME = 'space_time_drphi';set(gcf, 'Position',  [100, 100, 1200, 600])
     subplot(311)
         plot(Ts2D,GFlux_ri); hold on
-        plot(Ts2D,Bohm_transport*ones(size(Ts2D)),'--'); hold on
+        plot(Ts5D,PFlux_ri,'.'); hold on
+%         plot(Ts2D,Bohm_transport*ones(size(Ts2D)),'--'); hold on
         ylabel('$\Gamma_r$'); grid on
         title(['$\eta=',num2str(ETAB),'\quad',...
             '\nu_{',CONAME,'}=',num2str(NU),'$'])
-        legend(['$P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'],'$\eta\gamma_{max}/k_{max}^2$')
+        legend(['$P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'],'Particle flux')%'$\eta\gamma_{max}/k_{max}^2$')
         set(gca,'xticklabel',[])
     subplot(312)
         yyaxis left

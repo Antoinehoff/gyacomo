@@ -18,8 +18,8 @@ PMAXE   = 4;     % Highest electron Hermite polynomial degree
 JMAXE   = 4;     % Highest ''       Laguerre ''
 PMAXI   = 4;     % Highest ion      Hermite polynomial degree
 JMAXI   = 4;     % Highest ''       Laguerre ''
-MU_P    = 0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
-MU_J    = 0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
+MU_P    = 0.1/PMAXI^2;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
+MU_J    = 0.1/JMAXI^3;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
 TMAX    = 600;  % Maximal time unit
 DT      = 2e-2;   % Time step
@@ -36,7 +36,7 @@ JOB2LOAD= 0;
 % SIMID   = 'test_sapj_cut';  % Name of the simulation
 SIMID   = 'test_moments_damping';  % Name of the simulation
 CO      = -3;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty, -3 : GK Dougherty)
-CLOS    = 2;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
+CLOS    = 0;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
 KERN    = 0;   % Kernel model (0 : GK)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

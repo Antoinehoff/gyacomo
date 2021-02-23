@@ -149,7 +149,7 @@ SUBROUTINE load_output
   INTEGER :: rank, sz_, n_
   INTEGER :: dims(1) = (/0/)
   CHARACTER(LEN=50) :: dset_name
-  INTEGER :: pmaxe_cp, jmaxe_cp, pmaxi_cp, jmaxi_cp
+  INTEGER :: pmaxe_cp, jmaxe_cp, pmaxi_cp, jmaxi_cp, n0
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_e_cp
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_i_cp
   ! Checkpoint filename
@@ -163,14 +163,16 @@ SUBROUTINE load_output
   CALL getatt(fidrst,"/data/input/" , "jmaxe", jmaxe_cp)
   CALL getatt(fidrst,"/data/input/" , "pmaxi", pmaxi_cp)
   CALL getatt(fidrst,"/data/input/" , "jmaxi", jmaxi_cp)
+  CALL getatt(fidrst,"/data/input/" , "jmaxi", jmaxi_cp)
   IF (my_id .EQ. 0) WRITE(*,*) "Pe_cp = ", pmaxe_cp
   IF (my_id .EQ. 0) WRITE(*,*) "Je_cp = ", jmaxe_cp
+  CALL getatt(fidrst,"/data/input/" , "start_iframe5d", n0)
 
   ! Allocate the required size to load checkpoints moments
   CALL allocate_array(moments_e_cp, 1,pmaxe_cp+1, 1,jmaxe_cp+1, ikrs,ikre, ikzs,ikze)
   CALL allocate_array(moments_i_cp, 1,pmaxi_cp+1, 1,jmaxi_cp+1, ikrs,ikre, ikzs,ikze)
   ! Find the last results of the checkpoint file by iteration
-  n_ = 1
+  n_ = n0+1
   WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_ ! start with moments_e/000001
   DO WHILE (isdataset(fidrst, dset_name)) ! If n_ is not a file we stop the loop
     n_ = n_ + 1

@@ -56,5 +56,4 @@ Compilation of HeLaZ
 4. next times, for compilation, make is sufficient
 
 Remark for PPB110
-- The module list should be at least
-  1) intel_comp/17.0         2) impi/17.0               3) hdf5/1.8.12_intel13.1
+- before compilation do : module purge, then module load ProgEnv-intel/17.0
