@@ -70,16 +70,19 @@ for it = 1:numel(Ts5D) % Loop over 5D arrays
 end
 if err > 0; disp('WARNING Ts2D and Ts5D are shifted'); end;
 
+Np_i = zeros(Nkr,Nkz,Ns5D); % Ion particle density in Fourier space
+
 for it = 1:numel(Ts5D)
     [~, it2D] = min(abs(Ts2D-Ts5D(it)));
     si00(:,:,it)      = real(fftshift(ifft2(squeeze(Si00(:,:,it)),Nr,Nz)));
     
-    Np_i = zeros(Nkr,Nkz); % Ion particle density in Fourier space
+    Np_i(:,:,it) = 0;
     for ij = 1:Nji
         Kn = (KPERP2/2.).^(ij-1) .* exp(-KPERP2/2)/(factorial(ij-1));
-        Np_i = Np_i + Kn.*squeeze(Nipj(1,ij,:,:,it));
+        Np_i(:,:,it) = Np_i(:,:,it) + Kn.*squeeze(Nipj(1,ij,:,:,it));
     end
-    np_i(:,:,it)      = real(fftshift(ifft2(squeeze(Np_i(:,:)),Nr,Nz)));
+    
+    np_i(:,:,it)      = real(fftshift(ifft2(squeeze(Np_i(:,:,it)),Nr,Nz)));
 end
 
 % Post processing
@@ -212,7 +215,6 @@ set(gcf, 'Position',  [100, 100, 1200, 400])
         title(['$\eta=',num2str(ETAB),'\quad',...
             '\nu_{',CONAME,'}=',num2str(NU),'$'])
         legend(['$P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'],'Particle flux')%'$\eta\gamma_{max}/k_{max}^2$')
-        set(gca,'xticklabel',[])
     subplot(212)
         plot(Ts2D,GFLUX_RI); hold on
         plot(Ts5D,PFLUX_RI,'--'); hold on
@@ -220,7 +222,6 @@ set(gcf, 'Position',  [100, 100, 1200, 400])
         title(['$\eta=',num2str(ETAB),'\quad',...
             '\nu_{',CONAME,'}=',num2str(NU),'$'])
         legend(['$P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'],'Particle flux')%'$\eta\gamma_{max}/k_{max}^2$')
-        set(gca,'xticklabel',[])
 save_figure
 end
 
@@ -310,7 +311,7 @@ save_figure
 end
 
 %%
-if 1
+if 0
 %% Ion moments max mode vs pj
 % tf = Ts2D(end-3); 
 for tf = []
@@ -346,7 +347,7 @@ DELAY = 0.02*skip_;
 FRAMES_2D = it02D:skip_:numel(Ts2D);
 FRAMES_5D = it05D:skip_:numel(Ts5D);
 %% GIFS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if 0
+if 1
 %% Density ion
 GIFNAME = ['ni',sprintf('_%.2d',JOBNUM)]; INTERP = 1;
 FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
@@ -360,14 +361,14 @@ FIELD = real(ne00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$n_e$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
-if 0
+if 1
 %% Phi real space
 GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)];INTERP = 1;
 FIELD = real(phi); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$\phi$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
-if 0
+if 1
 %% Phi fourier
 GIFNAME = ['FFT_phi',sprintf('_%.2d',JOBNUM)];INTERP = 0;
 FIELD = ifftshift((abs(PHI)),2); X = fftshift(KR,2); Y = fftshift(KZ,2); T = Ts2D; FRAMES = FRAMES_2D;
