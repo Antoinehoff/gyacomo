@@ -5,21 +5,9 @@ function [ RESDIR ] = load_daint( outfilename )
     hostfile    = [hostfolder,'/out*'];
     RESDIR      = ['../',outfilename(33:end-8),'/'];
     localfolder = [RESDIR,'.'];
-    elafolder   = ['HeLaZ/',outfilename(33:end-8)];
-    % Create directory to move the results
-    CMD = ['ssh ahoffman@ela.cscs.ch ',...
-        'mkdir -p ',elafolder];
-    disp(CMD);
-    system(CMD);
-    
-    % Move results file from daint to ela3
-    CMD = ['ssh ahoffman@ela.cscs.ch ssh ahoffman@daint.cscs.ch ',...
-        'mv ', hostfolder,'/* ',elafolder];
-    disp(CMD);
-    system(CMD);
     
     % Download results from ela3
-    CMD = ['scp -r ahoffman@ela.cscs.ch:',hostfile,' ',localfolder];
+    CMD = ['scp -r ahoffman@daint:',hostfile,' ',localfolder];
     disp(CMD);
     system(CMD);
 end
