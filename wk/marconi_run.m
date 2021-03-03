@@ -15,25 +15,24 @@ CLUSTER.JNAME = 'gamma_inf';% Job name
 %% PHYSICAL PARAMETERS
 NU      = 1.0;   % Collision frequency
 ETAB    = 0.6;   % Magnetic gradient
-NU_HYP  = 0.1;   % Hyperdiffusivity coefficient
+NU_HYP  = 0.2;   % Hyperdiffusivity coefficient
 %% GRID PARAMETERS
-N       = 150;     % Frequency gridpoints (Nkr = N/2)
+N       = 200;     % Frequency gridpoints (Nkr = N/2)
 L       = 70;     % Size of the squared frequency domain
 P       = 10;       % Electron and Ion highest Hermite polynomial degree
 J       = 5;       % Electron and Ion highest Laguerre polynomial degree
 MU_P    = 0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
-TMAX    = 500;  % Maximal time unit
+TMAX    = 1000;  % Maximal time unit
 DT      = 1e-2;  % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1/2;   % Sampling per time unit for 2D arrays
-SPS5D   = 1/10;  % Sampling per time unit for 5D arrays
-SPSCP   = 1/10;  % Sampling per time unit for checkpoints
-RESTART = 1;     % To restart from last checkpoint
+SPS5D   = 1/4;  % Sampling per time unit for 5D arrays
+SPSCP   = 0;  % Sampling per time unit for checkpoints
+RESTART = 0;     % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
-% SIMID   = 'Marconi_DGGK_nu_%0.0e';  % Name of the simulation
 SIMID   = ['Marconi_DGGK_eta_',num2str(ETAB),'_nu_%0.0e'];  % Name of the simulation
 % SIMID   = 'Marconi_restart';  % Name of the simulation
 SIMID   = sprintf(SIMID,NU);
@@ -61,6 +60,6 @@ ETAN    = 1.0;    % Density gradient
 TAU     = 1.0;    % e/i temperature ratio
 %% Run file management scripts
 setup
-write_sbash
+write_sbash_marconi
 system('rm fort.90 setup_and_run.sh batch_script.sh');
 disp('done');

@@ -1,11 +1,19 @@
 %% Load results
+outfile ='';
 if 0
-    %%
+    %% Load from Marconi
     outfile ='';
     outfile ='';
-    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.6_nu_1e+00/150x75_L_70_P_10_J_5_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_8e-04/out.txt';
-
+    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.6_nu_1e+00/300x150_L_70_P_10_J_5_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_1e-04/out.txt';
     BASIC.RESDIR = load_marconi(outfile);
+end
+if 0
+    %% Load from Daint
+    outfile ='';
+    outfile ='';
+    outfile ='/scratch/snx3000/ahoffman/HeLaZ/results/Daint_eta_0.6_nu_1e-01/200x100_L_70_P_12_J_6_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_1e-03/out.txt';
+%     outfile ='/scratch/snx3000/ahoffman/HeLaZ/results/Daint_eta_0.6_nu_1e-01/150x75_L_70_P_12_J_6_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt';
+    BASIC.RESDIR = load_daint(outfile);
 end
 %%
 % JOBNUM = 0; load_results;
@@ -143,7 +151,6 @@ disp('- growth rate')
 [~,itmax] = max(GFlux_ri);
 tstart = 0.1 * Ts2D(itmax); tend = 0.9 * Ts2D(itmax);
 g_          = zeros(Nkr,Nkz);
-[~,ikr0KH] = min(abs(kr-KR0KH));
 for ikr = 1:Nkr
     for ikz = 1:Nkz
         g_(ikr,ikz) = LinearFit_s(Ts2D,squeeze(abs(Ni00(ikr,ikz,:))),tstart,tend);
@@ -206,22 +213,17 @@ end
 
 if 1
 %% Particle fluxes
+SCALING = Nkr*dkr * Nkz*dkz;
 fig = figure; FIGNAME = ['gamma',sprintf('_%.2d',JOBNUM)];
-set(gcf, 'Position',  [100, 100, 1200, 400])
-    subplot(211)
-        plot(Ts2D,GFlux_ri); hold on
-        plot(Ts5D,PFlux_ri,'--'); hold on
-        ylabel('$\Gamma_r$'); grid on
+set(gcf, 'Position',  [100, 100, 800, 300])
+        plot(Ts2D,GFLUX_RI, 'color', line_colors(2,:)); hold on
+        plot(Ts5D,PFLUX_RI,'.', 'color', line_colors(2,:)); hold on
+        plot(Ts2D,SCALING*GFlux_ri, 'color', line_colors(1,:)); hold on
+        plot(Ts5D,SCALING*PFlux_ri,'.', 'color', line_colors(1,:)); hold on
+        xlabel('$tc_{s0}/\rho_s$'); ylabel('$\Gamma_r$'); grid on
         title(['$\eta=',num2str(ETAB),'\quad',...
-            '\nu_{',CONAME,'}=',num2str(NU),'$'])
-        legend(['$P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'],'Particle flux')%'$\eta\gamma_{max}/k_{max}^2$')
-    subplot(212)
-        plot(Ts2D,GFLUX_RI); hold on
-        plot(Ts5D,PFLUX_RI,'--'); hold on
-        ylabel('$\Gamma_r$'); grid on
-        title(['$\eta=',num2str(ETAB),'\quad',...
-            '\nu_{',CONAME,'}=',num2str(NU),'$'])
-        legend(['$P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'],'Particle flux')%'$\eta\gamma_{max}/k_{max}^2$')
+            '\nu_{',CONAME,'}=',num2str(NU),'$', ' $P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'])
+        legend('Gyro Flux','Particle flux', 'iFFT GFlux', 'iFFT PFlux')%'$\eta\gamma_{max}/k_{max}^2$')
 save_figure
 end
 
@@ -229,9 +231,8 @@ if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
 fig = figure; FIGNAME = 'space_time_drphi';set(gcf, 'Position',  [100, 100, 1200, 600])
     subplot(311)
-        plot(Ts2D,GFlux_ri); hold on
-        plot(Ts5D,PFlux_ri,'.'); hold on
-        plot(Ts2D,GFLUX_RI,'--'); hold on
+        plot(Ts2D,GFLUX_RI,'-'); hold on
+        plot(Ts5D,PFLUX_RI,'.'); hold on
 %         plot(Ts2D,Bohm_transport*ones(size(Ts2D)),'--'); hold on
         ylabel('$\Gamma_r$'); grid on
         title(['$\eta=',num2str(ETAB),'\quad',...
@@ -354,18 +355,18 @@ FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$n_i$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
-if 0
-%% Density electron
-GIFNAME = ['ne',sprintf('_%.2d',JOBNUM)]; INTERP = 1;
-FIELD = real(ne00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
-FIELDNAME = '$n_e$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
-create_gif
-end
 if 1
 %% Phi real space
 GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)];INTERP = 1;
 FIELD = real(phi); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$\phi$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
+create_gif
+end
+if 0
+%% radial particle transport
+GIFNAME = ['gamma_r',sprintf('_%.2d',JOBNUM)]; INTERP = 1;
+FIELD = real(ni00.*dzphi); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
+FIELDNAME = '$\Gamma_r$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
 if 1
@@ -391,14 +392,6 @@ FIELDNAME = '$N_i^{00}$'; XNAME = '$k_r\rho_s$'; YNAME = '$k_z\rho_s$';
 create_gif
 end
 if 0
-%% Density ion frequency @ kr = 0
-GIFNAME = ['Ni00_kr0',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
-FIELD =(squeeze(abs(Ni00(1,:,:)))); linestyle = 'o-.'; FRAMES = FRAMES_2D;
-X = (kz); T = Ts2D; YMIN = -.1; YMAX = 1.1; XMIN = min(kz); XMAX = max(kz);
-FIELDNAME = '$N_i^{00}(kr=0)$'; XNAME = '$k_r\rho_s$';
-create_gif_1D
-end
-if 0
 %% kr vs P Si
 GIFNAME = ['Sip0_kr',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
 plt = @(x) squeeze(max((abs(x)),[],4));
@@ -420,22 +413,6 @@ GIFNAME = ['Nipj_kz',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
 plt = @(x) fftshift(squeeze(max((abs(x)),[],3)),3);
 FIELD = plt(Nipj); X = sort(kz'); Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
 FIELDNAME = 'N_i'; XNAME = '$k_z\rho_s$'; YNAME = '$P$, ${k_r}^{max}$';
-create_gif_5D
-end
-if 0
-%% maxkz, kr vs p, for all Nepj over time
-GIFNAME = ['Nepj_kr',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
-plt = @(x) squeeze(max((abs(x)),[],4));
-FIELD = plt(Nepj); X = kr'; Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
-FIELDNAME = 'N_e'; XNAME = '$k_r\rho_s$'; YNAME = '$P$, ${k_z}^{max}$';
-create_gif_5D
-end
-if 0
-%% maxkz, kz vs p, for all Nepj over time
-GIFNAME = ['Nepj_kz',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
-plt = @(x) fftshift(squeeze(max((abs(x)),[],3)),3);
-FIELD = plt(Nepj); X = sort(kz'); Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
-FIELDNAME = 'N_e'; XNAME = '$k_z\rho_s$'; YNAME = '$P$, ${k_r}^{max}$';
 create_gif_5D
 end
 %%

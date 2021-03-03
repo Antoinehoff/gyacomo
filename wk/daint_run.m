@@ -4,23 +4,25 @@ addpath(genpath('../matlab')) % ... add
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% CLUSTER PARAMETERS
-CLUSTER.TIME  = '06:00:00'; % allocation time hh:mm:ss
-CLUSTER.NODES = '1';        % MPI process
-CLUSTER.CPUPT = '1';        % CPU per task
-CLUSTER.NTPN  = '24';       % N tasks per node
-CLUSTER.PART  = 'normal';    % debug or normal
+CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
+CLUSTER.NODES = '1';        % number of nodes
+CLUSTER.NTPN  = '32';       % N tasks per node (mpi processes)
+CLUSTER.NTPC  = '1';        % N tasks per core (openmp threads)
+CLUSTER.CPUPT = '1';        % CPU per task     (number of CPU per mpi proc)
+CLUSTER.PART  = 'normal';   % debug or normal
+if(strcmp(CLUSTER.PART,'debug')); CLUSTER.TIME  = '00:30:00'; end;
 CLUSTER.MEM   = '12GB';     % Memory
 CLUSTER.JNAME = 'gamma_inf';% Job name
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;   % Collision frequency
+NU      = 1.0;   % Collision frequency
 ETAB    = 0.6;   % Magnetic gradient
-NU_HYP  = 0.2;   % Hyperdiffusivity coefficient
+NU_HYP  = 0.1;   % Hyperdiffusivity coefficient
 %% GRID PARAMETERS
-N       = 150;   % Frequency gridpoints (Nkr = N/2)
-L       = 70;    % Size of the squared frequency domain
-P       = 12;    % Electron and Ion highest Hermite polynomial degree
-J       = 06;    % Electron and Ion highest Laguerre polynomial degree
+N       = 200;   % Frequency gridpoints (Nkr = N/2)
+L       = 120;    % Size of the squared frequency domain
+P       = 10;    % Electron and Ion highest Hermite polynomial degree
+J       = 05;    % Electron and Ion highest Laguerre polynomial degree
 MU_P    = 0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
