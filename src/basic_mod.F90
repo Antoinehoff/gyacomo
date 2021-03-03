@@ -10,7 +10,10 @@ MODULE basic
   real(dp) :: tmax   = 100000.0    ! Maximum simulation time
   real(dp) :: dt     = 1.0         ! Time step
   real(dp) :: time   = 0           ! Current simulation time (Init from restart file)
-
+  
+  INTEGER :: comm0                 ! Default communicator with a topology
+  INTEGER :: commp, commr          ! Communicators for 1-dim cartesian subgrids of comm0
+  
   INTEGER :: jobnum  = 0           ! Job number
   INTEGER :: step    = 0           ! Calculation step of this run
   INTEGER :: cstep   = 0           ! Current step number (Init from restart file)
@@ -19,8 +22,10 @@ MODULE basic
   LOGICAL :: crashed = .FALSE.     ! Signal end of crashed run
 
   INTEGER :: ierr                  ! flag for MPI error
-  INTEGER :: my_id                 ! identification number of current process
+  INTEGER :: my_id                 ! Rank in COMM_WORLD
   INTEGER :: num_procs             ! number of MPI processes
+  INTEGER :: ncp, ncr              ! Number of processes in p and r
+  INTEGER :: me_0, me_p, me_z      ! Ranks in comm0, commp, commz
 
   INTEGER :: iframe1d              ! counting the number of times 1d datasets are outputed (for diagnose)
   INTEGER :: iframe2d              ! counting the number of times 2d datasets are outputed (for diagnose)
