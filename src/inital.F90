@@ -5,12 +5,15 @@ SUBROUTINE inital
 
   USE basic
   USE model, ONLY : CO, NON_LIN
+  USE initial_par
   USE prec_const
   USE coeff
   USE time_integration
   USE array, ONLY : Sepj,Sipj
   USE collision
   USE closure
+  USE ghosts
+  USE restarts
 
   implicit none
 
@@ -19,17 +22,33 @@ SUBROUTINE inital
   IF (my_id .EQ. 0) WRITE(*,*) 'Evaluate kernels'
   CALL evaluate_kernels
 
-  !!!!!! Set the moments arrays Nepj, Nipj !!!!!!
-  ! WRITE(*,*) 'Init moments'
+  !!!!!! Set the moments arrays Nepj, Nipj and phi!!!!!!
   IF ( RESTART ) THEN
-    CALL load_output
-    ! CALL load_cp
+    IF (my_id .EQ. 0) WRITE(*,*) 'Load moments'
+    CALL load_moments
+
+    IF (my_id .EQ. 0) WRITE(*,*) 'Init phi with Poisson'
+    CALL poisson
+    CALL MPI_BARRIER(MPI_COMM_WORLD,ierr);
+
   ELSE
-    CALL init_moments
-    !!!!!! Set phi !!!!!!
+    IF (INIT_NOISY_PHI) THEN
+      IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy phi'
+      CALL init_phi
+    ELSE
+      IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy moments and ghosts'
+      CALL init_moments
+      IF (my_id .EQ. 0) WRITE(*,*) 'Init phi with Poisson'
+      CALL poisson
+    ENDIF
+
   ENDIF
-  IF (my_id .EQ. 0) WRITE(*,*) 'Init phi'
-  CALL poisson
+
+  IF (my_id .EQ. 0) WRITE(*,*) 'Apply closure'
+  CALL apply_closure_model
+
+  IF (my_id .EQ. 0) WRITE(*,*) 'Ghosts communication'
+  CALL update_ghosts
 
   !!!!!! Set Sepj, Sipj and dnjs coeff table !!!!!!
   IF ( NON_LIN ) THEN;
@@ -130,198 +149,74 @@ SUBROUTINE init_moments
       ENDDO
       ENDDO
     ENDIF
-
 END SUBROUTINE init_moments
 !******************************************************************************!
 
+
 !******************************************************************************!
-!!!!!!! Load moments from a previous output file
+!!!!!!! Initialize a noisy ES potential and cancel the moments
 !******************************************************************************!
-SUBROUTINE load_output
+SUBROUTINE init_phi
   USE basic
-  USE futils,          ONLY: openf, closef, getarr, getatt, isgroup, isdataset
   USE grid
   USE fields
-  USE diagnostics_par
-  USE time_integration
+  USE prec_const
+  USE initial_par
   IMPLICIT NONE
 
-  INTEGER :: rank, sz_, n_
-  INTEGER :: dims(1) = (/0/)
-  CHARACTER(LEN=50) :: dset_name
-  INTEGER :: pmaxe_cp, jmaxe_cp, pmaxi_cp, jmaxi_cp, n0
-  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_e_cp
-  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_i_cp
-  ! Checkpoint filename
-  WRITE(rstfile,'(a,a1,i2.2,a3)') TRIM(resfile0),'_',job2load,'.h5'
+  REAL(dp) :: noise
+  REAL(dp) :: kr, kz, sigma, gain, kz_shift
+  INTEGER, DIMENSION(12) :: iseedarr
 
-  IF (my_id .EQ. 0) WRITE(*,'(3x,a)') "Resume from ", rstfile
-  ! Open file
-  CALL openf(rstfile, fidrst,mpicomm=MPI_COMM_WORLD)
-  ! Get the checkpoint moments degrees to allocate memory
-  CALL getatt(fidrst,"/data/input/" , "pmaxe", pmaxe_cp)
-  CALL getatt(fidrst,"/data/input/" , "jmaxe", jmaxe_cp)
-  CALL getatt(fidrst,"/data/input/" , "pmaxi", pmaxi_cp)
-  CALL getatt(fidrst,"/data/input/" , "jmaxi", jmaxi_cp)
-  CALL getatt(fidrst,"/data/input/" , "jmaxi", jmaxi_cp)
-  IF (my_id .EQ. 0) WRITE(*,*) "Pe_cp = ", pmaxe_cp
-  IF (my_id .EQ. 0) WRITE(*,*) "Je_cp = ", jmaxe_cp
-  CALL getatt(fidrst,"/data/input/" , "start_iframe5d", n0)
+  IF (INIT_NOISY_PHI) THEN
 
-  ! Allocate the required size to load checkpoints moments
-  CALL allocate_array(moments_e_cp, 1,pmaxe_cp+1, 1,jmaxe_cp+1, ikrs,ikre, ikzs,ikze)
-  CALL allocate_array(moments_i_cp, 1,pmaxi_cp+1, 1,jmaxi_cp+1, ikrs,ikre, ikzs,ikze)
-  ! Find the last results of the checkpoint file by iteration
-  n_ = n0+1
-  WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_ ! start with moments_e/000001
-  DO WHILE (isdataset(fidrst, dset_name)) ! If n_ is not a file we stop the loop
-    n_ = n_ + 1
-    WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_ ! updtate file number
-  ENDDO
-  n_ = n_ - 1 ! n_ is not a file so take the previous one n_-1
+    ! Seed random number generator
+    iseedarr(:)=iseed
+    CALL RANDOM_SEED(PUT=iseedarr+my_id)
 
-  ! Read state of system from checkpoint file
-  WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
-  CALL getarr(fidrst, dset_name, moments_e_cp(1:pmaxe_cp+1, 1:jmaxe_cp+1, ikrs:ikre, ikzs:ikze),pardim=3)
-  WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_i", n_
-  CALL getarr(fidrst, dset_name, moments_i_cp(1:pmaxi_cp+1, 1:jmaxi_cp+1, ikrs:ikre, ikzs:ikze),pardim=3)
+      !**** noise initialization *******************************************
 
-  ! Initialize simulation moments array with checkpoints ones
-  ! (they may have a larger number of polynomials, set to 0 at the begining)
-  moments_e = 0._dp; moments_i = 0._dp
-  DO ip=1,pmaxe_cp+1 
-    DO ij=1,jmaxe_cp+1
       DO ikr=ikrs,ikre
         DO ikz=ikzs,ikze
-          moments_e(ip,ij,ikr,ikz,:) = moments_e_cp(ip,ij,ikr,ikz)
+          CALL RANDOM_NUMBER(noise)
+          phi(ikr,ikz) = (initback_moments + initnoise_moments*(noise-0.5_dp))*AA_r(ikr)*AA_z(ikz)
+        END DO
+      END DO
+
+      !symmetry at kr = 0 to keep real inverse transform
+      IF ( ikrs .EQ. 1 ) THEN
+        DO ikz=2,Nkz/2
+          phi(1,ikz) = phi(1,Nkz+2-ikz)
+        END DO
+      ENDIF
+
+      !**** Cancel previous moments initialization
+      DO ip=ips_e,ipe_e
+        DO ij=ijs_e,ije_e
+          DO ikr=ikrs,ikre
+            DO ikz=ikzs,ikze
+              moments_e( ip,ij,ikr,ikz, :) = 0._dp
+            ENDDO
+          ENDDO
         ENDDO
       ENDDO
-    ENDDO
-  ENDDO
-
-  DO ip=1,pmaxi_cp+1
-    DO ij=1,jmaxi_cp+1
-      DO ikr=ikrs,ikre
-        DO ikz=ikzs,ikze
-          moments_i(ip,ij,ikr,ikz,:) = moments_i_cp(ip,ij,ikr,ikz)
+      DO ip=ips_i,ipe_i
+        DO ij=ijs_i,ije_i
+          DO ikr=ikrs,ikre
+            DO ikz=ikzs,ikze
+              moments_i( ip,ij,ikr,ikz, :) = 0._dp
+            ENDDO
+          ENDDO
         ENDDO
       ENDDO
-    ENDDO
-  ENDDO
-  ! Deallocate checkpoint arrays
-  DEALLOCATE(moments_e_cp)
-  DEALLOCATE(moments_i_cp)
 
-  ! Read time dependent attributes to continue simulation
-  CALL getatt(fidrst, dset_name, 'cstep', cstep)
-  CALL getatt(fidrst, dset_name, 'time', time)
-  CALL getatt(fidrst, dset_name, 'jobnum', jobnum)
-  jobnum = jobnum+1
-  CALL getatt(fidrst, dset_name, 'iframe2d',iframe2d)
-  CALL getatt(fidrst, dset_name, 'iframe5d',iframe5d)
-  iframe2d = iframe2d-1; iframe5d = iframe5d-1
+    ELSE ! we compute phi from noisy moments and poisson
 
-  CALL closef(fidrst)
+      CALL poisson
+    ENDIF
 
-  IF (my_id .EQ. 0) WRITE(*,'(3x,a)') "Reading from restart file "//TRIM(rstfile)//" completed!"
-
-END SUBROUTINE load_output
+END SUBROUTINE init_phi
 !******************************************************************************!
-
-!******************************************************************************!
-!!!!!!! Load moments from a previous save
-!******************************************************************************!
-SUBROUTINE load_cp
-  USE basic
-  USE futils,          ONLY: openf, closef, getarr, getatt, isgroup, isdataset
-  USE grid
-  USE fields
-  USE diagnostics_par
-  USE time_integration
-  IMPLICIT NONE
-
-  INTEGER :: rank, sz_, n_
-  INTEGER :: dims(1) = (/0/)
-  CHARACTER(LEN=50) :: dset_name
-  INTEGER :: pmaxe_cp, jmaxe_cp, pmaxi_cp, jmaxi_cp
-  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_e_cp
-  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_i_cp
-  ! Checkpoint filename
-  WRITE(rstfile,'(a,a1,i2.2,a3)') TRIM(rstfile0),'_',job2load,'.h5'
-
-  IF (my_id .EQ. 0) WRITE(*,'(3x,a)') "Resume from previous run"
-  ! Open file
-  CALL openf(rstfile, fidrst,mpicomm=MPI_COMM_WORLD)
-  ! Get the checkpoint moments degrees to allocate memory
-  CALL getatt(fidrst,"/Basic/moments_e/" , "pmaxe", pmaxe_cp)
-  CALL getatt(fidrst,"/Basic/moments_e/" , "jmaxe", jmaxe_cp)
-  CALL getatt(fidrst,"/Basic/moments_i/" , "pmaxi", pmaxi_cp)
-  CALL getatt(fidrst,"/Basic/moments_i/" , "jmaxi", jmaxi_cp)
-  IF (my_id .EQ. 0) WRITE(*,*) "Pe_cp = ", pmaxe_cp
-  IF (my_id .EQ. 0) WRITE(*,*) "Je_cp = ", jmaxe_cp
-
-  ! Allocate the required size to load checkpoints moments
-  CALL allocate_array(moments_e_cp, 1,pmaxe_cp+1, 1,jmaxe_cp+1, ikrs,ikre, ikzs,ikze)
-  CALL allocate_array(moments_i_cp, 1,pmaxi_cp+1, 1,jmaxi_cp+1, ikrs,ikre, ikzs,ikze)
-  ! Find the last results of the checkpoint file by iteration
-  n_ = 0
-  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_ ! start with moments_e/000000
-  DO WHILE (isdataset(fidrst, dset_name)) ! If n_ is not a file we stop the loop
-    n_ = n_ + 1
-    WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_ ! updtate file number
-  ENDDO
-  n_ = n_ - 1 ! n_ is not a file so take the previous one n_-1
-
-  ! Read state of system from checkpoint file
-  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_e", n_
-  CALL getarr(fidrst, dset_name, moments_e_cp(1:pmaxe_cp+1, 1:jmaxe_cp+1, ikrs:ikre, ikzs:ikze),pardim=3)
-  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/moments_i", n_
-  CALL getarr(fidrst, dset_name, moments_i_cp(1:pmaxi_cp+1, 1:jmaxi_cp+1, ikrs:ikre, ikzs:ikze),pardim=3)
-  WRITE(dset_name, "(A, '/', i6.6)") "/Basic/phi", n_
-  CALL getarr(fidrst, dset_name, phi(ikrs:ikre,ikzs:ikze),pardim=1)
-
-  ! Initialize simulation moments array with checkpoints ones
-  ! (they may have a larger number of polynomials, set to 0 at the begining)
-  moments_e = 0._dp; moments_i = 0._dp
-  DO ip=1,pmaxe_cp+1 
-    DO ij=1,jmaxe_cp+1
-      DO ikr=ikrs,ikre
-        DO ikz=ikzs,ikze
-          moments_e(ip,ij,ikr,ikz,:) = moments_e_cp(ip,ij,ikr,ikz)
-        ENDDO
-      ENDDO
-    ENDDO
-  ENDDO
-
-  DO ip=1,pmaxi_cp+1
-    DO ij=1,jmaxi_cp+1
-      DO ikr=ikrs,ikre
-        DO ikz=ikzs,ikze
-          moments_i(ip,ij,ikr,ikz,:) = moments_i_cp(ip,ij,ikr,ikz)
-        ENDDO
-      ENDDO
-    ENDDO
-  ENDDO
-  ! Deallocate checkpoint arrays
-  DEALLOCATE(moments_e_cp)
-  DEALLOCATE(moments_i_cp)
-
-  ! Read time dependent attributes to continue simulation
-  CALL getatt(fidrst, dset_name, 'cstep', cstep)
-  CALL getatt(fidrst, dset_name, 'time', time)
-  CALL getatt(fidrst, dset_name, 'jobnum', jobnum)
-  jobnum = jobnum+1
-  CALL getatt(fidrst, dset_name, 'iframe2d',iframe2d)
-  CALL getatt(fidrst, dset_name, 'iframe5d',iframe5d)
-  iframe2d = iframe2d-1; iframe5d = iframe5d-1
-
-  CALL closef(fidrst)
-
-  IF (my_id .EQ. 0) WRITE(*,'(3x,a)') "Reading from restart file "//TRIM(rstfile)//" completed!"
-
-END SUBROUTINE load_cp
-!******************************************************************************!
-
 
 !******************************************************************************!
 !!!!!!! Build the Laguerre-Laguerre coupling coefficient table for nonlin
