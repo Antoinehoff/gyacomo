@@ -35,7 +35,10 @@ MODULE grid
   REAL(dp), PUBLIC, PROTECTED ::  deltar,  deltaz
   INTEGER,  PUBLIC, PROTECTED  ::  irs,  ire,  izs,  ize
   INTEGER,  PUBLIC :: ir,iz ! counters
-  integer(C_INTPTR_T), PUBLIC :: local_nkr, local_nkr_offset, local_nz, local_nz_offset
+  integer(C_INTPTR_T), PUBLIC :: local_nkr, local_nz
+  integer(C_INTPTR_T), PUBLIC :: local_nkr_offset, local_nz_offset
+  INTEGER,             PUBLIC :: local_np_e, local_np_i
+  integer(C_INTPTR_T), PUBLIC :: local_np_e_offset, local_np_i_offset
 
   ! Grids containing position in fourier space
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: krarray
@@ -69,12 +72,12 @@ CONTAINS
 
   SUBROUTINE init_1Dgrid_distr
 
-    write(*,*) Nr
-    local_nkr        = (Nr/2+1)/num_procs
-    write(*,*) local_nkr
-    local_nkr_offset = my_id*local_nkr
+    ! write(*,*) Nr
+    local_nkr        = (Nr/2+1)/num_procs_kr
+    ! write(*,*) local_nkr
+    local_nkr_offset = rank_r*local_nkr
 
-    if (my_id .EQ. num_procs-1) local_nkr = (Nr/2+1)-local_nkr_offset
+    if (rank_r .EQ. num_procs_kr-1) local_nkr = (Nr/2+1)-local_nkr_offset
 
   END SUBROUTINE init_1Dgrid_distr
 
@@ -83,13 +86,14 @@ CONTAINS
     IMPLICIT NONE
     INTEGER :: ip
 
-    ips_e = 1; ipe_e = pmaxe + 1
-    ips_i = 1; ipe_i = pmaxi + 1
+    CALL decomp1D(pmaxe+1, num_procs_p, rank_p, ips_e, ipe_e)
+    CALL decomp1D(pmaxi+1, num_procs_p, rank_p, ips_i, ipe_i)
+
     ALLOCATE(parray_e(ips_e:ipe_e))
     ALLOCATE(parray_i(ips_i:ipe_i))
     DO ip = ips_e,ipe_e; parray_e(ip) = (ip-1); END DO
     DO ip = ips_i,ipe_i; parray_i(ip) = (ip-1); END DO
-      
+
     ! Ghosts boundaries
     ipsg_e = ips_e - 2; ipeg_e = ipe_e + 2;
     ipsg_i = ips_i - 2; ipeg_i = ipe_i + 2;
@@ -119,7 +123,7 @@ CONTAINS
     ! Precomputations
     jmaxe_dp   = real(jmaxe,dp)
     jmaxi_dp   = real(jmaxi,dp)
-    
+
   END SUBROUTINE set_jgrid
 
 
@@ -244,5 +248,19 @@ CONTAINS
     INTEGER :: bari, p_, j_
     bari = (jmaxi+1)*p_ + j_ + 1
   END FUNCTION
+
+  SUBROUTINE decomp1D( n, numprocs, myid, s, e )
+      INTEGER :: n, numprocs, myid, s, e
+      INTEGER :: nlocal
+      INTEGER :: deficit
+
+      nlocal   = n / numprocs
+      s        = myid * nlocal + 1
+      deficit  = MOD(n,numprocs)
+      s        = s + MIN(myid,deficit)
+      IF (myid .LT. deficit) nlocal = nlocal + 1
+      e = s + nlocal - 1
+      IF (e .GT. n .OR. myid .EQ. numprocs-1) e = n
+  END SUBROUTINE decomp1D
 
 END MODULE grid
