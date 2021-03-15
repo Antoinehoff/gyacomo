@@ -11,6 +11,8 @@ NU      = h5readatt(filename,'/data/input','nu')/0.532;
 NR      = h5readatt(filename,'/data/input','nr');
 NZ      = h5readatt(filename,'/data/input','nz');
 L       = h5readatt(filename,'/data/input','Lr');
+CLOS    = h5readatt(filename,'/data/input','CLOS');
+MU = str2num(filename(end-18:end-14));
 if NON_LIN == 'y'
     NON_LIN = 1;
 else
