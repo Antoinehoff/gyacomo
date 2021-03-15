@@ -10,10 +10,10 @@ MODULE basic
   real(dp) :: tmax   = 100000.0    ! Maximum simulation time
   real(dp) :: dt     = 1.0         ! Time step
   real(dp) :: time   = 0           ! Current simulation time (Init from restart file)
-  
+
   INTEGER :: comm0                 ! Default communicator with a topology
   INTEGER :: commp, commr          ! Communicators for 1-dim cartesian subgrids of comm0
-  
+
   INTEGER :: jobnum  = 0           ! Job number
   INTEGER :: step    = 0           ! Calculation step of this run
   INTEGER :: cstep   = 0           ! Current step number (Init from restart file)
@@ -24,8 +24,10 @@ MODULE basic
   INTEGER :: ierr                  ! flag for MPI error
   INTEGER :: my_id                 ! Rank in COMM_WORLD
   INTEGER :: num_procs             ! number of MPI processes
-  INTEGER :: ncp, ncr              ! Number of processes in p and r
-  INTEGER :: me_0, me_p, me_z      ! Ranks in comm0, commp, commz
+  INTEGER :: num_procs_p, num_procs_kr              ! Number of processes in p and r
+  INTEGER :: rank_0, rank_p, rank_r! Ranks in comm0, commp, commr
+  INTEGER :: nbr_L, nbr_R ! Left and right neighbours (along p)
+  INTEGER :: nbr_T, nbr_B ! Top and bottom neighbours (along kr)
 
   INTEGER :: iframe1d              ! counting the number of times 1d datasets are outputed (for diagnose)
   INTEGER :: iframe2d              ! counting the number of times 2d datasets are outputed (for diagnose)
@@ -38,9 +40,9 @@ MODULE basic
 
   ! To measure computation time
   real :: start, finish
-  real(dp) :: t0_rhs, t0_adv_field, t0_poisson, t0_Sapj, t0_diag, t0_checkfield, t0_step
-  real(dp) :: t1_rhs, t1_adv_field, t1_poisson, t1_Sapj, t1_diag, t1_checkfield, t1_step
-  real(dp) :: tc_rhs, tc_adv_field, tc_poisson, tc_Sapj, tc_diag, tc_checkfield, tc_step
+  real(dp) :: t0_rhs, t0_adv_field, t0_poisson, t0_Sapj, t0_diag, t0_checkfield, t0_step, t0_comm
+  real(dp) :: t1_rhs, t1_adv_field, t1_poisson, t1_Sapj, t1_diag, t1_checkfield, t1_step, t1_comm
+  real(dp) :: tc_rhs, tc_adv_field, tc_poisson, tc_Sapj, tc_diag, tc_checkfield, tc_step, tc_comm
   real(dp):: maxruntime = 1e9 ! Maximum simulation CPU time
 
   INTERFACE allocate_array
