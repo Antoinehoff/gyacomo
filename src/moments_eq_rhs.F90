@@ -170,7 +170,7 @@ SUBROUTINE moments_eq_rhs_e
           !! Adding non linearity
           IF ( NON_LIN ) THEN
             moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
-              moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) - Sepj(ip,ij,ikr,ikz)
+              moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) + Sepj(ip,ij,ikr,ikz)
           ENDIF
 
         END DO kzloope
@@ -356,7 +356,7 @@ SUBROUTINE moments_eq_rhs_i
           !! Adding non linearity
           IF ( NON_LIN ) THEN
            moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
-             moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) - Sipj(ip,ij,ikr,ikz)
+             moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) + Sipj(ip,ij,ikr,ikz)
           ENDIF
 
         END DO kzloopi
