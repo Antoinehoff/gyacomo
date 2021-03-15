@@ -6,7 +6,7 @@ addpath(genpath('../matlab')) % ... add
 %% CLUSTER PARAMETERS
 CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
 CLUSTER.NODES = '1';        % number of nodes
-CLUSTER.NTPN  = '32';       % N tasks per node (mpi processes)
+CLUSTER.NTPN  = '36';       % N tasks per node (mpi processes)
 CLUSTER.NTPC  = '1';        % N tasks per core (openmp threads)
 CLUSTER.CPUPT = '1';        % CPU per task     (number of CPU per mpi proc)
 CLUSTER.PART  = 'normal';   % debug or normal
@@ -15,8 +15,8 @@ CLUSTER.MEM   = '12GB';     % Memory
 CLUSTER.JNAME = 'gamma_inf';% Job name
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 1.0;   % Collision frequency
-ETAB    = 0.6;   % Magnetic gradient
+NU      = 0.1;   % Collision frequency
+ETAB    = 0.7;   % Magnetic gradient
 NU_HYP  = 0.1;   % Hyperdiffusivity coefficient
 %% GRID PARAMETERS
 N       = 200;   % Frequency gridpoints (Nkr = N/2)
@@ -26,14 +26,14 @@ J       = 05;    % Electron and Ion highest Laguerre polynomial degree
 MU_P    = 0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
-TMAX    = 1000;  % Maximal time unit
+TMAX    = 2500;  % Maximal time unit
 DT      = 1e-2;  % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1/2;   % Sampling per time unit for 2D arrays
 SPS5D   = 1/10;  % Sampling per time unit for 5D arrays
 SPSCP   = 0;  % Sampling per time unit for checkpoints
-RESTART = 0;     % To restart from last checkpoint
-JOB2LOAD= 0;
+RESTART = 1;     % To restart from last checkpoint
+JOB2LOAD= 1;
 %% OPTIONS
 % SIMID   = ['debug'];  % Name of the simulation
 SIMID   = ['Daint_eta_',num2str(ETAB),'_nu_%0.0e'];  % Name of the simulation

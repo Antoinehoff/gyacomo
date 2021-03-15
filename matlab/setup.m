@@ -34,10 +34,10 @@ MODEL.eta_n   = ETAN;        % source term kappa for HW
 MODEL.eta_T   = ETAT;        % Temperature
 MODEL.eta_B   = ETAB;        % Magnetic
 MODEL.lambdaD = LAMBDAD;
-if A0KH ~= 0; SIMID = [SIMID,'_Nz_',num2str(L/2/pi*KR0KH),'_A_',num2str(A0KH)]; end;
+% if A0KH ~= 0; SIMID = [SIMID,'_Nz_',num2str(L/2/pi*KR0KH),'_A_',num2str(A0KH)]; end;
 % Time integration and intialization parameters
 TIME_INTEGRATION.numerical_scheme  = '''RK4''';
-INITIAL.only_Na00         = '.false.';
+if INIT_PHI; INITIAL.init_noisy_phi = '.true.'; else; INITIAL.init_noisy_phi = '.false.';end;
 INITIAL.initback_moments  = 0.0e-5;
 INITIAL.initnoise_moments = NOISE0;
 INITIAL.iseed             = 42;
