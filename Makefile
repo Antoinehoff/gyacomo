@@ -53,8 +53,8 @@ $(OBJDIR)/diagnose.o $(OBJDIR)/diagnostics_par_mod.o $(OBJDIR)/endrun.o $(OBJDIR
 $(OBJDIR)/inital.o $(OBJDIR)/initial_par_mod.o $(OBJDIR)/main.o $(OBJDIR)/memory.o \
 $(OBJDIR)/model_mod.o $(OBJDIR)/moments_eq_rhs.o $(OBJDIR)/poisson.o \
 $(OBJDIR)/ppexit.o $(OBJDIR)/ppinit.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/readinputs.o \
-$(OBJDIR)/grid_mod.o $(OBJDIR)/stepon.o $(OBJDIR)/tesend.o $(OBJDIR)/time_integration_mod.o \
-$(OBJDIR)/utility_mod.o
+$(OBJDIR)/ghosts_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/restarts_mod.o $(OBJDIR)/stepon.o \
+$(OBJDIR)/tesend.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 
  $(EXEC): $(FOBJ)
 	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
@@ -101,10 +101,13 @@ $(OBJDIR)/utility_mod.o
  $(OBJDIR)/fields_mod.o : src/fields_mod.F90 $(OBJDIR)/prec_const_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/fields_mod.F90 -o $@
 
+ $(OBJDIR)/ghosts_mod.o : src/ghosts_mod.F90 $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/ppinit.o  $(OBJDIR)/time_integration_mod.o 
+		$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/ghosts_mod.F90 -o $@
+
  $(OBJDIR)/grid_mod.o : src/grid_mod.F90 $(OBJDIR)/basic_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/prec_const_mod.o
 		$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/grid_mod.F90 -o $@
 
- $(OBJDIR)/inital.o : src/inital.F90 $(OBJDIR)/array_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/initial_par_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/poisson.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
+ $(OBJDIR)/inital.o : src/inital.F90 $(OBJDIR)/array_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/initial_par_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/poisson.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/ghosts_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/restarts_mod.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/inital.F90 -o $@
 
  $(OBJDIR)/initial_par_mod.o : src/initial_par_mod.F90 $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o
@@ -137,7 +140,10 @@ $(OBJDIR)/utility_mod.o
  $(OBJDIR)/readinputs.o : src/readinputs.F90  $(OBJDIR)/diagnostics_par_mod.o $(OBJDIR)/initial_par_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/time_integration_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/readinputs.F90 -o $@
 
- $(OBJDIR)/stepon.o : src/stepon.F90 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/advance_field.o $(OBJDIR)/basic_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/moments_eq_rhs.o $(OBJDIR)/poisson.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/model_mod.o
+ $(OBJDIR)/restarts_mod.o : src/restarts_mod.F90  $(OBJDIR)/diagnostics_par_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/time_integration_mod.o
+	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/restarts_mod.F90 -o $@
+
+ $(OBJDIR)/stepon.o : src/stepon.F90 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/advance_field.o $(OBJDIR)/basic_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/ghosts_mod.o $(OBJDIR)/moments_eq_rhs.o $(OBJDIR)/poisson.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/model_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/stepon.F90 -o $@
 
  $(OBJDIR)/tesend.o : src/tesend.F90 $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o
