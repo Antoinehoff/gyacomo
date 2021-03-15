@@ -1,10 +1,14 @@
 function [ data, p, j, kr, kz, time, dt ] = load_5D_data( filename, variablename )
 %LOAD_5D_DATA load a 5D variable stored in a hdf5 result file from HeLaZ
     time  = h5read(filename,'/data/var5d/time');
-    p     = h5read(filename,['/data/var5d/',variablename,'/coordp']);
-    j     = h5read(filename,['/data/var5d/',variablename,'/coordj']);
-    kr    = h5read(filename,['/data/var5d/',variablename,'/coordkr']);
-    kz    = h5read(filename,['/data/var5d/',variablename,'/coordkz']);
+    p     = h5read(filename,'/data/grid/coordp');
+    j     = h5read(filename,'/data/grid/coordj');
+    kr    = h5read(filename,'/data/grid/coordkr');
+    kz    = h5read(filename,'/data/grid/coordkz');
+%     p     = h5read(filename,['/data/var5d/',variablename,'/coordp']);
+%     j     = h5read(filename,['/data/var5d/',variablename,'/coordj']);
+%     kr    = h5read(filename,['/data/var5d/',variablename,'/coordkr']);
+%     kz    = h5read(filename,['/data/var5d/',variablename,'/coordkz']);
 
     dt    = h5readatt(filename,'/data/input','dt');
     cstart= h5readatt(filename,'/data/input','start_iframe5d'); 
