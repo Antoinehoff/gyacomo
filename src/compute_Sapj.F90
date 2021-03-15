@@ -21,13 +21,17 @@ SUBROUTINE compute_Sapj
 
   INTEGER :: in, is
   REAL(dp):: kr, kz, kerneln
-
+  LOGICAL :: COMPUTE_ONLY_ODD_P = .true.
   ! Execution time start
   CALL cpu_time(t0_Sapj)
 
   !!!!!!!!!!!!!!!!!!!! ELECTRON non linear term computation (Sepj)!!!!!!!!!!
   ploope: DO ip = ips_e,ipe_e ! Loop over Hermite moments
+
+    ! we check if poly degree is even (eq to index is odd) to spare computation
+    IF (MODULO(ip,2) .EQ. 1 .OR. (.NOT. COMPUTE_ONLY_ODD_P)) THEN
     jloope: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
+
       real_data_c = 0._dp ! initialize sum over real nonlinear term
 
       nloope: DO in = 1,jmaxe+1 ! Loop over laguerre for the sum
@@ -44,12 +48,11 @@ SUBROUTINE compute_Sapj
             ! Second convolution terms
             Gz_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
             Gr_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
-            ! DO is = 1, MIN( in+ij-1, jmaxe+1 ) ! sum truncation on number of moments
-            DO is = 1, MIN( in+ij-1, 2 ) ! sum truncation on number of moments
-                Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
-               dnjs(in,ij,is) * moments_e(ip,is,ikr,ikz,updatetlevel)
+            DO is = 1, MIN( in+ij-1, jmaxe+1 ) ! sum truncation on number of moments
+              Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
+                dnjs(in,ij,is) * moments_e(ip,is,ikr,ikz,updatetlevel)
               Gr_cmpx(ikr,ikz) = Gr_cmpx(ikr,ikz) + &
-               dnjs(in,ij,is) * moments_e(ip,is,ikr,ikz,updatetlevel)
+                dnjs(in,ij,is) * moments_e(ip,is,ikr,ikz,updatetlevel)
             ENDDO
             Gz_cmpx(ikr,ikz) = imagu*kz*Gz_cmpx(ikr,ikz)
             Gr_cmpx(ikr,ikz) = imagu*kr*Gr_cmpx(ikr,ikz)
@@ -93,13 +96,21 @@ SUBROUTINE compute_Sapj
           Sepj(ip,ij,ikr,ikz) = cmpx_data_c(ikz,ikr-local_nkr_offset)*AA_r(ikr)*AA_z(ikz) !Anti aliasing filter
         ENDDO
       ENDDO
-
     ENDDO jloope
+
+    ELSE
+      ! Cancel the non lin term if we are dealing with odd Hermite degree
+      Sepj(ip,:,:,:) = 0._dp
+    ENDIF
   ENDDO ploope
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   !!!!!!!!!!!!!!!!!!!! ION non linear term computation (Sipj)!!!!!!!!!!
   ploopi: DO ip = ips_i,ipe_i ! Loop over Hermite moments
+
+    ! we check if poly degree is even (eq to index is odd) to spare computation
+    IF (MODULO(ip,2) .EQ. 1 .OR. (.NOT. COMPUTE_ONLY_ODD_P)) THEN
+
     jloopi: DO ij = ijs_i, ije_i ! Loop over Laguerre moments
       real_data_c = 0._dp ! initialize sum over real nonlinear term
 
@@ -117,12 +128,11 @@ SUBROUTINE compute_Sapj
             ! Second convolution terms
             Gz_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
             Gr_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
-            ! DO is = 1, MIN( in+ij-1, jmaxi+1 ) ! sum truncation on number of moments
-            DO is = 1, MIN( in+ij-1, 2 ) ! sum truncation on number of moments
-                Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
-               dnjs(in,ij,is) * moments_i(ip,is,ikr,ikz,updatetlevel)
+            DO is = 1, MIN( in+ij-1, jmaxi+1 ) ! sum truncation on number of moments
+              Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
+                dnjs(in,ij,is) * moments_i(ip,is,ikr,ikz,updatetlevel)
               Gr_cmpx(ikr,ikz) = Gr_cmpx(ikr,ikz) + &
-               dnjs(in,ij,is) * moments_i(ip,is,ikr,ikz,updatetlevel)
+                dnjs(in,ij,is) * moments_i(ip,is,ikr,ikz,updatetlevel)
             ENDDO
             Gz_cmpx(ikr,ikz) = imagu*kz*Gz_cmpx(ikr,ikz)
             Gr_cmpx(ikr,ikz) = imagu*kr*Gr_cmpx(ikr,ikz)
@@ -168,6 +178,10 @@ SUBROUTINE compute_Sapj
       ENDDO
 
     ENDDO jloopi
+    ELSE
+      ! Cancel the non lin term if we are dealing with odd Hermite degree
+      Sipj(ip,:,:,:) = 0._dp
+    ENDIF
   ENDDO ploopi
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
