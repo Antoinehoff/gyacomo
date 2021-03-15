@@ -21,7 +21,7 @@ MODULE fourier
   integer(C_INTPTR_T)                    :: i, ix, iy
   integer(C_INTPTR_T), PUBLIC            :: alloc_local_1, alloc_local_2
   integer(C_INTPTR_T)                    :: NR_, NZ_, NR_halved
-
+  integer                                :: communicator
   ! many plan data variables
   integer(C_INTPTR_T) :: howmany=9 ! numer of eleemnt of the tensor
   integer :: rank=3                ! rank of the transform
@@ -36,10 +36,12 @@ MODULE fourier
     NR_ = Nr; NZ_ = Nz
     NR_halved = NR_/2 + 1
 
+    ! communicator = MPI_COMM_WORLD
+    communicator = commr
+
     !! Complex arrays F, G
     ! Compute the room to allocate
-    alloc_local_1 = fftw_mpi_local_size_2d(NR_halved, NZ_, MPI_COMM_WORLD, local_nkr, local_nkr_offset)
-    ! alloc_local_1 = fftw_mpi_local_size_2d_many(2, NR_halved, NZ_, MPI_COMM_WORLD, local_nkr, local_nkr_offset)
+    alloc_local_1 = fftw_mpi_local_size_2d(NR_halved, NZ_, communicator, local_nkr, local_nkr_offset)
     ! Initalize pointers to this room
     cdatac_f = fftw_alloc_complex(alloc_local_1)
     cdatac_g = fftw_alloc_complex(alloc_local_1)
@@ -51,8 +53,7 @@ MODULE fourier
 
     !! Real arrays iFFT(F), iFFT(G)
     ! Compute the room to allocate
-    alloc_local_2 = fftw_mpi_local_size_2d(NZ_, NR_halved, MPI_COMM_WORLD, local_nz, local_nz_offset)
-    ! alloc_local_2 = fftw_mpi_local_size_2d_many(2, NZ_, NR_halved, MPI_COMM_WORLD, local_nz, local_nz_offset)
+    alloc_local_2 = fftw_mpi_local_size_2d(NZ_, NR_halved, communicator, local_nz, local_nz_offset)
     ! Initalize pointers to this room
     cdatar_f = fftw_alloc_real(2*alloc_local_2)
     cdatar_g = fftw_alloc_real(2*alloc_local_2)
@@ -63,8 +64,8 @@ MODULE fourier
     call c_f_pointer(cdatar_c, real_data_c, [2*(NR_/2  + 1),local_nz])
 
     ! Plan Creation (out-of-place forward and backward FFT)
-    planf = fftw_mpi_plan_dft_r2c_2d(NZ_, NR_, real_data_f, cmpx_data_f, MPI_COMM_WORLD,  ior(FFTW_MEASURE, FFTW_MPI_TRANSPOSED_OUT))
-    planb = fftw_mpi_plan_dft_c2r_2d(NZ_, NR_, cmpx_data_f, real_data_f, MPI_COMM_WORLD,  ior(FFTW_MEASURE, FFTW_MPI_TRANSPOSED_IN))
+    planf = fftw_mpi_plan_dft_r2c_2d(NZ_, NR_, real_data_f, cmpx_data_f, communicator,  ior(FFTW_MEASURE, FFTW_MPI_TRANSPOSED_OUT))
+    planb = fftw_mpi_plan_dft_c2r_2d(NZ_, NR_, cmpx_data_f, real_data_f, communicator,  ior(FFTW_MEASURE, FFTW_MPI_TRANSPOSED_IN))
 
    if ((.not. c_associated(planf)) .OR. (.not. c_associated(planb))) then
       write(*,*) "plan creation error!!"
