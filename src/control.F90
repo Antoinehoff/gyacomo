@@ -9,9 +9,8 @@ SUBROUTINE control
   !________________________________________________________________________________
   !              1.   Prologue
   !                   1.1     Initialize the parallel environment
-  IF (my_id .EQ. 0) WRITE(*,*) 'Initialize MPI...'
   CALL ppinit
-  IF (my_id .EQ. 0) WRITE(*,'(a/)') '...MPI initialized'
+  IF (my_id .EQ. 0) WRITE(*,'(a/)') 'MPI initialized'
 
 
   CALL daytim('Start at ')
