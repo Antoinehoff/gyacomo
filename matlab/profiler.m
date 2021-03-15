@@ -36,7 +36,7 @@ p1 = area(Ts0D(2:end),TIME_PER_FCT,'LineStyle','none');
 legend('Compute RHS','Adv. fields','Poisson', 'comm', 'Sapj','Check+Sym','Diag','Missing')
 xlabel('Sim. Time [$\rho_s/c_s$]'); ylabel('Step Comp. Time [s]')
 xlim([Ts0D(2),Ts0D(end)]);
-title(sprintf('Proc. #1, total sim. time  ~%.0f [h]',CPUTIME/3600))
+title(sprintf('Proc. 1, total sim. time  ~%.0f [h]',CPUTIME/3600))
 hold on
 FIGNAME = 'profiler';
 save_figure
