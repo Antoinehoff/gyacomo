@@ -8,7 +8,7 @@ MODULE initial_par
   ! Initial background level
   REAL(dp), PUBLIC, PROTECTED :: initback_moments=0._dp
   ! Initial background level
-  LOGICAL,  PUBLIC, PROTECTED :: only_Na00 = .false.
+  LOGICAL,  PUBLIC, PROTECTED :: INIT_NOISY_PHI = .false.
   ! Initial background noise amplitude
   REAL(dp), PUBLIC, PROTECTED :: initnoise_moments=1E-6_dp
   ! Initialization for random number generator
@@ -36,7 +36,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /INITIAL_CON/ only_Na00
+    NAMELIST /INITIAL_CON/ INIT_NOISY_PHI
     NAMELIST /INITIAL_CON/ initback_moments
     NAMELIST /INITIAL_CON/ initnoise_moments
     NAMELIST /INITIAL_CON/ iseed
@@ -59,7 +59,7 @@ CONTAINS
     INTEGER, INTENT(in) :: fidres
     CHARACTER(len=256), INTENT(in) :: str
 
-    CALL attach(fidres, TRIM(str), "only_Na00", only_Na00)
+    CALL attach(fidres, TRIM(str), "INIT_NOISY_PHI", INIT_NOISY_PHI)
 
     CALL attach(fidres, TRIM(str), "initback_moments", initback_moments)
 
