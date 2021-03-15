@@ -11,16 +11,21 @@ SUBROUTINE stepon
   USE closure
   USE utility, ONLY: checkfield
   use prec_const
+  USE ghosts
+
   IMPLICIT NONE
 
   INTEGER :: num_step
   LOGICAL :: mlend
 
    DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
-  
+
       ! Closure enforcement
       CALL apply_closure_model
-      
+
+      ! Exchanges the ghosts values updated
+      CALL update_ghosts
+
       ! Compute right hand side of moments hierarchy equation
       CALL moments_eq_rhs_e
       CALL moments_eq_rhs_i
@@ -29,23 +34,7 @@ SUBROUTINE stepon
       CALL advance_time_level
 
       ! Update the moments with the hierarchy RHS (step by step)
-
-      ! Execution time start
-      CALL cpu_time(t0_adv_field)
-      DO ip=ips_e,ipe_e
-        DO ij=ijs_e,ije_e
-          CALL advance_field(moments_e(ip,ij,:,:,:),moments_rhs_e(ip,ij,:,:,:))
-        ENDDO
-      ENDDO
-      DO ip=ips_i,ipe_i
-        DO ij=ijs_i,ije_i
-          CALL advance_field(moments_i(ip,ij,:,:,:),moments_rhs_i(ip,ij,:,:,:))
-        ENDDO
-      ENDDO
-
-      ! Execution time end
-      CALL cpu_time(t1_adv_field)
-      tc_adv_field = tc_adv_field + (t1_adv_field - t0_adv_field)
+      CALL advance_moments
 
       ! Update electrostatic potential
       CALL poisson
@@ -62,6 +51,27 @@ SUBROUTINE stepon
    END DO
 
    CONTAINS
+
+      SUBROUTINE advance_moments
+        ! Execution time start
+        CALL cpu_time(t0_adv_field)
+
+        DO ip=ips_e,ipe_e
+          DO ij=ijs_e,ije_e
+            CALL advance_field(moments_e(ip,ij,:,:,:),moments_rhs_e(ip,ij,:,:,:))
+          ENDDO
+        ENDDO
+        DO ip=ips_i,ipe_i
+          DO ij=ijs_i,ije_i
+            CALL advance_field(moments_i(ip,ij,:,:,:),moments_rhs_i(ip,ij,:,:,:))
+          ENDDO
+        ENDDO
+
+        ! Execution time end
+        CALL cpu_time(t1_adv_field)
+        tc_adv_field = tc_adv_field + (t1_adv_field - t0_adv_field)
+      END SUBROUTINE advance_moments
+
 
       SUBROUTINE checkfield_all ! Check all the fields for inf or nan
         ! Execution time start
