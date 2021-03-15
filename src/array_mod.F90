@@ -24,4 +24,8 @@ MODULE array
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Sepj ! electron
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Sipj ! ion
 
+  ! Gyrocenter density for electron and ions (meant for 2D output)
+  COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: Ne00
+  COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: Ni00
+
 END MODULE array
