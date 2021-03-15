@@ -4,15 +4,15 @@ if 0
     %% Load from Marconi
     outfile ='';
     outfile ='';
-    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.6_nu_1e+00/300x150_L_70_P_10_J_5_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_1e-04/out.txt';
+    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_new_eta_0.6_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.6_nu_1e-01/250x125_L_120_P_10_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.6_nu_1e-01/200x100_L_120_P_14_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt';
+%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.6_nu_1e-01/250x125_L_120_P_10_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt';
     BASIC.RESDIR = load_marconi(outfile);
 end
 if 0
     %% Load from Daint
     outfile ='';
-    outfile ='';
-    outfile ='/scratch/snx3000/ahoffman/HeLaZ/results/Daint_eta_0.6_nu_1e-01/200x100_L_70_P_12_J_6_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_1e-03/out.txt';
-%     outfile ='/scratch/snx3000/ahoffman/HeLaZ/results/Daint_eta_0.6_nu_1e-01/150x75_L_70_P_12_J_6_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt';
     BASIC.RESDIR = load_daint(outfile);
 end
 %%
@@ -166,7 +166,7 @@ FMT = '.fig';
 
 if 1
 %% Time evolutions and growth rate
-fig = figure; FIGNAME = ['t_evolutions',sprintf('_%.2d',JOBNUM)];
+fig = figure; FIGNAME = ['t_evolutions',sprintf('_%.2d',JOBNUM),'_',PARAMS];
 set(gcf, 'Position',  [100, 100, 900, 800])
     subplot(221); 
     for ip = 1:Npe
@@ -187,7 +187,7 @@ set(gcf, 'Position',  [100, 100, 900, 800])
             plotname = ['$N_i^{',num2str(Pi(ip)),num2str(Ji(ij)),'}$'];
             clr      = line_colors(min(ip,numel(line_colors(:,1))),:);
             lstyle   = line_styles(min(ij,numel(line_styles)));
-            plot(Ts5D,plt(Ni_norm),'DisplayName',plotname,...
+            semilogy(Ts5D,plt(Ni_norm),'DisplayName',plotname,...
                 'Color',clr,'LineStyle',lstyle{1}); hold on;
         end
     end
@@ -214,9 +214,9 @@ end
 if 1
 %% Particle fluxes
 SCALING = Nkr*dkr * Nkz*dkz;
-fig = figure; FIGNAME = ['gamma',sprintf('_%.2d',JOBNUM)];
+fig = figure; FIGNAME = ['gamma',sprintf('_%.2d',JOBNUM),'_',PARAMS];
 set(gcf, 'Position',  [100, 100, 800, 300])
-        plot(Ts2D,GFLUX_RI, 'color', line_colors(2,:)); hold on
+        semilogy(Ts2D,GFLUX_RI, 'color', line_colors(2,:)); hold on
         plot(Ts5D,PFLUX_RI,'.', 'color', line_colors(2,:)); hold on
         plot(Ts2D,SCALING*GFlux_ri, 'color', line_colors(1,:)); hold on
         plot(Ts5D,SCALING*PFlux_ri,'.', 'color', line_colors(1,:)); hold on
@@ -229,16 +229,16 @@ end
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-fig = figure; FIGNAME = 'space_time_drphi';set(gcf, 'Position',  [100, 100, 1200, 600])
+fig = figure; FIGNAME = ['space_time_drphi','_',PARAMS];set(gcf, 'Position',  [100, 100, 1200, 600])
     subplot(311)
-        plot(Ts2D,GFLUX_RI,'-'); hold on
+        semilogy(Ts2D,GFLUX_RI,'-'); hold on
         plot(Ts5D,PFLUX_RI,'.'); hold on
 %         plot(Ts2D,Bohm_transport*ones(size(Ts2D)),'--'); hold on
         ylabel('$\Gamma_r$'); grid on
         title(['$\eta=',num2str(ETAB),'\quad',...
             '\nu_{',CONAME,'}=',num2str(NU),'$'])
         legend(['$P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'],'Particle flux')%'$\eta\gamma_{max}/k_{max}^2$')
-        set(gca,'xticklabel',[])
+%         set(gca,'xticklabel',[])
     subplot(312)
         yyaxis left
         plot(Ts2D,squeeze(max(max((phi)))))
@@ -246,7 +246,7 @@ fig = figure; FIGNAME = 'space_time_drphi';set(gcf, 'Position',  [100, 100, 1200
         yyaxis right
         plot(Ts2D,squeeze(mean(max(dr2phi))))
         ylabel('$s\sim\langle\partial_r^2\phi\rangle_z$'); grid on  
-        set(gca,'xticklabel',[])
+%         set(gca,'xticklabel',[])
     subplot(313)
         [TY,TX] = meshgrid(r,Ts2D);
         pclr = pcolor(TX,TY,squeeze(mean(drphi(:,:,:),2))'); set(pclr, 'edgecolor','none'); %colorbar;
@@ -264,7 +264,7 @@ tf = 200;  [~,it1] = min(abs(Ts2D-tf));
 tf = 600;  [~,it2] = min(abs(Ts2D-tf)); 
 tf =1000; [~,it3] = min(abs(Ts2D-tf));
 tf =2000; [~,it4] = min(abs(Ts2D-tf));
-fig = figure; FIGNAME = [FNAME,'_snaps']; set(gcf, 'Position',  [100, 100, 1500, 400])
+fig = figure; FIGNAME = [FNAME,'_snaps','_',PARAMS]; set(gcf, 'Position',  [100, 100, 1500, 400])
 plt = @(x) x;%./max(max(x));
     subplot(141)
         DATA = plt(FIELD(:,:,it1));
@@ -295,7 +295,7 @@ end
 if 0
 %% Show frame in kspace
 tf = 0; [~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
-fig = figure; FIGNAME = ['krkz_',sprintf('t=%.0f',Ts2D(it2))];set(gcf, 'Position',  [100, 100, 700, 600])
+fig = figure; FIGNAME = ['krkz_',sprintf('t=%.0f',Ts2D(it2)),'_',PARAMS];set(gcf, 'Position',  [100, 100, 700, 600])
     subplot(221); plt = @(x) fftshift((abs(x)),2);
         pclr = pcolor(fftshift(KR,2),fftshift(KZ,2),plt(PHI(:,:,it2))); set(pclr, 'edgecolor','none'); colorbar;
         xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('$t c_s/R=%.0f$',Ts2D(it2))); legend('$|\hat\phi|$');
@@ -318,7 +318,7 @@ if 0
 for tf = []
 [~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
 % it2 = it2 + 1;
-fig = figure; FIGNAME = ['kmaxp_Nipj_',sprintf('t=%.2f',Ts2D(it2))];set(gcf, 'Position',  [100, 100, 700, 600])
+fig = figure; FIGNAME = ['kmaxp_Nipj_',sprintf('t=%.2f',Ts2D(it2)),'_',PARAMS];set(gcf, 'Position',  [100, 100, 700, 600])
 
 plt = @(x) squeeze(max(abs(x),[],4));
 % plt = @(x) squeeze(max(fftshift(abs(x),2),[],4));
@@ -348,37 +348,37 @@ DELAY = 0.02*skip_;
 FRAMES_2D = it02D:skip_:numel(Ts2D);
 FRAMES_5D = it05D:skip_:numel(Ts5D);
 %% GIFS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if 1
+if 0
 %% Density ion
-GIFNAME = ['ni',sprintf('_%.2d',JOBNUM)]; INTERP = 1;
+GIFNAME = ['ni',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 1;
 FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$n_i$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
 if 1
 %% Phi real space
-GIFNAME = ['phi',sprintf('_%.2d',JOBNUM)];INTERP = 1;
+GIFNAME = ['phi',sprintf('_%.2d',JOBNUM),'_',PARAMS];INTERP = 1;
 FIELD = real(phi); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$\phi$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
 if 0
 %% radial particle transport
-GIFNAME = ['gamma_r',sprintf('_%.2d',JOBNUM)]; INTERP = 1;
+GIFNAME = ['gamma_r',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 1;
 FIELD = real(ni00.*dzphi); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$\Gamma_r$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
-if 1
+if 0
 %% Phi fourier
-GIFNAME = ['FFT_phi',sprintf('_%.2d',JOBNUM)];INTERP = 0;
+GIFNAME = ['FFT_phi',sprintf('_%.2d',JOBNUM),'_',PARAMS];INTERP = 0;
 FIELD = ifftshift((abs(PHI)),2); X = fftshift(KR,2); Y = fftshift(KZ,2); T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$|\tilde\phi|$'; XNAME = '$k_r\rho_s$'; YNAME = '$k_z\rho_s$';
 create_gif
 end
 if 0
 %% phi @ z = 0
-GIFNAME = ['phi_r0',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
+GIFNAME = ['phi_r0',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
 FIELD =(squeeze(real(phi(:,1,:)))); linestyle = '-.'; FRAMES = FRAMES_2D;
 X = (r); T = Ts2D; YMIN = -1.1; YMAX = 1.1; XMIN = min(r); XMAX = max(r);
 FIELDNAME = '$\phi(r=0)$'; XNAME = '$r/\rho_s$';
@@ -386,14 +386,21 @@ create_gif_1D
 end
 if 0
 %% Density ion frequency
-GIFNAME = ['Ni00',sprintf('_%.2d',JOBNUM)]; INTERP = 0; FRAMES = FRAMES_2D;
+GIFNAME = ['Ni00',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0; FRAMES = FRAMES_2D;
 FIELD =ifftshift((abs(Ni00)),2); X = fftshift(KR,2); Y = fftshift(KZ,2); T = Ts2D;
 FIELDNAME = '$N_i^{00}$'; XNAME = '$k_r\rho_s$'; YNAME = '$k_z\rho_s$';
 create_gif
 end
 if 0
+%% Density electron frequency
+GIFNAME = ['Ne00',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0; FRAMES = FRAMES_2D;
+FIELD =ifftshift((abs(Ne00)),2); X = fftshift(KR,2); Y = fftshift(KZ,2); T = Ts2D;
+FIELDNAME = '$N_e^{00}$'; XNAME = '$k_r\rho_s$'; YNAME = '$k_z\rho_s$';
+create_gif
+end
+if 0
 %% kr vs P Si
-GIFNAME = ['Sip0_kr',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
+GIFNAME = ['Sip0_kr',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
 plt = @(x) squeeze(max((abs(x)),[],4));
 FIELD =plt(Sipj(:,1,:,:,:)); X = kr'; Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
 FIELDNAME = '$N_i^{p0}$'; XNAME = '$k_{max}\rho_s$'; YNAME = '$P$';
@@ -401,15 +408,15 @@ create_gif_imagesc
 end
 if 1
 %% maxkz, kr vs p, for all Nipj over time
-GIFNAME = ['Nipj_kr',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
+GIFNAME = ['Nipj_kr',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
 plt = @(x) squeeze(max((abs(x)),[],4));
 FIELD = plt(Nipj); X = kr'; Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
 FIELDNAME = 'N_i'; XNAME = '$k_r\rho_s$'; YNAME = '$P$, ${k_z}^{max}$';
 create_gif_5D
 end
-if 1
+if 0
 %% maxkr, kz vs p, for all Nipj over time
-GIFNAME = ['Nipj_kz',sprintf('_%.2d',JOBNUM)]; INTERP = 0;
+GIFNAME = ['Nipj_kz',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
 plt = @(x) fftshift(squeeze(max((abs(x)),[],3)),3);
 FIELD = plt(Nipj); X = sort(kz'); Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
 FIELDNAME = 'N_i'; XNAME = '$k_z\rho_s$'; YNAME = '$P$, ${k_r}^{max}$';
