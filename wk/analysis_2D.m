@@ -1,13 +1,11 @@
 %% Load results
 outfile ='';
-if 0
+if 1
     %% Load from Marconi
     outfile ='';
     outfile ='';
-    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_new_eta_0.6_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.6_nu_1e-01/250x125_L_120_P_10_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.6_nu_1e-01/200x100_L_120_P_14_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt';
-%     outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_DGGK_eta_0.6_nu_1e-01/250x125_L_120_P_10_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt';
+    outfile ='';
+    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.4_2_12_eta_0.6_nu_1e-01/50x25_L_100_P_10_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-01/out.txt';
     BASIC.RESDIR = load_marconi(outfile);
 end
 if 0
@@ -211,7 +209,7 @@ set(gcf, 'Position',  [100, 100, 900, 800])
 save_figure
 end
 
-if 1
+if 0
 %% Particle fluxes
 SCALING = Nkr*dkr * Nkz*dkz;
 fig = figure; FIGNAME = ['gamma',sprintf('_%.2d',JOBNUM),'_',PARAMS];
@@ -227,7 +225,7 @@ set(gcf, 'Position',  [100, 100, 800, 300])
 save_figure
 end
 
-if 1
+if 0
 %% Space time diagramm (fig 11 Ivanov 2020)
 fig = figure; FIGNAME = ['space_time_drphi','_',PARAMS];set(gcf, 'Position',  [100, 100, 1200, 600])
     subplot(311)
@@ -355,7 +353,7 @@ FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$n_i$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
-if 1
+if 0
 %% Phi real space
 GIFNAME = ['phi',sprintf('_%.2d',JOBNUM),'_',PARAMS];INTERP = 1;
 FIELD = real(phi); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
@@ -406,7 +404,7 @@ FIELD =plt(Sipj(:,1,:,:,:)); X = kr'; Y = Pi'; T = Ts5D; FRAMES = FRAMES_5D;
 FIELDNAME = '$N_i^{p0}$'; XNAME = '$k_{max}\rho_s$'; YNAME = '$P$';
 create_gif_imagesc
 end
-if 1
+if 0
 %% maxkz, kr vs p, for all Nipj over time
 GIFNAME = ['Nipj_kr',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
 plt = @(x) squeeze(max((abs(x)),[],4));

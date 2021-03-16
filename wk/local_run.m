@@ -16,7 +16,7 @@ JMAXE   = 1;     % Highest ''       Laguerre ''
 PMAXI   = 10;     % Highest ion      Hermite polynomial degree
 JMAXI   = 1;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS
-TMAX    = 10;  % Maximal time unit
+TMAX    = 100;  % Maximal time unit
 DT      = 2e-2;   % Time step
 SPS0D   = 1/DT;    % Sampling per time unit for profiler
 SPS2D   = 1/2;      % Sampling per time unit for 2D arrays
