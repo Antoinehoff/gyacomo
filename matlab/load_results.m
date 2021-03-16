@@ -11,5 +11,5 @@ DT_SIM    = h5readatt(filename,'/data/input','dt');
 
 PHI                            = load_2D_data(filename, 'phi');
 
-Sipj    = load_5D_data(filename, 'Sipj');
-Sepj    = load_5D_data(filename, 'Sepj');
+% Sipj    = load_5D_data(filename, 'Sipj');
+% Sepj    = load_5D_data(filename, 'Sepj');

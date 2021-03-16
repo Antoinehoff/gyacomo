@@ -1,11 +1,11 @@
 %% Load results
 outfile ='';
-if 1
+if 0
     %% Load from Marconi
     outfile ='';
     outfile ='';
     outfile ='';
-    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.4_2_12_eta_0.6_nu_1e-01/50x25_L_100_P_10_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-01/out.txt';
+    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.4_2_12_eta_0.6_nu_1e-01/50x25_L_100_P_20_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-01/out.txt';
     BASIC.RESDIR = load_marconi(outfile);
 end
 if 0
@@ -27,14 +27,14 @@ Ns2D      = numel(Ts2D);
 % renaming and reshaping quantity of interest
 Ts5D      = Ts5D';
 Ts2D      = Ts2D';
-Si00      = squeeze(Sipj(1,1,:,:,:));
-Se00      = squeeze(Sepj(1,1,:,:,:));
+
 %% Build grids
 Nkr = numel(kr); Nkz = numel(kz);
 [KZ,KR] = meshgrid(kz,kr);
 Lkr = max(kr)-min(kr); Lkz = max(kz)-min(kz);
 dkr = Lkr/(Nkr-1); dkz = Lkz/(Nkz-1);
 KPERP2 = KZ.^2+KR.^2;
+[~,ikr0] = min(abs(kr)); [~,ikz0] = min(abs(kz));
 
 Lk = max(Lkr,Lkz);
 dr = 2*pi/Lk; dz = 2*pi/Lk;
@@ -79,9 +79,7 @@ if err > 0; disp('WARNING Ts2D and Ts5D are shifted'); end;
 Np_i = zeros(Nkr,Nkz,Ns5D); % Ion particle density in Fourier space
 
 for it = 1:numel(Ts5D)
-    [~, it2D] = min(abs(Ts2D-Ts5D(it)));
-    si00(:,:,it)      = real(fftshift(ifft2(squeeze(Si00(:,:,it)),Nr,Nz)));
-    
+    [~, it2D] = min(abs(Ts2D-Ts5D(it)));    
     Np_i(:,:,it) = 0;
     for ij = 1:Nji
         Kn = (KPERP2/2.).^(ij-1) .* exp(-KPERP2/2)/(factorial(ij-1));
@@ -106,39 +104,26 @@ PFlux_ri  = zeros(1,Ns5D);      % Particle   flux
 GFLUX_RI = real(squeeze(sum(sum(-1i*KZ.*Ni00.*conj(PHI),1),2)))*(2*pi/Nr/Nz)^2;
 PFLUX_RI = real(squeeze(sum(sum(-1i*KZ.*Np_i.*conj(PHI_Ts5D),1),2)))*(2*pi/Nr/Nz)^2;
 
-Ne_norm  = zeros(Npe,Nje,Ns5D);% Time evol. of the norm of Napj
-Ni_norm  = zeros(Npi,Nji,Ns5D);% .
-Se_norm  = zeros(Npe,Nje,Ns5D);% Time evol. of the norm of Sapj
-Si_norm  = zeros(Npi,Nji,Ns5D);% .
-Sne00_norm = zeros(1,Ns2D);    % Time evol. of the amp of e nonlin term
-Sni00_norm = zeros(1,Ns2D);    %
-
+phi_avg  = zeros(1,Ns2D);        % Time evol. of the norm of phi
+Ne_norm  = zeros(Npe,Nje,Ns5D);  % Time evol. of the norm of Napj
+Ni_norm  = zeros(Npi,Nji,Ns5D);  % .
 
 Ddr = 1i*KR; Ddz = 1i*KZ; lapl   = Ddr.^2 + Ddz.^2; 
 
 for it = 1:numel(Ts2D) % Loop over 2D arrays
     NE_ = Ne00(:,:,it); NI_ = Ni00(:,:,it); PH_ = PHI(:,:,it);
-    E_pot(it)   = pi/Lr/Lz*sum(sum(abs(NI_).^2))/Nkr/Nkr; % integrate through Parseval id
-    E_kin(it)   = pi/Lr/Lz*sum(sum(abs(Ddr.*PH_).^2+abs(Ddz.*PH_).^2))/Nkr/Nkr;
-    ExB(it)     = max(max(max(abs(phi(3:end,:,it)-phi(1:end-2,:,it))/(2*dr))),max(max(abs(phi(:,3:end,it)-phi(:,1:end-2,it))'/(2*dz))));
+    phi_avg(it)   = real(squeeze(PH_(ikr0,ikz0)))/2;
+    ExB(it)       = max(max(max(abs(phi(3:end,:,it)-phi(1:end-2,:,it))/(2*dr))),max(max(abs(phi(:,3:end,it)-phi(:,1:end-2,it))'/(2*dz))));
     GFlux_ri(it)  = sum(sum(ni00(:,:,it).*dzphi(:,:,it)))*dr*dz/Lr/Lz;
     GFlux_zi(it)  = sum(sum(-ni00(:,:,it).*drphi(:,:,it)))*dr*dz/Lr/Lz;
     GFlux_re(it)  = sum(sum(ne00(:,:,it).*dzphi(:,:,it)))*dr*dz/Lr/Lz;
     GFlux_ze(it)  = sum(sum(-ne00(:,:,it).*drphi(:,:,it)))*dr*dz/Lr/Lz;
 end
 
-E_kin_KZ = mean(mean(abs(Ddr.*PHI(:,:,it)).^2+abs(Ddz.*PHI(:,:,it)).^2,3),2);
-E_kin_KR = mean(mean(abs(Ddr.*PHI(:,:,it)).^2+abs(Ddz.*PHI(:,:,it)).^2,3),2);
-dEdt     = diff(E_pot+E_kin)./dt2D;
-
 for it = 1:numel(Ts5D) % Loop over 5D arrays
     [~, it2D] = min(abs(Ts2D-Ts5D(it)));
     Ne_norm(:,:,it)= sum(sum(abs(Nepj(:,:,:,:,it)),3),4)/Nkr/Nkz;
     Ni_norm(:,:,it)= sum(sum(abs(Nipj(:,:,:,:,it)),3),4)/Nkr/Nkz;
-    Se_norm(:,:,it)= sum(sum(abs(Sepj(:,:,:,:,it)),3),4)/Nkr/Nkz;
-    Si_norm(:,:,it)= sum(sum(abs(Sipj(:,:,:,:,it)),3),4)/Nkr/Nkz;
-    Sne00_norm(it) = sum(sum(abs(Se00(:,:,it))))/Nkr/Nkz;
-    Sni00_norm(it) = sum(sum(abs(Si00(:,:,it))))/Nkr/Nkz;
     % Particle flux
     PFlux_ri(it)   = sum(sum(np_i(:,:,it).*dzphi(:,:,it2D)))*dr*dz/Lr/Lz;
 end
@@ -197,14 +182,14 @@ set(gcf, 'Position',  [100, 100, 900, 800])
     for ip = 1:Npi
         for ij = 1:Nji
             plt      = @(x) squeeze(x(ip,ij,:));
-            plotname = ['$S_i^{',num2str(ip-1),num2str(ij-1),'}$'];
+            plotname = '$\langle\phi\rangle_{r,z}(t)$';
             clr      = line_colors(min(ip,numel(line_colors(:,1))),:);
             lstyle   = line_styles(min(ij,numel(line_styles)));
-            semilogy(Ts5D,plt(Si_norm),'DisplayName',plotname,...
+            plot(Ts2D,phi_avg,'DisplayName',plotname,...
                 'Color',clr,'LineStyle',lstyle{1}); hold on;
         end
     end
-    grid on; xlabel('$t c_s/R$'); ylabel('$\sum_{k_r,k_z}|S_i^{pj}|$'); %legend('show');
+    grid on; xlabel('$t c_s/R$'); ylabel('$\tilde\phi_{00}/2$'); %legend('show');
 % suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB)]);
 save_figure
 end
