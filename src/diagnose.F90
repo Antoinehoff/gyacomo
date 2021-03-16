@@ -213,7 +213,7 @@ SUBROUTINE diagnose(kstep)
      END IF
 
      !                       2.4   3d profiles
-     IF (nsave_5d .GT. 0) THEN
+     IF (nsave_5d .GT. 0 .AND. cstep .GT. 0) THEN
         IF (MOD(cstep, nsave_5d) == 0) THEN
            CALL diagnose_5d
         END IF
