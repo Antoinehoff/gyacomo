@@ -18,31 +18,31 @@ SUBROUTINE control
   !                   1.2     Define data specific to run
   IF (my_id .EQ. 0) WRITE(*,*) 'Load basic data...'
   CALL basic_data
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+  ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   IF (my_id .EQ. 0) WRITE(*,'(a/)') '...basic data loaded.'
 
   !                   1.3   Read input parameters from input file
   IF (my_id .EQ. 0) WRITE(*,*) 'Read input parameters...'
   CALL readinputs
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+  ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   IF (my_id .EQ. 0) WRITE(*,'(a/)') '...input parameters read'
 
   !                   1.4     Set auxiliary values (allocate arrays, set grid, ...)
   IF (my_id .EQ. 0) WRITE(*,*) 'Calculate auxval...'
   CALL auxval
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+  ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   IF (my_id .EQ. 0) WRITE(*,'(a/)') '...auxval calculated'
 
   !                   1.5     Initial conditions
   IF (my_id .EQ. 0) WRITE(*,*) 'Create initial state...'
   CALL inital
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+  ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   IF (my_id .EQ. 0) WRITE(*,'(a/)') '...initial state created'
 
   !                   1.6     Initial diagnostics
   IF (my_id .EQ. 0) WRITE(*,*) 'Initial diagnostics...'
   CALL diagnose(0)
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+  ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   IF (my_id .EQ. 0) WRITE(*,'(a/)') '...initial diagnostics done'
 
   CALL FLUSH(stdout)
@@ -65,9 +65,7 @@ SUBROUTINE control
      CALL tesend
      IF( nlend ) EXIT ! exit do loop
 
-     CALL cpu_time(t0_diag) ! Measuring time
      CALL diagnose(step)
-     CALL cpu_time(t1_diag); tc_diag = tc_diag + (t1_diag - t0_diag)
 
     CALL cpu_time(t1_step); tc_step = tc_step + (t1_step - t0_step)
 
