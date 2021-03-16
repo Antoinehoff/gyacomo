@@ -26,6 +26,7 @@ SUBROUTINE diagnose(kstep)
   INTEGER     :: jarray_e_full(1:jmaxe+1), jarray_i_full(1:jmaxi+1)
   REAL(dp)    :: krarray_full(1:nkr),  kzarray_full(1:nkz)
 
+  CALL cpu_time(t0_diag) ! Measuring time
   !_____________________________________________________________________________
   !                   1.   Initial diagnostics
 
@@ -118,8 +119,8 @@ SUBROUTINE diagnose(kstep)
      IF (nsave_5d .GT. 0) THEN
        CALL creatg(fidres, "/data/var5d/moments_e", "moments_e")
        CALL creatg(fidres, "/data/var5d/moments_i", "moments_i")
-       CALL creatg(fidres, "/data/var5d/Sepj", "Sepj")
-       CALL creatg(fidres, "/data/var5d/Sipj", "Sipj")
+      !  CALL creatg(fidres, "/data/var5d/Sepj", "Sepj")
+      !  CALL creatg(fidres, "/data/var5d/Sipj", "Sipj")
      END IF
 
      !  Add input namelist variables as attributes of /data/input, defined in srcinfo.h
@@ -232,6 +233,8 @@ SUBROUTINE diagnose(kstep)
      CALL closef(fidres)
 
   END IF
+  
+  CALL cpu_time(t1_diag); tc_diag = tc_diag + (t1_diag - t0_diag)
 
 END SUBROUTINE diagnose
 
@@ -405,8 +408,8 @@ SUBROUTINE diagnose_5d
    CALL write_field5d_e(moments_e(ips_e:ipe_e,ijs_e:ije_e,:,:,updatetlevel), 'moments_e')
    CALL write_field5d_i(moments_i(ips_i:ipe_i,ijs_i:ije_i,:,:,updatetlevel), 'moments_i')
 
-   CALL write_field5d_e(Sepj(ips_e:ipe_e,ijs_e:ije_e,:,:), 'Sepj')
-   CALL write_field5d_i(Sipj(ips_i:ipe_i,ijs_i:ije_i,:,:), 'Sipj')
+  !  CALL write_field5d_e(Sepj(ips_e:ipe_e,ijs_e:ije_e,:,:), 'Sepj')
+  !  CALL write_field5d_i(Sipj(ips_i:ipe_i,ijs_i:ije_i,:,:), 'Sipj')
 
  CONTAINS
 
