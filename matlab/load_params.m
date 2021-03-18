@@ -13,6 +13,12 @@ NZ      = h5readatt(filename,'/data/input','nz');
 L       = h5readatt(filename,'/data/input','Lr');
 CLOS    = h5readatt(filename,'/data/input','CLOS');
 MU = str2num(filename(end-18:end-14));
+W_GAMMA   = h5readatt(filename,'/data/input','write_gamma') == 'y';
+W_PHI     = h5readatt(filename,'/data/input','write_phi')   == 'y';
+W_NA00    = h5readatt(filename,'/data/input','write_Na00')  == 'y';
+W_NAPJ    = h5readatt(filename,'/data/input','write_Napj')  == 'y';
+W_SAPJ    = h5readatt(filename,'/data/input','write_Sapj')  == 'y';
+
 if NON_LIN == 'y'
     NON_LIN = 1;
 else

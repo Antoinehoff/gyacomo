@@ -97,10 +97,15 @@ OUTPUTS.nsave_1d = -1;
 OUTPUTS.nsave_2d = floor(1.0/SPS2D/DT);
 OUTPUTS.nsave_5d = floor(1.0/SPS5D/DT);
 OUTPUTS.nsave_cp = floor(1.0/SPSCP/DT);
-OUTPUTS.write_doubleprecision = '.false.';
-OUTPUTS.resfile0      = '''outputs''';
-OUTPUTS.rstfile0      = '''checkpoint''';
-OUTPUTS.job2load      = JOB2LOAD;
+if W_DOUBLE; OUTPUTS.write_doubleprecision = '.true.'; else; OUTPUTS.write_doubleprecision = '.false.';end;
+if W_GAMMA;  OUTPUTS.write_gamma = '.true.'; else; OUTPUTS.write_gamma = '.false.';end;
+if W_PHI;    OUTPUTS.write_phi   = '.true.'; else; OUTPUTS.write_phi   = '.false.';end;
+if W_NA00;   OUTPUTS.write_Na00  = '.true.'; else; OUTPUTS.write_Na00  = '.false.';end;
+if W_NAPJ;   OUTPUTS.write_Napj  = '.true.'; else; OUTPUTS.write_Napj  = '.false.';end;
+if W_SAPJ;   OUTPUTS.write_Sapj  = '.true.'; else; OUTPUTS.write_Sapj  = '.false.';end;
+OUTPUTS.resfile0    = '''outputs''';
+OUTPUTS.rstfile0    = '''checkpoint''';
+OUTPUTS.job2load    = JOB2LOAD;
 %% Create directories
 if ~exist(SIMDIR, 'dir')
    mkdir(SIMDIR)

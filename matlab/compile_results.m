@@ -14,35 +14,51 @@ while(CONTINUE)
         % Load results of simulation #JOBNUM
         load_results
         % Check polynomials degrees
-        sz = size(Nepj); Pe_new= sz(1); Je_new= sz(2);
-        sz = size(Nipj); Pi_new= sz(1); Ji_new= sz(2);
+        Pe_new= numel(Pe); Je_new= numel(Je);
+        Pi_new= numel(Pi); Ji_new= numel(Ji);
         % If a degree is larger than previous job, put them in a larger array
         if (sum([Pe_new, Je_new, Pi_new, Ji_new]>[Pe_old, Je_old, Pi_old, Ji_old]) >= 1)
-            tmp = Nipj_; sz = size(tmp);
-            Nipj_ = zeros(cat(1,[Pi_new,Ji_new]',sz(3:end)')');
-            Nipj_(1:Pi_old,1:Ji_old,:,:,:) = tmp;
-            tmp = Nepj_; sz = size(tmp);
-            Nepj_ = zeros(cat(1,[Pe_new,Je_new]',sz(3:end)')');
-            Nepj_(1:Pe_old,1:Je_old,:,:,:) = tmp;
-            tmp = Sipj_; sz = size(tmp);
-            Sipj_ = zeros(cat(1,[Pi_new,Ji_new]',sz(3:end)')');
-            Sipj_(1:Pi_old,1:Ji_old,:,:,:) = tmp;
-            tmp = Sepj_; sz = size(tmp);
-            Sepj_ = zeros(cat(1,[Pe_new,Je_new]',sz(3:end)')');
-            Sepj_(1:Pe_old,1:Je_old,:,:,:) = tmp;
+            if W_NAPJ
+                tmp = Nipj_; sz = size(tmp);
+                Nipj_ = zeros(cat(1,[Pi_new,Ji_new]',sz(3:end)')');
+                Nipj_(1:Pi_old,1:Ji_old,:,:,:) = tmp;
+                tmp = Nepj_; sz = size(tmp);
+                Nepj_ = zeros(cat(1,[Pe_new,Je_new]',sz(3:end)')');
+                Nepj_(1:Pe_old,1:Je_old,:,:,:) = tmp;
+            end
+            if W_SAPJ
+                tmp = Sipj_; sz = size(tmp);
+                Sipj_ = zeros(cat(1,[Pi_new,Ji_new]',sz(3:end)')');
+                Sipj_(1:Pi_old,1:Ji_old,:,:,:) = tmp;
+                tmp = Sepj_; sz = size(tmp);
+                Sepj_ = zeros(cat(1,[Pe_new,Je_new]',sz(3:end)')');
+                Sepj_(1:Pe_old,1:Je_old,:,:,:) = tmp;
+            end
         end
         
-        
-        Nipj_ = cat(5,Nipj_,Nipj);
-        Nepj_ = cat(5,Nepj_,Nepj);
-        Ni00_ = cat(3,Ni00_,Ni00);
-        Ne00_ = cat(3,Ne00_,Ne00);
-        PHI_  = cat(3,PHI_,PHI);
-        Ts2D_   = cat(1,Ts2D_,Ts2D);
-        Ts5D_   = cat(1,Ts5D_,Ts5D);
-        
-        Sipj_ = cat(5,Sipj_,Sipj);
-        Sepj_ = cat(5,Sepj_,Sepj);
+
+        if W_PHI || W_NA00
+        	Ts2D_   = cat(1,Ts2D_,Ts2D);
+        end
+        if W_PHI
+            PHI_  = cat(3,PHI_,PHI);
+        end
+        if W_NA00
+            Ni00_ = cat(3,Ni00_,Ni00);
+            Ne00_ = cat(3,Ne00_,Ne00);
+        end
+
+        if W_NAPJ || W_SAPJ
+            Ts5D_   = cat(1,Ts5D_,Ts5D);
+        end
+        if W_NAPJ
+            Nipj_ = cat(5,Nipj_,Nipj);
+            Nepj_ = cat(5,Nepj_,Nepj);
+        end
+        if W_SAPJ
+     	  Sipj_ = cat(5,Sipj_,Sipj);
+          Sepj_ = cat(5,Sepj_,Sepj);
+        end
 
         JOBFOUND = JOBFOUND + 1;
         LASTJOB  = JOBNUM;

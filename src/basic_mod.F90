@@ -13,6 +13,7 @@ MODULE basic
 
   INTEGER :: comm0                 ! Default communicator with a topology
   INTEGER :: commp, commr          ! Communicators for 1-dim cartesian subgrids of comm0
+  INTEGER :: commr_p0              ! Communicators along kr for only rank 0 on p
 
   INTEGER :: jobnum  = 0           ! Job number
   INTEGER :: step    = 0           ! Calculation step of this run
@@ -24,11 +25,13 @@ MODULE basic
   INTEGER :: ierr                  ! flag for MPI error
   INTEGER :: my_id                 ! Rank in COMM_WORLD
   INTEGER :: num_procs             ! number of MPI processes
-  INTEGER :: num_procs_p, num_procs_kr              ! Number of processes in p and r
+  INTEGER :: num_procs_p           ! Number of processes in p
+  INTEGER :: num_procs_kr          ! Number of processes in r
   INTEGER :: rank_0, rank_p, rank_r! Ranks in comm0, commp, commr
-  INTEGER :: nbr_L, nbr_R ! Left and right neighbours (along p)
-  INTEGER :: nbr_T, nbr_B ! Top and bottom neighbours (along kr)
+  INTEGER :: nbr_L, nbr_R          ! Left and right neighbours (along p)
+  INTEGER :: nbr_T, nbr_B          ! Top and bottom neighbours (along kr)
 
+  INTEGER :: iframe0d              ! counting the number of times 0d datasets are outputed (for diagnose)
   INTEGER :: iframe1d              ! counting the number of times 1d datasets are outputed (for diagnose)
   INTEGER :: iframe2d              ! counting the number of times 2d datasets are outputed (for diagnose)
   INTEGER :: iframe3d              ! counting the number of times 3d datasets are outputed (for diagnose)

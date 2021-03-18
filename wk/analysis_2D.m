@@ -104,7 +104,7 @@ PFlux_ri  = zeros(1,Ns5D);      % Particle   flux
 GFLUX_RI = real(squeeze(sum(sum(-1i*KZ.*Ni00.*conj(PHI),1),2)))*(2*pi/Nr/Nz)^2;
 PFLUX_RI = real(squeeze(sum(sum(-1i*KZ.*Np_i.*conj(PHI_Ts5D),1),2)))*(2*pi/Nr/Nz)^2;
 
-phi_avg  = zeros(1,Ns2D);        % Time evol. of the norm of phi
+phi_max  = zeros(1,Ns2D);        % Time evol. of the norm of phi
 Ne_norm  = zeros(Npe,Nje,Ns5D);  % Time evol. of the norm of Napj
 Ni_norm  = zeros(Npi,Nji,Ns5D);  % .
 
@@ -112,7 +112,7 @@ Ddr = 1i*KR; Ddz = 1i*KZ; lapl   = Ddr.^2 + Ddz.^2;
 
 for it = 1:numel(Ts2D) % Loop over 2D arrays
     NE_ = Ne00(:,:,it); NI_ = Ni00(:,:,it); PH_ = PHI(:,:,it);
-    phi_avg(it)   = real(squeeze(PH_(ikr0,ikz0)))/2;
+    phi_max(it)   = max(max(squeeze(phi(:,:,it))));
     ExB(it)       = max(max(max(abs(phi(3:end,:,it)-phi(1:end-2,:,it))/(2*dr))),max(max(abs(phi(:,3:end,it)-phi(:,1:end-2,it))'/(2*dz))));
     GFlux_ri(it)  = sum(sum(ni00(:,:,it).*dzphi(:,:,it)))*dr*dz/Lr/Lz;
     GFlux_zi(it)  = sum(sum(-ni00(:,:,it).*drphi(:,:,it)))*dr*dz/Lr/Lz;
@@ -151,7 +151,7 @@ if 1
 %% Time evolutions and growth rate
 fig = figure; FIGNAME = ['t_evolutions',sprintf('_%.2d',JOBNUM),'_',PARAMS];
 set(gcf, 'Position',  [100, 100, 900, 800])
-    subplot(221); 
+    subplot(421); 
     for ip = 1:Npe
         for ij = 1:Nje
             plt      = @(x) squeeze(x(ip,ij,:));
@@ -163,7 +163,7 @@ set(gcf, 'Position',  [100, 100, 900, 800])
         end
     end
     grid on; ylabel('$\sum_{k_r,k_z}|N_e^{pj}|$');
-    subplot(222)
+    subplot(423)
     for ip = 1:Npi
         for ij = 1:Nji
             plt      = @(x) squeeze(x(ip,ij,:));
@@ -174,7 +174,14 @@ set(gcf, 'Position',  [100, 100, 900, 800])
                 'Color',clr,'LineStyle',lstyle{1}); hold on;
         end
     end
-    grid on; ylabel('$\sum_{k_r,k_z}|N_i^{pj}|$');
+    grid on; ylabel('$\sum_{k_r,k_z}|N_i^{pj}|$'); xlabel('$t c_s/R$')
+    subplot(222)
+        semilogy(Ts0D,GGAMMA_RI*(2*pi/Nr/Nz)^2); hold on;
+%         plot(Ts2D,GFLUX_RI)
+        plot(Ts0D,PGAMMA_RI*(2*pi/Nr/Nz)^2);
+%         plot(Ts5D,PFLUX_RI,'--');
+        legend(['Gyro. flux';'Part. flux']);
+        grid on; xlabel('$t c_s/R$'); ylabel('$\Gamma_{r,i}$')
     subplot(223)
         plot(kz,g_(1,:),'-','DisplayName','$\gamma$'); hold on;
         grid on; xlabel('$k_z\rho_s$'); ylabel('$\gamma R/c_s$'); %legend('show');
@@ -185,11 +192,11 @@ set(gcf, 'Position',  [100, 100, 900, 800])
             plotname = '$\langle\phi\rangle_{r,z}(t)$';
             clr      = line_colors(min(ip,numel(line_colors(:,1))),:);
             lstyle   = line_styles(min(ij,numel(line_styles)));
-            plot(Ts2D,phi_avg,'DisplayName',plotname,...
+            plot(Ts2D,phi_max,'DisplayName',plotname,...
                 'Color',clr,'LineStyle',lstyle{1}); hold on;
         end
     end
-    grid on; xlabel('$t c_s/R$'); ylabel('$\tilde\phi_{00}/2$'); %legend('show');
+    grid on; xlabel('$t c_s/R$'); ylabel('$\max_{r,z}(\phi)$'); %legend('show');
 % suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB)]);
 save_figure
 end
