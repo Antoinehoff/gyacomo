@@ -80,7 +80,9 @@ degngrad   = sprintf(degngrad,[NU,MU]);
 if ~NON_LIN; degngrad = ['lin_',degngrad]; end
 resolution = [num2str(GRID.Nr),'x',num2str(GRID.Nz/2),'_'];
 gridname   = ['L_',num2str(L),'_'];
-PARAMS = [resolution,gridname,degngrad];
+if (exist('PREFIX','var') == 0); PREFIX = []; end;
+if (exist('SUFFIX','var') == 0); SUFFIX = []; end;
+PARAMS = [PREFIX,resolution,gridname,degngrad,SUFFIX];
 BASIC.RESDIR = [SIMDIR,PARAMS,'/'];
 BASIC.PARAMS = PARAMS;
 BASIC.SIMID  = SIMID;

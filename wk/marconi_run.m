@@ -4,12 +4,12 @@ addpath(genpath('../matlab')) % ... add
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% CLUSTER PARAMETERS
-CLUSTER.TIME  = '01:00:00'; % allocation time hh:mm:ss
-CLUSTER.PART  = 'dbg';     % dbg or prod
+CLUSTER.TIME  = '20:00:00'; % allocation time hh:mm:ss
+CLUSTER.PART  = 'prod';     % dbg or prod
 CLUSTER.MEM   = '16GB';     % Memory
 CLUSTER.JNAME = 'gamma_inf';% Job name
 NP_P          = 2;          % MPI processes along p  
-NP_KR         = 12;         % MPI processes along kr
+NP_KR         = 24;         % MPI processes along kr
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
 NU      = 0.1;   % Collision frequency
@@ -18,33 +18,35 @@ NU_HYP  = 0.1;   % Hyperdiffusivity coefficient
 %% GRID PARAMETERS
 N       = 200;   % Frequency gridpoints (Nkr = N/2)
 L       = 120;   % Size of the squared frequency domain
-P       = 20;    % Electron and Ion highest Hermite polynomial degree
-J       = 08;    % Electron and Ion highest Laguerre polynomial degree
+P       = 10;    % Electron and Ion highest Hermite polynomial degree
+J       = 05;    % Electron and Ion highest Laguerre polynomial degree
 MU_P    = 0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
-TMAX    = 200;  % Maximal time unit
+TMAX    = 500;  % Maximal time unit
 DT      = 1e-2;  % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1/10;   % Sampling per time unit for 2D arrays
-SPS5D   = 0/50;  % Sampling per time unit for 5D arrays
+SPS5D   = 1/50;  % Sampling per time unit for 5D arrays
 SPSCP   = 0;  % Sampling per time unit for checkpoints
 RESTART = 0;     % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS
 SIMID   = ['HeLaZ_v2.4_eta_',num2str(ETAB),'_nu_%0.0e'];  % Name of the simulation
-% SIMID   = 'Marconi_test';  % Name of the simulation
+% SIMID   = 'Marconi_parallel_scaling_2D';  % Name of the simulation
 SIMID   = sprintf(SIMID,NU);
+PREFIX  =[];
+% PREFIX  = sprintf('%d_%d_',NP_P, NP_KR);
 CO      = -3;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty, -3 : GK Dougherty)
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
 KERN    = 0;   % Kernel model (0 : GK)
 INIT_PHI= 1;   % Start simulation with a noisy phi and moments
 %% OUTPUTS
-W_DOUBLE = 0;
-W_GAMMA  = 0;
+W_DOUBLE = 1;
+W_GAMMA  = 1;
 W_PHI    = 1;
 W_NA00   = 1;
-W_NAPJ   = 0;
+W_NAPJ   = 1;
 W_SAPJ   = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,3 +79,6 @@ setup
 write_sbash_marconi
 system('rm fort.90 setup_and_run.sh batch_script.sh');
 disp('done');
+if(mod(NP_P*NP_KR,24)~= 0)
+    disp('WARNING : unused cores (ntot cores must be a 24 multiple)');
+end
