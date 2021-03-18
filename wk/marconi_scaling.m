@@ -1,60 +1,60 @@
-%clear all;
-addpath(genpath('../matlab')) % ... add
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Set Up parameters
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% CLUSTER PARAMETERS
-CLUSTER.TIME  = '01:00:00'; % allocation time hh:mm:ss
-CLUSTER.NODES = '02';       % MPI process
-CLUSTER.CPUPT = '01';       % CPU per task
-CLUSTER.NTPN  = '14';       % N tasks per node (openMP)
-CLUSTER.PART  = 'dbg';      % dbg or prod
-CLUSTER.MEM   = '8GB';     % Memory
-CLUSTER.JNAME = 'scaling';     % Job name
-%% PHYSICAL PARAMETERS
-NU      = 1e-1;   % Collision frequency
-TAU     = 1.0;    % e/i temperature ratio
-ETAB    = 0.0;    % Magnetic gradient
-ETAN    = 1.0;    % Density gradient
-ETAT    = 0.0;    % Temperature gradient
-MU      = 0e-4;   % Hyper diffusivity coefficient
-NOISE0  = 1.0e-5;
-%% GRID PARAMETERS
-N       = 1024;     % Frequency gridpoints (Nkr = N/2)
-L       = 10;     % Size of the squared frequency domain
-PMAXE   = 2;     % Highest electron Hermite polynomial degree
-JMAXE   = 1;     % Highest ''       Laguerre ''
-PMAXI   = 2;     % Highest ion      Hermite polynomial degree
-JMAXI   = 1;     % Highest ''       Laguerre ''
-%% TIME PARAMETERS
-TMAX    = 5;  % Maximal time unit
-DT      = 5e-2;   % Time step
-SPS0D   = 1/DT;    % Sampling per time unit for profiler
-SPS2D   = -1;      % Sampling per time unit for 2D arrays
-SPS5D   = -1;      % Sampling per time unit for 5D arrays
-SPSCP   = -1;      % Sampling per time unit for checkpoints
-RESTART = 0;      % To restart from last checkpoint
-JOB2LOAD= 0;
-%% OPTIONS
-SIMID   = ['nn',num2str(CLUSTER.NODES),'_np',num2str(CLUSTER.NTPN)];  % Name of the simulation
-CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% unused
-KR0KH   = 0; A0KH = 0; % Background phi mode to drive Ray-Tay inst.
-% DK    = 0;  % Drift kinetic model (put every kernel_n to 0 except n=0 to 1)
-KREQ0   = 0;      % put kr = 0
-KPAR    = 0.0;    % Parellel wave vector component
-LAMBDAD = 0.0;
-NON_LIN = 1 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
+%% Load results np = 24
+np_p_24 = [1   2  3  4];
+np_kr_24= [24 12  8  6];
+el_ti_np_24= zeros(numel(np_p_24),1);
+for i_ = 1:numel(np_p_24)
+    npp_ = np_p_24(i_); npkr = np_kr_24(i_);
 
-%% Run following scripts
-setup
+    %% Load from Marconi
+    outfile =['/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_parallel_scaling_2D/',...
+        sprintf('%d_%d',npp_,npkr),...
+        '_200x100_L_120_P_12_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt'];
+    BASIC.RESDIR = load_marconi(outfile);
+    compile_results
+    load_params
+    el_ti_np_24(i_) = CPUTIME;
+end
+%% Load results np = 48
+np_p_48 = [1   2  3  4  6];
+np_kr_48= [48 24 16 12  8];
+el_ti_np_48= zeros(numel(np_p_48),1);
+for i_ = 1:numel(np_p_48)
+    npp_ = np_p_48(i_); npkr = np_kr_48(i_);
 
-write_sbash
+    %% Load from Marconi
+    outfile =['/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_parallel_scaling_2D/',...
+        sprintf('%d_%d',npp_,npkr),...
+        '_200x100_L_120_P_12_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt'];
+    BASIC.RESDIR = load_marconi(outfile);
+    compile_results
+    load_params
+    el_ti_np_48(i_) = CPUTIME;
+end
 
-system(['mkdir -p ../results/Scaling']);
-system(['cp -r ../results/',SIMID,' ../results/Scaling/']);
-system(['rm -r ../results/',SIMID]);
+%% Load results np = 72
+np_p_72 = [ 2   3];
+np_kr_72= [36  24];
+el_ti_np_72= zeros(numel(np_p_72),1);
+for i_ = 1:numel(np_p_72)
+    npp_ = np_p_72(i_); npkr = np_kr_72(i_);
 
-MARCONI = 1;
+    %% Load from Marconi
+    outfile =['/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_parallel_scaling_2D/',...
+        sprintf('%d_%d',npp_,npkr),...
+        '_200x100_L_120_P_12_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt'];
+    BASIC.RESDIR = load_marconi(outfile);
+    compile_results
+    load_params
+    el_ti_np_72(i_) = CPUTIME;
+end
+
+%% Plot
+figure
+plt = @(x) (x/el_ti_np_24(1)-1)*100;
+plot(np_p_24,plt(el_ti_np_24),'o--','DisplayName','Ncpu = 24'); hold on;
+plot(np_p_48,plt(el_ti_np_48),'o--','DisplayName','Ncpu = 48 ')
+plot(np_p_72,plt(el_ti_np_72),'o--','DisplayName','Ncpu = 72 ')
+xlabel('Num. proc. p')
+ylabel('Variation from 1 24 [$\%$]')
+title('CPU time change from 1D paralel')
+legend('show')
