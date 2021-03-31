@@ -25,10 +25,13 @@ else
     NON_LIN = 0;
 end
 
-if    (CO == 0); CONAME = 'LB';
-elseif(CO == -1); CONAME = 'FC';
-elseif(CO == -2); CONAME = 'DG';
-elseif(CO == -3); CONAME = 'DGGK';
+if    (CO == -3); CONAME = 'FCDK';
+elseif(CO == -2); CONAME = 'SGDK';
+elseif(CO == -1); CONAME = 'DGDK';
+elseif(CO ==  0); CONAME = 'LB';
+elseif(CO ==  1); CONAME = 'DGGK';
+elseif(CO ==  2); CONAME = 'SGGK';
+elseif(CO ==  3); CONAME = 'FCGK';
 end
 
 if    (CLOS == 0); CLOSNAME = 'Trunc.';
