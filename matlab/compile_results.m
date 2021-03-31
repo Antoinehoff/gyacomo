@@ -2,7 +2,10 @@ CONTINUE = 1;
 JOBNUM   = 0; JOBFOUND = 0;
 Nipj_    = []; Nepj_    = [];
 Ni00_    = []; Ne00_    = [];
+GGAMMA_  = [];
+PGAMMA_  = [];
 PHI_     = [];
+Ts0D_    = [];
 Ts2D_    = [];
 Ts5D_    = [];
 Sipj_    = []; Sepj_    = [];
@@ -36,7 +39,12 @@ while(CONTINUE)
             end
         end
         
-
+        if W_GAMMA
+            GGAMMA_ = cat(1,GGAMMA_,GGAMMA_RI);
+            PGAMMA_ = cat(1,PGAMMA_,PGAMMA_RI);
+            Ts0D_   = cat(1,Ts0D_,Ts0D);
+        end
+        
         if W_PHI || W_NA00
         	Ts2D_   = cat(1,Ts2D_,Ts2D);
         end
@@ -70,9 +78,10 @@ while(CONTINUE)
     Pe_old = Pe_new; Je_old = Je_new;
     Pi_old = Pi_new; Ji_old = Ji_new;
 end
+GGAMMA_RI = GGAMMA_; PGAMMA_RI = PGAMMA_; Ts0D = Ts0D_;
 Nipj = Nipj_; Nepj = Nepj_; Ts5D = Ts5D_;
 Ni00 = Ni00_; Ne00 = Ne00_; PHI = PHI_; Ts2D = Ts2D_;
-clear Nipj_ Nepj_ Ni00_ Ne00_ PHI_ Ts2D_ Ts5D_
+clear Nipj_ Nepj_ Ni00_ Ne00_ PHI_ Ts2D_ Ts5D_ GGAMMA_ PGAMMA_ Ts0D_
 
 Sipj = Sipj_; Sepj = Sepj_;
 clear Sipj_ Sepj_
