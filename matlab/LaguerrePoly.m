@@ -12,7 +12,7 @@ function Lk = LaguerrePoly(n)
 if n==0 
     Lk = 1;
 elseif n==1
-    Lk = [-1 1];
+    Lk = [-1 1]';
 else
     
     Lkm2 = zeros(n+1,1);
