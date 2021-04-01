@@ -58,11 +58,9 @@ SUBROUTINE inital
     CALL build_dnjs_table
   ENDIF
 
-  !!!!!! Load the full coulomb collision operator coefficients !!!!!!
-  IF (CO .EQ. -1) THEN
-    IF (my_id .EQ. 0) WRITE(*,*) '=== Load Full Coulomb matrix ==='
-    CALL load_FC_mat
-    IF (my_id .EQ. 0) WRITE(*,*) '..done'
+  !!!!!! Load the COSOlver collision operator coefficients !!!!!!
+  IF (ABS(CO) .GT. 1) THEN
+    CALL load_COSOlver_mat
   ENDIF
 
 END SUBROUTINE inital

@@ -1,17 +1,17 @@
 SUBROUTINE stepon
   !   Advance one time step, (num_step=4 for Runge Kutta 4 scheme)
-
-  USE basic
-  USE time_integration
-  USE fields, ONLY: moments_e, moments_i, phi
-  USE array , ONLY: moments_rhs_e, moments_rhs_i, Sepj, Sipj
-  USE grid
   USE advance_field_routine, ONLY: advance_time_level, advance_field
-  USE model
+  USE array , ONLY: moments_rhs_e, moments_rhs_i, Sepj, Sipj
+  USE basic
   USE closure
-  USE utility, ONLY: checkfield
-  use prec_const
+  USE collision, ONLY : compute_TColl
+  USE fields, ONLY: moments_e, moments_i, phi
   USE ghosts
+  USE grid
+  USE model
+  use prec_const
+  USE time_integration
+  USE utility, ONLY: checkfield
 
   IMPLICIT NONE
 
@@ -26,6 +26,9 @@ SUBROUTINE stepon
       ! Exchanges the ghosts values updated
       CALL update_ghosts
 
+      ! Compute collision
+      CALL compute_TColl
+      
       ! Compute right hand side of moments hierarchy equation
       CALL moments_eq_rhs_e
       CALL moments_eq_rhs_i

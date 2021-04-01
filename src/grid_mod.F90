@@ -37,16 +37,23 @@ MODULE grid
   INTEGER,  PUBLIC :: ir,iz ! counters
   integer(C_INTPTR_T), PUBLIC :: local_nkr, local_nz
   integer(C_INTPTR_T), PUBLIC :: local_nkr_offset, local_nz_offset
+  INTEGER,             PUBLIC :: local_nkp
   INTEGER,             PUBLIC :: local_np_e, local_np_i
   integer(C_INTPTR_T), PUBLIC :: local_np_e_offset, local_np_i_offset
+  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: counts_np_e, counts_np_i
+  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: displs_np_e, displs_np_i
 
   ! Grids containing position in fourier space
-  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: krarray
-  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: kzarray
+  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: krarray
+  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kzarray
+  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kparray     ! kperp array
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE, PUBLIC :: kparray_2D  ! kperp array in 2D
+  INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC :: ikparray    ! kperp indices array
+  INTEGER,  DIMENSION(:,:), ALLOCATABLE, PUBLIC :: ikparray_2D ! to convert (ikr,ikz) -> ikp
   REAL(dp), PUBLIC, PROTECTED ::  deltakr, deltakz
-  INTEGER,  PUBLIC, PROTECTED ::  ikrs, ikre, ikzs, ikze, a
+  INTEGER,  PUBLIC, PROTECTED ::  ikrs, ikre, ikzs, ikze, ikps, ikpe
   INTEGER,  PUBLIC, PROTECTED :: ikr_0, ikz_0 ! Indices of k-grid origin
-  INTEGER,  PUBLIC :: ikr, ikz, ip, ij ! counters
+  INTEGER,  PUBLIC :: ikr, ikz, ip, ij, ikp ! counters
 
   ! Grid containing the polynomials degrees
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_e
@@ -61,7 +68,7 @@ MODULE grid
   ! Public Functions
   PUBLIC :: init_1Dgrid_distr
   PUBLIC :: set_pgrid, set_jgrid
-  PUBLIC :: set_krgrid, set_kzgrid
+  PUBLIC :: set_krgrid, set_kzgrid, set_kpgrid
   PUBLIC :: grid_readinputs, grid_outputinputs
   PUBLIC :: bare, bari
 
@@ -84,11 +91,30 @@ CONTAINS
   SUBROUTINE set_pgrid
     USE prec_const
     IMPLICIT NONE
-    INTEGER :: ip
+    INTEGER :: ip, istart, iend, in
 
+    ! Local data distribution
     CALL decomp1D(pmaxe+1, num_procs_p, rank_p, ips_e, ipe_e)
     CALL decomp1D(pmaxi+1, num_procs_p, rank_p, ips_i, ipe_i)
+    local_np_e = ipe_e - ips_e + 1
+    local_np_i = ipe_i - ips_i + 1
+    ! List of shift and local numbers between the different processes (used in scatterv and gatherv)
+    ALLOCATE(counts_np_e (1:num_procs_p))
+    ALLOCATE(counts_np_i (1:num_procs_p))
+    ALLOCATE(displs_np_e (1:num_procs_p))
+    ALLOCATE(displs_np_i (1:num_procs_p))
+    DO in = 0,num_procs_p-1
+      CALL decomp1D(pmaxe+1, num_procs_p, in, istart, iend)
+      counts_np_e(in+1) = iend-istart+1
+      displs_np_e(in+1) = istart-1
+      CALL decomp1D(pmaxi+1, num_procs_p, in, istart, iend)
+      counts_np_i(in+1) = iend-istart+1
+      displs_np_i(in+1) = istart-1
+    ENDDO
+    write(*,*) rank_p, ': counts = ', counts_np_e
+    write(*,*) rank_p, ': disps = ',  displs_np_e
 
+    ! local grid computation
     ALLOCATE(parray_e(ips_e:ipe_e))
     ALLOCATE(parray_i(ips_i:ipe_i))
     DO ip = ips_e,ipe_e; parray_e(ip) = (ip-1); END DO
@@ -100,7 +126,6 @@ CONTAINS
     ! Precomputations
     pmaxe_dp   = real(pmaxe,dp)
     pmaxi_dp   = real(pmaxi,dp)
-
   END SUBROUTINE set_pgrid
 
   SUBROUTINE set_jgrid
@@ -123,7 +148,6 @@ CONTAINS
     ! Precomputations
     jmaxe_dp   = real(jmaxe,dp)
     jmaxi_dp   = real(jmaxi,dp)
-
   END SUBROUTINE set_jgrid
 
 
@@ -166,7 +190,7 @@ CONTAINS
   SUBROUTINE set_kzgrid
     USE prec_const
     IMPLICIT NONE
-    INTEGER :: i_
+    INTEGER :: i_, counter
 
     Nkz = Nz;
     ! Start and END indices of grid
@@ -199,6 +223,41 @@ CONTAINS
       ENDIF
     END DO
   END SUBROUTINE set_kzgrid
+
+  SUBROUTINE set_kpgrid !Precompute the grid of kperp
+    IMPLICIT NONE
+    INTEGER :: ikz_sym, tmp_, counter
+    ! 2D to 1D indices array convertor
+    ALLOCATE(ikparray_2D(ikrs:ikre,ikzs:ikze))
+    ALLOCATE( kparray_2D(ikrs:ikre,ikzs:ikze))
+    ! local number of different kperp
+    local_nkp = local_nkr * (local_nkr-1)/2 + 1
+    ! Allocate 1D array of kperp values and indices
+    ALLOCATE(ikparray(1:local_nkr))
+    ALLOCATE( kparray(1:local_nkr))
+
+    ! Fill the arrays
+    tmp_ = 0; counter = 1
+    DO ikz = ikzs,ikze
+      DO ikr = ikrs,ikre
+        ! Set a symmetry on kz
+        IF (ikz .LE. Nkz/2+1) THEN
+          ikz_sym = ikz
+        ELSE
+          ikz_sym = Nkz+2 - ikz
+        ENDIF
+        ! Formula to find the 2D to 1D kperp equivalences ordered as
+        !      10
+        !    6 9
+        !  3 5 8
+        !1 2 4 7  etc...
+        ikp = MAX(ikr-1,ikz_sym-1)*MIN(ikr-1,ikz_sym-1)/2 + min(ikr-1,ikz_sym-1)
+        ikparray_2D(ikr,ikz) = ikp
+        kparray_2D(ikr,ikz)  = SQRT(krarray(ikr)**2 + kzarray(ikz)**2)
+      ENDDO
+    ENDDO
+
+  END SUBROUTINE
 
   SUBROUTINE grid_readinputs
     ! Read the input parameters

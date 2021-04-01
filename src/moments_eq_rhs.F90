@@ -115,10 +115,10 @@ SUBROUTINE moments_eq_rhs_e
           TNapjm1  = xNapjm1 * moments_e(ip,ij-1,ikr,ikz,updatetlevel)
 
           !! Collision
-          IF (CO .EQ. -3) THEN ! GK Dougherty
-            CALL DoughertyGK_e(ip,ij,ikr,ikz,TColl)
+          IF (CO .EQ. 0) THEN ! Lenard Bernstein
+            TColl = xCapj * moments_e(ip,ij,ikr,ikz,updatetlevel)
 
-          ELSEIF (CO .EQ. -2) THEN ! DK Dougherty
+          ELSEIF (CO .EQ. -1) THEN ! DK Dougherty
             TColl20 = 0._dp; TColl01 = 0._dp; TColl10 = 0._dp
             IF ( (pmaxe .GE. 2) ) TColl20 = xCa20 * moments_e(3,1,ikr,ikz,updatetlevel)
             IF ( (jmaxe .GE. 1) ) TColl01 = xCa01 * moments_e(1,2,ikr,ikz,updatetlevel)
@@ -127,13 +127,12 @@ SUBROUTINE moments_eq_rhs_e
             TColl =  xCapj* moments_e(ip,ij,ikr,ikz,updatetlevel)&
                    + TColl20 + TColl01 + TColl10
 
-          ELSEIF (CO .EQ. -1) THEN ! Full Coulomb for electrons (COSOlver matrix)
-            CALL FullCoulombDK_e(p_int,j_int,ikr,ikz,TColl)
+          ELSEIF (CO .EQ. 1) THEN ! GK Dougherty
+            CALL DoughertyGK_e(ip,ij,ikr,ikz,TColl)
 
-          ELSEIF (CO .EQ. 0) THEN ! Lenard Bernstein
-            TColl = xCapj * moments_e(ip,ij,ikr,ikz,updatetlevel)
-
-          ENDIF
+          ELSE ! COSOLver matrix
+            TColl = TColl_e(ip,ij,ikr,ikz)
+        ENDIF
 
           !! Electrical potential term
           IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
@@ -303,24 +302,22 @@ SUBROUTINE moments_eq_rhs_i
           TNapjm1 = xNapjm1 * moments_i(ip,ij-1,ikr,ikz,updatetlevel)
 
           !! Collision
-          IF (CO .EQ. -3) THEN  ! Gyrokin. Dougherty Collision terms
-            CALL DoughertyGK_i(ip,ij,ikr,ikz,TColl)
+          IF (CO .EQ. 0) THEN ! Lenard Bernstein
+            TColl = xCapj * moments_i(ip,ij,ikr,ikz,updatetlevel)
 
-          ELSEIF (CO .EQ. -2) THEN  ! Dougherty Collision terms
+          ELSEIF (CO .EQ. -1) THEN ! DK Dougherty
             TColl20 = 0._dp; TColl01 = 0._dp; TColl10 = 0._dp
-            IF ( (pmaxe .GE. 2) ) TColl20 = xCa20 * moments_i(3,1,ikr,ikz,updatetlevel)
-            IF ( (jmaxe .GE. 1) ) TColl01 = xCa01 * moments_i(1,2,ikr,ikz,updatetlevel)
-            IF ( (pmaxe .GE. 1) ) TColl10 = xCa10 * moments_i(2,1,ikr,ikz,updatetlevel)
+            IF ( (pmaxi .GE. 2) ) TColl20 = xCa20 * moments_i(3,1,ikr,ikz,updatetlevel)
+            IF ( (jmaxi .GE. 1) ) TColl01 = xCa01 * moments_i(1,2,ikr,ikz,updatetlevel)
+            IF ( (pmaxi .GE. 1) ) TColl10 = xCa10 * moments_i(2,1,ikr,ikz,updatetlevel)
             ! Total collisional term
             TColl =  xCapj* moments_i(ip,ij,ikr,ikz,updatetlevel)&
                    + TColl20 + TColl01 + TColl10
 
-          ELSEIF (CO .EQ. -1) THEN !!! Full Coulomb for ions (COSOlver matrix) !!!
-            CALL FullCoulombDK_i(p_int,j_int,ikr,ikz,TColl)
-
-          ELSEIF (CO .EQ. 0) THEN! Lenhard Bernstein
-            TColl = xCapj * moments_i(ip,ij,ikr,ikz,updatetlevel)
-
+          ELSEIF (CO .EQ. 1) THEN ! GK Dougherty
+            CALL DoughertyGK_i(ip,ij,ikr,ikz,TColl)
+          ELSE! COSOLver matrix (Sugama, Coulomb)
+            TColl = TColl_i(ip,ij,ikr,ikz)
           ENDIF
 
           !! Electrical potential term

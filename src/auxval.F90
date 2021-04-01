@@ -23,6 +23,7 @@ subroutine auxval
 
   CALL set_krgrid ! MPI Distributed dimension
   CALL set_kzgrid
+  CALL set_kpgrid
 
   CALL memory ! Allocate memory for global arrays
 

@@ -21,7 +21,7 @@ SUBROUTINE memory
 
   ! Electrostatic potential
   CALL allocate_array(phi, ikrs,ikre, ikzs,ikze)
-  
+
   ! Gyrocenter density *for 2D output*
   CALL allocate_array(Ne00, ikrs,ikre, ikzs,ikze)
   CALL allocate_array(Ni00, ikrs,ikre, ikzs,ikze)
@@ -31,15 +31,25 @@ SUBROUTINE memory
   CALL allocate_array(Kernel_i, ijsg_i,ijeg_i, ikrs,ikre, ikzs,ikze)
 
   ! Collision matrix
-  IF (CO .EQ. -1) THEN
-    CALL allocate_array(  Ceepj, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1))
-    CALL allocate_array( CeipjT, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1))
-    CALL allocate_array( CeipjF, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxi+1)*(jmaxi+1))
-
-    CALL allocate_array(  Ciipj, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1))
-    CALL allocate_array( CiepjT, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1))
-    CALL allocate_array( CiepjF, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxe+1)*(jmaxe+1))
+  IF (CO .LT. -1) THEN !DK collision matrix (same for every k)
+    CALL allocate_array(  Ceepj, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1), 1,1, 1,1)
+    CALL allocate_array( CeipjT, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1), 1,1, 1,1)
+    CALL allocate_array( CeipjF, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxi+1)*(jmaxi+1), 1,1, 1,1)
+    CALL allocate_array(  Ciipj, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1), 1,1, 1,1)
+    CALL allocate_array( CiepjT, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1), 1,1, 1,1)
+    CALL allocate_array( CiepjF, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxe+1)*(jmaxe+1), 1,1, 1,1)
+  ELSEIF (CO .GT. 1) THEN !GK collision matrices (one for each kperp)
+    CALL allocate_array(  Ceepj, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1), ikrs,ikre, ikzs,ikze)
+    CALL allocate_array( CeipjT, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1), ikrs,ikre, ikzs,ikze)
+    CALL allocate_array( CeipjF, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxi+1)*(jmaxi+1), ikrs,ikre, ikzs,ikze)
+    CALL allocate_array(  Ciipj, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1), ikrs,ikre, ikzs,ikze)
+    CALL allocate_array( CiepjT, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1), ikrs,ikre, ikzs,ikze)
+    CALL allocate_array( CiepjF, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxe+1)*(jmaxe+1), ikrs,ikre, ikzs,ikze)
   ENDIF
+
+  ! Collision term
+  CALL allocate_array(  TColl_e, ips_e,ipe_e, ijs_e,ije_e , ikrs,ikre, ikzs,ikze)
+  CALL allocate_array(  TColl_i, ips_i,ipe_i, ijs_i,ije_i , ikrs,ikre, ikzs,ikze)
 
   ! Non linear terms and dnjs table
   CALL allocate_array( Sepj, ips_e,ipe_e, ijs_e,ije_e, ikrs,ikre, ikzs,ikze )

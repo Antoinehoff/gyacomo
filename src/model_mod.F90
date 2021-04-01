@@ -6,7 +6,8 @@ MODULE model
   PRIVATE
 
   INTEGER,  PUBLIC, PROTECTED ::      CO =  0         ! Collision Operator
-  INTEGER,  PUBLIC, PROTECTED :: CLOS =  0         ! Truncation method
+  INTEGER,  PUBLIC, PROTECTED ::    CLOS =  0         ! linear truncation method
+  INTEGER,  PUBLIC, PROTECTED :: NL_CLOS =  0         ! nonlinear truncation method
   INTEGER,  PUBLIC, PROTECTED ::    KERN =  0         ! Kernel model
   LOGICAL,  PUBLIC, PROTECTED :: NON_LIN =  .true.    ! To turn on non linear bracket term
   REAL(dp), PUBLIC, PROTECTED ::      mu =  0._dp     ! spatial      Hyperdiffusivity coefficient (for num. stability)
@@ -42,12 +43,11 @@ CONTAINS
 
   SUBROUTINE model_readinputs
     !    Read the input parameters
-
     USE basic, ONLY : lu_in
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /MODEL_PAR/ CO, CLOS, KERN, NON_LIN, mu, mu_p, mu_j, nu, tau_e, tau_i, sigma_e, sigma_i, &
+    NAMELIST /MODEL_PAR/ CO, CLOS, NL_CLOS, KERN, NON_LIN, mu, mu_p, mu_j, nu, tau_e, tau_i, sigma_e, sigma_i, &
                          q_e, q_i, eta_n, eta_T, eta_B, lambdaD
 
     READ(lu_in,model_par)
@@ -77,7 +77,6 @@ CONTAINS
     nu_i            = nu * sigma_e * (tau_i)**(-3._dp/2._dp)/SQRT2 ! ion-ion collision frequ.
     nu_ee           = nu_e/SQRT2 ! e-e coll. frequ.
     nu_ie           = nu*sigma_e**2 ! i-e coll. frequ.
-
   END SUBROUTINE model_readinputs
 
 

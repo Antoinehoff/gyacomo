@@ -8,10 +8,14 @@ MODULE array
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: moments_rhs_i ! (ip,ij,ikr,ikz,updatetlevel)
 
   ! To load collision matrix
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: Ceepj, CeipjT
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: CeipjF
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: Ciipj, CiepjT
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: CiepjF
+  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Ceepj, CeipjT
+  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: CeipjF
+  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Ciipj, CiepjT
+  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: CiepjF
+
+  ! Collision term
+  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: TColl_e, TColl_i
+  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: TColl_e_local, TColl_i_local
 
   ! dnjs coefficient storage (in, ij, is)
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: dnjs
