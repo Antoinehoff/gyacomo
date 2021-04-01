@@ -2,10 +2,10 @@
 outfile ='';
 if 0
     %% Load from Marconi
-    outfile ='';
-    outfile ='';
-    outfile ='';
-    outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.4_2_12_eta_0.6_nu_1e-01/50x25_L_100_P_20_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-01/out.txt';
+outfile ='';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.4_eta_0.8_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.8_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.4_eta_0.7_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.7_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.4_eta_0.6_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
     BASIC.RESDIR = load_marconi(outfile);
 end
 if 0
@@ -103,6 +103,9 @@ PFlux_ri  = zeros(1,Ns5D);      % Particle   flux
 % gyrocenter and particle flux from fourier coefficients
 GFLUX_RI = real(squeeze(sum(sum(-1i*KZ.*Ni00.*conj(PHI),1),2)))*(2*pi/Nr/Nz)^2;
 PFLUX_RI = real(squeeze(sum(sum(-1i*KZ.*Np_i.*conj(PHI_Ts5D),1),2)))*(2*pi/Nr/Nz)^2;
+% Hermite energy spectrum
+epsilon_e_pj = zeros(Npe,Nje,Ns5D);
+epsilon_i_pj = zeros(Npi,Nji,Ns5D);
 
 phi_max  = zeros(1,Ns2D);        % Time evol. of the norm of phi
 Ne_norm  = zeros(Npe,Nje,Ns5D);  % Time evol. of the norm of Napj
@@ -124,6 +127,8 @@ for it = 1:numel(Ts5D) % Loop over 5D arrays
     [~, it2D] = min(abs(Ts2D-Ts5D(it)));
     Ne_norm(:,:,it)= sum(sum(abs(Nepj(:,:,:,:,it)),3),4)/Nkr/Nkz;
     Ni_norm(:,:,it)= sum(sum(abs(Nipj(:,:,:,:,it)),3),4)/Nkr/Nkz;
+    epsilon_e_pj(:,:,it) = sqrt(pi)/2*sum(sum(abs(Nepj(:,:,:,:,it)).^2,3),4);
+    epsilon_i_pj(:,:,it) = sqrt(pi)/2*sum(sum(abs(Nipj(:,:,:,:,it)).^2,3),4);
     % Particle flux
     PFlux_ri(it)   = sum(sum(np_i(:,:,it).*dzphi(:,:,it2D)))*dr*dz/Lr/Lz;
 end
@@ -176,7 +181,7 @@ set(gcf, 'Position',  [100, 100, 900, 800])
     end
     grid on; ylabel('$\sum_{k_r,k_z}|N_i^{pj}|$'); xlabel('$t c_s/R$')
     subplot(222)
-        semilogy(Ts0D,GGAMMA_RI*(2*pi/Nr/Nz)^2); hold on;
+        plot(Ts0D,GGAMMA_RI*(2*pi/Nr/Nz)^2); hold on;
 %         plot(Ts2D,GFLUX_RI)
         plot(Ts0D,PGAMMA_RI*(2*pi/Nr/Nz)^2);
 %         plot(Ts5D,PFLUX_RI,'--');
@@ -186,16 +191,10 @@ set(gcf, 'Position',  [100, 100, 900, 800])
         plot(kz,g_(1,:),'-','DisplayName','$\gamma$'); hold on;
         grid on; xlabel('$k_z\rho_s$'); ylabel('$\gamma R/c_s$'); %legend('show');
     subplot(224)
-    for ip = 1:Npi
-        for ij = 1:Nji
-            plt      = @(x) squeeze(x(ip,ij,:));
-            plotname = '$\langle\phi\rangle_{r,z}(t)$';
-            clr      = line_colors(min(ip,numel(line_colors(:,1))),:);
-            lstyle   = line_styles(min(ij,numel(line_styles)));
-            plot(Ts2D,phi_max,'DisplayName',plotname,...
-                'Color',clr,'LineStyle',lstyle{1}); hold on;
-        end
-    end
+        plotname = '$\max_{r,z}(\phi)(t)$';
+        clr      = line_colors(min(ip,numel(line_colors(:,1))),:);
+        lstyle   = line_styles(min(ij,numel(line_styles)));
+        plot(Ts2D,phi_max,'DisplayName',plotname); hold on;
     grid on; xlabel('$t c_s/R$'); ylabel('$\max_{r,z}(\phi)$'); %legend('show');
 % suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB)]);
 save_figure
@@ -247,33 +246,38 @@ end
 
 if 0
 %% Photomaton : real space
-% FIELD = ni00; FNAME = 'ni';
-% FIELD = ne00; FNAME = 'ne';
-FIELD = phi; FNAME = 'phi';
-tf = 200;  [~,it1] = min(abs(Ts2D-tf));
-tf = 600;  [~,it2] = min(abs(Ts2D-tf)); 
-tf =1000; [~,it3] = min(abs(Ts2D-tf));
-tf =2000; [~,it4] = min(abs(Ts2D-tf));
+% FIELD = ni00; FNAME = 'ni'; XX = RR; YY = ZZ;
+FIELD = phi; FNAME = 'phi'; XX = RR; YY = ZZ;
+% FIELD = fftshift(abs(Ni00),2); FNAME = 'Fni'; XX = fftshift(KR,2); YY = fftshift(KZ,2);
+% FIELD = fftshift(abs(PHI),2);  FNAME = 'Fphi'; XX = fftshift(KR,2); YY = fftshift(KZ,2);
+tf = 100;  [~,it1] = min(abs(Ts2D-tf));
+tf = 118;  [~,it2] = min(abs(Ts2D-tf)); 
+tf = 140; [~,it3] = min(abs(Ts2D-tf));
+tf = 300; [~,it4] = min(abs(Ts2D-tf));
 fig = figure; FIGNAME = [FNAME,'_snaps','_',PARAMS]; set(gcf, 'Position',  [100, 100, 1500, 400])
 plt = @(x) x;%./max(max(x));
     subplot(141)
         DATA = plt(FIELD(:,:,it1));
-        pclr = pcolor((RR),(ZZ),DATA); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
+        pclr = pcolor((XX),(YY),DATA); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
+        colormap gray
         xlabel('$r/\rho_s$'); ylabel('$z/\rho_s$');set(gca,'ytick',[]); 
         title(sprintf('$t c_s/R=%.0f$',Ts2D(it1)));
     subplot(142)
         DATA = plt(FIELD(:,:,it2));
-        pclr = pcolor((RR),(ZZ),DATA); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
+        pclr = pcolor((XX),(YY),DATA); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
+        colormap gray
         xlabel('$r/\rho_s$');ylabel('$z/\rho_s$'); set(gca,'ytick',[]); 
         title(sprintf('$t c_s/R=%.0f$',Ts2D(it2)));
     subplot(143)
         DATA = plt(FIELD(:,:,it3));
-        pclr = pcolor((RR),(ZZ),DATA); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
+        pclr = pcolor((XX),(YY),DATA); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
+        colormap gray
         xlabel('$r/\rho_s$');ylabel('$z/\rho_s$');set(gca,'ytick',[]); 
         title(sprintf('$t c_s/R=%.0f$',Ts2D(it3)));
     subplot(144)
         DATA = plt(FIELD(:,:,it4));
-        pclr = pcolor((RR),(ZZ),DATA); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
+        pclr = pcolor((XX),(YY),DATA); set(pclr, 'edgecolor','none');pbaspect([1 1 1])
+        colormap gray
         xlabel('$r/\rho_s$');ylabel('$z/\rho_s$'); set(gca,'ytick',[]); 
         title(sprintf('$t c_s/R=%.0f$',Ts2D(it4)));
 % suptitle(['$\',FNAME,'$, $\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB),...
@@ -303,29 +307,25 @@ end
 
 %%
 if 0
-%% Ion moments max mode vs pj
-% tf = Ts2D(end-3); 
-for tf = []
-[~,it2] = min(abs(Ts2D-tf)); [~,it5] = min(abs(Ts5D-tf));
-% it2 = it2 + 1;
-fig = figure; FIGNAME = ['kmaxp_Nipj_',sprintf('t=%.2f',Ts2D(it2)),'_',PARAMS];set(gcf, 'Position',  [100, 100, 700, 600])
-
-plt = @(x) squeeze(max(abs(x),[],4));
-% plt = @(x) squeeze(max(fftshift(abs(x),2),[],4));
-
-for ij_ = 1:numel(Ji)
-    subplot(100+numel(Ji)*10+ij_)
-        pclr = imagesc(kr,Pi,plt(Nipj(:,ij_,:,:,it5)));
-        xlabel('$k_r$');
-        if ij_ == 1
-            ylabel('$P$(max o. $k_z$)');
-        else
-            yticks([])
-        end
-        LEGEND = ['$|\hat n_i^{p',num2str(ij_-1),'}|$']; title(LEGEND);
+%% Hermite energy spectra
+% tf = Ts2D(end-3);
+time_array = [1, 100, 400, 1000];
+fig = figure; FIGNAME = ['hermite_spectrum_',PARAMS];set(gcf, 'Position',  [100, 100, 1000, 300]);
+plt = @(x) squeeze(x);
+for ij = 1:Nji
+    subplotnum = 100+Nji*10+ij;
+    subplot(subplotnum)
+    for it5 = 1:2:Ns5D
+        alpha = it5*1.0/Ns5D;
+        loglog(Pi(1:2:end),plt(epsilon_i_pj(1:2:end,ij,it5)),...
+            'color',(1-alpha)*[0.8500, 0.3250, 0.0980]+alpha*[0, 0.4470, 0.7410],...
+            'DisplayName',['t=',num2str(Ts5D(it5))]); hold on;
+    end
+    grid on;
+    xlabel('$p$');
+    TITLE = ['$\sum |N_i^{p',num2str(Ji(ij)),'}|^2$']; title(TITLE);
 end
 save_figure
-end
 end
 
 
@@ -333,8 +333,8 @@ end
 t0    = 0;
 [~, it02D] = min(abs(Ts2D-t0));
 [~, it05D] = min(abs(Ts5D-t0));
-skip_ = 1; 
-DELAY = 0.02*skip_;
+skip_ = 2; 
+DELAY = 0.01*skip_;
 FRAMES_2D = it02D:skip_:numel(Ts2D);
 FRAMES_5D = it05D:skip_:numel(Ts5D);
 %% GIFS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -345,7 +345,7 @@ FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$n_i$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
-if 0
+if 1
 %% Phi real space
 GIFNAME = ['phi',sprintf('_%.2d',JOBNUM),'_',PARAMS];INTERP = 1;
 FIELD = real(phi); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
