@@ -20,6 +20,7 @@ SUBROUTINE compute_Sapj
   REAL(dp),    DIMENSION(irs:ire,izs:ize)     :: fz_real, gr_real, f_times_g
 
   INTEGER :: in, is
+  INTEGER :: nmax, smax ! Upper bound of the sums
   REAL(dp):: kr, kz, kerneln
   LOGICAL :: COMPUTE_ONLY_ODD_P = .true.
   ! Execution time start
@@ -34,7 +35,16 @@ SUBROUTINE compute_Sapj
 
       real_data_c = 0._dp ! initialize sum over real nonlinear term
 
-      nloope: DO in = 1,jmaxe+1 ! Loop over laguerre for the sum
+      ! Set non linear sum truncation
+      IF (NL_CLOS .EQ. -2) THEN
+        nmax = Jmaxe
+      ELSEIF (NL_CLOS .EQ. -1) THEN
+        nmax = Jmaxe-(ij-1)
+      ELSE
+        nmax = NL_CLOS
+      ENDIF
+
+      nloope: DO in = 1,nmax+1 ! Loop over laguerre for the sum
 
         krloope: DO ikr = ikrs,ikre ! Loop over kr
           kzloope: DO ikz = ikzs,ikze ! Loop over kz
@@ -48,7 +58,9 @@ SUBROUTINE compute_Sapj
             ! Second convolution terms
             Gz_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
             Gr_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
-            DO is = 1, MIN( in+ij-1, jmaxe+1 ) ! sum truncation on number of moments
+
+            smax = MIN( (in-1)+(ij-1), jmaxe );
+            DO is = 1, smax+1 ! sum truncation on number of moments
               Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
                 dnjs(in,ij,is) * moments_e(ip,is,ikr,ikz,updatetlevel)
               Gr_cmpx(ikr,ikz) = Gr_cmpx(ikr,ikz) + &
@@ -114,7 +126,16 @@ SUBROUTINE compute_Sapj
     jloopi: DO ij = ijs_i, ije_i ! Loop over Laguerre moments
       real_data_c = 0._dp ! initialize sum over real nonlinear term
 
-      nloopi: DO in = 1,jmaxi+1 ! Loop over laguerre for the sum
+      ! Set non linear sum truncation
+      IF (NL_CLOS .EQ. -2) THEN
+        nmax = Jmaxe
+      ELSEIF (NL_CLOS .EQ. -1) THEN
+        nmax = Jmaxe-(ij-1)
+      ELSE
+        nmax = NL_CLOS
+      ENDIF
+
+      nloopi: DO in = 1,nmax+1 ! Loop over laguerre for the sum
 
         krloopi: DO ikr = ikrs,ikre ! Loop over kr
           kzloopi: DO ikz = ikzs,ikze ! Loop over kz
@@ -128,7 +149,9 @@ SUBROUTINE compute_Sapj
             ! Second convolution terms
             Gz_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
             Gr_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
-            DO is = 1, MIN( in+ij-1, jmaxi+1 ) ! sum truncation on number of moments
+
+            smax = MIN( (in-1)+(ij-1), jmaxe );
+            DO is = 1, smax+1 ! sum truncation on number of moments
               Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
                 dnjs(in,ij,is) * moments_i(ip,is,ikr,ikz,updatetlevel)
               Gr_cmpx(ikr,ikz) = Gr_cmpx(ikr,ikz) + &
