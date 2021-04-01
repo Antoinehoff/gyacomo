@@ -12,7 +12,7 @@ MODULE basic
   real(dp) :: time   = 0           ! Current simulation time (Init from restart file)
 
   INTEGER :: comm0                 ! Default communicator with a topology
-  INTEGER :: commp, commr          ! Communicators for 1-dim cartesian subgrids of comm0
+  INTEGER :: comm_p, comm_kr          ! Communicators for 1-dim cartesian subgrids of comm0
   INTEGER :: commr_p0              ! Communicators along kr for only rank 0 on p
 
   INTEGER :: jobnum  = 0           ! Job number
@@ -27,7 +27,7 @@ MODULE basic
   INTEGER :: num_procs             ! number of MPI processes
   INTEGER :: num_procs_p           ! Number of processes in p
   INTEGER :: num_procs_kr          ! Number of processes in r
-  INTEGER :: rank_0, rank_p, rank_r! Ranks in comm0, commp, commr
+  INTEGER :: rank_0, rank_p, rank_r! Ranks in comm0, comm_p, comm_kr
   INTEGER :: nbr_L, nbr_R          ! Left and right neighbours (along p)
   INTEGER :: nbr_T, nbr_B          ! Top and bottom neighbours (along kr)
 

@@ -338,8 +338,8 @@ SUBROUTINE diagnose_2d
 
     root = 0
     !!!!! This is a manual way to do MPI_BCAST !!!!!!!!!!!
-    CALL MPI_COMM_RANK(commp,world_rank,ierr)
-    CALL MPI_COMM_SIZE(commp,world_size,ierr)
+    CALL MPI_COMM_RANK(comm_p,world_rank,ierr)
+    CALL MPI_COMM_SIZE(comm_p,world_size,ierr)
 
     IF (world_size .GT. 1) THEN
       !! Broadcast phi to the other processes on the same k range (communicator along p)
@@ -353,11 +353,11 @@ SUBROUTINE diagnose_2d
         ! Send it to all the other processes
         DO i_ = 0,num_procs_p-1
           IF (i_ .NE. world_rank) &
-          CALL MPI_SEND(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, i_, 0, commp, ierr)
+          CALL MPI_SEND(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, i_, 0, comm_p, ierr)
         ENDDO
       ELSE
         ! Recieve buffer from root
-        CALL MPI_RECV(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, root, 0, commp, MPI_STATUS_IGNORE, ierr)
+        CALL MPI_RECV(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, root, 0, comm_p, MPI_STATUS_IGNORE, ierr)
         ! Write it in phi
         DO ikr = ikrs,ikre
           DO ikz = ikzs,ikze
@@ -370,8 +370,8 @@ SUBROUTINE diagnose_2d
     CALL write_field2d(Ne00(ikrs:ikre,ikzs:ikze), 'Ne00')
 
       !!!!! This is a manual way to do MPI_BCAST !!!!!!!!!!!
-    CALL MPI_COMM_RANK(commp,world_rank,ierr)
-    CALL MPI_COMM_SIZE(commp,world_size,ierr)
+    CALL MPI_COMM_RANK(comm_p,world_rank,ierr)
+    CALL MPI_COMM_SIZE(comm_p,world_size,ierr)
 
     IF (world_size .GT. 1) THEN
       !! Broadcast phi to the other processes on the same k range (communicator along p)
@@ -385,11 +385,11 @@ SUBROUTINE diagnose_2d
         ! Send it to all the other processes
         DO i_ = 0,num_procs_p-1
           IF (i_ .NE. world_rank) &
-          CALL MPI_SEND(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, i_, 0, commp, ierr)
+          CALL MPI_SEND(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, i_, 0, comm_p, ierr)
         ENDDO
       ELSE
         ! Recieve buffer from root
-        CALL MPI_RECV(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, root, 0, commp, MPI_STATUS_IGNORE, ierr)
+        CALL MPI_RECV(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, root, 0, comm_p, MPI_STATUS_IGNORE, ierr)
         ! Write it in phi
         DO ikr = ikrs,ikre
           DO ikz = ikzs,ikze
@@ -408,7 +408,7 @@ CONTAINS
     USE futils, ONLY: attach, putarr
     USE grid, ONLY: ikrs,ikre, ikzs,ikze, nkr, nkz, local_nkr
     USE prec_const
-    USE basic, ONLY : commr, num_procs_p, rank_p
+    USE basic, ONLY : comm_kr, num_procs_p, rank_p
     IMPLICIT NONE
 
     COMPLEX(dp), DIMENSION(ikrs:ikre, ikzs:ikze), INTENT(IN) :: field

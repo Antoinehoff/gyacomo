@@ -37,7 +37,7 @@ MODULE fourier
     NR_halved = NR_/2 + 1
 
     ! communicator = MPI_COMM_WORLD
-    communicator = commr
+    communicator = comm_kr
 
     !! Complex arrays F, G
     ! Compute the room to allocate
