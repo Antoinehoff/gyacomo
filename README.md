@@ -54,9 +54,15 @@ How to run it
 
 	2.4 2D cartesian parallel (along p and kr)
 
+<<<<<<< HEAD
 #2.5 GK Sugama collision operator
 
 	2.6 GPU accelerated version
+=======
+#	2.5 GK Sugama collision operator
+
+  2.6 GPU accelerated version
+>>>>>>> e0f1973e4234da1ac2089c60ed313fed401da75d
 
 	2.7 GK Full Coulomb collision operator
 
