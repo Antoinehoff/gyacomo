@@ -4,12 +4,15 @@ To compile it check INSTALLATION.txt
 How to run it
 
 1. Be sure to have correct paths in local/dirs.inc for the different libraries
-2. You can compile from HeLaZ/ using make and launch from HeLaZ/wk using ./../bin/HeLaZ
-3. To have a better interface, open a script HeLaZ/wk/parameters*.m and run it to set up a wanted simulation.
-4. You can obtain various plots and gifs using HeLaZ/wk/analysis_2D.m once the simulation is done. To select the correct output file, run parameters*.m with the corresponding simulation parameters and then run analysis_2D.m (everything with matlab from wk/)
+2. Compile from HeLaZ/ using make
+3. To run the code, use HeLaZ/wk/local_run.m and run it to set up the parameters and the results folder
+4. Then go to the results folder and launch HeLaZ using mpirun -np num_procs ./../../../bin/helaz num_p num_kr
+5. You can obtain various plots and gifs using HeLaZ/wk/analysis_2D.m once the simulation is done. To select the correct output file, run parameters*.m with the corresponding simulation parameters and then run analysis_2D.m (everything with matlab from wk/)
+
+// Comment : For some collision operators (Sugama and Full Coulomb) you have to run COSOlver from B.J.Frei first in order to generate the required matrices in HeLaZ/iCa folder.
 
 # Logbook
-(Current versions : 2.4)
+(Current versions : 2.5)
 
 0. Write MOLI matlab solver in Fortran using Monli1D as starting point
 
@@ -72,12 +75,16 @@ How to run it
 
 		2.4.1 Parallel scaling and numerical stability
 
-	2.5 GK Coulomb operator
+	2.5 GK Sugama collision operator
 
-3. GK 3D version, kr,kz,kpar for linear device
+  2.7 GPU accelerated version
 
-3. DK 3D version, kr,kz,kpar for linear device
+	2.8 GK Full Coulomb collision operator
 
-4. DK+GK 3D version, kr,kz,kpar for linear device
+4. GK 3D version, kr,kz,kpar for linear device
 
-4. 3D version with curvature
+5. DK 3D version, kr,kz,kpar for linear device
+
+6. DK+GK 3D version, kr,kz,kpar for linear device
+
+7. 3D version with curvature
