@@ -52,18 +52,13 @@ How to run it
 
 	2.3 GK Dougherty operator
 
-		2.3.1 Convergence study of steady radial particle transport
-
-			2.3.1.1 Detailed analysis of numerical stability for P,J = 10,5.
-							(test were done with non linear s-sum truncated at 2, worked great.)
-
 	2.4 2D cartesian parallel (along p and kr)
 
-	2.5 GK Sugama collision operator
+#	2.5 GK Sugama collision operator
 
-  2.7 GPU accelerated version
+  2.6 GPU accelerated version
 
-	2.8 GK Full Coulomb collision operator
+	2.7 GK Full Coulomb collision operator
 
 4. GK 3D version, kr,kz,kpar for linear device
 
