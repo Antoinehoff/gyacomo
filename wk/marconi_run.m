@@ -8,28 +8,28 @@ CLUSTER.TIME  = '12:00:00'; % allocation time hh:mm:ss
 CLUSTER.PART  = 'prod';     % dbg or prod
 CLUSTER.MEM   = '16GB';     % Memory
 CLUSTER.JNAME = 'gamma_inf';% Job name
-NP_P          = 1;          % MPI processes along p  
+NP_P          = 2;          % MPI processes along p  
 NP_KR         = 24;         % MPI processes along kr
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
 NU      = 0.1;   % Collision frequency
 ETAB    = 0.6;   % Magnetic gradient
-NU_HYP  = 10.0;   % Hyperdiffusivity coefficient
+NU_HYP  = 1.0;   % Hyperdiffusivity coefficient
 %% GRID PARAMETERS
 N       = 200;   % Frequency gridpoints (Nkr = N/2)
 L       = 120;   % Size of the squared frequency domain
-P       = 04;    % Electron and Ion highest Hermite polynomial degree
-J       = 04;    % Electron and Ion highest Laguerre polynomial degree
+P       = 10;    % Electron and Ion highest Hermite polynomial degree
+J       = 05;    % Electron and Ion highest Laguerre polynomial degree
 MU_P    = 0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
-TMAX    = 2000;  % Maximal time unit
-DT      = 1e-2;  % Time step
+TMAX    = 250;  % Maximal time unit
+DT      = 5e-4;  % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1;   % Sampling per time unit for 2D arrays
 SPS5D   = 1/50;  % Sampling per time unit for 5D arrays
 SPSCP   = 0;  % Sampling per time unit for checkpoints
-RESTART = 0;     % To restart from last checkpoint
+RESTART = 1;     % To restart from last checkpoint
 JOB2LOAD= 1;
 %% OPTIONS
 SIMID   = ['HeLaZ_v2.4_eta_',num2str(ETAB),'_nu_%0.0e'];  % Name of the simulation
@@ -37,11 +37,10 @@ SIMID   = ['HeLaZ_v2.4_eta_',num2str(ETAB),'_nu_%0.0e'];  % Name of the simulati
 SIMID   = sprintf(SIMID,NU);
 PREFIX  =[];
 % PREFIX  = sprintf('%d_%d_',NP_P, NP_KR);
-% Collision operator
-% (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty, -3 : GK Dougherty)
-CO      = -3;  
+% (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Full Couloumb ; +/- for GK/DK)
+CO      = 1;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
-NL_CLOS = 0;   % nonlinear closure model (0: =0 nmax = jmax, 1: nmax = jmax-j, >1 : nmax = NL_CLOS)
+NL_CLOS = 1;   % nonlinear closure model (0: =0 nmax = jmax, 1: nmax = jmax-j, >1 : nmax = NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)
 INIT_PHI= 1;   % Start simulation with a noisy phi and moments
 %% OUTPUTS

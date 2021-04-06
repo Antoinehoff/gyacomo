@@ -64,7 +64,6 @@ fprintf(fid,'/\n');
 
 fprintf(fid,'&INITIAL_CON\n');
 fprintf(fid,['  INIT_NOISY_PHI    =', INITIAL.init_noisy_phi,'\n']);
-% fprintf(fid,['  only_Na00         =', '.false.','\n']);
 fprintf(fid,['  initback_moments  =', num2str(INITIAL.initback_moments),'\n']);
 fprintf(fid,['  initnoise_moments =', num2str(INITIAL.initnoise_moments),'\n']);
 fprintf(fid,['  iseed             =', num2str(INITIAL.iseed),'\n']);
