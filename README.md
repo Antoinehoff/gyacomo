@@ -15,7 +15,7 @@ How to run it
 
 2. MPI parallel version
 
-	>2.5 GK Sugama collision operator
+	2.5 //GK COSOlver collision operator//
 
 	2.4 2D cartesian parallel (along p and kr)
 
