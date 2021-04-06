@@ -25,12 +25,10 @@ How to run it
 	0.3 RK4 time solver
 
 	0.4 Benchmark with MOLI matlab results for Z-pinch (cf. kz_linear script)
-		Note : benchmark_*.m compares MOLI and HeLaZ linear results
 
 	0.5 Load COSOlver matrices
 
 	0.6 Benchmarks now include Dougherty, Lenard-Bernstein and Full Coulomb collision operators
-	    Note : for full Coulomb, one must store a precomputed matrix from COSOlver in the iCa folder
 
 1. Implementation of the non linear Poisson brackets term
 
@@ -44,25 +42,13 @@ How to run it
 
 	1.3 Linear analysis showed that a certain amount of PJ are recquired to trigger mode
 
-		1.3.1 The \eta_B = 0.5 case is easier since it converged better in linear analysis than \eta_B = 1.0
-
-		1.3.2 Collisionality helps
-
 	1.4 Quantitative study with stationary average particle flux \Gamma_\infty
 
-		1.4.1 Convergence study of \Gamma_\infty w.r.t. P and J
-
-		1.4.2 Direct comparison with GS2 results of Ricci,Rogers 2006
-
-		1.4.3 Code too expensive in sequential to reach PJ convergence
-
-2. MPI parallel version (branch MPI)
+2. MPI parallel version
 
 	2.1 First compilable parallel version (1D parallel along kr)
 
-		2.1.1 Benchmarks, profiling and portability of the code, max speed up is arround 10 for 12 proc. when using large enough resolution or polynomials degree. Should be inum_procs_kreased with other dimension distribution.
-
-	2.2 Allow restart with different P,J values
+	2.2 Allow restart with different P,J values (results are not concluents)
 
 	2.3 GK Dougherty operator
 
@@ -71,9 +57,7 @@ How to run it
 			2.3.1.1 Detailed analysis of numerical stability for P,J = 10,5.
 							(test were done with non linear s-sum truncated at 2, worked great.)
 
-	2.4 Data distribution along P
-
-		2.4.1 Parallel scaling and numerical stability
+	2.4 2D cartesian parallel (along p and kr)
 
 	2.5 GK Sugama collision operator
 
