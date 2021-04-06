@@ -1,4 +1,4 @@
-# HeLaZ (Hermite-Laguerre Z-pinch solver, 2020)
+# HeLaZ (Hermite-Laguerre Z-pinch solver, 2021)
 To compile it check INSTALLATION.txt
 
 How to run it
@@ -11,8 +11,8 @@ How to run it
 
 // Comment : For some collision operators (Sugama and Full Coulomb) you have to run COSOlver from B.J.Frei first in order to generate the required matrices in HeLaZ/iCa folder.
 
-# Logbook
-(Current versions : 2.5)
+# Road map
+(Current version : 2.5)
 
 0. Write MOLI matlab solver in Fortran using Monli1D as starting point
 
