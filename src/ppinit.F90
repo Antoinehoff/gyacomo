@@ -61,7 +61,7 @@ SUBROUTINE ppinit
   CALL MPI_CART_SUB (comm0, (/.FALSE.,.TRUE./), comm_kr, ierr)
   ! Find id inside the sub communicators
   CALL MPI_COMM_RANK(comm_p, rank_p, ierr)
-  CALL MPI_COMM_RANK(comm_kr, rank_r, ierr)
+  CALL MPI_COMM_RANK(comm_kr, rank_kr, ierr)
   ! Find neighbours
   CALL MPI_CART_SHIFT(comm0, 0, 1, nbr_L, nbr_R, ierr)
   CALL MPI_CART_SHIFT(comm0, 1, 1, nbr_B, nbr_T, ierr)

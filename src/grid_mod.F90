@@ -47,9 +47,6 @@ MODULE grid
   REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: krarray
   REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kzarray
   REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kparray     ! kperp array
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE, PUBLIC :: kparray_2D  ! kperp array in 2D
-  INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC :: ikparray    ! kperp indices array
-  INTEGER,  DIMENSION(:,:), ALLOCATABLE, PUBLIC :: ikparray_2D ! to convert (ikr,ikz) -> ikp
   REAL(dp), PUBLIC, PROTECTED ::  deltakr, deltakz
   INTEGER,  PUBLIC, PROTECTED ::  ikrs, ikre, ikzs, ikze, ikps, ikpe
   INTEGER,  PUBLIC, PROTECTED :: ikr_0, ikz_0 ! Indices of k-grid origin
@@ -82,9 +79,9 @@ CONTAINS
     ! write(*,*) Nr
     local_nkr        = (Nr/2+1)/num_procs_kr
     ! write(*,*) local_nkr
-    local_nkr_offset = rank_r*local_nkr
+    local_nkr_offset = rank_kr*local_nkr
 
-    if (rank_r .EQ. num_procs_kr-1) local_nkr = (Nr/2+1)-local_nkr_offset
+    if (rank_kr .EQ. num_procs_kr-1) local_nkr = (Nr/2+1)-local_nkr_offset
 
   END SUBROUTINE init_1Dgrid_distr
 
@@ -111,8 +108,6 @@ CONTAINS
       counts_np_i(in+1) = iend-istart+1
       displs_np_i(in+1) = istart-1
     ENDDO
-    write(*,*) rank_p, ': counts = ', counts_np_e
-    write(*,*) rank_p, ': disps = ',  displs_np_e
 
     ! local grid computation
     ALLOCATE(parray_e(ips_e:ipe_e))
@@ -227,36 +222,20 @@ CONTAINS
   SUBROUTINE set_kpgrid !Precompute the grid of kperp
     IMPLICIT NONE
     INTEGER :: ikz_sym, tmp_, counter
-    ! 2D to 1D indices array convertor
-    ALLOCATE(ikparray_2D(ikrs:ikre,ikzs:ikze))
-    ALLOCATE( kparray_2D(ikrs:ikre,ikzs:ikze))
+    REAL(dp):: local_kp_min, local_kp_max
+    ! Find the min and max kperp to load subsequent GK matrices
+    local_kp_min = krarray(ikrs) !smallest local kperp is on the kr axis
+    local_kp_max = SQRT(krarray(ikre)**2 + kzarray(Nkz/2+1)**2)
+    ikps = ikrs
+    ikpe = INT(CEILING(local_kp_max/deltakr))+2
     ! local number of different kperp
-    local_nkp = local_nkr * (local_nkr-1)/2 + 1
+    local_nkp = ikpe - ikps + 1
     ! Allocate 1D array of kperp values and indices
-    ALLOCATE(ikparray(1:local_nkr))
-    ALLOCATE( kparray(1:local_nkr))
-
-    ! Fill the arrays
-    tmp_ = 0; counter = 1
-    DO ikz = ikzs,ikze
-      DO ikr = ikrs,ikre
-        ! Set a symmetry on kz
-        IF (ikz .LE. Nkz/2+1) THEN
-          ikz_sym = ikz
-        ELSE
-          ikz_sym = Nkz+2 - ikz
-        ENDIF
-        ! Formula to find the 2D to 1D kperp equivalences ordered as
-        !      10
-        !    6 9
-        !  3 5 8
-        !1 2 4 7  etc...
-        ikp = MAX(ikr-1,ikz_sym-1)*MIN(ikr-1,ikz_sym-1)/2 + min(ikr-1,ikz_sym-1)
-        ikparray_2D(ikr,ikz) = ikp
-        kparray_2D(ikr,ikz)  = SQRT(krarray(ikr)**2 + kzarray(ikz)**2)
-      ENDDO
+    ALLOCATE(kparray(ikps:ikpe))
+    DO ikp = ikps,ikpe
+      kparray(ikp) = REAL(ikp-1,dp) * deltakr
     ENDDO
-
+    write(*,*) rank_kr, ': ikps = ', ikps, 'ikpe = ',ikpe
   END SUBROUTINE
 
   SUBROUTINE grid_readinputs

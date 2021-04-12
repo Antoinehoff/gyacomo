@@ -27,7 +27,7 @@ MODULE basic
   INTEGER :: num_procs             ! number of MPI processes
   INTEGER :: num_procs_p           ! Number of processes in p
   INTEGER :: num_procs_kr          ! Number of processes in r
-  INTEGER :: rank_0, rank_p, rank_r! Ranks in comm0, comm_p, comm_kr
+  INTEGER :: rank_0, rank_p, rank_kr! Ranks in comm0, comm_p, comm_kr
   INTEGER :: nbr_L, nbr_R          ! Left and right neighbours (along p)
   INTEGER :: nbr_T, nbr_B          ! Top and bottom neighbours (along kr)
 

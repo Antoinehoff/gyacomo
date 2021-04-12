@@ -36,7 +36,7 @@ subroutine auxval
       IF (my_id .EQ. 0) WRITE(*,'(A9,I3,A10,I3,A10,I3)') 'n_procs= ', num_procs, ', num_procs_p   = ', num_procs_p, ', num_procs_kr   = ', num_procs_kr
       IF (my_id .EQ. 0) WRITE(*,*) ''
       WRITE(*,'(A9,I3,A10,I3,A10,I3)')&
-       'my_id  = ', my_id, ', rank_p  = ', rank_p, ', rank_r  = ', rank_r
+       'my_id  = ', my_id, ', rank_p  = ', rank_p, ', rank_kr  = ', rank_kr
        WRITE(*,'(A22,I3,A10,I3)')&
        '              ips_e = ', ips_e, ', ikrs  = ', ikrs
        WRITE(*,'(A22,I3,A10,I3)')&
