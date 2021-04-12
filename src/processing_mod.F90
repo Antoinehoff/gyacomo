@@ -45,12 +45,12 @@ SUBROUTINE compute_radial_ion_transport
         pflux_ri = 0
         IF (num_procs_kr .GT. 1) THEN
             !! Everyone sends its local_sum to root = 0
-            IF (rank_r .NE. root) THEN
+            IF (rank_kr .NE. root) THEN
                 CALL MPI_SEND(buffer, 2 , MPI_DOUBLE_PRECISION, root, 1234, comm_kr, ierr)
             ELSE
                 ! Recieve from all the other processes
                 DO i_ = 0,num_procs_kr-1
-                    IF (i_ .NE. rank_r) &
+                    IF (i_ .NE. rank_kr) &
                         CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_kr, MPI_STATUS_IGNORE, ierr)
                         gflux_ri = gflux_ri + buffer(1)
                         pflux_ri = pflux_ri + buffer(2)
