@@ -27,7 +27,7 @@ fprintf(fid,'\n');
 fprintf(fid,'&BASIS_TRANSFORMATION_PAR\n');
 fprintf(fid,['T5dir = ','''/misc/coeffs_backup/T5src/''','\n']);
 fprintf(fid,['T4dir = ','''/misc/T4/NNT4_L000x200_K000x200_P000x200_J000x200/''','\n']);
-fprintf(fid,'idxT4max = 30\n');
+fprintf(fid,['idxT4max = ',num2str(COSOLVER.idxT4max),'\n']);
 fprintf(fid,'idxT5max = 0\n');
 fprintf(fid,'IFT4 = .true.\n');
 fprintf(fid,'IFT5 = .false.\n');

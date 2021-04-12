@@ -16,12 +16,16 @@ if 0
    figure
    plot(kperp)
 end
-%% Check if the differences btw kperp is larger than naming precision
-dkperp  = diff(kperp);
-warning = sum(dkperp<0.0002);
-if warning > 0
-    disp('Warning : dkperp < 0.0002');
-end
+% %% Check if the differences btw kperp is larger than naming precision
+% dkperp  = diff(kperp);
+% warning = sum(dkperp<0.0002);
+% if warning > 0
+%     disp('Warning : dkperp < 0.0002');
+% end
+%%
+%% We compute only on a kperp grid with dk space from 0 to kperpmax
+kperp = unique([0:dk:(sqrt(2)*kmax),sqrt(2)*kmax]);
+kperpmax = sqrt(2) * kmax;
 %%
 n_ = 1;
 for k_ = kperp
@@ -33,8 +37,9 @@ for k_ = kperp
     COSOLVER.jmaxi = 5;
     COSOLVER.kperp = k_;
 
-    COSOLVER.neFLR  = max(5,ceil(COSOLVER.kperp^2)); % rule of thumb for sum truncation
-    COSOLVER.niFLR  = max(5,ceil(COSOLVER.kperp^2));
+    COSOLVER.neFLR    = min(ceil((2/3*kperpmax)^2),max(5,ceil(COSOLVER.kperp^2))); % rule of thumb for sum truncation
+    COSOLVER.niFLR    = max(5,ceil(COSOLVER.kperp^2));
+    COSOLVER.idxT4max = 40;
 
     COSOLVER.neFLRs = 0; %  ... only for GK abel 
     COSOLVER.npeFLR = 0; %  ... only for GK abel 
@@ -69,7 +74,7 @@ for k_ = kperp
     else
         cd ../../Documents/MoliSolver/COSOlver/
         disp(['Matrix not found for kperp = ',k_string]);
-        disp([num2str(n_),'/',Nperp]
+        disp([num2str(n_),'/',Nperp])
         disp('computing...');
         CMD = 'mpirun -np 6 bin/CO 2 2 2 > out.txt';
         disp(CMD); 

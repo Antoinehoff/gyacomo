@@ -4,19 +4,19 @@ addpath(genpath('../matlab')) % ... add
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.01;   % Collision frequency
-ETAB    = 0.8;    % Magnetic gradient
+NU      = 1.0;   % Collision frequency
+ETAB    = 0.5;    % Magnetic gradient
 ETAN    = 1.0;    % Density gradient
 NU_HYP  = 1.0;
 %% GRID PARAMETERS
-N       = 50;     % Frequency gridpoints (Nkr = N/2)
-L       = 100;     % Size of the squared frequency domain
-PMAXE   = 4;     % Highest electron Hermite polynomial degree
-JMAXE   = 4;     % Highest ''       Laguerre ''
-PMAXI   = 4;     % Highest ion      Hermite polynomial degree
-JMAXI   = 4;     % Highest ''       Laguerre ''
+N       = 200;     % Frequency gridpoints (Nkr = N/2)
+L       = 120;     % Size of the squared frequency domain
+PMAXE   = 10;     % Highest electron Hermite polynomial degree
+JMAXE   = 05;     % Highest ''       Laguerre ''
+PMAXI   = 10;     % Highest ion      Hermite polynomial degree
+JMAXI   = 05;     % Highest ''       Laguerre ''
 %% TIME PARAMETERS
-TMAX    = 2000;  % Maximal time unit
+TMAX    = 50;  % Maximal time unit
 DT      = 2e-2;   % Time step
 SPS0D   = 1;    % Sampling per time unit for profiler
 SPS2D   = 1/2;      % Sampling per time unit for 2D arrays
@@ -27,15 +27,11 @@ JOB2LOAD= 0;
 %% OPTIONS AND NAMING
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Full Couloumb ; +/- for GK/DK)
-CO      = 1;
+CO      = 2 ;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
 NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
-KERN    = 0;   % Kernel model (0 : GK)
-INIT_PHI= 1;   % Start simulation with a noisy phi and moments
-% SIMID   = ['local_eta_',num2str(ETAB),'_nu_%0.0e'];  % Name of the simulation
-% SIMID   = sprintf(SIMID,NU);
-% SIMID   = 'test_init_phi';  % Name of the simulation
-SIMID   = ['test_nonlin_NL_CLOS_',num2str(NL_CLOS)];  % Name of the simulation
+SIMID   = 'test_SGGK_full_size';  % Name of the simulation
+NON_LIN = 1 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
 %% OUTPUTS
 W_DOUBLE = 0;
 W_GAMMA  = 1;
@@ -46,11 +42,11 @@ W_SAPJ   = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% unused
+KERN    = 0;   % Kernel model (0 : GK)
 KR0KH   = 0; A0KH = 0; % Background phi mode to drive Ray-Tay inst.
 KREQ0   = 0;      % put kr = 0
 KPAR    = 0.0;    % Parellel wave vector component
 LAMBDAD = 0.0;
-NON_LIN = 1 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
 kmax    = N*pi/L;% Highest fourier mode
 HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
 % kmaxcut = 2.5;
@@ -60,6 +56,7 @@ TAU     = 1.0;    % e/i temperature ratio
 ETAT    = 0.0;    % Temperature gradient
 MU_P    = 0.0/PMAXI^2;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0/JMAXI^3;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
+INIT_PHI= 1;   % Start simulation with a noisy phi and moments
 %% Setup and file management
 setup
 system('rm fort.90');

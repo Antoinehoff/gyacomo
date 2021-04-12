@@ -1,11 +1,13 @@
 %% Load results
 outfile ='';
-if 0
+if 1
     %% Load from Marconi
 outfile ='';
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.4_eta_0.8_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.8_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
-% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.4_eta_0.7_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.7_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
-% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.4_eta_0.6_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.6_nu_1e-01/200x100_L_120_P_20_J_3_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.8_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.8_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.7_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.7_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.6_nu_1e-01/200x100_L_120_P_12_J_6_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.6_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-01_SGGK_CLOS_0_mu_2e-02/out.txt';
     BASIC.RESDIR = load_marconi(outfile);
 end
 if 0
@@ -196,7 +198,7 @@ set(gcf, 'Position',  [100, 100, 900, 800])
         lstyle   = line_styles(min(ij,numel(line_styles)));
         plot(Ts2D,phi_max,'DisplayName',plotname); hold on;
     grid on; xlabel('$t c_s/R$'); ylabel('$\max_{r,z}(\phi)$'); %legend('show');
-% suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB)]);
+suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB)]);
 save_figure
 end
 
@@ -309,7 +311,6 @@ end
 if 0
 %% Hermite energy spectra
 % tf = Ts2D(end-3);
-time_array = [1, 100, 400, 1000];
 fig = figure; FIGNAME = ['hermite_spectrum_',PARAMS];set(gcf, 'Position',  [100, 100, 1000, 300]);
 plt = @(x) squeeze(x);
 for ij = 1:Nji
@@ -323,12 +324,42 @@ for ij = 1:Nji
     end
     grid on;
     xlabel('$p$');
-    TITLE = ['$\sum |N_i^{p',num2str(Ji(ij)),'}|^2$']; title(TITLE);
+    TITLE = ['$\sum_{kr,kz} |N_i^{p',num2str(Ji(ij)),'}|^2$']; title(TITLE);
 end
 save_figure
 end
+%%
+if 0
+%% Laguerre energy spectra
+% tf = Ts2D(end-3);
+fig = figure; FIGNAME = ['laguerre_spectrum_',PARAMS];set(gcf, 'Position',  [100, 100, 500, 400]);
+plt = @(x) squeeze(x);
+for it5 = 1:2:Ns5D
+    alpha = it5*1.0/Ns5D;
+    loglog(Ji,plt(max(epsilon_i_pj(:,:,it5),[],1)),...
+        'color',(1-alpha)*[0.8500, 0.3250, 0.0980]+alpha*[0, 0.4470, 0.7410],...
+        'DisplayName',['t=',num2str(Ts5D(it5))]); hold on;
+end
+grid on;
+xlabel('$j$');
+TITLE = ['$\max_p\sum_{kr,kz} |N_i^{pj}|^2$']; title(TITLE);
+save_figure
+end
 
-
+%%
+no_AA     = (2:floor(2*Nkr/3));
+tKHI      = 200;
+[~,itKHI] = min(abs(Ts2D-tKHI));
+after_KHI = (itKHI:Ns2D);
+if 0
+%% Phi frequency space time diagram at kz=0
+fig = figure; FIGNAME = ['phi_freq_diag_',PARAMS];set(gcf, 'Position',  [100, 100, 500, 400]);
+        [TY,TX] = meshgrid(Ts2D(after_KHI),kr(no_AA));
+        pclr = pcolor(TX,TY,log10(squeeze(abs(PHI(no_AA,1,(after_KHI)))))); set(pclr, 'edgecolor','none'); colorbar;
+        ylabel('$t c_s/R$'), xlabel('$0<k_r<2/3 k_r^{\max}$')
+        legend('$\log|\tilde\phi(k_z=0)|$')
+        title('Spectrogram of $\phi$')
+end
 %%
 t0    = 0;
 [~, it02D] = min(abs(Ts2D-t0));
@@ -368,10 +399,18 @@ create_gif
 end
 if 0
 %% phi @ z = 0
-GIFNAME = ['phi_r0',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
+GIFNAME = ['phi_z0',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
 FIELD =(squeeze(real(phi(:,1,:)))); linestyle = '-.'; FRAMES = FRAMES_2D;
 X = (r); T = Ts2D; YMIN = -1.1; YMAX = 1.1; XMIN = min(r); XMAX = max(r);
 FIELDNAME = '$\phi(r=0)$'; XNAME = '$r/\rho_s$';
+create_gif_1D
+end
+if 0
+%% phi @ kz = 0
+GIFNAME = ['phi_kz0',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0; SCALING = 0;
+FIELD =squeeze(log10(abs(PHI(no_AA,1,:)))); linestyle = '-.'; FRAMES = FRAMES_2D;
+X = kr(no_AA); T = Ts2D; YMIN = -30; YMAX = 6; XMIN = min(kr); XMAX = max(kr);
+FIELDNAME = '$|\tilde\phi(k_z=0)|$'; XNAME = '$k_r\rho_s$';
 create_gif_1D
 end
 if 0
