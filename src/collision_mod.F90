@@ -237,11 +237,7 @@ CONTAINS
             ENDDO
             ! Sum up all the sub collision terms on root 0
             CALL MPI_REDUCE(local_sum_e, buffer_e, pmaxe+1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
-            ! IF(rank_p .EQ. 0) THEN
-            !   DO ip = 1,Pmaxe+1
-            !     total_sum_e(ip) = buffer_e(ip)
-            !   ENDDO
-            ! ENDIF
+
             ! distribute the sum over the process among p
             CALL MPI_SCATTERV(buffer_e, counts_np_e, displs_np_e, MPI_DOUBLE_COMPLEX,&
                               TColl_distr_e, local_np_e, MPI_DOUBLE_COMPLEX,&
@@ -258,11 +254,7 @@ CONTAINS
             ENDDO
             ! Reduce the local_sums to root = 0
             CALL MPI_REDUCE(local_sum_i, buffer_i, pmaxi+1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
-            ! IF(rank_p .EQ. 0) THEN
-            !   DO ip = 1,Pmaxi+1
-            !     total_sum_i(ip) = buffer_i(ip)
-            !   ENDDO
-            ! ENDIF
+
             ! buffer_e contains the entire collision term along p, scatter it among
             ! the other processes (use of scatterv since Pmax/Np is not an integer)
             CALL MPI_SCATTERV(buffer_i, counts_np_i, displs_np_i, MPI_DOUBLE_COMPLEX,&
@@ -275,11 +267,6 @@ CONTAINS
         ENDDO
       ENDDO
     ENDIF
-    ! IF(cstep .EQ. 1) THEN
-    !   write(*,*) rank_p, ': local_sum = ', local_sum_e
-    !   write(*,*) rank_p, ': buffer = ', buffer_e
-    !   write(*,*) rank_p, ': dist_sum = ', TColl_distr_e
-    ! ENDIF
 
   END SUBROUTINE compute_TColl
 
