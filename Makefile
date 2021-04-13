@@ -4,7 +4,7 @@ include local/make.inc
 EXEC = $(BINDIR)/helaz
 
 F90 = mpiifort
-
+#F90 = ftn #for piz-daint cluster
 # Add Multiple-Precision Library
 EXTLIBS += -L$(FMDIR)/lib
 EXTINC += -I$(FMDIR)/mod
@@ -77,7 +77,7 @@ $(OBJDIR)/stepon.o $(OBJDIR)/tesend.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)
  $(OBJDIR)/closure_mod.o : src/closure_mod.F90 $(OBJDIR)/model_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/fields_mod.o
 	 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/closure_mod.F90 -o $@
 
- $(OBJDIR)/collision_mod.o : src/collision_mod.F90 $(OBJDIR)/initial_par_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/time_integration_mod.o
+ $(OBJDIR)/collision_mod.o : src/collision_mod.F90 $(OBJDIR)/initial_par_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 	 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/collision_mod.F90 -o $@
 
  $(OBJDIR)/compute_Sapj.o : src/compute_Sapj.F90 $(OBJDIR)/array_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/fourier_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/time_integration_mod.o
@@ -101,7 +101,7 @@ $(OBJDIR)/stepon.o $(OBJDIR)/tesend.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)
  $(OBJDIR)/fourier_mod.o : src/fourier_mod.F90 $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/grid_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/fourier_mod.F90 -o $@
 
- $(OBJDIR)/ghosts_mod.o : src/ghosts_mod.F90 $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/ppinit.o  $(OBJDIR)/time_integration_mod.o 
+ $(OBJDIR)/ghosts_mod.o : src/ghosts_mod.F90 $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/ppinit.o  $(OBJDIR)/time_integration_mod.o
 		$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/ghosts_mod.F90 -o $@
 
  $(OBJDIR)/grid_mod.o : src/grid_mod.F90 $(OBJDIR)/basic_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/prec_const_mod.o
