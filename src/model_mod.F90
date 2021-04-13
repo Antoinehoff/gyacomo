@@ -73,10 +73,17 @@ CONTAINS
     qi2_taui        = (q_i**2)/tau_i
     sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the Kernel argument
     sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp
-    nu_e            = nu ! electron-ion collision frequency (where already multiplied by 0.532)
-    nu_i            = nu * sigma_e * (tau_i)**(-3._dp/2._dp)/SQRT2 ! ion-ion collision frequ.
-    nu_ee           = nu_e/SQRT2 ! e-e coll. frequ.
-    nu_ie           = nu*sigma_e**2 ! i-e coll. frequ.
+    IF (CO .GT. 1) THEN ! If using COSOlver mat, remove sqrt(2) factor (already contained)
+      nu_e            = nu   ! electron-ion collision frequency (where already multiplied by 0.532)
+      nu_ee           = nu_e ! e-e coll. frequ.
+      nu_i            = nu * sigma_e * (tau_i)**(-3._dp/2._dp) ! ion-ion collision frequ.
+      nu_ie           = nu_i ! i-e coll. frequ.
+    ELSE
+      nu_e            = nu ! electron-ion collision frequency (where already multiplied by 0.532)
+      nu_i            = nu * sigma_e * (tau_i)**(-3._dp/2._dp)/SQRT2 ! ion-ion collision frequ.
+      nu_ee           = nu_e/SQRT2 ! e-e coll. frequ.
+      nu_ie           = nu*sigma_e**2 ! i-e coll. frequ.
+    ENDIF
   END SUBROUTINE model_readinputs
 
 
