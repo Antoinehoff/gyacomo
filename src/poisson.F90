@@ -65,13 +65,7 @@ SUBROUTINE poisson
     ! Cancel origin singularity
     IF ((ikr_0 .GE. ikrs) .AND. (ikr_0 .LE. ikre)) phi(ikr_0,ikz_0) = 0
 
-    ! Execution time end
-    CALL cpu_time(t1_poisson)
-    tc_poisson = tc_poisson + (t1_poisson - t0_poisson)
-
   ENDIF
-
-  CALL cpu_time(t0_comm)
 
   root_bcast = 0 ! Proc zero computes phi for every p
 
@@ -105,9 +99,8 @@ SUBROUTINE poisson
     ENDIF
   ENDIF
 
-  CALL cpu_time(t1_comm)
-  tc_comm = tc_comm + (t1_comm - t0_comm)
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+  ! Execution time end
+  CALL cpu_time(t1_poisson)
+  tc_poisson = tc_poisson + (t1_poisson - t0_poisson)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END SUBROUTINE poisson

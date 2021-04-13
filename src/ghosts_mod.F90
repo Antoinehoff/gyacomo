@@ -13,7 +13,7 @@ PUBLIC :: update_ghosts
 CONTAINS
 
 SUBROUTINE update_ghosts
-    CALL cpu_time(t0_comm)
+    CALL cpu_time(t0_ghost)
 
     IF (num_procs_p .GT. 1) THEN ! Do it only if we share the p
         CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
@@ -22,9 +22,9 @@ SUBROUTINE update_ghosts
         CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
         CALL update_ghosts_p_i
     ENDIF
-    
-    CALL cpu_time(t1_comm)
-    tc_comm = tc_comm + (t1_comm - t0_comm)
+
+    CALL cpu_time(t1_ghost)
+    tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
 END SUBROUTINE update_ghosts
 
 

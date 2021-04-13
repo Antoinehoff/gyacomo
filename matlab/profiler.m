@@ -7,27 +7,30 @@ DT_SIM    = h5readatt(filename,'/data/input','dt');
 
 rhs_Tc       = h5read(filename,'/profiler/Tc_rhs');
 adv_field_Tc = h5read(filename,'/profiler/Tc_adv_field');
+ghost_Tc      = h5read(filename,'/profiler/Tc_ghost');
+clos_Tc      = h5read(filename,'/profiler/Tc_clos');
+coll_Tc      = h5read(filename,'/profiler/Tc_coll');
 poisson_Tc   = h5read(filename,'/profiler/Tc_poisson');
 Sapj_Tc      = h5read(filename,'/profiler/Tc_Sapj');
-diag_Tc      = h5read(filename,'/profiler/Tc_diag');
-comm_Tc      = h5read(filename,'/profiler/Tc_comm');
 checkfield_Tc= h5read(filename,'/profiler/Tc_checkfield');
+diag_Tc      = h5read(filename,'/profiler/Tc_diag');
 step_Tc      = h5read(filename,'/profiler/Tc_step');
 Ts0D         = h5read(filename,'/profiler/time');
 
-missing_Tc   = step_Tc - rhs_Tc - adv_field_Tc - comm_Tc -...
-               poisson_Tc - Sapj_Tc -diag_Tc -checkfield_Tc;
+missing_Tc   = step_Tc - rhs_Tc - adv_field_Tc - ghost_Tc -clos_Tc ...
+              -coll_Tc -poisson_Tc -Sapj_Tc -checkfield_Tc -diag_Tc;
 total_Tc     = step_Tc;
 
-TIME_PER_FCT = [diff(rhs_Tc); diff(adv_field_Tc); diff(poisson_Tc); diff(comm_Tc);...
-    diff(Sapj_Tc); diff(checkfield_Tc); diff(diag_Tc); diff(missing_Tc)];
-TIME_PER_FCT = reshape(TIME_PER_FCT,[numel(TIME_PER_FCT)/8,8]);
+TIME_PER_FCT = [diff(rhs_Tc); diff(adv_field_Tc); diff(ghost_Tc);...
+    diff(clos_Tc); diff(coll_Tc); diff(poisson_Tc); diff(Sapj_Tc); ...
+    diff(checkfield_Tc); diff(diag_Tc); diff(missing_Tc)];
+TIME_PER_FCT = reshape(TIME_PER_FCT,[numel(TIME_PER_FCT)/10,10]);
 
 TIME_PER_STEP = sum(TIME_PER_FCT,2);
 TIME_PER_CPU  = trapz(Ts0D(2:end),TIME_PER_STEP);
 
 %% Plots
-TIME_PER_FCT = [diff(rhs_Tc); diff(adv_field_Tc); diff(poisson_Tc); diff(comm_Tc);...
+TIME_PER_FCT = [diff(rhs_Tc); diff(adv_field_Tc); diff(poisson_Tc); diff(ghost_Tc);...
     diff(Sapj_Tc); diff(checkfield_Tc); diff(diag_Tc); diff(missing_Tc)];
 TIME_PER_FCT = reshape(TIME_PER_FCT,[numel(TIME_PER_FCT)/8,8]);
 fig = figure;

@@ -26,6 +26,8 @@ SUBROUTINE apply_closure_model
   sqpp1p_e   = SQRT((pmaxe_dp+1)*(pmaxe_dp))
   sqpp1p_i   = SQRT((pmaxi_dp+1)*(pmaxi_dp))
 
+  CALL cpu_time(t0_clos)
+
   ! Negative out of bounds indices are put to zero (analytically correct)
     DO ikr = ikrs,ikre
       DO ikz = ikzs,ikze
@@ -74,7 +76,7 @@ SUBROUTINE apply_closure_model
             moments_i(ipeg_i  ,ij,ikr,ikz,:) = 0._dp
           ENDDO
           kernel_i(ijeg_i,ikr,ikz)      = 0._dp
-          
+
         ENDDO
       ENDDO
 
@@ -140,7 +142,7 @@ SUBROUTINE apply_closure_model
         ! Copy closure : P+2 <- P, P+1 <- P-1, J+1 <- J
         DO ikr = ikrs,ikre
           DO ikz = ikzs,ikze
-  
+
             DO ip = ipsg_e,ipeg_e
               ! J ghost is J+1, so we put moment J to J+1
               moments_e(ip,ijeg_e,ikr,ikz,:) = moments_e(ip,ije_e,ikr,ikz,:)
@@ -158,7 +160,7 @@ SUBROUTINE apply_closure_model
               moments_i(ipeg_i-1,ij,ikr,ikz,:) = moments_i(ipe_i-1,ij,ikr,ikz,:)
               moments_i(ipeg_i  ,ij,ikr,ikz,:) = moments_i(ipe_i  ,ij,ikr,ikz,:)
             ENDDO
-            
+
           ENDDO
         ENDDO
 
@@ -166,6 +168,8 @@ SUBROUTINE apply_closure_model
       if(my_id .EQ. 0) write(*,*) '! Closure scheme not found !'
 
     ENDIF
-
+    
+    CALL cpu_time(t1_clos)
+    tc_clos = tc_clos + (t1_clos - t0_clos)
   END SUBROUTINE apply_closure_model
 END module closure

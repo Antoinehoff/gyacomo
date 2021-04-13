@@ -224,6 +224,10 @@ CONTAINS
     COMPLEX(dp), DIMENSION(ips_i:ipe_i) :: TColl_distr_i
     COMPLEX(dp) :: TColl
     INTEGER :: ikrs_C, ikre_C, ikzs_C, ikze_C
+
+    ! Execution time start
+    CALL cpu_time(t0_coll)
+
     IF (ABS(CO) .GE. 2) THEN !compute only if COSOlver matrices are used
 
       DO ikr = ikrs,ikre
@@ -268,6 +272,9 @@ CONTAINS
       ENDDO
     ENDIF
 
+    ! Execution time end
+    CALL cpu_time(t1_coll)
+    tc_coll = tc_coll + (t1_coll - t0_coll)
   END SUBROUTINE compute_TColl
 
   !******************************************************************************!
