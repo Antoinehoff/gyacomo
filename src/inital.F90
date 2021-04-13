@@ -51,7 +51,7 @@ SUBROUTINE inital
 
   !!!!!! Set Sepj, Sipj and dnjs coeff table !!!!!!
   IF ( NON_LIN ) THEN;
-    WRITE(*,*) 'Building Dnjs table'
+    IF (my_id .EQ. 0) WRITE(*,*) 'Building Dnjs table'
     CALL build_dnjs_table
 
     IF (my_id .EQ. 0) WRITE(*,*) 'Init Sapj'
