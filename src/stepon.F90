@@ -19,38 +19,42 @@ SUBROUTINE stepon
   LOGICAL :: mlend
 
    DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
+   !----- BEFORE: All fields are updated for step = n
 
-      ! Closure enforcement
-      CALL apply_closure_model
-
-      ! Exchanges the ghosts values updated
-      CALL update_ghosts
-
-      ! Compute collision
-      CALL compute_TColl
-      
-      ! Compute right hand side of moments hierarchy equation
+      ! Compute right hand side from current fields
+      ! N_rhs(N_n,phi_n, S_n, Tcoll_n)
       CALL moments_eq_rhs_e
       CALL moments_eq_rhs_i
 
+      ! ---- step n -> n+1 transition
       ! Advance from updatetlevel to updatetlevel+1 (according to num. scheme)
       CALL advance_time_level
-
-      ! Update the moments with the hierarchy RHS (step by step)
+      ! Update moments with the hierarchy RHS (step by step)
+      ! N_n+1 = N_n + N_rhs(n)
       CALL advance_moments
+      ! Closure enforcement of N_n+1
+      CALL apply_closure_model
+      ! Exchanges the ghosts values of N_n+1
+      CALL update_ghosts
 
-      ! Update electrostatic potential
+      ! Update collision C_n+1 = C(N_n+1)
+      CALL compute_TColl
+
+      ! Update electrostatic potential phi_n = phi(N_n+1)
       CALL poisson
 
-      ! Update nonlinear term
+      ! Update nonlinear term S_n -> S_n+1(phi_n+1,N_n+1)
       IF ( NON_LIN ) THEN
         CALL compute_Sapj
       ENDIF
 
-      !(The two routines above are called in inital for t=0)
+      !-  Check before next step
       CALL checkfield_all()
       IF( nlend ) EXIT ! exit do loop
 
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+
+   !----- AFTER: All fields are updated for step = n+1
    END DO
 
    CONTAINS
@@ -124,24 +128,35 @@ SUBROUTINE stepon
         END DO
       END SUBROUTINE anti_aliasing
 
-      SUBROUTINE enforce_symetry
+      SUBROUTINE enforce_symetry ! Force X(k) = X(N-k)* complex conjugate symmetry
+        ! Electron moments
         DO ip=ips_e,ipe_e
           DO ij=ijs_e,ije_e
             DO ikz=2,Nkz/2 !symmetry at kr = 0
               moments_e( ip,ij,1,ikz, :) = CONJG(moments_e( ip,ij,1,Nkz+2-ikz, :))
             END DO
+            ! must be real at origin and top right
+            moments_e(ip,ij, ikr_0,ikz_0, :) = REAL(moments_e(ip,ij, ikr_0,ikz_0, :))
+            moments_e(ip,ij,  Nr/2,Nz/2 , :) = REAL(moments_e(ip,ij,  Nr/2,Nz/2 , :))
           END DO
         END DO
+        ! Ion moments
         DO ip=ips_i,ipe_i
           DO ij=ijs_i,ije_i
             DO ikz=2,Nkz/2 !symmetry at kr = 0
               moments_i( ip,ij,1,ikz, :) = CONJG(moments_i( ip,ij,1,Nkz+2-ikz, :))
             END DO
+            ! must be real at origin and top right
+            moments_i(ip,ij, ikr_0,ikz_0, :) = REAL(moments_i(ip,ij, ikr_0,ikz_0, :))
+            moments_i(ip,ij,  Nr/2,Nz/2 , :) = REAL(moments_i(ip,ij,  Nr/2,Nz/2 , :))
           END DO
         END DO
+        ! Phi
         DO ikz=2,Nkz/2 !symmetry at kr = 0
           phi(1,ikz) = phi(1,Nkz+2-ikz)
         END DO
+        ! must be real at origin and top right
+        phi(ikr_0,ikz_0) = REAL(phi(ikr_0,ikz_0))
       END SUBROUTINE enforce_symetry
 
 END SUBROUTINE stepon
