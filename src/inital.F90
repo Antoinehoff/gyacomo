@@ -25,21 +25,20 @@ SUBROUTINE inital
   !!!!!! Set the moments arrays Nepj, Nipj and phi!!!!!!
   IF ( RESTART ) THEN
     IF (my_id .EQ. 0) WRITE(*,*) 'Load moments'
-    CALL load_moments
+    CALL load_moments ! get N_0
 
     IF (my_id .EQ. 0) WRITE(*,*) 'Init phi with Poisson'
-    CALL poisson
-    CALL MPI_BARRIER(MPI_COMM_WORLD,ierr);
+    CALL poisson ! compute phi_0=phi(N_0)
 
   ELSE
     IF (INIT_NOISY_PHI) THEN
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy phi'
-      CALL init_phi
+      CALL init_phi ! init noisy phi_0, N_0 = 0
     ELSE
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy moments and ghosts'
-      CALL init_moments
+      CALL init_moments ! init noisy N_0
       IF (my_id .EQ. 0) WRITE(*,*) 'Init phi with Poisson'
-      CALL poisson
+      CALL poisson ! get phi_0 = phi(N_0)
     ENDIF
 
   ENDIF
@@ -52,15 +51,18 @@ SUBROUTINE inital
 
   !!!!!! Set Sepj, Sipj and dnjs coeff table !!!!!!
   IF ( NON_LIN ) THEN;
-    IF (my_id .EQ. 0) WRITE(*,*) 'Init Sapj'
-    CALL compute_Sapj
-    ! WRITE(*,*) 'Building Dnjs table'
+    WRITE(*,*) 'Building Dnjs table'
     CALL build_dnjs_table
+
+    IF (my_id .EQ. 0) WRITE(*,*) 'Init Sapj'
+    CALL compute_Sapj ! compute S_0 = S(phi_0,N_0)
   ENDIF
 
   !!!!!! Load the COSOlver collision operator coefficients !!!!!!
   IF (ABS(CO) .GT. 1) THEN
     CALL load_COSOlver_mat
+    ! Compute collision
+    CALL compute_TColl ! compute C_0 = C(N_0)
   ENDIF
 
 END SUBROUTINE inital
