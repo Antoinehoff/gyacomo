@@ -11,7 +11,7 @@ SUBROUTINE poisson
   USE prec_const
   IMPLICIT NONE
 
-  INTEGER     :: ini,ine, i_, world_rank, world_size, root_bcast
+  INTEGER     :: ini,ine, i_, root_bcast
   REAL(dp)    :: Kne, Kni ! sub kernel factor for recursive build
   REAL(dp)    :: alphaD
   REAL(dp)    :: sum_kernel2_e,    sum_kernel2_i    ! Store sum Kn^2
@@ -69,13 +69,9 @@ SUBROUTINE poisson
 
   root_bcast = 0 ! Proc zero computes phi for every p
 
-  !!!!! This is a manual way to do MPI_BCAST !!!!!!!!!!!
-  CALL MPI_COMM_RANK(comm_p,world_rank,ierr)
-  CALL MPI_COMM_SIZE(comm_p,world_size,ierr)
-
-  IF (world_size .GT. 1) THEN
+  IF (num_procs_p .GT. 1) THEN
     !! Broadcast phi to the other processes on the same k range (communicator along p)
-    IF (world_rank .EQ. root_bcast) THEN
+    IF (rank_p .EQ. root_bcast) THEN
       ! Fill the buffer
       DO ikr = ikrs,ikre
         DO ikz = ikzs,ikze
@@ -84,7 +80,7 @@ SUBROUTINE poisson
       ENDDO
       ! Send it to all the other processes
       DO i_ = 0,num_procs_p-1
-        IF (i_ .NE. world_rank) &
+        IF (i_ .NE. rank_p) &
         CALL MPI_SEND(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, i_, 0, comm_p, ierr)
       ENDDO
     ELSE
