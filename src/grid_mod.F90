@@ -49,8 +49,10 @@ MODULE grid
   REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kparray     ! kperp array
   REAL(dp), PUBLIC, PROTECTED ::  deltakr, deltakz
   INTEGER,  PUBLIC, PROTECTED ::  ikrs, ikre, ikzs, ikze, ikps, ikpe
-  INTEGER,  PUBLIC, PROTECTED :: ikr_0, ikz_0 ! Indices of k-grid origin
+  INTEGER,  PUBLIC, PROTECTED :: ikr_0, ikz_0, ikr_max, ikz_max ! Indices of k-grid origin and max
   INTEGER,  PUBLIC :: ikr, ikz, ip, ij, ikp ! counters
+  LOGICAL,  PUBLIC, PROTECTED :: contains_kr0   = .false. ! rank of the proc containing kr=0 indices
+  LOGICAL,  PUBLIC, PROTECTED :: contains_krmax = .false. ! rank of the proc containing kr=max indices
 
   ! Grid containing the polynomials degrees
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_e
@@ -164,10 +166,19 @@ CONTAINS
       deltakr = 2._dp*PI/Lr
     ENDIF
 
-    ! Discretized kr positions ordered as dk*(0 1 2 3)
+    ! Creating a grid ordered as dk*(0 1 2 3)
     DO ikr = ikrs,ikre
       krarray(ikr) = REAL(ikr-1,dp) * deltakr
-      IF (krarray(ikr) .EQ. 0) ikr_0 = ikr
+      ! Finding kr=0
+      IF (krarray(ikr) .EQ. 0) THEN
+        ikr_0 = ikr
+        contains_kr0 = .true.
+      ENDIF
+      ! Finding krmax
+      IF (krarray(ikr) .EQ. (Nr/2+1)*deltakr) THEN
+        ikr_max = ikr
+        contains_krmax = .true.
+      ENDIF
     END DO
 
     ! Orszag 2/3 filter
@@ -193,18 +204,23 @@ CONTAINS
     ikze = Nkz
     ALLOCATE(kzarray(ikzs:ikze))
 
-    ! Grid spacings and discretized kz positions ordered as dk*(0 1 2 3 -2 -1)
     IF (Lz .EQ. 0) THEN ! 1D linear case
       deltakz    = 1._dp
       kzarray(1) = 0
       ikz_0      = 1
+      ikz_max    = 1
     ELSE
       deltakz = 2._dp*PI/Lz
+      ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
       DO ikz = ikzs,ikze
         kzarray(ikz) = deltakz*(MODULO(ikz-1,Nkz/2)-Nkz/2*FLOOR(2.*real(ikz-1)/real(Nkz)))
         if (ikz .EQ. Nz/2+1)     kzarray(ikz) = -kzarray(ikz)
+        ! Finding kz=0
         IF (kzarray(ikz) .EQ. 0) ikz_0 = ikz
+        ! Finding kzmax
+        IF (kzarray(ikr) .EQ. (Nz/2)*deltakr) ikr_max = ikr
       END DO
+      IF(my_id .EQ. 0) write(*,*) kzarray
     ENDIF
 
     ! Orszag 2/3 filter

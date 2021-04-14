@@ -100,9 +100,9 @@ SUBROUTINE init_moments
           END DO
         END DO
 
-        IF ( ikrs .EQ. 1 ) THEN
+        IF ( contains_kr0 ) THEN
           DO ikz=2,Nkz/2 !symmetry at kr = 0
-            moments_e( ip,ij,1,ikz, :) = moments_e( ip,ij,1,Nkz+2-ikz, :)
+            moments_e( ip,ij,ikr_0,ikz, :) = moments_e( ip,ij,ikr_0,Nkz+2-ikz, :)
           END DO
         ENDIF
 
@@ -119,9 +119,9 @@ SUBROUTINE init_moments
           END DO
         END DO
 
-        IF ( ikrs .EQ. 1 ) THEN
+        IF ( contains_kr0 ) THEN
           DO ikz=2,Nkz/2 !symmetry at kr = 0
-            moments_i( ip,ij,1,ikz, :) = moments_i( ip,ij,1,Nkz+2-ikz, :)
+            moments_i( ip,ij,ikr_0,ikz, :) = moments_i( ip,ij,ikr_0,Nkz+2-ikz, :)
           END DO
         ENDIF
 
@@ -184,10 +184,11 @@ SUBROUTINE init_phi
       END DO
 
       !symmetry at kr = 0 to keep real inverse transform
-      IF ( ikrs .EQ. 1 ) THEN
+      IF ( contains_kr0 ) THEN
         DO ikz=2,Nkz/2
-          phi(1,ikz) = phi(1,Nkz+2-ikz)
+          phi(ikr_0,ikz) = phi(ikr_0,Nkz+2-ikz)
         END DO
+        phi(ikr_0,Nz/2) = REAL(phi(ikr_0,Nz/2)) !origin must be real
       ENDIF
 
       !**** Cancel previous moments initialization

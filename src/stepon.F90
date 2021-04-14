@@ -129,34 +129,34 @@ SUBROUTINE stepon
       END SUBROUTINE anti_aliasing
 
       SUBROUTINE enforce_symetry ! Force X(k) = X(N-k)* complex conjugate symmetry
-        ! Electron moments
-        DO ip=ips_e,ipe_e
-          DO ij=ijs_e,ije_e
-            DO ikz=2,Nkz/2 !symmetry at kr = 0
-              moments_e( ip,ij,1,ikz, :) = CONJG(moments_e( ip,ij,1,Nkz+2-ikz, :))
+        IF ( contains_kr0 ) THEN
+          ! Electron moments
+          DO ip=ips_e,ipe_e
+            DO ij=ijs_e,ije_e
+              DO ikz=2,Nkz/2 !symmetry at kr = 0
+                moments_e( ip,ij,ikr_0,ikz, :) = CONJG(moments_e( ip,ij,ikr_0,Nkz+2-ikz, :))
+              END DO
+              ! must be real at origin
+              moments_e(ip,ij, ikr_0,ikz_0, :) = REAL(moments_e(ip,ij, ikr_0,ikz_0, :))
             END DO
-            ! must be real at origin and top right
-            moments_e(ip,ij, ikr_0,ikz_0, :) = REAL(moments_e(ip,ij, ikr_0,ikz_0, :))
-            moments_e(ip,ij,  Nr/2,Nz/2 , :) = REAL(moments_e(ip,ij,  Nr/2,Nz/2 , :))
           END DO
-        END DO
-        ! Ion moments
-        DO ip=ips_i,ipe_i
-          DO ij=ijs_i,ije_i
-            DO ikz=2,Nkz/2 !symmetry at kr = 0
-              moments_i( ip,ij,1,ikz, :) = CONJG(moments_i( ip,ij,1,Nkz+2-ikz, :))
+          ! Ion moments
+          DO ip=ips_i,ipe_i
+            DO ij=ijs_i,ije_i
+              DO ikz=2,Nkz/2 !symmetry at kr = 0
+                moments_i( ip,ij,ikr_0,ikz, :) = CONJG(moments_i( ip,ij,ikr_0,Nkz+2-ikz, :))
+              END DO
+              ! must be real at origin and top right
+              moments_i(ip,ij, ikr_0,ikz_0, :) = REAL(moments_i(ip,ij, ikr_0,ikz_0, :))
             END DO
-            ! must be real at origin and top right
-            moments_i(ip,ij, ikr_0,ikz_0, :) = REAL(moments_i(ip,ij, ikr_0,ikz_0, :))
-            moments_i(ip,ij,  Nr/2,Nz/2 , :) = REAL(moments_i(ip,ij,  Nr/2,Nz/2 , :))
           END DO
-        END DO
-        ! Phi
-        DO ikz=2,Nkz/2 !symmetry at kr = 0
-          phi(1,ikz) = phi(1,Nkz+2-ikz)
-        END DO
-        ! must be real at origin and top right
-        phi(ikr_0,ikz_0) = REAL(phi(ikr_0,ikz_0))
+          ! Phi
+          DO ikz=2,Nkz/2 !symmetry at kr = 0
+            phi(ikr_0,ikz) = phi(ikr_0,Nkz+2-ikz)
+          END DO
+          ! must be real at origin
+          phi(ikr_0,ikz_0) = REAL(phi(ikr_0,ikz_0))
+        ENDIF
       END SUBROUTINE enforce_symetry
 
 END SUBROUTINE stepon
