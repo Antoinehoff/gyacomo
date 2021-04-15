@@ -239,13 +239,17 @@ CONTAINS
               CALL apply_COSOlver_mat_e(ip,ij,ikr,ikz,TColl)
               local_sum_e(ip) = TColl
             ENDDO
-            ! Sum up all the sub collision terms on root 0
-            CALL MPI_REDUCE(local_sum_e, buffer_e, pmaxe+1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
-
-            ! distribute the sum over the process among p
-            CALL MPI_SCATTERV(buffer_e, counts_np_e, displs_np_e, MPI_DOUBLE_COMPLEX,&
-                              TColl_distr_e, local_np_e, MPI_DOUBLE_COMPLEX,&
-                              0, comm_p, ierr)
+            IF (num_procs_p .GT. 1) THEN
+              ! Sum up all the sub collision terms on root 0
+              CALL MPI_REDUCE(local_sum_e, buffer_e, pmaxe+1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
+              ! distribute the sum over the process among p
+              CALL MPI_SCATTERV(buffer_e, counts_np_e, displs_np_e, MPI_DOUBLE_COMPLEX,&
+                                TColl_distr_e, local_np_e, MPI_DOUBLE_COMPLEX,&
+                                0, comm_p, ierr)
+            ELSE
+              TColl_distr_e = local_sum_e
+            ENDIF
+            ! Write in output variable
             DO ip = ips_e,ipe_e
               TColl_e(ip,ij,ikr,ikz) = TColl_distr_e(ip)
             ENDDO
@@ -256,14 +260,18 @@ CONTAINS
               CALL apply_COSOlver_mat_i(ip,ij,ikr,ikz,TColl)
               local_sum_i(ip) = TColl
             ENDDO
-            ! Reduce the local_sums to root = 0
-            CALL MPI_REDUCE(local_sum_i, buffer_i, pmaxi+1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
-
-            ! buffer_e contains the entire collision term along p, scatter it among
-            ! the other processes (use of scatterv since Pmax/Np is not an integer)
-            CALL MPI_SCATTERV(buffer_i, counts_np_i, displs_np_i, MPI_DOUBLE_COMPLEX,&
-                              TColl_distr_i, local_np_i, MPI_DOUBLE_COMPLEX, &
-                              0, comm_p, ierr)
+            IF (num_procs_p .GT. 1) THEN
+              ! Reduce the local_sums to root = 0
+              CALL MPI_REDUCE(local_sum_i, buffer_i, pmaxi+1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
+              ! buffer contains the entire collision term along p, we scatter it between
+              ! the other processes (use of scatterv since Pmax/Np is not an integer)
+              CALL MPI_SCATTERV(buffer_i, counts_np_i, displs_np_i, MPI_DOUBLE_COMPLEX,&
+                                TColl_distr_i, local_np_i, MPI_DOUBLE_COMPLEX, &
+                                0, comm_p, ierr)
+            ELSE
+              TColl_distr_i = local_sum_i
+            ENDIF
+            ! Write in output variable
             DO ip = ips_i,ipe_i
               TColl_i(ip,ij,ikr,ikz) = TColl_distr_i(ip)
             ENDDO
