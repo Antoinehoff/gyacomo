@@ -30,6 +30,7 @@ wk/fort.90
 .directory
 checkpoint/
 FM/
+iCa/
 *.out
 src/srcinfo.h
 src/srcinfo/srcinfo.h
