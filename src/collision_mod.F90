@@ -437,8 +437,6 @@ CONTAINS
         mat_filename = selfmat_file
       ENDIF
 
-      WRITE(*,*) 'loading : ', mat_filename
-
       CALL openf(mat_filename,fid1, 'r', 'D', mpicomm=comm_p);
       CALL getatt(fid1,'/Caapj/Ceepj/','Pmaxe',pdime)
       CALL getatt(fid1,'/Caapj/Ceepj/','Jmaxe',jdime)

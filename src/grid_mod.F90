@@ -220,7 +220,6 @@ CONTAINS
         ! Finding kzmax
         IF (kzarray(ikr) .EQ. (Nz/2)*deltakr) ikr_max = ikr
       END DO
-      IF(my_id .EQ. 0) write(*,*) kzarray
     ENDIF
 
     ! Orszag 2/3 filter
