@@ -93,8 +93,8 @@ SUBROUTINE diagnose(kstep)
      CALL putarr(fidres, "/data/grid/coordkz", kzarray_full(1:nkz),"kz*rho_s0", ionode=0)
      CALL putarr(fidres, "/data/grid/coordp_e" , parray_e_full(1:pmaxe+1), "p_e", ionode=0)
      CALL putarr(fidres, "/data/grid/coordj_e" , jarray_e_full(1:jmaxe+1), "j_e", ionode=0)
-     CALL putarr(fidres, "/data/grid/coordp_i" , parray_i_full(1:pmaxe+1), "p_i", ionode=0)
-     CALL putarr(fidres, "/data/grid/coordj_i" , jarray_i_full(1:jmaxe+1), "j_i", ionode=0)
+     CALL putarr(fidres, "/data/grid/coordp_i" , parray_i_full(1:pmaxi+1), "p_i", ionode=0)
+     CALL putarr(fidres, "/data/grid/coordj_i" , jarray_i_full(1:jmaxi+1), "j_i", ionode=0)
 
      !  var0d group (gyro transport)
      IF (nsave_0d .GT. 0) THEN
