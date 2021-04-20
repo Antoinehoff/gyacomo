@@ -29,8 +29,7 @@ SUBROUTINE stepon
       CALL advance_time_level
       ! Update moments with the hierarchy RHS (step by step)
       ! N_n+1 = N_n + N_rhs(n)
-      ! CALL advance_moments
-      CALL advance_moments_explicit
+      CALL advance_moments
       ! Closure enforcement of N_n+1
       CALL apply_closure_model
       ! Exchanges the ghosts values of N_n+1
@@ -52,27 +51,6 @@ SUBROUTINE stepon
    END DO
 
    CONTAINS
-
-      ! SUBROUTINE advance_moments
-      !   ! Execution time start
-      !   CALL cpu_time(t0_adv_field)
-      !
-      !   DO ip=ips_e,ipe_e
-      !     DO ij=ijs_e,ije_e
-      !       CALL advance_field(moments_e(ip,ij,:,:,:),moments_rhs_e(ip,ij,:,:,:))
-      !     ENDDO
-      !   ENDDO
-      !   DO ip=ips_i,ipe_i
-      !     DO ij=ijs_i,ije_i
-      !       CALL advance_field(moments_i(ip,ij,:,:,:),moments_rhs_i(ip,ij,:,:,:))
-      !     ENDDO
-      !   ENDDO
-      !
-      !   ! Execution time end
-      !   CALL cpu_time(t1_adv_field)
-      !   tc_adv_field = tc_adv_field + (t1_adv_field - t0_adv_field)
-      ! END SUBROUTINE advance_moments
-
 
       SUBROUTINE checkfield_all ! Check all the fields for inf or nan
         ! Execution time start
