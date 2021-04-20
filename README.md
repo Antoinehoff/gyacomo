@@ -15,7 +15,7 @@ How to run it
 
 2. MPI parallel version
 
-	2.5 //GK COSOlver collision operator//
+	2.5 //GK Sugama//
 
 	2.4 2D cartesian parallel (along p and kr)
 
@@ -61,9 +61,9 @@ How to run it
 
 2. MPI parallel version
 
-	2.6 GPU accelerated version
+	2.6 GK Full Coulomb collision operator
 
-	2.7 GK Full Coulomb collision operator
+	2.7 GPU?
 
 3. GK 3D version, kr,kz,kpar for linear device
 
