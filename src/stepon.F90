@@ -1,6 +1,6 @@
 SUBROUTINE stepon
   !   Advance one time step, (num_step=4 for Runge Kutta 4 scheme)
-  USE advance_field_routine, ONLY: advance_time_level, advance_field, advance_moments_explicit
+  USE advance_field_routine, ONLY: advance_time_level, advance_field, advance_moments
   USE array , ONLY: moments_rhs_e, moments_rhs_i, Sepj, Sipj
   USE basic
   USE closure
@@ -20,12 +20,10 @@ SUBROUTINE stepon
 
    DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
    !----- BEFORE: All fields are updated for step = n
-
       ! Compute right hand side from current fields
       ! N_rhs(N_n,phi_n, S_n, Tcoll_n)
       CALL moments_eq_rhs_e
       CALL moments_eq_rhs_i
-
       ! ---- step n -> n+1 transition
       ! Advance from updatetlevel to updatetlevel+1 (according to num. scheme)
       CALL advance_time_level
@@ -37,24 +35,19 @@ SUBROUTINE stepon
       CALL apply_closure_model
       ! Exchanges the ghosts values of N_n+1
       CALL update_ghosts
-
       ! Update collision C_n+1 = C(N_n+1)
       CALL compute_TColl
-
       ! Update electrostatic potential phi_n = phi(N_n+1)
       CALL poisson
-
       ! Update nonlinear term S_n -> S_n+1(phi_n+1,N_n+1)
       IF ( NON_LIN ) THEN
         CALL compute_Sapj
       ENDIF
-
       !-  Check before next step
       CALL checkfield_all()
       IF( nlend ) EXIT ! exit do loop
 
       CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
-
    !----- AFTER: All fields are updated for step = n+1
    END DO
 
