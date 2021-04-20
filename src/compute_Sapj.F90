@@ -22,7 +22,7 @@ SUBROUTINE compute_Sapj
   INTEGER :: in, is
   INTEGER :: nmax, smax ! Upper bound of the sums
   REAL(dp):: kr, kz, kerneln
-  LOGICAL :: COMPUTE_ONLY_ODD_P = .true.
+  LOGICAL :: COMPUTE_ONLY_EVEN_P = .true.
   ! Execution time start
   CALL cpu_time(t0_Sapj)
 
@@ -30,7 +30,7 @@ SUBROUTINE compute_Sapj
   ploope: DO ip = ips_e,ipe_e ! Loop over Hermite moments
 
     ! we check if poly degree is even (eq to index is odd) to spare computation
-    IF (MODULO(ip,2) .EQ. 1 .OR. (.NOT. COMPUTE_ONLY_ODD_P)) THEN
+    IF ((MODULO(ip,2) .EQ. 1) .OR. (.NOT. COMPUTE_ONLY_EVEN_P)) THEN
     jloope: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
 
       real_data_c = 0._dp ! initialize sum over real nonlinear term
@@ -121,7 +121,7 @@ SUBROUTINE compute_Sapj
   ploopi: DO ip = ips_i,ipe_i ! Loop over Hermite moments
 
     ! we check if poly degree is even (eq to index is odd) to spare computation
-    IF (MODULO(ip,2) .EQ. 1 .OR. (.NOT. COMPUTE_ONLY_ODD_P)) THEN
+    IF (MODULO(ip,2) .EQ. 1 .OR. (.NOT. COMPUTE_ONLY_EVEN_P)) THEN
 
     jloopi: DO ij = ijs_i, ije_i ! Loop over Laguerre moments
       real_data_c = 0._dp ! initialize sum over real nonlinear term
