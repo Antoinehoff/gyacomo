@@ -4,12 +4,13 @@ addpath(genpath('../matlab')) % ... add
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% CLUSTER PARAMETERS
-CLUSTER.TIME  = '00:10:00'; % allocation time hh:mm:ss
-CLUSTER.PART  = 'dbg';     % dbg or prod
-CLUSTER.MEM   = '16GB';     % Memory
+CLUSTER.PART  = 'prod';     % dbg or prod
+CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
+if(strcmp(CLUSTER.PART,'dbg')); CLUSTER.TIME  = '00:30:00'; end;
+CLUSTER.MEM   = '64GB';     % Memory
 CLUSTER.JNAME = 'gamma_inf';% Job name
-NP_P          = 1;          % MPI processes along p  
-NP_KR         = 1;         % MPI processes along kr
+NP_P          = 2;          % MPI processes along p  
+NP_KR         = 24;         % MPI processes along kr
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
 NU      = 0.1;   % Collision frequency
@@ -17,28 +18,28 @@ ETAB    = 0.6;   % Magnetic gradient
 NU_HYP  = 1.0;   % Hyperdiffusivity coefficient
 %% GRID PARAMETERS
 N       = 200;   % Frequency gridpoints (Nkr = N/2)
-L       = 120;   % Size of the squared frequency domain
-P       = 04;    % Electron and Ion highest Hermite polynomial degree
-J       = 04;    % Electron and Ion highest Laguerre polynomial degree
+L       = 80;   % Size of the squared frequency domain
+P       = 12;    % Electron and Ion highest Hermite polynomial degree
+J       = 06;    % Electron and Ion highest Laguerre polynomial degree
 MU_P    = 0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
-TMAX    = 120;  % Maximal time unit
-DT      = 2e-2;  % Time step
+TMAX    = 4000;  % Maximal time unit
+DT      = 1e-2;  % Time step
 SPS0D   = 1;     % Sampling per time unit for profiler
-SPS2D   = 1;     % Sampling per time unit for 2D arrays
-SPS5D   = 1/40;  % Sampling per time unit for 5D arrays
+SPS2D   = 1/2;     % Sampling per time unit for 2D arrays
+SPS5D   = 1/100;  % Sampling per time unit for 5D arrays
 SPSCP   = 0;     % Sampling per time unit for checkpoints
-RESTART = 0;     % To restart from last checkpoint
-JOB2LOAD= 0;
+RESTART = 1;     % To restart from last checkpoint
+JOB2LOAD= 4;
 %% OPTIONS
-% SIMID   = ['HeLaZ_v2.5_eta_',num2str(ETAB),'_nu_%0.0e'];  % Name of the simulation
-SIMID   = 'test_marconi_sugama';  % Name of the simulation
+SIMID   = ['HeLaZ_v2.5_eta_',num2str(ETAB),'_nu_%0.0e'];  % Name of the simulation
 SIMID   = sprintf(SIMID,NU);
+% SIMID   = 'test_marconi_sugama';  % Name of the simulation
 PREFIX  =[];
 % PREFIX  = sprintf('%d_%d_',NP_P, NP_KR);
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Full Couloumb ; +/- for GK/DK)
-CO      = 2;
+CO      = 1;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
 NL_CLOS = 1;   % nonlinear closure model (0: =0 nmax = jmax, 1: nmax = jmax-j, >1 : nmax = NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)

@@ -1,5 +1,11 @@
 CONTINUE = 1;
 JOBNUM   = 0; JOBFOUND = 0;
+TJOB_SE  = []; % Start and end times of jobs
+NU_EVOL  = []; % evolution of parameter nu between jobs
+ETAB_EVOL= []; %
+L_EVOL   = []; % 
+
+% FIELDS
 Nipj_    = []; Nepj_    = [];
 Ni00_    = []; Ne00_    = [];
 GGAMMA_  = [];
@@ -68,6 +74,13 @@ while(CONTINUE)
           Sepj_ = cat(5,Sepj_,Sepj);
         end
 
+        % Evolution of simulation parameters
+        load_params
+        TJOB_SE   = [TJOB_SE Ts0D(1) Ts0D(end)]; 
+        NU_EVOL   = [NU_EVOL NU NU];
+        ETAB_EVOL = [ETAB_EVOL ETAB ETAB];
+        L_EVOL    = [L_EVOL L L];
+    
         JOBFOUND = JOBFOUND + 1;
         LASTJOB  = JOBNUM;
     elseif (JOBNUM > 20)
@@ -77,6 +90,7 @@ while(CONTINUE)
     JOBNUM   = JOBNUM + 1;
     Pe_old = Pe_new; Je_old = Je_new;
     Pi_old = Pi_new; Ji_old = Ji_new;
+    
 end
 GGAMMA_RI = GGAMMA_; PGAMMA_RI = PGAMMA_; Ts0D = Ts0D_;
 Nipj = Nipj_; Nepj = Nepj_; Ts5D = Ts5D_;

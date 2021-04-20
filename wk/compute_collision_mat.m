@@ -29,16 +29,17 @@ kperpmax = sqrt(2) * kmax;
 %%
 n_ = 1;
 for k_ = kperp
+    disp(['----------Computing matrix ',num2str(n_),'/',num2str(Nperp),'----------'])
     %% Script to run COSOlver in order to create needed collision matrices
     COSOlver_path = '../../Documents/MoliSolver/COSOlver/';
-    COSOLVER.pmaxe = 10;
-    COSOLVER.jmaxe = 5;
-    COSOLVER.pmaxi = 10;
-    COSOLVER.jmaxi = 5;
+    COSOLVER.pmaxe = 20;
+    COSOLVER.jmaxe = 10;
+    COSOLVER.pmaxi = 20;
+    COSOLVER.jmaxi = 10;
     COSOLVER.kperp = k_;
 
     COSOLVER.neFLR    = min(ceil((2/3*kperpmax)^2),max(5,ceil(COSOLVER.kperp^2))); % rule of thumb for sum truncation
-    COSOLVER.niFLR    = max(5,ceil(COSOLVER.kperp^2));
+    COSOLVER.niFLR    = min(ceil((2/3*kperpmax)^2),max(5,ceil(COSOLVER.kperp^2)));
     COSOLVER.idxT4max = 40;
 
     COSOLVER.neFLRs = 0; %  ... only for GK abel 
@@ -83,4 +84,5 @@ for k_ = kperp
         disp('..done');
         cd ../../../HeLaZ/wk
     end
+    n_ = n_ + 1;
 end

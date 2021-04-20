@@ -1,25 +1,23 @@
 %% Load results
 outfile ='';
-if 1
+if 0
     %% Load from Marconi
-outfile ='';
-% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.6_nu_1e-01/200x100_L_120_P_20_J_3_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
-% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.8_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.8_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
-% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.7_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.7_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.6_nu_1e-01/200x100_L_120_P_12_J_6_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.6_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-01_SGGK_CLOS_0_mu_2e-02/out.txt';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.4_eta_0.6_nu_1e-01/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.6_nu_1e-01/200x100_L_80_P_10_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_4e-03/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.6_nu_1e+00/200x100_L_120_P_12_J_6_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_2e-02/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.6_nu_1e-01/200x100_L_120_P_12_J_6_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.6_nu_1e-01/200x100_L_120_P_12_J_6_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_1e-02/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.6_nu_1e-01/200x100_L_120_P_12_J_6_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
     BASIC.RESDIR = load_marconi(outfile);
 end
 if 0
     %% Load from Daint
-    outfile ='';
+    outfile ='/scratch/snx3000/ahoffman/HeLaZ/results/HeLaZ_v2.5_eta_0.6_nu_1e-01/200x100_L_120_P_12_J_6_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
     BASIC.RESDIR = load_daint(outfile);
 end
 %%
-% JOBNUM = 0; load_results;
 % JOBNUM = 1; load_results;
 compile_results
-load_params
 
 %% Retrieving max polynomial degree and sampling info
 Npe = numel(Pe); Nje = numel(Je); [JE,PE] = meshgrid(Je,Pe);
@@ -109,7 +107,10 @@ PFLUX_RI = real(squeeze(sum(sum(-1i*KZ.*Np_i.*conj(PHI_Ts5D),1),2)))*(2*pi/Nr/Nz
 epsilon_e_pj = zeros(Npe,Nje,Ns5D);
 epsilon_i_pj = zeros(Npi,Nji,Ns5D);
 
-phi_max  = zeros(1,Ns2D);        % Time evol. of the norm of phi
+phi_maxr_maxz  = zeros(1,Ns2D);        % Time evol. of the norm of phi
+phi_avgr_maxz  = zeros(1,Ns2D);        % Time evol. of the norm of phi
+phi_maxr_avgz  = zeros(1,Ns2D);        % Time evol. of the norm of phi
+phi_avgr_avgz  = zeros(1,Ns2D);        % Time evol. of the norm of phi
 Ne_norm  = zeros(Npe,Nje,Ns5D);  % Time evol. of the norm of Napj
 Ni_norm  = zeros(Npi,Nji,Ns5D);  % .
 
@@ -117,7 +118,10 @@ Ddr = 1i*KR; Ddz = 1i*KZ; lapl   = Ddr.^2 + Ddz.^2;
 
 for it = 1:numel(Ts2D) % Loop over 2D arrays
     NE_ = Ne00(:,:,it); NI_ = Ni00(:,:,it); PH_ = PHI(:,:,it);
-    phi_max(it)   = max(max(squeeze(phi(:,:,it))));
+    phi_maxr_maxz(it)   =  max( max(squeeze(phi(:,:,it))));
+    phi_avgr_maxz(it)   =  max(mean(squeeze(phi(:,:,it))));
+    phi_maxr_avgz(it)   = mean( max(squeeze(phi(:,:,it))));
+    phi_avgr_avgz(it)   = mean(mean(squeeze(phi(:,:,it))));
     ExB(it)       = max(max(max(abs(phi(3:end,:,it)-phi(1:end-2,:,it))/(2*dr))),max(max(abs(phi(:,3:end,it)-phi(:,1:end-2,it))'/(2*dz))));
     GFlux_ri(it)  = sum(sum(ni00(:,:,it).*dzphi(:,:,it)))*dr*dz/Lr/Lz;
     GFlux_zi(it)  = sum(sum(-ni00(:,:,it).*drphi(:,:,it)))*dr*dz/Lr/Lz;
@@ -138,8 +142,9 @@ end
 %% Compute growth rate
 disp('- growth rate')
 % Find max value of transport (end of linear mode)
-[~,itmax] = max(GFlux_ri);
-tstart = 0.1 * Ts2D(itmax); tend = 0.9 * Ts2D(itmax);
+[tmp,tmax] = max(GGAMMA_RI*(2*pi/Nr/Nz)^2);
+[~,itmax]  = min(abs(Ts2D-tmax));
+tstart = 0.1 * Ts2D(itmax); tend = 0.5 * Ts2D(itmax);
 g_          = zeros(Nkr,Nkz);
 for ikr = 1:Nkr
     for ikz = 1:Nkz
@@ -158,6 +163,9 @@ if 1
 %% Time evolutions and growth rate
 fig = figure; FIGNAME = ['t_evolutions',sprintf('_%.2d',JOBNUM),'_',PARAMS];
 set(gcf, 'Position',  [100, 100, 900, 800])
+subplot(111); 
+    suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB),...
+        ', $L=',num2str(L),'$, $N=',num2str(Nr),'$, $(P,J)=(',num2str(PMAXI),',',num2str(JMAXI),')$']);
     subplot(421); 
     for ip = 1:Npe
         for ij = 1:Nje
@@ -189,16 +197,20 @@ set(gcf, 'Position',  [100, 100, 900, 800])
 %         plot(Ts5D,PFLUX_RI,'--');
         legend(['Gyro. flux';'Part. flux']);
         grid on; xlabel('$t c_s/R$'); ylabel('$\Gamma_{r,i}$')
+%         ylim([0,2.0]);
     subplot(223)
-        plot(kz,g_(1,:),'-','DisplayName','$\gamma$'); hold on;
-        grid on; xlabel('$k_z\rho_s$'); ylabel('$\gamma R/c_s$'); %legend('show');
+        plot(kz,g_(1,:),'-','DisplayName','Linear growth rate'); hold on;
+        plot([max(kz)*2/3,max(kz)*2/3],[0,10],'--k', 'DisplayName','2/3 Orszag AA');
+        grid on; xlabel('$k_z\rho_s$'); ylabel('$\gamma R/c_s$'); legend('show');
+%         ylim([0,max(g_(1,:))]); xlim([0,max(kz)]);
     subplot(224)
-        plotname = '$\max_{r,z}(\phi)(t)$';
         clr      = line_colors(min(ip,numel(line_colors(:,1))),:);
         lstyle   = line_styles(min(ij,numel(line_styles)));
-        plot(Ts2D,phi_max,'DisplayName',plotname); hold on;
-    grid on; xlabel('$t c_s/R$'); ylabel('$\max_{r,z}(\phi)$'); %legend('show');
-suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB)]);
+        plot(Ts2D,phi_maxr_maxz,'DisplayName','$\max_{r,z}(\phi)$'); hold on;
+        plot(Ts2D,phi_maxr_avgz,'DisplayName','$\max_{r}\langle\phi\rangle_z$'); hold on;
+        plot(Ts2D,phi_avgr_maxz,'DisplayName','$\max_{z}\langle\phi\rangle_r$'); hold on;
+        plot(Ts2D,phi_avgr_avgz,'DisplayName','$\langle\phi\rangle_{r,z}$'); hold on;
+    grid on; xlabel('$t c_s/R$'); ylabel('$T_e/e$'); legend('show');
 save_figure
 end
 
@@ -311,7 +323,7 @@ end
 if 0
 %% Hermite energy spectra
 % tf = Ts2D(end-3);
-fig = figure; FIGNAME = ['hermite_spectrum_',PARAMS];set(gcf, 'Position',  [100, 100, 1000, 300]);
+fig = figure; FIGNAME = ['hermite_spectrum_',PARAMS];set(gcf, 'Position',  [100, 100, 1800, 600]);
 plt = @(x) squeeze(x);
 for ij = 1:Nji
     subplotnum = 100+Nji*10+ij;
@@ -348,14 +360,14 @@ end
 
 %%
 no_AA     = (2:floor(2*Nkr/3));
-tKHI      = 200;
+tKHI      = 100;
 [~,itKHI] = min(abs(Ts2D-tKHI));
 after_KHI = (itKHI:Ns2D);
 if 0
 %% Phi frequency space time diagram at kz=0
 fig = figure; FIGNAME = ['phi_freq_diag_',PARAMS];set(gcf, 'Position',  [100, 100, 500, 400]);
         [TY,TX] = meshgrid(Ts2D(after_KHI),kr(no_AA));
-        pclr = pcolor(TX,TY,log10(squeeze(abs(PHI(no_AA,1,(after_KHI)))))); set(pclr, 'edgecolor','none'); colorbar;
+        pclr = pcolor(TX,TY,(squeeze(abs(PHI(no_AA,1,(after_KHI)))))); set(pclr, 'edgecolor','none'); colorbar;
         ylabel('$t c_s/R$'), xlabel('$0<k_r<2/3 k_r^{\max}$')
         legend('$\log|\tilde\phi(k_z=0)|$')
         title('Spectrogram of $\phi$')
@@ -365,7 +377,7 @@ t0    = 0;
 [~, it02D] = min(abs(Ts2D-t0));
 [~, it05D] = min(abs(Ts5D-t0));
 skip_ = 2; 
-DELAY = 0.01*skip_;
+DELAY = 0.005*skip_;
 FRAMES_2D = it02D:skip_:numel(Ts2D);
 FRAMES_5D = it05D:skip_:numel(Ts5D);
 %% GIFS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -376,7 +388,7 @@ FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$n_i$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end
-if 1
+if 0
 %% Phi real space
 GIFNAME = ['phi',sprintf('_%.2d',JOBNUM),'_',PARAMS];INTERP = 1;
 FIELD = real(phi); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
@@ -398,12 +410,12 @@ FIELDNAME = '$|\tilde\phi|$'; XNAME = '$k_r\rho_s$'; YNAME = '$k_z\rho_s$';
 create_gif
 end
 if 0
-%% phi @ z = 0
-GIFNAME = ['phi_z0',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
-FIELD =(squeeze(real(phi(:,1,:)))); linestyle = '-.'; FRAMES = FRAMES_2D;
+%% phi averaged on z
+GIFNAME = ['phi_z0',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0; SCALING=1;
+FIELD =(squeeze(mean(real(phi),2))); linestyle = '-.k'; FRAMES = FRAMES_2D;
 X = (r); T = Ts2D; YMIN = -1.1; YMAX = 1.1; XMIN = min(r); XMAX = max(r);
-FIELDNAME = '$\phi(r=0)$'; XNAME = '$r/\rho_s$';
-create_gif_1D
+FIELDNAME = '$\langle\phi\rangle_{z}$'; XNAME = '$r/\rho_s$';
+create_gif_1D_phi
 end
 if 0
 %% phi @ kz = 0
