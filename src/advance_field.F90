@@ -14,7 +14,7 @@ CONTAINS
     CALL set_updatetlevel(mod(updatetlevel,ntimelevel)+1)
   END SUBROUTINE advance_time_level
 
-  SUBROUTINE advance_moments_explicit
+  SUBROUTINE advance_moments
 
     USE basic
     USE time_integration
@@ -56,7 +56,7 @@ CONTAINS
     ! Execution time end
     CALL cpu_time(t1_adv_field)
     tc_adv_field = tc_adv_field + (t1_adv_field - t0_adv_field)
-  END SUBROUTINE advance_moments_explicit
+  END SUBROUTINE advance_moments
 
 
   SUBROUTINE advance_field( f, f_rhs )
