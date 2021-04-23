@@ -261,6 +261,11 @@ SUBROUTINE diagnose(kstep)
      CALL cpu_time(finish)
      CALL attach(fidres, "/data/input","cpu_time",finish-start)
 
+     ! make a checkpoint at last timestep if not crashed
+     IF(.NOT. crashed) THEN
+       IF(my_id .EQ. 0) write(*,*) 'Saving last state'
+       CALL diagnose_5d
+     ENDIF
      ! Display computational time cost
      IF (my_id .EQ. 0) CALL display_h_min_s(finish-start)
 
