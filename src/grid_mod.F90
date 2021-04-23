@@ -24,6 +24,7 @@ MODULE grid
   ! For Orszag filter
   REAL(dp), PUBLIC, PROTECTED :: two_third_krmax
   REAL(dp), PUBLIC, PROTECTED :: two_third_kzmax
+  REAL(dp), PUBLIC, PROTECTED :: two_third_kpmax
 
   ! 1D Antialiasing arrays (2/3 rule)
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: AA_r
@@ -251,6 +252,7 @@ CONTAINS
       kparray(ikp) = REAL(ikp-1,dp) * deltakr
     ENDDO
     write(*,*) rank_kr, ': ikps = ', ikps, 'ikpe = ',ikpe
+    two_third_kpmax = SQRT(two_third_krmax**2+two_third_kzmax**2)    
   END SUBROUTINE
 
   SUBROUTINE grid_readinputs

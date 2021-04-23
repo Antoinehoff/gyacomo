@@ -425,175 +425,186 @@ CONTAINS
     CALL allocate_array(  CiepjF_kp, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1), ikps_C,ikpe_C)
 
     DO ikp = ikps_C,ikpe_C ! Loop over everz kperp values
-      write(kperp_string,'(f6.4)') kparray(ikp)
-      NFLR = MIN(25,MAX(5,CEILING(kparray(ikp)**2)))
-      write(NFLR_string,'(i2.1)') NFLR
-      !!!!!!!!!!!! Electron matrices !!!!!!!!!!!!
-      ! get the self electron colision matrix
-      IF (CO .GT. 0) THEN
-        WRITE(mat_filename,'(a,a,a,a,a,a)') TRIM(selfmat_file),&
-            'NFLR_',TRIM(ADJUSTL(NFLR_string)),'_kperp_',TRIM(ADJUSTL(kperp_string)),'.h5'
+      ! we put zeros if kp>2/3kpmax because thoses frequenvies are filtered through AA
+      IF(kparray(ikp) .GT. two_third_kpmax .AND. NON_LIN) THEN
+        CiepjT_kp(:,:,ikp) = 0._dp
+        CiepjF_kp(:,:,ikp) = 0._dp
+        CeipjT_kp(:,:,ikp) = 0._dp
+        CeipjF_kp(:,:,ikp) = 0._dp
+        Ceepj__kp(:,:,ikp) = 0._dp
+        Ciipj__kp(:,:,ikp) = 0._dp
       ELSE
-        mat_filename = selfmat_file
+        write(kperp_string,'(f6.4)') kparray(ikp)
+        NFLR = MIN(25,MAX(5,CEILING(kparray(ikp)**2)))
+        write(NFLR_string,'(i2.1)') NFLR
+        !!!!!!!!!!!! Electron matrices !!!!!!!!!!!!
+        ! get the self electron colision matrix
+        IF (CO .GT. 0) THEN
+          WRITE(mat_filename,'(a,a,a,a,a,a)') TRIM(selfmat_file),&
+              'NFLR_',TRIM(ADJUSTL(NFLR_string)),'_kperp_',TRIM(ADJUSTL(kperp_string)),'.h5'
+        ELSE
+          mat_filename = selfmat_file
+        ENDIF
+        ! write(*,*) 'loading ', mat_filename
+        
+        CALL openf(mat_filename,fid1, 'r', 'D', mpicomm=comm_p);
+        CALL getatt(fid1,'/Caapj/Ceepj/','Pmaxe',pdime)
+        CALL getatt(fid1,'/Caapj/Ceepj/','Jmaxe',jdime)
+        IF ( ((pdime .LT. pmaxe) .OR. (jdime .LT. jmaxe)) .AND. (my_id .EQ. 0)) WRITE(*,*) '!! P,J Matrix too small !!'
+
+        CALL allocate_array(  Ceepj_full, 1,(pdime+1)*(jdime+1), 1,(pdime+1)*(jdime+1))
+        CALL getarr(fid1, '/Caapj/Ceepj', Ceepj_full) ! get array (moli format)
+        ! Fill sub array with only usefull polynmials degree
+        DO ip_e = 0,pmaxe ! Loop over rows
+        DO ij_e = 0,jmaxe
+              irow_sub  = (jmaxe +1)*ip_e + ij_e +1
+              irow_full = (jdime +1)*ip_e + ij_e +1
+              DO il_e = 0,pmaxe ! Loop over columns
+              DO ik_e = 0,jmaxe
+                    icol_sub  = (jmaxe +1)*il_e + ik_e +1
+                    icol_full = (jdime +1)*il_e + ik_e +1
+                    Ceepj__kp (irow_sub,icol_sub,ikp) = Ceepj_full (irow_full,icol_full)
+              ENDDO
+              ENDDO
+        ENDDO
+        ENDDO
+
+        CALL closef(fid1)
+        DEALLOCATE(Ceepj_full)
+
+        ! get the Test and Back field electron ion collision matrix
+        IF (CO .GT. 0) THEN
+          WRITE(mat_filename,'(a,a,a,a,a,a,a,a)') TRIM(eimat_file),&
+              'NFLRe_',TRIM(ADJUSTL(NFLR_string)),'_NFLRi_',TRIM(ADJUSTL(NFLR_string)),&
+              '_kperp_',TRIM(ADJUSTL(kperp_string)),'.h5'
+            ELSE
+          mat_filename = eimat_file
+        ENDIF
+
+        ! WRITE(*,*) 'loading : ', mat_filename
+
+        CALL openf(mat_filename,fid2, 'r', 'D', mpicomm=comm_p);
+
+        CALL getatt(fid2,'/Ceipj/CeipjT/','Pmaxi',pdimi)
+        CALL getatt(fid2,'/Ceipj/CeipjT/','Jmaxi',jdimi)
+        IF ( (pdimi .LT. pmaxi) .OR. (jdimi .LT. jmaxi) ) WRITE(*,*) '!! Sugama Matrix too small !!'
+
+        CALL allocate_array( CeipjT_full, 1,(pdime+1)*(jdime+1), 1,(pdime+1)*(jdime+1))
+        CALL allocate_array( CeipjF_full, 1,(pdime+1)*(jdime+1), 1,(pdimi+1)*(jdimi+1))
+
+        CALL getarr(fid2, '/Ceipj/CeipjT', CeipjT_full)
+        CALL getarr(fid2, '/Ceipj/CeipjF', CeipjF_full)
+
+        ! Fill sub array with only usefull polynmials degree
+        DO ip_e = 0,pmaxe ! Loop over rows
+        DO ij_e = 0,jmaxe
+              irow_sub  = (jmaxe +1)*ip_e + ij_e +1
+              irow_full = (jdime +1)*ip_e + ij_e +1
+              DO il_e = 0,pmaxe ! Loop over columns
+              DO ik_e = 0,jmaxe
+                    icol_sub  = (jmaxe +1)*il_e + ik_e +1
+                    icol_full = (jdime +1)*il_e + ik_e +1
+                    CeipjT_kp(irow_sub,icol_sub,ikp) = CeipjT_full(irow_full,icol_full)
+              ENDDO
+              ENDDO
+              DO il_i = 0,pmaxi ! Loop over columns
+              DO ik_i = 0,jmaxi
+                    icol_sub  = (Jmaxi +1)*il_i + ik_i +1
+                    icol_full = (jdimi +1)*il_i + ik_i +1
+                    CeipjF_kp(irow_sub,icol_sub,ikp) = CeipjF_full(irow_full,icol_full)
+              ENDDO
+              ENDDO
+        ENDDO
+        ENDDO
+
+        CALL closef(fid2)
+        DEALLOCATE(CeipjF_full)
+        DEALLOCATE(CeipjT_full)
+
+        !!!!!!!!!!!!!!! Ion matrices !!!!!!!!!!!!!!
+        ! get the self electron colision matrix
+        IF (CO .GT. 0) THEN
+          WRITE(mat_filename,'(a,a,a,a,a,a)') TRIM(selfmat_file),&
+              'NFLR_',TRIM(ADJUSTL(NFLR_string)),'_kperp_',TRIM(ADJUSTL(kperp_string)),'.h5'
+        ELSE
+          mat_filename = selfmat_file
+        ENDIF
+
+        ! WRITE(*,*) 'loading : ', mat_filename
+
+        CALL openf(mat_filename, fid3, 'r', 'D', mpicomm=comm_p);
+
+        CALL allocate_array(  Ciipj_full, 1,(pdimi+1)*(jdimi+1), 1,(pdimi+1)*(jdimi+1))
+
+        IF ( (pmaxe .EQ. pmaxi) .AND. (jmaxe .EQ. jmaxi) ) THEN ! if same degrees ion and electron matrices are alike so load Ceepj
+          CALL getarr(fid3, '/Caapj/Ceepj', Ciipj_full) ! get array (moli format)
+        ELSE
+          CALL getarr(fid3, '/Caapj/Ciipj', Ciipj_full) ! get array (moli format)
+        ENDIF
+
+        ! Fill sub array with only usefull polynmials degree
+        DO ip_i = 0,Pmaxi ! Loop over rows
+        DO ij_i = 0,Jmaxi
+              irow_sub  = (Jmaxi +1)*ip_i + ij_i +1
+              irow_full = (jdimi +1)*ip_i + ij_i +1
+              DO il_i = 0,Pmaxi ! Loop over columns
+              DO ik_i = 0,Jmaxi
+                    icol_sub  = (Jmaxi +1)*il_i + ik_i +1
+                    icol_full = (jdimi +1)*il_i + ik_i +1
+                    Ciipj__kp (irow_sub,icol_sub,ikp) = Ciipj_full (irow_full,icol_full)
+              ENDDO
+              ENDDO
+        ENDDO
+        ENDDO
+
+        CALL closef(fid3)
+        DEALLOCATE(Ciipj_full)
+
+        ! get the Test and Back field electron ion collision matrix
+        IF (CO .GT. 0) THEN
+          WRITE(mat_filename,'(a,a,a,a,a,a,a,a)') TRIM(iemat_file),&
+              'NFLRe_',TRIM(ADJUSTL(NFLR_string)),'_NFLRi_',TRIM(ADJUSTL(NFLR_string)),&
+              '_kperp_',TRIM(ADJUSTL(kperp_string)),'.h5'
+        ELSE
+          mat_filename = iemat_file
+        ENDIF
+
+        ! write(*,*) 'loading : ', mat_filename
+
+        CALL openf(mat_filename,fid4, 'r', 'D', mpicomm=comm_p);
+
+        CALL allocate_array( CiepjT_full, 1,(pdimi+1)*(jdimi+1), 1,(pdimi+1)*(jdimi+1))
+        CALL allocate_array( CiepjF_full, 1,(pdimi+1)*(jdimi+1), 1,(pdime+1)*(jdime+1))
+
+        CALL getarr(fid4, '/Ciepj/CiepjT', CiepjT_full)
+        CALL getarr(fid4, '/Ciepj/CiepjF', CiepjF_full)
+
+        ! Fill sub array with only usefull polynmials degree
+        DO ip_i = 0,Pmaxi ! Loop over rows
+        DO ij_i = 0,Jmaxi
+              irow_sub  = (Jmaxi +1)*ip_i + ij_i +1
+              irow_full = (jdimi +1)*ip_i + ij_i +1
+              DO il_i = 0,Pmaxi ! Loop over columns
+              DO ik_i = 0,Jmaxi
+                    icol_sub  = (Jmaxi +1)*il_i + ik_i +1
+                    icol_full = (jdimi +1)*il_i + ik_i +1
+                    CiepjT_kp(irow_sub,icol_sub,ikp) = CiepjT_full(irow_full,icol_full)
+              ENDDO
+              ENDDO
+              DO il_e = 0,pmaxe ! Loop over columns
+              DO ik_e = 0,jmaxe
+                    icol_sub  = (jmaxe +1)*il_e + ik_e +1
+                    icol_full = (jdime +1)*il_e + ik_e +1
+                    CiepjF_kp(irow_sub,icol_sub,ikp) = CiepjF_full(irow_full,icol_full)
+              ENDDO
+              ENDDO
+        ENDDO
+        ENDDO
+
+        CALL closef(fid4)
+        DEALLOCATE(CiepjF_full)
+        DEALLOCATE(CiepjT_full)
       ENDIF
-
-      CALL openf(mat_filename,fid1, 'r', 'D', mpicomm=comm_p);
-      CALL getatt(fid1,'/Caapj/Ceepj/','Pmaxe',pdime)
-      CALL getatt(fid1,'/Caapj/Ceepj/','Jmaxe',jdime)
-      IF ( ((pdime .LT. pmaxe) .OR. (jdime .LT. jmaxe)) .AND. (my_id .EQ. 0)) WRITE(*,*) '!! P,J Matrix too small !!'
-
-      CALL allocate_array(  Ceepj_full, 1,(pdime+1)*(jdime+1), 1,(pdime+1)*(jdime+1))
-      CALL getarr(fid1, '/Caapj/Ceepj', Ceepj_full) ! get array (moli format)
-      ! Fill sub array with only usefull polynmials degree
-      DO ip_e = 0,pmaxe ! Loop over rows
-      DO ij_e = 0,jmaxe
-            irow_sub  = (jmaxe +1)*ip_e + ij_e +1
-            irow_full = (jdime +1)*ip_e + ij_e +1
-            DO il_e = 0,pmaxe ! Loop over columns
-            DO ik_e = 0,jmaxe
-                  icol_sub  = (jmaxe +1)*il_e + ik_e +1
-                  icol_full = (jdime +1)*il_e + ik_e +1
-                  Ceepj__kp (irow_sub,icol_sub,ikp) = Ceepj_full (irow_full,icol_full)
-            ENDDO
-            ENDDO
-      ENDDO
-      ENDDO
-
-      CALL closef(fid1)
-      DEALLOCATE(Ceepj_full)
-
-      ! get the Test and Back field electron ion collision matrix
-      IF (CO .GT. 0) THEN
-        WRITE(mat_filename,'(a,a,a,a,a,a,a,a)') TRIM(eimat_file),&
-            'NFLRe_',TRIM(ADJUSTL(NFLR_string)),'_NFLRi_',TRIM(ADJUSTL(NFLR_string)),&
-            '_kperp_',TRIM(ADJUSTL(kperp_string)),'.h5'
-          ELSE
-        mat_filename = eimat_file
-      ENDIF
-
-      ! WRITE(*,*) 'loading : ', mat_filename
-
-      CALL openf(mat_filename,fid2, 'r', 'D', mpicomm=comm_p);
-
-      CALL getatt(fid2,'/Ceipj/CeipjT/','Pmaxi',pdimi)
-      CALL getatt(fid2,'/Ceipj/CeipjT/','Jmaxi',jdimi)
-      IF ( (pdimi .LT. pmaxi) .OR. (jdimi .LT. jmaxi) ) WRITE(*,*) '!! Sugama Matrix too small !!'
-
-      CALL allocate_array( CeipjT_full, 1,(pdime+1)*(jdime+1), 1,(pdime+1)*(jdime+1))
-      CALL allocate_array( CeipjF_full, 1,(pdime+1)*(jdime+1), 1,(pdimi+1)*(jdimi+1))
-
-      CALL getarr(fid2, '/Ceipj/CeipjT', CeipjT_full)
-      CALL getarr(fid2, '/Ceipj/CeipjF', CeipjF_full)
-
-      ! Fill sub array with only usefull polynmials degree
-      DO ip_e = 0,pmaxe ! Loop over rows
-      DO ij_e = 0,jmaxe
-            irow_sub  = (jmaxe +1)*ip_e + ij_e +1
-            irow_full = (jdime +1)*ip_e + ij_e +1
-            DO il_e = 0,pmaxe ! Loop over columns
-            DO ik_e = 0,jmaxe
-                  icol_sub  = (jmaxe +1)*il_e + ik_e +1
-                  icol_full = (jdime +1)*il_e + ik_e +1
-                  CeipjT_kp(irow_sub,icol_sub,ikp) = CeipjT_full(irow_full,icol_full)
-            ENDDO
-            ENDDO
-            DO il_i = 0,pmaxi ! Loop over columns
-            DO ik_i = 0,jmaxi
-                  icol_sub  = (Jmaxi +1)*il_i + ik_i +1
-                  icol_full = (jdimi +1)*il_i + ik_i +1
-                  CeipjF_kp(irow_sub,icol_sub,ikp) = CeipjF_full(irow_full,icol_full)
-            ENDDO
-            ENDDO
-      ENDDO
-      ENDDO
-
-      CALL closef(fid2)
-      DEALLOCATE(CeipjF_full)
-      DEALLOCATE(CeipjT_full)
-
-      !!!!!!!!!!!!!!! Ion matrices !!!!!!!!!!!!!!
-      ! get the self electron colision matrix
-      IF (CO .GT. 0) THEN
-        WRITE(mat_filename,'(a,a,a,a,a,a)') TRIM(selfmat_file),&
-            'NFLR_',TRIM(ADJUSTL(NFLR_string)),'_kperp_',TRIM(ADJUSTL(kperp_string)),'.h5'
-      ELSE
-        mat_filename = selfmat_file
-      ENDIF
-
-      ! WRITE(*,*) 'loading : ', mat_filename
-
-      CALL openf(mat_filename, fid3, 'r', 'D', mpicomm=comm_p);
-
-      CALL allocate_array(  Ciipj_full, 1,(pdimi+1)*(jdimi+1), 1,(pdimi+1)*(jdimi+1))
-
-      IF ( (pmaxe .EQ. pmaxi) .AND. (jmaxe .EQ. jmaxi) ) THEN ! if same degrees ion and electron matrices are alike so load Ceepj
-        CALL getarr(fid3, '/Caapj/Ceepj', Ciipj_full) ! get array (moli format)
-      ELSE
-        CALL getarr(fid3, '/Caapj/Ciipj', Ciipj_full) ! get array (moli format)
-      ENDIF
-
-      ! Fill sub array with only usefull polynmials degree
-      DO ip_i = 0,Pmaxi ! Loop over rows
-      DO ij_i = 0,Jmaxi
-            irow_sub  = (Jmaxi +1)*ip_i + ij_i +1
-            irow_full = (jdimi +1)*ip_i + ij_i +1
-            DO il_i = 0,Pmaxi ! Loop over columns
-            DO ik_i = 0,Jmaxi
-                  icol_sub  = (Jmaxi +1)*il_i + ik_i +1
-                  icol_full = (jdimi +1)*il_i + ik_i +1
-                  Ciipj__kp (irow_sub,icol_sub,ikp) = Ciipj_full (irow_full,icol_full)
-            ENDDO
-            ENDDO
-      ENDDO
-      ENDDO
-
-      CALL closef(fid3)
-      DEALLOCATE(Ciipj_full)
-
-      ! get the Test and Back field electron ion collision matrix
-      IF (CO .GT. 0) THEN
-        WRITE(mat_filename,'(a,a,a,a,a,a,a,a)') TRIM(iemat_file),&
-            'NFLRe_',TRIM(ADJUSTL(NFLR_string)),'_NFLRi_',TRIM(ADJUSTL(NFLR_string)),&
-            '_kperp_',TRIM(ADJUSTL(kperp_string)),'.h5'
-      ELSE
-        mat_filename = iemat_file
-      ENDIF
-
-      ! write(*,*) 'loading : ', mat_filename
-
-      CALL openf(mat_filename,fid4, 'r', 'D', mpicomm=comm_p);
-
-      CALL allocate_array( CiepjT_full, 1,(pdimi+1)*(jdimi+1), 1,(pdimi+1)*(jdimi+1))
-      CALL allocate_array( CiepjF_full, 1,(pdimi+1)*(jdimi+1), 1,(pdime+1)*(jdime+1))
-
-      CALL getarr(fid4, '/Ciepj/CiepjT', CiepjT_full)
-      CALL getarr(fid4, '/Ciepj/CiepjF', CiepjF_full)
-
-      ! Fill sub array with only usefull polynmials degree
-      DO ip_i = 0,Pmaxi ! Loop over rows
-      DO ij_i = 0,Jmaxi
-            irow_sub  = (Jmaxi +1)*ip_i + ij_i +1
-            irow_full = (jdimi +1)*ip_i + ij_i +1
-            DO il_i = 0,Pmaxi ! Loop over columns
-            DO ik_i = 0,Jmaxi
-                  icol_sub  = (Jmaxi +1)*il_i + ik_i +1
-                  icol_full = (jdimi +1)*il_i + ik_i +1
-                  CiepjT_kp(irow_sub,icol_sub,ikp) = CiepjT_full(irow_full,icol_full)
-            ENDDO
-            ENDDO
-            DO il_e = 0,pmaxe ! Loop over columns
-            DO ik_e = 0,jmaxe
-                  icol_sub  = (jmaxe +1)*il_e + ik_e +1
-                  icol_full = (jdime +1)*il_e + ik_e +1
-                  CiepjF_kp(irow_sub,icol_sub,ikp) = CiepjF_full(irow_full,icol_full)
-            ENDDO
-            ENDDO
-      ENDDO
-      ENDDO
-
-      CALL closef(fid4)
-      DEALLOCATE(CiepjF_full)
-      DEALLOCATE(CiepjT_full)
     ENDDO
 
     IF (CO .GT. 0) THEN ! Interpolation of the kperp matrix values on kr kz grid
