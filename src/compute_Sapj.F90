@@ -128,9 +128,9 @@ SUBROUTINE compute_Sapj
 
       ! Set non linear sum truncation
       IF (NL_CLOS .EQ. -2) THEN
-        nmax = Jmaxe
+        nmax = Jmaxi
       ELSEIF (NL_CLOS .EQ. -1) THEN
-        nmax = Jmaxe-(ij-1)
+        nmax = Jmaxi-(ij-1)
       ELSE
         nmax = NL_CLOS
       ENDIF
@@ -150,7 +150,7 @@ SUBROUTINE compute_Sapj
             Gz_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
             Gr_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
 
-            smax = MIN( (in-1)+(ij-1), jmaxe );
+            smax = MIN( (in-1)+(ij-1), jmaxi );
             DO is = 1, smax+1 ! sum truncation on number of moments
               Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
                 dnjs(in,ij,is) * moments_i(ip,is,ikr,ikz,updatetlevel)
