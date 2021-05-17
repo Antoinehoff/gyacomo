@@ -400,6 +400,8 @@ CONTAINS
 
     CHARACTER(len=256) :: mat_filename, kperp_string, NFLR_string
 
+    LOGICAL     :: CO_AA_ONLY = .false. ! Flag to remove ei ie collision
+
     !! Some terminal info
     IF (CO .EQ. 2) THEN
       IF (my_id .EQ. 0) WRITE(*,*) '=== Load GK Sugama matrix ==='
@@ -446,7 +448,7 @@ CONTAINS
           mat_filename = selfmat_file
         ENDIF
         ! write(*,*) 'loading ', mat_filename
-        
+
         CALL openf(mat_filename,fid1, 'r', 'D', mpicomm=comm_p);
         CALL getatt(fid1,'/Caapj/Ceepj/','Pmaxe',pdime)
         CALL getatt(fid1,'/Caapj/Ceepj/','Jmaxe',jdime)
@@ -637,6 +639,13 @@ CONTAINS
     ! Deallocate auxiliary variables
     DEALLOCATE (Ceepj__kp ); DEALLOCATE (CeipjT_kp); DEALLOCATE (CeipjF_kp)
     DEALLOCATE (Ciipj__kp ); DEALLOCATE (CiepjT_kp); DEALLOCATE (CiepjF_kp)
+
+    IF( CO_AA_ONLY ) THEN
+      CeipjF = 0._dp;
+      CeipjT = 0._dp;
+      CiepjF = 0._dp;
+      CiepjT = 0._dp;
+    ENDIF
 
     IF (my_id .EQ. 0) WRITE(*,*) '============DONE==========='
 
