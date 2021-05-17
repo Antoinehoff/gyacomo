@@ -39,8 +39,8 @@ MODEL.lambdaD = LAMBDAD;
 % Time integration and intialization parameters
 TIME_INTEGRATION.numerical_scheme  = '''RK4''';
 if INIT_PHI; INITIAL.init_noisy_phi = '.true.'; else; INITIAL.init_noisy_phi = '.false.';end;
-INITIAL.initback_moments  = 0.0e-5;
-INITIAL.initnoise_moments = NOISE0;
+INITIAL.init_background  = 0.0e-5;
+INITIAL.init_noiselvl = NOISE0;
 INITIAL.iseed             = 42;
 INITIAL.selfmat_file = '''null''';
 INITIAL.eimat_file = '''null''';

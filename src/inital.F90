@@ -96,7 +96,7 @@ SUBROUTINE init_moments
         DO ikr=ikrs,ikre
           DO ikz=ikzs,ikze
             CALL RANDOM_NUMBER(noise)
-            moments_e( ip,ij, ikr,ikz, :) = (initback_moments + initnoise_moments*(noise-0.5_dp))
+            moments_e( ip,ij, ikr,ikz, :) = (init_background + init_noiselvl*(noise-0.5_dp))
           END DO
         END DO
 
@@ -115,7 +115,7 @@ SUBROUTINE init_moments
         DO ikr=ikrs,ikre
           DO ikz=ikzs,ikze
             CALL RANDOM_NUMBER(noise)
-            moments_i( ip,ij, ikr,ikz, :) = (initback_moments + initnoise_moments*(noise-0.5_dp))
+            moments_i( ip,ij, ikr,ikz, :) = (init_background + init_noiselvl*(noise-0.5_dp))
           END DO
         END DO
 
@@ -179,7 +179,7 @@ SUBROUTINE init_phi
       DO ikr=ikrs,ikre
         DO ikz=ikzs,ikze
           CALL RANDOM_NUMBER(noise)
-          phi(ikr,ikz) = (initback_moments + initnoise_moments*(noise-0.5_dp))*AA_r(ikr)*AA_z(ikz)
+          phi(ikr,ikz) = (init_background + init_noiselvl*(noise-0.5_dp))*AA_r(ikr)*AA_z(ikz)
         END DO
       END DO
 

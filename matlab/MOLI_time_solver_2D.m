@@ -102,7 +102,7 @@ params.Rphi             = 0.0;         % Major Radius * normalized kperp / Backg
 params.betae            = 1e-6;        % Electron Beta plasma.
 
 params.rhostar          = 1e-5;        % sound Larmor Radius/Major Radius ~ sqrt(Te)/(R_0*B).
-params.n0               = INITIAL.initback_moments;        % initial density perturbation
+params.n0               = INITIAL.init_background;        % initial density perturbation
 
 params.gradB            = MODEL.eta_B;         % Magnetic field gradient
 params.curvB            = MODEL.eta_B;         % Curvature of B

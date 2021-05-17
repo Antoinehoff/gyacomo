@@ -6,11 +6,13 @@ MODULE initial_par
   PRIVATE
 
   ! Initial background level
-  REAL(dp), PUBLIC, PROTECTED :: initback_moments=0._dp
-  ! Initial background level
+  REAL(dp), PUBLIC, PROTECTED :: init_background=0._dp
+  ! Initialization through a noisy phi
   LOGICAL,  PUBLIC, PROTECTED :: INIT_NOISY_PHI = .false.
+  ! Initialization through a zonal flow phi
+  LOGICAL,  PUBLIC, PROTECTED :: INIT_ZF_PHI    = .false.
   ! Initial background noise amplitude
-  REAL(dp), PUBLIC, PROTECTED :: initnoise_moments=1E-6_dp
+  REAL(dp), PUBLIC, PROTECTED :: init_noiselvl=1E-6_dp
   ! Initialization for random number generator
   INTEGER,  PUBLIC, PROTECTED :: iseed=42
 
@@ -37,8 +39,9 @@ CONTAINS
     IMPLICIT NONE
 
     NAMELIST /INITIAL_CON/ INIT_NOISY_PHI
-    NAMELIST /INITIAL_CON/ initback_moments
-    NAMELIST /INITIAL_CON/ initnoise_moments
+    NAMELIST /INITIAL_CON/ INIT_ZF_PHI
+    NAMELIST /INITIAL_CON/ init_background
+    NAMELIST /INITIAL_CON/ init_noiselvl
     NAMELIST /INITIAL_CON/ iseed
     NAMELIST /INITIAL_CON/ selfmat_file
     NAMELIST /INITIAL_CON/ iemat_file
@@ -61,9 +64,9 @@ CONTAINS
 
     CALL attach(fidres, TRIM(str), "INIT_NOISY_PHI", INIT_NOISY_PHI)
 
-    CALL attach(fidres, TRIM(str), "initback_moments", initback_moments)
+    CALL attach(fidres, TRIM(str), "init_background", init_background)
 
-    CALL attach(fidres, TRIM(str), "initnoise_moments", initnoise_moments)
+    CALL attach(fidres, TRIM(str), "init_noiselvl", init_noiselvl)
 
     CALL attach(fidres, TRIM(str), "iseed", iseed)
 
