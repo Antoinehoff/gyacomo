@@ -211,6 +211,18 @@ SUBROUTINE init_phi
         ENDDO
       ENDDO
 
+    ELSEIF(INIT_ZF_PHI .GT. 0)
+
+      !**** Zonal Flow initialization *******************************************
+      ! Every mode is zero
+      DO ikr=ikrs,ikre
+        DO ikz=ikzs,ikze
+          phi(ikr,ikz) = 0._dp
+        END DO
+      END DO
+      ! Except at ikr = mode number + 1, symmetry is already included since kr>=0
+      phi(INIT_ZF_PHI+1,ikz_0) = -init_background * imagu/2._dp
+      
     ELSE ! we compute phi from noisy moments and poisson
 
       CALL poisson

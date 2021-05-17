@@ -5,13 +5,13 @@ MODULE initial_par
   IMPLICIT NONE
   PRIVATE
 
-  ! Initial background level
-  REAL(dp), PUBLIC, PROTECTED :: init_background=0._dp
   ! Initialization through a noisy phi
   LOGICAL,  PUBLIC, PROTECTED :: INIT_NOISY_PHI = .false.
   ! Initialization through a zonal flow phi
-  LOGICAL,  PUBLIC, PROTECTED :: INIT_ZF_PHI    = .false.
-  ! Initial background noise amplitude
+  INTEGER,  PUBLIC, PROTECTED :: INIT_ZF_PHI    = 0
+  ! Initial background level
+  REAL(dp), PUBLIC, PROTECTED :: init_background=0._dp
+  ! Initial noise amplitude
   REAL(dp), PUBLIC, PROTECTED :: init_noiselvl=1E-6_dp
   ! Initialization for random number generator
   INTEGER,  PUBLIC, PROTECTED :: iseed=42
@@ -63,6 +63,8 @@ CONTAINS
     CHARACTER(len=256), INTENT(in) :: str
 
     CALL attach(fidres, TRIM(str), "INIT_NOISY_PHI", INIT_NOISY_PHI)
+
+    CALL attach(fidres, TRIM(str), "INIT_ZF_PHI", INIT_ZF_PHI)
 
     CALL attach(fidres, TRIM(str), "init_background", init_background)
 
