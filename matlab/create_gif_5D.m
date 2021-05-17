@@ -16,7 +16,7 @@ fig  = figure('Color','white','Position', [100, 100, sz(2)*400, 400]);
         else
             yticks([])
         end
-        LEGEND = ['ln$|',FIELDNAME,'^{p',num2str(ij_-1),'}|$']; title(LEGEND);
+        LEGEND = ['$|',FIELDNAME,'^{p',num2str(ij_-1),'}|$']; title(LEGEND);
     end
 %     colormap gray
     axis tight manual % this ensures that getframe() returns a consistent size
@@ -35,7 +35,7 @@ fig  = figure('Color','white','Position', [100, 100, sz(2)*400, 400]);
             else
                 yticks([])
             end
-            LEGEND = ['ln$|',FIELDNAME,'^{p',num2str(ij_-1),'}|$']; 
+            LEGEND = ['$|',FIELDNAME,'^{p',num2str(ij_-1),'}|$']; 
             title([LEGEND,', amp = ',sprintf('%.1e',scale)]);
         end
         suptitle(['$t \approx$', sprintf('%.3d',ceil(T(n)))]);

@@ -1,6 +1,6 @@
-for NU = [1.0 0.1 0.01]
-for ETAB = [0.5 0.6 0.7 0.8]
-for CO = [-3 -2 -1 0 1 2]
+for NU = [1.0]
+for ETAB = [0.5]
+for CO = [1,2]
 %clear all;
 addpath(genpath('../matlab')) % ... add
 default_plots_options
@@ -14,11 +14,11 @@ TAU     = 1.0;    % e/i temperature ratio
 % ETAB    = 0.5;
 ETAN    = 1.0;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
-NU_HYP  = 0.0;   % Hyperdiffusivity coefficient
+NU_HYP  = 1.0;   % Hyperdiffusivity coefficient
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
-N       = 100;     % Frequency gridpoints (Nkr = N/2)
+N       = 200;     % Frequency gridpoints (Nkr = N/2)
 L       = 120;     % Size of the squared frequency domain
 KREQ0   = 1;      % put kr = 0
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
@@ -62,13 +62,13 @@ MU      = NU_HYP/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
 %% PARAMETER SCANS
 if 1
 %% Parameter scan over PJ
-PA = [2, 3, 4, 6, 8, 10];
-JA = [1, 2, 2, 3, 4,  5];
+% PA = [2, 3, 4, 6, 8, 10];
+% JA = [1, 2, 2, 3, 4,  5];
+PA = [4];
+JA = [2];
 DTA= DT./sqrt(JA);
 mup_ = MU_P;
 muj_ = MU_J;
-% PA = [4];
-% JA = [1];
 Nparam = numel(PA);
 param_name = 'PJ';
 gamma_Ni00 = zeros(Nparam,floor(N/2)+1);
@@ -88,15 +88,20 @@ for i = 1:Nparam
     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 1 6; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 2 3; cd ../../../wk'])
     % Load and process results
+    %%
     load_results
     tend   = Ts2D(end); tstart   = 0.4*tend;
+    [~,itstart] = min(abs(Ts2D-tstart));
+    [~,itend]   = min(abs(Ts2D-tend));
     for ikr = 1:N/2+1
-        gamma_Ni00(i,ikr) = LinearFit_s(Ts2D,squeeze(abs(Ni00(ikr,1,:))),tstart,tend);
+        gamma_Ni00(i,ikr) = LinearFit_s(Ts2D(itstart:itend),squeeze(abs(Ni00(ikr,1,itstart:itend))));
         Ni00_ST(i,ikr,1:numel(Ts2D)) = squeeze((Ni00(ikr,1,:)));
     end
     tend   = Ts5D(end); tstart   = 0.4*tend;
+    [~,itstart] = min(abs(Ts5D-tstart));
+    [~,itend]   = min(abs(Ts5D-tend));
     for ikr = 1:N/2+1
-        gamma_Nipj(i,ikr) = LinearFit_s(Ts5D,squeeze(max(max(abs(Nipj(:,:,ikr,1,:)),[],1),[],2)),tstart,tend);
+        gamma_Nipj(i,ikr) = LinearFit_s(Ts5D(itstart:itend),squeeze(max(max(abs(Nipj(:,:,ikr,1,itstart:itend)),[],1),[],2)));
     end
     gamma_Ni00(i,:) = real(gamma_Ni00(i,:) .* (gamma_Ni00(i,:)>=0.0));
     gamma_Nipj(i,:) = real(gamma_Nipj(i,:) .* (gamma_Nipj(i,:)>=0.0));

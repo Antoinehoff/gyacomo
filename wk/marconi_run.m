@@ -1,4 +1,4 @@
-%clear all;
+clear all;
 addpath(genpath('../matlab')) % ... add
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
@@ -8,40 +8,40 @@ CLUSTER.PART  = 'prod';     % dbg or prod
 CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
 if(strcmp(CLUSTER.PART,'dbg')); CLUSTER.TIME  = '00:30:00'; end;
 CLUSTER.MEM   = '64GB';     % Memory
-CLUSTER.JNAME = 'gamma_inf';% Job name
+CLUSTER.JNAME = 'HeLaZ';% Job name
 NP_P          = 2;          % MPI processes along p  
 NP_KR         = 24;         % MPI processes along kr
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;   % Collision frequency
+NU      = 1.0;   % Collision frequency
 ETAB    = 0.6;   % Magnetic gradient
 NU_HYP  = 1.0;   % Hyperdiffusivity coefficient
+NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
+% (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Full Couloumb ; +/- for GK/DK)
+CO      = -3;
 %% GRID PARAMETERS
-N       = 200;   % Frequency gridpoints (Nkr = N/2)
-L       = 80;   % Size of the squared frequency domain
-P       = 12;    % Electron and Ion highest Hermite polynomial degree
-J       = 06;    % Electron and Ion highest Laguerre polynomial degree
-MU_P    = 0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
-MU_J    = 0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
+N       = 200;    % Frequency gridpoints (Nkr = N/2)
+L       = 120;    % Size of the squared frequency domain
+P       = 10;     % Electron and Ion highest Hermite polynomial degree
+J       = 05;     % Electron and Ion highest Laguerre polynomial degree
+MU_P    = 0.0/(P/2)^4;% Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
+MU_J    = 0.0/(J/2)^2;% Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
-TMAX    = 4000;  % Maximal time unit
+TMAX    = 5000;  % Maximal time unit
 DT      = 1e-2;  % Time step
 SPS0D   = 1;     % Sampling per time unit for profiler
 SPS2D   = 1/2;     % Sampling per time unit for 2D arrays
 SPS5D   = 1/100;  % Sampling per time unit for 5D arrays
 SPSCP   = 0;     % Sampling per time unit for checkpoints
 RESTART = 1;     % To restart from last checkpoint
-JOB2LOAD= 4;
-%% OPTIONS
-SIMID   = ['HeLaZ_v2.5_eta_',num2str(ETAB),'_nu_%0.0e'];  % Name of the simulation
-SIMID   = sprintf(SIMID,NU);
-% SIMID   = 'test_marconi_sugama';  % Name of the simulation
+JOB2LOAD= 0;
+%% Naming
+% SIMID   = 'test';  % Name of the simulation
+SIMID   = ['v2.5_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
 PREFIX  =[];
 % PREFIX  = sprintf('%d_%d_',NP_P, NP_KR);
-% (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Full Couloumb ; +/- for GK/DK)
-CO      = 1;
+%% Options
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
-NL_CLOS = 1;   % nonlinear closure model (0: =0 nmax = jmax, 1: nmax = jmax-j, >1 : nmax = NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)
 INIT_PHI= 1;   % Start simulation with a noisy phi and moments
 %% OUTPUTS
@@ -64,6 +64,7 @@ JMAXE   = J;     % Highest ''       Laguerre ''
 PMAXI   = P;     % Highest ion      Hermite polynomial degree
 JMAXI   = J;     % Highest ''       Laguerre ''
 kmax    = N*pi/L;% Highest fourier mode
+% kmax    = 2/3*N*pi/L;% Highest fourier mode with AA
 HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
 MU      = NU_HYP/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
 NOISE0  = 1.0e-5;

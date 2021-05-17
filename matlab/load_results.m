@@ -1,11 +1,17 @@
 %% load results %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-filename = sprintf([BASIC.RESDIR,'outputs_%.2d.h5'],JOBNUM);
 disp(['Loading ',filename])
 % Loading from output file
 CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
 DT_SIM    = h5readatt(filename,'/data/input','dt');
 
 [Pe, Je, Pi, Ji, kr, kz] = load_grid_data(filename);
+
+W_GAMMA   = strcmp(h5readatt(filename,'/data/input','write_gamma'),'y');
+W_PHI     = strcmp(h5readatt(filename,'/data/input','write_phi')  ,'y');
+W_NA00    = strcmp(h5readatt(filename,'/data/input','write_Na00') ,'y');
+W_NAPJ    = strcmp(h5readatt(filename,'/data/input','write_Napj') ,'y');
+W_SAPJ    = strcmp(h5readatt(filename,'/data/input','write_Sapj') ,'y');
+
 
 if W_GAMMA
     [ GGAMMA_RI, Ts0D, dt0D] = load_0D_data(filename, 'gflux_ri');
