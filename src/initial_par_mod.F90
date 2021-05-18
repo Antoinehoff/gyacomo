@@ -8,7 +8,7 @@ MODULE initial_par
   ! Initialization through a noisy phi
   LOGICAL,  PUBLIC, PROTECTED :: INIT_NOISY_PHI = .false.
   ! Initialization through a zonal flow phi
-  INTEGER,  PUBLIC, PROTECTED :: INIT_ZF_PHI    = 0
+  INTEGER,  PUBLIC, PROTECTED :: INIT_ZF    = 0
   ! Initial background level
   REAL(dp), PUBLIC, PROTECTED :: init_background=0._dp
   ! Initial noise amplitude
@@ -39,7 +39,7 @@ CONTAINS
     IMPLICIT NONE
 
     NAMELIST /INITIAL_CON/ INIT_NOISY_PHI
-    NAMELIST /INITIAL_CON/ INIT_ZF_PHI
+    NAMELIST /INITIAL_CON/ INIT_ZF
     NAMELIST /INITIAL_CON/ init_background
     NAMELIST /INITIAL_CON/ init_noiselvl
     NAMELIST /INITIAL_CON/ iseed
@@ -64,7 +64,7 @@ CONTAINS
 
     CALL attach(fidres, TRIM(str), "INIT_NOISY_PHI", INIT_NOISY_PHI)
 
-    CALL attach(fidres, TRIM(str), "INIT_ZF_PHI", INIT_ZF_PHI)
+    CALL attach(fidres, TRIM(str), "INIT_ZF", INIT_ZF)
 
     CALL attach(fidres, TRIM(str), "init_background", init_background)
 

@@ -34,6 +34,9 @@ SUBROUTINE inital
     IF (INIT_NOISY_PHI) THEN
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy phi'
       CALL init_phi ! init noisy phi_0, N_0 = 0
+    ELSEIF (INIT_ZF .GT. 0) THEN
+      IF (my_id .EQ. 0) WRITE(*,*) 'Init ZF phi'
+      CALL init_phi ! init ZF
     ELSE
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy moments and ghosts'
       CALL init_moments ! init noisy N_0
@@ -192,36 +195,22 @@ SUBROUTINE init_phi
       ENDIF
 
       !**** Cancel previous moments initialization
-      DO ip=ips_e,ipe_e
-        DO ij=ijs_e,ije_e
-          DO ikr=ikrs,ikre
-            DO ikz=ikzs,ikze
-              moments_e( ip,ij,ikr,ikz, :) = 0._dp
-            ENDDO
-          ENDDO
-        ENDDO
-      ENDDO
-      DO ip=ips_i,ipe_i
-        DO ij=ijs_i,ije_i
-          DO ikr=ikrs,ikre
-            DO ikz=ikzs,ikze
-              moments_i( ip,ij,ikr,ikz, :) = 0._dp
-            ENDDO
-          ENDDO
-        ENDDO
-      ENDDO
+      moments_e = 0._dp; moments_i = 0._dp
 
-    ELSEIF(INIT_ZF_PHI .GT. 0) THEN
+    ELSEIF(INIT_ZF .GT. 0) THEN
 
       !**** Zonal Flow initialization *******************************************
       ! Every mode is zero
-      DO ikr=ikrs,ikre
-        DO ikz=ikzs,ikze
-          phi(ikr,ikz) = 0._dp
-        END DO
-      END DO
+      phi       = 0._dp
+      moments_e = 0._dp
+      moments_i = 0._dp
       ! Except at ikr = mode number + 1, symmetry is already included since kr>=0
-      phi(INIT_ZF_PHI+1,ikz_0) = -init_background * imagu/2._dp
+      IF( (INIT_ZF+1 .GT. ikrs) .AND. (INIT_ZF+1 .LT. ikre) ) THEN
+        phi(INIT_ZF+1,ikz_0) = (2._dp*PI)**2*init_background/deltakr/deltakz/2._dp
+      ENDIF
+      !**** Init ZF in density
+      moments_e(1,1,INIT_ZF+1,ikz_0,:) = -(2._dp*PI)**2*init_background/deltakr/deltakz * imagu/2._dp
+      moments_i(1,1,INIT_ZF+1,ikz_0,:) = -(2._dp*PI)**2*init_background/deltakr/deltakz * imagu/2._dp
 
     ELSE ! we compute phi from noisy moments and poisson
 
