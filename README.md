@@ -15,7 +15,9 @@ How to run it
 
 2. MPI parallel version
 
-	2.5 //GK Sugama//
+	2.6 //Change of collisionality normalisation (from nu_ei to nu_ii), implementation of FCGK//
+
+	2.5 GK cosolver collision implementation
 
 	2.4 2D cartesian parallel (along p and kr)
 
