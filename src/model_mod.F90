@@ -69,18 +69,13 @@ CONTAINS
     qi2_taui        = (q_i**2)/tau_i
     sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the Kernel argument
     sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp
-    !! We must change the normalization of the collisionality according to the collision model
-    IF (ABS(CO) .GT. 1) THEN ! If using COSOlver mat (2 Sugama, 3 Coulomb)
-      nu_e            = 0.532_dp*nu/sigma_e * (tau_e)**(3._dp/2._dp)  ! electron-ion collision frequency (where already multiplied by 0.532)
-      nu_i            = 0.532_dp*nu ! ion-ion collision frequ.
-      nu_ee           = nu_e ! e-e coll. frequ.
-      nu_ie           = nu_i ! i-e coll. frequ.
-    ELSE ! If we use an ad hoc collision operator as Dougherty or Lenhard-Bernstein
-      nu_e            = 0.532_dp*nu ! electron-ion collision frequency
-      nu_i            = 0.532_dp*nu * sigma_e * (tau_i)**(-3._dp/2._dp)/SQRT2 ! ion-ion collision frequ.
-      nu_ee           = nu_e/SQRT2 ! e-e coll. frequ.
-      nu_ie           = nu*sigma_e**2 ! i-e coll. frequ.
-    ENDIF
+    !! We use the ion-ion collision as normalization with definition
+    !   nu_ii = 4 sqrt(pi)/3 T_i^(-3/2) m_i^(-1/2) q^4 n_i0 ln(Lambda)
+    !
+    nu_e            = nu/sigma_e * (tau_e)**(3._dp/2._dp)  ! electron-ion collision frequency (where already multiplied by 0.532)
+    nu_i            = nu ! ion-ion collision frequ.
+    nu_ee           = nu_e ! e-e coll. frequ.
+    nu_ie           = nu_i ! i-e coll. frequ.
   END SUBROUTINE model_readinputs
 
 
