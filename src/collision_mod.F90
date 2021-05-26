@@ -111,8 +111,8 @@ CONTAINS
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     ENDIF
-    ! Multiply by electron-ion collision coefficient
-    TColl_ = nu_e * TColl_
+    ! Multiply by electron-electron collision coefficient
+    TColl_ = nu_ee * TColl_
 
   END SUBROUTINE DoughertyGK_e
 

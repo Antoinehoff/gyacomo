@@ -76,6 +76,14 @@ CONTAINS
     nu_i            = nu ! ion-ion collision frequ.
     nu_ee           = nu_e ! e-e coll. frequ.
     nu_ie           = nu_i ! i-e coll. frequ.
+
+
+    ! Old normalization (MOLI Jorge/Frei)
+    ! nu_e            = 0.532_dp*nu ! electron-ion collision frequency (where already multiplied by 0.532)
+    ! nu_i            = 0.532_dp*nu*sigma_e*tau_e**(-3._dp/2._dp)/SQRT2 ! ion-ion collision frequ.
+    ! nu_ee           = nu_e/SQRT2 ! e-e coll. frequ.
+    ! nu_ie           = 0.532_dp*nu*sigma_e**2 ! i-e coll. frequ.
+
   END SUBROUTINE model_readinputs
 
 
