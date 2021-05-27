@@ -288,7 +288,7 @@ CONTAINS
 
   SUBROUTINE allocate_array_l5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
     IMPLICIT NONE
-    real(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    LOGICAL, DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
     a=.false.
