@@ -25,6 +25,7 @@ MODULE initial_par
   CHARACTER(len=128), PUBLIC :: selfmat_file  ! COSOlver matrix file names
   CHARACTER(len=128), PUBLIC :: iemat_file  ! COSOlver matrix file names
   CHARACTER(len=128), PUBLIC :: eimat_file  ! COSOlver matrix file names
+  CHARACTER(len=128), PUBLIC :: mat_file    ! COSOlver matrix file names
 
   PUBLIC :: initial_outputinputs, initial_readinputs
 
@@ -46,6 +47,7 @@ CONTAINS
     NAMELIST /INITIAL_CON/ selfmat_file
     NAMELIST /INITIAL_CON/ iemat_file
     NAMELIST /INITIAL_CON/ eimat_file
+    NAMELIST /INITIAL_CON/ mat_file
 
     READ(lu_in,initial_con)
     !WRITE(*,initial_con)
