@@ -450,7 +450,11 @@ CONTAINS
         Ciipj__kp(:,:,ikp) = 0._dp
       ELSE
         ! Kperp value in string format
-        write(kperp_string,'(f6.4)') kparray(ikp)
+        IF (CO .GT. 0) THEN
+          write(kperp_string,'(f6.4)') kparray(ikp)
+        ELSE
+          write(kperp_string,'(f6.4)') 0._dp
+        ENDIF
         !!!!!!!!!!!! Electron matrices !!!!!!!!!!!!
         ! get the self electron colision matrix
         ! Allocate space for storing full collision matrix
