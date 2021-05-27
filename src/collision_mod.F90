@@ -427,7 +427,7 @@ CONTAINS
     CALL allocate_array(  CiepjF_kp, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1), ikps_C,ikpe_C)
 
     ! Opening the compiled cosolver matrices results
-    write(*,*) 'Opening ', mat_file
+    if(my_id.EQ.0)write(*,*) mat_file
 
     CALL openf(mat_file,fid, 'r', 'D', mpicomm=comm_p);
     CALL getarr(fid, '/Pmaxe', p_r) ! Get the dimension of the stored matrices
