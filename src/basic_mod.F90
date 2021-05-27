@@ -254,44 +254,4 @@ CONTAINS
 
   !========================================
 
-  SUBROUTINE allocate_array_l1(a,is1,ie1)
-    IMPLICIT NONE
-    LOGICAL, DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a
-    INTEGER, INTENT(IN) :: is1,ie1
-    ALLOCATE(a(is1:ie1))
-    a=.false.
-  END SUBROUTINE allocate_array_l1
-
-  SUBROUTINE allocate_array_l2(a,is1,ie1,is2,ie2)
-    IMPLICIT NONE
-    LOGICAL, DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
-    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2
-    ALLOCATE(a(is1:ie1,is2:ie2))
-    a=.false.
-  END SUBROUTINE allocate_array_l2
-
-  SUBROUTINE allocate_array_l3(a,is1,ie1,is2,ie2,is3,ie3)
-    IMPLICIT NONE
-    LOGICAL, DIMENSION(:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
-    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3
-    ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3))
-    a=.false.
-  END SUBROUTINE allocate_array_l3
-
-  SUBROUTINE allocate_array_l4(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4)
-    IMPLICIT NONE
-    LOGICAL, DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
-    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4
-    ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4))
-    a=.false.
-  END SUBROUTINE allocate_array_l4
-
-  SUBROUTINE allocate_array_l5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
-    IMPLICIT NONE
-    real(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
-    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
-    ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
-    a=.false.
-  END SUBROUTINE allocate_array_l5
-
 END MODULE basic
