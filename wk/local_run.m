@@ -4,19 +4,19 @@ addpath(genpath('../matlab')) % ... add
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;   % Collision frequency
-ETAB    = 0.6;    % Magnetic gradient
+NU      = 1.0e-1;   % Collision frequency
+ETAB    = 0.4;    % Magnetic gradient
 ETAN    = 1.0;    % Density gradient
-NU_HYP  = 0.2;
+NU_HYP  = 1.0;
 %% GRID PARAMETERS
-N       = 200;     % Frequency gridpoints (Nkr = N/2)
+N       = 20;     % Frequency gridpoints (Nkr = N/2)
 L       = 120;     % Size of the squared frequency domain
-P       = 2;
+P       = 0;
 J       = 1;
-MU_P    = 0.0/P^2;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
-MU_J    = 0.0/J^2;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
+MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
+MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
-TMAX    = 500;  % Maximal time unit
+TMAX    = 1000;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;    % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
@@ -27,13 +27,13 @@ JOB2LOAD= 0;
 %% OPTIONS AND NAMING
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Full Couloumb ; +/- for GK/DK)
-CO      = 2;
+CO      = 1;
 CLOS    = 0;   % Closure model (0: =0 truncation)
 NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
-% SIMID   = 'local_low_pj_analysis';  % Name of the simulation
-% SIMID   = 'Sugama_no_ei_ie_coll';  % Name of the simulation
-SIMID   = ['v2.5_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
+SIMID   = 'test';  % Name of the simulation
+% SIMID   = ['v2.6_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
 NON_LIN = 1;   % activate non-linearity (is cancelled if KREQ0 = 1)
+INIT_ZF = 0; ZF_AMP = 0.0;
 %% OUTPUTS
 W_DOUBLE = 0;
 W_GAMMA  = 1;

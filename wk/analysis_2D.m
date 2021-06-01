@@ -1,20 +1,21 @@
 addpath(genpath('../matlab')) % ... add
 %% Load results
 outfile ='';
-if 0 % Local results
+if 1 % Local results
 outfile ='';
 outfile ='';
 outfile ='';
-outfile ='';
+outfile ='v2.6_P_2_J_1/200x100_L_120_P_2_J_1_eta_0.4_nu_1e-01_DGGK_CLOS_0_mu_1e-01';
+
     BASIC.RESDIR      = ['../results/',outfile,'/'];
     BASIC.MISCDIR     = ['../results/',outfile,'/'];
 end
-if 1 % Marconi results
+if 0 % Marconi results
 outfile ='';
 outfile ='';
 outfile ='';
 outfile ='';
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.5_P_10_J_5/200x100_L_120_P_10_J_5_eta_0.9_nu_5e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.6_P_6_J_3/200x100_L_120_P_6_J_3_eta_0.6_nu_1e-03_DGGK_CLOS_0_mu_2e-02/out.txt';
 % load_marconi(outfile);
 BASIC.RESDIR      = ['../',outfile(46:end-8),'/'];
 BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'/'];
@@ -182,7 +183,8 @@ fig = figure; FIGNAME = ['t_evolutions',sprintf('_%.2d',JOBNUM),'_',PARAMS];
 set(gcf, 'Position',  [100, 100, 900, 800])
 subplot(111); 
     suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB),...
-        ', $L=',num2str(L),'$, $N=',num2str(Nr),'$, $(P,J)=(',num2str(PMAXI),',',num2str(JMAXI),')$']);
+        ', $L=',num2str(L),'$, $N=',num2str(Nr),'$, $(P,J)=(',num2str(PMAXI),',',num2str(JMAXI),')$,',...
+        ' $\mu_{hd}=$',num2str(MU)]);
     subplot(421); 
     for ip = 1:Npe
         for ij = 1:Nje
@@ -215,25 +217,38 @@ subplot(111);
         legend(['Gyro. flux';'Part. flux']);
         grid on; xlabel('$t c_s/R$'); ylabel('$\Gamma_{r,i}$')
 %         ylim([0,2.0]);
+    if(1)
     subplot(223)
         plot(kz,g_(1,:),'-','DisplayName','Linear growth rate'); hold on;
         plot([max(kz)*2/3,max(kz)*2/3],[0,10],'--k', 'DisplayName','2/3 Orszag AA');
         grid on; xlabel('$k_z\rho_s$'); ylabel('$\gamma R/c_s$'); legend('show');
         ylim([0,max(g_(1,:))]); xlim([0,max(kz)]);
-    subplot(224)
+        shearplot = 426; phiplot = 428;
+    else
+    shearplot = 223; phiplot = 224;      
+    end
+    subplot(shearplot)
+        clr      = line_colors(min(ip,numel(line_colors(:,1))),:);
+        lstyle   = line_styles(min(ij,numel(line_styles)));
+        plot(Ts2D,shear_maxr_maxz,'DisplayName','$\max_{r,z}(s)$'); hold on;
+        plot(Ts2D,shear_maxr_avgz,'DisplayName','$\max_{r}\langle s \rangle_z$'); hold on;
+        plot(Ts2D,shear_avgr_maxz,'DisplayName','$\max_{z}\langle s \rangle_r$'); hold on;
+        plot(Ts2D,shear_avgr_avgz,'DisplayName','$\langle s \rangle_{r,z}$'); hold on;
+    grid on; xlabel('$t c_s/R$'); ylabel('$shear$'); 
+    subplot(phiplot)
         clr      = line_colors(min(ip,numel(line_colors(:,1))),:);
         lstyle   = line_styles(min(ij,numel(line_styles)));
         plot(Ts2D,phi_maxr_maxz,'DisplayName','$\max_{r,z}(\phi)$'); hold on;
         plot(Ts2D,phi_maxr_avgz,'DisplayName','$\max_{r}\langle\phi\rangle_z$'); hold on;
         plot(Ts2D,phi_avgr_maxz,'DisplayName','$\max_{z}\langle\phi\rangle_r$'); hold on;
         plot(Ts2D,phi_avgr_avgz,'DisplayName','$\langle\phi\rangle_{r,z}$'); hold on;
-    grid on; xlabel('$t c_s/R$'); ylabel('$T_e/e$'); legend('show');
+    grid on; xlabel('$t c_s/R$'); ylabel('$E.S. pot$');
 save_figure
 end
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-TAVG = 1500; % Averaging time duration
+TAVG = 3500; % Averaging time duration
 %Compute steady radial transport
 tend = Ts0D(end); tstart = tend - TAVG;
 [~,its0D] = min(abs(Ts0D-tstart));
@@ -283,7 +298,7 @@ fig = figure; FIGNAME = ['ZF_transport_drphi','_',PARAMS];set(gcf, 'Position',  
 save_figure
 end
 
-if 0
+if 1
 %% Space time diagramms
 tstart = 0; tend = Ts2D(end);
 [~,itstart] = min(abs(Ts2D-tstart));
@@ -295,24 +310,41 @@ fig = figure; FIGNAME = ['space_time','_',PARAMS];set(gcf, 'Position',  [100, 10
         pclr = pcolor(TX,TY,squeeze(mean(ni00(:,:,trange).*dzphi(:,:,trange),2))'); set(pclr, 'edgecolor','none'); colorbar;
         shading interp
         colormap hot;
-        caxis([0.0,0.02]);
+        caxis([0.0,max(max(mean(ni00(:,:,its2D:ite2D).*dzphi(:,:,its2D:ite2D),2)))]);
          xticks([]); ylabel('$r/\rho_s$')
-        legend('$\Gamma_r(r)=\langle n_i^{GC}\partial_z\phi\rangle_z$')
+        legend('Radial part. transport $\langle n_i^{00}\partial_z\phi\rangle_z$')
         title(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB),...
         ', $L=',num2str(L),'$, $N=',num2str(Nr),'$, $(P,J)=(',num2str(PMAXI),',',num2str(JMAXI),')$,',...
         ' $\mu_{hd}=$',num2str(MU)]);
     subplot(212)
         pclr = pcolor(TX,TY,squeeze(mean(drphi(:,:,trange),2))'); set(pclr, 'edgecolor','none'); colorbar;
+        fieldmax = max(max(mean(abs(drphi(:,:,its2D:ite2D)),2)));
+        caxis([-fieldmax,fieldmax]);
         xlabel('$t c_s/R$'), ylabel('$r/\rho_s$')
-        legend('$\langle \partial_r\phi\rangle_z$')        
+        legend('Zonal flow $\langle \partial_r\phi\rangle_z$')        
 save_figure
 end
 
+if 0
+%% Averaged phi, ZF and shear profiles
+figure;
+plt = @(x) squeeze(mean(mean(real(x(:,:,its2D:ite2D)),2),3))/max(abs(squeeze(mean(mean(real(x(:,:,its2D:ite2D)),2),3))));
+subplot(311)
+plot(r,plt(phi)); hold on;
+xlim([-60,60]); xticks([]); yticks([]);
+subplot(312)
+plot(r,plt(drphi)); hold on;
+xlim([-60,60]);xticks([]);yticks([]);
+subplot(313)
+plot(r,plt(dr2phi)); hold on;
+xlim([-60,60]); xlabel('$r/\rho_s$');xticks([]);yticks([]);
+end
+
 %%
-t0    = 0000;
+t0    = 500;
 [~, it02D] = min(abs(Ts2D-t0));
 [~, it05D] = min(abs(Ts5D-t0));
-skip_ = 10; 
+skip_ = 5; 
 DELAY = 1e-3*skip_;
 FRAMES_2D = it02D:skip_:numel(Ts2D);
 FRAMES_5D = it05D:skip_:numel(Ts5D);
@@ -362,10 +394,26 @@ FIELDNAME = '$\langle\phi\rangle_{z}$'; XNAME = '$r/\rho_s$';
 create_gif_1D_phi
 end
 if 0
+%% flow averaged on z
+GIFNAME = ['zf_z0',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0; SCALING=1;
+FIELD =(squeeze(mean(real(drphi),2))); linestyle = '-.k'; FRAMES = FRAMES_2D;
+X = (r); T = Ts2D; YMIN = -1.1; YMAX = 1.1; XMIN = min(r); XMAX = max(r);
+FIELDNAME = '$\langle\phi\rangle_{z}$'; XNAME = '$r/\rho_s$';
+create_gif_1D_phi
+end
+if 0
+%% shear averaged on z
+GIFNAME = ['shear_z0',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0; SCALING=1;
+FIELD =(squeeze(mean(real(dr2phi),2))); linestyle = '-.k'; FRAMES = FRAMES_2D;
+X = (r); T = Ts2D; YMIN = -1.1; YMAX = 1.1; XMIN = min(r); XMAX = max(r);
+FIELDNAME = '$\langle\phi\rangle_{z}$'; XNAME = '$r/\rho_s$';
+create_gif_1D_phi
+end
+if 0
 %% phi @ kz = 0
 GIFNAME = ['phi_kz0',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0; SCALING = 0;
-FIELD =squeeze(log10(abs(PHI(no_AA,1,:)))); linestyle = '-.'; FRAMES = FRAMES_2D;
-X = kr(no_AA); T = Ts2D; YMIN = -30; YMAX = 6; XMIN = min(kr); XMAX = max(kr);
+FIELD =squeeze(log10(abs(PHI(:,1,:)))); linestyle = '-.'; FRAMES = FRAMES_2D;
+X = kr; T = Ts2D; YMIN = -0; YMAX = 6; XMIN = min(kr); XMAX = max(kr);
 FIELDNAME = '$\log_{10}|\tilde\phi(k_z=0)|$'; XNAME = '$k_r\rho_s$';
 create_gif_1D
 end

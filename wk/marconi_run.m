@@ -1,5 +1,9 @@
 clear all;
 addpath(genpath('../matlab')) % ... add
+SUBMIT = 1; % To submit the job automatically
+% EXECNAME = 'helaz_dbg';
+  EXECNAME = 'helaz_2.62';
+for ETAB = [0.6 0.7]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -7,37 +11,38 @@ addpath(genpath('../matlab')) % ... add
 CLUSTER.PART  = 'prod';     % dbg or prod
 CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
 if(strcmp(CLUSTER.PART,'dbg')); CLUSTER.TIME  = '00:30:00'; end;
-CLUSTER.MEM   = '64GB';     % Memory
+CLUSTER.MEM   = '128GB';     % Memory
 CLUSTER.JNAME = 'HeLaZ';% Job name
 NP_P          = 2;          % MPI processes along p  
 NP_KR         = 24;         % MPI processes along kr
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 1.0;   % Collision frequency
-ETAB    = 0.6;   % Magnetic gradient
+NU      = 1e-1;   % Collision frequency
+% ETAB    = 0.7;   % Magnetic gradient
 NU_HYP  = 1.0;   % Hyperdiffusivity coefficient
 NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Full Couloumb ; +/- for GK/DK)
-CO      = -3;
+CO      = -2;
+INIT_ZF = 0; ZF_AMP = 0.0;
 %% GRID PARAMETERS
 N       = 200;    % Frequency gridpoints (Nkr = N/2)
 L       = 120;    % Size of the squared frequency domain
-P       = 10;     % Electron and Ion highest Hermite polynomial degree
-J       = 05;     % Electron and Ion highest Laguerre polynomial degree
-MU_P    = 0.0/(P/2)^4;% Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
-MU_J    = 0.0/(J/2)^2;% Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
+P       = 06;     % Electron and Ion highest Hermite polynomial degree
+J       = 03;     % Electron and Ion highest Laguerre polynomial degree
+MU_P    = 0.0;% Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
+MU_J    = 0.0;% Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
 TMAX    = 5000;  % Maximal time unit
 DT      = 1e-2;  % Time step
 SPS0D   = 1;     % Sampling per time unit for profiler
-SPS2D   = 1/2;     % Sampling per time unit for 2D arrays
+SPS2D   = 1/4;     % Sampling per time unit for 2D arrays
 SPS5D   = 1/100;  % Sampling per time unit for 5D arrays
 SPSCP   = 0;     % Sampling per time unit for checkpoints
-RESTART = 1;     % To restart from last checkpoint
+RESTART = 0;     % To restart from last checkpoint
 JOB2LOAD= 0;
 %% Naming
 % SIMID   = 'test';  % Name of the simulation
-SIMID   = ['v2.5_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
+SIMID   = ['v2.6_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
 PREFIX  =[];
 % PREFIX  = sprintf('%d_%d_',NP_P, NP_KR);
 %% Options
@@ -66,7 +71,7 @@ JMAXI   = J;     % Highest ''       Laguerre ''
 kmax    = N*pi/L;% Highest fourier mode
 % kmax    = 2/3*N*pi/L;% Highest fourier mode with AA
 HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
-MU      = NU_HYP/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
+MU      = NU_HYP/(HD_CO*kmax)^4; % Hyperdiffusivity coefficient
 NOISE0  = 1.0e-5;
 ETAT    = 0.0;    % Temperature gradient
 ETAN    = 1.0;    % Density gradient
@@ -82,7 +87,11 @@ CLUSTER.CPUPT = '1';        % CPU per task
 setup
 write_sbash_marconi
 system('rm fort.90 setup_and_run.sh batch_script.sh');
-disp('done');
 if(mod(NP_P*NP_KR,48)~= 0)
     disp('WARNING : unused cores (ntot cores must be a 48 multiple)');
+end
+if(SUBMIT)
+    system('ssh ahoffman@login.marconi.cineca.it sh HeLaZ/wk/setup_and_run.sh');
+end
+disp('done');
 end

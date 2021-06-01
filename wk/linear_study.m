@@ -1,6 +1,6 @@
 for NU = [1.0]
 for ETAB = [0.5]
-for CO = [1,2]
+for CO = [-2 2]
 %clear all;
 addpath(genpath('../matlab')) % ... add
 default_plots_options
@@ -14,18 +14,18 @@ TAU     = 1.0;    % e/i temperature ratio
 % ETAB    = 0.5;
 ETAN    = 1.0;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
-NU_HYP  = 1.0;   % Hyperdiffusivity coefficient
+NU_HYP  = 0.0;   % Hyperdiffusivity coefficient
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
-N       = 200;     % Frequency gridpoints (Nkr = N/2)
+N       = 20;     % Frequency gridpoints (Nkr = N/2)
 L       = 120;     % Size of the squared frequency domain
 KREQ0   = 1;      % put kr = 0
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARMETERS
-TMAX    = 200;  % Maximal time unit
-DT      = 2e-2;   % Time step
+TMAX    = 100;  % Maximal time unit
+DT      = 1e-2;   % Time step
 SPS0D   = 0.5;      % Sampling per time unit for 2D arrays
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 1/2;    % Sampling per time unit for 5D arrays
@@ -33,7 +33,8 @@ SPSCP   = 0;    % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 00;
 %% OPTIONS
-SIMID   = 'linear_study';  % Name of the simulation
+% SIMID   = 'test';  % Name of the simulation
+SIMID   = 'v2.6_lin_analysis';  % Name of the simulation
 NON_LIN = 0 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Full Couloumb ; +/- for GK/DK)
@@ -41,7 +42,8 @@ NON_LIN = 0 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
 NL_CLOS = 0;   % nonlinear closure model (0: =0 nmax = jmax, 1: nmax = jmax-j, >1 : nmax = NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)
-INIT_PHI= 0;   % Start simulation with a noisy phi and moments
+INIT_PHI= 0;   % Start simulation with a noisy phi
+INIT_ZF = 0;   % Start simulation with a noisy phi
 %% OUTPUTS
 W_DOUBLE = 0;
 W_GAMMA  = 1;
@@ -62,11 +64,12 @@ MU      = NU_HYP/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
 %% PARAMETER SCANS
 if 1
 %% Parameter scan over PJ
-% PA = [2, 3, 4, 6, 8, 10];
-% JA = [1, 2, 2, 3, 4,  5];
+% PA = [2, 3, 4, 6];%, 8, 10];
+% JA = [1, 2, 2, 3];%, 4,  5];
 PA = [4];
-JA = [2];
-DTA= DT./sqrt(JA);
+JA = [4];
+DTA= DT./sqrt(JA)/4;
+% DTA= DT;
 mup_ = MU_P;
 muj_ = MU_J;
 Nparam = numel(PA);
@@ -80,35 +83,36 @@ for i = 1:Nparam
     PMAXE = PA(i); PMAXI = PA(i);
     JMAXE = JA(i); JMAXI = JA(i);
     DT = DTA(i);
-    MU_P = mup_/PMAXE^2;
-    MU_J = muj_/JMAXE^3;
+%     MU_P = mup_/PMAXE^2;
+%     MU_J = muj_/JMAXE^3;
     setup
     % Run linear simulation
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ./../../../bin/helaz 1 1; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 1 6; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 2 3; cd ../../../wk'])
-    % Load and process results
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 1 6; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 2 3; cd ../../../wk'])
+%     Load and process results
     %%
+    filename = ['../results/',SIMID,'/',PARAMS,'/outputs_00.h5'];
     load_results
     tend   = Ts2D(end); tstart   = 0.4*tend;
     [~,itstart] = min(abs(Ts2D-tstart));
     [~,itend]   = min(abs(Ts2D-tend));
     for ikr = 1:N/2+1
-        gamma_Ni00(i,ikr) = LinearFit_s(Ts2D(itstart:itend),squeeze(abs(Ni00(ikr,1,itstart:itend))));
+        gamma_Ni00(i,ikr) = (LinearFit_s(Ts2D(itstart:itend)',(squeeze(abs(Ni00(ikr,1,itstart:itend))))));
         Ni00_ST(i,ikr,1:numel(Ts2D)) = squeeze((Ni00(ikr,1,:)));
     end
     tend   = Ts5D(end); tstart   = 0.4*tend;
     [~,itstart] = min(abs(Ts5D-tstart));
     [~,itend]   = min(abs(Ts5D-tend));
     for ikr = 1:N/2+1
-        gamma_Nipj(i,ikr) = LinearFit_s(Ts5D(itstart:itend),squeeze(max(max(abs(Nipj(:,:,ikr,1,itstart:itend)),[],1),[],2)));
+        gamma_Nipj(i,ikr) = LinearFit_s(Ts5D(itstart:itend)',squeeze(max(max(abs(Nipj(:,:,ikr,1,itstart:itend)),[],1),[],2)));
     end
     gamma_Ni00(i,:) = real(gamma_Ni00(i,:) .* (gamma_Ni00(i,:)>=0.0));
     gamma_Nipj(i,:) = real(gamma_Nipj(i,:) .* (gamma_Nipj(i,:)>=0.0));
 %     kzmax = abs(kr(ikzmax));
 %     Bohm_transport(i) = ETAB/ETAN*gmax/kzmax^2;
     % Clean output
-    system(['rm -r ',BASIC.RESDIR])
+    system(['rm -r ',BASIC.RESDIR]);
 end
 
 if 1
@@ -116,7 +120,7 @@ if 1
 SCALE = 1;%sqrt(2);
 fig = figure; FIGNAME = 'linear_study';
 plt = @(x) x;
-subplot(211)
+% subplot(211)
     for i = 1:Nparam
         clr       = line_colors(mod(i-1,numel(line_colors(:,1)))+1,:);
         linestyle = line_styles(floor((i-1)/numel(line_colors(:,1)))+1);
@@ -126,22 +130,22 @@ subplot(211)
             'DisplayName',['$P=$',num2str(PA(i)),', $J=$',num2str(JA(i))]);
         hold on;
     end
-    grid on; xlabel('$k_z\rho_s^{R}$'); ylabel('$\gamma(N_i^{00})\rho_s/c_s$'); xlim([0.0,max(kr)]);
+    grid on; xlabel('$k_z\rho_s^{R}$'); ylabel('$\gamma(N_i^{00})L_\perp/c_s$'); xlim([0.0,max(kr)]);
     title(['$\eta_B=',num2str(ETAB),'$, $\nu_{',CONAME,'}=',num2str(NU),'$, ', CLOSNAME])
     legend('show')
-subplot(212)
-    for i = 1:Nparam
-        clr       = line_colors(mod(i-1,numel(line_colors(:,1)))+1,:);
-        linestyle = line_styles(floor((i-1)/numel(line_colors(:,1)))+1);
-        plot(plt(SCALE*kr),plt(gamma_Nipj(i,:)),...
-            'Color',clr,...
-            'LineStyle',linestyle{1},...
-            'DisplayName',['$P=$',num2str(PA(i)),', $J=$',num2str(JA(i))]);
-        hold on;
-    end
-    grid on; xlabel('$k_z\rho_s^{R}$'); ylabel('$\gamma(\max_{pj}N_i^{pj})\rho_s/c_s$'); xlim([0.0,max(kr)]);
-    title(['$\eta_B=',num2str(ETAB),'$, $\nu_{',CONAME,'}=',num2str(NU),'$, ', CLOSNAME])
-    legend('show')
+% subplot(212)
+%     for i = 1:Nparam
+%         clr       = line_colors(mod(i-1,numel(line_colors(:,1)))+1,:);
+%         linestyle = line_styles(floor((i-1)/numel(line_colors(:,1)))+1);
+%         plot(plt(SCALE*kr),plt(gamma_Nipj(i,:)),...
+%             'Color',clr,...
+%             'LineStyle',linestyle{1},...
+%             'DisplayName',['$P=$',num2str(PA(i)),', $J=$',num2str(JA(i))]);
+%         hold on;
+%     end
+%     grid on; xlabel('$k_z\rho_s^{R}$'); ylabel('$\gamma(\max_{pj}N_i^{pj})\rho_s/c_s$'); xlim([0.0,max(kr)]);
+%     title(['$\eta_B=',num2str(ETAB),'$, $\nu_{',CONAME,'}=',num2str(NU),'$, ', CLOSNAME])
+%     legend('show')
 saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.fig']);
 saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.png']);
 end

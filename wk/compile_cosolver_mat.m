@@ -24,28 +24,39 @@ Nperp   = numel(kperp);
     % ! 9 = GK coulomb polarization term
 CO = 3;
 GK = 1;
-
+P = 10;
+J = 5;
+M_FLR= 0; %to increase the NFLR
+if 0
+    %% plot the kperp distribution
+   figure
+   plot(kperp)
+end
+% %% Check if the differences btw kperp is larger than naming precision
 %%
 %% We compute only on a kperp grid with dk space from 0 to kperpmax
 kperpmax = sqrt(2) * kmax;
 kperp = unique([0:dk:kperpmax,kperpmax]);
-%%
-%% If DK collision, compute only kperp = 0
-if (GK == 0); kperp = 0; end;
-%% Kperp scan
+%% Naming
+if CO == 1; CONAME = 'FC'; end;
+if CO == 2; CONAME = 'PA'; end;
+if CO == 3; CONAME = 'SG'; end;
+matfilename = ['../iCa/',CONAME,'_P_',num2str(P),'_J_',num2str(J),...
+    '_N_',num2str(N),'_dk_',num2str(dk),'_MFLR_',num2str(M_FLR),'.h5'];
+
 n_ = 1;
 for k_ = kperp
-    disp(['----------Computing matrix ',num2str(n_),'/',num2str(numel(kperp)),'----------'])
+    disp(['-Writing matrix for kperp = ',num2str(k_)])
     %% Script to run COSOlver in order to create needed collision matrices
     COSOlver_path = '../../Documents/MoliSolver/COSOlver/';
-    COSOLVER.pmaxe = 10;
-    COSOLVER.jmaxe = 05;
-    COSOLVER.pmaxi = 10;
-    COSOLVER.jmaxi = 05;
+    COSOLVER.pmaxe = P;
+    COSOLVER.jmaxe = J;
+    COSOLVER.pmaxi = P;
+    COSOLVER.jmaxi = J;
     COSOLVER.kperp = k_;
 
-    COSOLVER.neFLR    = min(ceil((2/3*kperpmax)^2),max(5,ceil(COSOLVER.kperp^2))); % rule of thumb for sum truncation
-    COSOLVER.niFLR    = min(ceil((2/3*kperpmax)^2),max(5,ceil(COSOLVER.kperp^2)));
+    COSOLVER.neFLR    = min(ceil((2/3*kperpmax)^2),max(5,ceil(COSOLVER.kperp^2)))+M_FLR; % rule of thumb for sum truncation
+    COSOLVER.niFLR    = min(ceil((2/3*kperpmax)^2),max(5,ceil(COSOLVER.kperp^2)))+M_FLR;
     COSOLVER.idxT4max = 40;
 
     COSOLVER.neFLRs = 0; %  ... only for GK abel 
@@ -55,8 +66,6 @@ for k_ = kperp
 
     COSOLVER.gk = GK; 
     COSOLVER.co = CO;
-
-    write_fort90_COSOlver
     
     k_string      = sprintf('%0.4f',k_);
     self_mat_file_name = ['../iCa/self_Coll_GKE_',num2str(COSOLVER.gk),'_GKI_',num2str(COSOLVER.gk),...
@@ -80,20 +89,53 @@ for k_ = kperp
         '_JE_12_tau_1.0000_mu_0.0233',...
         '_NFLRe_',num2str(COSOLVER.neFLR),'_NFLRi_',num2str(COSOLVER.neFLR)...
         '_kperp_',k_string,'.h5'];
-%     if (exist(self_mat_file_name,'file')>0 && exist(ei_mat_file_name,'file')>0 && exist(ie_mat_file_name,'file') > 0)
-    if (exist(ei_mat_file_name,'file')>0)%&& exist(ie_mat_file_name,'file') > 0)
-        disp(['Matrix available for kperp = ',k_string]);
-    else
-        cd ../../Documents/MoliSolver/COSOlver/
-        disp(['Matrix not found for kperp = ',k_string]);
-        disp([num2str(n_),'/',Nperp])
-        disp('computing...');
-        CMD = 'mpirun -np 6 bin/CO 2 2 2 > out.txt';
-        disp(CMD); 
-        system(CMD);
-        system(CMD);
-        disp('..done');
-        cd ../../../HeLaZ/wk
+   
+    %% Load self matrix
+    C_self = h5read(self_mat_file_name,'/Caapj/Ceepj');
+    sz_ = size(C_self);
+    % Write it in the compiled file
+    h5create(matfilename,['/Caapj/',k_string],sz_)
+    h5write(matfilename,['/Caapj/',k_string],C_self)
+    
+    %% Load ei matrices
+    % Field
+    C_eiF = h5read(ei_mat_file_name,'/Ceipj/CeipjF');
+    sz_ = size(C_eiF);
+    h5create(matfilename,['/CeipjF/',k_string],sz_)
+    h5write(matfilename,['/CeipjF/',k_string],C_eiF)
+    % Test
+    C_eiT = h5read(ei_mat_file_name,'/Ceipj/CeipjT');
+    sz_ = size(C_eiT);
+    h5create(matfilename,['/CeipjT/',k_string],sz_)
+    h5write(matfilename,['/CeipjT/',k_string],C_eiT)
+    
+    %% Load ie matrices
+    % Field
+    C_ieF = h5read(ie_mat_file_name,'/Ciepj/CiepjF');
+    sz_ = size(C_ieF);
+    h5create(matfilename,['/CiepjF/',k_string],sz_)
+    h5write(matfilename,['/CiepjF/',k_string],C_ieF)
+    % Test
+    C_ieT = h5read(ie_mat_file_name,'/Ciepj/CiepjT');
+    sz_ = size(C_eiT);
+    h5create(matfilename,['/CiepjT/',k_string],sz_)
+    h5write(matfilename,['/CiepjT/',k_string],C_ieT)
+    
+    %% Copy fort.90 input file and put grid params
+    if(k_ == 0)
+        h5create(matfilename,'/dk',1);
+        h5write (matfilename,'/dk',dk);   
+        h5create(matfilename,'/N',1);
+        h5write (matfilename,'/N',N);
+        h5create(matfilename,'/Pmaxe',1);
+        h5write (matfilename,'/Pmaxe',P);   
+        h5create(matfilename,'/Jmaxe',1);
+        h5write (matfilename,'/Jmaxe',J);   
+        h5create(matfilename,'/Pmaxi',1);
+        h5write (matfilename,'/Pmaxi',P);  
+        h5create(matfilename,'/Jmaxi',1);
+        h5write (matfilename,'/Jmaxi',J);   
     end
-    n_ = n_ + 1;
+    
 end
+disp(['File saved @ :',matfilename])

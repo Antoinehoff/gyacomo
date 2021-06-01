@@ -16,7 +16,7 @@ figure('Color','white','Position', [100, 100, 400, 400]);
     pcolor(X,Y,FIELD(:,:,1)); % to set up
     colormap gray
     axis tight manual % this ensures that getframe() returns a consistent size
-    if INTERP
+    if 1
         shading interp;
     end
     in      = 1;
@@ -24,7 +24,7 @@ figure('Color','white','Position', [100, 100, 400, 400]);
     for n = FRAMES % loop over selected frames
         scale = max(max(abs(FIELD(:,:,n))));
         pclr = pcolor(X,Y,FIELD(:,:,n)/scale); % frame plot
-        if INTERP
+        if 1
             shading interp; 
         end
         set(pclr, 'edgecolor','none'); axis square;
