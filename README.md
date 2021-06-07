@@ -15,7 +15,9 @@ How to run it
 
 2. MPI parallel version
 
-	2.6 //Change of collisionality normalisation (from nu_ei to nu_ii), implementation of FCGK//
+	2.7 Versatile interpolation of kperp for the cosolver matrices and corrections done on DGGK
+
+	2.6 Change of collisionality normalisation (from nu_ei to nu_ii), implementation of FCGK
 
 	2.5 GK cosolver collision implementation
 
