@@ -48,7 +48,7 @@ MODULE grid
   REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: krarray
   REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kzarray
   REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kparray     ! kperp array
-  REAL(dp), PUBLIC, PROTECTED ::  deltakr, deltakz
+  REAL(dp), PUBLIC, PROTECTED ::  deltakr, deltakz, kr_max, kz_max, kp_max
   INTEGER,  PUBLIC, PROTECTED ::  ikrs, ikre, ikzs, ikze, ikps, ikpe
   INTEGER,  PUBLIC, PROTECTED :: ikr_0, ikz_0, ikr_max, ikz_max ! Indices of k-grid origin and max
   INTEGER,  PUBLIC :: ikr, ikz, ip, ij, ikp ! counters
@@ -163,8 +163,10 @@ CONTAINS
     ! Grid spacings
     IF (Lr .EQ. 0) THEN
       deltakr = 1._dp
+      kr_max  = 0._dp
     ELSE
       deltakr = 2._dp*PI/Lr
+      kr_max  = (Nr/2+1)*deltakr
     ENDIF
 
     ! Creating a grid ordered as dk*(0 1 2 3)
@@ -175,8 +177,8 @@ CONTAINS
         ikr_0 = ikr
         contains_kr0 = .true.
       ENDIF
-      ! Finding krmax
-      IF (krarray(ikr) .EQ. (Nr/2+1)*deltakr) THEN
+      ! Finding krmax idx
+      IF (krarray(ikr) .EQ. kr_max) THEN
         ikr_max = ikr
         contains_krmax = .true.
       ENDIF
@@ -212,6 +214,7 @@ CONTAINS
       ikz_max    = 1
     ELSE
       deltakz = 2._dp*PI/Lz
+      kz_max  = (Nz/2)*deltakr
       ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
       DO ikz = ikzs,ikze
         kzarray(ikz) = deltakz*(MODULO(ikz-1,Nkz/2)-Nkz/2*FLOOR(2.*real(ikz-1)/real(Nkz)))
@@ -219,7 +222,7 @@ CONTAINS
         ! Finding kz=0
         IF (kzarray(ikz) .EQ. 0) ikz_0 = ikz
         ! Finding kzmax
-        IF (kzarray(ikr) .EQ. (Nz/2)*deltakr) ikr_max = ikr
+        IF (kzarray(ikr) .EQ. kz_max) ikr_max = ikr
       END DO
     ENDIF
 
@@ -252,7 +255,8 @@ CONTAINS
       kparray(ikp) = REAL(ikp-1,dp) * deltakr
     ENDDO
     write(*,*) rank_kr, ': ikps = ', ikps, 'ikpe = ',ikpe
-    two_third_kpmax = SQRT(two_third_krmax**2+two_third_kzmax**2)    
+    two_third_kpmax = SQRT(two_third_krmax**2+two_third_kzmax**2)
+    kp_max = 3._dp/2._dp * two_third_kpmax
   END SUBROUTINE
 
   SUBROUTINE grid_readinputs

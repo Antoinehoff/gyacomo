@@ -57,21 +57,21 @@ SUBROUTINE moments_eq_rhs_e
       xNapj   = taue_qe_etaB * 2._dp*(p_dp + j_dp + 1._dp)
 
       !! Collision operator pj terms
-      xCapj = -nu_e*(p_dp + 2._dp*j_dp) !DK Lenard-Bernstein basis
+      xCapj = -nu_ee*(p_dp + 2._dp*j_dp) !DK Lenard-Bernstein basis
       ! Dougherty part
       IF ( CO .EQ. -2) THEN
         IF     ((p_int .EQ. 2) .AND. (j_int .EQ. 0)) THEN ! kronecker pj20
-          xCa20 = nu_e * 2._dp/3._dp
+          xCa20 = nu_ee * 2._dp/3._dp
           xCa01 = -SQRT2 * xCa20
           xCa10 = 0._dp
         ELSEIF ((p_int .EQ. 0) .AND. (j_int .EQ. 1)) THEN ! kronecker pj01
-          xCa20 = -nu_e * SQRT2 * 2._dp/3._dp
+          xCa20 = -nu_ee * SQRT2 * 2._dp/3._dp
           xCa01 = -SQRT2 * xCa20
           xCa10 = 0._dp
         ELSEIF ((p_int .EQ. 1) .AND. (j_int .EQ. 0)) THEN ! kronecker pj10
           xCa20 = 0._dp
           xCa01 = 0._dp
-          xCa10 = nu_e
+          xCa10 = nu_ee
         ELSE
           xCa20 = 0._dp; xCa01 = 0._dp; xCa10 = 0._dp
         ENDIF
