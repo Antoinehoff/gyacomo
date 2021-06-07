@@ -41,12 +41,12 @@ kperp = unique([0:dk:kperpmax,kperpmax]);
 if CO == 1; CONAME = 'FC'; end;
 if CO == 2; CONAME = 'PA'; end;
 if CO == 3; CONAME = 'SG'; end;
-matfilename = ['../iCa/',CONAME,'_P_',num2str(P),'_J_',num2str(J),...
-    '_N_',num2str(N),'_dk_',num2str(dk),'_MFLR_',num2str(M_FLR),'.h5'];
-
-n_ = 1;
+% matfilename = ['../iCa/',CONAME,'_P_',num2str(P),'_J_',num2str(J),...
+%     '_N_',num2str(N),'_dk_',num2str(dk),'_MFLR_',num2str(M_FLR),'.h5'];
+matfilename = '../iCa/gk_sugama_P_10_J_5.h5';
+n_ = 0;
 for k_ = kperp
-    disp(['-Writing matrix for kperp = ',num2str(k_)])
+    disp(['-Writing matrices for kperp = ',num2str(k_)])
     %% Script to run COSOlver in order to create needed collision matrices
     COSOlver_path = '../../Documents/MoliSolver/COSOlver/';
     COSOLVER.pmaxe = P;
@@ -68,6 +68,7 @@ for k_ = kperp
     COSOLVER.co = CO;
     
     k_string      = sprintf('%0.4f',k_);
+    n_string      = sprintf('%0.5d',n_);
     self_mat_file_name = ['../iCa/self_Coll_GKE_',num2str(COSOLVER.gk),'_GKI_',num2str(COSOLVER.gk),...
         '_ESELF_',num2str(COSOLVER.co),'_ISELF_',num2str(COSOLVER.co),...
         '_Pmaxe_',num2str(COSOLVER.pmaxe),'_Jmaxe_',num2str(COSOLVER.jmaxe),...
@@ -94,48 +95,43 @@ for k_ = kperp
     C_self = h5read(self_mat_file_name,'/Caapj/Ceepj');
     sz_ = size(C_self);
     % Write it in the compiled file
-    h5create(matfilename,['/Caapj/',k_string],sz_)
-    h5write(matfilename,['/Caapj/',k_string],C_self)
-    
+    h5create(matfilename,['/',n_string,'/Caapj/Ceepj'],sz_)
+    h5write (matfilename,['/',n_string,'/Caapj/Ceepj'],C_self)
+    h5create(matfilename,['/',n_string,'/Caapj/Ciipj'],sz_)
+    h5write (matfilename,['/',n_string,'/Caapj/Ciipj'],C_self)    
     %% Load ei matrices
     % Field
     C_eiF = h5read(ei_mat_file_name,'/Ceipj/CeipjF');
     sz_ = size(C_eiF);
-    h5create(matfilename,['/CeipjF/',k_string],sz_)
-    h5write(matfilename,['/CeipjF/',k_string],C_eiF)
+    h5create(matfilename,['/',n_string,'/Ceipj/CeipjF'],sz_)
+    h5write (matfilename,['/',n_string,'/Ceipj/CeipjF'],C_eiF)
     % Test
     C_eiT = h5read(ei_mat_file_name,'/Ceipj/CeipjT');
     sz_ = size(C_eiT);
-    h5create(matfilename,['/CeipjT/',k_string],sz_)
-    h5write(matfilename,['/CeipjT/',k_string],C_eiT)
+    h5create(matfilename,['/',n_string,'/Ceipj/CeipjT'],sz_)
+    h5write (matfilename,['/',n_string,'/Ceipj/CeipjT'],C_eiT)
     
     %% Load ie matrices
     % Field
     C_ieF = h5read(ie_mat_file_name,'/Ciepj/CiepjF');
     sz_ = size(C_ieF);
-    h5create(matfilename,['/CiepjF/',k_string],sz_)
-    h5write(matfilename,['/CiepjF/',k_string],C_ieF)
+    h5create(matfilename,['/',n_string,'/Ciepj/CiepjF'],sz_)
+    h5write (matfilename,['/',n_string,'/Ciepj/CiepjF'],C_ieF)
     % Test
     C_ieT = h5read(ie_mat_file_name,'/Ciepj/CiepjT');
     sz_ = size(C_eiT);
-    h5create(matfilename,['/CiepjT/',k_string],sz_)
-    h5write(matfilename,['/CiepjT/',k_string],C_ieT)
+    h5create(matfilename,['/',n_string,'/Ciepj/CiepjT'],sz_)
+    h5write (matfilename,['/',n_string,'/Ciepj/CiepjT'],C_ieT)
     
     %% Copy fort.90 input file and put grid params
     if(k_ == 0)
-        h5create(matfilename,'/dk',1);
-        h5write (matfilename,'/dk',dk);   
-        h5create(matfilename,'/N',1);
-        h5write (matfilename,'/N',N);
-        h5create(matfilename,'/Pmaxe',1);
-        h5write (matfilename,'/Pmaxe',P);   
-        h5create(matfilename,'/Jmaxe',1);
-        h5write (matfilename,'/Jmaxe',J);   
-        h5create(matfilename,'/Pmaxi',1);
-        h5write (matfilename,'/Pmaxi',P);  
-        h5create(matfilename,'/Jmaxi',1);
-        h5write (matfilename,'/Jmaxi',J);   
+        h5create(matfilename,'/coordkperp',numel(kperp));
+        h5write (matfilename,'/coordkperp',kperp);   
+        h5create(matfilename,'/dims_e',2);
+        h5write (matfilename,'/dims_e',[P,J]);   
+        h5create(matfilename,'/dims_i',2);
+        h5write (matfilename,'/dims_i',[P,J]); 
     end
-    
+    n_ = n_ + 1;
 end
 disp(['File saved @ :',matfilename])

@@ -1,6 +1,6 @@
-for NU = [1.0]
+for NU = [1e-1]
 for ETAB = [0.5]
-for CO = [-2 2]
+for CO = [1]
 %clear all;
 addpath(genpath('../matlab')) % ... add
 default_plots_options
@@ -18,8 +18,8 @@ NU_HYP  = 0.0;   % Hyperdiffusivity coefficient
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
-N       = 20;     % Frequency gridpoints (Nkr = N/2)
-L       = 120;     % Size of the squared frequency domain
+N       = 66;     % Frequency gridpoints (Nkr = N/2)
+L       = 150;     % Size of the squared frequency domain
 KREQ0   = 1;      % put kr = 0
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
@@ -33,8 +33,9 @@ SPSCP   = 0;    % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 00;
 %% OPTIONS
-% SIMID   = 'test';  % Name of the simulation
-SIMID   = 'v2.6_lin_analysis';  % Name of the simulation
+SIMID   = 'test';  % Name of the simulation
+% SIMID   = 'kobayashi_lin';  % Name of the simulation
+% SIMID   = 'v2.6_lin_analysis';  % Name of the simulation
 NON_LIN = 0 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Full Couloumb ; +/- for GK/DK)
@@ -64,10 +65,10 @@ MU      = NU_HYP/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
 %% PARAMETER SCANS
 if 1
 %% Parameter scan over PJ
-% PA = [2, 3, 4, 6];%, 8, 10];
-% JA = [1, 2, 2, 3];%, 4,  5];
+% PA = [2, 4, 6, 8, 10];
+% JA = [1, 2, 3, 4,  5];
 PA = [4];
-JA = [4];
+JA = [2];
 DTA= DT./sqrt(JA)/4;
 % DTA= DT;
 mup_ = MU_P;
@@ -88,8 +89,8 @@ for i = 1:Nparam
     setup
     % Run linear simulation
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ./../../../bin/helaz 1 1; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 1 6; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 2 3; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 1 6; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 2 3; cd ../../../wk'])
 %     Load and process results
     %%
     filename = ['../results/',SIMID,'/',PARAMS,'/outputs_00.h5'];

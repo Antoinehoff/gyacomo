@@ -1,11 +1,13 @@
 addpath(genpath('../matlab')) % ... add
+% for ETA_ =[0.6:0.1:0.9]
 %% Load results
-outfile ='';
 if 1 % Local results
 outfile ='';
 outfile ='';
 outfile ='';
-outfile ='v2.6_P_2_J_1/200x100_L_120_P_2_J_1_eta_0.4_nu_1e-01_DGGK_CLOS_0_mu_1e-01';
+outfile ='kobayashi/100x50_L_50_P_4_J_2_eta_0.71429_nu_5e-03_DGGK_CLOS_0_mu_1e-02';
+% outfile ='kobayashi/100x50_L_50_P_4_J_2_eta_0.71429_nu_5e-03_SGGK_CLOS_0_mu_1e-02';
+% outfile ='v2.6_P_6_J_3/200x100_L_120_P_6_J_3_eta_0.5_nu_1e-01_DGGK_CLOS_0_mu_2e-02';
 
     BASIC.RESDIR      = ['../results/',outfile,'/'];
     BASIC.MISCDIR     = ['../results/',outfile,'/'];
@@ -13,9 +15,8 @@ end
 if 0 % Marconi results
 outfile ='';
 outfile ='';
-outfile ='';
-outfile ='';
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.6_P_6_J_3/200x100_L_120_P_6_J_3_eta_0.6_nu_1e-03_DGGK_CLOS_0_mu_2e-02/out.txt';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/kobayashi/100x50_L_50_P_6_J_3_eta_0.71429_nu_5e-03_DGGK_CLOS_0_mu_1e-02/out.txt';
+% outfile =['/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.6_P_10_J_5/200x100_L_120_P_10_J_5_eta_',num2str(ETA_),'_nu_1e-03_DGGK_CLOS_0_mu_2e-02/out.txt'];
 % load_marconi(outfile);
 BASIC.RESDIR      = ['../',outfile(46:end-8),'/'];
 BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'/'];
@@ -23,7 +24,7 @@ end
 
 %%
 % JOBNUM = 1; load_results;
-JOBNUMMAX = 20; compile_results %Compile the results from first output found to JOBNUMMAX if existing
+JOBNUMMAX = 0; compile_results %Compile the results from first output found to JOBNUMMAX if existing
 
 %% Retrieving max polynomial degree and sampling info
 Npe = numel(Pe); Nje = numel(Je); [JE,PE] = meshgrid(Je,Pe);
@@ -55,17 +56,19 @@ disp('- iFFT')
 % IFFT (Lower case = real space, upper case = frequency space)
 ne00   = zeros(Nr,Nz,Ns2D);         % Gyrocenter density
 ni00   = zeros(Nr,Nz,Ns2D);
+dzni00 = zeros(Nr,Nz,Ns2D);
 np_i   = zeros(Nr,Nz,Ns5D); % Ion particle density
 si00   = zeros(Nr,Nz,Ns5D);
 phi    = zeros(Nr,Nz,Ns2D);
 drphi  = zeros(Nr,Nz,Ns2D);
-dr2phi = zeros(Nr,Nz,Ns2D);
 dzphi  = zeros(Nr,Nz,Ns2D);
+dr2phi = zeros(Nr,Nz,Ns2D);
 
 for it = 1:numel(Ts2D)
     NE_ = Ne00(:,:,it); NI_ = Ni00(:,:,it); PH_ = PHI(:,:,it);
     ne00(:,:,it)  = real(fftshift(ifft2((NE_),Nr,Nz)));
     ni00(:,:,it)  = real(fftshift(ifft2((NI_),Nr,Nz)));
+    dzni00(:,:,it) = real(fftshift(ifft2(1i*KZ.*(NI_),Nr,Nz)));
     phi (:,:,it)  = real(fftshift(ifft2((PH_),Nr,Nz)));
     drphi(:,:,it) = real(fftshift(ifft2(1i*KR.*(PH_),Nr,Nz)));
     dr2phi(:,:,it)= real(fftshift(ifft2(-KR.^2.*(PH_),Nr,Nz)));
@@ -248,7 +251,7 @@ end
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-TAVG = 3500; % Averaging time duration
+TAVG = 500; % Averaging time duration
 %Compute steady radial transport
 tend = Ts0D(end); tstart = tend - TAVG;
 [~,its0D] = min(abs(Ts0D-tstart));
@@ -310,7 +313,8 @@ fig = figure; FIGNAME = ['space_time','_',PARAMS];set(gcf, 'Position',  [100, 10
         pclr = pcolor(TX,TY,squeeze(mean(ni00(:,:,trange).*dzphi(:,:,trange),2))'); set(pclr, 'edgecolor','none'); colorbar;
         shading interp
         colormap hot;
-        caxis([0.0,max(max(mean(ni00(:,:,its2D:ite2D).*dzphi(:,:,its2D:ite2D),2)))]);
+        caxis([0.0,0.8*max(max(mean(ni00(:,:,its2D:ite2D).*dzphi(:,:,its2D:ite2D),2)))]);
+%         caxis([0.0,0.1]);
          xticks([]); ylabel('$r/\rho_s$')
         legend('Radial part. transport $\langle n_i^{00}\partial_z\phi\rangle_z$')
         title(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB),...
@@ -325,26 +329,22 @@ fig = figure; FIGNAME = ['space_time','_',PARAMS];set(gcf, 'Position',  [100, 10
 save_figure
 end
 
-if 0
-%% Averaged phi, ZF and shear profiles
+if 1
+%% Averaged shear and Reynold stress profiles
 figure;
 plt = @(x) squeeze(mean(mean(real(x(:,:,its2D:ite2D)),2),3))/max(abs(squeeze(mean(mean(real(x(:,:,its2D:ite2D)),2),3))));
-subplot(311)
-plot(r,plt(phi)); hold on;
-xlim([-60,60]); xticks([]); yticks([]);
-subplot(312)
-plot(r,plt(drphi)); hold on;
-xlim([-60,60]);xticks([]);yticks([]);
-subplot(313)
-plot(r,plt(dr2phi)); hold on;
-xlim([-60,60]); xlabel('$r/\rho_s$');xticks([]);yticks([]);
+plot(r,plt(-dr2phi),'-k','DisplayName','Zonal shear'); hold on;
+plot(r,plt(-drphi.*dzphi),'--','DisplayName','$\Pi_\phi$'); hold on;
+plot(r,plt(-drphi.*dzni00),'--','DisplayName','$\Pi_{ni00}$'); hold on;
+plot(r,plt(-drphi.*dzphi-drphi.*dzni00),'--','DisplayName','$\Pi_\phi+\Pi_{ni00}$'); hold on;
+xlim([-60,60]); xlabel('$r/\rho_s$');
 end
 
 %%
-t0    = 500;
+t0    = 00;
 [~, it02D] = min(abs(Ts2D-t0));
 [~, it05D] = min(abs(Ts5D-t0));
-skip_ = 5; 
+skip_ = 1; 
 DELAY = 1e-3*skip_;
 FRAMES_2D = it02D:skip_:numel(Ts2D);
 FRAMES_5D = it05D:skip_:numel(Ts5D);
@@ -354,7 +354,8 @@ if 0
 GIFNAME = ['ni',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
 FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$n_i$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
-create_gif
+% create_gif
+create_mov
 end
 if 0
 %% Density electrons
@@ -456,3 +457,5 @@ FIELDNAME = 'N_i'; XNAME = '$k_z\rho_s$'; YNAME = '$P$, $\sum_r$';
 create_gif_5D
 end
 %%
+ZF_fourier_analysis
+% end

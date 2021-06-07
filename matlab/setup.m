@@ -70,7 +70,8 @@ elseif (CO == -2) % Write matrice filename for Sugama
     cmat_jmaxe = 5;
     cmat_pmaxi = 10;
     cmat_jmaxi = 5;
-    INITIAL.mat_file = ['''../../../iCa/SG_P_10_J_5_N_200_dk_0.05236_MFLR_0.h5'''];
+%     INITIAL.mat_file = ['''../../../iCa/SG_P_10_J_5_N_200_dk_0.05236_MFLR_0.h5'''];
+    INITIAL.mat_file = ['''../../../iCa/gk_sugama_P_10_J_5.h5'''];
     INITIAL.selfmat_file = ...
         ['''../../../iCa/self_Coll_GKE_0_GKI_0_ESELF_3_ISELF_3_Pmaxe_',num2str(cmat_pmaxe),...
         '_Jmaxe_',num2str(cmat_jmaxe),'_Pmaxi_',num2str(cmat_pmaxi),'_Jmaxi_',...
@@ -88,7 +89,11 @@ elseif (CO == 2) % Write matrice filename for Sugama GK
     cmat_jmaxe = 5;
     cmat_pmaxi = 10;
     cmat_jmaxi = 5;
-    INITIAL.mat_file = ['''../../../iCa/SG_P_10_J_5_N_200_dk_0.05236_MFLR_0.h5'''];
+%     INITIAL.mat_file = ['''../../../iCa/SG_P_10_J_5_N_200_dk_0.05236_MFLR_0.h5'''];
+%     INITIAL.mat_file = ['''../../../iCa/gk_sugama_P_4_J_2_N_10_kpm_1.h5'''];
+%     INITIAL.mat_file = ['''../../../iCa/gk_sugama_P_4_J_2_N_150_kpm_8.h5'''];
+    INITIAL.mat_file = ['''../../../iCa/gk_sugama_P_20_J_10_N_150_kpm_8.h5'''];
+%     INITIAL.mat_file = ['''../../../iCa/gk_sugama_P_10_J_5.h5'''];
     INITIAL.selfmat_file = ...
         ['''../../../iCa/self_Coll_GKE_1_GKI_1_ESELF_3_ISELF_3_Pmaxe_',num2str(cmat_pmaxe),...
         '_Jmaxe_',num2str(cmat_jmaxe),'_Pmaxi_',num2str(cmat_pmaxi),'_Jmaxi_',...
@@ -171,8 +176,8 @@ end
 %% Compile and WRITE input file
 INPUT = write_fort90(OUTPUTS,GRID,MODEL,INITIAL,TIME_INTEGRATION,BASIC);
 nproc = 1;
-MAKE  = 'cd ..; make; cd wk';
-system(MAKE);
+% MAKE  = 'cd ..; make; cd wk';
+% system(MAKE);
 %%
 disp(['Set up ',SIMID]);
 disp([resolution,gridname,degngrad]);

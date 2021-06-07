@@ -4,9 +4,9 @@ if 0
 % FIELD = ne00; FNAME = 'ne'; FIELDLTX = '$N_e^{00}$'; XX = RR; YY = ZZ;
 FIELD = phi; FNAME = 'phi'; FIELDLTX = '$\phi$'; XX = RR; YY = ZZ;
 % FIELD = dr2phi; FNAME = 'dr2phi'; XX = RR; YY = ZZ;
-tf = 800;  [~,it1] = min(abs(Ts2D-tf));
-tf = 900;  [~,it2] = min(abs(Ts2D-tf)); 
-tf = 1000; [~,it3] = min(abs(Ts2D-tf));
+tf = 100;  [~,it1] = min(abs(Ts2D-tf));
+tf = 285;  [~,it2] = min(abs(Ts2D-tf)); 
+tf = 350; [~,it3] = min(abs(Ts2D-tf));
 tf = 1100; [~,it4] = min(abs(Ts2D-tf));
 fig = figure; FIGNAME = [FNAME,'_snaps','_',PARAMS]; set(gcf, 'Position',  [100, 100, 1500, 350])
 plt = @(x) x;%./max(max(x));

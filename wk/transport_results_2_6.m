@@ -1,5 +1,5 @@
 default_plots_options
-%% nuDGGK = 1.0
+%% nuDGGK = 0.1
 figure; set(gcf, 'Position',  [100, 100, 1200, 350])
 % 6,3 nuDGGK=1.0
 eta   = [0.5,0.6,0.7,0.8];
