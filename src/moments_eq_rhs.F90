@@ -129,6 +129,7 @@ SUBROUTINE moments_eq_rhs_e
 
           ELSEIF (CO .EQ. 1) THEN ! GK Dougherty
             CALL DoughertyGK_e(ip,ij,ikr,ikz,TColl)
+            ! CALL DoughertyGK(ip,ij,ikr,ikz,TColl,'e')
 
           ELSE ! COSOLver matrix
             TColl = TColl_e(ip,ij,ikr,ikz)
@@ -316,6 +317,7 @@ SUBROUTINE moments_eq_rhs_i
 
           ELSEIF (CO .EQ. 1) THEN ! GK Dougherty
             CALL DoughertyGK_i(ip,ij,ikr,ikz,TColl)
+            ! CALL DoughertyGK(ip,ij,ikr,ikz,TColl,'i')
           ELSE! COSOLver matrix (Sugama, Coulomb)
             TColl = TColl_i(ip,ij,ikr,ikz)
           ENDIF

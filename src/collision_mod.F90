@@ -11,12 +11,138 @@ USE utility
 IMPLICIT NONE
 
 PUBLIC :: compute_TColl
-PUBLIC :: DoughertyGK_e, DoughertyGK_i
+PUBLIC :: DoughertyGK_e, DoughertyGK_i!, DoughertyGK
 PUBLIC :: load_COSOlver_mat
 PUBLIC :: apply_COSOlver_mat_e, apply_COSOlver_mat_i
 
 CONTAINS
 
+  ! !******************************************************************************!
+  ! !! Doughtery gyrokinetic collision operator for electrons
+  ! !******************************************************************************!
+  ! SUBROUTINE DoughertyGK(ip_,ij_,ikr_,ikz_,TColl_,specie_)
+  !   IMPLICIT NONE
+  !   INTEGER,     INTENT(IN)        :: ip_,ij_,ikr_,ikz_
+  !   CHARACTER(len = 1), INTENT(IN) :: specie_
+  !   COMPLEX(dp), INTENT(INOUT)     :: TColl_
+  !
+  !   COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_
+  !   COMPLEX(dp) :: Dpj, Ppj, T_
+  !   COMPLEX(dp) :: nadiab_moment_0j
+  !   COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: moments_
+  !   REAL(dp),    DIMENSION(:),   ALLOCATABLE :: kernel_
+  !   REAL(dp)    :: Knp0, Knp1, Knm1
+  !   INTEGER     :: in_, jmax_
+  !   REAL(dp)    :: n_dp, j_dp, p_dp, b_, bo2_2_, q_tau_, nu_
+  !
+  !   !** Auxiliary variables **
+  !   !! If electrons !!
+  !   IF ( specie_ .EQ. 'e' ) THEN
+  !     p_dp      = REAL(parray_e(ip_),dp)
+  !     j_dp      = REAL(jarray_e(ij_),dp)
+  !     jmax_     = jmaxe
+  !     bo2_2_    = (krarray(ikr_)**2 + kzarray(ikz_)**2) * sigmae2_taue_o2 ! this is (be/2)^2
+  !     b_        = 2_dp*SQRT(bo2_2_) ! this is be
+  !     q_tau_   = q_e/tau_e
+  !     nu_       = nu_ee
+  !     CALL allocate_array(moments_, ips_e,ipe_e, ijs_e,ije_e)
+  !     moments_(ips_e:ipe_e,ijs_e:ije_e) = moments_e(ips_e:ipe_e,ijs_e:ije_e,ikr_,ikz_,updatetlevel)
+  !     CALL allocate_array(kernel_, ijs_e,ije_e)
+  !     kernel_(ijsg_e:ijeg_e)    = kernel_e(ijsg_e:ijeg_e,ikr_,ikz_)
+  !   !! If ions !!
+  !   ELSEIF ( specie_ .EQ. 'i') THEN
+  !     p_dp      = REAL(parray_i(ip_),dp)
+  !     j_dp      = REAL(jarray_i(ij_),dp)
+  !     jmax_     = jmaxi
+  !     bo2_2_    = (krarray(ikr_)**2 + kzarray(ikz_)**2) * sigmai2_taui_o2 ! this is (bi/2)^2
+  !     b_        = 2_dp*SQRT(bo2_2_) ! this is be
+  !     q_tau_   = q_i/tau_i
+  !     nu_       = nu_i
+  !     CALL allocate_array(moments_, ips_i,ipe_i, ijs_i,ije_i)
+  !     moments_(ips_i:ipe_i,ijs_i:ije_i) = moments_i(ips_i:ipe_i,ijs_i:ije_i,ikr_,ikz_,updatetlevel)
+  !     CALL allocate_array(kernel_, ijsg_i,ijeg_i)
+  !     kernel_(ijsg_i:ijeg_i)    = kernel_i(ijsg_i:ijeg_i,ikr_,ikz_)
+  !   ENDIF
+  !
+  !   !** Assembling collison operator **
+  !   ! Velocity-space diffusion (similar to Lenhard Bernstein)
+  !   ! -nuee (p + 2j + b^2/2) Nepj
+  !   TColl_ = -(p_dp + 2._dp*j_dp + 2._dp*bo2_2_)*moments_(ip_,ij_)
+  !
+  !   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !   IF( p_dp .EQ. 0 ) THEN ! Kronecker p0
+  !     ! Get adiabatic moment
+  !     TColl_ = TColl_ - (p_dp + 2._dp*j_dp + 2._dp*bo2_2_) * q_tau_ * kernel_(ij_)*phi(ikr_,ikz_)
+  !       !** build required fluid moments **
+  !       n_     = 0._dp
+  !       upar_  = 0._dp; uperp_ = 0._dp
+  !       Tpar_  = 0._dp; Tperp_ = 0._dp
+  !       DO in_ = 1,jmaxe+1
+  !         n_dp = REAL(in_-1,dp)
+  !         ! Store the kernels for sparing readings
+  !         Knp0 =  kernel_(in_)
+  !         Knp1 =  kernel_(in_+1)
+  !         Knm1 =  kernel_(in_-1)
+  !         ! Nonadiabatic moments (only different from moments when p=0)
+  !         nadiab_moment_0j   = moments_(1,in_) + q_tau_ * Knp0 *phi(ikr_,ikz_)
+  !         ! Density
+  !         n_     = n_     + Knp0 * nadiab_moment_0j
+  !         ! Perpendicular velocity
+  !         uperp_ = uperp_ + b_*0.5_dp*(Knp0 - Knm1) * nadiab_moment_0j
+  !         ! Parallel temperature
+  !         Tpar_  = Tpar_  + Knp0 * (SQRT2*moments_(3,in_) + nadiab_moment_0j)
+  !         ! Perpendicular temperature
+  !         Tperp_ = Tperp_ + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1._dp)*Knp1 - n_dp*Knm1)*nadiab_moment_0j
+  !       ENDDO
+  !     T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
+  !     ! Add energy restoring term
+  !     TColl_ = TColl_ + T_* 4._dp *  j_dp          * kernel_(ij_)
+  !     TColl_ = TColl_ - T_* 2._dp * (j_dp + 1._dp) * kernel_(ij_+1)
+  !     TColl_ = TColl_ - T_* 2._dp *  j_dp          * kernel_(ij_-1)
+  !     TColl_ = TColl_ + uperp_*b_*  (kernel_(ij_) - kernel_(ij_-1))
+  !   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !
+  !   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !   ELSEIF( p_dp .eq. 1 ) THEN ! kronecker p1
+  !     !** build required fluid moments **
+  !     upar_  = 0._dp
+  !     DO in_ = 1,jmax_+1
+  !       ! Parallel velocity
+  !        upar_  = upar_  + Kernel_(in_) * moments_(2,in_)
+  !     ENDDO
+  !     TColl_ = TColl_ + upar_*Kernel_(ij_)
+  !   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !
+  !   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 2 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !   ELSEIF( p_dp .eq. 2 ) THEN ! kronecker p2
+  !     !** build required fluid moments **
+  !     n_     = 0._dp
+  !     upar_  = 0._dp; uperp_ = 0._dp
+  !     Tpar_  = 0._dp; Tperp_ = 0._dp
+  !     DO in_ = 1,jmaxe+1
+  !       n_dp = REAL(in_-1,dp)
+  !       ! Store the kernels for sparing readings
+  !       Knp0 =  kernel_(in_)
+  !       Knp1 =  kernel_(in_+1)
+  !       Knm1 =  kernel_(in_-1)
+  !       ! Nonadiabatic moments (only different from moments when p=0)
+  !       nadiab_moment_0j   = moments_(1,in_) + q_tau_*Knp0*phi(ikr_,ikz_)
+  !       ! Density
+  !       n_     = n_     + Knp0 * nadiab_moment_0j
+  !       ! Parallel temperature
+  !       Tpar_  = Tpar_  + Knp0 * (SQRT2*moments_(3,in_) + nadiab_moment_0j)
+  !       ! Perpendicular temperature
+  !       Tperp_ = Tperp_ + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1) * Knp1 - n_dp * Knm1)*nadiab_moment_0j
+  !     ENDDO
+  !     T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
+  !     TColl_ = TColl_ + T_*SQRT2*kernel_(ij_)
+  !   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !
+  !   ENDIF
+  !   ! Multiply by specieslike collision coefficient
+  !   TColl_ = nu_ * TColl_
+  !
+  ! END SUBROUTINE DoughertyGK
 
   !******************************************************************************!
   !! Doughtery gyrokinetic collision operator for electrons
@@ -28,84 +154,90 @@ CONTAINS
 
     COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_
     COMPLEX(dp) :: Dpj, Ppj, T_, be_
-    COMPLEX(dp) :: nadiab_moment_0j, nadiab_moment_0jp1, nadiab_moment_0jm1
+    COMPLEX(dp) :: nadiab_moment_0j
+    REAL(dp)    :: Knp0, Knp1, Knm1
     INTEGER     :: in_
     REAL(dp)    :: n_dp, j_dp, p_dp, be_2, q_e_tau_e
 
     !** Auxiliary variables **
     p_dp      = REAL(parray_e(ip_),dp)
     j_dp      = REAL(jarray_e(ij_),dp)
-    be_2      = (krarray(ikr_)**2 + kzarray(ikz_)**2) * sigmae2_taue_o2
-    be_       = SQRT(2._dp*be_2)
+    be_2      = (krarray(ikr_)**2 + kzarray(ikz_)**2) * sigmae2_taue_o2 ! this is (be/2)^2
+    ! ibe_       = imagu*2._dp*SQRT(be_2)
+    be_       = 2_dp*SQRT(be_2) ! this is be
     q_e_tau_e = q_e/tau_e
 
     !** Assembling collison operator **
     ! Velocity-space diffusion (similar to Lenhard Bernstein)
-    TColl_ = -(p_dp + 2._dp*j_dp + be_2)*moments_e(ip_,ij_,ikr_,ikz_,updatetlevel)
+    ! -nuee (p + 2j + b^2/2) Nepj
+    TColl_ = -(p_dp + 2._dp*j_dp + 2._dp*be_2)*moments_e(ip_,ij_,ikr_,ikz_,updatetlevel)
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     IF( p_dp .EQ. 0 ) THEN ! Kronecker p0
       ! Get adiabatic moment
-      TColl_ = TColl_ - (p_dp + 2._dp*j_dp + be_2) * q_e_tau_e * Kernel_e(ij_,ikr_,ikz_)*phi(ikr_,ikz_)
+      TColl_ = TColl_ - (p_dp + 2._dp*j_dp + 2._dp*be_2) * q_e_tau_e * Kernel_e(ij_,ikr_,ikz_)*phi(ikr_,ikz_)
         !** build required fluid moments **
         n_     = 0._dp
         upar_  = 0._dp; uperp_ = 0._dp
         Tpar_  = 0._dp; Tperp_ = 0._dp
         DO in_ = 1,jmaxe+1
           n_dp = REAL(in_-1,dp)
+          ! Store the kernels for sparing readings
+          Knp0 =  Kernel_e(in_,ikr_,ikz_)
+          Knp1 =  Kernel_e(in_+1,ikr_,ikz_)
+          Knm1 =  Kernel_e(in_-1,ikr_,ikz_)
           ! Nonadiabatic moments (only different from moments when p=0)
-          nadiab_moment_0j   = moments_e(1,in_  ,ikr_,ikz_,updatetlevel) + q_e_tau_e * kernel_e(in_  ,ikr_,ikz_)*phi(ikr_,ikz_)
-          nadiab_moment_0jp1 = moments_e(1,in_+1,ikr_,ikz_,updatetlevel) + q_e_tau_e * kernel_e(in_+1,ikr_,ikz_)*phi(ikr_,ikz_)
-          nadiab_moment_0jm1 = moments_e(1,in_-1,ikr_,ikz_,updatetlevel) + q_e_tau_e * kernel_e(in_-1,ikr_,ikz_)*phi(ikr_,ikz_)
+          nadiab_moment_0j   = moments_e(1,in_  ,ikr_,ikz_,updatetlevel) + q_e_tau_e * Knp0 *phi(ikr_,ikz_)
           ! Density
-          n_     = n_     + Kernel_e(in_,ikr_,ikz_) * nadiab_moment_0j
+          n_     = n_     + Knp0 * nadiab_moment_0j
           ! Perpendicular velocity
-          uperp_ = uperp_ + be_*0.5_dp*Kernel_e(in_,ikr_,ikz_) * (nadiab_moment_0j - nadiab_moment_0jp1)
+          uperp_ = uperp_ + be_*0.5_dp*(Knp0 - Knm1) * nadiab_moment_0j
           ! Parallel temperature
-          Tpar_  = Tpar_  + Kernel_e(in_,ikr_,ikz_) * (SQRT2*moments_e(3,in_,ikr_,ikz_,updatetlevel) + nadiab_moment_0j)
+          Tpar_  = Tpar_  + Knp0 * (SQRT2*moments_e(3,in_,ikr_,ikz_,updatetlevel) + nadiab_moment_0j)
           ! Perpendicular temperature
-          Tperp_ = Tperp_ + Kernel_e(in_,ikr_,ikz_) * ((2._dp*n_dp+1._dp)* nadiab_moment_0j   &
-                                                     -            n_dp * nadiab_moment_0jm1 &
-                                                     -         (n_dp+1)* nadiab_moment_0jp1)
+          Tperp_ = Tperp_ + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1._dp)*Knp1 - n_dp*Knm1)*nadiab_moment_0j
         ENDDO
-        T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
+      T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
       ! Add energy restoring term
-      TColl_ = TColl_ + T_* 4._dp *  j_dp          * Kernel_e(ij_  ,ikr_,ikz_)
+      TColl_ = TColl_ + T_* 4._dp *  j_dp          * Kernel_e(ij_,ikr_,ikz_)
       TColl_ = TColl_ - T_* 2._dp * (j_dp + 1._dp) * Kernel_e(ij_+1,ikr_,ikz_)
       TColl_ = TColl_ - T_* 2._dp *  j_dp          * Kernel_e(ij_-1,ikr_,ikz_)
-      TColl_ = TColl_ + uperp_*be_* (Kernel_e(ij_  ,ikr_,ikz_) - Kernel_e(ij_-1,ikr_,ikz_))
+      TColl_ = TColl_ + uperp_*be_* (Kernel_e(ij_,ikr_,ikz_) - Kernel_e(ij_-1,ikr_,ikz_))
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ELSEIF( p_dp .eq. 1 ) THEN ! kronecker p1
-        !** build required fluid moments **
-        upar_  = 0._dp
-        DO in_ = 1,jmaxe+1
-          ! Parallel velocity
-           upar_  = upar_  + Kernel_e(in_,ikr_,ikz_) * moments_e(2,in_,ikr_,ikz_,updatetlevel)
-        ENDDO
+      !** build required fluid moments **
+      upar_  = 0._dp
+      DO in_ = 1,jmaxe+1
+        ! Parallel velocity
+         upar_  = upar_  + Kernel_e(in_,ikr_,ikz_) * moments_e(2,in_,ikr_,ikz_,updatetlevel)
+      ENDDO
       TColl_ = TColl_ + upar_*Kernel_e(ij_,ikr_,ikz_)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 2 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ELSEIF( p_dp .eq. 2 ) THEN ! kronecker p2
-        !** build required fluid moments **
-        n_     = 0._dp
-        Tpar_  = 0._dp; Tperp_ = 0._dp
-        DO in_ = 1,jmaxe+1
-          n_dp = REAL(in_-1,dp)
-          ! Nonadiabatic moments (only different from moments when p=0)
-          nadiab_moment_0j   = moments_e(1,in_  ,ikr_,ikz_,updatetlevel) + q_e_tau_e * kernel_e(in_  ,ikr_,ikz_)*phi(ikr_,ikz_)/tau_e
-          nadiab_moment_0jp1 = moments_e(1,in_+1,ikr_,ikz_,updatetlevel) + q_e_tau_e * kernel_e(in_+1,ikr_,ikz_)*phi(ikr_,ikz_)/tau_e
-          nadiab_moment_0jm1 = moments_e(1,in_-1,ikr_,ikz_,updatetlevel) + q_e_tau_e * kernel_e(in_-1,ikr_,ikz_)*phi(ikr_,ikz_)/tau_e
-          ! Density
-          n_     = n_     + Kernel_e(in_,ikr_,ikz_) * nadiab_moment_0j
-          ! Parallel temperature
-          Tpar_  = Tpar_  + Kernel_e(in_,ikr_,ikz_) * (SQRT2*moments_e(3,in_,ikr_,ikz_,updatetlevel) + nadiab_moment_0j)
-          ! Perpendicular temperature
-          Tperp_ = Tperp_ + Kernel_e(in_,ikr_,ikz_) * ((2._dp*n_dp+1._dp)*nadiab_moment_0j - n_dp*nadiab_moment_0jm1 - (n_dp+1)*nadiab_moment_0jp1)
-        ENDDO
-        T_    = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
+      !** build required fluid moments **
+      n_     = 0._dp
+      upar_  = 0._dp; uperp_ = 0._dp
+      Tpar_  = 0._dp; Tperp_ = 0._dp
+      DO in_ = 1,jmaxe+1
+        n_dp = REAL(in_-1,dp)
+        ! Store the kernels for sparing readings
+        Knp0 =  Kernel_e(in_,ikr_,ikz_)
+        Knp1 =  Kernel_e(in_+1,ikr_,ikz_)
+        Knm1 =  Kernel_e(in_-1,ikr_,ikz_)
+        ! Nonadiabatic moments (only different from moments when p=0)
+        nadiab_moment_0j   = moments_e(1,in_  ,ikr_,ikz_,updatetlevel) + q_e_tau_e*Knp0*phi(ikr_,ikz_)
+        ! Density
+        n_     = n_     + Knp0 * nadiab_moment_0j
+        ! Parallel temperature
+        Tpar_  = Tpar_  + Knp0 * (SQRT2*moments_e(3,in_,ikr_,ikz_,updatetlevel) + nadiab_moment_0j)
+        ! Perpendicular temperature
+        Tperp_ = Tperp_ + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1) * Knp1 - n_dp * Knm1)*nadiab_moment_0j
+      ENDDO
+      T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
       TColl_ = TColl_ + T_*SQRT2*Kernel_e(ij_,ikr_,ikz_)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -114,9 +246,9 @@ CONTAINS
     TColl_ = nu_ee * TColl_
 
   END SUBROUTINE DoughertyGK_e
-
   !******************************************************************************!
-  !! Doughtery gyrokinetic collision operator for electrons
+  !! Doughtery gyrokinetic collision operator for ions
+  !******************************************************************************!
   SUBROUTINE DoughertyGK_i(ip_,ij_,ikr_,ikz_,TColl_)
     IMPLICIT NONE
     INTEGER,     INTENT(IN)    :: ip_,ij_,ikr_,ikz_
@@ -124,84 +256,94 @@ CONTAINS
 
     COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_
     COMPLEX(dp) :: Dpj, Ppj, T_, bi_
-    COMPLEX(dp) :: nadiab_moment_0j, nadiab_moment_0jp1, nadiab_moment_0jm1
+    COMPLEX(dp) :: nadiab_moment_0j
+    REAL(dp)    :: Knp0, Knp1, Knm1
     INTEGER     :: in_
     REAL(dp)    :: n_dp, j_dp, p_dp, bi_2, q_i_tau_i
 
     !** Auxiliary variables **
     p_dp      = REAL(parray_i(ip_),dp)
     j_dp      = REAL(jarray_i(ij_),dp)
-    bi_2      =  (krarray(ikr_)**2 + kzarray(ikz_)**2) * sigmai2_taui_o2
-    bi_      = SQRT(2._dp*bi_2)
+    bi_2      = (krarray(ikr_)**2 + kzarray(ikz_)**2) * sigmai2_taui_o2 ! this is (bi/2)^2
+    bi_       = 2_dp*SQRT(bi_2) ! this is be
     q_i_tau_i = q_i/tau_i
 
     !** Assembling collison operator **
     ! Velocity-space diffusion (similar to Lenhard Bernstein)
-    TColl_ = -(p_dp + 2._dp*j_dp + bi_2)*moments_i(ip_,ij_,ikr_,ikz_,updatetlevel)
+    ! -nui (p + 2j + b^2/2) Nipj
+    TColl_ = -(p_dp + 2._dp*j_dp + 2._dp*bi_2)*moments_i(ip_,ij_,ikr_,ikz_,updatetlevel)
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     IF( p_dp .EQ. 0 ) THEN ! Kronecker p0
       ! Get adiabatic moment
-      TColl_ = TColl_ - (p_dp + 2._dp*j_dp + bi_2) * q_i_tau_i * Kernel_i(ij_,ikr_,ikz_)*phi(ikr_,ikz_)
+      TColl_ = TColl_ - (p_dp + 2._dp*j_dp + 2._dp*bi_2) * q_i_tau_i * Kernel_i(ij_,ikr_,ikz_)*phi(ikr_,ikz_)
         !** build required fluid moments **
         n_     = 0._dp
         upar_  = 0._dp; uperp_ = 0._dp
         Tpar_  = 0._dp; Tperp_ = 0._dp
         DO in_ = 1,jmaxi+1
           n_dp = REAL(in_-1,dp)
+          ! Store the kernels for sparing readings
+          Knp0 =  Kernel_i(in_,ikr_,ikz_)
+          Knp1 =  Kernel_i(in_+1,ikr_,ikz_)
+          Knm1 =  Kernel_i(in_-1,ikr_,ikz_)
           ! Nonadiabatic moments (only different from moments when p=0)
-          nadiab_moment_0j   = moments_i(1,in_  ,ikr_,ikz_,updatetlevel) + q_i_tau_i * kernel_i(in_  ,ikr_,ikz_)*phi(ikr_,ikz_)
-          nadiab_moment_0jp1 = moments_i(1,in_+1,ikr_,ikz_,updatetlevel) + q_i_tau_i * kernel_i(in_+1,ikr_,ikz_)*phi(ikr_,ikz_)
-          nadiab_moment_0jm1 = moments_i(1,in_-1,ikr_,ikz_,updatetlevel) + q_i_tau_i * kernel_i(in_-1,ikr_,ikz_)*phi(ikr_,ikz_)
+          nadiab_moment_0j   = moments_i(1,in_  ,ikr_,ikz_,updatetlevel) + q_i_tau_i * Kernel_i(in_  ,ikr_,ikz_)*phi(ikr_,ikz_)
           ! Density
-          n_     = n_     + Kernel_i(in_,ikr_,ikz_) * nadiab_moment_0j
+          n_     = n_     + Knp0 * nadiab_moment_0j
           ! Perpendicular velocity
-          uperp_ = uperp_ + bi_*0.5_dp*Kernel_i(in_,ikr_,ikz_) * (nadiab_moment_0j -nadiab_moment_0jp1)
+          ! uperp_ = uperp_ + ibi_*0.5_dp*Kernel_i(in_,ikr_,ikz_) * (nadiab_moment_0j - nadiab_moment_0jp1)
+          ! uperp_ = uperp_ + b_i*0.5_dp*Kernel_i(in_,ikr_,ikz_) * (nadiab_moment_0j - nadiab_moment_0jp1)
+          uperp_ = uperp_ + bi_*0.5_dp*(Knp0 - Knm1) * nadiab_moment_0j
           ! Parallel temperature
-          Tpar_  = Tpar_  + Kernel_i(in_,ikr_,ikz_) * (SQRT2*moments_i(3,in_,ikr_,ikz_,updatetlevel) + nadiab_moment_0j)
+          Tpar_  = Tpar_  + Knp0 * (SQRT2*moments_i(3,in_,ikr_,ikz_,updatetlevel) + nadiab_moment_0j)
           ! Perpendicular temperature
-          Tperp_ = Tperp_ + Kernel_i(in_,ikr_,ikz_) * ((2._dp*n_dp+1._dp)* nadiab_moment_0j   &
-                                                     -            n_dp * nadiab_moment_0jm1 &
-                                                     -         (n_dp+1)* nadiab_moment_0jp1)
+          ! Tperp_ = Tperp_ + Kernel_i(in_,ikr_,ikz_) * ((2._dp*n_dp+1._dp)* nadiab_moment_0j   &
+          !                                            -            n_dp * nadiab_moment_0jm1 &
+          !                                            -         (n_dp+1)* nadiab_moment_0jp1)
+          Tperp_ = Tperp_ + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1) * Knp1 - n_dp * Knm1)*nadiab_moment_0j
         ENDDO
         T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
       ! Add energy restoring term
-      TColl_ = TColl_ + T_* 4._dp *  j_dp          * Kernel_i(ij_  ,ikr_,ikz_)
+      TColl_ = TColl_ + T_* 4._dp *  j_dp          * Kernel_i(ij_,ikr_,ikz_)
       TColl_ = TColl_ - T_* 2._dp * (j_dp + 1._dp) * Kernel_i(ij_+1,ikr_,ikz_)
       TColl_ = TColl_ - T_* 2._dp *  j_dp          * Kernel_i(ij_-1,ikr_,ikz_)
-      TColl_ = TColl_ + uperp_*bi_*( Kernel_i(ij_  ,ikr_,ikz_) - Kernel_i(ij_-1,ikr_,ikz_))
+      TColl_ = TColl_ + uperp_*bi_* (Kernel_i(ij_,ikr_,ikz_) - Kernel_i(ij_-1,ikr_,ikz_))
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ELSEIF( p_dp .eq. 1 ) THEN ! kronecker p1
-        !** build required fluid moments **
-        upar_  = 0._dp
-        DO in_ = 1,jmaxi+1
-          ! Parallel velocity
-           upar_  = upar_  + Kernel_i(in_,ikr_,ikz_) * moments_i(2,in_,ikr_,ikz_,updatetlevel)
-        ENDDO
+      !** build required fluid moments **
+      upar_  = 0._dp
+      DO in_ = 1,jmaxi+1
+        ! Parallel velocity
+         upar_  = upar_  + Kernel_i(in_,ikr_,ikz_) * moments_i(2,in_,ikr_,ikz_,updatetlevel)
+      ENDDO
       TColl_ = TColl_ + upar_*Kernel_i(ij_,ikr_,ikz_)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 2 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ELSEIF( p_dp .eq. 2 ) THEN ! kronecker p2
-        !** build required fluid moments **
-        n_     = 0._dp
-        Tpar_  = 0._dp; Tperp_ = 0._dp
-        DO in_ = 1,jmaxi+1
-          n_dp = REAL(in_-1,dp)
-          ! Nonadiabatic moments (only different from moments when p=0)
-          nadiab_moment_0j   = moments_i(1,in_  ,ikr_,ikz_,updatetlevel) + q_i_tau_i * kernel_i(in_  ,ikr_,ikz_)*phi(ikr_,ikz_)
-          nadiab_moment_0jp1 = moments_i(1,in_+1,ikr_,ikz_,updatetlevel) + q_i_tau_i * kernel_i(in_+1,ikr_,ikz_)*phi(ikr_,ikz_)
-          nadiab_moment_0jm1 = moments_i(1,in_-1,ikr_,ikz_,updatetlevel) + q_i_tau_i * kernel_i(in_-1,ikr_,ikz_)*phi(ikr_,ikz_)
-          ! Density
-          n_     = n_     + Kernel_i(in_,ikr_,ikz_) * nadiab_moment_0j
-          ! Parallel temperature
-          Tpar_  = Tpar_  + Kernel_i(in_,ikr_,ikz_) * (SQRT2*moments_i(3,in_,ikr_,ikz_,updatetlevel) + nadiab_moment_0j)
-          ! Perpendicular temperature
-          Tperp_ = Tperp_ + Kernel_i(in_,ikr_,ikz_) * ((2._dp*n_dp+1._dp)*nadiab_moment_0j - n_dp*nadiab_moment_0jm1 - (n_dp+1)*nadiab_moment_0jp1)
-        ENDDO
-        T_    = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
+      !** build required fluid moments **
+      n_     = 0._dp
+      upar_  = 0._dp; uperp_ = 0._dp
+      Tpar_  = 0._dp; Tperp_ = 0._dp
+      DO in_ = 1,jmaxi+1
+        n_dp = REAL(in_-1,dp)
+        ! Store the kernels for sparing readings
+        Knp0 =  Kernel_i(in_,ikr_,ikz_)
+        Knp1 =  Kernel_i(in_+1,ikr_,ikz_)
+        Knm1 =  Kernel_i(in_-1,ikr_,ikz_)
+        ! Nonadiabatic moments (only different from moments when p=0)
+        nadiab_moment_0j   = moments_i(1,in_  ,ikr_,ikz_,updatetlevel) + q_i_tau_i * Kernel_i(in_  ,ikr_,ikz_)*phi(ikr_,ikz_)
+        ! Density
+        n_     = n_     + Knp0 * nadiab_moment_0j
+        ! Parallel temperature
+        Tpar_  = Tpar_  + Knp0 * (SQRT2*moments_i(3,in_,ikr_,ikz_,updatetlevel) + nadiab_moment_0j)
+        ! Perpendicular temperature
+        Tperp_ = Tperp_ + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1) * Knp1 - n_dp * Knm1)*nadiab_moment_0j
+      ENDDO
+      T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
       TColl_ = TColl_ + T_*SQRT2*Kernel_i(ij_,ikr_,ikz_)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
