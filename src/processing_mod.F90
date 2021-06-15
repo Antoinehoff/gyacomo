@@ -64,9 +64,10 @@ END SUBROUTINE compute_radial_ion_transport
 
 ! Compute the 2D particle density for electron and ions (sum over Laguerre)
 SUBROUTINE compute_density
-  USE fields,           ONLY : moments_i, moments_e
+  USE fields,           ONLY : moments_i, moments_e, phi
   USE array,            ONLY : dens_e, dens_i, kernel_e, kernel_i
   USE time_integration, ONLY : updatetlevel
+  USE model, ONLY : q_e, q_i, tau_e, tau_i
   IMPLICIT NONE
 
   IF( (ips_i .EQ. 1) .AND. (ips_e .EQ. 1) ) THEN
@@ -76,14 +77,14 @@ SUBROUTINE compute_density
           ! electron density
           dens_e(ikr,ikz) = 0._dp
           DO ij = ijs_e, ije_e
-              dens_e(ikr,ikz) = dens_e(ikr,ikz) + &
-                    kernel_e(ij,ikr,ikz) * moments_e(1,ij,ikr,ikz,updatetlevel)
+              dens_e(ikr,ikz) = dens_e(ikr,ikz) + kernel_e(ij,ikr,ikz) * &
+               (moments_e(1,ij,ikr,ikz,updatetlevel)+q_e/tau_e*kernel_e(ij,ikr,ikz)*phi(ikr,ikz))
           ENDDO
           ! ion density
           dens_i(ikr,ikz) = 0._dp
           DO ij = ijs_i, ije_i
-              dens_i(ikr,ikz) = dens_i(ikr,ikz) + &
-                    kernel_i(ij,ikr,ikz) * moments_i(1,ij,ikr,ikz,updatetlevel)
+              dens_i(ikr,ikz) = dens_i(ikr,ikz) + kernel_i(ij,ikr,ikz) * &
+              (moments_i(1,ij,ikr,ikz,updatetlevel)+q_i/tau_i*kernel_i(ij,ikr,ikz)*phi(ikr,ikz))
           ENDDO
         ENDDO
       ENDDO
@@ -94,9 +95,10 @@ END SUBROUTINE compute_density
 
 ! Compute the 2D particle temperature for electron and ions (sum over Laguerre)
 SUBROUTINE compute_temperature
-  USE fields,           ONLY : moments_i, moments_e
+  USE fields,           ONLY : moments_i, moments_e, phi
   USE array,            ONLY : temp_e, temp_i, kernel_e, kernel_i
   USE time_integration, ONLY : updatetlevel
+  USE model, ONLY : q_e, q_i, tau_e, tau_i
   IMPLICIT NONE
   REAL(dp)    :: j_dp
   COMPLEX(dp) :: Tperp, Tpar
@@ -106,26 +108,24 @@ SUBROUTINE compute_temperature
       DO ikz = ikzs,ikze
         DO ikr = ikrs,ikre
           ! electron temperature
-          Tpar = 0._dp; Tperp = 0._dp
+          temp_e(ikr,ikz) = 0._dp
           DO ij = ijs_e, ije_e
             j_dp = REAL(ij-1,dp)
-            Tpar = Tpar + kernel_e(ij,ikr,ikz)* &
-              (SQRT2*moments_e(3,ij,ikr,ikz,updatetlevel) + moments_e(1,ij,ikr,ikz,updatetlevel))
-            Tperp = Tperp + moments_e(1,ij,ikr,ikz,updatetlevel)*&
-              ((2._dp*j_dp+1)*kernel_e(ij,ikr,ikz) - (j_dp+1)*kernel_e(ij+1,ikr,ikz) - j_dp*kernel_e(ij-1,ikr,ikz))
+            temp_e(ikr,ikz) = temp_e(ikr,ikz) + &
+              2._dp/3._dp * (2._dp*j_dp*kernel_e(ij,ikr,ikz) - (j_dp+1)*kernel_e(ij+1,ikr,ikz) - j_dp*kernel_e(ij-1,ikr,ikz))&
+               * (moments_e(1,ij,ikr,ikz,updatetlevel)+q_e/tau_e*kernel_e(ij,ikr,ikz)*phi(ikr,ikz)) + &
+              SQRT2/3._dp * kernel_e(ij,ikr,ikz) * moments_e(3,ij,ikr,ikz,updatetlevel)
           ENDDO
-          temp_e(ikr,ikz) = (Tpar + 2._dp*Tperp)/3._dp
 
           ! ion temperature
-          Tpar = 0._dp; Tperp = 0._dp
+          temp_i(ikr,ikz) = 0._dp
           DO ij = ijs_i, ije_i
             j_dp = REAL(ij-1,dp)
-            Tpar = Tpar + kernel_i(ij,ikr,ikz)* &
-              (SQRT2*moments_i(3,ij,ikr,ikz,updatetlevel) + moments_i(1,ij,ikr,ikz,updatetlevel))
-            Tperp = Tperp + moments_i(1,ij,ikr,ikz,updatetlevel)*&
-              ((2._dp*j_dp+1)*kernel_i(ij,ikr,ikz) - (j_dp+1)*kernel_i(ij+1,ikr,ikz) - j_dp*kernel_i(ij-1,ikr,ikz))
+            temp_i(ikr,ikz) = temp_i(ikr,ikz) + &
+              2._dp/3._dp * (2._dp*j_dp*kernel_i(ij,ikr,ikz) - (j_dp+1)*kernel_i(ij+1,ikr,ikz) - j_dp*kernel_i(ij-1,ikr,ikz))&
+               * (moments_i(1,ij,ikr,ikz,updatetlevel)+q_i/tau_i*kernel_i(ij,ikr,ikz)*phi(ikr,ikz)) + &
+              SQRT2/3._dp * kernel_i(ij,ikr,ikz) * moments_i(3,ij,ikr,ikz,updatetlevel)
           ENDDO
-          temp_i(ikr,ikz) = (Tpar + 2._dp*Tperp)/3._dp
         ENDDO
       ENDDO
   ENDIF
