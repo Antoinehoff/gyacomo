@@ -7,8 +7,9 @@ MODULE diagnostics_par
 
   LOGICAL, PUBLIC, PROTECTED :: write_doubleprecision = .FALSE.
   LOGICAL, PUBLIC, PROTECTED :: write_gamma
-  LOGICAL, PUBLIC, PROTECTED :: write_phi,  write_Na00 
+  LOGICAL, PUBLIC, PROTECTED :: write_phi,  write_Na00
   LOGICAL, PUBLIC, PROTECTED :: write_Napj, write_Sapj
+  LOGICAL, PUBLIC, PROTECTED :: write_dens, write_temp
 
   INTEGER, PUBLIC, PROTECTED :: nsave_0d , nsave_1d , nsave_2d , nsave_5d, nsave_cp
 
@@ -36,6 +37,7 @@ CONTAINS
     NAMELIST /OUTPUT_PAR/ nsave_0d , nsave_1d , nsave_2d , nsave_5d, nsave_cp
     NAMELIST /OUTPUT_PAR/ write_doubleprecision, write_gamma, write_phi
     NAMELIST /OUTPUT_PAR/ write_Na00, write_Napj, write_Sapj
+    NAMELIST /OUTPUT_PAR/ write_dens, write_temp
     NAMELIST /OUTPUT_PAR/ resfile0, rstfile0, job2load
 
     READ(lu_in,output_par)

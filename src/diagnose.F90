@@ -126,6 +126,16 @@ SUBROUTINE diagnose(kstep)
        CALL creatg(fidres, "/data/var2d/Ni00", "Ni00")
       ENDIF
 
+      IF (write_dens) THEN
+       CALL creatg(fidres, "/data/var2d/dens_e", "dens_e")
+       CALL creatg(fidres, "/data/var2d/dens_i", "dens_i")
+      ENDIF
+
+      IF (write_temp) THEN
+       CALL creatg(fidres, "/data/var2d/temp_e", "temp_e")
+       CALL creatg(fidres, "/data/var2d/temp_i", "temp_i")
+      ENDIF
+
       IF (cstep==0) THEN
         iframe2d=0
       ENDIF
@@ -184,6 +194,8 @@ SUBROUTINE diagnose(kstep)
      CALL attach(fidres, TRIM(str),  "write_Na00",write_Na00)
      CALL attach(fidres, TRIM(str),  "write_Napj",write_Napj)
      CALL attach(fidres, TRIM(str),  "write_Sapj",write_Sapj)
+     CALL attach(fidres, TRIM(str),  "write_dens",write_dens)
+     CALL attach(fidres, TRIM(str),  "write_temp",write_temp)
 
      CALL grid_outputinputs(fidres, str)
 
@@ -227,7 +239,7 @@ SUBROUTINE diagnose(kstep)
 
     ! Terminal info
     IF (MOD(cstep, INT(1.0/dt)) == 0 .AND. (my_id .EQ. 0)) THEN
-     WRITE(*,"(F5.0,A,F5.0)") time,"/",tmax
+     WRITE(*,"(F6.0,A,F6.0)") time,"/",tmax
     ENDIF
 
      !                       2.1   0d history arrays
@@ -321,11 +333,13 @@ SUBROUTINE diagnose_2d
   USE basic
   USE futils, ONLY: append, getatt, attach, putarrnd
   USE fields
-  USE array, ONLY: Ne00, Ni00
+  USE array, ONLY: Ne00, Ni00, dens_e, dens_i, temp_e, temp_i
   USE grid, ONLY: ikrs,ikre, ikzs,ikze, nkr, nkz, local_nkr, ikr, ikz, ips_e, ips_i
   USE time_integration
   USE diagnostics_par
   USE prec_const
+  USE processing
+
   IMPLICIT NONE
 
   COMPLEX(dp) :: buffer(ikrs:ikre,ikzs:ikze)
@@ -345,70 +359,23 @@ SUBROUTINE diagnose_2d
       Ni00(ikrs:ikre,ikzs:ikze) = moments_i(ips_e,1,ikrs:ikre,ikzs:ikze,updatetlevel)
     ENDIF
 
-    root = 0
-    !!!!! This is a manual way to do MPI_BCAST !!!!!!!!!!!
-    CALL MPI_COMM_RANK(comm_p,world_rank,ierr)
-    CALL MPI_COMM_SIZE(comm_p,world_size,ierr)
-
-    IF (world_size .GT. 1) THEN
-      !! Broadcast phi to the other processes on the same k range (communicator along p)
-      IF (world_rank .EQ. root) THEN
-        ! Fill the buffer
-        DO ikr = ikrs,ikre
-          DO ikz = ikzs,ikze
-            buffer(ikr,ikz) = Ne00(ikr,ikz)
-          ENDDO
-        ENDDO
-        ! Send it to all the other processes
-        DO i_ = 0,num_procs_p-1
-          IF (i_ .NE. world_rank) &
-          CALL MPI_SEND(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, i_, 0, comm_p, ierr)
-        ENDDO
-      ELSE
-        ! Recieve buffer from root
-        CALL MPI_RECV(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, root, 0, comm_p, MPI_STATUS_IGNORE, ierr)
-        ! Write it in phi
-        DO ikr = ikrs,ikre
-          DO ikz = ikzs,ikze
-            Ne00(ikr,ikz) = buffer(ikr,ikz)
-          ENDDO
-        ENDDO
-      ENDIF
-    ENDIF
-
+    CALL manual_2D_bcast(Ne00(ikrs:ikre,ikzs:ikze))
     CALL write_field2d(Ne00(ikrs:ikre,ikzs:ikze), 'Ne00')
 
-      !!!!! This is a manual way to do MPI_BCAST !!!!!!!!!!!
-    CALL MPI_COMM_RANK(comm_p,world_rank,ierr)
-    CALL MPI_COMM_SIZE(comm_p,world_size,ierr)
-
-    IF (world_size .GT. 1) THEN
-      !! Broadcast phi to the other processes on the same k range (communicator along p)
-      IF (world_rank .EQ. root) THEN
-        ! Fill the buffer
-        DO ikr = ikrs,ikre
-          DO ikz = ikzs,ikze
-            buffer(ikr,ikz) = Ni00(ikr,ikz)
-          ENDDO
-        ENDDO
-        ! Send it to all the other processes
-        DO i_ = 0,num_procs_p-1
-          IF (i_ .NE. world_rank) &
-          CALL MPI_SEND(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, i_, 0, comm_p, ierr)
-        ENDDO
-      ELSE
-        ! Recieve buffer from root
-        CALL MPI_RECV(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, root, 0, comm_p, MPI_STATUS_IGNORE, ierr)
-        ! Write it in phi
-        DO ikr = ikrs,ikre
-          DO ikz = ikzs,ikze
-            Ni00(ikr,ikz) = buffer(ikr,ikz)
-          ENDDO
-        ENDDO
-      ENDIF
-    ENDIF
-
+    CALL manual_2D_bcast(Ni00(ikrs:ikre,ikzs:ikze))
     CALL write_field2d(Ni00(ikrs:ikre,ikzs:ikze), 'Ni00')
+  ENDIF
+
+  IF (write_dens) THEN
+    CALL compute_density
+    CALL write_field2d(dens_e(ikrs:ikre,ikzs:ikze), 'dens_e')
+    CALL write_field2d(dens_i(ikrs:ikre,ikzs:ikze), 'dens_i')
+  ENDIF
+
+  IF (write_temp) THEN
+    CALL compute_temperature
+    CALL write_field2d(temp_e(ikrs:ikre,ikzs:ikze), 'temp_e')
+    CALL write_field2d(temp_i(ikrs:ikre,ikzs:ikze), 'temp_i')
   ENDIF
 
 CONTAINS
