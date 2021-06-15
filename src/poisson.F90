@@ -67,34 +67,9 @@ SUBROUTINE poisson
 
   ENDIF
 
-  root_bcast = 0 ! Proc zero computes phi for every p
-
-  IF (num_procs_p .GT. 1) THEN
-    !! Broadcast phi to the other processes on the same k range (communicator along p)
-    IF (rank_p .EQ. root_bcast) THEN
-      ! Fill the buffer
-      DO ikr = ikrs,ikre
-        DO ikz = ikzs,ikze
-          buffer(ikr,ikz) = phi(ikr,ikz)
-        ENDDO
-      ENDDO
-      ! Send it to all the other processes
-      DO i_ = 0,num_procs_p-1
-        IF (i_ .NE. rank_p) &
-        CALL MPI_SEND(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, i_, 0, comm_p, ierr)
-      ENDDO
-    ELSE
-      ! Recieve buffer from root
-      CALL MPI_RECV(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, root_bcast, 0, comm_p, MPI_STATUS_IGNORE, ierr)
-      ! Write it in phi
-      DO ikr = ikrs,ikre
-        DO ikz = ikzs,ikze
-          phi(ikr,ikz) = buffer(ikr,ikz)
-        ENDDO
-      ENDDO
-    ENDIF
-  ENDIF
-
+  ! Transfer phi to all the others process along p
+  CALL manual_2D_bcast(phi(ikrs:ikre,ikzs:ikze))
+  
   ! Execution time end
   CALL cpu_time(t1_poisson)
   tc_poisson = tc_poisson + (t1_poisson - t0_poisson)
