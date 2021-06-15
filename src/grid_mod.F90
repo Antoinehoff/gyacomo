@@ -110,6 +110,10 @@ CONTAINS
       CALL decomp1D(pmaxi+1, num_procs_p, in, istart, iend)
       counts_np_i(in+1) = iend-istart+1
       displs_np_i(in+1) = istart-1
+    !DGGK operator uses moments at index p=2 (ip=3) for the p=0 term so the
+    ! process that contains ip=1 MUST contain ip=3 as well for both e and i.
+    IF(((ips_e .EQ. 1) .OR. (ips_i .EQ. 1)) .AND. ((ipe_e .LT. 3) .OR. (ipe_i .LT. 3)))&
+     WRITE(*,*) "Warning : distribution along p may not work with DGGK"
     ENDDO
 
     ! local grid computation
