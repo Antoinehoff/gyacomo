@@ -32,4 +32,12 @@ MODULE array
   COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: Ne00
   COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: Ni00
 
+  ! particle density for electron and ions (meant for 2D output)
+  COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: dens_e
+  COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: dens_i
+
+  ! particle temperature for electron and ions (meant for 2D output)
+  COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: temp_e
+  COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: temp_i
+
 END MODULE array
