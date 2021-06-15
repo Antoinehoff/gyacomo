@@ -5,18 +5,17 @@ if 1 % Local results
 outfile ='';
 outfile ='';
 outfile ='';
-outfile ='kobayashi/100x50_L_50_P_4_J_2_eta_0.71429_nu_5e-03_DGGK_CLOS_0_mu_1e-02';
-% outfile ='kobayashi/100x50_L_50_P_4_J_2_eta_0.71429_nu_5e-03_SGGK_CLOS_0_mu_1e-02';
-% outfile ='v2.6_P_6_J_3/200x100_L_120_P_6_J_3_eta_0.5_nu_1e-01_DGGK_CLOS_0_mu_2e-02';
-
+outfile ='test_diagnostics/100x50_L_50_P_2_J_1_eta_0.5_nu_5e-03_DGGK_CLOS_0_mu_1e-02';
     BASIC.RESDIR      = ['../results/',outfile,'/'];
     BASIC.MISCDIR     = ['../results/',outfile,'/'];
 end
 if 0 % Marconi results
 outfile ='';
 outfile ='';
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/kobayashi/100x50_L_50_P_6_J_3_eta_0.71429_nu_5e-03_DGGK_CLOS_0_mu_1e-02/out.txt';
-% outfile =['/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.6_P_10_J_5/200x100_L_120_P_10_J_5_eta_',num2str(ETA_),'_nu_1e-03_DGGK_CLOS_0_mu_2e-02/out.txt'];
+outfile ='';
+outfile ='';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.7_P_10_J_5/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-03_DGGK_CLOS_0_mu_2e-02/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.6_P_10_J_5/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-03_DGGK_CLOS_0_mu_2e-02/out.txt';
 % load_marconi(outfile);
 BASIC.RESDIR      = ['../',outfile(46:end-8),'/'];
 BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'/'];
@@ -24,7 +23,7 @@ end
 
 %%
 % JOBNUM = 1; load_results;
-JOBNUMMAX = 0; compile_results %Compile the results from first output found to JOBNUMMAX if existing
+JOBNUMMAX = 20; compile_results %Compile the results from first output found to JOBNUMMAX if existing
 
 %% Retrieving max polynomial degree and sampling info
 Npe = numel(Pe); Nje = numel(Je); [JE,PE] = meshgrid(Je,Pe);
@@ -60,16 +59,26 @@ dzni00 = zeros(Nr,Nz,Ns2D);
 np_i   = zeros(Nr,Nz,Ns5D); % Ion particle density
 si00   = zeros(Nr,Nz,Ns5D);
 phi    = zeros(Nr,Nz,Ns2D);
+dens_e = zeros(Nr,Nz,Ns2D);
+dens_i = zeros(Nr,Nz,Ns2D);
+temp_e = zeros(Nr,Nz,Ns2D);
+temp_i = zeros(Nr,Nz,Ns2D);
 drphi  = zeros(Nr,Nz,Ns2D);
 dzphi  = zeros(Nr,Nz,Ns2D);
 dr2phi = zeros(Nr,Nz,Ns2D);
 
 for it = 1:numel(Ts2D)
     NE_ = Ne00(:,:,it); NI_ = Ni00(:,:,it); PH_ = PHI(:,:,it);
-    ne00(:,:,it)  = real(fftshift(ifft2((NE_),Nr,Nz)));
-    ni00(:,:,it)  = real(fftshift(ifft2((NI_),Nr,Nz)));
-    dzni00(:,:,it) = real(fftshift(ifft2(1i*KZ.*(NI_),Nr,Nz)));
-    phi (:,:,it)  = real(fftshift(ifft2((PH_),Nr,Nz)));
+    DENS_E_ = DENS_E(:,:,it); DENS_I_ = DENS_I(:,:,it);
+    TEMP_E_ = TEMP_E(:,:,it); TEMP_I_ = TEMP_I(:,:,it);
+    ne00(:,:,it)    = real(fftshift(ifft2((NE_),Nr,Nz)));
+    ni00(:,:,it)    = real(fftshift(ifft2((NI_),Nr,Nz)));
+    dzni00(:,:,it)  = real(fftshift(ifft2(1i*KZ.*(NI_),Nr,Nz)));
+    phi (:,:,it)    = real(fftshift(ifft2((PH_),Nr,Nz)));
+    dens_e (:,:,it) = real(fftshift(ifft2((DENS_E_),Nr,Nz)));
+    dens_i (:,:,it) = real(fftshift(ifft2((DENS_I_),Nr,Nz)));
+    temp_e (:,:,it) = real(fftshift(ifft2((TEMP_E_),Nr,Nz)));
+    temp_i (:,:,it) = real(fftshift(ifft2((TEMP_I_),Nr,Nz)));
     drphi(:,:,it) = real(fftshift(ifft2(1i*KR.*(PH_),Nr,Nz)));
     dr2phi(:,:,it)= real(fftshift(ifft2(-KR.^2.*(PH_),Nr,Nz)));
     dzphi(:,:,it) = real(fftshift(ifft2(1i*KZ.*(PH_),Nr,Nz)));
@@ -329,7 +338,7 @@ fig = figure; FIGNAME = ['space_time','_',PARAMS];set(gcf, 'Position',  [100, 10
 save_figure
 end
 
-if 1
+if 0
 %% Averaged shear and Reynold stress profiles
 figure;
 plt = @(x) squeeze(mean(mean(real(x(:,:,its2D:ite2D)),2),3))/max(abs(squeeze(mean(mean(real(x(:,:,its2D:ite2D)),2),3))));
@@ -340,8 +349,37 @@ plot(r,plt(-drphi.*dzphi-drphi.*dzni00),'--','DisplayName','$\Pi_\phi+\Pi_{ni00}
 xlim([-60,60]); xlabel('$r/\rho_s$');
 end
 
+if 0
+%% |phi_k|^2 spectra (Kobayashi 2015 fig 3)
+tstart = 500; tend = 5000;
+[~,itstart] = min(abs(Ts2D-tstart));
+[~,itend]   = min(abs(Ts2D-tend));
+trange = itstart:itend;
+%full kperp points
+phi_k_2 = reshape(mean((abs(PHI(:,:,trange))).^2,3),[numel(KR),1]);
+kperp  = reshape(sqrt(KR.^2+KZ.^2),[numel(KR),1]);
+%interpolated kperps
+nk_noAA = floor(2/3*numel(kr));
+kp_ip = kr(1:nk_noAA);
+[thg, rg] = meshgrid(linspace(-pi/2,pi/2,2*nk_noAA),kp_ip);
+[xn,yn] = pol2cart(thg,rg);
+[xc,yc] = meshgrid(sort(kz),kr);
+Z_rth = interp2(xc,yc,mean((abs(PHI(:,:,trange))).^2,3),xn,yn);
+z_k = mean(Z_rth,2);
+%for theorical trends
+kp_1d  = linspace(0.1,5,100);
+figure;
+scatter(kperp,phi_k_2,'.'); hold on; grid on;
+plot(kp_ip,z_k);
+plot(kp_1d,1e4*kp_1d.^(-13/3));
+plot(kp_1d,1e4*kp_1d.^(-3)./(1+kp_1d.^2).^2);
+set(gca, 'XScale', 'log');set(gca, 'YScale', 'log');
+xlabel('$k_\perp \rho_s$'); ylabel('$|\phi_k|^2$');
+xlim([0.1,10]);
+end
+
 %%
-t0    = 00;
+t0    = 000;
 [~, it02D] = min(abs(Ts2D-t0));
 [~, it05D] = min(abs(Ts5D-t0));
 skip_ = 1; 
@@ -350,18 +388,34 @@ FRAMES_2D = it02D:skip_:numel(Ts2D);
 FRAMES_5D = it05D:skip_:numel(Ts5D);
 %% GIFS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if 0
-%% Density ion
+%% part density ion
 GIFNAME = ['ni',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
-FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
+FIELD = real(dens_i); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$n_i$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 % create_gif
 create_mov
 end
 if 0
-%% Density electrons
-GIFNAME = ['ne',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
+%% part temperature ion
+GIFNAME = ['Ti',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
+FIELD = real(temp_i); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
+FIELDNAME = '$T_i$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
+% create_gif
+create_mov
+end
+if 0
+%% GC Density ion
+GIFNAME = ['ni00',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
+FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
+FIELDNAME = '$n_i^{00}$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
+% create_gif
+create_mov
+end
+if 0
+%% GC Density electrons
+GIFNAME = ['ne00',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
 FIELD = real(ne00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
-FIELDNAME = '$n_e$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
+FIELDNAME = '$n_e^{00}$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 % create_gif
 create_mov
 end

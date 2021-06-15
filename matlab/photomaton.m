@@ -1,13 +1,13 @@
 if 0
 %% Photomaton : real space
-% FIELD = ni00; FNAME = 'ni'; FIELDLTX = '$N_i^{00}$'; XX = RR; YY = ZZ;
+FIELD = ni00; FNAME = 'ni'; FIELDLTX = '$N_i^{00}$'; XX = RR; YY = ZZ;
 % FIELD = ne00; FNAME = 'ne'; FIELDLTX = '$N_e^{00}$'; XX = RR; YY = ZZ;
-FIELD = phi; FNAME = 'phi'; FIELDLTX = '$\phi$'; XX = RR; YY = ZZ;
-% FIELD = dr2phi; FNAME = 'dr2phi'; XX = RR; YY = ZZ;
-tf = 100;  [~,it1] = min(abs(Ts2D-tf));
-tf = 285;  [~,it2] = min(abs(Ts2D-tf)); 
-tf = 350; [~,it3] = min(abs(Ts2D-tf));
-tf = 1100; [~,it4] = min(abs(Ts2D-tf));
+% FIELD = phi; FNAME = 'phi'; FIELDLTX = '$\phi$'; XX = RR; YY = ZZ;
+% FIELD = dr2phi; FNAME = 'dr2phi'; FIELDLTX = '$\partial_r^2\phi$'; XX = RR; YY = ZZ;
+tf = 10;  [~,it1] = min(abs(Ts2D-tf));
+tf = 40;  [~,it2] = min(abs(Ts2D-tf)); 
+tf = 80; [~,it3] = min(abs(Ts2D-tf));
+tf = 100; [~,it4] = min(abs(Ts2D-tf));
 fig = figure; FIGNAME = [FNAME,'_snaps','_',PARAMS]; set(gcf, 'Position',  [100, 100, 1500, 350])
 plt = @(x) x;%./max(max(x));
     subplot(141)

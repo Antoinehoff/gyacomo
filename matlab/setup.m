@@ -163,6 +163,8 @@ if W_PHI;    OUTPUTS.write_phi   = '.true.'; else; OUTPUTS.write_phi   = '.false
 if W_NA00;   OUTPUTS.write_Na00  = '.true.'; else; OUTPUTS.write_Na00  = '.false.';end;
 if W_NAPJ;   OUTPUTS.write_Napj  = '.true.'; else; OUTPUTS.write_Napj  = '.false.';end;
 if W_SAPJ;   OUTPUTS.write_Sapj  = '.true.'; else; OUTPUTS.write_Sapj  = '.false.';end;
+if W_DENS;   OUTPUTS.write_dens  = '.true.'; else; OUTPUTS.write_dens  = '.false.';end;
+if W_TEMP;   OUTPUTS.write_temp  = '.true.'; else; OUTPUTS.write_temp  = '.false.';end;
 OUTPUTS.resfile0    = '''outputs''';
 OUTPUTS.rstfile0    = '''checkpoint''';
 OUTPUTS.job2load    = JOB2LOAD;
@@ -176,8 +178,8 @@ end
 %% Compile and WRITE input file
 INPUT = write_fort90(OUTPUTS,GRID,MODEL,INITIAL,TIME_INTEGRATION,BASIC);
 nproc = 1;
-% MAKE  = 'cd ..; make; cd wk';
-% system(MAKE);
+MAKE  = 'cd ..; make; cd wk';
+system(MAKE);
 %%
 disp(['Set up ',SIMID]);
 disp([resolution,gridname,degngrad]);

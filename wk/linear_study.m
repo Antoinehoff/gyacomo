@@ -18,8 +18,8 @@ NU_HYP  = 0.0;   % Hyperdiffusivity coefficient
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
-N       = 66;     % Frequency gridpoints (Nkr = N/2)
-L       = 150;     % Size of the squared frequency domain
+N       = 100;     % Frequency gridpoints (Nkr = N/2)
+L       = 100;     % Size of the squared frequency domain
 KREQ0   = 1;      % put kr = 0
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f

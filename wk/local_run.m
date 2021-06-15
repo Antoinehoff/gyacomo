@@ -5,19 +5,19 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
 NU      = 5.0e-3;   % Collision frequency
-ETAB    = 1/1.4;    % Magnetic gradient
+ETAB    = 0.5;%1/1.4;    % Magnetic gradient
 ETAN    = 1.0;    % Density gradient
 NU_HYP  = 1.0;
 %% GRID PARAMETERS
 N       = 100;     % Frequency gridpoints (Nkr = N/2)
 L       = 50;     % Size of the squared frequency domain
-P       = 4;
-J       = 2;
+P       = 2;
+J       = 1;
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
-TMAX    = 2000;  % Maximal time unit
-DT      = 1e-2;   % Time step
+TMAX    = 500;  % Maximal time unit
+DT      = 2e-2;   % Time step
 SPS0D   = 1;    % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 1/50;    % Sampling per time unit for 5D arrays
@@ -27,12 +27,12 @@ JOB2LOAD= 0;
 %% OPTIONS AND NAMING
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Full Couloumb ; +/- for GK/DK)
-CO      = 2;
+CO      =1;
 CLOS    = 0;   % Closure model (0: =0 truncation)
 NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
-% SIMID   = 'test';  % Name of the simulation
-SIMID   = 'kobayashi';  % Name of the simulation
-% SIMID   = ['v2.6_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
+SIMID   = 'test_diagnostics';  % Name of the simulation
+% SIMID   = 'kobayashi';  % Name of the simulation
+% SIMID   = ['v2.7_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
 NON_LIN = 1;   % activate non-linearity (is cancelled if KREQ0 = 1)
 INIT_ZF = 0; ZF_AMP = 0.0;
 %% OUTPUTS
@@ -42,6 +42,8 @@ W_PHI    = 1;
 W_NA00   = 1;
 W_NAPJ   = 1;
 W_SAPJ   = 0;
+W_DENS   = 1;
+W_TEMP   = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% unused

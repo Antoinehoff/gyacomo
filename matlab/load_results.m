@@ -11,6 +11,8 @@ W_PHI     = strcmp(h5readatt(filename,'/data/input','write_phi')  ,'y');
 W_NA00    = strcmp(h5readatt(filename,'/data/input','write_Na00') ,'y');
 W_NAPJ    = strcmp(h5readatt(filename,'/data/input','write_Napj') ,'y');
 W_SAPJ    = strcmp(h5readatt(filename,'/data/input','write_Sapj') ,'y');
+W_DENS    = strcmp(h5readatt(filename,'/data/input','write_dens') ,'y');
+W_TEMP    = strcmp(h5readatt(filename,'/data/input','write_temp') ,'y');
 
 
 if W_GAMMA
@@ -36,4 +38,14 @@ end
 if W_SAPJ
     [Sipj, Ts5D, dt5D] = load_5D_data(filename, 'Sipj');
      Sepj              = load_5D_data(filename, 'Sepj');
+end
+
+if W_DENS
+    [DENS_E, Ts2D, dt2D] = load_2D_data(filename, 'dens_e');
+    [DENS_I, Ts2D, dt2D] = load_2D_data(filename, 'dens_i');
+end
+
+if W_TEMP
+    [TEMP_E, Ts2D, dt2D] = load_2D_data(filename, 'temp_e');
+    [TEMP_I, Ts2D, dt2D] = load_2D_data(filename, 'temp_i');
 end

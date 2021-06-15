@@ -1,9 +1,9 @@
 clear all;
 addpath(genpath('../matlab')) % ... add
-SUBMIT = 0; % To submit the job automatically
+SUBMIT = 1; % To submit the job automatically
 % EXECNAME = 'helaz_dbg';
-  EXECNAME = 'helaz_2.62';
-for ETAB = [0.5]
+  EXECNAME = 'helaz_2.71';
+for ETAB = [0.6]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -28,22 +28,22 @@ INIT_ZF = 0; ZF_AMP = 0.0;
 N       = 200;    % Frequency gridpoints (Nkr = N/2)
 L       = 120;    % Size of the squared frequency domain
 P       = 10;     % Electron and Ion highest Hermite polynomial degree
-J       = 05;     % Electron and Ion highest Laguerre polynomial degree
+J       = 5;     % Electron and Ion highest Laguerre polynomial degree
 MU_P    = 0.0;% Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;% Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
-TMAX    = 10000;  % Maximal time unit
-DT      = 1e-3;  % Time step
+TMAX    = 5000;  % Maximal time unit
+DT      = 1e-5;  % Time step
 SPS0D   = 1;     % Sampling per time unit for profiler
 SPS2D   = 1/4;     % Sampling per time unit for 2D arrays
 SPS5D   = 1/100;  % Sampling per time unit for 5D arrays
 SPSCP   = 0;     % Sampling per time unit for checkpoints
-RESTART = 1;     % To restart from last checkpoint
+RESTART = 0;     % To restart from last checkpoint
 JOB2LOAD= 0;
 %% Naming
 % SIMID   = 'kobayashi';  % Name of the simulation
 % SIMID   = 'test';  % Name of the simulation
-SIMID   = ['v2.6_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
+SIMID   = ['v2.7_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
 PREFIX  =[];
 % PREFIX  = sprintf('%d_%d_',NP_P, NP_KR);
 %% Options
