@@ -125,44 +125,6 @@ CONTAINS
 
     ENDIF
   END SUBROUTINE display_h_min_s
-  !================================================================================
-
-  !!!!! This is a manual way to do MPI_BCAST !!!!!!!!!!!
-SUBROUTINE manual_2D_bcast(field_)
-  USE grid
-  IMPLICIT NONE
-  COMPLEX(dp), INTENT(INOUT) :: field_(ikrs:ikre,ikzs:ikze)
-  COMPLEX(dp) :: buffer(ikrs:ikre,ikzs:ikze)
-  INTEGER     :: i_, root, world_rank, world_size
-  root = 0;
-  CALL MPI_COMM_RANK(comm_p,world_rank,ierr)
-  CALL MPI_COMM_SIZE(comm_p,world_size,ierr)
-  IF (world_size .GT. 1) THEN
-    !! Broadcast phi to the other processes on the same k range (communicator along p)
-    IF (world_rank .EQ. root) THEN
-      ! Fill the buffer
-      DO ikr = ikrs,ikre
-        DO ikz = ikzs,ikze
-          buffer(ikr,ikz) = field_(ikr,ikz)
-        ENDDO
-      ENDDO
-      ! Send it to all the other processes
-      DO i_ = 0,num_procs_p-1
-        IF (i_ .NE. world_rank) &
-        CALL MPI_SEND(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, i_, 0, comm_p, ierr)
-      ENDDO
-    ELSE
-      ! Recieve buffer from root
-      CALL MPI_RECV(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, root, 0, comm_p, MPI_STATUS_IGNORE, ierr)
-      ! Write it in phi
-      DO ikr = ikrs,ikre
-        DO ikz = ikzs,ikze
-          field_(ikr,ikz) = buffer(ikr,ikz)
-        ENDDO
-      ENDDO
-    ENDIF
-  ENDIF
-END SUBROUTINE manual_2D_bcast
 !================================================================================
 
 ! To allocate arrays of doubles, integers, etc. at run time

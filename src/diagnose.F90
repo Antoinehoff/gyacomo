@@ -9,7 +9,7 @@ SUBROUTINE diagnose(kstep)
   USE initial_par
   USE fields
   USE time_integration
-
+  USE utility
   USE prec_const
   IMPLICIT NONE
 

@@ -3,6 +3,7 @@ MODULE processing
     USE basic
     USE prec_const
     USE grid
+    USE utility
     implicit none
 
     REAL(dp), PUBLIC, PROTECTED :: pflux_ri, gflux_ri

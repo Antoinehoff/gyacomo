@@ -6,6 +6,7 @@ SUBROUTINE poisson
   USE array
   USE fields
   USE grid
+  USE utility
   use model, ONLY : qe2_taue, qi2_taui, q_e, q_i, lambdaD
 
   USE prec_const
@@ -69,7 +70,7 @@ SUBROUTINE poisson
 
   ! Transfer phi to all the others process along p
   CALL manual_2D_bcast(phi(ikrs:ikre,ikzs:ikze))
-  
+
   ! Execution time end
   CALL cpu_time(t1_poisson)
   tc_poisson = tc_poisson + (t1_poisson - t0_poisson)
