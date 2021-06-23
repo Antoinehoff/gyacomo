@@ -97,10 +97,11 @@ CONTAINS
     INTEGER, INTENT(in) :: fidres
     CHARACTER(len=256), INTENT(in) :: str
     CALL attach(fidres, TRIM(str),      "CO",      CO)
-    CALL attach(fidres, TRIM(str),   "CLOS",   CLOS)
+    CALL attach(fidres, TRIM(str),    "CLOS",   CLOS)
     CALL attach(fidres, TRIM(str),    "KERN",    KERN)
     CALL attach(fidres, TRIM(str), "NON_LIN", NON_LIN)
     CALL attach(fidres, TRIM(str),      "nu",      nu)
+    CALL attach(fidres, TRIM(str),      "mu",      mu)
     CALL attach(fidres, TRIM(str),   "tau_e",   tau_e)
     CALL attach(fidres, TRIM(str),   "tau_i",   tau_i)
     CALL attach(fidres, TRIM(str), "sigma_e", sigma_e)
