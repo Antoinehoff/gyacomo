@@ -46,7 +46,7 @@ SUBROUTINE tesend
   CALL mpi_allreduce(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, &
        &    ierr)
   IF ( nlend ) THEN
-     WRITE(*,'(/a)') 'Max run time reached'
+     IF(my_id.EQ.0) WRITE(*,'(/a)') 'Max run time reached'
      RETURN
   END IF
   !
