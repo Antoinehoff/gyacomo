@@ -19,17 +19,10 @@ PUBLIC :: load_moments
 
 CONTAINS
 
-
-    SUBROUTINE load_moments
-        CALL load_output_same_dims ! load same dimensions older moments from output file
-        ! CALL load_output_adapt_pj  ! load moments with possibly different PJ from output file
-        ! CALL load_cp             ! load from checkpoint file (meant to be deleted)
-    END SUBROUTINE load_moments
-
-        !******************************************************************************!
-    !!!!!!! Load moments from a previous output file with same PJ
     !******************************************************************************!
-    SUBROUTINE load_output_same_dims
+    !!!!!!! Load moments from a previous output file
+    !******************************************************************************!
+    SUBROUTINE load_moments
         IMPLICIT NONE
 
         ! Checkpoint filename
@@ -49,40 +42,42 @@ CONTAINS
 
         IF ((pmaxe_cp .NE. pmaxe) .OR. (jmaxe_cp .NE. jmaxe) .OR.&
          (pmaxi_cp .NE. pmaxi) .OR. (jmaxi_cp .NE. jmaxi)) THEN
-         WRITE(*,*) '! Previous simulation has not the same polynomial basis ! -> EXIT'
+         IF(my_id.EQ.0)WRITE(*,*) '! Extending the polynomials basis !'
+         CALL load_output_adapt_pj
+        ELSE
+
+          ! Find the last results of the checkpoint file by iteration
+          n_ = n0+1
+          WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_ ! start with moments_e/000001
+          DO WHILE (isdataset(fidrst, dset_name)) ! If n_ is not a file we stop the loop
+          n_ = n_ + 1
+          WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_ ! updtate file number
+          ENDDO
+          n_ = n_ - 1 ! n_ is not a file so take the previous one n_-1
+
+          ! Read time dependent attributes to continue simulation
+          WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
+          CALL getatt(fidrst, dset_name, 'cstep', cstep)
+          CALL getatt(fidrst, dset_name, 'time', time)
+          CALL getatt(fidrst, dset_name, 'jobnum', jobnum)
+          jobnum = jobnum+1
+          CALL getatt(fidrst, dset_name, 'iframe2d',iframe2d)
+          CALL getatt(fidrst, dset_name, 'iframe5d',iframe5d)
+          iframe2d = iframe2d-1; iframe5d = iframe5d-1
+          IF(my_id.EQ.0) WRITE(*,*) '.. restart from t = ', time
+
+          ! Read state of system from checkpoint file
+          WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
+          CALL getarrnd(fidrst, dset_name, moments_e(ips_e:ipe_e, ijs_e:ije_e, ikrs:ikre, ikzs:ikze, 1),(/1,3/))
+          WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_i", n_
+          CALL getarrnd(fidrst, dset_name, moments_i(ips_i:ipe_i, ijs_i:ije_i, ikrs:ikre, ikzs:ikze, 1),(/1,3/))
+
+          CALL closef(fidrst)
+
+          IF (my_id .EQ. 0) WRITE(*,'(3x,a)') "Reading from restart file "//TRIM(rstfile)//" completed!"
         ENDIF
 
-        ! Find the last results of the checkpoint file by iteration
-        n_ = n0+1
-        WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_ ! start with moments_e/000001
-        DO WHILE (isdataset(fidrst, dset_name)) ! If n_ is not a file we stop the loop
-        n_ = n_ + 1
-        WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_ ! updtate file number
-        ENDDO
-        n_ = n_ - 1 ! n_ is not a file so take the previous one n_-1
-
-        ! Read time dependent attributes to continue simulation
-        WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
-        CALL getatt(fidrst, dset_name, 'cstep', cstep)
-        CALL getatt(fidrst, dset_name, 'time', time)
-        CALL getatt(fidrst, dset_name, 'jobnum', jobnum)
-        jobnum = jobnum+1
-        CALL getatt(fidrst, dset_name, 'iframe2d',iframe2d)
-        CALL getatt(fidrst, dset_name, 'iframe5d',iframe5d)
-        iframe2d = iframe2d-1; iframe5d = iframe5d-1
-        IF(my_id.EQ.0) WRITE(*,*) '.. restart from t = ', time
-
-        ! Read state of system from checkpoint file
-        WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
-        CALL getarrnd(fidrst, dset_name, moments_e(ips_e:ipe_e, ijs_e:ije_e, ikrs:ikre, ikzs:ikze, 1),(/1,3/))
-        WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_i", n_
-        CALL getarrnd(fidrst, dset_name, moments_i(ips_i:ipe_i, ijs_i:ije_i, ikrs:ikre, ikzs:ikze, 1),(/1,3/))
-
-        CALL closef(fidrst)
-
-        IF (my_id .EQ. 0) WRITE(*,'(3x,a)') "Reading from restart file "//TRIM(rstfile)//" completed!"
-
-    END SUBROUTINE load_output_same_dims
+    END SUBROUTINE load_moments
     !******************************************************************************!
 
 
@@ -119,7 +114,7 @@ CONTAINS
         ENDDO
         n_ = n_ - 1 ! n_ is not a file so take the previous one n_-1
 
-        ! Read state of system from checkpoint file
+        ! Read state of system from checkpoint file and load every moment to change the distribution
         WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
         CALL getarrnd(fidrst, dset_name, moments_e_cp(1:pmaxe_cp+1, 1:jmaxe_cp+1, ikrs:ikre, ikzs:ikze),(/1,3/))
         WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_i", n_
@@ -128,8 +123,8 @@ CONTAINS
         ! Initialize simulation moments array with checkpoints ones
         ! (they may have a larger number of polynomials, set to 0 at the begining)
         moments_e = 0._dp; moments_i = 0._dp
-        DO ip=1,pmaxe_cp+1
-        DO ij=1,jmaxe_cp+1
+        DO ip=ips_e,ipe_e
+        DO ij=ijs_e,ije_e
             DO ikr=ikrs,ikre
             DO ikz=ikzs,ikze
                 moments_e(ip,ij,ikr,ikz,:) = moments_e_cp(ip,ij,ikr,ikz)
