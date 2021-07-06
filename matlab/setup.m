@@ -38,88 +38,30 @@ MODEL.lambdaD = LAMBDAD;
 % if A0KH ~= 0; SIMID = [SIMID,'_Nz_',num2str(L/2/pi*KR0KH),'_A_',num2str(A0KH)]; end;
 % Time integration and intialization parameters
 TIME_INTEGRATION.numerical_scheme  = '''RK4''';
-if (INIT_PHI && INIT_ZF == 0); INITIAL.init_noisy_phi = '.true.'; else; INITIAL.init_noisy_phi = '.false.';end;
+if (INIT_PHI); INITIAL.init_noisy_phi = '.true.'; else; INITIAL.init_noisy_phi = '.false.';end;
 INITIAL.INIT_ZF = INIT_ZF;
 INITIAL.init_background  = (INIT_ZF>0)*ZF_AMP;
 INITIAL.init_noiselvl = NOISE0;
 INITIAL.iseed             = 42;
-INITIAL.selfmat_file = '''null''';
-INITIAL.eimat_file = '''null''';
-INITIAL.iemat_file = '''null''';
 INITIAL.mat_file   = '''null''';
-if (CO == -3) % Write matrice filename for Full Coulomb
-    cmat_pmaxe = 25;
-    cmat_jmaxe = 18;
-    cmat_pmaxi = 25;
-    cmat_jmaxi = 18;
-    INITIAL.mat_file = ['''../../../iCa/FC_P_25_J_18_N_200_dk_0.05236_MFLR_0.h5'''];
-    INITIAL.selfmat_file = ...
-        ['''../../../iCa/self_Coll_GKE_0_GKI_0_ESELF_1_ISELF_1_Pmaxe_',num2str(cmat_pmaxe),...
-        '_Jmaxe_',num2str(cmat_jmaxe),'_Pmaxi_',num2str(cmat_pmaxi),'_Jmaxi_',...
-        num2str(cmat_jmaxi),'_pamaxx_10.h5'''];
-    INITIAL.eimat_file = ...
-        ['''../../../iCa/ei_Coll_GKE_0_GKI_0_ETEST_1_EBACK_1_Pmaxe_',num2str(cmat_pmaxe),...
-        '_Jmaxe_',num2str(cmat_jmaxe),'_Pmaxi_',num2str(cmat_pmaxi),'_Jmaxi_',...
-        num2str(cmat_jmaxi),'_pamaxx_10_tau_1.0000_mu_0.0233.h5'''];
-    INITIAL.iemat_file = ...
-        ['''../../../iCa/ie_Coll_GKE_0_GKI_0_ITEST_1_IBACK_1_Pmaxe_',num2str(cmat_pmaxe),...
-        '_Jmaxe_',num2str(cmat_jmaxe),'_Pmaxi_',num2str(cmat_pmaxi),'_Jmaxi_',...
-        num2str(cmat_jmaxi),'_pamaxx_10_tau_1.0000_mu_0.0233.h5'''];
-elseif (CO == -2) % Write matrice filename for Sugama
-    cmat_pmaxe = 10;
-    cmat_jmaxe = 5;
-    cmat_pmaxi = 10;
-    cmat_jmaxi = 5;
-%     INITIAL.mat_file = ['''../../../iCa/SG_P_10_J_5_N_200_dk_0.05236_MFLR_0.h5'''];
-    INITIAL.mat_file = ['''../../../iCa/gk_sugama_P_10_J_5.h5'''];
-    INITIAL.selfmat_file = ...
-        ['''../../../iCa/self_Coll_GKE_0_GKI_0_ESELF_3_ISELF_3_Pmaxe_',num2str(cmat_pmaxe),...
-        '_Jmaxe_',num2str(cmat_jmaxe),'_Pmaxi_',num2str(cmat_pmaxi),'_Jmaxi_',...
-        num2str(cmat_jmaxi),'_JE_12.h5'''];
-    INITIAL.eimat_file = ...
-        ['''../../../iCa/ei_Coll_GKE_0_GKI_0_ETEST_3_EBACK_3_Pmaxe_',num2str(cmat_pmaxe),...
-        '_Jmaxe_',num2str(cmat_jmaxe),'_Pmaxi_',num2str(cmat_pmaxi),'_Jmaxi_',...
-        num2str(cmat_jmaxi),'_JE_12_tau_1.0000_mu_0.0233.h5'''];
-    INITIAL.iemat_file = ...
-        ['''../../../iCa/ie_Coll_GKE_0_GKI_0_ITEST_3_IBACK_3_Pmaxe_',num2str(cmat_pmaxe),...
-        '_Jmaxe_',num2str(cmat_jmaxe),'_Pmaxi_',num2str(cmat_pmaxi),'_Jmaxi_',...
-        num2str(cmat_jmaxi),'_JE_12_tau_1.0000_mu_0.0233.h5'''];
-elseif (CO == 2) % Write matrice filename for Sugama GK
-    cmat_pmaxe = 10;
-    cmat_jmaxe = 5;
-    cmat_pmaxi = 10;
-    cmat_jmaxi = 5;
-%     INITIAL.mat_file = ['''../../../iCa/SG_P_10_J_5_N_200_dk_0.05236_MFLR_0.h5'''];
-%     INITIAL.mat_file = ['''../../../iCa/gk_sugama_P_4_J_2_N_10_kpm_1.h5'''];
-%     INITIAL.mat_file = ['''../../../iCa/gk_sugama_P_4_J_2_N_150_kpm_8.h5'''];
+if (abs(CO) == 2) %Sugama operator
     INITIAL.mat_file = ['''../../../iCa/gk_sugama_P_20_J_10_N_150_kpm_8.h5'''];
-%     INITIAL.mat_file = ['''../../../iCa/gk_sugama_P_10_J_5.h5'''];
-    INITIAL.selfmat_file = ...
-        ['''../../../iCa/self_Coll_GKE_1_GKI_1_ESELF_3_ISELF_3_Pmaxe_',num2str(cmat_pmaxe),...
-        '_Jmaxe_',num2str(cmat_jmaxe),'_Pmaxi_',num2str(cmat_pmaxi),'_Jmaxi_',...
-        num2str(cmat_jmaxi),'_JE_12_'''];
-    INITIAL.eimat_file = ...
-        ['''../../../iCa/ei_Coll_GKE_1_GKI_1_ETEST_3_EBACK_3_Pmaxe_',num2str(cmat_pmaxe),...
-        '_Jmaxe_',num2str(cmat_jmaxe),'_Pmaxi_',num2str(cmat_pmaxi),'_Jmaxi_',...
-        num2str(cmat_jmaxi),'_JE_12_tau_1.0000_mu_0.0233_'''];
-    INITIAL.iemat_file = ...
-        ['''../../../iCa/ie_Coll_GKE_1_GKI_1_ITEST_3_IBACK_3_Pmaxe_',num2str(cmat_pmaxe),...
-        '_Jmaxe_',num2str(cmat_jmaxe),'_Pmaxi_',num2str(cmat_pmaxi),'_Jmaxi_',...
-        num2str(cmat_jmaxi),'_JE_12_tau_1.0000_mu_0.0233_'''];
-elseif (CO == 3) % Full Coulomb GK
+elseif (abs(CO) == 3) %pitch angle operator
+    INITIAL.mat_file = ['''../../../iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5'''];
+elseif (CO == 4) % Full Coulomb GK
     disp('Warning, FCGK not implemented yet')
 elseif (CO == -1) % DGDK
     disp('Warning, DGDK not debugged')
 end
 
 % Naming and creating input file
-if    (CO == -3); CONAME = 'FCDK';
+if    (CO == -3); CONAME = 'PADK';
 elseif(CO == -2); CONAME = 'SGDK';
 elseif(CO == -1); CONAME = 'DGDK';
 elseif(CO ==  0); CONAME = 'LB';
 elseif(CO ==  1); CONAME = 'DGGK';
 elseif(CO ==  2); CONAME = 'SGGK';
-elseif(CO ==  3); CONAME = 'FCGK';
+elseif(CO ==  3); CONAME = 'PAGK';
 end
 if    (CLOS == 0); CLOSNAME = 'Trunc.';
 elseif(CLOS == 1); CLOSNAME = 'Clos. 1';
@@ -133,7 +75,7 @@ else
 end
 degngrad = [degngrad,'_eta_',num2str(ETAB/ETAN),'_nu_%0.0e_',...
         CONAME,'_CLOS_',num2str(CLOS),'_mu_%0.0e'];
-    
+
 degngrad   = sprintf(degngrad,[NU,MU]);
 if ~NON_LIN; degngrad = ['lin_',degngrad]; end
 resolution = [num2str(GRID.Nr),'x',num2str(GRID.Nz/2),'_'];
@@ -141,7 +83,8 @@ gridname   = ['L_',num2str(L),'_'];
 if (exist('PREFIX','var') == 0); PREFIX = []; end;
 if (exist('SUFFIX','var') == 0); SUFFIX = []; end;
 PARAMS = [PREFIX,resolution,gridname,degngrad,SUFFIX];
-BASIC.RESDIR = [SIMDIR,PARAMS,'/'];
+BASIC.RESDIR  = [SIMDIR,PARAMS,'/'];
+BASIC.MISCDIR = ['/misc/HeLaZ_outputs/',SIMDIR(4:end),PARAMS,'/'];
 BASIC.PARAMS = PARAMS;
 BASIC.SIMID  = SIMID;
 BASIC.nrun       = 1e8;
@@ -174,6 +117,9 @@ if ~exist(SIMDIR, 'dir')
 end
 if ~exist(BASIC.RESDIR, 'dir')
 mkdir(BASIC.RESDIR)
+end
+if ~exist(BASIC.MISCDIR, 'dir')
+mkdir(BASIC.MISCDIR)
 end
 %% Compile and WRITE input file
 INPUT = write_fort90(OUTPUTS,GRID,MODEL,INITIAL,TIME_INTEGRATION,BASIC);

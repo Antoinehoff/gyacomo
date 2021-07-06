@@ -1,12 +1,9 @@
 %% Paste the list of continue_run calls
-continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.6_P_10_J_5/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-03_DGGK_CLOS_0_mu_2e-02/out.txt')
-continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.6_P_10_J_5/200x100_L_120_P_10_J_5_eta_0.7_nu_1e-03_DGGK_CLOS_0_mu_2e-02/out.txt')
-continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.6_P_10_J_5/200x100_L_120_P_10_J_5_eta_0.8_nu_1e-03_DGGK_CLOS_0_mu_2e-02/out.txt')
-continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.6_P_10_J_5/200x100_L_120_P_10_J_5_eta_0.9_nu_1e-03_DGGK_CLOS_0_mu_2e-02/out.txt')
+continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.7_P_6_J_3/200x100_L_60_P_6_J_3_eta_0.6_nu_1e-03_SGGK_CLOS_0_mu_1e-03/out.txt')
 
 %% Functions to modify preexisting fort.90 input file and launch on marconi
 function [] = continue_run(outfilename)
-    EXECNAME = 'helaz_2.6';
+    EXECNAME = 'helaz_2.73';
     %% CLUSTER PARAMETERS
     CLUSTER.PART  = 'prod';     % dbg or prod
     CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
@@ -44,15 +41,25 @@ function [] = continue_run(outfilename)
         A{5} = sprintf('  RESTART   = .true.');
         J2L = 0;
     else
-        line = A{33};
+        line = A{35};
         line = line(end-2:end);
         if(line(1) == '='); line = line(end); end;
-        J2L = str2num(line) + 1;
+        J2L = str2num(line);
     end
     % Change job 2 load in fort.90
-    A{33} = ['  job2load      = ',num2str(J2L)];
-    disp(A{33})
-    
+    A{35} = ['  job2load      = ',num2str(0)];
+    disp(A{35})
+    % Change time step
+    A{3} = ['  dt     = 0.01'];
+    % Increase endtime
+    A{4} = ['  tmax      = 10000'];
+    % Put non linear term back
+    A{41} = ['  NL_CLOS = -1'];
+    % change HD
+    line_= A{43};
+    mu_old = str2num(line_(13:end));
+    A{43} = ['  mu      = ',num2str(1e-3)];
+
     % Rewrite fort.90
     fid = fopen('fort.90', 'w');
     for i = 1:numel(A)

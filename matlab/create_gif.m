@@ -13,7 +13,7 @@ else
 % Setup figure frame
 fig  = figure('Color','white','Position', [100, 100, 400, 400]);
     pcolor(X,Y,FIELD(:,:,1)); % to set up
-    colormap gray
+    colormap(bluewhitered)
     axis tight manual % this ensures that getframe() returns a consistent size
     if INTERP
         shading interp;
@@ -27,7 +27,7 @@ fig  = figure('Color','white','Position', [100, 100, 400, 400]);
             shading interp; 
         end
         set(pclr, 'edgecolor','none'); axis square;
-%         caxis([-max(max(abs(FIELD(:,:,n)))),max(max(abs(FIELD(:,:,n))))]);
+        caxis([-1,1]);
         xlabel(XNAME); ylabel(YNAME); %colorbar;
         title([FIELDNAME,', $t \approx$', sprintf('%.3d',ceil(T(n)))...
             ,', scaling = ',sprintf('%.1e',scale)]);

@@ -13,7 +13,8 @@ NZ      = h5readatt(filename,'/data/input','nz');
 L       = h5readatt(filename,'/data/input','Lr');
 CLOS    = h5readatt(filename,'/data/input','CLOS');
 DT_SIM  = h5readatt(filename,'/data/input','dt');
-MU      = str2num(filename(end-18:end-14));
+% MU      = h5readatt(filename,'/data/input','mu');
+MU      = str2num(filename(end-18:end-14)); %bad...
 W_GAMMA   = h5readatt(filename,'/data/input','write_gamma') == 'y';
 W_PHI     = h5readatt(filename,'/data/input','write_phi')   == 'y';
 W_NA00    = h5readatt(filename,'/data/input','write_Na00')  == 'y';
@@ -26,13 +27,13 @@ else
     NON_LIN = 0;
 end
 
-if    (CO == -3); CONAME = 'FCDK';
+if    (CO == -3); CONAME = 'PADK';
 elseif(CO == -2); CONAME = 'SGDK';
 elseif(CO == -1); CONAME = 'DGDK';
 elseif(CO ==  0); CONAME = 'LB';
 elseif(CO ==  1); CONAME = 'DGGK';
 elseif(CO ==  2); CONAME = 'SGGK';
-elseif(CO ==  3); CONAME = 'FCGK';
+elseif(CO ==  3); CONAME = 'PAGK';
 end
 
 if    (CLOS == 0); CLOSNAME = 'Trunc.';

@@ -1,21 +1,21 @@
 %% load profiling
 % filename = sprintf([BASIC.RESDIR,'outputs_%.2d.h5'],00);
+filename_ = ['/misc/HeLaZ_outputs',filename(3:end)];
+CPUTIME   = double(h5readatt(filename_,'/data/input','cpu_time'));
+DT_SIM    = h5readatt(filename_,'/data/input','dt');
 
-CPUTIME   = double(h5readatt(filename,'/data/input','cpu_time'));
-DT_SIM    = h5readatt(filename,'/data/input','dt');
 
-
-rhs_Tc       = h5read(filename,'/profiler/Tc_rhs');
-adv_field_Tc = h5read(filename,'/profiler/Tc_adv_field');
-ghost_Tc      = h5read(filename,'/profiler/Tc_ghost');
-clos_Tc      = h5read(filename,'/profiler/Tc_clos');
-coll_Tc      = h5read(filename,'/profiler/Tc_coll');
-poisson_Tc   = h5read(filename,'/profiler/Tc_poisson');
-Sapj_Tc      = h5read(filename,'/profiler/Tc_Sapj');
-checkfield_Tc= h5read(filename,'/profiler/Tc_checkfield');
-diag_Tc      = h5read(filename,'/profiler/Tc_diag');
-step_Tc      = h5read(filename,'/profiler/Tc_step');
-Ts0D         = h5read(filename,'/profiler/time');
+rhs_Tc       = h5read(filename_,'/profiler/Tc_rhs');
+adv_field_Tc = h5read(filename_,'/profiler/Tc_adv_field');
+ghost_Tc      = h5read(filename_,'/profiler/Tc_ghost');
+clos_Tc      = h5read(filename_,'/profiler/Tc_clos');
+coll_Tc      = h5read(filename_,'/profiler/Tc_coll');
+poisson_Tc   = h5read(filename_,'/profiler/Tc_poisson');
+Sapj_Tc      = h5read(filename_,'/profiler/Tc_Sapj');
+checkfield_Tc= h5read(filename_,'/profiler/Tc_checkfield');
+diag_Tc      = h5read(filename_,'/profiler/Tc_diag');
+step_Tc      = h5read(filename_,'/profiler/Tc_step');
+Ts0D         = h5read(filename_,'/profiler/time');
 
 missing_Tc   = step_Tc - rhs_Tc - adv_field_Tc - ghost_Tc -clos_Tc ...
               -coll_Tc -poisson_Tc -Sapj_Tc -checkfield_Tc -diag_Tc;

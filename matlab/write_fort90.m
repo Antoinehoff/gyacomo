@@ -70,9 +70,6 @@ fprintf(fid,['  INIT_ZF       =', num2str(INITIAL.INIT_ZF),'\n']);
 fprintf(fid,['  init_background  =', num2str(INITIAL.init_background),'\n']);
 fprintf(fid,['  init_noiselvl =', num2str(INITIAL.init_noiselvl),'\n']);
 fprintf(fid,['  iseed             =', num2str(INITIAL.iseed),'\n']);
-fprintf(fid,['  selfmat_file      =', INITIAL.selfmat_file,'\n']);
-fprintf(fid,['  eimat_file        =', INITIAL.eimat_file,'\n']);
-fprintf(fid,['  iemat_file        =', INITIAL.iemat_file,'\n']);
 fprintf(fid,['  mat_file        =', INITIAL.mat_file,'\n']);
 fprintf(fid,'/\n');
 

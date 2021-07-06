@@ -1,6 +1,6 @@
-for NU = [1e-1]
-for ETAB = [0.5]
-for CO = [1]
+for NU = [0.14]
+for ETAB = [1/1.4]
+for CO = [3]
 %clear all;
 addpath(genpath('../matlab')) % ... add
 default_plots_options
@@ -18,7 +18,7 @@ NU_HYP  = 0.0;   % Hyperdiffusivity coefficient
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
-N       = 100;     % Frequency gridpoints (Nkr = N/2)
+N       = 50;     % Frequency gridpoints (Nkr = N/2)
 L       = 100;     % Size of the squared frequency domain
 KREQ0   = 1;      % put kr = 0
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
@@ -26,20 +26,21 @@ MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARMETERS
 TMAX    = 100;  % Maximal time unit
 DT      = 1e-2;   % Time step
-SPS0D   = 0.5;      % Sampling per time unit for 2D arrays
+SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
-SPS5D   = 1/2;    % Sampling per time unit for 5D arrays
+SPS5D   = 1/200;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 00;
 %% OPTIONS
-SIMID   = 'test';  % Name of the simulation
-% SIMID   = 'kobayashi_lin';  % Name of the simulation
+% SIMID   = 'v2.7_lin_analysis';  % Name of the simulation
+SIMID   = 'kobayashi_2015_fig2';  % Name of the simulation
 % SIMID   = 'v2.6_lin_analysis';  % Name of the simulation
 NON_LIN = 0 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Full Couloumb ; +/- for GK/DK)
 % CO      = 2;
+INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
 NL_CLOS = 0;   % nonlinear closure model (0: =0 nmax = jmax, 1: nmax = jmax-j, >1 : nmax = NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)
@@ -47,11 +48,13 @@ INIT_PHI= 0;   % Start simulation with a noisy phi
 INIT_ZF = 0;   % Start simulation with a noisy phi
 %% OUTPUTS
 W_DOUBLE = 0;
-W_GAMMA  = 1;
-W_PHI    = 1;
+W_GAMMA  = 0;
+W_PHI    = 0;
 W_NA00   = 1;
 W_NAPJ   = 1;
 W_SAPJ   = 0;
+W_DENS   = 0;
+W_TEMP   = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % unused
@@ -65,10 +68,10 @@ MU      = NU_HYP/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
 %% PARAMETER SCANS
 if 1
 %% Parameter scan over PJ
-% PA = [2, 4, 6, 8, 10];
-% JA = [1, 2, 3, 4,  5];
-PA = [4];
-JA = [2];
+PA = [2, 6, 10];
+JA = [1, 3,  5];
+% PA = [2 4];
+% JA = [1 2];
 DTA= DT./sqrt(JA)/4;
 % DTA= DT;
 mup_ = MU_P;
@@ -78,7 +81,7 @@ param_name = 'PJ';
 gamma_Ni00 = zeros(Nparam,floor(N/2)+1);
 gamma_Nipj = zeros(Nparam,floor(N/2)+1);
 Bohm_transport = zeros(Nparam,1);
-Ni00_ST  = zeros(Nparam,floor(N/2)+1,SPS2D*TMAX);
+Ni00_ST  = zeros(Nparam,floor(N/2)+1,floor(SPS2D*TMAX));
 for i = 1:Nparam
     % Change scan parameter
     PMAXE = PA(i); PMAXI = PA(i);
@@ -125,28 +128,15 @@ plt = @(x) x;
     for i = 1:Nparam
         clr       = line_colors(mod(i-1,numel(line_colors(:,1)))+1,:);
         linestyle = line_styles(floor((i-1)/numel(line_colors(:,1)))+1);
-        plot(plt(SCALE*kr),plt(gamma_Ni00(i,:)),...
+        semilogx(plt(SCALE*kr(2:numel(kr))),plt(gamma_Ni00(i,2:end)),...
             'Color',clr,...
-            'LineStyle',linestyle{1},...
-            'DisplayName',['$P=$',num2str(PA(i)),', $J=$',num2str(JA(i))]);
+            'LineStyle',linestyle{1},'Marker','^',...
+            'DisplayName',['$\eta_B=',num2str(ETAB),'$, $\nu_{',CONAME,'}=',num2str(NU),'$, $P=',num2str(PA(i)),'$, $J=',num2str(JA(i)),'$']);
         hold on;
     end
     grid on; xlabel('$k_z\rho_s^{R}$'); ylabel('$\gamma(N_i^{00})L_\perp/c_s$'); xlim([0.0,max(kr)]);
-    title(['$\eta_B=',num2str(ETAB),'$, $\nu_{',CONAME,'}=',num2str(NU),'$, ', CLOSNAME])
-    legend('show')
-% subplot(212)
-%     for i = 1:Nparam
-%         clr       = line_colors(mod(i-1,numel(line_colors(:,1)))+1,:);
-%         linestyle = line_styles(floor((i-1)/numel(line_colors(:,1)))+1);
-%         plot(plt(SCALE*kr),plt(gamma_Nipj(i,:)),...
-%             'Color',clr,...
-%             'LineStyle',linestyle{1},...
-%             'DisplayName',['$P=$',num2str(PA(i)),', $J=$',num2str(JA(i))]);
-%         hold on;
-%     end
-%     grid on; xlabel('$k_z\rho_s^{R}$'); ylabel('$\gamma(\max_{pj}N_i^{pj})\rho_s/c_s$'); xlim([0.0,max(kr)]);
-%     title(['$\eta_B=',num2str(ETAB),'$, $\nu_{',CONAME,'}=',num2str(NU),'$, ', CLOSNAME])
-%     legend('show')
+    title(['$\eta_B=',num2str(ETAB),'$, $\nu_{',CONAME,'}=',num2str(NU),'$'])
+    legend('show'); xlim([0.01,10])
 saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.fig']);
 saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.png']);
 end
