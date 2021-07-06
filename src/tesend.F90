@@ -10,8 +10,7 @@ SUBROUTINE tesend
 
   !________________________________________________________________________________
   !                   1.  Some processors had set nlend
-  CALL mpi_allreduce(nlend, mlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, &
-     &             ierr)
+  CALL mpi_allreduce(nlend, mlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierr)
   IF( mlend ) THEN
     nlend   = .TRUE.
     crashed = .TRUE.
@@ -40,11 +39,12 @@ SUBROUTINE tesend
   !
 
   !________________________________________________________________________________
-  !                   4.  Test on rune time
+  !                   4.  Test on run time
   CALL cpu_time(tnow)
   mlend = (1.2*(tnow-start)) .GT. maxruntime
-  CALL mpi_allreduce(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, &
-       &    ierr)
+
+
+  CALL mpi_allreduce(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierr)
   IF ( nlend ) THEN
      IF(my_id.EQ.0) WRITE(*,'(/a)') 'Max run time reached'
      RETURN
