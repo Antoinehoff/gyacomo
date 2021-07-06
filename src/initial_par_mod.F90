@@ -9,6 +9,7 @@ MODULE initial_par
   LOGICAL,  PUBLIC, PROTECTED :: INIT_NOISY_PHI = .false.
   ! Initialization through a zonal flow phi
   INTEGER,  PUBLIC, PROTECTED :: INIT_ZF    = 0
+  REAL(DP), PUBLIC, PROTECTED :: ZF_AMP     = 1E+3_dp
   ! Initial background level
   REAL(dp), PUBLIC, PROTECTED :: init_background=0._dp
   ! Initial noise amplitude
@@ -22,9 +23,6 @@ MODULE initial_par
   REAL(dp), PUBLIC, PROTECTED ::  init_ampli_density=0.1_dp ! Oscillation amplitude
   REAL(dp), PUBLIC, PROTECTED ::  init_ampli_temp=0.1_dp
 
-  CHARACTER(len=128), PUBLIC :: selfmat_file  ! COSOlver matrix file names
-  CHARACTER(len=128), PUBLIC :: iemat_file  ! COSOlver matrix file names
-  CHARACTER(len=128), PUBLIC :: eimat_file  ! COSOlver matrix file names
   CHARACTER(len=128), PUBLIC :: mat_file    ! COSOlver matrix file names
 
   PUBLIC :: initial_outputinputs, initial_readinputs
@@ -44,9 +42,6 @@ CONTAINS
     NAMELIST /INITIAL_CON/ init_background
     NAMELIST /INITIAL_CON/ init_noiselvl
     NAMELIST /INITIAL_CON/ iseed
-    NAMELIST /INITIAL_CON/ selfmat_file
-    NAMELIST /INITIAL_CON/ iemat_file
-    NAMELIST /INITIAL_CON/ eimat_file
     NAMELIST /INITIAL_CON/ mat_file
 
     READ(lu_in,initial_con)

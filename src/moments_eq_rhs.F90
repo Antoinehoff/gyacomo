@@ -162,10 +162,10 @@ SUBROUTINE moments_eq_rhs_e
 
           !! Sum of all linear terms
           moments_rhs_e(ip,ij,ikr,ikz,updatetlevel) = &
-              -i_kz  * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
+              - INV_LIN_SYS * i_kz  * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
               - mu*kperp2**2 * moments_e(ip,ij,ikr,ikz,updatetlevel) &
               + mu_p * Hyper_diff_p + mu_j * Hyper_diff_j &
-              + TColl
+              + INV_LIN_SYS * TColl
 
           !! Adding non linearity
           IF ( NON_LIN ) THEN
@@ -347,10 +347,10 @@ SUBROUTINE moments_eq_rhs_i
 
           !! Sum of linear terms
           moments_rhs_i(ip,ij,ikr,ikz,updatetlevel) = &
-              -i_kz  * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
+              -INV_LIN_SYS * i_kz  * (TNapj + TNapp2j + TNapm2j + TNapjp1 + TNapjm1 - Tphi)&
               - mu*kperp2**2 * moments_i(ip,ij,ikr,ikz,updatetlevel) &
               + mu_p * Hyper_diff_p + mu_j * Hyper_diff_j &
-              + TColl
+              +INV_LIN_SYS * TColl
 
           !! Adding non linearity
           IF ( NON_LIN ) THEN

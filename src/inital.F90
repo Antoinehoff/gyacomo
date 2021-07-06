@@ -197,21 +197,16 @@ SUBROUTINE init_phi
       !**** Cancel previous moments initialization
       moments_e = 0._dp; moments_i = 0._dp
 
-    ELSEIF(INIT_ZF .GT. 0) THEN
+      IF(INIT_ZF .GT. 0) THEN
 
-      !**** Zonal Flow initialization *******************************************
-      ! Every mode is zero
-      phi       = 0._dp
-      moments_e = 0._dp
-      moments_i = 0._dp
-      ! Except at ikr = mode number + 1, symmetry is already included since kr>=0
-      IF( (INIT_ZF+1 .GT. ikrs) .AND. (INIT_ZF+1 .LT. ikre) ) THEN
-        phi(INIT_ZF+1,ikz_0) = (2._dp*PI)**2*init_background/deltakr/deltakz/2._dp
+        !**** Zonal Flow initialization *******************************************
+        ! put a mode at ikr = mode number + 1, symmetry is already included since kr>=0
+        IF( (INIT_ZF+1 .GT. ikrs) .AND. (INIT_ZF+1 .LT. ikre) ) THEN
+          phi(INIT_ZF+1,ikz_0) = ZF_AMP*(2._dp*PI)**2/deltakr/deltakz/2._dp
+          moments_i(1,1,INIT_ZF+1,ikz_0,:) = krarray(INIT_ZF+1)**2*phi(INIT_ZF+1,ikz_0)
+          moments_e(1,1,INIT_ZF+1,ikz_0,:) = 0._dp
+        ENDIF
       ENDIF
-      !**** Init ZF in density
-      moments_e(1,1,INIT_ZF+1,ikz_0,:) = -(2._dp*PI)**2*init_background/deltakr/deltakz * imagu/2._dp
-      moments_i(1,1,INIT_ZF+1,ikz_0,:) = -(2._dp*PI)**2*init_background/deltakr/deltakz * imagu/2._dp
-
     ELSE ! we compute phi from noisy moments and poisson
 
       CALL poisson

@@ -37,6 +37,8 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED :: nu_ee, nu_ie         ! e-e, i-e coll. frequ.
   REAL(dp), PUBLIC, PROTECTED :: qe2_taue, qi2_taui   ! factor of the gammaD sum
 
+  REAL(dp), PUBLIC, PROTECTED :: INV_LIN_SYS = 1._dp  ! Invert the sign of the linear RHS (for measuring damped eigenvalues)
+
   PUBLIC :: model_readinputs, model_outputinputs
 
 CONTAINS
