@@ -421,11 +421,11 @@ CONTAINS
       IF (CO .EQ. 2) THEN
         IF (my_id .EQ. 0) WRITE(*,*) '=== Load GK Sugama matrix ==='
       ELSEIF(CO .EQ. 3) THEN
-        IF (my_id .EQ. 0) WRITE(*,*) '=== Load GK Full Coulomb matrix ==='
+        IF (my_id .EQ. 0) WRITE(*,*) '=== Load GK pitch angle matrix ==='
       ELSEIF(CO .EQ. -2) THEN
         IF (my_id .EQ. 0) WRITE(*,*) '=== Load DK Sugama matrix ==='
       ELSEIF(CO .EQ. -3) THEN
-        IF (my_id .EQ. 0) WRITE(*,*) '=== Load DK Full Coulomb matrix ==='
+        IF (my_id .EQ. 0) WRITE(*,*) '=== Load DK pitch angle matrix ==='
       ENDIF
 
       ! Opening the compiled cosolver matrices results
@@ -478,7 +478,7 @@ CONTAINS
           ELSE
             write(ikp_string,'(i5.5)') 0
           ENDIF
-          !!!!!!!!!!!! Electron matrices !!!!!!!!!!!!
+          !!!!!!!!!!!! E-E matrices !!!!!!!!!!!!
           ! get the self electron colision matrix
           ! Allocate space for storing full collision matrix
           CALL allocate_array(  Ceepj_full, 1,(pdime+1)*(jdime+1), 1,(pdime+1)*(jdime+1))
@@ -501,38 +501,7 @@ CONTAINS
           ENDDO
           DEALLOCATE(Ceepj_full)
 
-          ! Get test and field e-i collision matrices
-          CALL allocate_array( CeipjT_full, 1,(pdime+1)*(jdime+1), 1,(pdime+1)*(jdime+1))
-          CALL allocate_array( CeipjF_full, 1,(pdime+1)*(jdime+1), 1,(pdimi+1)*(jdimi+1))
-          WRITE(var_name,'(a,a)') TRIM(ADJUSTL(ikp_string)),'/Ceipj/CeipjT'
-          CALL getarr(fid, var_name, CeipjT_full)
-          WRITE(var_name,'(a,a)') TRIM(ADJUSTL(ikp_string)),'/Ceipj/CeipjF'
-          CALL getarr(fid, var_name, CeipjF_full)
-          ! Fill sub array with only usefull polynmials degree
-          DO ip_e = 0,pmaxe ! Loop over rows
-          DO ij_e = 0,jmaxe
-                irow_sub  = (jmaxe +1)*ip_e + ij_e +1
-                irow_full = (jdime +1)*ip_e + ij_e +1
-                DO il_e = 0,pmaxe ! Loop over columns
-                DO ik_e = 0,jmaxe
-                      icol_sub  = (jmaxe +1)*il_e + ik_e +1
-                      icol_full = (jdime +1)*il_e + ik_e +1
-                      CeipjT_kp(irow_sub,icol_sub,ikp) = CeipjT_full(irow_full,icol_full)
-                ENDDO
-                ENDDO
-                DO il_i = 0,pmaxi ! Loop over columns
-                DO ik_i = 0,jmaxi
-                      icol_sub  = (Jmaxi +1)*il_i + ik_i +1
-                      icol_full = (jdimi +1)*il_i + ik_i +1
-                      CeipjF_kp(irow_sub,icol_sub,ikp) = CeipjF_full(irow_full,icol_full)
-                ENDDO
-                ENDDO
-          ENDDO
-          ENDDO
-          DEALLOCATE(CeipjF_full)
-          DEALLOCATE(CeipjT_full)
-
-          !!!!!!!!!!!!!!! Ion matrices !!!!!!!!!!!!!!
+          !!!!!!!!!!!!!!! I-I matrices !!!!!!!!!!!!!!
           ! get the self electron colision matrix
           CALL allocate_array(  Ciipj_full, 1,(pdimi+1)*(jdimi+1), 1,(pdimi+1)*(jdimi+1))
           WRITE(var_name,'(a,a,a)') TRIM(ADJUSTL(ikp_string)),'/Caapj/Ciipj'
@@ -553,36 +522,73 @@ CONTAINS
           ENDDO
           DEALLOCATE(Ciipj_full)
 
-          ! get the Test and Back field electron ion collision matrix
-          CALL allocate_array( CiepjT_full, 1,(pdimi+1)*(jdimi+1), 1,(pdimi+1)*(jdimi+1))
-          CALL allocate_array( CiepjF_full, 1,(pdimi+1)*(jdimi+1), 1,(pdime+1)*(jdime+1))
-          WRITE(var_name,'(a,a,a)') TRIM(ADJUSTL(ikp_string)),'/Ciepj/CiepjT'
-          CALL getarr(fid, var_name, CiepjT_full)
-          WRITE(var_name,'(a,a,a)') TRIM(ADJUSTL(ikp_string)),'/Ciepj/CiepjF'
-          CALL getarr(fid, var_name, CiepjF_full)
-          ! Fill sub array with only usefull polynmials degree
-          DO ip_i = 0,Pmaxi ! Loop over rows
-          DO ij_i = 0,Jmaxi
-                irow_sub  = (Jmaxi +1)*ip_i + ij_i +1
-                irow_full = (jdimi +1)*ip_i + ij_i +1
-                DO il_i = 0,Pmaxi ! Loop over columns
-                DO ik_i = 0,Jmaxi
-                      icol_sub  = (Jmaxi +1)*il_i + ik_i +1
-                      icol_full = (jdimi +1)*il_i + ik_i +1
-                      CiepjT_kp(irow_sub,icol_sub,ikp) = CiepjT_full(irow_full,icol_full)
-                ENDDO
-                ENDDO
-                DO il_e = 0,pmaxe ! Loop over columns
-                DO ik_e = 0,jmaxe
-                      icol_sub  = (jmaxe +1)*il_e + ik_e +1
-                      icol_full = (jdime +1)*il_e + ik_e +1
-                      CiepjF_kp(irow_sub,icol_sub,ikp) = CiepjF_full(irow_full,icol_full)
-                ENDDO
-                ENDDO
-          ENDDO
-          ENDDO
-          DEALLOCATE(CiepjF_full)
-          DEALLOCATE(CiepjT_full)
+          IF(abs(CO) .NE. 3) THEN ! Pitch angle is only applied on like-species
+            !!!!!!!!!!!!!!! E-I matrices !!!!!!!!!!!!!!
+            ! Get test and field e-i collision matrices
+            CALL allocate_array( CeipjT_full, 1,(pdime+1)*(jdime+1), 1,(pdime+1)*(jdime+1))
+            CALL allocate_array( CeipjF_full, 1,(pdime+1)*(jdime+1), 1,(pdimi+1)*(jdimi+1))
+            WRITE(var_name,'(a,a)') TRIM(ADJUSTL(ikp_string)),'/Ceipj/CeipjT'
+            CALL getarr(fid, var_name, CeipjT_full)
+            WRITE(var_name,'(a,a)') TRIM(ADJUSTL(ikp_string)),'/Ceipj/CeipjF'
+            CALL getarr(fid, var_name, CeipjF_full)
+            ! Fill sub array with only usefull polynmials degree
+            DO ip_e = 0,pmaxe ! Loop over rows
+            DO ij_e = 0,jmaxe
+                  irow_sub  = (jmaxe +1)*ip_e + ij_e +1
+                  irow_full = (jdime +1)*ip_e + ij_e +1
+                  DO il_e = 0,pmaxe ! Loop over columns
+                  DO ik_e = 0,jmaxe
+                        icol_sub  = (jmaxe +1)*il_e + ik_e +1
+                        icol_full = (jdime +1)*il_e + ik_e +1
+                        CeipjT_kp(irow_sub,icol_sub,ikp) = CeipjT_full(irow_full,icol_full)
+                  ENDDO
+                  ENDDO
+                  DO il_i = 0,pmaxi ! Loop over columns
+                  DO ik_i = 0,jmaxi
+                        icol_sub  = (Jmaxi +1)*il_i + ik_i +1
+                        icol_full = (jdimi +1)*il_i + ik_i +1
+                        CeipjF_kp(irow_sub,icol_sub,ikp) = CeipjF_full(irow_full,icol_full)
+                  ENDDO
+                  ENDDO
+            ENDDO
+            ENDDO
+            DEALLOCATE(CeipjF_full)
+            DEALLOCATE(CeipjT_full)
+
+            !!!!!!!!!!!!!!! I-E matrices !!!!!!!!!!!!!!
+            ! get the Test and Back field electron ion collision matrix
+            CALL allocate_array( CiepjT_full, 1,(pdimi+1)*(jdimi+1), 1,(pdimi+1)*(jdimi+1))
+            CALL allocate_array( CiepjF_full, 1,(pdimi+1)*(jdimi+1), 1,(pdime+1)*(jdime+1))
+            WRITE(var_name,'(a,a,a)') TRIM(ADJUSTL(ikp_string)),'/Ciepj/CiepjT'
+            CALL getarr(fid, var_name, CiepjT_full)
+            WRITE(var_name,'(a,a,a)') TRIM(ADJUSTL(ikp_string)),'/Ciepj/CiepjF'
+            CALL getarr(fid, var_name, CiepjF_full)
+            ! Fill sub array with only usefull polynmials degree
+            DO ip_i = 0,Pmaxi ! Loop over rows
+            DO ij_i = 0,Jmaxi
+                  irow_sub  = (Jmaxi +1)*ip_i + ij_i +1
+                  irow_full = (jdimi +1)*ip_i + ij_i +1
+                  DO il_i = 0,Pmaxi ! Loop over columns
+                  DO ik_i = 0,Jmaxi
+                        icol_sub  = (Jmaxi +1)*il_i + ik_i +1
+                        icol_full = (jdimi +1)*il_i + ik_i +1
+                        CiepjT_kp(irow_sub,icol_sub,ikp) = CiepjT_full(irow_full,icol_full)
+                  ENDDO
+                  ENDDO
+                  DO il_e = 0,pmaxe ! Loop over columns
+                  DO ik_e = 0,jmaxe
+                        icol_sub  = (jmaxe +1)*il_e + ik_e +1
+                        icol_full = (jdime +1)*il_e + ik_e +1
+                        CiepjF_kp(irow_sub,icol_sub,ikp) = CiepjF_full(irow_full,icol_full)
+                  ENDDO
+                  ENDDO
+            ENDDO
+            ENDDO
+            DEALLOCATE(CiepjF_full)
+            DEALLOCATE(CiepjT_full)
+          ELSE
+            CeipjT_kp = 0._dp; CeipjF_kp = 0._dp; CiepjT_kp = 0._dp; CiepjF_kp = 0._dp;
+          ENDIF
         ENDIF
       ENDDO
       CALL closef(fid)
