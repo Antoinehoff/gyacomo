@@ -5,8 +5,8 @@ for i_ = 1
 if 1% Local results
 outfile ='';
 outfile ='';
-outfile ='';
-outfile ='HD_study/200x100_L_100_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-02';
+outfile ='HD_study/150x75_L_100_P_2_J_1_eta_0.6_nu_1e-02_DGGK_CLOS_0_mu_3e-03';
+% outfile ='HD_study/200x100_L_100_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-02';
 % outfile ='HD_study/150x75_L_100_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-02';
     BASIC.RESDIR      = ['../results/',outfile,'/'];
     BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/results/',outfile,'/'];
