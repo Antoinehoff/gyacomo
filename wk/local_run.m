@@ -4,13 +4,13 @@ addpath(genpath('../matlab')) % ... add
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.0141;   % Collision frequency
-ETAB    = 1/1.4;    % Magnetic gradient
+NU      = 0.1;   % Collision frequency
+ETAB    = 0.6;    % Magnetic gradient
 ETAN    = 1.0;    % Density gradient
-NU_HYP  = 0.0;
+NU_HYP  = 1.0;
 %% GRID PARAMETERS
-N       = 100;     % Frequency gridpoints (Nkr = N/2)
-L       = 50;     % Size of the squared frequency domain
+N       = 150;     % Frequency gridpoints (Nkr = N/2)
+L       = 100;     % Size of the squared frequency domain
 P       = 2;
 J       = 1;
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
@@ -27,11 +27,11 @@ JOB2LOAD= 0;
 %% OPTIONS AND NAMING
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle ; +/- for GK/DK)
-CO      = 3;
+CO      = 1;
 CLOS    = 0;   % Closure model (0: =0 truncation)
 NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
-% SIMID   = 'test_restart';  % Name of the simulation
-SIMID   = 'kobayashi';  % Name of the simulation
+SIMID   = 'HD_study';  % Name of the simulation
+% SIMID   = 'kobayashi';  % Name of the simulation
 % SIMID   = ['v2.7_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
 NON_LIN = 1;   % activate non-linearity (is cancelled if KREQ0 = 1)
 INIT_ZF = 0; ZF_AMP = 0.0;

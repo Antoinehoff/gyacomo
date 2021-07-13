@@ -2,12 +2,10 @@ addpath(genpath('../matlab')) % ... add
 for i_ = 1
 % for ETA_ =[0.6:0.1:0.9]
 %% Load results
-if 0% Local results
+if 1% Local results
 outfile ='';
-outfile ='';
-outfile ='';
-outfile ='';
-outfile ='kobayashi/100x50_L_50_P_2_J_1_eta_0.71429_nu_1e-02_PAGK_CLOS_0_mu_0e+00';
+outfile ='HD_study/150x75_L_100_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-02';
+% outfile ='HD_study/100x50_L_50_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_1e-02';
 % outfile ='kobayashi/100x50_L_50_P_2_J_1_eta_0.71429_nu_1e-02_PAGK_CLOS_0_mu_0e+00';
 % outfile ='v2.7_P_2_J_1/100x50_L_200_P_2_J_1_eta_0.6_nu_1e+00_SGGK_CLOS_0_mu_0e+00';
     BASIC.RESDIR      = ['../results/',outfile,'/'];
@@ -15,7 +13,7 @@ outfile ='kobayashi/100x50_L_50_P_2_J_1_eta_0.71429_nu_1e-02_PAGK_CLOS_0_mu_0e+0
     CMD = ['cp ', BASIC.RESDIR,'outputs* ',BASIC.MISCDIR]; disp(CMD);
     system(CMD);
 end
-if 1% Marconi results
+if 0% Marconi results
 outfile ='';
 outfile ='';
 outfile ='';
@@ -75,7 +73,11 @@ temp_i = zeros(Nr,Nz,Ns2D);
 drphi  = zeros(Nr,Nz,Ns2D);
 dzphi  = zeros(Nr,Nz,Ns2D);
 dr2phi = zeros(Nr,Nz,Ns2D);
+E_turb = zeros(1,Ns2D);    % Time evol. of the turbulence energy (Pred in Kobayashi 2015)
+E_ZF   = zeros(1,Ns2D);    % Time evol. of the ZF energy (Pray in Kobayashi 2015)
+for it = 1:numel(Ts2D)
 
+end
 for it = 1:numel(Ts2D)
     NE_ = Ne00(:,:,it); NI_ = Ni00(:,:,it); PH_ = PHI(:,:,it);
     ne00(:,:,it)    = real(fftshift(ifft2((NE_),Nr,Nz)));
@@ -84,6 +86,8 @@ for it = 1:numel(Ts2D)
     drphi(:,:,it) = real(fftshift(ifft2(1i*KR.*(PH_),Nr,Nz)));
     dr2phi(:,:,it)= real(fftshift(ifft2(-KR.^2.*(PH_),Nr,Nz)));
     dzphi(:,:,it) = real(fftshift(ifft2(1i*KZ.*(PH_),Nr,Nz)));
+    E_turb(it) = sum(sum((1+KR.^2+KZ.^2).*abs(PHI(:,:,it)).^2))- sum((1+kr.^2).*abs(PHI(:,1,it)).^2);
+    E_ZF(it)   = kr(ikZF)^2*abs(PHI(ikZF,1,it)).^2;
     if(W_DENS && W_TEMP)
     DENS_E_ = DENS_E(:,:,it); DENS_I_ = DENS_I(:,:,it);
     TEMP_E_ = TEMP_E(:,:,it); TEMP_I_ = TEMP_I(:,:,it);
@@ -327,7 +331,7 @@ Q_infty_std     = std(Q_RI(its2D:ite2D))*SCALE;
 % plots
 fig = figure; FIGNAME = ['ZF_transport_drphi','_',PARAMS];set(gcf, 'Position',  [100, 100, 1200, 600])
     subplot(311)
-%     yyaxis left
+    yyaxis left
         plot(Ts0D,PGAMMA_RI*SCALE,'DisplayName','$\langle n_i d\phi/dz \rangle_z$'); hold on;
         plot(Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*gamma_infty_avg, '-k',...
             'DisplayName',['$\Gamma^{\infty} = $',num2str(gamma_infty_avg),'$\pm$',num2str(gamma_infty_std)]);
@@ -336,24 +340,19 @@ fig = figure; FIGNAME = ['ZF_transport_drphi','_',PARAMS];set(gcf, 'Position',  
         title(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB),...
         ', $L=',num2str(L),'$, $N=',num2str(Nr),'$, $(P,J)=(',num2str(PMAXI),',',num2str(JMAXI),')$,',...
         ' $\mu_{hd}=$',num2str(MU)]);
-%     yyaxis right
-%         plot(Ts2D,Q_RI*SCALE,'.','DisplayName','$\langle T_i d\phi/dz \rangle_z$'); hold on;
-%         ylim([0,5*Q_infty_avg]); xlim([0,Ts0D(end)]); ylabel('$Q_r$')
-%         plot(Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*Q_infty_avg, '--k',...
-%             'DisplayName',['$Q^{\infty} = $',num2str(Q_infty_avg),'$\pm$',num2str(Q_infty_std)]);
-%     legend('show','Location','west')
-        %         
-    subplot(312)
-        clr      = line_colors(1,:);
-        lstyle   = line_styles(1);
-        plot(Ts2D,shear_maxr_maxz,'DisplayName','$\max_{r,z}(s_\phi)$'); hold on;
+    yyaxis right     
         plot(Ts2D,shear_maxr_avgz,'DisplayName','$\max_{r}\langle s_\phi\rangle_z$'); hold on;
-        plot(Ts2D,shear_avgr_maxz,'DisplayName','$\max_{z}\langle s_\phi\rangle_r$'); hold on;
-        plot(Ts2D,shear_avgr_avgz,'DisplayName','$\langle s_\phi\rangle_{r,z}$'); hold on;
         plot(Ts2D(its2D:ite2D),ones(ite2D-its2D+1,1)*shear_infty_avg, '-k',...
         'DisplayName',['$s^{\infty} = $',num2str(shear_infty_avg),'$\pm$',num2str(shear_infty_std)]);
         ylim([0,shear_infty_avg*5.0]); xlim([0,Ts0D(end)]);
         grid on; ylabel('Shear amp.');set(gca,'xticklabel',[]);% legend('show');
+    subplot(312)
+    yyaxis left
+        plot(Ts2D,SCALE*E_ZF);
+        ylabel('ZF energy');
+    yyaxis right     
+        plot(Ts2D,SCALE*E_turb);
+        ylabel('Turb. energy');  ylim([0;1.2*max(SCALE*E_ZF(floor(0.8*numel(Ts2D)):end))]);
     subplot(313)
         [TY,TX] = meshgrid(r,Ts2D);
 %         pclr = pcolor(TX,TY,squeeze(mean(drphi(:,:,:),2))'); set(pclr, 'edgecolor','none'); legend('$\langle \partial_r\phi\rangle_z$') %colorbar;

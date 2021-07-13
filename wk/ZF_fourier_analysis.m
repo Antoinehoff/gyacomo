@@ -42,13 +42,6 @@ set(gcf, 'Position',  [100, 100, 800, 400])
 save_figure
 
 %% Pred-Pray phase space (A Zonal Flow review, Diamond 2005, Fig 15, Kobayashi 2015)
-
-E_turb           = zeros(1,Ns2D);    % Time evol. of the turbulence energy (Pred in Kobayashi 2015)
-E_ZF             = zeros(1,Ns2D);    % Time evol. of the ZF energy (Pray in Kobayashi 2015)
-for it = 1:numel(Ts2D)
-    E_turb(it) = sum(sum((1+KR.^2+KZ.^2).*abs(PHI(:,:,it)).^2))- sum((1+kr.^2).*abs(PHI(:,1,it)).^2);
-    E_ZF(it)   = kr(ikZF)^2*abs(PHI(ikZF,1,it)).^2;
-end
 fig = figure; FIGNAME = ['phi_shear_phase_space_',PARAMS];
 set(gcf, 'Position',  [100, 100, 700, 500])
 scatter(E_ZF*SCALE,E_turb*SCALE,35,Ts2D,'.',...
