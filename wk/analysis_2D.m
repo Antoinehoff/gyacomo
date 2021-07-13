@@ -4,10 +4,10 @@ for i_ = 1
 %% Load results
 if 1% Local results
 outfile ='';
-outfile ='HD_study/150x75_L_100_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-02';
-% outfile ='HD_study/100x50_L_50_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_1e-02';
-% outfile ='kobayashi/100x50_L_50_P_2_J_1_eta_0.71429_nu_1e-02_PAGK_CLOS_0_mu_0e+00';
-% outfile ='v2.7_P_2_J_1/100x50_L_200_P_2_J_1_eta_0.6_nu_1e+00_SGGK_CLOS_0_mu_0e+00';
+outfile ='';
+outfile ='';
+outfile ='HD_study/200x100_L_100_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-02';
+% outfile ='HD_study/150x75_L_100_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-02';
     BASIC.RESDIR      = ['../results/',outfile,'/'];
     BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/results/',outfile,'/'];
     CMD = ['cp ', BASIC.RESDIR,'outputs* ',BASIC.MISCDIR]; disp(CMD);
@@ -19,7 +19,9 @@ outfile ='';
 outfile ='';
 outfile ='';
 outfile ='';
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.7_P_6_J_3/200x100_L_120_P_6_J_3_eta_0.6_nu_1e+00_SGGK_CLOS_0_mu_1e-02/out.txt';
+outfile ='';
+outfile ='';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.7_P_10_J_5/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-02_DGGK_CLOS_0_mu_1e-02/out.txt';
 % outfile = outcl{i_};
 % load_marconi(outfile);
 BASIC.RESDIR      = ['../',outfile(46:end-8),'/'];
@@ -87,7 +89,7 @@ for it = 1:numel(Ts2D)
     dr2phi(:,:,it)= real(fftshift(ifft2(-KR.^2.*(PH_),Nr,Nz)));
     dzphi(:,:,it) = real(fftshift(ifft2(1i*KZ.*(PH_),Nr,Nz)));
     E_turb(it) = sum(sum((1+KR.^2+KZ.^2).*abs(PHI(:,:,it)).^2))- sum((1+kr.^2).*abs(PHI(:,1,it)).^2);
-    E_ZF(it)   = kr(ikZF)^2*abs(PHI(ikZF,1,it)).^2;
+    E_ZF(it)   = sum(kr.^2.*abs(PHI(:,1,it)).^2);
     if(W_DENS && W_TEMP)
     DENS_E_ = DENS_E(:,:,it); DENS_I_ = DENS_I(:,:,it);
     TEMP_E_ = TEMP_E(:,:,it); TEMP_I_ = TEMP_I(:,:,it);
@@ -348,11 +350,11 @@ fig = figure; FIGNAME = ['ZF_transport_drphi','_',PARAMS];set(gcf, 'Position',  
         grid on; ylabel('Shear amp.');set(gca,'xticklabel',[]);% legend('show');
     subplot(312)
     yyaxis left
-        plot(Ts2D,SCALE*E_ZF);
-        ylabel('ZF energy');
+        plot(Ts2D,SCALE*E_ZF);xlim([0,Ts0D(end)]);
+        ylabel('ZF energy'); ylim([0;1.2*max(SCALE*E_ZF(floor(0.5*numel(Ts2D)):end))]);
     yyaxis right     
-        plot(Ts2D,SCALE*E_turb);
-        ylabel('Turb. energy');  ylim([0;1.2*max(SCALE*E_ZF(floor(0.8*numel(Ts2D)):end))]);
+        plot(Ts2D,SCALE*E_turb);xlim([0,Ts0D(end)]);
+        ylabel('Turb. energy');  ylim([0;1.2*max(SCALE*E_turb(floor(0.5*numel(Ts2D)):end))]);
     subplot(313)
         [TY,TX] = meshgrid(r,Ts2D);
 %         pclr = pcolor(TX,TY,squeeze(mean(drphi(:,:,:),2))'); set(pclr, 'edgecolor','none'); legend('$\langle \partial_r\phi\rangle_z$') %colorbar;
@@ -361,7 +363,7 @@ fig = figure; FIGNAME = ['ZF_transport_drphi','_',PARAMS];set(gcf, 'Position',  
 save_figure
 end
 
-if 1
+if 0
 %% Space time diagramms
 tstart = 0; tend = Ts2D(end);
 [~,itstart] = min(abs(Ts2D-tstart));
@@ -370,32 +372,20 @@ trange = itstart:itend;
 [TY,TX] = meshgrid(r,Ts2D(trange));
 fig = figure; FIGNAME = ['space_time','_',PARAMS];set(gcf, 'Position',  [100, 100, 1200, 600])
     subplot(211)
-%         pclr = pcolor(TX,TY,squeeze(mean(dens_i(:,:,trange).*dzphi(:,:,trange),2))'); set(pclr, 'edgecolor','none'); colorbar;
         pclr = pcolor(TX,TY,squeeze(mean(ni00(:,:,trange).*dzphi(:,:,trange),2))'); set(pclr, 'edgecolor','none'); colorbar;
         shading interp
         colormap hot;
         caxis([0.0,0.05*max(max(mean(ni00(:,:,its2D:ite2D).*dzphi(:,:,its2D:ite2D),2)))]);
         caxis([0.0,0.05]); c = colorbar; c.Label.String ='\langle n_i\partial_z\phi\rangle_z';
          xticks([]); ylabel('$r/\rho_s$')
-%         legend('Radial part. transport $\langle n_i\partial_z\phi\rangle_z$')
         title(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB),...
         ', $L=',num2str(L),'$, $N=',num2str(Nr),'$, $(P,J)=(',num2str(PMAXI),',',num2str(JMAXI),')$,',...
         ' $\mu_{hd}=$',num2str(MU)]);
-%     subplot(312)
-%         pclr = pcolor(TX,TY,squeeze(mean(temp_i(:,:,trange).*dzphi(:,:,trange),2))'); set(pclr, 'edgecolor','none'); colorbar;
-%         shading interp
-% %         colormap(bluewhitered(256));
-%          xticks([]); ylabel('$r/\rho_s$')
-%         legend('Radial part. transport $\langle T_i\partial_z\phi\rangle_z$')
-%         title(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB),...
-%         ', $L=',num2str(L),'$, $N=',num2str(Nr),'$, $(P,J)=(',num2str(PMAXI),',',num2str(JMAXI),')$,',...
-%         ' $\mu_{hd}=$',num2str(MU)]);
     subplot(212)
         pclr = pcolor(TX,TY,squeeze(mean(drphi(:,:,trange),2))'); set(pclr, 'edgecolor','none'); colorbar;
         fieldmax = max(max(mean(abs(drphi(:,:,its2D:ite2D)),2)));
         caxis([-fieldmax,fieldmax]); c = colorbar; c.Label.String ='\langle \partial_r\phi\rangle_z';
         xlabel('$t c_s/R$'), ylabel('$r/\rho_s$')
-%         legend('Zonal flow $\langle \partial_r\phi\rangle_z$')        
 save_figure
 end
 
@@ -416,7 +406,7 @@ end
 
 if 1
 %% |phi_k|^2 spectra (Kobayashi 2015 fig 3)
-tstart = 4000; tend = 4000;
+tstart = 2000; tend = 3000;
 [~,itstart] = min(abs(Ts2D-tstart));
 [~,itend]   = min(abs(Ts2D-tend));
 trange = itstart:itend;
@@ -439,7 +429,7 @@ ne00_kp = mean(Z_rth,2);
 %for theorical trends
 a1 = phi_kp(2)*kp_ip(2).^(13/3);
 a2 = phi_kp(2)*kp_ip(2).^(3)./(1+kp_ip(2).^2).^(-2);
-fig = figure; FIGNAME = ['cascade','_',PARAMS];set(gcf, 'Position',  [100, 100, 500, 500])
+fig = figure; FIGNAME = ['cascade_',num2str(tstart),'to',num2str(tend),PARAMS];set(gcf, 'Position',  [100, 100, 500, 500])
 % scatter(kperp,phi_k_2,'.k','MarkerEdgeAlpha',0.4,'DisplayName','$|\phi_k|^2$'); hold on; grid on;
 plot(kp_ip,phi_kp,'^','DisplayName','$\langle|\phi_k|^2\rangle_{k_\perp}$'); hold on;
 plot(kp_ip,ni00_kp, '^','DisplayName','$\langle|N_{i,k}^{00}|^2\rangle_{k_\perp}$'); hold on;
@@ -450,14 +440,14 @@ set(gca, 'XScale', 'log');set(gca, 'YScale', 'log'); grid on
 xlabel('$k_\perp \rho_s$'); legend('show','Location','southwest')
 title({['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta_B=$',num2str(ETAB),...
 ', $L=',num2str(L),'$, $N=',num2str(Nr),'$'];[' $(P,J)=(',num2str(PMAXI),',',num2str(JMAXI),')$,',...
-' $\mu_{hd}=$',num2str(MU)]});
+' $\mu_{hd}=$',num2str(MU),', $',num2str(tstart),'<t<',num2str(tend),'$']});
 xlim([0.1,10]);
 save_figure
 clear Z_rth phi_kp ni_kp Ti_kp
 end
 
 %%
-t0    =000;
+t0    =3000;
 [~, it02D] = min(abs(Ts2D-t0));
 [~, it05D] = min(abs(Ts5D-t0));
 skip_ = 1; 
@@ -502,8 +492,8 @@ if 0
 GIFNAME = ['ni00',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
 FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$n_i^{00}$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
-% create_gif
-create_mov
+create_gif
+% create_mov
 end
 if 0
 %% GC Density electrons

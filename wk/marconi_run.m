@@ -1,8 +1,8 @@
 clear all;
 addpath(genpath('../matlab')) % ... add
-SUBMIT = 1; % To submit the job automatically
+SUBMIT = 0; % To submit the job automatically
 % EXECNAME = 'helaz_dbg';
-  EXECNAME = 'helaz_2.73';
+  EXECNAME = 'helaz_2.8';
 for ETAB = [0.6]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
@@ -15,7 +15,7 @@ if(strcmp(CLUSTER.PART,'dbg')); CLUSTER.TIME  = '00:30:00'; end;
 CLUSTER.MEM   = '128GB';     % Memory
 CLUSTER.JNAME = 'HeLaZ';% Job name
 NP_P          = 2;          % MPI processes along p  
-NP_KR         = 24;         % MPI processes along kr
+NP_KX         = 24;         % MPI processes along kr
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
 NU      = 1e-3;   % Collision frequency
@@ -81,7 +81,7 @@ ETAT    = 0.0;    % Temperature gradient
 ETAN    = 1.0;    % Density gradient
 TAU     = 1.0;    % e/i temperature ratio
 % Compute processes distribution
-Ntot = NP_P * NP_KR;
+Ntot = NP_P * NP_KX;
 Nnodes = ceil(Ntot/48);
 Nppn   = Ntot/Nnodes; 
 CLUSTER.NODES =  num2str(Nnodes);  % MPI process along p
@@ -91,7 +91,7 @@ CLUSTER.CPUPT = '1';        % CPU per task
 setup
 write_sbash_marconi
 system('rm fort.90 setup_and_run.sh batch_script.sh');
-if(mod(NP_P*NP_KR,48)~= 0)
+if(mod(NP_P*NP_KX,48)~= 0)
     disp('WARNING : unused cores (ntot cores must be a 48 multiple)');
 end
 if(SUBMIT)

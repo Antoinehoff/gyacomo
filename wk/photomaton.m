@@ -1,19 +1,19 @@
 if 0
 %% Photomaton : real space
 % FIELD = ni00;   FNAME = 'ni00'; FIELDLTX = '$n_i^{00}$'; XX = RR; YY = ZZ;
-FIELD = ne00;   FNAME = 'ne00'; FIELDLTX = '$n_e^{00}$'; XX = RR; YY = ZZ;
+% FIELD = ne00;   FNAME = 'ne00'; FIELDLTX = '$n_e^{00}$'; XX = RR; YY = ZZ;
 % FIELD = dens_i; FNAME = 'ni';   FIELDLTX = '$n_i$'; XX = RR; YY = ZZ;
 % FIELD = dens_e; FNAME = 'ne';   FIELDLTX = '$n_e$'; XX = RR; YY = ZZ;
 % FIELD = temp_i; FNAME = 'Ti';   FIELDLTX = '$T_i$'; XX = RR; YY = ZZ;
 % FIELD = temp_e; FNAME = 'Te';   FIELDLTX = '$T_e$'; XX = RR; YY = ZZ;
-% FIELD = phi; FNAME = 'phi'; FIELDLTX = '$\phi$'; XX = RR; YY = ZZ;
+FIELD = phi; FNAME = 'phi'; FIELDLTX = '$\phi$'; XX = RR; YY = ZZ;
 % FIELD = drphi; FNAME = 'ZF'; FIELDLTX = '$u^{ZF}_z$'; XX = RR; YY = ZZ;
 % FIELD = -dr2phi; FNAME = 'shear'; FIELDLTX = '$s$'; XX = RR; YY = ZZ;
 TNAME = [];
-tf = 250; [~,it1] = min(abs(Ts2D-tf)); TNAME = [TNAME,'_',num2str(tf)];
-tf = 450; [~,it2] = min(abs(Ts2D-tf)); TNAME = [TNAME,'_',num2str(tf)];
-tf = 1200; [~,it3] = min(abs(Ts2D-tf)); TNAME = [TNAME,'_',num2str(tf)];
-tf = 1500; [~,it4] = min(abs(Ts2D-tf)); TNAME = [TNAME,'_',num2str(tf)];
+tf = 2500; [~,it1] = min(abs(Ts2D-tf)); TNAME = [TNAME,'_',num2str(tf)];
+tf = 3000; [~,it2] = min(abs(Ts2D-tf)); TNAME = [TNAME,'_',num2str(tf)];
+tf = 3500; [~,it3] = min(abs(Ts2D-tf)); TNAME = [TNAME,'_',num2str(tf)];
+tf = 4000; [~,it4] = min(abs(Ts2D-tf)); TNAME = [TNAME,'_',num2str(tf)];
 fig = figure; FIGNAME = [FNAME,TNAME,'_snaps','_',PARAMS]; set(gcf, 'Position',  [100, 100, 1500, 350])
 plt = @(x) x./max(max(x));
     subplot(141)
