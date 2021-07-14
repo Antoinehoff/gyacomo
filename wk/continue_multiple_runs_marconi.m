@@ -1,5 +1,5 @@
 %% Paste the list of continue_run calls
-continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.7_P_10_J_5/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-02_DGGK_CLOS_0_mu_1e-02/out.txt')
+continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.8_P_10_J_5/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-03_SGGK_CLOS_0_mu_2e-02/out.txt')
 
 %% Functions to modify preexisting fort.90 input file and launch on marconi
 function [] = continue_run(outfilename)
@@ -51,15 +51,16 @@ function [] = continue_run(outfilename)
     disp(A{35})
     % Change time step
     line_= A{3}; dt_old = str2num(line_(12:end));    
-    A{3} = ['  dt     = ',num2str(dt_old)];
+    A{3} = ['  dt     = ',num2str(1.5*dt_old)];
     % Increase endtime
     A{4} = ['  tmax      = 20000'];
     % Put non linear term back
     line_= A{41}; NL_old = str2num(line_(13:end));    
     A{41} = ['  NL_CLOS = ',num2str(NL_old)];
+%     A{41} = ['  NL_CLOS = -1'];
     % change HD
     line_= A{43}; mu_old = str2num(line_(13:end));
-    A{43} = ['  mu      = ',num2str(mu_old)];
+    A{43} = ['  mu      = ',num2str(0*mu_old)];
     % change N
     line_= A{13}; N_old = str2num(line_(10:end));
     A{13} = ['  Nr = ',num2str(N_old)];
