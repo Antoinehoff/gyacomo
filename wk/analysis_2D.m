@@ -6,10 +6,10 @@ if 1% Local results
 outfile ='';
 outfile ='';
 outfile ='';
-outfile ='';
+outfile ='HD_study/200x100_L_100_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-02';
 % outfile ='HD_study/300x150_L_100_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_1e-03';
 % outfile ='HD_study/150x75_L_100_P_2_J_1_eta_0.6_nu_1e-02_DGGK_CLOS_0_mu_3e-03';
-outfile ='HD_study/200x100_L_200_P_2_J_1_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_0e+00';
+% outfile ='HD_study/200x100_L_200_P_2_J_1_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_0e+00';
     BASIC.RESDIR      = ['../results/',outfile,'/'];
     BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/results/',outfile,'/'];
     CMD = ['cp ', BASIC.RESDIR,'outputs* ',BASIC.MISCDIR]; disp(CMD);
@@ -406,7 +406,7 @@ end
 
 if 1
 %% |phi_k|^2 spectra (Kobayashi 2015 fig 3)
-tstart = 10000; tend = 14000;
+tstart = 3000; tend = 4000;
 [~,itstart] = min(abs(Ts2D-tstart));
 [~,itend]   = min(abs(Ts2D-tend));
 trange = itstart:itend;
@@ -447,10 +447,10 @@ clear Z_rth phi_kp ni_kp Ti_kp
 end
 
 %%
-t0    =800;
+t0    =2900;
 [~, it02D] = min(abs(Ts2D-t0));
 [~, it05D] = min(abs(Ts5D-t0));
-skip_ = 5; 
+skip_ = 1; 
 DELAY = 1e-3*skip_;
 FRAMES_2D = it02D:skip_:numel(Ts2D);
 FRAMES_5D = it05D:skip_:numel(Ts5D);
@@ -492,8 +492,8 @@ if 0
 GIFNAME = ['ni00',sprintf('_%.2d',JOBNUM),'_',PARAMS]; INTERP = 0;
 FIELD = real(ni00); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
 FIELDNAME = '$n_i^{00}$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
-% create_gif
-create_mov
+create_gif
+% create_mov
 end
 if 0
 %% GC Density electrons
