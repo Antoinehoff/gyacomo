@@ -1,5 +1,5 @@
 %% Paste the list of continue_run calls
-continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.8_P_10_J_5/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-03_SGGK_CLOS_0_mu_2e-02/out.txt')
+continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/kobayashi/300x150_L_100_P_10_J_5_eta_0.71429_nu_1e-02_PAGK_CLOS_0_mu_0e+00/out.txt')
 
 %% Functions to modify preexisting fort.90 input file and launch on marconi
 function [] = continue_run(outfilename)
@@ -10,8 +10,8 @@ function [] = continue_run(outfilename)
     if(strcmp(CLUSTER.PART,'dbg')); CLUSTER.TIME  = '00:30:00'; end;
     CLUSTER.MEM   = '64GB';     % Memory
     CLUSTER.JNAME = 'HeLaZ';% Job name
-    NP_P          = 2;          % MPI processes along p  
-    NP_KX         = 24;         % MPI processes along kx
+    NP_P          = 3;          % MPI processes along p  
+    NP_KX         = 32;         % MPI processes along kx
     % Compute processes distribution
     Ntot = NP_P * NP_KX;
     Nnodes = ceil(Ntot/48);

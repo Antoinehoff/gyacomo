@@ -2,14 +2,13 @@ addpath(genpath('../matlab')) % ... add
 for i_ = 1
 % for ETA_ =[0.6:0.1:0.9]
 %% Load results
-if 1% Local results
-outfile ='';
-outfile ='';
-outfile ='';
-outfile ='HD_study/200x100_L_100_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-02';
+if 0% Local results
+% outfile ='HD_study/100x50_L_50_P_2qe_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_1e-02';
+% outfile ='HD_study/150x75_L_100_P_2_J_1_eta_0.6_nu_5e-02_DGGK_CLOS_0_mu_3e-03';
+% outfile ='HD_study/200x100_L_100_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-02';
 % outfile ='HD_study/300x150_L_100_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_1e-03';
 % outfile ='HD_study/150x75_L_100_P_2_J_1_eta_0.6_nu_1e-02_DGGK_CLOS_0_mu_3e-03';
-% outfile ='HD_study/200x100_L_200_P_2_J_1_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_0e+00';
+outfile ='HD_study/200x100_L_200_P_2_J_1_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_0e+00';
     BASIC.RESDIR      = ['../results/',outfile,'/'];
     BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/results/',outfile,'/'];
     CMD = ['cp ', BASIC.RESDIR,'outputs* ',BASIC.MISCDIR]; disp(CMD);
@@ -20,8 +19,7 @@ outfile ='';
 outfile ='';
 outfile ='';
 outfile ='';
-outfile ='';
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.8_P_10_J_5/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-03_SGGK_CLOS_0_mu_2e-02/out.txt';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/kobayashi/300x150_L_100_P_10_J_5_eta_0.71429_nu_1e-02_PAGK_CLOS_0_mu_0e+00/out.txt';
 % outfile = outcl{i_};
 % load_marconi(outfile);
 BASIC.RESDIR      = ['../',outfile(46:end-8),'/'];
@@ -447,10 +445,10 @@ clear Z_rth phi_kp ni_kp Ti_kp
 end
 
 %%
-t0    =2900;
+t0    =2250;
 [~, it02D] = min(abs(Ts2D-t0));
 [~, it05D] = min(abs(Ts5D-t0));
-skip_ = 1; 
+skip_ = 5; 
 DELAY = 1e-3*skip_;
 FRAMES_2D = it02D:skip_:numel(Ts2D);
 FRAMES_5D = it05D:skip_:numel(Ts5D);
