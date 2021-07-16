@@ -62,7 +62,7 @@ function [] = continue_run(outfilename)
     line_= A{43}; mu_old = str2num(line_(13:end));
     A{43} = ['  mu      = ',num2str(0*mu_old)];
     % change N
-    line_= A{13}; N_old = str2num(line_(10:end));
+    line_= A{13}; N_old = str2num(line_(8:end));
     A{13} = ['  Nr = ',num2str(N_old)];
     A{15} = ['  Nz = ',num2str(N_old)];
     % change L
