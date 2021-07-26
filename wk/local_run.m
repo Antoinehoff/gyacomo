@@ -4,22 +4,22 @@ addpath(genpath('../matlab')) % ... add
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 1.0;   % Collision frequency
-ETAB    = 0.6;    % Magnetic gradient
-ETAN    = 1.0;    % Density gradient
+NU      = 0.1;   % Collision frequency
+ETAB    = 1.0;    % Magnetic gradient
+ETAN    = 2.0;    % Density gradient
 NU_HYP  = 0.0;
 %% GRID PARAMETERS
-N       = 100;     % Frequency gridpoints (Nkr = N/2)
-L       = 100;     % Size of the squared frequency domain
+N       = 50;     % Frequency gridpoints (Nkr = N/2)
+L       = 50;     % Size of the squared frequency domain
 P       = 2;
 J       = 1;
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
-TMAX    = 500;  % Maximal time unit
-DT      = 2e-2;   % Time step
-SPS0D   = 2;      % Sampling per time unit for profiler
-SPS2D   = 2;      % Sampling per time unit for 2D arrays
+TMAX    = 20;  % Maximal time unit
+DT      = 1e-2;   % Time step
+SPS0D   = 1;      % Sampling per time unit for profiler
+SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 1/200;  % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints/10
 RESTART = 0;      % To restart from last checkpoint
@@ -30,7 +30,8 @@ JOB2LOAD= 0;
 CO      = 1;
 CLOS    = 0;   % Closure model (0: =0 truncation)
 NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
-SIMID   = 'HD_study';  % Name of the simulation
+% SIMID   = 'HD_study';  % Name of the simulation
+SIMID   = 'test_3D';  % Name of the simulation
 % SIMID   = 'kobayashi';  % Name of the simulation
 % SIMID   = ['v2.7_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
 NON_LIN = 1;   % activate non-linearity (is cancelled if KREQ0 = 1)
