@@ -22,15 +22,14 @@ CONTAINS
   !******************************************************************************!
   SUBROUTINE DoughertyGK_e(ip_,ij_,ikr_,ikz_,TColl_)
     IMPLICIT NONE
-    INTEGER,     INTENT(IN)    :: ip_,ij_,ikr_,ikz_
-    COMPLEX(dp), INTENT(INOUT) :: TColl_
+    INTEGER,     INTENT(IN)  :: ip_,ij_,ikr_,ikz_
+    COMPLEX(dp), INTENT(OUT) :: TColl_
 
-    COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_
-    COMPLEX(dp) :: Dpj, Ppj, T_, be_
+    COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_, T_
     COMPLEX(dp) :: nadiab_moment_0j
     REAL(dp)    :: Knp0, Knp1, Knm1
     INTEGER     :: in_
-    REAL(dp)    :: n_dp, j_dp, p_dp, be_2, q_e_tau_e
+    REAL(dp)    :: n_dp, j_dp, p_dp, be_, be_2, q_e_tau_e
 
     !** Auxiliary variables **
     p_dp      = REAL(parray_e(ip_),dp)
@@ -124,15 +123,14 @@ CONTAINS
   !******************************************************************************!
   SUBROUTINE DoughertyGK_i(ip_,ij_,ikr_,ikz_,TColl_)
     IMPLICIT NONE
-    INTEGER,     INTENT(IN)    :: ip_,ij_,ikr_,ikz_
-    COMPLEX(dp), INTENT(INOUT) :: TColl_
+    INTEGER,     INTENT(IN)  :: ip_,ij_,ikr_,ikz_
+    COMPLEX(dp), INTENT(OUT) :: TColl_
 
-    COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_
-    COMPLEX(dp) :: Dpj, Ppj, T_, bi_
+    COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_, T_
     COMPLEX(dp) :: nadiab_moment_0j
     REAL(dp)    :: Knp0, Knp1, Knm1
     INTEGER     :: in_
-    REAL(dp)    :: n_dp, j_dp, p_dp, bi_2, q_i_tau_i
+    REAL(dp)    :: n_dp, j_dp, p_dp, bi_, bi_2, q_i_tau_i
 
     !** Auxiliary variables **
     p_dp      = REAL(parray_i(ip_),dp)
@@ -161,7 +159,7 @@ CONTAINS
           Knp1 =  Kernel_i(in_+1,ikr_,ikz_)
           Knm1 =  Kernel_i(in_-1,ikr_,ikz_)
           ! Nonadiabatic moments (only different from moments when p=0)
-          nadiab_moment_0j   = moments_i(1,in_  ,ikr_,ikz_,updatetlevel) + q_i_tau_i * Kernel_i(in_  ,ikr_,ikz_)*phi(ikr_,ikz_)
+          nadiab_moment_0j   = moments_i(1,in_  ,ikr_,ikz_,updatetlevel) + q_i_tau_i * Knp0 *phi(ikr_,ikz_)
           ! Density
           n_     = n_     + Knp0 * nadiab_moment_0j
           ! Perpendicular velocity
@@ -208,7 +206,7 @@ CONTAINS
         Knp1 =  Kernel_i(in_+1,ikr_,ikz_)
         Knm1 =  Kernel_i(in_-1,ikr_,ikz_)
         ! Nonadiabatic moments (only different from moments when p=0)
-        nadiab_moment_0j   = moments_i(1,in_  ,ikr_,ikz_,updatetlevel) + q_i_tau_i * Kernel_i(in_  ,ikr_,ikz_)*phi(ikr_,ikz_)
+        nadiab_moment_0j   = moments_i(1,in_  ,ikr_,ikz_,updatetlevel) + q_i_tau_i * Knp0*phi(ikr_,ikz_)
         ! Density
         n_     = n_     + Knp0 * nadiab_moment_0j
         ! Parallel temperature
