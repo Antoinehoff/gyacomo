@@ -4,7 +4,7 @@ addpath(genpath('../matlab')) % ... add
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;   % Collision frequency
+NU      = 0.0;   % Collision frequency
 ETAB    = 1.0;    % Magnetic gradient
 ETAN    = 0.0;    % Density gradient
 NU_HYP  = 0.0;
@@ -34,7 +34,7 @@ NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >
 SIMID   = 'test_3D';  % Name of the simulation
 % SIMID   = 'kobayashi';  % Name of the simulation
 % SIMID   = ['v2.7_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
-NON_LIN = 1;   % activate non-linearity (is cancelled if KREQ0 = 1)
+NON_LIN = 0;   % activate non-linearity (is cancelled if KREQ0 = 1)
 INIT_ZF = 0; ZF_AMP = 0.0;
 %% OUTPUTS
 W_DOUBLE = 0;
