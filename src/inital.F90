@@ -64,10 +64,9 @@ SUBROUTINE inital
   !!!!!! Load the COSOlver collision operator coefficients !!!!!!
   IF (ABS(CO) .GT. 1) THEN
     CALL load_COSOlver_mat
-    ! Compute collision
-    CALL compute_TColl ! compute C_0 = C(N_0)
   ENDIF
-
+  ! Compute collision
+  CALL compute_TColl ! compute C_0 = C(N_0)
 END SUBROUTINE inital
 !******************************************************************************!
 
