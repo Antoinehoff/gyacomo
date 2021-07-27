@@ -45,7 +45,7 @@ INITIAL.init_noiselvl = NOISE0;
 INITIAL.iseed             = 42;
 INITIAL.mat_file   = '''null''';
 if (abs(CO) == 2) %Sugama operator
-    INITIAL.mat_file = ['''../../../iCa/gk_sugama_P_20_J_10_N_150_kpm_8.h5'''];
+    INITIAL.mat_file = ['''../../../iCa/gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'''];
 elseif (abs(CO) == 3) %pitch angle operator
     INITIAL.mat_file = ['''../../../iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5'''];
 elseif (CO == 4) % Full Coulomb GK
