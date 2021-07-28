@@ -4,9 +4,9 @@ addpath(genpath('../matlab')) % ... add
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.0;   % Collision frequency
+NU      = 0.1;   % Collision frequency
 ETAB    = 1.0;    % Magnetic gradient
-ETAN    = 0.0;    % Density gradient
+ETAN    = 2.0;    % Density gradient
 NU_HYP  = 0.0;
 %% GRID PARAMETERS
 N       = 50;     % Frequency gridpoints (Nkr = N/2)
@@ -16,7 +16,7 @@ J       = 1;
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
-TMAX    = 50;  % Maximal time unit
+TMAX    = 100;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
@@ -27,7 +27,7 @@ JOB2LOAD= 0;
 %% OPTIONS AND NAMING
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle ; +/- for GK/DK)
-CO      = 1;
+CO      = 0;
 CLOS    = 0;   % Closure model (0: =0 truncation)
 NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
 % SIMID   = 'HD_study';  % Name of the simulation
