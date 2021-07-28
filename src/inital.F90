@@ -249,7 +249,6 @@ SUBROUTINE build_dnjs_table
   ENDDO
 END SUBROUTINE build_dnjs_table
 !******************************************************************************!
-
 !******************************************************************************!
 !!!!!!! Evaluate the kernels once for all
 !******************************************************************************!
@@ -257,18 +256,15 @@ SUBROUTINE evaluate_kernels
   USE basic
   USE array, Only : kernel_e, kernel_i
   USE grid
-  use model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, lambdaD, CLOS
+  use model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, lambdaD, CLOS, sigmae2_taue_o2, sigmai2_taui_o2
   IMPLICIT NONE
 
   REAL(dp)    :: factj, j_dp, j_int
-  REAL(dp)    :: sigmae2_taue_o2, sigmai2_taui_o2
   REAL(dp)    :: be_2, bi_2, alphaD
   REAL(dp)    :: kr, kz, kperp2
 
   !!!!! Electron kernels !!!!!
   !Precompute species dependant factors
-  sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the Kernel argument
-
   factj = 1.0 ! Start of the recursive factorial
   DO ij = 1, jmaxe+1
     j_int = jarray_e(ij)
@@ -299,13 +295,18 @@ SUBROUTINE evaluate_kernels
     DO ikz = ikzs,ikze
       kz    = kzarray(ikz)
       be_2  =  (kr**2 + kz**2) * sigmae2_taue_o2
-      kernel_e(ijeg_e,ikr,ikz) = be_2/(real(ijeg_e,dp))*kernel_e(ije_e,ikr,ikz)
+      ! Kernel ghost + 1 with Kj+1 = y/(j+1) Kj (/!\ ij = j+1)
+      kernel_e(ijeg_e,ikr,ikz) = be_2/(real(ijeg_e-1,dp))*kernel_e(ije_e,ikr,ikz)
+      ! Kernel ghost - 1 with Kj-1 = j/y Kj(careful about the kperp=0)
+      IF ( be_2 .NE. 0 ) THEN
+        kernel_e(ijsg_e,ikr,ikz) = (real(ijsg_e,dp))/be_2*kernel_e(ijs_e,ikr,ikz)
+      ELSE
+        kernel_e(ijsg_e,ikr,ikz) = 0._dp
+      ENDIF
     ENDDO
   ENDDO
 
   !!!!! Ion kernels !!!!!
-  sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp ! (b_a/2)^2 = (kperp sqrt(2 tau_a) sigma_a/2)^2
-
   factj = 1.0 ! Start of the recursive factorial
   DO ij = 1, jmaxi+1
     j_int = jarray_e(ij)
@@ -322,9 +323,7 @@ SUBROUTINE evaluate_kernels
       kr     = krarray(ikr)
       DO ikz = ikzs,ikze
         kz    = kzarray(ikz)
-
         bi_2  =  (kr**2 + kz**2) * sigmai2_taui_o2
-
         kernel_i(ij, ikr, ikz) = bi_2**j_int * exp(-bi_2)/factj
 
       ENDDO
@@ -336,8 +335,105 @@ SUBROUTINE evaluate_kernels
     DO ikz = ikzs,ikze
       kz    = kzarray(ikz)
       bi_2  =  (kr**2 + kz**2) * sigmai2_taui_o2
-      kernel_i(ijeg_i,ikr,ikz) = bi_2/(real(ijeg_i,dp))*kernel_e(ije_i,ikr,ikz)
+      ! Kernel ghost + 1 with Kj+1 = y/(j+1) Kj
+      kernel_i(ijeg_i,ikr,ikz) = bi_2/(real(ijeg_i-1,dp))*kernel_i(ije_i,ikr,ikz)
+      ! Kernel ghost - 1 with Kj-1 = j/y Kj(careful about the kperp=0)
+      IF ( bi_2 .NE. 0 ) THEN
+        kernel_i(ijsg_i,ikr,ikz) = (real(ijsg_i,dp))/bi_2*kernel_i(ijs_i,ikr,ikz)
+      ELSE
+        kernel_i(ijsg_i,ikr,ikz) = 0._dp
+      ENDIF
     ENDDO
   ENDDO
 END SUBROUTINE evaluate_kernels
+! !******************************************************************************!
+! !!!!!!! Evaluate the kernels once for all
+! !******************************************************************************!
+! SUBROUTINE evaluate_kernels
+!   USE basic
+!   USE array, Only : kernel_e, kernel_i
+!   USE grid
+!   use model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, lambdaD, CLOS
+!   IMPLICIT NONE
+!
+!   REAL(dp)    :: factj, j_dp, j_int
+!   REAL(dp)    :: sigmae2_taue_o2, sigmai2_taui_o2
+!   REAL(dp)    :: be_2, bi_2, alphaD
+!   REAL(dp)    :: kr, kz, kperp2
+!
+!   !!!!! Electron kernels !!!!!
+!   !Precompute species dependant factors
+!   sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the Kernel argument
+!
+!   factj = 1.0 ! Start of the recursive factorial
+!   DO ij = 1, jmaxe+1
+!     j_int = jarray_e(ij)
+!     j_dp = REAL(j_int,dp) ! REAL of degree
+!
+!     ! Recursive factorial
+!     IF (j_dp .GT. 0) THEN
+!       factj = factj * j_dp
+!     ELSE
+!       factj = 1._dp
+!     ENDIF
+!
+!     DO ikr = ikrs,ikre
+!       kr     = krarray(ikr)
+!       DO ikz = ikzs,ikze
+!         kz    = kzarray(ikz)
+!
+!         be_2  =  (kr**2 + kz**2) * sigmae2_taue_o2
+!
+!         kernel_e(ij, ikr, ikz) = be_2**j_int * exp(-be_2)/factj
+!
+!       ENDDO
+!     ENDDO
+!   ENDDO
+!   ! Kernels closure
+!   DO ikr = ikrs,ikre
+!     kr     = krarray(ikr)
+!     DO ikz = ikzs,ikze
+!       kz    = kzarray(ikz)
+!       be_2  =  (kr**2 + kz**2) * sigmae2_taue_o2
+!       kernel_e(ijeg_e,ikr,ikz) = be_2/(real(ijeg_e,dp))*kernel_e(ije_e,ikr,ikz)
+!     ENDDO
+!   ENDDO
+!
+!   !!!!! Ion kernels !!!!!
+!   sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp ! (b_a/2)^2 = (kperp sqrt(2 tau_a) sigma_a/2)^2
+!
+!   factj = 1.0 ! Start of the recursive factorial
+!   DO ij = 1, jmaxi+1
+!     j_int = jarray_e(ij)
+!     j_dp = REAL(j_int,dp) ! REAL of degree
+!
+!     ! Recursive factorial
+!     IF (j_dp .GT. 0) THEN
+!       factj = factj * j_dp
+!     ELSE
+!       factj = 1._dp
+!     ENDIF
+!
+!     DO ikr = ikrs,ikre
+!       kr     = krarray(ikr)
+!       DO ikz = ikzs,ikze
+!         kz    = kzarray(ikz)
+!
+!         bi_2  =  (kr**2 + kz**2) * sigmai2_taui_o2
+!
+!         kernel_i(ij, ikr, ikz) = bi_2**j_int * exp(-bi_2)/factj
+!
+!       ENDDO
+!     ENDDO
+!   ENDDO
+!   ! Kernels closure
+!   DO ikr = ikrs,ikre
+!     kr     = krarray(ikr)
+!     DO ikz = ikzs,ikze
+!       kz    = kzarray(ikz)
+!       bi_2  =  (kr**2 + kz**2) * sigmai2_taui_o2
+!       kernel_i(ijeg_i,ikr,ikz) = bi_2/(real(ijeg_i,dp))*kernel_e(ije_i,ikr,ikz)
+!     ENDDO
+!   ENDDO
+! END SUBROUTINE evaluate_kernels
 !******************************************************************************!
