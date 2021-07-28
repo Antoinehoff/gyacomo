@@ -40,32 +40,37 @@ set(gca, 'XScale', 'log'); set(gca, 'YScale', 'log');
 xlabel('$\nu_{DGGK}$'); ylabel('$\mu_{HD}$'); hold on;
 
 % Trajectory of simulations
+
 % HD_study/200x100_L_200_P_2_J_1_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_1e-02/
 mu_ = [0  1 2 5 5];
 nu_ = [1  1 1 1 0.5];
-plot(nu_,mu_,'x--','DisplayName','N=200, L=050, P,J=2,1,');
+plot(nu_,mu_,'x--','DisplayName','N=200, L=050, P,J=2,1');
 
+% HD_study/300x150_L_200_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_1e-02/
+mu_ = [1e-2 1e-3];
+nu_ = [1e-1 1e-1];
+plot(nu_,mu_,'x--','DisplayName','N=300, L=100, P,J=2,1');
 
 % Trajectory of simulations
 % HD_study/100x50_L_50_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_1e-02/
 mu_ = [1e-2 5e-3 2e-3];
 nu_ = [1e-1 1e-1 1e-1];
-plot(nu_,mu_,'x-','DisplayName','N=100, L=050, P,J=2,1,');
+plot(nu_,mu_,'x-','DisplayName','N=100, L=050, P,J=2,1');
 
 % HD_study/150x75_L_100_P_2_J_1_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_3e-02/
 mu_ = [3e-2 1e-3    0];
 nu_ = [1e-1 1e-1 1e-1];
-plot(nu_,mu_,'x--','DisplayName','N=150, L=100, P,J=2,1,');
+plot(nu_,mu_,'x--','DisplayName','N=150, L=100, P,J=2,1');
 
 % HD_study/150x75_L_100_P_2_J_1_eta_0.6_nu_1e-02_DGGK_CLOS_0_mu_3e-02/
 mu_ = [3e-3 1e-3 1e-4];
 nu_ = [1e-2 1e-2 1e-2];
-plot(nu_,mu_,'x--','DisplayName','N=150, L=100, P,J=2,1,');
+plot(nu_,mu_,'x--','DisplayName','N=150, L=100, P,J=2,1');
 
 % HD_study/150x75_L_100_P_2_J_1_eta_0.6_nu_5e-02_DGGK_CLOS_0_mu_3e-02/
 mu_ = [3e-3 1e-3];
 nu_ = [5e-2 5e-2];
-plot(nu_,mu_,'x--','DisplayName','N=150, L=100, P,J=2,1,');
+plot(nu_,mu_,'x--','DisplayName','N=150, L=100, P,J=2,1');
 
 scatter( b_(:,1), b_(:,2),'o',...
     'MarkerFaceColor',[0.6350 0.0780 0.1840],'MarkerEdgeColor',[0 0 0],'SizeData',50,...
