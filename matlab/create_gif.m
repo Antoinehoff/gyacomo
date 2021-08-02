@@ -2,6 +2,10 @@ title1 = GIFNAME;
 FIGDIR = BASIC.RESDIR;
 GIFNAME = [FIGDIR, GIFNAME,'.gif'];
 
+XNAME     = latexize(XNAME);
+YNAME     = latexize(YNAME);
+FIELDNAME = latexize(FIELDNAME);
+
 % Set colormap boundaries
 hmax = max(max(max(FIELD)));
 hmin = min(min(min(FIELD)));

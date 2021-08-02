@@ -1,14 +1,14 @@
 addpath(genpath('../matlab')) % ... add
 %% Grid configuration
-N       = 10;     % Frequency gridpoints (Nkr = N/2)
+N       = 10;     % Frequency gridpoints (Nkx = N/2)
 L       = 120;     % Size of the squared frequency domain
 dk      = 2*pi/L;
 kmax    = N/2*dk;
-kr      = dk*(0:N/2);
-kz      = dk*(0:N/2);
-[KZ, KR]= meshgrid(kz,kr);
-KPERP   = sqrt(KR.^2 + KZ.^2);
-kperp   = reshape(KPERP,[1,numel(kr)^2]);
+kx      = dk*(0:N/2);
+ky      = dk*(0:N/2);
+[ky, kx]= meshgrid(ky,kx);
+KPERP   = sqrt(kx.^2 + ky.^2);
+kperp   = reshape(KPERP,[1,numel(kx)^2]);
 kperp   = uniquetol(kperp,1e-14);
 Nperp   = numel(kperp);
 COSOlver_path = '../../Documents/MoliSolver/COSOlver/';

@@ -1,6 +1,10 @@
 title1 = GIFNAME;
 FIGDIR = BASIC.RESDIR;
 GIFNAME = [FIGDIR, GIFNAME,'.mp4'];
+XNAME     = latexize(XNAME);
+YNAME     = latexize(YNAME);
+FIELDNAME = latexize(FIELDNAME);
+
 vidfile = VideoWriter(GIFNAME,'Uncompressed AVI');
 open(vidfile);
 % Set colormap boundaries

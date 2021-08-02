@@ -8,9 +8,9 @@ PMAXE   = h5readatt(filename,'/data/input','pmaxe');
 JMAXE   = h5readatt(filename,'/data/input','jmaxe');
 NON_LIN = h5readatt(filename,'/data/input','NON_LIN');
 NU      = h5readatt(filename,'/data/input','nu');
-NR      = h5readatt(filename,'/data/input','nr');
-NZ      = h5readatt(filename,'/data/input','nz');
-L       = h5readatt(filename,'/data/input','Lr');
+Nx      = h5readatt(filename,'/data/input','Nx');
+Ny      = h5readatt(filename,'/data/input','Ny');
+L       = h5readatt(filename,'/data/input','Lx');
 CLOS    = h5readatt(filename,'/data/input','CLOS');
 DT_SIM  = h5readatt(filename,'/data/input','dt');
 MU      = h5readatt(filename,'/data/input','mu');
@@ -46,11 +46,11 @@ else
     degngrad   = ['Pe_',num2str(PMAXE),'_Je_',num2str(JMAXE),...
         '_Pi_',num2str(PMAXI),'_Ji_',num2str(JMAXI)];
 end
-degngrad = [degngrad,'_eta_',num2str(ETAB/ETAN),'_nu_%0.0e_',...
+degngrad = [degngrad,'_eta_%1.1f_nu_%0.0e_',...
         CONAME,'_CLOS_',num2str(CLOS),'_mu_%0.0e'];
-degngrad   = sprintf(degngrad,[NU,MU]);
+degngrad   = sprintf(degngrad,[ETAB/ETAN,NU,MU]);
 if ~NON_LIN; degngrad = ['lin_',degngrad]; end
-resolution = [num2str(NR),'x',num2str(NZ/2),'_'];
+resolution = [num2str(Nx),'x',num2str(Ny/2),'_'];
 gridname   = ['L_',num2str(L),'_'];
 PARAMS = [resolution,gridname,degngrad];
 % BASIC.RESDIR = [SIMDIR,PARAMS,'/'];

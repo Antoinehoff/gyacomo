@@ -5,11 +5,12 @@ GRID.pmaxe = PMAXE;  % Electron Hermite moments
 GRID.jmaxe = JMAXE;  % Electron Laguerre moments
 GRID.pmaxi = PMAXI;  % Ion Hermite moments
 GRID.jmaxi = JMAXI;  % Ion Laguerre moments
-GRID.Nr    = N; % r grid resolution
-GRID.Lr    = L; % r length
-GRID.Nz    = N * (1-KREQ0) + KREQ0; % z ''
-GRID.Lz    = L * (1-KREQ0); % z ''
-GRID.kpar  = KPAR;
+GRID.Nx    = N; % x grid resolution
+GRID.Lx    = L; % x length
+GRID.Ny    = N * (1-KXEQ0) + KXEQ0; % y ''
+GRID.Ly    = L * (1-KXEQ0); % y ''
+GRID.Nz    = Nz; % z resolution
+GRID.q0    = q0; % q factor
 
 % Model parameters
 MODEL.CO      = CO;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
@@ -35,11 +36,13 @@ MODEL.eta_n   = ETAN;        % source term kappa for HW
 MODEL.eta_T   = ETAT;        % Temperature
 MODEL.eta_B   = ETAB;        % Magnetic
 MODEL.lambdaD = LAMBDAD;
-% if A0KH ~= 0; SIMID = [SIMID,'_Nz_',num2str(L/2/pi*KR0KH),'_A_',num2str(A0KH)]; end;
+% if A0KH ~= 0; SIMID = [SIMID,'_Nz_',num2str(L/2/pi*KX0KH),'_A_',num2str(A0KH)]; end;
 % Time integration and intialization parameters
 TIME_INTEGRATION.numerical_scheme  = '''RK4''';
 if (INIT_PHI); INITIAL.init_noisy_phi = '.true.'; else; INITIAL.init_noisy_phi = '.false.';end;
 INITIAL.INIT_ZF = INIT_ZF;
+if (WIPE_TURB); INITIAL.wipe_turb = '.true.'; else; INITIAL.wipe_turb = '.false.';end;
+if (INIT_BLOB); INITIAL.init_blob = '.true.'; else; INITIAL.init_blob = '.false.';end;
 INITIAL.init_background  = (INIT_ZF>0)*ZF_AMP;
 INITIAL.init_noiselvl = NOISE0;
 INITIAL.iseed             = 42;
@@ -74,12 +77,17 @@ else
         '_Pi_',num2str(PMAXI),'_Ji_',num2str(JMAXI)];
 end
 degngrad = [degngrad,'_eta_',num2str(ETAB/ETAN),'_nu_%0.0e_',...
-        CONAME,'_CLOS_',num2str(CLOS),'_mu_%0.0e'];
+        CONAME,'_mu_%0.0e'];
 
 degngrad   = sprintf(degngrad,[NU,MU]);
 if ~NON_LIN; degngrad = ['lin_',degngrad]; end
-resolution = [num2str(GRID.Nr),'x',num2str(GRID.Nz/2),'_'];
-gridname   = ['L_',num2str(L),'_'];
+if (Nz == 1)
+    resolution = [num2str(GRID.Nx),'x',num2str(GRID.Ny/2),'_'];
+    gridname   = ['L_',num2str(L),'_'];
+else
+    resolution = [num2str(GRID.Nx),'x',num2str(GRID.Ny/2),'x',num2str(GRID.Nz),'_'];
+    gridname   = ['L_',num2str(L),'_q_',num2str(q),'_'];
+end
 if (exist('PREFIX','var') == 0); PREFIX = []; end;
 if (exist('SUFFIX','var') == 0); SUFFIX = []; end;
 PARAMS = [PREFIX,resolution,gridname,degngrad,SUFFIX];
@@ -98,6 +106,7 @@ if RESTART; BASIC.RESTART = '.true.'; else; BASIC.RESTART = '.false.';end;
 OUTPUTS.nsave_0d = floor(1.0/SPS0D/DT);
 OUTPUTS.nsave_1d = -1;
 OUTPUTS.nsave_2d = floor(1.0/SPS2D/DT);
+OUTPUTS.nsave_3d = floor(1.0/SPS3D/DT);
 OUTPUTS.nsave_5d = floor(1.0/SPS5D/DT);
 OUTPUTS.nsave_cp = floor(1.0/SPSCP/DT);
 if W_DOUBLE; OUTPUTS.write_doubleprecision = '.true.'; else; OUTPUTS.write_doubleprecision = '.false.';end;
