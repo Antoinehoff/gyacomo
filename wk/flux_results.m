@@ -17,7 +17,7 @@ Results_256x128.L     = [  66,   66,   66,    50,   66,   66,   66,   66,   66, 
 Results_256x128.P     = [   2,    3,    4,     5,    2,    3,    4,    2,    3,    4];
 Results_256x128.J     = [   1,    2,    2,     3,    1,    2,    2,    1,    2,    2];
 Results_256x128.etaB  = [ 0.5,  0.5,  0.5,   0.5,  0.4,  0.4,  0.4,  0.6,  0.6,  0.6];
-Results_256x128.mrkr  = [ 'v',  '>',  '^',   'o',  'v',  '>',  '^',  'v',  '>',  '^'];
+Results_256x128.mrkx  = [ 'v',  '>',  '^',   'o',  'v',  '>',  '^',  'v',  '>',  '^'];
 Results_256x128.clr   = [ 'k',  'k',  'k',   'r',  'r',  'r',  'r',  'k',  'k',  'k'];
 % Low definition results (128x64)
 % Results_128x64.Gamma = [0.29, 0.05, 7e-4, 0.31,  3.7,  2e-3];
@@ -26,7 +26,7 @@ Results_256x128.clr   = [ 'k',  'k',  'k',   'r',  'r',  'r',  'r',  'k',  'k', 
 % Results_128x64.J     = [   1,    1,    1,    1,    1,    1];
 % Results_128x64.NU    = [0.01,  0.1, 0.01, 0.01, 0.01, 0.01];
 % Results_128x64.etaB  = [ 0.5,  0.5, 0.67,  0.5   0.4,  0.6];
-% Results_128x64.mrkr  = [ 's',  's',  's',  's',  's',  's'];
+% Results_128x64.mrkx  = [ 's',  's',  's',  's',  's',  's'];
 % Results_128x64.clr   = [ 'b',  'b',   'b',  'r',  'r',  'r'];
 
 % Ricci_Rogers.Gamma = [2.5 1 1e-2];
@@ -41,14 +41,14 @@ hold on;
 res = Results_256x128;
 for i = 1:numel(res.Gamma)
     semilogy(res.etaB(i),res.Gamma(i)*SCALING,...
-        res.mrkr(i),'DisplayName','256x128', 'color', res.clr(i));
+        res.mrkx(i),'DisplayName','256x128', 'color', res.clr(i));
     hold on;
 end
 % res = Results_128x64;
 % for i = 1:numel(res.Gamma)
 %     if res.NU(i) == 0.01
 %     semilogy(res.etaB(i),res.Gamma(i),...
-%         res.mrkr(i),'DisplayName','128x64', 'color', res.clr(i)); 
+%         res.mrkx(i),'DisplayName','128x64', 'color', res.clr(i)); 
 %     end
 %     hold on;
 % end
@@ -67,7 +67,7 @@ Results_256x128.Gamma = [0.026,0.026, 1e-2,    1,    1,    1, 2e-2,    1, 0.15, 
 Results_256x128.P     = [   2,     3,    4,    2,    3,    4,    2,    3,    4,       4];
 Results_256x128.J     = [   1,     2,    2,    1,    2,    2,    1,    2,    2,       2];
 Results_256x128.etaB  = [ 0.5,   0.5,  0.5,  0.4,  0.4,  0.4,  0.6,  0.6,  0.6,     0.7];
-Results_256x128.mrkr  = [ 'v',   '>',  '^',  'v',  '>',  '^',  'v',  '>',  '^',     '^'];
+Results_256x128.mrkx  = [ 'v',   '>',  '^',  'v',  '>',  '^',  'v',  '>',  '^',     '^'];
 Results_256x128.clr   = [ 'k',   'k',  'k',  'b',  'b',  'b',  'r',  'b',  'r',     'r'];
 
 % Ricci_Rogers.Gamma = [2 1e-1];
@@ -84,7 +84,7 @@ hold on;
 res = Results_256x128;
 for i = 1:numel(res.Gamma)
     semilogy(res.etaB(i),res.Gamma(i)*SCALING,...
-        res.mrkr(i),'DisplayName','256x128', 'color', res.clr(i));
+        res.mrkx(i),'DisplayName','256x128', 'color', res.clr(i));
     hold on;
 end
 
@@ -104,7 +104,7 @@ Results_256x128.Gamma = [0.026,0.026, 1e-2,    1,    1,    1, 2e-2,    1, 0.15, 
 Results_256x128.P     = [   2,     3,    4,    2,    3,    4,    2,    3,    4,       4];
 Results_256x128.J     = [   1,     2,    2,    1,    2,    2,    1,    2,    2,       2];
 Results_256x128.etaB  = [ 0.5,   0.5,  0.5,  0.4,  0.4,  0.4,  0.6,  0.6,  0.6,     0.7];
-Results_256x128.mrkr  = [ 'v',   '>',  '^',  'v',  '>',  '^',  'v',  '>',  '^',     '^'];
+Results_256x128.mrkx  = [ 'v',   '>',  '^',  'v',  '>',  '^',  'v',  '>',  '^',     '^'];
 Results_256x128.clr   = [ 'k',   'k',  'k',  'b',  'b',  'b',  'r',  'b',  'r',     'r'];
 
 % Ricci_Rogers.Gamma = [2 1e-1];
@@ -121,7 +121,7 @@ hold on;
 res = Results_256x128;
 for i = 1:numel(res.Gamma)
     semilogy(res.etaB(i),res.Gamma(i)*SCALING,...
-        res.mrkr(i),'DisplayName','256x128', 'color', res.clr(i));
+        res.mrkx(i),'DisplayName','256x128', 'color', res.clr(i));
     hold on;
 end
 
@@ -140,7 +140,7 @@ Results_150x75.Gamma = [0.026,0.026, 1e-2,    1,    1,    1, 2e-2,    1, 0.15,  
 Results_150x75.P     = [   2,     3,    4,    2,    3,    4,    2,    3,    4,       4];
 Results_150x75.J     = [   1,     2,    2,    1,    2,    2,    1,    2,    2,       2];
 Results_150x75.etaB  = [ 0.5,   0.5,  0.5,  0.4,  0.4,  0.4,  0.6,  0.6,  0.6,     0.7];
-Results_150x75.mrkr  = [ 'v',   '>',  '^',  'v',  '>',  '^',  'v',  '>',  '^',     '^'];
+Results_150x75.mrkx  = [ 'v',   '>',  '^',  'v',  '>',  '^',  'v',  '>',  '^',     '^'];
 Results_150x75.clr   = [ 'k',   'k',  'k',  'b',  'b',  'b',  'r',  'b',  'r',     'r'];
 
 % Ricci_Rogers.Gamma = [2 1e-1];
@@ -157,7 +157,7 @@ hold on;
 res = Results_150x75;
 for i = 1:numel(res.Gamma)
     semilogy(res.etaB(i),res.Gamma(i)*SCALING,...
-        res.mrkr(i),'DisplayName','256x128', 'color', res.clr(i));
+        res.mrkx(i),'DisplayName','256x128', 'color', res.clr(i));
     hold on;
 end
 

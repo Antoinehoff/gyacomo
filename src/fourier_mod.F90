@@ -29,39 +29,39 @@ MODULE fourier
 
   CONTAINS
 
-  SUBROUTINE init_grid_distr_and_plans(Nr,Nz)
+  SUBROUTINE init_grid_distr_and_plans(Nx,Ny)
     IMPLICIT NONE
 
-    INTEGER, INTENT(IN) :: Nr,Nz
-    NR_ = Nr; NZ_ = Nz
+    INTEGER, INTENT(IN) :: Nx,Ny
+    NR_ = Nx; NZ_ = Ny
     NR_halved = NR_/2 + 1
 
     ! communicator = MPI_COMM_WORLD
-    communicator = comm_kr
+    communicator = comm_kx
 
     !! Complex arrays F, G
     ! Compute the room to allocate
-    alloc_local_1 = fftw_mpi_local_size_2d(NR_halved, NZ_, communicator, local_nkr, local_nkr_offset)
+    alloc_local_1 = fftw_mpi_local_size_2d(NR_halved, NZ_, communicator, local_nkx, local_nkx_offset)
     ! Initalize pointers to this room
     cdatac_f = fftw_alloc_complex(alloc_local_1)
     cdatac_g = fftw_alloc_complex(alloc_local_1)
     cdatac_c = fftw_alloc_complex(alloc_local_1)
     ! Initalize the arrays with the rooms pointed
-    call c_f_pointer(cdatac_f, cmpx_data_f, [NZ_ ,local_nkr])
-    call c_f_pointer(cdatac_g, cmpx_data_g, [NZ_ ,local_nkr])
-    call c_f_pointer(cdatac_c, cmpx_data_c, [NZ_ ,local_nkr])
+    call c_f_pointer(cdatac_f, cmpx_data_f, [NZ_ ,local_nkx])
+    call c_f_pointer(cdatac_g, cmpx_data_g, [NZ_ ,local_nkx])
+    call c_f_pointer(cdatac_c, cmpx_data_c, [NZ_ ,local_nkx])
 
     !! Real arrays iFFT(F), iFFT(G)
     ! Compute the room to allocate
-    alloc_local_2 = fftw_mpi_local_size_2d(NZ_, NR_halved, communicator, local_nz, local_nz_offset)
+    alloc_local_2 = fftw_mpi_local_size_2d(NZ_, NR_halved, communicator, local_nky, local_nky_offset)
     ! Initalize pointers to this room
     cdatar_f = fftw_alloc_real(2*alloc_local_2)
     cdatar_g = fftw_alloc_real(2*alloc_local_2)
     cdatar_c = fftw_alloc_real(2*alloc_local_2)
     ! Initalize the arrays with the rooms pointed
-    call c_f_pointer(cdatar_f, real_data_f, [2*(NR_/2  + 1),local_nz])
-    call c_f_pointer(cdatar_g, real_data_g, [2*(NR_/2  + 1),local_nz])
-    call c_f_pointer(cdatar_c, real_data_c, [2*(NR_/2  + 1),local_nz])
+    call c_f_pointer(cdatar_f, real_data_f, [2*(NR_/2  + 1),local_nky])
+    call c_f_pointer(cdatar_g, real_data_g, [2*(NR_/2  + 1),local_nky])
+    call c_f_pointer(cdatar_c, real_data_c, [2*(NR_/2  + 1),local_nky])
 
     ! Plan Creation (out-of-place forward and backward FFT)
     planf = fftw_mpi_plan_dft_r2c_2d(NZ_, NR_, real_data_f, cmpx_data_f, communicator,  ior(FFTW_MEASURE, FFTW_MPI_TRANSPOSED_OUT))
@@ -80,13 +80,13 @@ MODULE fourier
   SUBROUTINE convolve_2D_F2F( F_2D, G_2D, C_2D )
     IMPLICIT NONE
 
-    COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(ikrs:ikre,ikzs:ikze), INTENT(IN)  :: F_2D, G_2D  ! input fields
-    COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(ikrs:ikre,ikzs:ikze), INTENT(OUT) :: C_2D  ! output convolutioned field
+    COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(ikxs:ikxe,ikys:ikye), INTENT(IN)  :: F_2D, G_2D  ! input fields
+    COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(ikxs:ikxe,ikys:ikye), INTENT(OUT) :: C_2D  ! output convolutioned field
 
-    do ikr = ikrs, ikre
-      do ikz = ikzs, ikze
-        cmpx_data_f(ikz,ikr-local_nkr_offset) = F_2D(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
-        cmpx_data_g(ikz,ikr-local_nkr_offset) = G_2D(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
+    do ikx = ikxs, ikxe
+      do iky = ikys, ikye
+        cmpx_data_f(iky,ikx-local_nkx_offset) = F_2D(ikx,iky)*AA_x(ikx)*AA_y(iky)
+        cmpx_data_g(iky,ikx-local_nkx_offset) = G_2D(ikx,iky)*AA_x(ikx)*AA_y(iky)
       end do
     end do
 
@@ -99,9 +99,9 @@ MODULE fourier
     call fftw_mpi_execute_dft_r2c(planf, real_data_c, cmpx_data_c)
 
     ! Retrieve convolution in input format
-    do ikr = ikrs, ikre
-      do ikz = ikzs, ikze
-        C_2D(ikr,ikz) = cmpx_data_c(ikz,ikr-local_nkr_offset)*AA_r(ikr)*AA_z(ikz)
+    do ikx = ikxs, ikxe
+      do iky = ikys, ikye
+        C_2D(ikx,iky) = cmpx_data_c(iky,ikx-local_nkx_offset)*AA_x(ikx)*AA_y(iky)
       end do
     end do
 

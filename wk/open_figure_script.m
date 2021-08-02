@@ -3,7 +3,10 @@ fname_='';
 %% Marconi output file
 fname_='';
 fname_='';
-fname_='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.7_P_10_J_5/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-02/out.txt';
+fname_='';
+fname_='';
+fname_='';
+fname_='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.7_P_6_J_3/200x100_L_60_P_6_J_3_eta_0.6_nu_1e-03_SGGK_CLOS_0_mu_1e-03/out.txt';
 simname_ = fname_(54:end-8);
 
 %%
@@ -12,8 +15,8 @@ simname_ = fname_(54:end-8);
 % simname_ = '';
 % simname_ = '';
 % simname_ = '';
-% simname_ = 'v2.7_P_2_J_1/100x50_L_200_P_2_J_1_eta_0.6_nu_1e+00_SGGK_CLOS_0_mu_0e+00';
-simname_ = 'v2.7_P_2_J_1/100x50_L_100_P_2_J_1_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_0e+00';
+% simname_ = '';
+
 
 
 

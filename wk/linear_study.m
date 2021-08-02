@@ -1,5 +1,5 @@
-for NU = [0.14]
-for ETAB = [1/1.4]
+for NU = [0.01]
+for ETAN = [2.0]
 for CO = [3]
 %clear all;
 addpath(genpath('../matlab')) % ... add
@@ -11,24 +11,24 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %% PHYSICAL PARAMETERS
 % NU      = 1.0;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-% ETAB    = 0.5;
-ETAN    = 1.0;    % Density gradient
+ETAB    = 1.0;
+% ETAN    = ETAN;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
 NU_HYP  = 0.0;   % Hyperdiffusivity coefficient
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
-N       = 50;     % Frequency gridpoints (Nkr = N/2)
+N       = 50;     % Frequency gridpoints (Nkx = N/2)
 L       = 100;     % Size of the squared frequency domain
-KREQ0   = 1;      % put kr = 0
+KXEQ0   = 1;      % put kx = 0
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARMETERS
-TMAX    = 100;  % Maximal time unit
+TMAX    = 200;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
-SPS5D   = 1/200;    % Sampling per time unit for 5D arrays
+SPS5D   = 1/50;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 00;
@@ -36,7 +36,7 @@ JOB2LOAD= 00;
 % SIMID   = 'v2.7_lin_analysis';  % Name of the simulation
 SIMID   = 'kobayashi_2015_fig2';  % Name of the simulation
 % SIMID   = 'v2.6_lin_analysis';  % Name of the simulation
-NON_LIN = 0 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
+NON_LIN = 0 *(1-KXEQ0);   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Full Couloumb ; +/- for GK/DK)
 % CO      = 2;
@@ -68,11 +68,11 @@ MU      = NU_HYP/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
 %% PARAMETER SCANS
 if 1
 %% Parameter scan over PJ
-PA = [2, 6, 10];
-JA = [1, 3,  5];
-% PA = [2 4];
-% JA = [1 2];
-DTA= DT./sqrt(JA)/4;
+% PA = [2 4 6 10];
+% JA = [1 2 3  5];
+PA = [2];
+JA = [1];
+DTA= DT*ones(size(JA));%./sqrt(JA);
 % DTA= DT;
 mup_ = MU_P;
 muj_ = MU_J;
@@ -101,20 +101,20 @@ for i = 1:Nparam
     tend   = Ts2D(end); tstart   = 0.4*tend;
     [~,itstart] = min(abs(Ts2D-tstart));
     [~,itend]   = min(abs(Ts2D-tend));
-    for ikr = 1:N/2+1
-        gamma_Ni00(i,ikr) = (LinearFit_s(Ts2D(itstart:itend)',(squeeze(abs(Ni00(ikr,1,itstart:itend))))));
-        Ni00_ST(i,ikr,1:numel(Ts2D)) = squeeze((Ni00(ikr,1,:)));
+    for ikx = 1:N/2+1
+        gamma_Ni00(i,ikx) = (LinearFit_s(Ts2D(itstart:itend)',(squeeze(abs(Ni00(ikx,1,itstart:itend))))));
+        Ni00_ST(i,ikx,1:numel(Ts2D)) = squeeze((Ni00(ikx,1,:)));
     end
     tend   = Ts5D(end); tstart   = 0.4*tend;
     [~,itstart] = min(abs(Ts5D-tstart));
     [~,itend]   = min(abs(Ts5D-tend));
-    for ikr = 1:N/2+1
-        gamma_Nipj(i,ikr) = LinearFit_s(Ts5D(itstart:itend)',squeeze(max(max(abs(Nipj(:,:,ikr,1,itstart:itend)),[],1),[],2)));
+    for ikx = 1:N/2+1
+        gamma_Nipj(i,ikx) = LinearFit_s(Ts5D(itstart:itend)',squeeze(max(max(abs(Nipj(:,:,ikx,1,itstart:itend)),[],1),[],2)));
     end
     gamma_Ni00(i,:) = real(gamma_Ni00(i,:) .* (gamma_Ni00(i,:)>=0.0));
     gamma_Nipj(i,:) = real(gamma_Nipj(i,:) .* (gamma_Nipj(i,:)>=0.0));
-%     kzmax = abs(kr(ikzmax));
-%     Bohm_transport(i) = ETAB/ETAN*gmax/kzmax^2;
+%     kymax = abs(kx(ikymax));
+%     Bohm_transport(i) = ETAB/ETAN*gmax/kymax^2;
     % Clean output
     system(['rm -r ',BASIC.RESDIR]);
 end
@@ -128,14 +128,14 @@ plt = @(x) x;
     for i = 1:Nparam
         clr       = line_colors(mod(i-1,numel(line_colors(:,1)))+1,:);
         linestyle = line_styles(floor((i-1)/numel(line_colors(:,1)))+1);
-        semilogx(plt(SCALE*kr(2:numel(kr))),plt(gamma_Ni00(i,2:end)),...
+        semilogx(plt(SCALE*kx(2:numel(kx))),plt(gamma_Ni00(i,2:end)),...
             'Color',clr,...
             'LineStyle',linestyle{1},'Marker','^',...
-            'DisplayName',['$\eta_B=',num2str(ETAB),'$, $\nu_{',CONAME,'}=',num2str(NU),'$, $P=',num2str(PA(i)),'$, $J=',num2str(JA(i)),'$']);
+            'DisplayName',['$\eta=',num2str(ETAB/ETAN),'$, $\nu_{',CONAME,'}=',num2str(NU),'$, $P=',num2str(PA(i)),'$, $J=',num2str(JA(i)),'$']);
         hold on;
     end
-    grid on; xlabel('$k_z\rho_s^{R}$'); ylabel('$\gamma(N_i^{00})L_\perp/c_s$'); xlim([0.0,max(kr)]);
-    title(['$\eta_B=',num2str(ETAB),'$, $\nu_{',CONAME,'}=',num2str(NU),'$'])
+    grid on; xlabel('$k_z\rho_s^{R}$'); ylabel('$\gamma(N_i^{00})L_\perp/c_s$'); xlim([0.0,max(kx)]);
+    title(['$\eta=',num2str(ETAB/ETAN),'$, $\nu_{',CONAME,'}=',num2str(NU),'$'])
     legend('show'); xlim([0.01,10])
 saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.fig']);
 saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.png']);
@@ -168,14 +168,14 @@ for i = 1:Nparam
     % Load and process results
     load_results
     tend   = Ts2D(end); tstart   = 0.4*tend;
-    for ikr = 1:N/2+1
-        gamma_Ni(i,ikr) = LinearFit_s(Ts2D,squeeze(abs(Ni00(ikr,1,:))),tstart,tend);
-        Ni00_ST(i,ikr,1:numel(Ts2D)) = squeeze((Ni00(ikr,1,:)));
+    for ikx = 1:N/2+1
+        gamma_Ni(i,ikx) = LinearFit_s(Ts2D,squeeze(abs(Ni00(ikx,1,:))),tstart,tend);
+        Ni00_ST(i,ikx,1:numel(Ts2D)) = squeeze((Ni00(ikx,1,:)));
     end
     gamma_Ni(i,:) = real(gamma_Ni(i,:) .* (gamma_Ni(i,:)>=0.0));
-    [gmax,ikzmax] = max(gamma_Ni(i,:));
-    kzmax = abs(kr(ikzmax));
-    Bohm_transport(i) = ETAB/ETAN*gmax/kzmax^2;
+    [gmax,ikymax] = max(gamma_Ni(i,:));
+    kymax = abs(kx(ikymax));
+    Bohm_transport(i) = ETAB/ETAN*gmax/kymax^2;
     % Clean output
     system(['rm -r ',BASIC.RESDIR])
 end
@@ -187,13 +187,13 @@ plt = @(x) circshift(x,N/2-1);
 for i = 1:Nparam
     clr       = line_colors(mod(i-1,numel(line_colors(:,1)))+1,:);
     linestyle = line_styles(floor((i-1)/numel(line_colors(:,1)))+1);
-    plot(plt(kz),plt(gamma_Ni(i,:)),...
+    plot(plt(ky),plt(gamma_Ni(i,:)),...
         'Color',clr,...
         'LineStyle',linestyle{1},...
         'DisplayName',['$\eta_B=$',num2str(eta_B(i))]);
     hold on;
 end
-grid on; xlabel('$k_z\rho_s$'); ylabel('$\gamma(N_i^{00})\rho_2/c_s$'); xlim([0.0,max(kz)]);
+grid on; xlabel('$k_z\rho_s$'); ylabel('$\gamma(N_i^{00})\rho_2/c_s$'); xlim([0.0,max(ky)]);
 title(['$P_e=',num2str(PMAXE),'$',', $J_e=',num2str(JMAXE),'$',...
        ', $P_i=',num2str(PMAXE),'$',', $J_i=',num2str(JMAXI),'$'])
 legend('show')

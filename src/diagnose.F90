@@ -25,7 +25,7 @@ SUBROUTINE diagnose(kstep)
   ! so we need to gather non 5D data on one proc to output it
   INTEGER     :: parray_e_full(1:pmaxe+1), parray_i_full(1:pmaxi+1)
   INTEGER     :: jarray_e_full(1:jmaxe+1), jarray_i_full(1:jmaxi+1)
-  REAL(dp)    :: krarray_full(1:nkr),  kzarray_full(1:nkz)
+  REAL(dp)    :: kxarray_full(1:Nkx),  kyarray_full(1:Nky), zarray_full(1:Nz)
 
   CALL cpu_time(t0_diag) ! Measuring time
   !_____________________________________________________________________________
@@ -72,25 +72,34 @@ SUBROUTINE diagnose(kstep)
        ! J
        DO ij = 1,jmaxe+1; jarray_e_full(ij) = (ij-1); END DO
        DO ij = 1,jmaxi+1; jarray_i_full(ij) = (ij-1); END DO
-       ! Kr
-       DO ikr = 1,Nkr
-         krarray_full(ikr) = REAL(ikr-1,dp) * deltakr
+       ! kx
+       DO ikx = 1,Nkx
+         kxarray_full(ikx) = REAL(ikx-1,dp) * deltakx
        END DO
-       ! Kz
-       IF (Nkz .GT. 1) THEN
-        DO ikz = 1,Nkz
-          kzarray_full(ikz) = deltakz*(MODULO(ikz-1,Nkz/2)-Nkz/2*FLOOR(2.*real(ikz-1)/real(Nkz)))
-          if (ikz .EQ. Nz/2+1)     kzarray(ikz) = -kzarray(ikz)
+       ! ky
+       IF (Nky .GT. 1) THEN
+        DO iky = 1,Nky
+          kyarray_full(iky) = deltaky*(MODULO(iky-1,Nky/2)-Nky/2*FLOOR(2.*real(iky-1)/real(Nky)))
+          if (iky .EQ. Ny/2+1)     kyarray(iky) = -kyarray(iky)
         END DO
+       ELSE
+        kyarray_full(1) =  0
+       endif
+      ! z
+      IF (Nz .GT. 1) THEN
+       DO iz = 1,Nz
+         zarray_full(iz) = deltaz*(iz-1)
+       END DO
       ELSE
-        kzarray_full(1) =  0
+       zarray_full(1) =  0
       endif
      ENDIF
 
      ! Grid info
      CALL creatg(fidres, "/data/grid", "Grid data")
-     CALL putarr(fidres, "/data/grid/coordkr", krarray_full(1:nkr),"kr*rho_s0", ionode=0)
-     CALL putarr(fidres, "/data/grid/coordkz", kzarray_full(1:nkz),"kz*rho_s0", ionode=0)
+     CALL putarr(fidres, "/data/grid/coordkx", kxarray_full(1:Nkx),"kx*rho_s0", ionode=0)
+     CALL putarr(fidres, "/data/grid/coordky", kyarray_full(1:Nky),"ky*rho_s0", ionode=0)
+     CALL putarr(fidres, "/data/grid/coordz",   zarray_full(1:Nz) ,"z/R", ionode=0)
      CALL putarr(fidres, "/data/grid/coordp_e" , parray_e_full(1:pmaxe+1), "p_e", ionode=0)
      CALL putarr(fidres, "/data/grid/coordj_e" , jarray_e_full(1:jmaxe+1), "j_e", ionode=0)
      CALL putarr(fidres, "/data/grid/coordp_i" , parray_i_full(1:pmaxi+1), "p_i", ionode=0)
@@ -113,33 +122,44 @@ SUBROUTINE diagnose(kstep)
      END IF
 
 
-     !  var2d group (electro. pot., Ni00 moment)
+     !  var2d group (??)
      IF (nsave_2d .GT. 0) THEN
       CALL creatg(fidres, "/data/var2d", "2d profiles")
       CALL creatd(fidres, rank, dims,  "/data/var2d/time",     "Time t*c_s/R")
       CALL creatd(fidres, rank, dims, "/data/var2d/cstep", "iteration number")
-
-      IF (write_phi) CALL creatg(fidres, "/data/var2d/phi", "phi")
-
-      IF (write_Na00) THEN
-       CALL creatg(fidres, "/data/var2d/Ne00", "Ne00")
-       CALL creatg(fidres, "/data/var2d/Ni00", "Ni00")
-      ENDIF
-
-      IF (write_dens) THEN
-       CALL creatg(fidres, "/data/var2d/dens_e", "dens_e")
-       CALL creatg(fidres, "/data/var2d/dens_i", "dens_i")
-      ENDIF
-
-      IF (write_temp) THEN
-       CALL creatg(fidres, "/data/var2d/temp_e", "temp_e")
-       CALL creatg(fidres, "/data/var2d/temp_i", "temp_i")
-      ENDIF
-
       IF (cstep==0) THEN
         iframe2d=0
       ENDIF
       CALL attach(fidres,"/data/var2d/" , "frames", iframe2d)
+     END IF
+
+     !  var3d group (electro. pot., Ni00 moment)
+     IF (nsave_3d .GT. 0) THEN
+      CALL creatg(fidres, "/data/var3d", "3d profiles")
+      CALL creatd(fidres, rank, dims,  "/data/var3d/time",     "Time t*c_s/R")
+      CALL creatd(fidres, rank, dims, "/data/var3d/cstep", "iteration number")
+
+      IF (write_phi) CALL creatg(fidres, "/data/var3d/phi", "phi")
+
+      IF (write_Na00) THEN
+       CALL creatg(fidres, "/data/var3d/Ne00", "Ne00")
+       CALL creatg(fidres, "/data/var3d/Ni00", "Ni00")
+      ENDIF
+
+      IF (write_dens) THEN
+       CALL creatg(fidres, "/data/var3d/dens_e", "dens_e")
+       CALL creatg(fidres, "/data/var3d/dens_i", "dens_i")
+      ENDIF
+
+      IF (write_temp) THEN
+       CALL creatg(fidres, "/data/var3d/temp_e", "temp_e")
+       CALL creatg(fidres, "/data/var3d/temp_i", "temp_i")
+      ENDIF
+
+      IF (cstep==0) THEN
+        iframe3d=0
+      ENDIF
+      CALL attach(fidres,"/data/var3d/" , "frames", iframe3d)
      END IF
 
      !  var5d group (moments)
@@ -181,6 +201,7 @@ SUBROUTINE diagnose(kstep)
      CALL attach(fidres, TRIM(str), "start_cstep",    cstep-1)
      CALL attach(fidres, TRIM(str), "start_iframe0d", iframe0d)
      CALL attach(fidres, TRIM(str), "start_iframe2d", iframe2d)
+     CALL attach(fidres, TRIM(str), "start_iframe3d", iframe3d)
      CALL attach(fidres, TRIM(str), "start_iframe5d", iframe5d)
      CALL attach(fidres, TRIM(str),          "dt",       dt)
      CALL attach(fidres, TRIM(str),        "tmax",     tmax)
@@ -188,7 +209,7 @@ SUBROUTINE diagnose(kstep)
      CALL attach(fidres, TRIM(str),    "cpu_time",       -1)
      CALL attach(fidres, TRIM(str),       "Nproc",   num_procs)
      CALL attach(fidres, TRIM(str),       "Np_p" , num_procs_p)
-     CALL attach(fidres, TRIM(str),       "Np_kr",num_procs_kr)
+     CALL attach(fidres, TRIM(str),       "Np_kx",num_procs_kx)
      CALL attach(fidres, TRIM(str), "write_gamma",write_gamma)
      CALL attach(fidres, TRIM(str),   "write_phi",write_phi)
      CALL attach(fidres, TRIM(str),  "write_Na00",write_Na00)
@@ -253,9 +274,13 @@ SUBROUTINE diagnose(kstep)
      ! empty in our case
 
      !                       2.3   2d profiles
-     IF (nsave_2d .GT. 0) THEN
-        IF (MOD(cstep, nsave_2d) == 0) THEN
-           CALL diagnose_2d
+     ! empty in our case
+
+
+     !                       2.3   2d profiles
+     IF (nsave_3d .GT. 0) THEN
+        IF (MOD(cstep, nsave_3d) == 0) THEN
+           CALL diagnose_3d
         END IF
      END IF
 
@@ -334,7 +359,7 @@ SUBROUTINE diagnose_2d
   USE futils, ONLY: append, getatt, attach, putarrnd
   USE fields
   USE array, ONLY: Ne00, Ni00, dens_e, dens_i, temp_e, temp_i
-  USE grid, ONLY: ikrs,ikre, ikzs,ikze, nkr, nkz, local_nkr, ikr, ikz, ips_e, ips_i
+  USE grid, ONLY: ikxs,ikxe, ikys,ikye, Nkx, Nky, local_nkx, ikx, iky, ips_e, ips_i
   USE time_integration
   USE diagnostics_par
   USE prec_const
@@ -342,7 +367,7 @@ SUBROUTINE diagnose_2d
 
   IMPLICIT NONE
 
-  COMPLEX(dp) :: buffer(ikrs:ikre,ikzs:ikze)
+  COMPLEX(dp) :: buffer(ikxs:ikxe,ikys:ikye)
   INTEGER     :: i_, root, world_rank, world_size
 
   CALL append(fidres,  "/data/var2d/time",           time,ionode=0)
@@ -351,63 +376,110 @@ SUBROUTINE diagnose_2d
   iframe2d=iframe2d+1
   CALL attach(fidres,"/data/var2d/" , "frames", iframe2d)
 
-  IF (write_phi) CALL write_field2d(phi (:,:), 'phi')
-
-  IF (write_Na00) THEN
-    IF ( (ips_e .EQ. 1) .AND. (ips_i .EQ. 1) ) THEN
-      Ne00(ikrs:ikre,ikzs:ikze) = moments_e(ips_e,1,ikrs:ikre,ikzs:ikze,updatetlevel)
-      Ni00(ikrs:ikre,ikzs:ikze) = moments_i(ips_e,1,ikrs:ikre,ikzs:ikze,updatetlevel)
-    ENDIF
-
-    CALL manual_2D_bcast(Ne00(ikrs:ikre,ikzs:ikze))
-    CALL write_field2d(Ne00(ikrs:ikre,ikzs:ikze), 'Ne00')
-
-    CALL manual_2D_bcast(Ni00(ikrs:ikre,ikzs:ikze))
-    CALL write_field2d(Ni00(ikrs:ikre,ikzs:ikze), 'Ni00')
-  ENDIF
-
-  IF (write_dens) THEN
-    CALL compute_density
-    CALL write_field2d(dens_e(ikrs:ikre,ikzs:ikze), 'dens_e')
-    CALL write_field2d(dens_i(ikrs:ikre,ikzs:ikze), 'dens_i')
-  ENDIF
-
-  IF (write_temp) THEN
-    CALL compute_temperature
-    CALL write_field2d(temp_e(ikrs:ikre,ikzs:ikze), 'temp_e')
-    CALL write_field2d(temp_i(ikrs:ikre,ikzs:ikze), 'temp_i')
-  ENDIF
-
 CONTAINS
 
   SUBROUTINE write_field2d(field, text)
     USE futils, ONLY: attach, putarr
-    USE grid, ONLY: ikrs,ikre, ikzs,ikze, nkr, nkz, local_nkr
+    USE grid, ONLY: ikxs,ikxe, ikys,ikye, Nkx, Nky, local_nkx
     USE prec_const
-    USE basic, ONLY : comm_kr, num_procs_p, rank_p
+    USE basic, ONLY : comm_kx, num_procs_p, rank_p
     IMPLICIT NONE
 
-    COMPLEX(dp), DIMENSION(ikrs:ikre, ikzs:ikze), INTENT(IN) :: field
+    COMPLEX(dp), DIMENSION(ikxs:ikxe, ikys:ikye), INTENT(IN) :: field
     CHARACTER(*), INTENT(IN) :: text
-    COMPLEX(dp) :: buffer_dist(ikrs:ikre,ikzs:ikze)
-    COMPLEX(dp) :: buffer_full(1:nkr,1:nkz)
+    COMPLEX(dp) :: buffer_dist(ikxs:ikxe,ikys:ikye)
+    COMPLEX(dp) :: buffer_full(1:Nkx,1:Nky)
     INTEGER     :: scount, rcount
     CHARACTER(LEN=50) :: dset_name
 
-    scount = (ikre-ikrs+1) * (ikze-ikzs+1)
+    scount = (ikxe-ikxs+1) * (ikye-ikys+1)
     rcount = scount
 
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var2d", TRIM(text), iframe2d
     IF (num_procs .EQ. 1) THEN ! no data distribution
-      CALL putarr(fidres, dset_name, field(ikrs:ikre, ikzs:ikze), ionode=0)
+      CALL putarr(fidres, dset_name, field(ikxs:ikxe, ikys:ikye), ionode=0)
     ELSE
-      CALL putarrnd(fidres, dset_name, field(ikrs:ikre, ikzs:ikze),  (/1, 1/))
+      CALL putarrnd(fidres, dset_name, field(ikxs:ikxe, ikys:ikye),  (/1, 1/))
     ENDIF
     CALL attach(fidres, dset_name, "time", time)
 
   END SUBROUTINE write_field2d
 
 END SUBROUTINE diagnose_2d
+
+SUBROUTINE diagnose_3d
+
+  USE basic
+  USE futils, ONLY: append, getatt, attach, putarrnd
+  USE fields
+  USE array, ONLY: Ne00, Ni00, dens_e, dens_i, temp_e, temp_i
+  USE grid, ONLY: ikxs,ikxe, ikys,ikye, Nkx, Nky, local_nkx, ikx, iky, ips_e, ips_i
+  USE time_integration
+  USE diagnostics_par
+  USE prec_const
+  USE processing
+
+  IMPLICIT NONE
+
+  INTEGER     :: i_, root, world_rank, world_size
+
+  CALL append(fidres,  "/data/var3d/time",           time,ionode=0)
+  CALL append(fidres, "/data/var3d/cstep", real(cstep,dp),ionode=0)
+  CALL getatt(fidres,      "/data/var3d/",       "frames",iframe3d)
+  iframe3d=iframe3d+1
+  CALL attach(fidres,"/data/var3d/" , "frames", iframe3d)
+
+  IF (write_phi) CALL write_field3d(phi (:,:,:), 'phi')
+
+  IF (write_Na00) THEN
+    IF ( (ips_e .EQ. 1) .AND. (ips_i .EQ. 1) ) THEN
+      Ne00(ikxs:ikxe,ikys:ikye,izs:ize) = moments_e(ips_e,1,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel)
+      Ni00(ikxs:ikxe,ikys:ikye,izs:ize) = moments_i(ips_e,1,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel)
+    ENDIF
+
+    CALL manual_3D_bcast(Ne00(ikxs:ikxe,ikys:ikye,izs:ize))
+    CALL write_field3d(Ne00(ikxs:ikxe,ikys:ikye,izs:ize), 'Ne00')
+
+    CALL manual_3D_bcast(Ni00(ikxs:ikxe,ikys:ikye,izs:ize))
+    CALL write_field3d(Ni00(ikxs:ikxe,ikys:ikye,izs:ize), 'Ni00')
+  ENDIF
+
+  IF (write_dens) THEN
+    CALL compute_density
+    CALL write_field3d(dens_e(ikxs:ikxe,ikys:ikye,izs:ize), 'dens_e')
+    CALL write_field3d(dens_i(ikxs:ikxe,ikys:ikye,izs:ize), 'dens_i')
+  ENDIF
+
+  IF (write_temp) THEN
+    CALL compute_temperature
+    CALL write_field3d(temp_e(ikxs:ikxe,ikys:ikye,izs:ize), 'temp_e')
+    CALL write_field3d(temp_i(ikxs:ikxe,ikys:ikye,izs:ize), 'temp_i')
+  ENDIF
+
+CONTAINS
+
+  SUBROUTINE write_field3d(field, text)
+    USE futils, ONLY: attach, putarr
+    USE grid, ONLY: ikxs,ikxe, ikys,ikye, Nkx, Nky, local_nkx
+    USE prec_const
+    USE basic, ONLY : comm_kx, num_procs_p, rank_p
+    IMPLICIT NONE
+
+    COMPLEX(dp), DIMENSION(ikxs:ikxe, ikys:ikye, izs:ize), INTENT(IN) :: field
+    CHARACTER(*), INTENT(IN) :: text
+    CHARACTER(LEN=50) :: dset_name
+
+    WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
+    IF (num_procs .EQ. 1) THEN ! no data distribution
+      CALL putarr(fidres, dset_name, field(ikxs:ikxe, ikys:ikye, izs:ize), ionode=0)
+    ELSE
+      CALL putarrnd(fidres, dset_name, field(ikxs:ikxe, ikys:ikye, izs:ize),  (/1, 1/))
+    ENDIF
+    CALL attach(fidres, dset_name, "time", time)
+
+  END SUBROUTINE write_field3d
+
+END SUBROUTINE diagnose_3d
 
 SUBROUTINE diagnose_5d
 
@@ -429,33 +501,33 @@ SUBROUTINE diagnose_5d
    CALL attach(fidres,"/data/var5d/" , "frames", iframe5d)
 
    IF (write_Napj) THEN
-    CALL write_field5d_e(moments_e(ips_e:ipe_e,ijs_e:ije_e,:,:,updatetlevel), 'moments_e')
-    CALL write_field5d_i(moments_i(ips_i:ipe_i,ijs_i:ije_i,:,:,updatetlevel), 'moments_i')
+    CALL write_field5d_e(moments_e(ips_e:ipe_e,ijs_e:ije_e,:,:,:,updatetlevel), 'moments_e')
+    CALL write_field5d_i(moments_i(ips_i:ipe_i,ijs_i:ije_i,:,:,:,updatetlevel), 'moments_i')
    ENDIF
 
    IF (write_Sapj) THEN
-     CALL write_field5d_e(Sepj(ips_e:ipe_e,ijs_e:ije_e,:,:), 'Sepj')
-     CALL write_field5d_i(Sipj(ips_i:ipe_i,ijs_i:ije_i,:,:), 'Sipj')
+     CALL write_field5d_e(Sepj(ips_e:ipe_e,ijs_e:ije_e,:,:,:), 'Sepj')
+     CALL write_field5d_i(Sipj(ips_i:ipe_i,ijs_i:ije_i,:,:,:), 'Sipj')
    ENDIF
 
  CONTAINS
 
    SUBROUTINE write_field5d_e(field, text)
      USE futils, ONLY: attach, putarr, putarrnd
-     USE grid,   ONLY: ips_e,ipe_e, ijs_e,ije_e, ikrs,ikre, ikzs,ikze
+     USE grid,   ONLY: ips_e,ipe_e, ijs_e,ije_e, ikxs,ikxe, ikys,ikye, izs,ize
      USE prec_const
      IMPLICIT NONE
 
-     COMPLEX(dp), DIMENSION(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze), INTENT(IN) :: field
+     COMPLEX(dp), DIMENSION(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,ikys:ikye,izs:ize), INTENT(IN) :: field
      CHARACTER(*), INTENT(IN) :: text
 
      CHARACTER(LEN=50) :: dset_name
 
      WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var5d", TRIM(text), iframe5d
      IF (num_procs .EQ. 1) THEN
-       CALL putarr(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze), ionode=0)
+       CALL putarr(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,ikys:ikye,izs:ize), ionode=0)
      ELSE
-       CALL putarrnd(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,ikrs:ikre,ikzs:ikze),  (/1,3/))
+       CALL putarrnd(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,ikys:ikye,izs:ize),  (/1,3/))
      ENDIF
      CALL attach(fidres, dset_name, 'cstep', cstep)
      CALL attach(fidres, dset_name, 'time', time)
@@ -468,20 +540,20 @@ SUBROUTINE diagnose_5d
 
    SUBROUTINE write_field5d_i(field, text)
       USE futils, ONLY: attach, putarr, putarrnd
-      USE grid, ONLY: ips_i,ipe_i, ijs_i,ije_i, ikrs,ikre, ikzs,ikze
+      USE grid, ONLY: ips_i,ipe_i, ijs_i,ije_i, ikxs,ikxe, ikys,ikye, izs,ize
       USE prec_const
       IMPLICIT NONE
 
-      COMPLEX(dp), DIMENSION(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze), INTENT(IN) :: field
+      COMPLEX(dp), DIMENSION(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,ikys:ikye,izs:ize), INTENT(IN) :: field
       CHARACTER(*), INTENT(IN) :: text
 
       CHARACTER(LEN=50) :: dset_name
 
       WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var5d", TRIM(text), iframe5d
       IF (num_procs .EQ. 1) THEN
-        CALL putarr(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze), ionode=0)
+        CALL putarr(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,ikys:ikye,izs:ize), ionode=0)
       ELSE
-        CALL putarrnd(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,ikrs:ikre,ikzs:ikze),  (/1,3/))
+        CALL putarrnd(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,ikys:ikye,izs:ize),  (/1,3/))
       ENDIF
      CALL attach(fidres, dset_name, 'cstep', cstep)
      CALL attach(fidres, dset_name, 'time', time)

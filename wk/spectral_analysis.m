@@ -19,7 +19,7 @@ for ij = 1:Nji
     end
     grid on; ylim([1e0,1e10]);
     xlabel('$p$');
-    TITLE = ['$\sum_{kr,kz} |N_i^{p',num2str(Ji(ij)),'}|^2$']; title(TITLE);
+    TITLE = ['$\sum_{kx,ky} |N_i^{p',num2str(Ji(ij)),'}|^2$']; title(TITLE);
 end
 save_figure
 end
@@ -42,26 +42,26 @@ for ip = 1:2:Npi
             'DisplayName',['t=',num2str(Ts5D(it5))]); hold on;
         grid on;
         xlabel('$j$'); ylim([1e-20,1e10]);
-        TITLE = ['$\sum_{kr,kz} |N_i^{',num2str(Pi(ip)),'j}|^2$']; title(TITLE);
+        TITLE = ['$\sum_{kx,ky} |N_i^{',num2str(Pi(ip)),'j}|^2$']; title(TITLE);
     end
 end
 save_figure
 end
 
 %%
-no_AA     = (2:floor(2*Nkr/3));
+no_AA     = (2:floor(2*Nkx/3));
 tKHI      = 100;
 [~,itKHI] = min(abs(Ts2D-tKHI));
 after_KHI = (itKHI:Ns2D);
 if 0
-%% Phi frequency space time diagram at kz=kz(ikz)
-kz_ = 0.0;
-[~,ikz] = min(abs(kz-kz_));
+%% Phi frequency space time diagram at ky=ky(iky)
+ky_ = 0.0;
+[~,iky] = min(abs(ky-ky_));
 fig = figure; FIGNAME = ['phi_freq_diag_',PARAMS];set(gcf, 'Position',  [100, 100, 500, 400]);
-        [TY,TX] = meshgrid(Ts2D(after_KHI),kr(no_AA));
-        pclr = pcolor(TX,TY,(squeeze(abs(PHI(no_AA,ikz,(after_KHI)))))); set(pclr, 'edgecolor','none'); colorbar;
+        [TY,TX] = meshgrid(Ts2D(after_KHI),kx(no_AA));
+        pclr = pcolor(TX,TY,(squeeze(abs(PHI(no_AA,iky,(after_KHI)))))); set(pclr, 'edgecolor','none'); colorbar;
         caxis([0,10000]); colormap hot
         ylabel('$t c_s/R$'), xlabel('$0<k_r<2/3 k_r^{\max}$')
-        legend(['$|\tilde\phi(k_z=',num2str(kz_),')|$'])
+        legend(['$|\tilde\phi(k_z=',num2str(ky_),')|$'])
         title('Spectrogram of $\phi$')
 end

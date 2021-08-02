@@ -56,19 +56,19 @@ SUBROUTINE stepon
         ! Execution time start
         CALL cpu_time(t0_checkfield)
 
-        IF ( (ikrs .EQ. 1) .AND. (NON_LIN) ) CALL enforce_symetry() ! Enforcing symmetry on kr = 0
+        IF ( (ikxs .EQ. 1) .AND. (NON_LIN) ) CALL enforce_symetry() ! Enforcing symmetry on kx = 0
 
         mlend=.FALSE.
         IF(.NOT.nlend) THEN
            mlend=mlend .or. checkfield(phi,' phi')
            DO ip=ips_e,ipe_e
              DO ij=ijs_e,ije_e
-              mlend=mlend .or. checkfield(moments_e(ip,ij,:,:,updatetlevel),' moments_e')
+              mlend=mlend .or. checkfield(moments_e(ip,ij,:,:,:,updatetlevel),' moments_e')
              ENDDO
            ENDDO
            DO ip=ips_i,ipe_i
              DO ij=ijs_i,ije_i
-              mlend=mlend .or. checkfield(moments_i(ip,ij,:,:,updatetlevel),' moments_i')
+              mlend=mlend .or. checkfield(moments_i(ip,ij,:,:,:,updatetlevel),' moments_i')
              ENDDO
            ENDDO
            CALL MPI_ALLREDUCE(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierr)
@@ -82,18 +82,22 @@ SUBROUTINE stepon
       SUBROUTINE anti_aliasing
         DO ip=ips_e,ipe_e
           DO ij=ijs_e,ije_e
-            DO ikr=ikrs,ikre
-              DO ikz=ikzs,ikze
-                moments_e( ip,ij,ikr,ikz,:) = AA_r(ikr)* AA_z(ikz) * moments_e( ip,ij,ikr,ikz,:)
+            DO ikx=ikxs,ikxe
+              DO iky=ikys,ikye
+                DO iz=izs,ize
+                  moments_e( ip,ij,ikx,iky,iz,:) = AA_x(ikx)* AA_y(iky) * moments_e( ip,ij,ikx,iky,iz,:)
+                END DO
               END DO
             END DO
           END DO
         END DO
         DO ip=ips_i,ipe_i
           DO ij=ijs_i,ije_i
-            DO ikr=ikrs,ikre
-              DO ikz=ikzs,ikze
-                moments_i( ip,ij,ikr,ikz,:) = AA_r(ikr)* AA_z(ikz) * moments_i( ip,ij,ikr,ikz,:)
+            DO ikx=ikxs,ikxe
+              DO iky=ikys,ikye
+                DO iz=izs,ize
+                  moments_i( ip,ij,ikx,iky,iz,:) = AA_x(ikx)* AA_y(iky) * moments_i( ip,ij,ikx,iky,iz,:)
+                END DO
               END DO
             END DO
           END DO
@@ -101,33 +105,37 @@ SUBROUTINE stepon
       END SUBROUTINE anti_aliasing
 
       SUBROUTINE enforce_symetry ! Force X(k) = X(N-k)* complex conjugate symmetry
-        IF ( contains_kr0 ) THEN
+        IF ( contains_kx0 ) THEN
           ! Electron moments
           DO ip=ips_e,ipe_e
             DO ij=ijs_e,ije_e
-              DO ikz=2,Nkz/2 !symmetry at kr = 0
-                moments_e( ip,ij,ikr_0,ikz, :) = CONJG(moments_e( ip,ij,ikr_0,Nkz+2-ikz, :))
+              DO iz=izs,ize
+                DO iky=2,Nky/2 !symmetry at kx = 0
+                  moments_e( ip,ij,ikx_0,iky,iz, :) = CONJG(moments_e( ip,ij,ikx_0,Nky+2-iky,iz, :))
+                END DO
+                ! must be real at origin
+                moments_e(ip,ij, ikx_0,iky_0,iz, :) = REAL(moments_e(ip,ij, ikx_0,iky_0,iz, :))
               END DO
-              ! must be real at origin
-              moments_e(ip,ij, ikr_0,ikz_0, :) = REAL(moments_e(ip,ij, ikr_0,ikz_0, :))
             END DO
           END DO
           ! Ion moments
           DO ip=ips_i,ipe_i
             DO ij=ijs_i,ije_i
-              DO ikz=2,Nkz/2 !symmetry at kr = 0
-                moments_i( ip,ij,ikr_0,ikz, :) = CONJG(moments_i( ip,ij,ikr_0,Nkz+2-ikz, :))
+              DO iz=izs,ize
+                DO iky=2,Nky/2 !symmetry at kx = 0
+                  moments_i( ip,ij,ikx_0,iky,iz, :) = CONJG(moments_i( ip,ij,ikx_0,Nky+2-iky,iz, :))
+                END DO
+                ! must be real at origin and top right
+                moments_i(ip,ij, ikx_0,iky_0,iz, :) = REAL(moments_i(ip,ij, ikx_0,iky_0,iz, :))
               END DO
-              ! must be real at origin and top right
-              moments_i(ip,ij, ikr_0,ikz_0, :) = REAL(moments_i(ip,ij, ikr_0,ikz_0, :))
             END DO
           END DO
           ! Phi
-          DO ikz=2,Nkz/2 !symmetry at kr = 0
-            phi(ikr_0,ikz) = phi(ikr_0,Nkz+2-ikz)
+          DO iky=2,Nky/2 !symmetry at kx = 0
+            phi(ikx_0,iky,:) = phi(ikx_0,Nky+2-iky,:)
           END DO
           ! must be real at origin
-          phi(ikr_0,ikz_0) = REAL(phi(ikr_0,ikz_0))
+          phi(ikx_0,iky_0,:) = REAL(phi(ikx_0,iky_0,:))
         ENDIF
       END SUBROUTINE enforce_symetry
 

@@ -37,7 +37,7 @@ Results_150x75.P     = [2,          4,          6,       2,       4,         6  
 Results_150x75.J     = [1,          2,          3        1        2          3         4 1,          2,          3  1,          2,          3         4  1,          2            5];
 Results_150x75.etaB  = [0.49,        0.49       0.49    0.59      0.59      0.59    0.59 0.50,     0.50       0.50  0.60,     0.60       0.60       0.60 0.51        0.51      0.51];
 Results_150x75.nu    = [1.0,        1.0       1.0       1.0     1.0         1.0      1.0 0.5,        0.5       0.5  0.5,        0.5       0.5       0.5  0.1        0.1         0.1];
-Results_150x75.mrkr  = [ '*',        '*',    '*',        '*',     '*',      '*',    '*', 'o',        'o',      'o', 'o',        'o',      'o',       'o' 's'        's'         's'];
+Results_150x75.mrkx  = [ '*',        '*',    '*',        '*',     '*',      '*',    '*', 'o',        'o',      'o', 'o',        'o',      'o',       'o' 's'        's'         's'];
 Results_150x75.iclr  = [  1,        2,          3,      1          2        3          4  1,        2,          3    1,        2,          3           4  1         2             5];
 
 % Ricci_Rogers.Gamma = [2 1e-1];
@@ -61,7 +61,7 @@ plot(10,10,'sk','MarkerSize',10, 'LineWidth',1.0);
 res = Results_150x75;
 for i = 1:numel(res.Gamma)
     errorbar(res.etaB(i),res.Gamma(i)*SCALING,res.error(i)*SCALING,...
-        res.mrkr(i),'DisplayName','256x128', 'color', line_colors(res.iclr(i),:),...
+        res.mrkx(i),'DisplayName','256x128', 'color', line_colors(res.iclr(i),:),...
         'MarkerSize',12, 'LineWidth',2.0);
     hold on;
 end

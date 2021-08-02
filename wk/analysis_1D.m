@@ -9,30 +9,30 @@ Ts2D      = Ts2D';
 Ns      = numel(Ts2D);
 dt_samp = mean(diff(Ts2D));
 % Build grids
-Nkr = numel(kr); Nkz = numel(kz);
-[KZ,KR] = meshgrid(kz,kr);
-Lkr = max(kr)-min(kr); Lkz = max(kz)-min(kz);
-dkr = Lkr/(Nkr-1); dkz = Lkz/(Nkz-1);
-Lk = max(Lkr,Lkz);
+Nkx = numel(kx); Nky = numel(ky);
+[ky,kx] = meshgrid(ky,kx);
+Lkx = max(kx)-min(kx); Lky = max(ky)-min(ky);
+dkx = Lkx/(Nkx-1); dky = Lky/(Nky-1);
+Lk = max(Lkx,Lky);
 
 dr = 2*pi/Lk; dz = 2*pi/Lk;
-Nr = max(Nkr,Nkz) * (Nkr > 1) + (Nkr == 1);  Nz = Nkz;
-r = dr*(-Nr/2:(Nr/2-1)); Lr = max(r)-min(r);
-z = dz*(-Nz/2:(Nz/2-1)); Lz = max(z)-min(z);
+Nx = max(Nkx,Nky) * (Nkx > 1) + (Nkx == 1);  Ny = Nky;
+r = dr*(-Nx/2:(Nx/2-1)); Lx = max(r)-min(r);
+z = dz*(-Ny/2:(Ny/2-1)); Ly = max(z)-min(z);
 [YY,XX] = meshgrid(z,r);
 % Analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % IFFT
-ne00 = zeros(Nz, Ns);
-ni00 = zeros(Nz, Ns);
-phi  = zeros(Nz, Ns);
+ne00 = zeros(Ny, Ns);
+ni00 = zeros(Ny, Ns);
+phi  = zeros(Ny, Ns);
 
 for it = 1:numel(Ts2D)
     NE_ = Ne00(:,it); NN_ = Ni00(:,it); PH_ = PHI(:,it);
-    F_          = (ifft((NE_),Nz));
+    F_          = (ifft((NE_),Ny));
     ne00(:,it)= real(fftshift(F_));
-    F_          = (ifft((NN_),Nz));
+    F_          = (ifft((NN_),Ny));
     ni00(:,it)  = real(fftshift(F_));
-    F_          = (ifft((PH_),Nz));
+    F_          = (ifft((PH_),Ny));
     phi(:,it) = real(fftshift(F_));
 end
 
@@ -44,9 +44,9 @@ E_pot    = zeros(1,Ns);    % Potential energy n^2
 E_kin    = zeros(1,Ns);    % Kinetic energy grad(phi)^2
 ExB      = zeros(1,Ns);    % ExB drift intensity \propto |\grad \phi|
 CFL      = zeros(1,Ns);    % CFL time step
-Ddz = 1i*kz;
+Ddz = 1i*ky;
 [~,iz0]  = min(abs(z)); % index of z==0
-[~,ikz1] = min(abs(kz-round(1/dkz)*dkz)); % index of kz==1
+[~,iky1] = min(abs(ky-round(1/dky)*dky)); % index of ky==1
 for it = 1:numel(Ts2D)
     NE_ = squeeze(Ne00(:,it)); NN_ = squeeze(Ni00(:,it)); PH_ = squeeze(PHI(:,it));
 
@@ -56,23 +56,23 @@ for it = 1:numel(Ts2D)
     
     phi_00(it)     = phi(iz0,it);
     
-    E_pot(it)   = pi/Lz*sum(abs(NN_).^2)/Nkz; % integrate through Parseval id
-    E_kin(it)   = pi/Lz*sum(abs(Ddz.*PH_).^2)/Nkz;
+    E_pot(it)   = pi/Ly*sum(abs(NN_).^2)/Nky; % integrate through Parseval id
+    E_kin(it)   = pi/Ly*sum(abs(Ddz.*PH_).^2)/Nky;
     ExB(it)     = max(abs(phi(3:end,it)-phi(1:end-2,it))'/(2*dz));
 end
-E_kin_KZ = abs(Ddz.*PHI(:,it)).^2;
+E_kin_KY = abs(Ddz.*PHI(:,it)).^2;
 dEdt     = diff(E_pot+E_kin)./diff(Ts2D);
 
 %% Compute growth rate
-gamma_Ne = zeros(1,Nkz);
-gamma_Ni = zeros(1,Nkz);
-gamma_PH = zeros(1,Nkz);
+gamma_Ne = zeros(1,Nky);
+gamma_Ni = zeros(1,Nky);
+gamma_PH = zeros(1,Nky);
 tend   = Ts2D(end); tstart   = 0.6*tend; 
 plt = @(x) squeeze(abs(x));
-for ikz = 1:Nkz
-    gamma_Ne(ikz) = LinearFit_s(Ts2D,plt(Ne00(ikz,:)),tstart,tend);
-    gamma_Ni(ikz) = LinearFit_s(Ts2D,plt(Ni00(ikz,:)),tstart,tend);
-    gamma_PH(ikz) = LinearFit_s(Ts2D,plt(PHI(ikz,:)),tstart,tend);
+for iky = 1:Nky
+    gamma_Ne(iky) = LinearFit_s(Ts2D,plt(Ne00(iky,:)),tstart,tend);
+    gamma_Ni(iky) = LinearFit_s(Ts2D,plt(Ni00(iky,:)),tstart,tend);
+    gamma_PH(iky) = LinearFit_s(Ts2D,plt(PHI(iky,:)),tstart,tend);
 end
 gamma_Ne = real(gamma_Ne .* (gamma_Ne>=0.0));
 gamma_Ni = real(gamma_Ni .* (gamma_Ni>=0.0));
@@ -98,15 +98,15 @@ end
 if 1
 %% Growth rate
 fig = figure; FIGNAME = ['growth_rate',sprintf('_%.2d',JOBNUM)];
-plt = @(x) circshift(x,Nkz/2-1);
+plt = @(x) circshift(x,Nky/2-1);
     subplot(221)
-        plot(plt(kz),plt(gamma_Ne),'-'); hold on; xlim([0.0,max(kz)+dkz]);
+        plot(plt(ky),plt(gamma_Ne),'-'); hold on; xlim([0.0,max(ky)+dky]);
         grid on; xlabel('$k_z$'); ylabel('$\gamma(N_e^{00})$');
     subplot(222)
-        plot(plt(kz),plt(gamma_Ni),'-'); hold on; xlim([0.0,max(kz)+dkz]);
+        plot(plt(ky),plt(gamma_Ni),'-'); hold on; xlim([0.0,max(ky)+dky]);
         grid on; xlabel('$k_z$'); ylabel('$\gamma(N_i^{00})$');
     subplot(223)
-        plot(plt(kz),plt(gamma_PH),'-'); hold on; xlim([0.0,max(kz)+dkz]);
+        plot(plt(ky),plt(gamma_PH),'-'); hold on; xlim([0.0,max(ky)+dky]);
         grid on; xlabel('$k_z$'); ylabel('$\gamma(\tilde\phi)$'); legend('show');
 FMT = '.fig'; save_figure
 end
@@ -137,9 +137,9 @@ XMIN = -L/2-2; XMAX = L/2+1; YMIN = -1.1; YMAX = 1.1;
 create_gif_1D
 %% Density electron frequency
 GIFNAME = ['Ni',sprintf('_%.2d',JOBNUM)]; 
-FIELD = (abs(Ni00)); X = (kz); T = Ts2D;
+FIELD = (abs(Ni00)); X = (ky); T = Ts2D;
 FIELDNAME = '$|N_i^{00}|$'; XNAME = '$k_z$';
-XMIN = min(kz)-0.5; XMAX = max(kz)+.5; YMIN = -0.1; YMAX = 1.1;
+XMIN = min(ky)-0.5; XMAX = max(ky)+.5; YMIN = -0.1; YMAX = 1.1;
 create_gif_1D
 end
 
@@ -159,28 +159,28 @@ subplot(223)% density
     xlabel('$z\,(r=0)$'); ylabel('$t$'); title('$\phi$');
 FMT = '.fig'; save_figure
 
-%% Space-Time diagrams at kr=0
+%% Space-Time diagrams at kx=0
 plt = @(x) abs(x);
-fig = figure; FIGNAME = ['kz_space_time_diag',sprintf('_%.2d',JOBNUM)];
-    [TY,TX] = meshgrid(Ts2D,kz);
+fig = figure; FIGNAME = ['ky_space_time_diag',sprintf('_%.2d',JOBNUM)];
+    [TY,TX] = meshgrid(Ts2D,ky);
 subplot(221)% density
     pclr = pcolor(TX,TY,(plt(Ne00))); set(pclr, 'edgecolor','none'); colorbar;
-    xlabel('$kz$'); ylabel('$t$'); title('$\textrm{Re}(N_e^{00})|_{k_r=0}$');
+    xlabel('$ky$'); ylabel('$t$'); title('$\textrm{Re}(N_e^{00})|_{k_r=0}$');
 subplot(222)% density
     pclr = pcolor(TX,TY,(plt(Ni00))); set(pclr, 'edgecolor','none'); colorbar;
-    xlabel('$kz$'); ylabel('$t$'); title('$\textrm{Re}(N_i^{00})|_{k_r=0}$');
+    xlabel('$ky$'); ylabel('$t$'); title('$\textrm{Re}(N_i^{00})|_{k_r=0}$');
 subplot(223)% density
     pclr = pcolor(TX,TY,(plt(PH))); set(pclr, 'edgecolor','none'); colorbar;
-    xlabel('$kz$'); ylabel('$t$'); title('$\textrm{Re}(\tilde\phi)|_{k_r=0}$');
+    xlabel('$ky$'); ylabel('$t$'); title('$\textrm{Re}(\tilde\phi)|_{k_r=0}$');
 FMT = '.fig'; save_figure 
 end
 
 if 0
 %% Mode time evolution
-[~,ik05] = min(abs(kz-0.50));
-[~,ik10] = min(abs(kz-1.00));
-[~,ik15] = min(abs(kz-1.50));
-[~,ik20] = min(abs(kz-2.00));
+[~,ik05] = min(abs(ky-0.50));
+[~,ik10] = min(abs(ky-1.00));
+[~,ik15] = min(abs(ky-1.50));
+[~,ik20] = min(abs(ky-2.00));
 
 fig = figure; FIGNAME = ['frame',sprintf('_%.2d',JOBNUM)];
     subplot(221); plt = @(x) abs(squeeze(x));
@@ -221,13 +221,13 @@ if 0
 it = min(70,numel(Ts2D));
 fig = figure; FIGNAME = ['frame',sprintf('_%.2d',JOBNUM)];
     subplot(221); plt = @(x) (abs(x));
-        plot(kz,plt(PH(:,it)))
+        plot(ky,plt(PH(:,it)))
         xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('t=%.3d',Ts2D(it))); legend('$\hat\phi$');
     subplot(222); plt = @(x) (abs(x));
-        plot(kz,plt(Ni00(:,it)))
+        plot(ky,plt(Ni00(:,it)))
         xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('t=%.3d',Ts2D(it))); legend('$\hat n_i^{00}$');
     subplot(223); plt = @(x) (abs(x));
-        plot(kz,plt(Ne00(:,it)))
+        plot(ky,plt(Ne00(:,it)))
         xlabel('$k_r$'); ylabel('$k_z$'); title(sprintf('t=%.3d',Ts2D(it))); legend('$\hat n_e^{00}$');
 FMT = '.fig'; save_figure
 end

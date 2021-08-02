@@ -12,8 +12,8 @@ MODULE basic
   real(dp) :: time   = 0           ! Current simulation time (Init from restart file)
 
   INTEGER :: comm0                 ! Default communicator with a topology
-  INTEGER :: comm_p, comm_kr          ! Communicators for 1-dim cartesian subgrids of comm0
-  INTEGER :: commr_p0              ! Communicators along kr for only rank 0 on p
+  INTEGER :: comm_p, comm_kx          ! Communicators for 1-dim cartesian subgrids of comm0
+  INTEGER :: commr_p0              ! Communicators along kx for only rank 0 on p
 
   INTEGER :: jobnum  = 0           ! Job number
   INTEGER :: step    = 0           ! Calculation step of this run
@@ -26,10 +26,10 @@ MODULE basic
   INTEGER :: my_id                 ! Rank in COMM_WORLD
   INTEGER :: num_procs             ! number of MPI processes
   INTEGER :: num_procs_p           ! Number of processes in p
-  INTEGER :: num_procs_kr          ! Number of processes in r
-  INTEGER :: rank_0, rank_p, rank_kr! Ranks in comm0, comm_p, comm_kr
+  INTEGER :: num_procs_kx          ! Number of processes in r
+  INTEGER :: rank_0, rank_p, rank_kx! Ranks in comm0, comm_p, comm_kx
   INTEGER :: nbr_L, nbr_R          ! Left and right neighbours (along p)
-  INTEGER :: nbr_T, nbr_B          ! Top and bottom neighbours (along kr)
+  INTEGER :: nbr_T, nbr_B          ! Top and bottom neighbours (along kx)
 
   INTEGER :: iframe0d              ! counting the number of times 0d datasets are outputed (for diagnose)
   INTEGER :: iframe1d              ! counting the number of times 1d datasets are outputed (for diagnose)
@@ -52,8 +52,8 @@ MODULE basic
   real(dp) :: maxruntime = 1e9 ! Maximum simulation CPU time
 
   INTERFACE allocate_array
-    MODULE PROCEDURE allocate_array_dp1,allocate_array_dp2,allocate_array_dp3,allocate_array_dp4
-    MODULE PROCEDURE allocate_array_dc1,allocate_array_dc2,allocate_array_dc3,allocate_array_dc4, allocate_array_dc5
+    MODULE PROCEDURE allocate_array_dp1,allocate_array_dp2,allocate_array_dp3,allocate_array_dp4, allocate_array_dp5, allocate_array_dp6
+    MODULE PROCEDURE allocate_array_dc1,allocate_array_dc2,allocate_array_dc3,allocate_array_dc4, allocate_array_dc5, allocate_array_dc6
     MODULE PROCEDURE allocate_array_i1,allocate_array_i2,allocate_array_i3,allocate_array_i4
     MODULE PROCEDURE allocate_array_l1,allocate_array_l2,allocate_array_l3,allocate_array_l4
   END INTERFACE allocate_array
@@ -168,6 +168,13 @@ CONTAINS
     a=0.0_dp
   END SUBROUTINE allocate_array_dp5
 
+  SUBROUTINE allocate_array_dp6(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6)
+    IMPLICIT NONE
+    real(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6
+    ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5,is6:ie6))
+    a=0.0_dp
+  END SUBROUTINE allocate_array_dp6
   !========================================
 
   SUBROUTINE allocate_array_dc1(a,is1,ie1)
@@ -210,6 +217,13 @@ CONTAINS
     a=CMPLX(0.0_dp,0.0_dp)
   END SUBROUTINE allocate_array_dc5
 
+  SUBROUTINE allocate_array_dc6(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6)
+    IMPLICIT NONE
+    DOUBLE COMPLEX, DIMENSION(:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6
+    ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5,is6:ie6))
+    a=CMPLX(0.0_dp,0.0_dp)
+  END SUBROUTINE allocate_array_dc6
   !========================================
 
   SUBROUTINE allocate_array_i1(a,is1,ie1)

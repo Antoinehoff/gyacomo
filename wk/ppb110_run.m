@@ -17,7 +17,7 @@ NU      = 1.0;   % Collision frequency
 ETAB    = 0.5;   % Magnetic gradient
 NU_HYP  = 0.1;   % Hyperdiffusivity coefficient
 %% GRID PARAMETERS
-N       = 150;     % Frequency gridpoints (Nkr = N/2)
+N       = 150;     % Frequency gridpoints (Nkx = N/2)
 L       = 70;     % Size of the squared frequency domain
 P       = 2;       % Electron and Ion highest Hermite polynomial degree
 J       = 1;       % Electron and Ion highest Laguerre polynomial degree
@@ -41,11 +41,11 @@ KERN    = 0;   % Kernel model (0 : GK)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% fixed parameters (for current study)
-KR0KH   = 0; A0KH = 0; % Background phi mode to drive Ray-Tay inst. (not implemented)
-KREQ0   = 0;      % put kr = 0
+KX0KH   = 0; A0KH = 0; % Background phi mode to drive Ray-Tay inst. (not implemented)
+KXEQ0   = 0;      % put kx = 0
 KPAR    = 0.0;    % Parellel wave vector component
 LAMBDAD = 0.0;
-NON_LIN = 1 *(1-KREQ0);   % activate non-linearity (is cancelled if KREQ0 = 1)
+NON_LIN = 1 *(1-KXEQ0);   % activate non-linearity (is cancelled if KXEQ0 = 1)
 PMAXE   = P;    % Highest electron Hermite polynomial degree
 JMAXE   = J;     % Highest ''       Laguerre ''
 PMAXI   = P;     % Highest ion      Hermite polynomial degree

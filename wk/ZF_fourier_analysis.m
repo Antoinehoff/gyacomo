@@ -9,7 +9,7 @@ set(gcf, 'Position',  [100, 100, 800, 400])
     % Time series analysis (burst period and time frequencies spectrum)
     subplot(121)
     samplerate = Ts0D(2)-Ts0D(1);
-    Y = log(PGAMMA_RI(its0D:ite0D)*(2*pi/Nr/Nz)^2);
+    Y = log(PGAMMA_RI(its0D:ite0D)*(2*pi/Nx/Ny)^2);
     [n,~] = size(Y);
     Yy= fft(Y);
     Pot = Yy .* conj(Yy) / n;
@@ -35,13 +35,20 @@ set(gcf, 'Position',  [100, 100, 800, 400])
     [amax, ikZF] = max(mean(Pot,2));
 %     pclr = pcolor(NN(1:nmax,:),TT(1:nmax,:),Pot(1:nmax,:)); set(pclr, 'edgecolor','none'); hold on;
     plot(0:nmax,mean(Pot(1:nmax+1,:),2)/amax,'DisplayName','$\langle\partial_r\phi\rangle_z (k_r)$'); hold on;
-    plot([ikZF-1,ikZF-1],[0,1],'--k', 'DisplayName',['$L_z=',num2str(2*pi/kr(ikZF)),'\rho_s$']);
+    plot([ikZF-1,ikZF-1],[0,1],'--k', 'DisplayName',['$L_z=',num2str(2*pi/kx(ikZF)),'\rho_s$']);
     grid on; box on;
     title('ZF spatial spectrum')
     xlabel('radial mode number');  yticks([]); legend('show')
 save_figure
 
 %% Pred-Pray phase space (A Zonal Flow review, Diamond 2005, Fig 15, Kobayashi 2015)
+
+E_turb           = zeros(1,Ns2D);    % Time evol. of the turbulence energy (Pred in Kobayashi 2015)
+E_ZF             = zeros(1,Ns2D);    % Time evol. of the ZF energy (Pray in Kobayashi 2015)
+for it = 1:numel(Ts2D)
+    E_turb(it) = sum(sum((1+kx.^2+ky.^2).*abs(PHI(:,:,it)).^2))- sum((1+kx.^2).*abs(PHI(:,1,it)).^2);
+    E_ZF(it)   = kx(ikZF)^2*abs(PHI(ikZF,1,it)).^2;
+end
 fig = figure; FIGNAME = ['phi_shear_phase_space_',PARAMS];
 set(gcf, 'Position',  [100, 100, 700, 500])
 scatter(E_ZF*SCALE,E_turb*SCALE,35,Ts2D,'.',...
@@ -75,10 +82,10 @@ end
 PHI_NZ = PHI;
 PHI_NZ(ikZF-1:ikZF+1,:,:) = 0;
 
-phi_nz    = zeros(Nr,Nz,Ns2D);
+phi_nz    = zeros(Nx,Ny,Ns2D);
 for it = 1:numel(Ts2D)
     PH_ = PHI_NZ(:,:,it);
-    phi_nz (:,:,it)  = real(fftshift(ifft2((PH_),Nr,Nz)));
+    phi_nz (:,:,it)  = real(fftshift(ifft2((PH_),Nx,Ny)));
 end
 %%
 t0    = 1000;
@@ -91,6 +98,6 @@ if 0
 %% Phi non zonal real space
 GIFNAME = ['phi_nz',sprintf('_%.2d',JOBNUM),'_',PARAMS];INTERP = 0;
 FIELD = real(phi_nz); X = RR; Y = ZZ; T = Ts2D; FRAMES = FRAMES_2D;
-FIELDNAME = '$\phi_{NZ}$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
+FIELDNAME = '$\phi_{Ny}$'; XNAME = '$r/\rho_s$'; YNAME = '$z/\rho_s$';
 create_gif
 end

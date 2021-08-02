@@ -27,8 +27,8 @@ CONTAINS
     use prec_const
     IMPLICIT NONE
 
-    COMPLEX(dp), DIMENSION ( ikrs:ikre, ikzs:ikze, ntimelevel ) :: f
-    COMPLEX(dp), DIMENSION ( ikrs:ikre, ikzs:ikze, ntimelevel ) :: f_rhs
+    COMPLEX(dp), DIMENSION ( ikxs:ikxe, ikys:ikye, ntimelevel ) :: f
+    COMPLEX(dp), DIMENSION ( ikxs:ikxe, ikys:ikye, ntimelevel ) :: f_rhs
     REAL(dp)    :: error
     INTEGER     :: istage
 
@@ -39,37 +39,37 @@ CONTAINS
 
       CASE ('DOPRI5_ADAPT')
         error = 0._dp
-        DO ikz=ikzs,ikze
-          DO ikr=ikrs,ikre
-            fs = f(ikr,ikz,1)
+        DO iky=ikys,ikye
+          DO ikx=ikxs,ikxe
+            fs = f(ikx,iky,1)
             DO istage=1,ntimelevel
-              f(ikr,ikz,1) = f(ikr,ikz,1) + dt*b_E(istage)*f_rhs(ikr,ikz,istage)
-              fs = fs + dt*b_Es(istage)*f_rhs(ikr,ikz,istage)
+              f(ikx,iky,1) = f(ikx,iky,1) + dt*b_E(istage)*f_rhs(ikx,iky,istage)
+              fs = fs + dt*b_Es(istage)*f_rhs(ikx,iky,istage)
             END DO
-            IF ( ABS(f(ikr,ikz,1) - fs) .GT. error ) THEN
-              error = ABS(f(ikr,ikz,1) - fs)
+            IF ( ABS(f(ikx,iky,1) - fs) .GT. error ) THEN
+              error = ABS(f(ikx,iky,1) - fs)
             ENDIF
           END DO
         END DO
         IF (error > TOL)
       CASE DEFAULT
-        DO ikz=ikzs,ikze
-          DO ikr=ikrs,ikre
-            fs = f(ikr,ikz,1)
+        DO iky=ikys,ikye
+          DO ikx=ikxs,ikxe
+            fs = f(ikx,iky,1)
             DO istage=1,ntimelevel
-            f(ikr,ikz,1) = f(ikr,ikz,1) + dt*b_E(istage)*f_rhs(ikr,ikz,istage)
+            f(ikx,iky,1) = f(ikx,iky,1) + dt*b_E(istage)*f_rhs(ikx,iky,istage)
             END DO
           END DO
         END DO
       END SELECT
 
     CASE DEFAULT
-      DO ikz=ikzs,ikze
-        DO ikr=ikrs,ikre
-          f(ikr,ikz,updatetlevel) = f(ikr,ikz,1);
+      DO iky=ikys,ikye
+        DO ikx=ikxs,ikxe
+          f(ikx,iky,updatetlevel) = f(ikx,iky,1);
           DO istage=1,updatetlevel-1
-            f(ikr,ikz,updatetlevel) = f(ikr,ikz,updatetlevel) + &
-                                  dt*A_E(updatetlevel,istage)*f_rhs(ikr,ikz,istage)
+            f(ikx,iky,updatetlevel) = f(ikx,iky,updatetlevel) + &
+                                  dt*A_E(updatetlevel,istage)*f_rhs(ikx,iky,istage)
           END DO
         END DO
       END DO

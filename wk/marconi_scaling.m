@@ -1,13 +1,13 @@
 %% Load results np = 24
 np_p_24 = [1   2  3  4];
-np_kr_24= [24 12  8  6];
+np_kx_24= [24 12  8  6];
 el_ti_np_24= zeros(numel(np_p_24),1);
 for i_ = 1:numel(np_p_24)
-    npp_ = np_p_24(i_); npkr = np_kr_24(i_);
+    npp_ = np_p_24(i_); npkx = np_kx_24(i_);
 
     %% Load from Marconi
     outfile =['/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_parallel_scaling_2D/',...
-        sprintf('%d_%d',npp_,npkr),...
+        sprintf('%d_%d',npp_,npkx),...
         '_200x100_L_120_P_12_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt'];
     BASIC.RESDIR = load_marconi(outfile);
     compile_results
@@ -16,14 +16,14 @@ for i_ = 1:numel(np_p_24)
 end
 %% Load results np = 48
 np_p_48 = [1   2  3  4  6];
-np_kr_48= [48 24 16 12  8];
+np_kx_48= [48 24 16 12  8];
 el_ti_np_48= zeros(numel(np_p_48),1);
 for i_ = 1:numel(np_p_48)
-    npp_ = np_p_48(i_); npkr = np_kr_48(i_);
+    npp_ = np_p_48(i_); npkx = np_kx_48(i_);
 
     %% Load from Marconi
     outfile =['/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_parallel_scaling_2D/',...
-        sprintf('%d_%d',npp_,npkr),...
+        sprintf('%d_%d',npp_,npkx),...
         '_200x100_L_120_P_12_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt'];
     BASIC.RESDIR = load_marconi(outfile);
     compile_results
@@ -33,14 +33,14 @@ end
 
 %% Load results np = 72
 np_p_72 = [ 2   3];
-np_kr_72= [36  24];
+np_kx_72= [36  24];
 el_ti_np_72= zeros(numel(np_p_72),1);
 for i_ = 1:numel(np_p_72)
-    npp_ = np_p_72(i_); npkr = np_kr_72(i_);
+    npp_ = np_p_72(i_); npkx = np_kx_72(i_);
 
     %% Load from Marconi
     outfile =['/marconi_scratch/userexternal/ahoffman/HeLaZ/results/Marconi_parallel_scaling_2D/',...
-        sprintf('%d_%d',npp_,npkr),...
+        sprintf('%d_%d',npp_,npkx),...
         '_200x100_L_120_P_12_J_5_eta_0.6_nu_1e-01_DGGK_CLOS_0_mu_2e-03/out.txt'];
     BASIC.RESDIR = load_marconi(outfile);
     compile_results

@@ -7,7 +7,7 @@ SUBROUTINE ppinit
 
   INTEGER :: version_prov=-1
   ! Variables for cartesian domain decomposition
-  INTEGER, PARAMETER :: ndims=2 ! p and kr
+  INTEGER, PARAMETER :: ndims=2 ! p and kx
   INTEGER, DIMENSION(ndims) :: dims=0, coords=0, coords_L=0, coords_R=0
   LOGICAL :: periods(ndims) = .FALSE., reorder=.FALSE.
   CHARACTER(len=32) :: str
@@ -40,12 +40,12 @@ SUBROUTINE ppinit
   END IF
 
   num_procs_p = dims(1) ! Number of processes along p
-  num_procs_kr = dims(2) ! Number of processes along kr
+  num_procs_kx = dims(2) ! Number of processes along kx
 
   !
   !periodicity in p
   periods(1)=.FALSE.
-  !periodicity in kr
+  !periodicity in kx
   periods(2)=.FALSE.
 
   CALL MPI_CART_CREATE(MPI_COMM_WORLD, ndims, dims, periods, reorder, comm0, ierr)
@@ -58,10 +58,10 @@ SUBROUTINE ppinit
   !  Partitions 2-dim cartesian topology of comm0 into 1-dim cartesian subgrids
   !
   CALL MPI_CART_SUB (comm0, (/.TRUE.,.FALSE./), comm_p, ierr)
-  CALL MPI_CART_SUB (comm0, (/.FALSE.,.TRUE./), comm_kr, ierr)
+  CALL MPI_CART_SUB (comm0, (/.FALSE.,.TRUE./), comm_kx, ierr)
   ! Find id inside the sub communicators
   CALL MPI_COMM_RANK(comm_p, rank_p, ierr)
-  CALL MPI_COMM_RANK(comm_kr, rank_kr, ierr)
+  CALL MPI_COMM_RANK(comm_kx, rank_kx, ierr)
   ! Find neighbours
   CALL MPI_CART_SHIFT(comm0, 0, 1, nbr_L, nbr_R, ierr)
   CALL MPI_CART_SHIFT(comm0, 1, 1, nbr_B, nbr_T, ierr)

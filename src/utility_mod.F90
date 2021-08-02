@@ -4,7 +4,7 @@ MODULE utility
 
   use prec_const
   IMPLICIT NONE
-  PUBLIC :: manual_2D_bcast
+  PUBLIC :: manual_2D_bcast, manual_3D_bcast
 
 CONTAINS
 
@@ -59,7 +59,7 @@ CONTAINS
     use prec_const
     IMPLICIT NONE
 
-    COMPLEX(dp), DIMENSION(ikrs:ikre,ikzs:ikze), INTENT(IN) :: field
+    COMPLEX(dp), DIMENSION(ikxs:ikxe,ikys:ikye), INTENT(IN) :: field
     CHARACTER(LEN=*), INTENT(IN) :: str
     LOGICAL :: mlend
     COMPLEX(dp) :: sumfield
@@ -75,8 +75,8 @@ CONTAINS
   SUBROUTINE manual_2D_bcast(field_)
     USE grid
     IMPLICIT NONE
-    COMPLEX(dp), INTENT(INOUT) :: field_(ikrs:ikre,ikzs:ikze)
-    COMPLEX(dp) :: buffer(ikrs:ikre,ikzs:ikze)
+    COMPLEX(dp), INTENT(INOUT) :: field_(ikxs:ikxe,ikys:ikye)
+    COMPLEX(dp) :: buffer(ikxs:ikxe,ikys:ikye)
     INTEGER     :: i_, root, world_rank, world_size
     root = 0;
     CALL MPI_COMM_RANK(comm_p,world_rank,ierr)
@@ -85,27 +85,68 @@ CONTAINS
       !! Broadcast phi to the other processes on the same k range (communicator along p)
       IF (world_rank .EQ. root) THEN
         ! Fill the buffer
-        DO ikr = ikrs,ikre
-          DO ikz = ikzs,ikze
-            buffer(ikr,ikz) = field_(ikr,ikz)
+        DO ikx = ikxs,ikxe
+          DO iky = ikys,ikye
+            buffer(ikx,iky) = field_(ikx,iky)
           ENDDO
         ENDDO
         ! Send it to all the other processes
         DO i_ = 0,num_procs_p-1
           IF (i_ .NE. world_rank) &
-          CALL MPI_SEND(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, i_, 0, comm_p, ierr)
+          CALL MPI_SEND(buffer, local_nkx * Nky , MPI_DOUBLE_COMPLEX, i_, 0, comm_p, ierr)
         ENDDO
       ELSE
         ! Recieve buffer from root
-        CALL MPI_RECV(buffer, local_nkr * nkz , MPI_DOUBLE_COMPLEX, root, 0, comm_p, MPI_STATUS_IGNORE, ierr)
+        CALL MPI_RECV(buffer, local_nkx * Nky , MPI_DOUBLE_COMPLEX, root, 0, comm_p, MPI_STATUS_IGNORE, ierr)
         ! Write it in phi
-        DO ikr = ikrs,ikre
-          DO ikz = ikzs,ikze
-            field_(ikr,ikz) = buffer(ikr,ikz)
+        DO ikx = ikxs,ikxe
+          DO iky = ikys,ikye
+            field_(ikx,iky) = buffer(ikx,iky)
           ENDDO
         ENDDO
       ENDIF
     ENDIF
   END SUBROUTINE manual_2D_bcast
+
+  !!!!! This is a manual way to do MPI_BCAST !!!!!!!!!!!
+SUBROUTINE manual_3D_bcast(field_)
+  USE grid
+  IMPLICIT NONE
+  COMPLEX(dp), INTENT(INOUT) :: field_(ikxs:ikxe,ikys:ikye,izs:ize)
+  COMPLEX(dp) :: buffer(ikxs:ikxe,ikys:ikye,izs:ize)
+  INTEGER     :: i_, root, world_rank, world_size
+  root = 0;
+  CALL MPI_COMM_RANK(comm_p,world_rank,ierr)
+  CALL MPI_COMM_SIZE(comm_p,world_size,ierr)
+  IF (world_size .GT. 1) THEN
+    !! Broadcast phi to the other processes on the same k range (communicator along p)
+    IF (world_rank .EQ. root) THEN
+      ! Fill the buffer
+      DO ikx = ikxs,ikxe
+        DO iky = ikys,ikye
+          DO iz = izs,ize
+            buffer(ikx,iky,iz) = field_(ikx,iky,iz)
+          ENDDO
+        ENDDO
+      ENDDO
+      ! Send it to all the other processes
+      DO i_ = 0,num_procs_p-1
+        IF (i_ .NE. world_rank) &
+        CALL MPI_SEND(buffer, local_nkx * Nky * Nz, MPI_DOUBLE_COMPLEX, i_, 0, comm_p, ierr)
+      ENDDO
+    ELSE
+      ! Recieve buffer from root
+      CALL MPI_RECV(buffer, local_nkx * Nky * Nz, MPI_DOUBLE_COMPLEX, root, 0, comm_p, MPI_STATUS_IGNORE, ierr)
+      ! Write it in phi
+      DO ikx = ikxs,ikxe
+        DO iky = ikys,ikye
+          DO iz = izs,ize
+            field_(ikx,iky,iz) = buffer(ikx,iky,iz)
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDIF
+  ENDIF
+END SUBROUTINE manual_3D_bcast
 
 END MODULE utility

@@ -12,32 +12,35 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED :: pmaxi = 1      ! The maximal ion Hermite-moment computed
   INTEGER,  PUBLIC, PROTECTED :: jmaxi = 1      ! The maximal ion Laguerre-moment computed
   INTEGER,  PUBLIC, PROTECTED :: maxj  = 1      ! The maximal ion Laguerre-moment computed
-  INTEGER,  PUBLIC, PROTECTED :: Nr    = 16     ! Number of total internal grid points in r
-  REAL(dp), PUBLIC, PROTECTED :: Lr    = 1._dp  ! horizontal length of the spatial box
-  INTEGER,  PUBLIC, PROTECTED :: Nz    = 16     ! Number of total internal grid points in z
-  REAL(dp), PUBLIC, PROTECTED :: Lz    = 1._dp  ! vertical length of the spatial box
-  INTEGER,  PUBLIC, PROTECTED :: Nkr   = 8      ! Number of total internal grid points in kr
-  REAL(dp), PUBLIC, PROTECTED :: Lkr   = 1._dp  ! horizontal length of the fourier box
-  INTEGER,  PUBLIC, PROTECTED :: Nkz   = 16     ! Number of total internal grid points in kz
-  REAL(dp), PUBLIC, PROTECTED :: Lkz   = 1._dp  ! vertical length of the fourier box
+  INTEGER,  PUBLIC, PROTECTED :: Nx    = 16     ! Number of total internal grid points in x
+  REAL(dp), PUBLIC, PROTECTED :: Lx    = 1._dp  ! horizontal length of the spatial box
+  INTEGER,  PUBLIC, PROTECTED :: Ny    = 16     ! Number of total internal grid points in y
+  REAL(dp), PUBLIC, PROTECTED :: Ly    = 1._dp  ! vertical length of the spatial box
+  INTEGER,  PUBLIC, PROTECTED :: Nz    = 1      ! Number of total perpendicular planes
+  REAL(dp), PUBLIC, PROTECTED :: q0    = 1._dp  ! q factor
+  INTEGER,  PUBLIC, PROTECTED :: Nkx   = 8      ! Number of total internal grid points in kx
+  REAL(dp), PUBLIC, PROTECTED :: Lkx   = 1._dp  ! horizontal length of the fourier box
+  INTEGER,  PUBLIC, PROTECTED :: Nky   = 16     ! Number of total internal grid points in ky
+  REAL(dp), PUBLIC, PROTECTED :: Lky   = 1._dp  ! vertical length of the fourier box
   REAL(dp), PUBLIC, PROTECTED :: kpar  = 0_dp   ! parallel wave vector component
   ! For Orszag filter
-  REAL(dp), PUBLIC, PROTECTED :: two_third_krmax
-  REAL(dp), PUBLIC, PROTECTED :: two_third_kzmax
+  REAL(dp), PUBLIC, PROTECTED :: two_third_kxmax
+  REAL(dp), PUBLIC, PROTECTED :: two_third_kymax
   REAL(dp), PUBLIC, PROTECTED :: two_third_kpmax
 
   ! 1D Antialiasing arrays (2/3 rule)
-  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: AA_r
-  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: AA_z
+  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: AA_x
+  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: AA_y
 
   ! Grids containing position in physical space
-  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: rarray
+  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: xarray
+  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: yarray
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: zarray
-  REAL(dp), PUBLIC, PROTECTED ::  deltar,  deltaz
-  INTEGER,  PUBLIC, PROTECTED  ::  irs,  ire,  izs,  ize
+  REAL(dp), PUBLIC, PROTECTED ::  deltax,  deltay, deltaz
+  INTEGER,  PUBLIC, PROTECTED  ::  ixs,  ixe,  iys,  iye, izs, ize
   INTEGER,  PUBLIC :: ir,iz ! counters
-  integer(C_INTPTR_T), PUBLIC :: local_nkr, local_nz
-  integer(C_INTPTR_T), PUBLIC :: local_nkr_offset, local_nz_offset
+  integer(C_INTPTR_T), PUBLIC :: local_nkx, local_nky
+  integer(C_INTPTR_T), PUBLIC :: local_nkx_offset, local_nky_offset
   INTEGER,             PUBLIC :: local_nkp
   INTEGER,             PUBLIC :: local_np_e, local_np_i
   integer(C_INTPTR_T), PUBLIC :: local_np_e_offset, local_np_i_offset
@@ -45,15 +48,15 @@ MODULE grid
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: displs_np_e, displs_np_i
 
   ! Grids containing position in fourier space
-  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: krarray
-  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kzarray
+  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kxarray
+  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kyarray
   REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kparray     ! kperp array
-  REAL(dp), PUBLIC, PROTECTED ::  deltakr, deltakz, kr_max, kz_max, kp_max
-  INTEGER,  PUBLIC, PROTECTED ::  ikrs, ikre, ikzs, ikze, ikps, ikpe
-  INTEGER,  PUBLIC, PROTECTED :: ikr_0, ikz_0, ikr_max, ikz_max ! Indices of k-grid origin and max
-  INTEGER,  PUBLIC :: ikr, ikz, ip, ij, ikp ! counters
-  LOGICAL,  PUBLIC, PROTECTED :: contains_kr0   = .false. ! rank of the proc containing kr=0 indices
-  LOGICAL,  PUBLIC, PROTECTED :: contains_krmax = .false. ! rank of the proc containing kr=max indices
+  REAL(dp), PUBLIC, PROTECTED ::  deltakx, deltaky, kx_max, ky_max, kp_max
+  INTEGER,  PUBLIC, PROTECTED ::  ikxs, ikxe, ikys, ikye, ikps, ikpe
+  INTEGER,  PUBLIC, PROTECTED :: ikx_0, iky_0, ikx_max, iky_max ! Indices of k-grid origin and max
+  INTEGER,  PUBLIC :: ikx, iky, ip, ij, ikp ! counters
+  LOGICAL,  PUBLIC, PROTECTED :: contains_kx0   = .false. ! rank of the proc containing kx=0 indices
+  LOGICAL,  PUBLIC, PROTECTED :: contains_kxmax = .false. ! rank of the proc containing kx=max indices
 
   ! Grid containing the polynomials degrees
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_e
@@ -68,7 +71,7 @@ MODULE grid
   ! Public Functions
   PUBLIC :: init_1Dgrid_distr
   PUBLIC :: set_pgrid, set_jgrid
-  PUBLIC :: set_krgrid, set_kzgrid, set_kpgrid
+  PUBLIC :: set_kxgrid, set_kygrid, set_kpgrid, set_zgrid
   PUBLIC :: grid_readinputs, grid_outputinputs
   PUBLIC :: bare, bari
 
@@ -79,12 +82,12 @@ CONTAINS
 
   SUBROUTINE init_1Dgrid_distr
 
-    ! write(*,*) Nr
-    local_nkr        = (Nr/2+1)/num_procs_kr
-    ! write(*,*) local_nkr
-    local_nkr_offset = rank_kr*local_nkr
+    ! write(*,*) Nx
+    local_nkx        = (Nx/2+1)/num_procs_kx
+    ! write(*,*) local_nkx
+    local_nkx_offset = rank_kx*local_nkx
 
-    if (rank_kr .EQ. num_procs_kr-1) local_nkr = (Nr/2+1)-local_nkr_offset
+    if (rank_kx .EQ. num_procs_kx-1) local_nkx = (Nx/2+1)-local_nkx_offset
 
   END SUBROUTINE init_1Dgrid_distr
 
@@ -153,115 +156,135 @@ CONTAINS
   END SUBROUTINE set_jgrid
 
 
-  SUBROUTINE set_krgrid
+  SUBROUTINE set_kxgrid
     USE prec_const
     IMPLICIT NONE
     INTEGER :: i_
 
-    Nkr = Nr/2+1 ! Defined only on positive kr since fields are real
+    Nkx = Nx/2+1 ! Defined only on positive kx since fields are real
     ! Start and END indices of grid
-    ikrs = local_nkr_offset + 1
-    ikre = ikrs + local_nkr - 1
-    ALLOCATE(krarray(ikrs:ikre))
+    ikxs = local_nkx_offset + 1
+    ikxe = ikxs + local_nkx - 1
+    ALLOCATE(kxarray(ikxs:ikxe))
 
     ! Grid spacings
-    IF (Lr .EQ. 0) THEN
-      deltakr = 1._dp
-      kr_max  = 0._dp
+    IF (Lx .EQ. 0) THEN
+      deltakx = 1._dp
+      kx_max  = 0._dp
     ELSE
-      deltakr = 2._dp*PI/Lr
-      kr_max  = (Nr/2+1)*deltakr
+      deltakx = 2._dp*PI/Lx
+      kx_max  = (Nx/2+1)*deltakx
     ENDIF
 
     ! Creating a grid ordered as dk*(0 1 2 3)
-    DO ikr = ikrs,ikre
-      krarray(ikr) = REAL(ikr-1,dp) * deltakr
-      ! Finding kr=0
-      IF (krarray(ikr) .EQ. 0) THEN
-        ikr_0 = ikr
-        contains_kr0 = .true.
+    DO ikx = ikxs,ikxe
+      kxarray(ikx) = REAL(ikx-1,dp) * deltakx
+      ! Finding kx=0
+      IF (kxarray(ikx) .EQ. 0) THEN
+        ikx_0 = ikx
+        contains_kx0 = .true.
       ENDIF
-      ! Finding krmax idx
-      IF (krarray(ikr) .EQ. kr_max) THEN
-        ikr_max = ikr
-        contains_krmax = .true.
+      ! Finding kxmax idx
+      IF (kxarray(ikx) .EQ. kx_max) THEN
+        ikx_max = ikx
+        contains_kxmax = .true.
       ENDIF
     END DO
 
     ! Orszag 2/3 filter
-    two_third_krmax = 2._dp/3._dp*deltakr*Nkr
-    ALLOCATE(AA_r(ikrs:ikre))
-    DO ikr = ikrs,ikre
-      IF ( (krarray(ikr) .LT. two_third_krmax) ) THEN
-        AA_r(ikr) = 1._dp;
+    two_third_kxmax = 2._dp/3._dp*deltakx*Nkx
+    ALLOCATE(AA_x(ikxs:ikxe))
+    DO ikx = ikxs,ikxe
+      IF ( (kxarray(ikx) .LT. two_third_kxmax) ) THEN
+        AA_x(ikx) = 1._dp;
       ELSE
-        AA_r(ikr) = 0._dp;
+        AA_x(ikx) = 0._dp;
       ENDIF
     END DO
-  END SUBROUTINE set_krgrid
+  END SUBROUTINE set_kxgrid
 
-  SUBROUTINE set_kzgrid
+  SUBROUTINE set_kygrid
     USE prec_const
     IMPLICIT NONE
     INTEGER :: i_, counter
 
-    Nkz = Nz;
+    Nky = Ny;
     ! Start and END indices of grid
-    ikzs = 1
-    ikze = Nkz
-    ALLOCATE(kzarray(ikzs:ikze))
+    ikys = 1
+    ikye = Nky
+    ALLOCATE(kyarray(ikys:ikye))
 
-    IF (Lz .EQ. 0) THEN ! 1D linear case
-      deltakz    = 1._dp
-      kzarray(1) = 0
-      ikz_0      = 1
-      ikz_max    = 1
+    IF (Ly .EQ. 0) THEN ! 1D linear case
+      deltaky    = 1._dp
+      kyarray(1) = 0
+      iky_0      = 1
+      iky_max    = 1
     ELSE
-      deltakz = 2._dp*PI/Lz
-      kz_max  = (Nz/2)*deltakr
+      deltaky = 2._dp*PI/Ly
+      ky_max  = (Ny/2)*deltakx
       ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
-      DO ikz = ikzs,ikze
-        kzarray(ikz) = deltakz*(MODULO(ikz-1,Nkz/2)-Nkz/2*FLOOR(2.*real(ikz-1)/real(Nkz)))
-        if (ikz .EQ. Nz/2+1)     kzarray(ikz) = -kzarray(ikz)
-        ! Finding kz=0
-        IF (kzarray(ikz) .EQ. 0) ikz_0 = ikz
-        ! Finding kzmax
-        IF (kzarray(ikr) .EQ. kz_max) ikr_max = ikr
+      DO iky = ikys,ikye
+        kyarray(iky) = deltaky*(MODULO(iky-1,Nky/2)-Nky/2*FLOOR(2.*real(iky-1)/real(Nky)))
+        if (iky .EQ. Ny/2+1)     kyarray(iky) = -kyarray(iky)
+        ! Finding ky=0
+        IF (kyarray(iky) .EQ. 0) iky_0 = iky
+        ! Finding kymax
+        IF (kyarray(ikx) .EQ. ky_max) ikx_max = ikx
       END DO
     ENDIF
 
     ! Orszag 2/3 filter
-    two_third_kzmax = 2._dp/3._dp*deltakz*(Nkz/2);
-    ALLOCATE(AA_z(ikzs:ikze))
-    DO ikz = ikzs,ikze
-      IF ( (kzarray(ikz) .GT. -two_third_kzmax) .AND. (kzarray(ikz) .LT. two_third_kzmax) ) THEN
-        AA_z(ikz) = 1._dp;
+    two_third_kymax = 2._dp/3._dp*deltaky*(Nky/2);
+    ALLOCATE(AA_y(ikys:ikye))
+    DO iky = ikys,ikye
+      IF ( (kyarray(iky) .GT. -two_third_kymax) .AND. (kyarray(iky) .LT. two_third_kymax) ) THEN
+        AA_y(iky) = 1._dp;
       ELSE
-        AA_z(ikz) = 0._dp;
+        AA_y(iky) = 0._dp;
       ENDIF
     END DO
-  END SUBROUTINE set_kzgrid
+  END SUBROUTINE set_kygrid
 
   SUBROUTINE set_kpgrid !Precompute the grid of kperp
     IMPLICIT NONE
-    INTEGER :: ikz_sym, tmp_, counter
+    INTEGER :: iky_sym, tmp_, counter
     REAL(dp):: local_kp_min, local_kp_max
     ! Find the min and max kperp to load subsequent GK matrices
-    local_kp_min = krarray(ikrs) !smallest local kperp is on the kr axis
-    local_kp_max = SQRT(krarray(ikre)**2 + kzarray(Nkz/2+1)**2)
-    ikps = ikrs
-    ikpe = INT(CEILING(local_kp_max/deltakr))+2
+    local_kp_min = kxarray(ikxs) !smallest local kperp is on the kx axis
+    local_kp_max = SQRT(kxarray(ikxe)**2 + kyarray(Nky/2+1)**2)
+    ikps = ikxs
+    ikpe = INT(CEILING(local_kp_max/deltakx))+2
     ! local number of different kperp
     local_nkp = ikpe - ikps + 1
     ! Allocate 1D array of kperp values and indices
     ALLOCATE(kparray(ikps:ikpe))
     DO ikp = ikps,ikpe
-      kparray(ikp) = REAL(ikp-1,dp) * deltakr
+      kparray(ikp) = REAL(ikp-1,dp) * deltakx
     ENDDO
-    write(*,*) rank_kr, ': ikps = ', ikps, 'ikpe = ',ikpe
-    two_third_kpmax = SQRT(two_third_krmax**2+two_third_kzmax**2)
+    write(*,*) rank_kx, ': ikps = ', ikps, 'ikpe = ',ikpe
+    two_third_kpmax = SQRT(two_third_kxmax**2+two_third_kymax**2)
     kp_max = 3._dp/2._dp * two_third_kpmax
   END SUBROUTINE
+
+  SUBROUTINE set_zgrid
+    USE prec_const
+    IMPLICIT NONE
+    INTEGER :: i_
+    ! Start and END indices of grid
+    izs = 1
+    ize = Nz
+    ALLOCATE(zarray(izs:ize))
+    IF (Nz .EQ. 1) THEN ! full perp case
+      deltaz    = 1._dp
+      zarray(1) = 0
+    ELSE
+      deltaz = q0*2._dp*PI/REAL(Nz+1,dp)
+      DO iz = izs,ize
+        zarray(iz) = REAL((iz-1),dp)*deltaz
+      ENDDO
+    ENDIF
+    if(my_id.EQ.0) write(*,*) '#parallel planes = ', Nz
+  END SUBROUTINE set_zgrid
 
   SUBROUTINE grid_readinputs
     ! Read the input parameters
@@ -270,7 +293,7 @@ CONTAINS
     INTEGER :: lu_in   = 90              ! File duplicated from STDIN
 
     NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, &
-                    Nr,  Lr,  Nz,  Lz, kpar
+                    Nx,  Lx,  Ny,  Ly, Nz, q0
     READ(lu_in,grid)
 
   END SUBROUTINE grid_readinputs
@@ -290,14 +313,16 @@ CONTAINS
     CALL attach(fidres, TRIM(str), "jmaxe", jmaxe)
     CALL attach(fidres, TRIM(str), "pmaxi", pmaxi)
     CALL attach(fidres, TRIM(str), "jmaxi", jmaxi)
-    CALL attach(fidres, TRIM(str),   "nr",   nr)
-    CALL attach(fidres, TRIM(str),   "Lr",   Lr)
-    CALL attach(fidres, TRIM(str),   "nz",   nz)
-    CALL attach(fidres, TRIM(str),   "Lz",   Lz)
-    CALL attach(fidres, TRIM(str),   "nkr",   nkr)
-    CALL attach(fidres, TRIM(str),   "Lkr",   Lkr)
-    CALL attach(fidres, TRIM(str),   "nkz",   nkz)
-    CALL attach(fidres, TRIM(str),   "Lkz",   Lkz)
+    CALL attach(fidres, TRIM(str),   "Nx",   Nx)
+    CALL attach(fidres, TRIM(str),   "Lx",   Lx)
+    CALL attach(fidres, TRIM(str),   "Ny",   Ny)
+    CALL attach(fidres, TRIM(str),   "Ly",   Ly)
+    CALL attach(fidres, TRIM(str),   "Nz",   Nz)
+    CALL attach(fidres, TRIM(str),   "q0",   q0)
+    CALL attach(fidres, TRIM(str),   "Nkx",   Nkx)
+    CALL attach(fidres, TRIM(str),   "Lkx",   Lkx)
+    CALL attach(fidres, TRIM(str),   "Nky",   Nky)
+    CALL attach(fidres, TRIM(str),   "Lky",   Lky)
   END SUBROUTINE grid_outputinputs
 
   FUNCTION bare(p_,j_)

@@ -5,7 +5,7 @@ SUBROUTINE lin_coeff_and_geometry
   USE model, ONLY: taue_qe, taui_qi, sqrtTaue_qe, sqrtTaui_qi, eta_T, eta_n
   USE prec_const
   USE grid,  ONLY: parray_e, parray_i, jarray_e, jarray_i, &
-                   ip,ij, ips_e,ip_e, ips_i,ipe_i, ijs_e,ije_e, ijs_i,ije_i,&
+                   ip,ij, ips_e,ipe_e, ips_i,ipe_i, ijs_e,ije_e, ijs_i,ije_i,&
                    kxarray, kyarray, zarray, &
                    ikx,iky,iz, ikxs,ikxe, ikys,ikye, izs,ize
   IMPLICIT NONE
@@ -34,8 +34,8 @@ SUBROUTINE lin_coeff_and_geometry
   DO ij = ijs_e, ije_e
     j_int= jarray_e(ij)   ! Laguerre degree
     j_dp = REAL(j_int,dp) ! REAL of Laguerre degree
-    xnepjp1(ij) = -taui_qi * (j_dp + 1._dp)
-    xnepjm1(ij) = -taui_qi * j_dp
+    xnepjp1(ij) = -taue_qe * (j_dp + 1._dp)
+    xnepjm1(ij) = -taue_qe * j_dp
   ENDDO
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !! Ions linear coefficients for moment RHS !!!!!!!!!!
@@ -72,10 +72,10 @@ SUBROUTINE lin_coeff_and_geometry
       !! Electrostatic potential pj terms
       IF (p_int .EQ. 0) THEN ! kronecker p0
         xphij(ip,ij)    = eta_n + 2.*j_dp*eta_T
-        xphijp1(ip,ij)  = eta_T*(j_dp+1._dp)
-        xphijm1(ip,ij)  = eta_T* j_dp
+        xphijp1(ip,ij)  =-eta_T*(j_dp+1._dp)
+        xphijm1(ip,ij)  =-eta_T* j_dp
       ELSE IF (p_int .EQ. 2) THEN ! kronecker p2
-        xphij(ip,ij)    =-eta_T/SQRT2
+        xphij(ip,ij)    = eta_T/SQRT2
         xphijp1(ip,ij)  = 0._dp; xphijm1(ip,ij)  = 0._dp;
       ELSE
         xphij(ip,ij)    = 0._dp; xphijp1(ip,ij)  = 0._dp

@@ -10,6 +10,10 @@ MODULE initial_par
   ! Initialization through a zonal flow phi
   INTEGER,  PUBLIC, PROTECTED :: INIT_ZF    = 0
   REAL(DP), PUBLIC, PROTECTED :: ZF_AMP     = 1E+3_dp
+  ! Wipe turbulence in the restart
+  LOGICAL,  PUBLIC, PROTECTED :: WIPE_TURB = .false.
+  ! Init a Gaussian blob density in the middle
+  LOGICAL,  PUBLIC, PROTECTED :: INIT_BLOB = .false.
   ! Initial background level
   REAL(dp), PUBLIC, PROTECTED :: init_background=0._dp
   ! Initial noise amplitude
@@ -39,6 +43,8 @@ CONTAINS
 
     NAMELIST /INITIAL_CON/ INIT_NOISY_PHI
     NAMELIST /INITIAL_CON/ INIT_ZF
+    NAMELIST /INITIAL_CON/ WIPE_TURB
+    NAMELIST /INITIAL_CON/ INIT_BLOB
     NAMELIST /INITIAL_CON/ init_background
     NAMELIST /INITIAL_CON/ init_noiselvl
     NAMELIST /INITIAL_CON/ iseed

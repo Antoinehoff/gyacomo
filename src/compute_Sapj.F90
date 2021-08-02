@@ -1,7 +1,7 @@
 SUBROUTINE compute_Sapj
   ! This routine is meant to compute the non linear term for each specie and degree
   !! In real space Sapj ~ b*(grad(phi) x grad(g)) which in moments in fourier becomes
-  !! Sapj = Sum_n (ikr Kn phi)#(ikz Sum_s d_njs Naps) - (ikz Kn phi)#(ikr Sum_s d_njs Naps)
+  !! Sapj = Sum_n (ikx Kn phi)#(iky Sum_s d_njs Naps) - (iky Kn phi)#(ikx Sum_s d_njs Naps)
   !! where # denotes the convolution.
   USE array, ONLY : dnjs, Sepj, Sipj, kernel_i, kernel_e
   USE basic
@@ -14,18 +14,22 @@ SUBROUTINE compute_Sapj
   IMPLICIT NONE
   INCLUDE 'fftw3-mpi.f03'
 
-  COMPLEX(dp), DIMENSION(ikrs:ikre,ikzs:ikze) :: Fr_cmpx, Gz_cmpx
-  COMPLEX(dp), DIMENSION(ikrs:ikre,ikzs:ikze) :: Fz_cmpx, Gr_cmpx, F_conv_G
-  REAL(dp),    DIMENSION(irs:ire,izs:ize)     :: fr_real, gz_real
-  REAL(dp),    DIMENSION(irs:ire,izs:ize)     :: fz_real, gr_real, f_times_g
+  COMPLEX(dp), DIMENSION(ikxs:ikxe,ikys:ikye) :: Fx_cmpx, Gy_cmpx
+  COMPLEX(dp), DIMENSION(ikxs:ikxe,ikys:ikye) :: Fy_cmpx, Gx_cmpx, F_conv_G
+  REAL(dp),    DIMENSION(ixs:ixe,iys:iye)     :: fr_real, gz_real
+  REAL(dp),    DIMENSION(ixs:ixe,iys:iye)     :: fz_real, gr_real, f_times_g
 
   INTEGER :: in, is
   INTEGER :: nmax, smax ! Upper bound of the sums
-  REAL(dp):: kr, kz, kerneln
+  REAL(dp):: kx, ky, kerneln
   LOGICAL :: COMPUTE_ONLY_EVEN_P = .true.
   ! Execution time start
   CALL cpu_time(t0_Sapj)
 
+! If we have a parallel dynamic, odd p are coupled with even ones
+IF(Nz .GT. 1) COMPUTE_ONLY_EVEN_P = .false.
+
+zloop: DO iz = izs,ize
   !!!!!!!!!!!!!!!!!!!! ELECTRON non linear term computation (Sepj)!!!!!!!!!!
   ploope: DO ip = ips_e,ipe_e ! Loop over Hermite moments
 
@@ -46,56 +50,56 @@ SUBROUTINE compute_Sapj
 
       nloope: DO in = 1,nmax+1 ! Loop over laguerre for the sum
 
-        krloope: DO ikr = ikrs,ikre ! Loop over kr
-          kzloope: DO ikz = ikzs,ikze ! Loop over kz
-            kr     = krarray(ikr)
-            kz     = kzarray(ikz)
-            kerneln = kernel_e(in, ikr, ikz)
+        kxloope: DO ikx = ikxs,ikxe ! Loop over kx
+          kyloope: DO iky = ikys,ikye ! Loop over ky
+            kx     = kxarray(ikx)
+            ky     = kyarray(iky)
+            kerneln = kernel_e(in, ikx, iky)
 
             ! First convolution terms
-            Fr_cmpx(ikr,ikz) = imagu*kr* phi(ikr,ikz) * kerneln
-            Fz_cmpx(ikr,ikz) = imagu*kz* phi(ikr,ikz) * kerneln
+            Fx_cmpx(ikx,iky) = imagu*kx* phi(ikx,iky,iz) * kerneln
+            Fy_cmpx(ikx,iky) = imagu*ky* phi(ikx,iky,iz) * kerneln
             ! Second convolution terms
-            Gz_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
-            Gr_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
+            Gy_cmpx(ikx,iky) = 0._dp ! initialization of the sum
+            Gx_cmpx(ikx,iky) = 0._dp ! initialization of the sum
 
             smax = MIN( (in-1)+(ij-1), jmaxe );
             DO is = 1, smax+1 ! sum truncation on number of moments
-              Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
-                dnjs(in,ij,is) * moments_e(ip,is,ikr,ikz,updatetlevel)
-              Gr_cmpx(ikr,ikz) = Gr_cmpx(ikr,ikz) + &
-                dnjs(in,ij,is) * moments_e(ip,is,ikr,ikz,updatetlevel)
+              Gy_cmpx(ikx,iky) = Gy_cmpx(ikx,iky) + &
+                dnjs(in,ij,is) * moments_e(ip,is,ikx,iky,iz,updatetlevel)
+              Gx_cmpx(ikx,iky) = Gx_cmpx(ikx,iky) + &
+                dnjs(in,ij,is) * moments_e(ip,is,ikx,iky,iz,updatetlevel)
             ENDDO
-            Gz_cmpx(ikr,ikz) = imagu*kz*Gz_cmpx(ikr,ikz)
-            Gr_cmpx(ikr,ikz) = imagu*kr*Gr_cmpx(ikr,ikz)
-          ENDDO kzloope
-        ENDDO krloope
+            Gy_cmpx(ikx,iky) = imagu*ky*Gy_cmpx(ikx,iky)
+            Gx_cmpx(ikx,iky) = imagu*kx*Gx_cmpx(ikx,iky)
+          ENDDO kyloope
+        ENDDO kxloope
 
         ! First term drphi x dzf
-        DO ikr = ikrs, ikre
-          DO ikz = ikzs, ikze
-            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fr_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz) !Anti aliasing filter
-            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gz_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz) !Anti aliasing filter
+        DO ikx = ikxs, ikxe
+          DO iky = ikys, ikye
+            cmpx_data_f(iky,ikx-local_nkx_offset) = Fx_cmpx(ikx,iky)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+            cmpx_data_g(iky,ikx-local_nkx_offset) = Gy_cmpx(ikx,iky)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
           ENDDO
         ENDDO
 
         call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
         call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
 
-        real_data_c = real_data_c + real_data_f/Nz/Nr  * real_data_g/Nz/Nr
+        real_data_c = real_data_c + real_data_f/Ny/Nx  * real_data_g/Ny/Nx
 
         ! Second term -dzphi x drf
-        DO ikr = ikrs, ikre
-          DO ikz = ikzs, ikze
-            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fz_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz) !Anti aliasing filter
-            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gr_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz) !Anti aliasing filter
+        DO ikx = ikxs, ikxe
+          DO iky = ikys, ikye
+            cmpx_data_f(iky,ikx-local_nkx_offset) = Fy_cmpx(ikx,iky)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+            cmpx_data_g(iky,ikx-local_nkx_offset) = Gx_cmpx(ikx,iky)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
           ENDDO
         ENDDO
 
         call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
         call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
 
-        real_data_c = real_data_c - real_data_f/Nz/Nr  * real_data_g/Nz/Nr
+        real_data_c = real_data_c - real_data_f/Ny/Nx  * real_data_g/Ny/Nx
 
       ENDDO nloope
 
@@ -103,16 +107,16 @@ SUBROUTINE compute_Sapj
       call fftw_mpi_execute_dft_r2c(planf, real_data_c, cmpx_data_c)
 
       ! Retrieve convolution in input format
-      DO ikr = ikrs, ikre
-        DO ikz = ikzs, ikze
-          Sepj(ip,ij,ikr,ikz) = cmpx_data_c(ikz,ikr-local_nkr_offset)*AA_r(ikr)*AA_z(ikz) !Anti aliasing filter
+      DO ikx = ikxs, ikxe
+        DO iky = ikys, ikye
+          Sepj(ip,ij,ikx,iky,iz) = cmpx_data_c(iky,ikx-local_nkx_offset)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
         ENDDO
       ENDDO
     ENDDO jloope
 
     ELSE
       ! Cancel the non lin term if we are dealing with odd Hermite degree
-      Sepj(ip,:,:,:) = 0._dp
+      Sepj(ip,:,:,:,iz) = 0._dp
     ENDIF
   ENDDO ploope
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -137,56 +141,56 @@ SUBROUTINE compute_Sapj
 
       nloopi: DO in = 1,nmax+1 ! Loop over laguerre for the sum
 
-        krloopi: DO ikr = ikrs,ikre ! Loop over kr
-          kzloopi: DO ikz = ikzs,ikze ! Loop over kz
-            kr      = krarray(ikr)
-            kz      = kzarray(ikz)
-            kerneln = kernel_i(in, ikr, ikz)
+        kxloopi: DO ikx = ikxs,ikxe ! Loop over kx
+          kyloopi: DO iky = ikys,ikye ! Loop over ky
+            kx      = kxarray(ikx)
+            ky      = kyarray(iky)
+            kerneln = kernel_i(in, ikx, iky)
 
             ! First convolution terms
-            Fr_cmpx(ikr,ikz) = imagu*kr* phi(ikr,ikz) * kerneln
-            Fz_cmpx(ikr,ikz) = imagu*kz* phi(ikr,ikz) * kerneln
+            Fx_cmpx(ikx,iky) = imagu*kx* phi(ikx,iky,iz) * kerneln
+            Fy_cmpx(ikx,iky) = imagu*ky* phi(ikx,iky,iz) * kerneln
             ! Second convolution terms
-            Gz_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
-            Gr_cmpx(ikr,ikz) = 0._dp ! initialization of the sum
+            Gy_cmpx(ikx,iky) = 0._dp ! initialization of the sum
+            Gx_cmpx(ikx,iky) = 0._dp ! initialization of the sum
 
             smax = MIN( (in-1)+(ij-1), jmaxi );
             DO is = 1, smax+1 ! sum truncation on number of moments
-              Gz_cmpx(ikr,ikz) = Gz_cmpx(ikr,ikz) + &
-                dnjs(in,ij,is) * moments_i(ip,is,ikr,ikz,updatetlevel)
-              Gr_cmpx(ikr,ikz) = Gr_cmpx(ikr,ikz) + &
-                dnjs(in,ij,is) * moments_i(ip,is,ikr,ikz,updatetlevel)
+              Gy_cmpx(ikx,iky) = Gy_cmpx(ikx,iky) + &
+                dnjs(in,ij,is) * moments_i(ip,is,ikx,iky,iz,updatetlevel)
+              Gx_cmpx(ikx,iky) = Gx_cmpx(ikx,iky) + &
+                dnjs(in,ij,is) * moments_i(ip,is,ikx,iky,iz,updatetlevel)
             ENDDO
-            Gz_cmpx(ikr,ikz) = imagu*kz*Gz_cmpx(ikr,ikz)
-            Gr_cmpx(ikr,ikz) = imagu*kr*Gr_cmpx(ikr,ikz)
-          ENDDO kzloopi
-        ENDDO krloopi
+            Gy_cmpx(ikx,iky) = imagu*ky*Gy_cmpx(ikx,iky)
+            Gx_cmpx(ikx,iky) = imagu*kx*Gx_cmpx(ikx,iky)
+          ENDDO kyloopi
+        ENDDO kxloopi
 
         ! First term drphi x dzf
-        DO ikr = ikrs, ikre
-          DO ikz = ikzs, ikze
-            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fr_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
-            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gz_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
+        DO ikx = ikxs, ikxe
+          DO iky = ikys, ikye
+            cmpx_data_f(iky,ikx-local_nkx_offset) = Fx_cmpx(ikx,iky)*AA_x(ikx)*AA_y(iky)
+            cmpx_data_g(iky,ikx-local_nkx_offset) = Gy_cmpx(ikx,iky)*AA_x(ikx)*AA_y(iky)
           ENDDO
         ENDDO
 
         call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
         call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
 
-        real_data_c = real_data_c + real_data_f/Nz/Nr  * real_data_g/Nz/Nr
+        real_data_c = real_data_c + real_data_f/Ny/Nx  * real_data_g/Ny/Nx
 
         ! Second term -dzphi x drf
-        DO ikr = ikrs, ikre
-          DO ikz = ikzs, ikze
-            cmpx_data_f(ikz,ikr-local_nkr_offset) = Fz_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
-            cmpx_data_g(ikz,ikr-local_nkr_offset) = Gr_cmpx(ikr,ikz)*AA_r(ikr)*AA_z(ikz)
+        DO ikx = ikxs, ikxe
+          DO iky = ikys, ikye
+            cmpx_data_f(iky,ikx-local_nkx_offset) = Fy_cmpx(ikx,iky)*AA_x(ikx)*AA_y(iky)
+            cmpx_data_g(iky,ikx-local_nkx_offset) = Gx_cmpx(ikx,iky)*AA_x(ikx)*AA_y(iky)
           ENDDO
         ENDDO
 
         call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
         call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
 
-        real_data_c = real_data_c - real_data_f/Nz/Nr  * real_data_g/Nz/Nr
+        real_data_c = real_data_c - real_data_f/Ny/Nx  * real_data_g/Ny/Nx
 
       ENDDO nloopi
 
@@ -194,16 +198,16 @@ SUBROUTINE compute_Sapj
       call fftw_mpi_execute_dft_r2c(planf, real_data_c, cmpx_data_c)
 
       ! Retrieve convolution in input format
-      DO ikr = ikrs, ikre
-        DO ikz = ikzs, ikze
-          Sipj(ip,ij,ikr,ikz) = cmpx_data_c(ikz,ikr-local_nkr_offset)*AA_r(ikr)*AA_z(ikz)
+      DO ikx = ikxs, ikxe
+        DO iky = ikys, ikye
+          Sipj(ip,ij,ikx,iky,iz) = cmpx_data_c(iky,ikx-local_nkx_offset)*AA_x(ikx)*AA_y(iky)
         ENDDO
       ENDDO
 
     ENDDO jloopi
     ELSE
       ! Cancel the non lin term if we are dealing with odd Hermite degree
-      Sipj(ip,:,:,:) = 0._dp
+      Sipj(ip,:,:,:,iz) = 0._dp
     ENDIF
   ENDDO ploopi
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -212,4 +216,5 @@ SUBROUTINE compute_Sapj
   CALL cpu_time(t1_Sapj)
   tc_Sapj = tc_Sapj + (t1_Sapj - t0_Sapj)
 
+ENDDO zloop
 END SUBROUTINE compute_Sapj

@@ -25,8 +25,10 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED ::   eta_B =  1._dp     ! Magnetic gradient
   REAL(dp), PUBLIC, PROTECTED :: lambdaD =  1._dp     ! Debye length
 
-  REAL(dp), PUBLIC, PROTECTED :: taue_qe_etaB         ! factor of the magnetic moment coupling
-  REAL(dp), PUBLIC, PROTECTED :: taui_qi_etaB         !
+  REAL(dp), PUBLIC, PROTECTED :: taue_qe         ! factor of the magnetic moment coupling
+  REAL(dp), PUBLIC, PROTECTED :: taui_qi         !
+  REAL(dp), PUBLIC, PROTECTED :: qi_taui         !
+  REAL(dp), PUBLIC, PROTECTED :: qe_taue         !
   REAL(dp), PUBLIC, PROTECTED :: sqrtTaue_qe          ! factor of parallel moment term
   REAL(dp), PUBLIC, PROTECTED :: sqrtTaui_qi          !
   REAL(dp), PUBLIC, PROTECTED :: qe_sigmae_sqrtTaue   ! factor of parallel phi term
@@ -54,16 +56,11 @@ CONTAINS
 
     READ(lu_in,model_par)
 
-    !Precompute species dependant factors
-    IF( q_e .NE. 0._dp ) THEN
-      taue_qe_etaB    = tau_e/q_e * eta_B ! factor of the magnetic moment coupling
-      sqrtTaue_qe     = sqrt(tau_e)/q_e   ! factor of parallel moment term
-    ELSE
-      taue_qe_etaB  = 0._dp
-      sqrtTaue_qe   = 0._dp
-    ENDIF
-
-    taui_qi_etaB    = tau_i/q_i * eta_B ! factor of the magnetic moment coupling
+    taue_qe    = tau_e/q_e ! factor of the magnetic moment coupling
+    taui_qi    = tau_i/q_i ! factor of the magnetic moment coupling
+    qe_taue    = q_e/tau_e
+    qi_taui    = q_i/tau_i
+    sqrtTaue_qe     = sqrt(tau_e)/q_e   ! factor of parallel moment term
     sqrtTaui_qi     = sqrt(tau_i)/q_i   ! factor of parallel moment term
     qe_sigmae_sqrtTaue = q_e/sigma_e/SQRT(tau_e) ! factor of parallel phi term
     qi_sigmai_sqrtTaui = q_i/sigma_i/SQRT(tau_i)
@@ -78,7 +75,6 @@ CONTAINS
     nu_i            = nu ! ion-ion collision frequ.
     nu_ee           = nu_e ! e-e coll. frequ.
     nu_ie           = nu_i ! i-e coll. frequ.
-
 
     ! Old normalization (MOLI Jorge/Frei)
     ! nu_e            = 0.532_dp*nu ! electron-ion collision frequency (where already multiplied by 0.532)
