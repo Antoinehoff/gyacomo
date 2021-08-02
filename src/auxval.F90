@@ -8,6 +8,7 @@ subroutine auxval
   USE fourier, ONLY: init_grid_distr_and_plans, alloc_local_1, alloc_local_2
   use prec_const
   USE numerics
+  USE geometry
   IMPLICIT NONE
 
   INTEGER :: irows,irowe, irow, icol, i_
@@ -29,7 +30,9 @@ subroutine auxval
 
   CALL memory ! Allocate memory for global arrays
 
-  CALL lin_coeff_and_geometry ! precompute coeff for lin equation and geometry
+  CALL eval_magnetic_geometry ! precompute coeff for lin equation
+
+  CALL compute_lin_coeff ! precompute coeff for lin equation and geometry
 
   CALL evaluate_kernels ! precompute the kernels
 

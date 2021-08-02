@@ -6,6 +6,9 @@ MODULE array
   ! Arrays to store the rhs, for time integration (ip,ij,ikx,iky,iz,updatetlevel)
   COMPLEX(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: moments_rhs_e
   COMPLEX(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: moments_rhs_i
+  ! Non linear term array (ip,ij,ikx,iky,iz)
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Sepj ! electron
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Sipj ! ion
 
   ! To load collision matrix (ip1,ij1,ip2,ij2)
   REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Ceepj, CeipjT
@@ -26,17 +29,31 @@ MODULE array
   REAL(dp), DIMENSION(:),   ALLOCATABLE :: xnipp1j, xnipm1j, xnipp2j, xnipm2j, xnipjp1, xnipjm1
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xphij, xphijp1, xphijm1
 
-  ! Curvature array
-  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ckxky
-
+  ! Geoemtrical operators
+  ! Curvature
+  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z
+  ! Jacobian
+  REAL(dp), DIMENSION(:), ALLOCATABLE :: Jacobian ! dimensions: z
+  ! Metric
+  REAL(dp), DIMENSION(:), ALLOCATABLE :: gxx, gxy, gyy, gxz, gyz
+  ! derivatives of magnetic field strength
+  REAL(dp), DIMENSION(:), allocatable :: gradzB  ! dimensions: z
+  REAL(dp), DIMENSION(:), allocatable :: gradxB
+  ! Relative magnetic field strength
+  REAL(dp), DIMENSION(:), allocatable :: hatB
+  ! Relative strength of major radius
+  REAL(dp), DIMENSION(:), allocatable :: hatR
+  ! Geometrical factors
+  REAL(dp), DIMENSION(:), allocatable :: Gamma1
+  REAL(dp), DIMENSION(:), allocatable :: Gamma2
+  REAL(dp), DIMENSION(:), allocatable :: Gamma3
+  ! Some geometrical coefficients
+  REAL(dp), DIMENSION(:) , allocatable :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
   ! Kernel function evaluation (ij,ikx,iky)
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: kernel_e
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: kernel_i
 
-  ! Non linear term array (ip,ij,ikx,iky,iz)
-  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Sepj ! electron
-  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Sipj ! ion
-
+  !! Diagnostics
   ! Gyrocenter density for electron and ions (ikx,iky,iz)
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ne00
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ni00

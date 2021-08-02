@@ -73,6 +73,20 @@ SUBROUTINE memory
 
   ! Curvature and geometry
   CALL allocate_array( Ckxky, ikxs,ikxe, ikys,ikye, izs,ize)
+  CALL allocate_array(Jacobian,izs,ize)
+  CALL allocate_array(gxx, izs,ize)
+  CALL allocate_array(gxy, izs,ize)
+  CALL allocate_array(gyy, izs,ize)
+  CALL allocate_array(gyz, izs,ize)
+  CALL allocate_array(gxz, izs,ize)
+  CALL allocate_array(gradzB,izs,ize)
+  CALL allocate_array(gradxB,izs,ize)
+  CALL allocate_array(hatB,izs,ize)
+  CALL allocate_array(hatR,izs,ize)
+  CALL allocate_array(Gamma1,  izs,ize)
+  call allocate_array(Gamma2, izs,ize)
+  call allocate_array(Gamma3, izs, ize)
+  call allocate_array(gradz_coeff, izs, ize)
 
   !___________________ 2x5D ARRAYS __________________________
   !! Collision matrices
