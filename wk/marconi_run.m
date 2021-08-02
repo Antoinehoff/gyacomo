@@ -8,8 +8,8 @@ for ETAN = [1/0.6]
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% CLUSTER PARAMETERS
-% CLUSTER.PART  = 'prod';     % dbg or prod
-CLUSTER.PART  = 'dbg';
+CLUSTER.PART  = 'prod';     % dbg or prod
+% CLUSTER.PART  = 'dbg';
 CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
 if(strcmp(CLUSTER.PART,'dbg')); CLUSTER.TIME  = '00:30:00'; end;
 CLUSTER.MEM   = '128GB';     % Memory
@@ -18,12 +18,12 @@ NP_P          = 2;          % MPI processes along p
 NP_KX         = 24;         % MPI processes along kx
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;   % Collision frequency
-ETAN    = 0/0.6;    % Density gradient drive (R/Ln)
-NU_HYP  = 0.0;
+NU      = 0.05;   % Collision frequency
+ETAN    = 1.0/0.6;    % Density gradient drive (R/Ln)
+NU_HYP  = 1.0;
 %% GRID PARAMETERS
-N       = 100;     % Frequency gridpoints (Nkx = N/2)
-L       = 60;     % Size of the squared frequency domain
+N       = 300;     % Frequency gridpoints (Nkx = N/2)
+L       = 100;     % Size of the squared frequency domain
 Nz      = 1;      % number of perpendicular planes (parallel grid)
 q0      = 1.0;    % q factor ()
 P       = 2;
@@ -31,12 +31,12 @@ J       = 1;
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
-TMAX    = 10;  % Maximal time unit
+TMAX    = 200;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
-SPS3D   = 2;      % Sampling per time unit for 3D arrays
-SPS5D   = 1;  % Sampling per time unit for 5D arrays
+SPS3D   = 1/2;      % Sampling per time unit for 3D arrays
+SPS5D   = 1/100;  % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints/10
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 0;
@@ -45,9 +45,9 @@ JOB2LOAD= 0;
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle ; +/- for GK/DK)
 CO      = 1;
 CLOS    = 0;   % Closure model (0: =0 truncation)
-NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
-SIMID   = 'test_3D_marconi';  % Name of the simulation
-% SIMID   = 'HD_study';  % Name of the simulation
+NL_CLOS = 0;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
+% SIMID   = 'test_3D_marconi';  % Name of the simulation
+SIMID   = 'HD_study';  % Name of the simulation
 % SIMID   = ['v3.0_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
 NON_LIN = 1;   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % INIT options

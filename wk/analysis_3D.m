@@ -2,19 +2,26 @@ addpath(genpath('../matlab')) % ... add
 addpath(genpath('../matlab/plots')) % ... add
 %% Directory of the simulation
 if 1% Local results
+outfile ='';
+outfile ='';
+outfile ='';
+outfile ='';
+outfile ='';
+outfile ='';
+outfile ='';
 outfile ='HD_study/150x75_L_100_P_4_J_2_eta_0.6_nu_1e-02_DGGK_mu_3e-03';
+% outfile ='HD_study/300x150_L_100_P_2_J_1_eta_0.6_nu_5e-01_DGGK_mu_2e-03';
     BASIC.RESDIR      = ['../results/',outfile,'/'];
     BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/results/',outfile,'/'];
     CMD = ['cp ', BASIC.RESDIR,'outputs* ',BASIC.MISCDIR]; disp(CMD);
     system(CMD);
-end
-if 0% Marconi results
+else% Marconi results
 outfile ='';
 outfile ='';
 outfile ='';
 outfile ='';
 outfile ='';
-outfile ='';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/test_3D_marconi/100x50_L_60_P_2_J_1_eta_Inf_nu_1e-01_DGGK_mu_0e+00/out.txt';
 BASIC.RESDIR      = ['../',outfile(46:end-8),'/'];
 BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'/'];
 end
@@ -71,12 +78,12 @@ skip_ = 1; DELAY = 1e-2*skip_;
 [~, it05D] = min(abs(Ts5D-t0)); FRAMES_5D = it05D:skip_:numel(Ts5D);
 INTERP = 0; T = Ts3D; FRAMES = FRAMES_3D;
 % Field to plot
-FIELD = dens_e; NAME = 'ne';   FIELDNAME = 'n_e';
+% FIELD = dens_e; NAME = 'ne';   FIELDNAME = 'n_e';
 % FIELD = dens_i; NAME = 'ni';   FIELDNAME = 'n_i';
 % FIELD = temp_e; NAME = 'Te';   FIELDNAME = 'n_i';
 % FIELD = temp_i; NAME = 'Ti';   FIELDNAME = 'n_i';
 % FIELD = ne00;   NAME = 'ne00'; FIELDNAME = 'n_e^{00}';
-% FIELD = ni00;   NAME = 'ni00'; FIELDNAME = 'n_i^{00}';
+FIELD = ni00;   NAME = 'ni00'; FIELDNAME = 'n_i^{00}';
 % Slice
 % plt = @(x) real(x(ix, :, :,:)); X = Y_YZ; Y = Z_YZ; XNAME = 'y'; YNAME = 'z'; 
 % plt = @(x) real(x( :,iy, :,:)); X = X_XZ; Y = Z_XZ; XNAME = 'x'; YNAME = 'z'; 
@@ -101,13 +108,13 @@ if 0
 %% Photomaton : real space
 
 % Chose the field to plot
-% FIELD = ni00;   FNAME = 'ni00'; FIELDLTX = 'n_i^{00}';
+FIELD = ni00;   FNAME = 'ni00'; FIELDLTX = 'n_i^{00}';
 % FIELD = ne00;   FNAME = 'ne00'; FIELDLTX = 'n_e^{00}'
 % FIELD = dens_i; FNAME = 'ni';   FIELDLTX = 'n_i';
 % FIELD = dens_e; FNAME = 'ne';   FIELDLTX = 'n_e';
 % FIELD = temp_i; FNAME = 'Ti';   FIELDLTX = 'T_i';
 % FIELD = temp_e; FNAME = 'Te';   FIELDLTX = 'T_e';
-FIELD = phi; FNAME = 'phi'; FIELDLTX = '\phi';
+% FIELD = phi; FNAME = 'phi'; FIELDLTX = '\phi';
 
 % Chose when to plot it
 tf = [0 1 2 3];
