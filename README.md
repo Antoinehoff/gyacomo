@@ -13,6 +13,12 @@ How to run it
 
 # Changelog
 
+3. HeLaZ 3D
+
+//	3.1 (WIP) Implementation of mirror force and test for linear ZF damping
+
+	3.0 HeLaZ is now 3D and works like HeLaZ 2D if Nz = 1, the axis were renamed (r,z) -> (x,y,z) and now the parallel direction is ez. All arrays have been extended, diagnostics and analysis too. The linear coefficients are now precomputed with lin_coeff_and_geometry routines.
+
 2. MPI parallel version
 
 	2.7 Versatile interpolation of kperp for the cosolver matrices and corrections done on DGGK
@@ -63,16 +69,10 @@ How to run it
 
 # Roadmap
 
-2. MPI parallel version
+3. 3D version
 
-	2.6 GK Full Coulomb collision operator
+	3.1 Flux-tube
 
-	2.7 GPU?
+	3.2 Benchmark and 3D transport analysis
 
-3. GK 3D version, kr,kz,kpar for linear device
-
-4. DK 3D version, kr,kz,kpar for linear device
-
-5. DK+GK 3D version, kr,kz,kpar for linear device
-
-6. 3D version with curvature
+4. full-f terms? Evolving backgrounds?
