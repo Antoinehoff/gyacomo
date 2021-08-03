@@ -25,11 +25,11 @@ SUBROUTINE memory
   CALL allocate_array(temp_e, ikxs,ikxe, ikys,ikye, izs,ize)
   CALL allocate_array(temp_i, ikxs,ikxe, ikys,ikye, izs,ize)
 
-  !___________________ 3D ARRAYS __________________________
+  !___________________ 4D ARRAYS __________________________
   !! FLR kernels functions
   ! Kernel evaluation from j= -1 to jmax+1 for truncation
-  CALL allocate_array(Kernel_e, ijsg_e,ijeg_e, ikxs,ikxe, ikys,ikye)
-  CALL allocate_array(Kernel_i, ijsg_i,ijeg_i, ikxs,ikxe, ikys,ikye)
+  CALL allocate_array(Kernel_e, ijsg_e,ijeg_e, ikxs,ikxe, ikys,ikye, izs,ize)
+  CALL allocate_array(Kernel_i, ijsg_i,ijeg_i, ikxs,ikxe, ikys,ikye, izs,ize)
 
   !___________________ 5D ARRAYS __________________________
   ! Moments with ghost degrees for p+2 p-2, j+1, j-1 truncations
@@ -58,6 +58,13 @@ SUBROUTINE memory
   CALL allocate_array( xnepm2j, ips_e,ipe_e)
   CALL allocate_array( xnepjp1, ijs_e,ije_e)
   CALL allocate_array( xnepjm1, ijs_e,ije_e)
+  CALL allocate_array(   ynepp1j, ips_e,ipe_e, ijs_e,ije_e)
+  CALL allocate_array(   ynepm1j, ips_e,ipe_e, ijs_e,ije_e)
+  CALL allocate_array( ynepp1jm1, ips_e,ipe_e, ijs_e,ije_e)
+  CALL allocate_array( ynepm1jm1, ips_e,ipe_e, ijs_e,ije_e)
+  CALL allocate_array(   zNepm1j, ips_e,ipe_e, ijs_e,ije_e)
+  CALL allocate_array( zNepm1jp1, ips_e,ipe_e, ijs_e,ije_e)
+  CALL allocate_array( zNepm1jm1, ips_e,ipe_e, ijs_e,ije_e)
   ! ions
   CALL allocate_array( xnipj,   ips_i,ipe_i, ijs_i,ije_i)
   CALL allocate_array( xnipp2j, ips_i,ipe_i)
@@ -66,6 +73,13 @@ SUBROUTINE memory
   CALL allocate_array( xnipm2j, ips_i,ipe_i)
   CALL allocate_array( xnipjp1, ijs_i,ije_i)
   CALL allocate_array( xnipjm1, ijs_i,ije_i)
+  CALL allocate_array(   ynipp1j, ips_i,ipe_i, ijs_i,ije_i)
+  CALL allocate_array(   ynipm1j, ips_i,ipe_i, ijs_i,ije_i)
+  CALL allocate_array( ynipp1jm1, ips_i,ipe_i, ijs_i,ije_i)
+  CALL allocate_array( ynipm1jm1, ips_i,ipe_i, ijs_i,ije_i)
+  CALL allocate_array(   zNipm1j, ips_i,ipe_i, ijs_i,ije_i)
+  CALL allocate_array( zNipm1jp1, ips_i,ipe_i, ijs_i,ije_i)
+  CALL allocate_array( zNipm1jm1, ips_i,ipe_i, ijs_i,ije_i)
   ! elect. pot.
   CALL allocate_array( xphij,   ips_i,ipe_i, ijs_i,ije_i)
   CALL allocate_array( xphijp1, ips_i,ipe_i, ijs_i,ije_i)

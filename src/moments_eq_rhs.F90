@@ -14,11 +14,14 @@ SUBROUTINE moments_eq_rhs_e
   USE model
   USE prec_const
   USE collision
+  use geometry
   IMPLICIT NONE
 
   INTEGER     :: p_int, j_int ! loops indices and polynom. degrees
-  REAL(dp)    :: kx, ky, kperp2
-  COMPLEX(dp) :: Tnepj, Tnepp2j, Tnepm2j, Tnepjp1, Tnepjm1, Tpare, Tphi
+  REAL(dp)    :: kx, ky, kperp2, dzlnB_o_J
+  COMPLEX(dp) :: Tnepj, Tnepp2j, Tnepm2j, Tnepjp1, Tnepjm1, Tpare, Tphi ! Terms from b x gradB and drives
+  COMPLEX(dp) :: Tmir, Tnepp1j, Tnepm1j, Tnepp1jm1, Tnepm1jm1 ! Terms from mirror force with non adiab moments
+  COMPLEX(dp) :: UNepm1j, UNepm1jp1, UNepm1jm1 ! Terms from mirror force with adiab moments
   COMPLEX(dp) :: TColl ! terms of the rhs
   COMPLEX(dp) :: i_ky
   REAL(dp)    :: delta_p0, delta_p1, delta_p2
@@ -49,38 +52,52 @@ SUBROUTINE moments_eq_rhs_e
           ky     = kyarray(iky)   ! toroidal wavevector
           i_ky   = imagu * ky     ! toroidal derivative
           IF (Nky .EQ. 1) i_ky = imagu * kxarray(ikx) ! If 1D simulation we put kx as ky
-          kperp2 = kx**2 + ky**2  ! perpendicular wavevector
+          kperp2= kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2
 
           !! Compute moments mixing terms
           ! Perpendicular dynamic
           ! term propto n_e^{p,j}
           Tnepj   = xnepj(ip,ij) * (moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
-                               +kernel_e(ij,ikx,iky)*qe_taue*phi(ikx,iky,iz)*delta_p0)
+                               +kernel_e(ij,ikx,iky,iz)*qe_taue*phi(ikx,iky,iz)*delta_p0)
           ! term propto n_e^{p+2,j}
           Tnepp2j = xnepp2j(ip)  * moments_e(ip+2,ij,ikx,iky,iz,updatetlevel)
           ! term propto n_e^{p-2,j}
           Tnepm2j = xnepm2j(ip)  * (moments_e(ip-2,ij,ikx,iky,iz,updatetlevel) &
-                               +kernel_e(ij,ikx,iky)*qe_taue*phi(ikx,iky,iz)*delta_p2)
+                               +kernel_e(ij,ikx,iky,iz)*qe_taue*phi(ikx,iky,iz)*delta_p2)
           ! term propto n_e^{p,j+1}
           Tnepjp1 = xnepjp1(ij)  * (moments_e(ip,ij+1,ikx,iky,iz,updatetlevel) &
-                               +kernel_e(ij+1,ikx,iky)*qe_taue*phi(ikx,iky,iz)*delta_p0)
+                               +kernel_e(ij+1,ikx,iky,iz)*qe_taue*phi(ikx,iky,iz)*delta_p0)
           ! term propto n_e^{p,j-1}
           Tnepjm1 = xnepjm1(ij)  * (moments_e(ip,ij-1,ikx,iky,iz,updatetlevel) &
-                               +kernel_e(ij-1,ikx,iky)*qe_taue*phi(ikx,iky,iz)*delta_p0)
+                               +kernel_e(ij-1,ikx,iky,iz)*qe_taue*phi(ikx,iky,iz)*delta_p0)
           ! Parallel dynamic
-          ! term propto n_i^{p+1,j}, centered FDF
+          ! term propto centered FDF dz(n_a)
           Tpare = xnepp1j(ip) * &
               (moments_e(ip+1,ij,ikx,iky,iznext,updatetlevel)&
               -moments_e(ip+1,ij,ikx,iky,izprev,updatetlevel)) &
                 +xnepm1j(ip) * &
-              (moments_e(ip-1,ij,ikx,iky,iznext,updatetlevel)+kernel_e(ij,ikx,iky)*qe_taue*phi(ikx,iky,iznext)*delta_p1&
-              -moments_e(ip-1,ij,ikx,iky,izprev,updatetlevel)-kernel_e(ij,ikx,iky)*qe_taue*phi(ikx,iky,izprev)*delta_p1)
+              (moments_e(ip-1,ij,ikx,iky,iznext,updatetlevel)+kernel_e(ij,ikx,iky,iz)*qe_taue*phi(ikx,iky,iznext)*delta_p1&
+              -moments_e(ip-1,ij,ikx,iky,izprev,updatetlevel)-kernel_e(ij,ikx,iky,iz)*qe_taue*phi(ikx,iky,izprev)*delta_p1)
+
+          ! Mirror terms
+          Tnepp1j   =   ynepp1j(ip,ij) *  moments_e(ip+1,  ij,ikx,iky,iz,updatetlevel)
+          Tnepp1jm1 = ynepp1jm1(ip,ij) *  moments_e(ip+1,ij-1,ikx,iky,iz,updatetlevel)
+          Tnepm1j   =   ynepm1j(ip,ij) * (moments_e(ip-1,  ij,ikx,iky,iz,updatetlevel) &
+                               +kernel_e(ij,ikx,iky,iz)*qe_taue*phi(ikx,iky,iz)*delta_p1)
+          Tnepm1jm1 = ynepm1jm1(ip,ij) * (moments_e(ip-1,ij-1,ikx,iky,iz,updatetlevel) &
+                               +kernel_e(ij-1,ikx,iky,iz)*qe_taue*phi(ikx,iky,iz)*delta_p1)
+
+          UNepm1j   =   zNepm1j(ip,ij) * moments_e(ip+1,  ij,ikx,iky,iz,updatetlevel)
+          UNepm1jp1 = zNepm1jp1(ip,ij) * moments_e(ip-1,ij+1,ikx,iky,iz,updatetlevel)
+          UNepm1jm1 = zNepm1jm1(ip,ij) * moments_e(ip-1,ij-1,ikx,iky,iz,updatetlevel)
+
+          Tmir = Tnepp1j + Tnepp1jm1 + Tnepm1j + Tnepm1jm1 + UNepm1j + UNepm1jp1 + UNepm1jm1
 
           !! Electrical potential term
           IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
-          Tphi = phi(ikx,iky,iz) * (xphij(ip,ij)*kernel_e(ij, ikx, iky) &
-                   + xphijp1(ip,ij)*kernel_e(ij+1, ikx, iky) &
-                   + xphijm1(ip,ij)*kernel_e(ij-1, ikx, iky) )
+          Tphi = phi(ikx,iky,iz) * (xphij(ip,ij)*kernel_e(ij,ikx,iky,iz) &
+                   + xphijp1(ip,ij)*kernel_e(ij+1,ikx,iky,iz) &
+                   + xphijm1(ip,ij)*kernel_e(ij-1,ikx,iky,iz) )
           ELSE
             Tphi = 0._dp
           ENDIF
@@ -96,8 +113,9 @@ SUBROUTINE moments_eq_rhs_e
 
           !! Sum of all linear terms (the sign is inverted to match RHS)
           moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) = &
-              - Ckxky(ikx,iky,iz) * (Tnepj + Tnepp2j + Tnepm2j + Tnepjp1 + Tnepjm1)&
-              - Tpare/2._dp/deltaz/q0 &
+              - imagu*Ckxky(ikx,iky,iz) * (Tnepj + Tnepp2j + Tnepm2j + Tnepjp1 + Tnepjm1)&
+              - Tpare/2._dp/deltaz*gradz_coeff(iz) &
+              - gradzB(iz)* Tmir  *gradz_coeff(iz) &
               + i_ky  * Tphi &
               - mu*kperp2**2 * moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
               + TColl
@@ -141,6 +159,8 @@ SUBROUTINE moments_eq_rhs_i
   INTEGER     :: p_int, j_int ! loops indices and polynom. degrees
   REAL(dp)    :: kx, ky, kperp2
   COMPLEX(dp) :: Tnipj, Tnipp2j, Tnipm2j, Tnipjp1, Tnipjm1, Tpari, Tphi
+  COMPLEX(dp) :: Tmir, Tnipp1j, Tnipm1j, Tnipp1jm1, Tnipm1jm1 ! Terms from mirror force with non adiab moments
+  COMPLEX(dp) :: UNipm1j, UNipm1jp1, UNipm1jm1 ! Terms from mirror force with adiab moments
   COMPLEX(dp) :: TColl ! terms of the rhs
   COMPLEX(dp) :: i_ky
   REAL(dp)    :: delta_p0, delta_p1, delta_p2
@@ -171,38 +191,52 @@ SUBROUTINE moments_eq_rhs_i
           ky     = kyarray(iky)   ! toroidal wavevector
           i_ky   = imagu * ky     ! toroidal derivative
           IF (Nky .EQ. 1) i_ky = imagu * kxarray(ikx) ! If 1D simulation we put kx as ky
-          kperp2 = kx**2 + ky**2  ! perpendicular wavevector
+          kperp2= kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2
 
           !! Compute moments mixing terms
           ! Perpendicular dynamic
           ! term propto n_i^{p,j}
           Tnipj   = xnipj(ip,ij)   * (moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
-                             +kernel_i(ij,ikx,iky)*qi_taui*phi(ikx,iky,iz)*delta_p0)
+                             +kernel_i(ij,ikx,iky,iz)*qi_taui*phi(ikx,iky,iz)*delta_p0)
           ! term propto n_i^{p+2,j}
           Tnipp2j = xnipp2j(ip) * moments_i(ip+2,ij,ikx,iky,iz,updatetlevel)
           ! term propto n_i^{p-2,j}
           Tnipm2j = xnipm2j(ip) * (moments_i(ip-2,ij,ikx,iky,iz,updatetlevel) &
-                             +kernel_i(ij,ikx,iky)*qi_taui*phi(ikx,iky,iz)*delta_p2)
+                             +kernel_i(ij,ikx,iky,iz)*qi_taui*phi(ikx,iky,iz)*delta_p2)
           ! term propto n_e^{p,j+1}
           Tnipjp1 = xnipjp1(ij)  * (moments_i(ip,ij+1,ikx,iky,iz,updatetlevel) &
-                               +kernel_i(ij+1,ikx,iky)*qi_taui*phi(ikx,iky,iz)*delta_p0)
+                               +kernel_i(ij+1,ikx,iky,iz)*qi_taui*phi(ikx,iky,iz)*delta_p0)
           ! term propto n_e^{p,j-1}
           Tnipjm1 = xnipjm1(ij)  * (moments_i(ip,ij-1,ikx,iky,iz,updatetlevel) &
-                               +kernel_i(ij-1,ikx,iky)*qi_taui*phi(ikx,iky,iz)*delta_p0)
+                               +kernel_i(ij-1,ikx,iky,iz)*qi_taui*phi(ikx,iky,iz)*delta_p0)
           ! Parallel dynamic
           ! term propto N_i^{p,j+1}, centered FDF
           Tpari = xnipp1j(ip) * &
               (moments_i(ip+1,ij,ikx,iky,iznext,updatetlevel)&
               -moments_i(ip+1,ij,ikx,iky,izprev,updatetlevel)) &
                 +xnipm1j(ip) * &
-              (moments_i(ip-1,ij,ikx,iky,iznext,updatetlevel)+qi_taui*kernel_i(ij,ikx,iky)*phi(ikx,iky,iznext)*delta_p1&
-              -moments_i(ip-1,ij,ikx,iky,izprev,updatetlevel)-qi_taui*kernel_i(ij,ikx,iky)*phi(ikx,iky,izprev)*delta_p1)
+              (moments_i(ip-1,ij,ikx,iky,iznext,updatetlevel)+qi_taui*kernel_i(ij,ikx,iky,iz)*phi(ikx,iky,iznext)*delta_p1&
+              -moments_i(ip-1,ij,ikx,iky,izprev,updatetlevel)-qi_taui*kernel_i(ij,ikx,iky,iz)*phi(ikx,iky,izprev)*delta_p1)
+
+          ! Mirror terms
+          Tnipp1j   =   ynipp1j(ip,ij) *  moments_i(ip+1,  ij,ikx,iky,iz,updatetlevel)
+          Tnipp1jm1 = ynipp1jm1(ip,ij) *  moments_i(ip+1,ij-1,ikx,iky,iz,updatetlevel)
+          Tnipm1j   =   ynipm1j(ip,ij) * (moments_i(ip-1,  ij,ikx,iky,iz,updatetlevel) &
+                               +kernel_i(ij,ikx,iky,iz)*qi_taui*phi(ikx,iky,iz)*delta_p1)
+          Tnipm1jm1 = ynipm1jm1(ip,ij) * (moments_i(ip-1,ij-1,ikx,iky,iz,updatetlevel) &
+                               +kernel_i(ij-1,ikx,iky,iz)*qi_taui*phi(ikx,iky,iz)*delta_p1)
+
+          Unipm1j   =   znipm1j(ip,ij) * moments_i(ip+1,ij,ikx,iky,iz,updatetlevel)
+          Unipm1jp1 = znipm1jp1(ip,ij) * moments_i(ip-1,ij+1,ikx,iky,iz,updatetlevel)
+          Unipm1jm1 = znipm1jm1(ip,ij) * moments_i(ip-1,ij-1,ikx,iky,iz,updatetlevel)
+
+          Tmir = Tnipp1j + Tnipp1jm1 + Tnipm1j + Tnipm1jm1 + UNipm1j + UNipm1jp1 + UNipm1jm1
 
           !! Electrical potential term
           IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
-            Tphi = phi(ikx,iky,iz) * (xphij(ip,ij)*kernel_i(ij, ikx, iky) &
-                     + xphijp1(ip,ij)*kernel_i(ij+1, ikx, iky) &
-                     + xphijm1(ip,ij)*kernel_i(ij-1, ikx, iky) )
+            Tphi = phi(ikx,iky,iz) * (xphij(ip,ij)*kernel_i(ij,ikx,iky,iz) &
+                     + xphijp1(ip,ij)*kernel_i(ij+1,ikx,iky,iz) &
+                     + xphijm1(ip,ij)*kernel_i(ij-1,ikx,iky,iz) )
           ELSE
             Tphi = 0._dp
           ENDIF
@@ -218,8 +252,9 @@ SUBROUTINE moments_eq_rhs_i
 
           !! Sum of linear terms
           moments_rhs_i(ip,ij,ikx,iky,iz,updatetlevel) = &
-              - Ckxky(ikx,iky,iz) * (Tnipj + Tnipp2j + Tnipm2j + Tnipjp1 + Tnipjm1)&
-              - Tpari/2._dp/deltaz/q0 &
+              - imagu*Ckxky(ikx,iky,iz) * (Tnipj + Tnipp2j + Tnipm2j + Tnipjp1 + Tnipjm1)&
+              - Tpari/2._dp/deltaz*gradz_coeff(iz) &
+              - gradzB(iz)* Tmir  *gradz_coeff(iz) &
               + i_ky  * Tphi &
               - mu*kperp2**2 * moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
               + TColl

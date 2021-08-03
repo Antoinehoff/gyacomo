@@ -25,10 +25,13 @@ MODULE array
 
   ! lin rhs p,j coefficient storage (ip,ij)
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xnepj,xnipj
-  REAL(dp), DIMENSION(:),   ALLOCATABLE :: xnepp1j, xnepm1j, xnepp2j, xnepm2j, xnepjp1, xnepjm1
+  REAL(dp), DIMENSION(:),   ALLOCATABLE :: xnepp1j, xnepm1j,   xnepp2j,   xnepm2j, xnepjp1, xnepjm1
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: ynepp1j, ynepm1j,   ynepp1jm1, ynepm1jm1 ! mirror lin coeff for non adiab mom
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: zNepm1j, zNepm1jp1, zNepm1jm1            ! mirror lin coeff for adiab mom
   REAL(dp), DIMENSION(:),   ALLOCATABLE :: xnipp1j, xnipm1j, xnipp2j, xnipm2j, xnipjp1, xnipjm1
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: ynipp1j, ynipm1j,   ynipp1jm1, ynipm1jm1 ! mirror lin coeff for non adiab mom
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: zNipm1j, zNipm1jp1, zNipm1jm1            ! mirror lin coeff for adiab mom
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xphij, xphijp1, xphijm1
-
   ! Geoemtrical operators
   ! Curvature
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z
@@ -49,9 +52,9 @@ MODULE array
   REAL(dp), DIMENSION(:), allocatable :: Gamma3
   ! Some geometrical coefficients
   REAL(dp), DIMENSION(:) , allocatable :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
-  ! Kernel function evaluation (ij,ikx,iky)
-  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: kernel_e
-  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: kernel_i
+  ! Kernel function evaluation (ij,ikx,iky,iz)
+  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: kernel_e
+  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: kernel_i
 
   !! Diagnostics
   ! Gyrocenter density for electron and ions (ikx,iky,iz)
