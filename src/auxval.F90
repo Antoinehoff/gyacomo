@@ -31,9 +31,7 @@ subroutine auxval
   CALL memory ! Allocate memory for global arrays
 
   CALL eval_magnetic_geometry ! precompute coeff for lin equation
-
   CALL compute_lin_coeff ! precompute coeff for lin equation and geometry
-
   CALL evaluate_kernels ! precompute the kernels
 
   IF ( NON_LIN ) THEN;
