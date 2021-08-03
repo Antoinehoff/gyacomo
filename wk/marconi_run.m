@@ -2,7 +2,7 @@ clear all;
 addpath(genpath('../matlab')) % ... add
 SUBMIT = 1; % To submit the job automatically
 % EXECNAME = 'helaz_dbg';
-  EXECNAME = 'helaz_3.0';
+  EXECNAME = 'helaz_3.1';
 for ETAN = [1/0.6]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
@@ -20,16 +20,16 @@ NP_KX         = 24;         % MPI processes along kx
 %% PHYSICAL PARAMETERS
 NU      = 0.05;   % Collision frequency
 ETAN    = 1.0/0.6;    % Density gradient drive (R/Ln)
-NU_HYP  = 1.0;
+NU_HYP  = 10.0;
 %% GRID PARAMETERS
 N       = 300;     % Frequency gridpoints (Nkx = N/2)
 L       = 100;     % Size of the squared frequency domain
 Nz      = 1;      % number of perpendicular planes (parallel grid)
 q0      = 1.0;    % q factor ()
+shear   = 0.0;    % magnetic shear
+eps     = 0.0;    % inverse aspect ratio
 P       = 2;
 J       = 1;
-MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
-MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARAMETERS
 TMAX    = 200;  % Maximal time unit
 DT      = 1e-2;   % Time step
@@ -43,7 +43,7 @@ JOB2LOAD= 0;
 %% OPTIONS AND NAMING
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle ; +/- for GK/DK)
-CO      = 1;
+CO      = 2;
 CLOS    = 0;   % Closure model (0: =0 truncation)
 NL_CLOS = 0;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
 % SIMID   = 'test_3D_marconi';  % Name of the simulation
@@ -83,6 +83,8 @@ TAU     = 1.0;    % e/i temperature ratio
 ETAT    = 0.0;    % Temperature gradient
 ETAB    = 1.0;    % Magnetic gradient (1.0 to set R=LB)
 INIT_PHI= 1;   % Start simulation with a noisy phi and moments
+MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
+MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 % Compute processes distribution
 Ntot = NP_P * NP_KX;
 Nnodes = ceil(Ntot/48);

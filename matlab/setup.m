@@ -9,8 +9,10 @@ GRID.Nx    = N; % x grid resolution
 GRID.Lx    = L; % x length
 GRID.Ny    = N * (1-KXEQ0) + KXEQ0; % y ''
 GRID.Ly    = L * (1-KXEQ0); % y ''
-GRID.Nz    = Nz; % z resolution
-GRID.q0    = q0; % q factor
+GRID.Nz    = Nz;    % z resolution
+GRID.q0    = q0;    % q factor
+GRID.shear = shear; % shear
+GRID.eps   = eps;   % inverse aspect ratio
 
 % Model parameters
 MODEL.CO      = CO;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)

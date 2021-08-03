@@ -82,6 +82,19 @@ MODULE grid
 
 CONTAINS
 
+
+  SUBROUTINE grid_readinputs
+    ! Read the input parameters
+    USE prec_const
+    IMPLICIT NONE
+    INTEGER :: lu_in   = 90              ! File duplicated from STDIN
+
+    NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, &
+                    Nx,  Lx,  Ny,  Ly, Nz, q0, shear, eps
+    READ(lu_in,grid)
+
+  END SUBROUTINE grid_readinputs
+
   SUBROUTINE init_1Dgrid_distr
 
     ! write(*,*) Nx
@@ -288,19 +301,6 @@ CONTAINS
     if(my_id.EQ.0) write(*,*) '#parallel planes = ', Nz
   END SUBROUTINE set_zgrid
 
-  SUBROUTINE grid_readinputs
-    ! Read the input parameters
-    USE prec_const
-    IMPLICIT NONE
-    INTEGER :: lu_in   = 90              ! File duplicated from STDIN
-
-    NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, &
-                    Nx,  Lx,  Ny,  Ly, Nz, q0
-    READ(lu_in,grid)
-
-  END SUBROUTINE grid_readinputs
-
-
   SUBROUTINE grid_outputinputs(fidres, str)
     ! Write the input parameters to the results_xx.h5 file
 
@@ -321,10 +321,12 @@ CONTAINS
     CALL attach(fidres, TRIM(str),   "Ly",   Ly)
     CALL attach(fidres, TRIM(str),   "Nz",   Nz)
     CALL attach(fidres, TRIM(str),   "q0",   q0)
-    CALL attach(fidres, TRIM(str),   "Nkx",   Nkx)
-    CALL attach(fidres, TRIM(str),   "Lkx",   Lkx)
-    CALL attach(fidres, TRIM(str),   "Nky",   Nky)
-    CALL attach(fidres, TRIM(str),   "Lky",   Lky)
+    CALL attach(fidres, TRIM(str),"shear",shear)
+    CALL attach(fidres, TRIM(str),  "eps",  eps)
+    CALL attach(fidres, TRIM(str),  "Nkx",  Nkx)
+    CALL attach(fidres, TRIM(str),  "Lkx",  Lkx)
+    CALL attach(fidres, TRIM(str),  "Nky",  Nky)
+    CALL attach(fidres, TRIM(str),  "Lky",  Lky)
   END SUBROUTINE grid_outputinputs
 
   FUNCTION bare(p_,j_)
