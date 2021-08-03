@@ -60,7 +60,7 @@ contains
         ky = kyarray(iky)
         DO ikx= ikxs, ikxe
           kx = kxarray(ikx)
-          Ckxky(ikx,iky,iz) = SIN(z)*kx + (COS(z)+shear*z*SIN(z))*ky
+          Ckxky(ikx,iky,iz) = -SIN(z)*kx -(COS(z)+shear*z*SIN(z))*ky
         ENDDO
       ENDDO
 
