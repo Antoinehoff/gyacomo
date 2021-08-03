@@ -174,12 +174,12 @@ SUBROUTINE compute_lin_coeff
       j_dp = REAL(j_int,dp) ! REAL of Laguerre degree
       xnepj(ip,ij) = taue_qe * 2._dp * (p_dp + j_dp + 1._dp)
       ynepp1j  (ip,ij) = -SQRT(tau_e)/sigma_e * (j_dp+1)*SQRT(p_dp+1._dp)
-      ynepp1jm1(ip,ij) = +SQRT(tau_e)/sigma_e *     j_dp*SQRT(p_dp+1._dp)
       ynepm1j  (ip,ij) = -SQRT(tau_e)/sigma_e * (j_dp+1)*SQRT(p_dp)
+      ynepp1jm1(ip,ij) = +SQRT(tau_e)/sigma_e *     j_dp*SQRT(p_dp+1._dp)
       ynepm1jm1(ip,ij) = +SQRT(tau_e)/sigma_e *     j_dp*SQRT(p_dp)
-      zNepm1j  (ip,ij) = -SQRT(tau_e)/sigma_e * (2._dp*j_dp+1_dp)*SQRT(2._dp*p_dp)
-      zNepm1jp1(ip,ij) = +SQRT(tau_e)/sigma_e *       (j_dp+1_dp)*SQRT(2._dp*p_dp)
-      zNepm1jm1(ip,ij) = +SQRT(tau_e)/sigma_e *              j_dp*SQRT(2._dp*p_dp)
+      zNepm1j  (ip,ij) = -SQRT(tau_e)/sigma_e * (2._dp*j_dp+1_dp)*SQRT(p_dp)
+      zNepm1jp1(ip,ij) = +SQRT(tau_e)/sigma_e *       (j_dp+1_dp)*SQRT(p_dp)
+      zNepm1jm1(ip,ij) = +SQRT(tau_e)/sigma_e *              j_dp*SQRT(p_dp)
     ENDDO
   ENDDO
   DO ip = ips_e, ipe_e
@@ -206,12 +206,12 @@ SUBROUTINE compute_lin_coeff
       j_dp = REAL(j_int,dp) ! REAL of Laguerre degree
       xnipj(ip,ij) = taui_qi * 2._dp * (p_dp + j_dp + 1._dp)
       ynipp1j  (ip,ij) = -SQRT(tau_i)/sigma_i * (j_dp+1)*SQRT(p_dp+1._dp)
-      ynipp1jm1(ip,ij) = +SQRT(tau_i)/sigma_i *     j_dp*SQRT(p_dp+1._dp)
       ynipm1j  (ip,ij) = -SQRT(tau_i)/sigma_i * (j_dp+1)*SQRT(p_dp)
+      ynipp1jm1(ip,ij) = +SQRT(tau_i)/sigma_i *     j_dp*SQRT(p_dp+1._dp)
       ynipm1jm1(ip,ij) = +SQRT(tau_i)/sigma_i *     j_dp*SQRT(p_dp)
-      zNipm1j  (ip,ij) = -SQRT(tau_i)/sigma_i * (2._dp*j_dp+1_dp)*SQRT(2._dp*p_dp)
-      zNipm1jp1(ip,ij) = +SQRT(tau_i)/sigma_i *       (j_dp+1_dp)*SQRT(2._dp*p_dp)
-      zNipm1jm1(ip,ij) = +SQRT(tau_i)/sigma_i *              j_dp*SQRT(2._dp*p_dp)
+      zNipm1j  (ip,ij) = -SQRT(tau_i)/sigma_i * (2._dp*j_dp+1_dp)*SQRT(p_dp)
+      zNipm1jp1(ip,ij) = +SQRT(tau_i)/sigma_i *       (j_dp+1_dp)*SQRT(p_dp)
+      zNipm1jm1(ip,ij) = +SQRT(tau_i)/sigma_i *              j_dp*SQRT(p_dp)
     ENDDO
   ENDDO
   DO ip = ips_i, ipe_i
@@ -237,11 +237,11 @@ SUBROUTINE compute_lin_coeff
       j_dp = REAL(j_int,dp) ! REALof Laguerre degree
       !! Electrostatic potential pj terms
       IF (p_int .EQ. 0) THEN ! kronecker p0
-        xphij(ip,ij)    = eta_n + 2.*j_dp*eta_T
+        xphij(ip,ij)    =+eta_n + 2.*j_dp*eta_T
         xphijp1(ip,ij)  =-eta_T*(j_dp+1._dp)
         xphijm1(ip,ij)  =-eta_T* j_dp
       ELSE IF (p_int .EQ. 2) THEN ! kronecker p2
-        xphij(ip,ij)    = eta_T/SQRT2
+        xphij(ip,ij)    =+eta_T/SQRT2
         xphijp1(ip,ij)  = 0._dp; xphijm1(ip,ij)  = 0._dp;
       ELSE
         xphij(ip,ij)    = 0._dp; xphijp1(ip,ij)  = 0._dp

@@ -116,7 +116,7 @@ SUBROUTINE moments_eq_rhs_e
               - imagu*Ckxky(ikx,iky,iz) * (Tnepj + Tnepp2j + Tnepm2j + Tnepjp1 + Tnepjm1)&
               - Tpare/2._dp/deltaz*gradz_coeff(iz) &
               - gradzB(iz)* Tmir  *gradz_coeff(iz) &
-              + i_ky  * Tphi &
+              - i_ky  * Tphi &
               - mu*kperp2**2 * moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
               + TColl
 
@@ -255,7 +255,7 @@ SUBROUTINE moments_eq_rhs_i
               - imagu*Ckxky(ikx,iky,iz) * (Tnipj + Tnipp2j + Tnipm2j + Tnipjp1 + Tnipjm1)&
               - Tpari/2._dp/deltaz*gradz_coeff(iz) &
               - gradzB(iz)* Tmir  *gradz_coeff(iz) &
-              + i_ky  * Tphi &
+              - i_ky  * Tphi &
               - mu*kperp2**2 * moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
               + TColl
 
