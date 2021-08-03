@@ -86,7 +86,7 @@ if (Nz == 1)
     gridname   = ['L_',num2str(L),'_'];
 else
     resolution = [num2str(GRID.Nx),'x',num2str(GRID.Ny/2),'x',num2str(GRID.Nz),'_'];
-    gridname   = ['L_',num2str(L),'_q_',num2str(q),'_'];
+    gridname   = ['L_',num2str(L),'_q0_',num2str(q0),'_'];
 end
 if (exist('PREFIX','var') == 0); PREFIX = []; end;
 if (exist('SUFFIX','var') == 0); SUFFIX = []; end;
