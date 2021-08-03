@@ -30,10 +30,10 @@ SUBROUTINE compute_radial_ion_transport
           DO iky = ikys,ikye
               ky_ = kyarray(iky)
               DO ikx = ikxs,ikxe
-                  gflux_local = gflux_local - &
+                  gflux_local = gflux_local + &
                       imagu * ky_ * moments_i(1,1,ikx,iky,iz,updatetlevel) * CONJG(phi(ikx,iky,iz))
                   DO ij = ijs_i, ije_i
-                      pflux_local = pflux_local - &
+                      pflux_local = pflux_local + &
                           imagu * ky_ * kernel_i(ij,ikx,iky,iz) * moments_i(1,ij,ikx,iky,iz,updatetlevel) * CONJG(phi(ikx,iky,iz))
                   ENDDO
               ENDDO
