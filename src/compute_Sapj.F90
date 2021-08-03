@@ -54,7 +54,7 @@ zloop: DO iz = izs,ize
           kyloope: DO iky = ikys,ikye ! Loop over ky
             kx     = kxarray(ikx)
             ky     = kyarray(iky)
-            kerneln = kernel_e(in, ikx, iky)
+            kerneln = kernel_e(in, ikx, iky, iz)
 
             ! First convolution terms
             Fx_cmpx(ikx,iky) = imagu*kx* phi(ikx,iky,iz) * kerneln
@@ -145,7 +145,7 @@ zloop: DO iz = izs,ize
           kyloopi: DO iky = ikys,ikye ! Loop over ky
             kx      = kxarray(ikx)
             ky      = kyarray(iky)
-            kerneln = kernel_i(in, ikx, iky)
+            kerneln = kernel_i(in, ikx, iky, iz)
 
             ! First convolution terms
             Fx_cmpx(ikx,iky) = imagu*kx* phi(ikx,iky,iz) * kerneln

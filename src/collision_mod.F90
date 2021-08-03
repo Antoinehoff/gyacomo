@@ -43,7 +43,7 @@ CONTAINS
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     IF( p_dp .EQ. 0 ) THEN ! Kronecker p0
       ! Get adiabatic moment
-      TColl_ = TColl_ - (p_dp + 2._dp*j_dp + 2._dp*be_2) * qe_taue * Kernel_e(ij_,ikx_,iky_)*phi(ikx_,iky_,iz_)
+      TColl_ = TColl_ - (p_dp + 2._dp*j_dp + 2._dp*be_2) * qe_taue * Kernel_e(ij_,ikx_,iky_,iz_)*phi(ikx_,iky_,iz_)
         !** build required fluid moments **
         n_     = 0._dp
         upar_  = 0._dp; uperp_ = 0._dp
@@ -51,9 +51,9 @@ CONTAINS
         DO in_ = 1,jmaxe+1
           n_dp = REAL(in_-1,dp)
           ! Store the kernels for sparing readings
-          Knp0 =  Kernel_e(in_,ikx_,iky_)
-          Knp1 =  Kernel_e(in_+1,ikx_,iky_)
-          Knm1 =  Kernel_e(in_-1,ikx_,iky_)
+          Knp0 =  Kernel_e(in_  ,ikx_,iky_,iz_)
+          Knp1 =  Kernel_e(in_+1,ikx_,iky_,iz_)
+          Knm1 =  Kernel_e(in_-1,ikx_,iky_,iz_)
           ! Nonadiabatic moments (only different from moments when p=0)
           nadiab_moment_0j   = moments_e(1,in_  ,ikx_,iky_,iz_,updatetlevel) + qe_taue*Knp0*phi(ikx_,iky_,iz_)
           ! Density
@@ -67,10 +67,10 @@ CONTAINS
         ENDDO
       T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
       ! Add energy restoring term
-      TColl_ = TColl_ + T_* 4._dp *  j_dp          * Kernel_e(ij_  ,ikx_,iky_)
-      TColl_ = TColl_ - T_* 2._dp * (j_dp + 1._dp) * Kernel_e(ij_+1,ikx_,iky_)
-      TColl_ = TColl_ - T_* 2._dp *  j_dp          * Kernel_e(ij_-1,ikx_,iky_)
-      TColl_ = TColl_ + uperp_*be_* (Kernel_e(ij_,ikx_,iky_) - Kernel_e(ij_-1,ikx_,iky_))
+      TColl_ = TColl_ + T_* 4._dp *  j_dp          * Kernel_e(ij_  ,ikx_,iky_,iz_)
+      TColl_ = TColl_ - T_* 2._dp * (j_dp + 1._dp) * Kernel_e(ij_+1,ikx_,iky_,iz_)
+      TColl_ = TColl_ - T_* 2._dp *  j_dp          * Kernel_e(ij_-1,ikx_,iky_,iz_)
+      TColl_ = TColl_ + uperp_*be_* (Kernel_e(ij_,ikx_,iky_,iz_) - Kernel_e(ij_-1,ikx_,iky_,iz_))
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -79,9 +79,9 @@ CONTAINS
       upar_  = 0._dp
       DO in_ = 1,jmaxe+1
         ! Parallel velocity
-         upar_  = upar_  + Kernel_e(in_,ikx_,iky_) * moments_e(2,in_,ikx_,iky_,iz_,updatetlevel)
+         upar_  = upar_  + Kernel_e(in_,ikx_,iky_,iz_) * moments_e(2,in_,ikx_,iky_,iz_,updatetlevel)
       ENDDO
-      TColl_ = TColl_ + upar_*Kernel_e(ij_,ikx_,iky_)
+      TColl_ = TColl_ + upar_*Kernel_e(ij_,ikx_,iky_,iz_)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 2 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -93,9 +93,9 @@ CONTAINS
       DO in_ = 1,jmaxe+1
         n_dp = REAL(in_-1,dp)
         ! Store the kernels for sparing readings
-        Knp0 =  Kernel_e(in_  ,ikx_,iky_)
-        Knp1 =  Kernel_e(in_+1,ikx_,iky_)
-        Knm1 =  Kernel_e(in_-1,ikx_,iky_)
+        Knp0 =  Kernel_e(in_  ,ikx_,iky_,iz_)
+        Knp1 =  Kernel_e(in_+1,ikx_,iky_,iz_)
+        Knm1 =  Kernel_e(in_-1,ikx_,iky_,iz_)
         ! Nonadiabatic moments (only different from moments when p=0)
         nadiab_moment_0j = moments_e(1,in_,ikx_,iky_,iz_,updatetlevel) + qe_taue*Knp0*phi(ikx_,iky_,iz_)
         ! Density
@@ -106,7 +106,7 @@ CONTAINS
         Tperp_ = Tperp_ + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1._dp)*Knp1 - n_dp*Knm1)*nadiab_moment_0j
       ENDDO
       T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
-      TColl_ = TColl_ + T_*SQRT2*Kernel_e(ij_,ikx_,iky_)
+      TColl_ = TColl_ + T_*SQRT2*Kernel_e(ij_,ikx_,iky_,iz_)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     ENDIF
@@ -149,7 +149,7 @@ CONTAINS
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     IF( p_dp .EQ. 0 ) THEN ! Kronecker p0
       ! Get adiabatic moment
-      TColl_ = TColl_ - (p_dp + 2._dp*j_dp + 2._dp*bi_2) * qi_taui * Kernel_i(ij_,ikx_,iky_)*phi(ikx_,iky_,iz_)
+      TColl_ = TColl_ - (p_dp + 2._dp*j_dp + 2._dp*bi_2) * qi_taui * Kernel_i(ij_,ikx_,iky_,iz_)*phi(ikx_,iky_,iz_)
         !** build required fluid moments **
         n_     = 0._dp
         upar_  = 0._dp; uperp_ = 0._dp
@@ -157,9 +157,9 @@ CONTAINS
         DO in_ = 1,jmaxi+1
           n_dp = REAL(in_-1,dp)
           ! Store the kernels for sparing readings
-          Knp0 =  Kernel_i(in_,ikx_,iky_)
-          Knp1 =  Kernel_i(in_+1,ikx_,iky_)
-          Knm1 =  Kernel_i(in_-1,ikx_,iky_)
+          Knp0 =  Kernel_i(in_  ,ikx_,iky_,iz_)
+          Knp1 =  Kernel_i(in_+1,ikx_,iky_,iz_)
+          Knm1 =  Kernel_i(in_-1,ikx_,iky_,iz_)
           ! Nonadiabatic moments (only different from moments when p=0)
           nadiab_moment_0j   = moments_i(1,in_  ,ikx_,iky_,iz_,updatetlevel) + qi_taui*Knp0*phi(ikx_,iky_,iz_)
           ! Density
@@ -173,10 +173,10 @@ CONTAINS
         ENDDO
         T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
       ! Add energy restoring term
-      TColl_ = TColl_ + T_* 4._dp *  j_dp          * Kernel_i(ij_  ,ikx_,iky_)
-      TColl_ = TColl_ - T_* 2._dp * (j_dp + 1._dp) * Kernel_i(ij_+1,ikx_,iky_)
-      TColl_ = TColl_ - T_* 2._dp *  j_dp          * Kernel_i(ij_-1,ikx_,iky_)
-      TColl_ = TColl_ + uperp_*bi_* (Kernel_i(ij_,ikx_,iky_) - Kernel_i(ij_-1,ikx_,iky_))
+      TColl_ = TColl_ + T_* 4._dp *  j_dp          * Kernel_i(ij_  ,ikx_,iky_,iz_)
+      TColl_ = TColl_ - T_* 2._dp * (j_dp + 1._dp) * Kernel_i(ij_+1,ikx_,iky_,iz_)
+      TColl_ = TColl_ - T_* 2._dp *  j_dp          * Kernel_i(ij_-1,ikx_,iky_,iz_)
+      TColl_ = TColl_ + uperp_*bi_* (Kernel_i(ij_,ikx_,iky_,iz_) - Kernel_i(ij_-1,ikx_,iky_,iz_))
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -185,9 +185,9 @@ CONTAINS
       upar_  = 0._dp
       DO in_ = 1,jmaxi+1
         ! Parallel velocity
-         upar_  = upar_  + Kernel_i(in_,ikx_,iky_) * moments_i(2,in_,ikx_,iky_,iz_,updatetlevel)
+         upar_  = upar_  + Kernel_i(in_,ikx_,iky_,iz_) * moments_i(2,in_,ikx_,iky_,iz_,updatetlevel)
       ENDDO
-      TColl_ = TColl_ + upar_*Kernel_i(ij_,ikx_,iky_)
+      TColl_ = TColl_ + upar_*Kernel_i(ij_,ikx_,iky_,iz_)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 2 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -199,9 +199,9 @@ CONTAINS
       DO in_ = 1,jmaxi+1
         n_dp = REAL(in_-1,dp)
         ! Store the kernels for sparing readings
-        Knp0 =  Kernel_i(in_  ,ikx_,iky_)
-        Knp1 =  Kernel_i(in_+1,ikx_,iky_)
-        Knm1 =  Kernel_i(in_-1,ikx_,iky_)
+        Knp0 =  Kernel_i(in_  ,ikx_,iky_,iz_)
+        Knp1 =  Kernel_i(in_+1,ikx_,iky_,iz_)
+        Knm1 =  Kernel_i(in_-1,ikx_,iky_,iz_)
         ! Nonadiabatic moments (only different from moments when p=0)
         nadiab_moment_0j = moments_i(1,in_,ikx_,iky_,iz_,updatetlevel) + qi_taui*Knp0*phi(ikx_,iky_,iz_)
         ! Density
@@ -212,7 +212,7 @@ CONTAINS
         Tperp_ = Tperp_ + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1._dp)*Knp1 - n_dp*Knm1)*nadiab_moment_0j
       ENDDO
       T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
-      TColl_ = TColl_ + T_*SQRT2*Kernel_i(ij_,ikx_,iky_)
+      TColl_ = TColl_ + T_*SQRT2*Kernel_i(ij_,ikx_,iky_,iz_)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     ENDIF

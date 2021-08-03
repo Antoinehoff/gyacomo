@@ -32,8 +32,8 @@ SUBROUTINE apply_closure_model
             moments_e(ipeg_e-1,ij,ikx,iky,iz,updatetlevel) = 0._dp
             moments_e(ipeg_e  ,ij,ikx,iky,iz,updatetlevel) = 0._dp
           ENDDO
-          kernel_e(ijsg_e,ikx,iky)      = 0._dp
-          kernel_e(ijeg_e,ikx,iky)      = 0._dp
+          kernel_e(ijsg_e,ikx,iky,iz)      = 0._dp
+          kernel_e(ijeg_e,ikx,iky,iz)      = 0._dp
 
           DO ip = ipsg_i,ipeg_i
             moments_i(ip,ijsg_i,ikx,iky,iz,updatetlevel) = 0._dp
@@ -45,8 +45,8 @@ SUBROUTINE apply_closure_model
             moments_i(ipeg_i-1,ij,ikx,iky,iz,updatetlevel) = 0._dp
             moments_i(ipeg_i  ,ij,ikx,iky,iz,updatetlevel) = 0._dp
           ENDDO
-          kernel_i(ijsg_i,ikx,iky)      = 0._dp
-          kernel_i(ijeg_i,ikx,iky)      = 0._dp
+          kernel_i(ijsg_i,ikx,iky,iz)      = 0._dp
+          kernel_i(ijeg_i,ikx,iky,iz)      = 0._dp
         ENDDO
       ENDDO
     ENDDO
@@ -66,8 +66,8 @@ SUBROUTINE apply_closure_model
             moments_e(ipeg_e-1,ij,ikx,iky,iz,updatetlevel) = 0._dp
             moments_e(ipeg_e  ,ij,ikx,iky,iz,updatetlevel) = 0._dp
           ENDDO
-          kernel_e(ijsg_e,ikx,iky)      = 0._dp
-          kernel_e(ijeg_e,ikx,iky)      = 0._dp
+          kernel_e(ijsg_e,ikx,iky,iz)      = 0._dp
+          kernel_e(ijeg_e,ikx,iky,iz)      = 0._dp
 
           DO ip = ipsg_i,ipeg_i
             moments_i(ip,ijsg_i,ikx,iky,iz,updatetlevel) = 0._dp
@@ -79,8 +79,8 @@ SUBROUTINE apply_closure_model
             moments_i(ipeg_i-1,ij,ikx,iky,iz,updatetlevel) = 0._dp
             moments_i(ipeg_i  ,ij,ikx,iky,iz,updatetlevel) = 0._dp
           ENDDO
-          kernel_i(ijsg_i,ikx,iky)      = 0._dp
-          kernel_i(ijeg_i,ikx,iky)      = 0._dp
+          kernel_i(ijsg_i,ikx,iky,iz)      = 0._dp
+          kernel_i(ijeg_i,ikx,iky,iz)      = 0._dp
         ENDDO
       ENDDO
     ENDDO

@@ -37,7 +37,7 @@ SUBROUTINE poisson
           sum_kernel2_e    = 0._dp
           ! loop over n only if the max polynomial degree
           DO ine=1,jmaxe+1 ! ine = n+1
-            Kne = kernel_e(ine, ikx, iky)
+            Kne = kernel_e(ine,ikx,iky,iz)
             sum_kernel_mom_e  = sum_kernel_mom_e  + Kne * moments_e(1, ine, ikx, iky, iz, updatetlevel)
             sum_kernel2_e     = sum_kernel2_e     + Kne**2 ! ... sum recursively ...
           END DO
@@ -47,7 +47,7 @@ SUBROUTINE poisson
             sum_kernel2_i    = 0._dp
             ! loop over n only if the max polynomial degree
             DO ini=1,jmaxi+1
-              Kni = kernel_i(ini, ikx, iky)
+              Kni = kernel_i(ini,ikx,iky,iz)
               sum_kernel_mom_i  = sum_kernel_mom_i  + Kni * moments_i(1, ini, ikx, iky, iz, updatetlevel)
               sum_kernel2_i     = sum_kernel2_i     + Kni**2 ! ... sum recursively ...
             END DO
