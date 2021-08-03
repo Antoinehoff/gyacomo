@@ -123,7 +123,7 @@ SUBROUTINE moments_eq_rhs_e
           !! Adding non linearity
           IF ( NON_LIN ) THEN
             moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) = &
-              moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) + Sepj(ip,ij,ikx,iky,iz)
+              moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) - Sepj(ip,ij,ikx,iky,iz)
           ENDIF
 
           END DO kyloope
@@ -262,7 +262,7 @@ SUBROUTINE moments_eq_rhs_i
           !! Adding non linearity
           IF ( NON_LIN ) THEN
            moments_rhs_i(ip,ij,ikx,iky,iz,updatetlevel) = &
-             moments_rhs_i(ip,ij,ikx,iky,iz,updatetlevel) + Sipj(ip,ij,ikx,iky,iz)
+             moments_rhs_i(ip,ij,ikx,iky,iz,updatetlevel) - Sipj(ip,ij,ikx,iky,iz)
           ENDIF
 
           END DO kyloopi
