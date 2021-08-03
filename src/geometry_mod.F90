@@ -18,78 +18,53 @@ contains
     ! evalute metrix, elements, jacobian and gradient
     implicit none
     !
-     IF( my_id .eq. 0 ) WRITE(*,*) 'circular geometry'
+     IF( my_id .eq. 0 ) WRITE(*,*) 's-alpha geometry'
      ! circular model
-     call eval_circular_geometry
+     call eval_s_alpha_geometry
     !
   END SUBROUTINE eval_magnetic_geometry
   !
   !--------------------------------------------------------------------------------
   !
-  subroutine eval_circular_geometry
-   ! evaluate circular geometry model
+  subroutine eval_s_alpha_geometry
+    ! evaluate circular geometry model
 
     ! Ref: Lapilonne et al., PoP, 2009
-   implicit none
-   REAL(dp) :: shear   = 0._dp
-   REAL(dp) :: epsilon = 0.18_dp
+    implicit none
+    REAL(dp) :: z, kx, ky
 
-   ! Metric elements
+    zloop: DO iz = izs,ize
+      z = zarray(iz)
 
-   DO iz = izs,ize
+      ! Metric elements
       gxx(iz) = 1._dp
-      gxy(iz) = shear*zarray(iz) - epsilon*sin(zarray(iz))
-      gyy(iz) = 1._dp + (shear*zarray(iz))**2 &
-           - 2._dp * epsilon *COS(zarray(iz)) - 2._dp*shear * epsilon * zarray(iz)*SIN(zarray(iz))
-      gxz( iz) = - SIN(zarray(iz))
-      gyz( iz) = ( 1._dp - 2._dp * epsilon *COS(zarray( iz)) - epsilon*shear * zarray( iz) * SIN(zarray(iz)) ) /epsilon
-   ENDDO
+      gxy(iz) = shear*z -eps*SIN(z)
+      gyy(iz) = 1._dp +(shear*z)**2 -2._dp*eps*COS(z) -2._dp*shear*eps*z*SIN(z)
 
-   ! Relative strengh of radius
-   DO iz = izs,ize
-       hatR(iz) = 1._dp + epsilon*cos(zarray(iz))
-    ENDDO
+      ! Relative strengh of radius
+      hatR(iz) = 1._dp + eps*cos(z)
 
-    DO iz = izs, ize
-       hatB( iz) = sqrt(gxx(iz) * gyy(iz) - gxy(iz)*  gxy(iz))
-   ENDDO
+      hatB(iz) = SQRT(gxx(iz)*gyy(iz) - gxy(iz)**2)
 
+      ! Jacobian
+      Jacobian(iz) = q0*hatR(iz)**2
 
-   ! Jacobian
-    DO iz = izs,ize
-       Jacobian(iz) = q0*hatR(iz)*hatR(iz)
-    ENDDO
+      ! Derivative of the magnetic field strenght
+      gradxB(iz) = -(COS(z) + eps*SIN(z)**2)/hatB(iz)/hatB(iz)
+      gradzB(iz) =  eps*SIN(z)
+      ! coefficient in the front of parallel derivative
+      gradz_coeff(iz) = 1._dp / Jacobian(iz) / hatB(iz)
 
-    ! Derivative of the magnetic field strenght
-    DO iz = izs, ize
-       gradxB(iz) = - ( COS( zarray(iz))   + epsilon* SIN( zarray(iz)) * SIN(zarray(iz) )) / hatB(iz)/hatB(iz)
-       gradzB( iz) = epsilon * SIN(zarray(iz)) *( 1._dp - epsilon*COS(zarray(iz)) ) / hatB(iz)/hatB(iz)
-    ENDDO
+      ! Curvature operator
+      DO iky = ikys, ikye
+        ky = kyarray(iky)
+        DO ikx= ikxs, ikxe
+          kx = kxarray(ikx)
+          Ckxky(ikx,iky,iz) = SIN(z)*kx + (COS(z)+shear*z*SIN(z))*ky
+        ENDDO
+      ENDDO
 
-    ! Gemoetrical coefficients for the curvature operator
-    ! Note: Gamma2 and Gamma3 are obtained directly form Gamma1 in the expression of the curvature operator implemented here
-   DO iz = izs, ize
-      Gamma1( iz) = gxy(iz) * gxy(iz) - gxx(iz) * gyy(iz)
-      Gamma2( iz) = gxz( iz) * gxy( iz) - gxx( iz) * gyz( iz)
-      Gamma3( iz) = gxz( iz) * gyy( iz) - gxy(iz) * gyz(  iz)
-   ENDDO
-
-    ! Curvature operator
-    DO iz = izs, ize
-       DO iky = ikys, ikye
-          DO ikx= ikxs, ikxe
-             Ckxky( ikx, iky,  iz) = Gamma1(iz)/hatB(iz)*((kxarray(ikx) &
-                  + shear*zarray(iz)*kyarray(iky)) * gradzB(iz)/epsilon &
-                  - gradxB(iz)* kyarray(iky))
-          ENDDO
-       ENDDO
-    ENDDO
-
-    ! coefficient in the front of parallel derivative
-    DO iz = izs, ize
-       gradz_coeff( iz) = 1._dp / Jacobian( iz) / hatB( iz)
-    ENDDO
-
-  END SUBROUTINE eval_circular_geometry
+    ENDDO zloop
+  END SUBROUTINE eval_s_alpha_geometry
 
 end module geometry
