@@ -17,7 +17,9 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED :: Ny    = 16     ! Number of total internal grid points in y
   REAL(dp), PUBLIC, PROTECTED :: Ly    = 1._dp  ! vertical length of the spatial box
   INTEGER,  PUBLIC, PROTECTED :: Nz    = 1      ! Number of total perpendicular planes
-  REAL(dp), PUBLIC, PROTECTED :: q0    = 1._dp  ! q factor
+  REAL(dp), PUBLIC, PROTECTED :: q0    = 1._dp  ! safety factor
+  REAL(dp), PUBLIC, PROTECTED :: shear = 0._dp  ! magnetic field shear
+  REAL(dp), PUBLIC, PROTECTED :: eps   = 0._dp ! inverse aspect ratio
   INTEGER,  PUBLIC, PROTECTED :: Nkx   = 8      ! Number of total internal grid points in kx
   REAL(dp), PUBLIC, PROTECTED :: Lkx   = 1._dp  ! horizontal length of the fourier box
   INTEGER,  PUBLIC, PROTECTED :: Nky   = 16     ! Number of total internal grid points in ky
