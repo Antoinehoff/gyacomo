@@ -63,7 +63,15 @@ contains
           Ckxky(ikx,iky,iz) = -SIN(z)*kx -(COS(z)+shear*z*SIN(z))*ky
         ENDDO
       ENDDO
-
+      IF (Nky .EQ. 1) THEN ! linear 1D run we switch kx and ky for parallel opt
+        DO iky = ikys, ikye
+          ky = kyarray(iky)
+          DO ikx= ikxs, ikxe
+            kx = kxarray(ikx)
+            Ckxky(ikx,iky,iz) = -SIN(z)*ky -(COS(z)+shear*z*SIN(z))*kx
+          ENDDO
+        ENDDO
+      ENDIF
     ENDDO zloop
   END SUBROUTINE eval_s_alpha_geometry
 
