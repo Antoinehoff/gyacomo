@@ -1,6 +1,3 @@
-for NU = [0.1]
-for ETAN = [2.0]
-for CO = [1]
 %clear all;
 addpath(genpath('../matlab')) % ... add
 default_plots_options
@@ -19,7 +16,7 @@ LAMBDAD = 0.0;
 NOISE0  = 1.0e-5;
 %% GRID PARAMETERS
 N       = 50;     % Frequency gridpoints (Nkx = N/2)
-L       = 100;     % Size of the squared frequency domain
+L       = 75;     % Size of the squared frequency domain
 KXEQ0   = 1;      % put kx = 0
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
@@ -67,7 +64,8 @@ q0      = 1.0;    % safety factor
 shear   = 0.0;    % magnetic shear
 eps     = 0.0;    % inverse aspect ratio
 %% PARAMETER SCANS
-if 1
+
+if 0
 %% Parameter scan over PJ
 % PA = [2 4 6 10];
 % JA = [1 2 3  5];
@@ -141,65 +139,79 @@ saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.png']);
 end
 end
 
-if 0
-%% Parameter scan over eta_B
+if 1
+%% Parameter scan over CO
 PMAXE = 6; PMAXI = 6;
 JMAXE = 3; JMAXI = 3;
-TMAX  = 400;
-DT    = 0.001;
-eta_B = [0.45, 0.5, 0.55, 0.6, 0.65];
-Nparam = numel(eta_B);
-param_name = 'etaB';
-CO      = -2;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
-NU      = 1e-2;   % Collision frequency
+TMAX  = 200;
+DT    = 0.01;
+CO_A = [4];
+CONAME_A = {};
+Nparam = numel(CO_A);
+param_name = 'CO';
+ETAN    = 2.0;
+NU      = 1e-1;   % Collision frequency
 
 Bohm_transport = zeros(Nparam,1);
-gamma_Ni = zeros(Nparam,N);
+gamma_Ni00 = zeros(Nparam,floor(N/2)+1);
+gamma_Nipj = zeros(Nparam,floor(N/2)+1);
 
 for i = 1:Nparam
     % Change scan parameter
-    ETAB = eta_B(i);
+    CO = CO_A(i);
     setup
+    CONAME_A{i} = CONAME;
     % Run linear simulation
     system(...
-        ['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ./../../../bin/helaz; cd ../../../wk']...
+        ['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz_3 1 6; cd ../../../wk']...
     )
-    % Load and process results
+    %% Load an process results
+    filename = ['../results/',SIMID,'/',PARAMS,'/outputs_00.h5'];
     load_results
-    tend   = Ts2D(end); tstart   = 0.4*tend;
+    tend   = Ts3D(end); tstart   = 0.4*tend;
+    [~,itstart] = min(abs(Ts3D-tstart));
+    [~,itend]   = min(abs(Ts3D-tend));
     for ikx = 1:N/2+1
-        gamma_Ni(i,ikx) = LinearFit_s(Ts2D,squeeze(abs(Ni00(ikx,1,:))),tstart,tend);
-        Ni00_ST(i,ikx,1:numel(Ts2D)) = squeeze((Ni00(ikx,1,:)));
+        gamma_Ni00(i,ikx) = (LinearFit_s(Ts3D(itstart:itend)',(squeeze(abs(Ni00(ikx,1,itstart:itend))))));
+        Ni00_ST(i,ikx,1:numel(Ts3D)) = squeeze((Ni00(ikx,1,:)));
     end
-    gamma_Ni(i,:) = real(gamma_Ni(i,:) .* (gamma_Ni(i,:)>=0.0));
-    [gmax,ikymax] = max(gamma_Ni(i,:));
-    kymax = abs(kx(ikymax));
-    Bohm_transport(i) = ETAB/ETAN*gmax/kymax^2;
+    tend   = Ts5D(end); tstart   = 0.4*tend;
+    [~,itstart] = min(abs(Ts5D-tstart));
+    [~,itend]   = min(abs(Ts5D-tend));
+    for ikx = 1:N/2+1
+        gamma_Nipj(i,ikx) = LinearFit_s(Ts5D(itstart:itend)',squeeze(max(max(abs(Nipj(:,:,ikx,1,itstart:itend)),[],1),[],2)));
+    end
+    gamma_Ni00(i,:) = real(gamma_Ni00(i,:) .* (gamma_Ni00(i,:)>=0.0));
+    gamma_Nipj(i,:) = real(gamma_Nipj(i,:) .* (gamma_Nipj(i,:)>=0.0));
+%     kymax = abs(kx(ikymax));
+%     Bohm_transport(i) = ETAB/ETAN*gmax/kymax^2;
     % Clean output
-    system(['rm -r ',BASIC.RESDIR])
-end
-
-if 0
-%% Plot
-fig = figure; FIGNAME = 'linear_study';
-plt = @(x) circshift(x,N/2-1);
-for i = 1:Nparam
-    clr       = line_colors(mod(i-1,numel(line_colors(:,1)))+1,:);
-    linestyle = line_styles(floor((i-1)/numel(line_colors(:,1)))+1);
-    plot(plt(ky),plt(gamma_Ni(i,:)),...
-        'Color',clr,...
-        'LineStyle',linestyle{1},...
-        'DisplayName',['$\eta_B=$',num2str(eta_B(i))]);
-    hold on;
-end
-grid on; xlabel('$k_z\rho_s$'); ylabel('$\gamma(N_i^{00})\rho_2/c_s$'); xlim([0.0,max(ky)]);
-title(['$P_e=',num2str(PMAXE),'$',', $J_e=',num2str(JMAXE),'$',...
-       ', $P_i=',num2str(PMAXE),'$',', $J_i=',num2str(JMAXI),'$'])
-legend('show')
-saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.fig']);
+    system(['rm -r ',BASIC.RESDIR]);
 end
 
 if 1
+%% Plot
+SCALE = 1;%sqrt(2);
+fig = figure; FIGNAME = 'linear_study';
+plt = @(x) x;
+% subplot(211)
+    for i = 1:Nparam
+        clr       = line_colors(mod(i-1,numel(line_colors(:,1)))+1,:);
+        linestyle = line_styles(floor((i-1)/numel(line_colors(:,1)))+1);
+        semilogx(plt(SCALE*kx(2:numel(kx))),plt(gamma_Ni00(i,2:end)),...
+            'Color',clr,...
+            'LineStyle',linestyle{1},'Marker','^',...
+            'DisplayName',[CONAME_A{i}]);
+        hold on;
+    end
+    grid on; xlabel('$k_z\rho_s^{R}$'); ylabel('$\gamma(N_i^{00})L_\perp/c_s$'); xlim([0.0,max(kx)]);
+    title(['$\eta=',num2str(ETAB/ETAN),'$, $\nu=',num2str(NU),'$',', $P=',num2str(PMAXI),'$, $J=',num2str(JMAXI),'$'])
+    legend('show'); xlim([0.01,10])
+saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.fig']);
+saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.png']);
+end
+
+if 0
 %% Plot
 fig = figure; FIGNAME = 'mixing_length';
 plot(eta_B, Bohm_transport)
@@ -209,7 +221,4 @@ title(['$P_e=',num2str(PMAXE),'$',', $J_e=',num2str(JMAXE),'$',...
 saveas(fig,[SIMDIR,FIGNAME,'_vs_',param_name,'_',PARAMS,'.fig']);
 end
 %%
-end
-end
-end
 end
