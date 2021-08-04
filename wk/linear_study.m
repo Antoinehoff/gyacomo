@@ -1,6 +1,6 @@
-for NU = [0.01]
+for NU = [0.1]
 for ETAN = [2.0]
-for CO = [3]
+for CO = [1]
 %clear all;
 addpath(genpath('../matlab')) % ... add
 default_plots_options
@@ -33,12 +33,10 @@ SPSCP   = 0;    % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 00;
 %% OPTIONS
-% SIMID   = 'v2.7_lin_analysis';  % Name of the simulation
-SIMID   = 'kobayashi_2015_fig2';  % Name of the simulation
-% SIMID   = 'v2.6_lin_analysis';  % Name of the simulation
+SIMID   = 'v3.1_lin_analysis';  % Name of the simulation
 NON_LIN = 0 *(1-KXEQ0);   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
-% (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Full Couloumb ; +/- for GK/DK)
+% (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle, 4 : Full Couloumb ; +/- for GK/DK)
 % CO      = 2;
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: semi coll, 2: Copy closure J+1 = J, P+2 = P)
@@ -63,15 +61,18 @@ JOBNUM  = 00;
 KPAR    = 0.0;    % Parellel wave vector component
 HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
 kmax    = N*pi/L;% Highest fourier mode
-MU      = NU_HYP/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
-
+MU      = NU_HYP/(HD_CO*kmax)^4; % Hyperdiffusivity coefficient
+Nz      = 1;      % number of perpendicular planes (parallel grid)
+q0      = 1.0;    % safety factor
+shear   = 0.0;    % magnetic shear
+eps     = 0.0;    % inverse aspect ratio
 %% PARAMETER SCANS
 if 1
 %% Parameter scan over PJ
 % PA = [2 4 6 10];
 % JA = [1 2 3  5];
-PA = [2];
-JA = [1];
+PA = [6];
+JA = [3];
 DTA= DT*ones(size(JA));%./sqrt(JA);
 % DTA= DT;
 mup_ = MU_P;
@@ -87,23 +88,21 @@ for i = 1:Nparam
     PMAXE = PA(i); PMAXI = PA(i);
     JMAXE = JA(i); JMAXI = JA(i);
     DT = DTA(i);
-%     MU_P = mup_/PMAXE^2;
-%     MU_J = muj_/JMAXE^3;
     setup
     % Run linear simulation
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ./../../../bin/helaz 1 1; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 1 6; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 2 3; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ./../../../bin/helaz_3 1 1; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz_3 1 6; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz_3 2 3; cd ../../../wk'])
 %     Load and process results
     %%
     filename = ['../results/',SIMID,'/',PARAMS,'/outputs_00.h5'];
     load_results
-    tend   = Ts2D(end); tstart   = 0.4*tend;
-    [~,itstart] = min(abs(Ts2D-tstart));
-    [~,itend]   = min(abs(Ts2D-tend));
+    tend   = Ts3D(end); tstart   = 0.4*tend;
+    [~,itstart] = min(abs(Ts3D-tstart));
+    [~,itend]   = min(abs(Ts3D-tend));
     for ikx = 1:N/2+1
-        gamma_Ni00(i,ikx) = (LinearFit_s(Ts2D(itstart:itend)',(squeeze(abs(Ni00(ikx,1,itstart:itend))))));
-        Ni00_ST(i,ikx,1:numel(Ts2D)) = squeeze((Ni00(ikx,1,:)));
+        gamma_Ni00(i,ikx) = (LinearFit_s(Ts3D(itstart:itend)',(squeeze(abs(Ni00(ikx,1,itstart:itend))))));
+        Ni00_ST(i,ikx,1:numel(Ts3D)) = squeeze((Ni00(ikx,1,:)));
     end
     tend   = Ts5D(end); tstart   = 0.4*tend;
     [~,itstart] = min(abs(Ts5D-tstart));

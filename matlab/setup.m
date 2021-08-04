@@ -54,19 +54,22 @@ if (abs(CO) == 2) %Sugama operator
 elseif (abs(CO) == 3) %pitch angle operator
     INITIAL.mat_file = ['''../../../iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5'''];
 elseif (CO == 4) % Full Coulomb GK
-    disp('Warning, FCGK not implemented yet')
+    INITIAL.mat_file = ['''../../../iCa/gk_coulomb_P_6_J_3_N_150_kpm_8.0.h5'''];
 elseif (CO == -1) % DGDK
     disp('Warning, DGDK not debugged')
 end
 
 % Naming and creating input file
-if    (CO == -3); CONAME = 'PADK';
-elseif(CO == -2); CONAME = 'SGDK';
-elseif(CO == -1); CONAME = 'DGDK';
-elseif(CO ==  0); CONAME = 'LBDK';
-elseif(CO ==  1); CONAME = 'DGGK';
-elseif(CO ==  2); CONAME = 'SGGK';
-elseif(CO ==  3); CONAME = 'PAGK';
+switch abs(CO)
+    case 0; CONAME = 'LB';
+    case 1; CONAME = 'DG';
+    case 2; CONAME = 'SG';
+    case 3; CONAME = 'PA';
+    case 4; CONAME = 'FC';
+    otherwise; CONAME ='UK';
+end
+if (CO <= 0); CONAME = [CONAME,'DK'];
+else;         CONAME = [CONAME,'GK'];
 end
 if    (CLOS == 0); CLOSNAME = 'Trunc.';
 elseif(CLOS == 1); CLOSNAME = 'Clos. 1';

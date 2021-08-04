@@ -34,6 +34,7 @@ rp_=[...
     5e-2, 1e-3;...
     1e-2, 1e-3;...
     1e-2, 1e-4;...
+    1e-2, 5e-4;...
     ];
 figure; set(gcf, 'Position',  [100, 100, 900, 400])
 grid on; xlim([5e-4,5e0]); ylim([5e-5,5e+0]);
@@ -71,6 +72,12 @@ plot(nu_,mu_,'x--','DisplayName','N=150, L=100, P,J=2,1');
 mu_ = [3e-3 1e-3 1e-4];
 nu_ = [1e-2 1e-2 1e-2];
 plot(nu_,mu_,'x--','DisplayName','N=150, L=100, P,J=2,1');
+
+% HD_study/150x75_L_100_P_4_J_2_eta_0.6_nu_1e-02_DGGK_CLOS_0_mu_3e-02/
+mu_ = [3e-3 5e-4];
+nu_ = [1e-2 1e-2];
+plot(nu_,mu_,'x--','DisplayName','N=150, L=100, P,J=4,2');
+
 
 % HD_study/150x75_L_100_P_2_J_1_eta_0.6_nu_5e-02_DGGK_CLOS_0_mu_3e-02/
 mu_ = [3e-3 1e-3];

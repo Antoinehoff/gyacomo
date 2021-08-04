@@ -6,10 +6,10 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %% PHYSICAL PARAMETERS
 NU      = 0.1;   % Collision frequency
 ETAN    = 1.0/0.6;    % Density gradient drive (R/Ln)
-NU_HYP  = 0.1;
+NU_HYP  = 1.0;
 %% GRID AND GEOMETRY PARAMETERS
-N       = 100;     % Frequency gridpoints (Nkx = N/2)
-L       = 60;     % Size of the squared frequency domain
+N       = 50;     % Frequency gridpoints (Nkx = N/2)
+L       = 30;     % Size of the squared frequency domain
 Nz      = 10;      % number of perpendicular planes (parallel grid)
 q0      = 1.0;    % safety factor
 shear   = 0.0;    % magnetic shear
@@ -17,7 +17,7 @@ eps     = 0.0;    % inverse aspect ratio
 P       = 2;
 J       = 1;
 %% TIME PARAMETERS
-TMAX    = 200;  % Maximal time unit
+TMAX    = 500;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
