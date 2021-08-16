@@ -21,12 +21,6 @@ MODULE initial_par
   ! Initialization for random number generator
   INTEGER,  PUBLIC, PROTECTED :: iseed=42
 
-  ! Parameters of initial smooth sine profiles
-  REAL(dp), PUBLIC, PROTECTED ::  init_nb_oscil_density=2._dp ! Number of oscillations
-  REAL(dp), PUBLIC, PROTECTED ::  init_nb_oscil_temp=2._dp
-  REAL(dp), PUBLIC, PROTECTED ::  init_ampli_density=0.1_dp ! Oscillation amplitude
-  REAL(dp), PUBLIC, PROTECTED ::  init_ampli_temp=0.1_dp
-
   CHARACTER(len=128), PUBLIC :: mat_file    ! COSOlver matrix file names
 
   PUBLIC :: initial_outputinputs, initial_readinputs

@@ -207,7 +207,7 @@ CONTAINS
     END DO
 
     ! Orszag 2/3 filter
-    two_third_kxmax = 2._dp/3._dp*deltakx*Nkx
+    two_third_kxmax = 2._dp/3._dp*deltakx*(Nkx-1)
     ALLOCATE(AA_x(ikxs:ikxe))
     DO ikx = ikxs,ikxe
       IF ( (kxarray(ikx) .LT. two_third_kxmax) ) THEN
@@ -249,7 +249,7 @@ CONTAINS
     ENDIF
 
     ! Orszag 2/3 filter
-    two_third_kymax = 2._dp/3._dp*deltaky*(Nky/2);
+    two_third_kymax = 2._dp/3._dp*deltaky*(Nky/2-1);
     ALLOCATE(AA_y(ikys:ikye))
     DO iky = ikys,ikye
       IF ( (kyarray(iky) .GT. -two_third_kymax) .AND. (kyarray(iky) .LT. two_third_kymax) ) THEN

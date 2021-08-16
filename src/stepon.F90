@@ -39,9 +39,8 @@ SUBROUTINE stepon
       ! Update electrostatic potential phi_n = phi(N_n+1)
       CALL poisson
       ! Update nonlinear term S_n -> S_n+1(phi_n+1,N_n+1)
-      IF ( NON_LIN ) THEN
-        CALL compute_Sapj
-      ENDIF
+      IF ( NON_LIN ) CALL compute_Sapj
+
       !-  Check before next step
       CALL checkfield_all()
       IF( nlend ) EXIT ! exit do loop
@@ -56,7 +55,8 @@ SUBROUTINE stepon
         ! Execution time start
         CALL cpu_time(t0_checkfield)
 
-        IF ( (ikxs .EQ. 1) .AND. (NON_LIN) ) CALL enforce_symetry() ! Enforcing symmetry on kx = 0
+        IF(NON_LIN) CALL anti_aliasing   ! ensure 0 mode for 2/3 rule
+        IF(NON_LIN) CALL enforce_symetry ! Enforcing symmetry on kx = 0
 
         mlend=.FALSE.
         IF(.NOT.nlend) THEN
