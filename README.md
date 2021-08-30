@@ -8,14 +8,16 @@ How to run it
 3. To run the code, use HeLaZ/wk/local_run.m and run it to set up the parameters and the results folder
 4. Then go to the results folder and launch HeLaZ using mpirun -np num_procs ./../../../bin/helaz num_p num_kr
 5. You can obtain various plots and gifs using HeLaZ/wk/analysis_2D.m once the simulation is done. To select the correct output file, run parameters*.m with the corresponding simulation parameters and then run analysis_2D.m (everything with matlab from wk/)
-
+6. The current simulation can be stopped at any moment by writing a file named "stop" in the simulation directory
 // Comment : For some collision operators (Sugama and Full Coulomb) you have to run COSOlver from B.J.Frei first in order to generate the required matrices in HeLaZ/iCa folder.
 
 # Changelog
 
 3. HeLaZ 3D
 
-//	3.1 (WIP) Implementation of mirror force and test for linear ZF damping
+	3.2 Stopping file procedure like in GBS is added
+
+	3.1 Implementation of mirror force
 
 	3.0 HeLaZ is now 3D and works like HeLaZ 2D if Nz = 1, the axis were renamed (r,z) -> (x,y,z) and now the parallel direction is ez. All arrays have been extended, diagnostics and analysis too. The linear coefficients are now precomputed with lin_coeff_and_geometry routines.
 
