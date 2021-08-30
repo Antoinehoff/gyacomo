@@ -5,8 +5,10 @@ SUBROUTINE tesend
 
   use prec_const
   IMPLICIT NONE
-  LOGICAL :: mlend
-  real    :: tnow
+  LOGICAL :: mlend, mlexist
+  REAL    :: tnow
+  INTEGER :: ncheck_stop = 100
+  CHARACTER(len=*), PARAMETER :: stop_file = 'mystop'
 
   !________________________________________________________________________________
   !                   1.  Some processors had set nlend
@@ -49,6 +51,19 @@ SUBROUTINE tesend
      IF(my_id.EQ.0) WRITE(*,'(/a)') 'Max run time reached'
      RETURN
   END IF
+  !________________________________________________________________________________
+  !                   5.  NRUN modified throught "stop file"
+  !
+  IF( (my_id .EQ. 0) .AND. (MOD(cstep, ncheck_stop) == 0) ) THEN
+     INQUIRE(file=stop_file, exist=mlexist)
+     IF( mlexist ) THEN
+        OPEN(lu_stop, file=stop_file)
+        mlend = mlexist ! Send stop status asa the file exists
+        WRITE(*,'(/a,i4,a)') 'Stop file found -> finishing..'
+        CLOSE(lu_stop, status='delete')
+     END IF
+  END IF
+  CALL mpi_allreduce(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierr)
   !
   RETURN
   !

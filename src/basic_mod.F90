@@ -39,7 +39,7 @@ MODULE basic
 
   !  List of logical file units
   INTEGER :: lu_in   = 90              ! File duplicated from STDIN
-  INTEGER :: lu_job  = 91              ! myjob file
+  INTEGER :: lu_stop = 91              ! stop file, see subroutine TESEND
 
   ! To measure computation time
   real     :: start, finish
