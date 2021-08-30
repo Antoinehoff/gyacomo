@@ -29,16 +29,16 @@ fig = figure; FIGNAME = ['ZF_transport_drphi','_',PARAMS];set(gcf, 'Position',  
         lstyle   = line_styles(1);
 %         plt = @(x_) mean(x_,1);
         plt = @(x_) x_(1,:);
-        plot(Ts3D,plt(shear_maxx_maxy),'DisplayName','$\max_{r,z}(s_\phi)$'); hold on;
-        plot(Ts3D,plt(shear_maxx_avgy),'DisplayName','$\max_{r}\langle s_\phi\rangle_z$'); hold on;
-        plot(Ts3D,plt(shear_avgx_maxy),'DisplayName','$\max_{z}\langle s_\phi\rangle_r$'); hold on;
-        plot(Ts3D,plt(shear_avgx_avgy),'DisplayName','$\langle s_\phi\rangle_{r,z}$'); hold on;
+        plot(Ts3D,plt(shear_maxx_maxy),'DisplayName','$\max_{x,y}(s_\phi)$'); hold on;
+        plot(Ts3D,plt(shear_maxx_avgy),'DisplayName','$\max_{x}\langle s_\phi\rangle_y$'); hold on;
+        plot(Ts3D,plt(shear_avgx_maxy),'DisplayName','$\max_{y}\langle s_\phi\rangle_x$'); hold on;
+        plot(Ts3D,plt(shear_avgx_avgy),'DisplayName','$\langle s_\phi\rangle_{x,y}$'); hold on;
         plot(Ts3D(its2D:ite2D),ones(ite2D-its2D+1,1)*shear_infty_avg, '-k',...
         'DisplayName',['$s^{\infty} = $',num2str(shear_infty_avg),'$\pm$',num2str(shear_infty_std)]);
         ylim([0,shear_infty_avg*5.0]); xlim([Ts0D(1),Ts0D(end)]);
         grid on; ylabel('Shear amp.');set(gca,'xticklabel',[]);% legend('show');
     subplot(313)
         [TY,TX] = meshgrid(x,Ts3D);
-        pclr = pcolor(TX,TY,squeeze((mean(dr2phi(:,:,1,:),2)))'); set(pclr, 'edgecolor','none'); legend('Shear ($\langle \partial_r^2\phi\rangle_z$)') %colorbar; 
+        pclr = pcolor(TX,TY,squeeze((mean(dx2phi(:,:,1,:),2)))'); set(pclr, 'edgecolor','none'); legend('Shear ($\langle \partial_x^2\phi\rangle_y$)') %colorbar; 
         caxis(1*shear_infty_avg*[-1 1]); xlabel('$t c_s/R$'), ylabel('$x/\rho_s$'); colormap(bluewhitered(256))
 save_figure

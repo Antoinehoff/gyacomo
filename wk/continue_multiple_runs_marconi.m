@@ -1,9 +1,12 @@
 %% Paste the list of continue_run calls
-continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/v2.7_P_10_J_5/200x100_L_120_P_10_J_5_eta_0.6_nu_1e-02_SGGK_CLOS_0_mu_1e-02/out.txt')
+continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HD_study/150x75_L_100_P_4_J_2_eta_0.6_nu_5e-01_SGGK_mu_3e-02/out.txt')
+continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HD_study/150x75_L_100_P_4_J_2_eta_0.6_nu_1e-01_SGGK_mu_3e-02/out.txt')
+continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HD_study/150x75_L_100_P_4_J_2_eta_0.6_nu_5e-01_SGGK_mu_0e+00/out.txt')
+continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HD_study/150x75_L_100_P_4_J_2_eta_0.6_nu_1e-01_SGGK_mu_0e+00/out.txt')
 
 %% Functions to modify preexisting fort.90 input file and launch on marconi
 function [] = continue_run(outfilename)
-    EXECNAME = 'helaz_2.8';
+    EXECNAME = 'helaz_3.1';
     %% CLUSTER PARAMETERS
     CLUSTER.PART  = 'prod';     % dbg or prod
     CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
@@ -37,41 +40,41 @@ function [] = continue_run(outfilename)
     fclose(fid);
 
     % Find previous job2load
-    if( numel(A{5}) ==  numel('  RESTART   = .false.') )
+    if( numel(A{5}) ==  numel('  RESTART    = .false.') )
         A{5} = sprintf('  RESTART   = .true.');
         J2L = 0;
     else
-        line = A{35};
+        line = A{39};
         line = line(end-2:end);
         if(line(1) == '='); line = line(end); end;
         J2L = str2num(line) + 1;
     end
     % Change job 2 load in fort.90
-    A{35} = ['  job2load      = ',num2str(J2L)];
-    disp(A{35})
+    A{39} = ['  job2load      = ',num2str(3)];
+    disp(A{39})
     % Change time step
-    A{3} = ['  dt     = 0.005'];
+    A{3} = ['  dt     = 0.01'];
     % Increase endtime
     A{4} = ['  tmax      = 10000'];
     % Put non linear term back
-    A{41} = ['  NL_CLOS = -1'];
+    A{45} = ['  NL_CLOS = -1'];
     % change HD
-    line_= A{43};
+    line_= A{47};
     mu_old = str2num(line_(13:end));
-    A{43} = ['  mu      = ',num2str(mu_old*2)];
+    A{47} = ['  mu      = ',num2str(mu_old)];
     % change L
     line_= A{14};
-    L_old = str2num(line_(8:end));
-    A{14} = ['  Lx = ',num2str(L_old)];
-    A{16} = ['  Ly = ',num2str(L_old)];
+    L_old = str2num(line_(12:end));
+    A{14} = ['  Lx     = ',num2str(L_old)];
+    A{16} = ['  Ly     = ',num2str(L_old)];
     % change eta N
-    line_= A{53};
+    line_= A{57};
     etan_old = str2num(line_(13:end));
-    A{53} = ['  eta_n   = ',num2str(etan_old)];
+    A{57} = ['  eta_n   = ',num2str(etan_old)];
     % change eta B
-    line_= A{55};
+    line_= A{59};
     etab_old = str2num(line_(13:end));
-    A{55} = ['  eta_B   = ',num2str(etab_old)];
+    A{59} = ['  eta_B   = ',num2str(etab_old)];
     % Rewrite fort.90
     fid = fopen('fort.90', 'w');
     for i = 1:numel(A)

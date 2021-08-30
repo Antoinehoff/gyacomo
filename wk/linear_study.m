@@ -25,7 +25,7 @@ TMAX    = 200;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
-SPS5D   = 1/50;    % Sampling per time unit for 5D arrays
+SPS5D   = 1/5;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 00;
@@ -141,8 +141,9 @@ end
 
 if 1
 %% Parameter scan over CO
-PMAXE = 6; PMAXI = 6;
-JMAXE = 3; JMAXI = 3;
+P=2; J=1;
+N       = 20;     % Frequency gridpoints (Nkx = N/2)
+L       = 75;     % Size of the squared frequency domain
 TMAX  = 200;
 DT    = 0.01;
 CO_A = [4];
@@ -151,7 +152,8 @@ Nparam = numel(CO_A);
 param_name = 'CO';
 ETAN    = 2.0;
 NU      = 1e-1;   % Collision frequency
-
+PMAXE = P; PMAXI = P;
+JMAXE = J; JMAXI = J;
 Bohm_transport = zeros(Nparam,1);
 gamma_Ni00 = zeros(Nparam,floor(N/2)+1);
 gamma_Nipj = zeros(Nparam,floor(N/2)+1);

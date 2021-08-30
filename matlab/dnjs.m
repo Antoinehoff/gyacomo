@@ -1,11 +1,11 @@
 function [ result ] = dnjs( n, j, s )
+% Compute the dnjs from Ln*Lj = sum_s dnjs Ls with Laguerre coeffs
 % sort in order to compute only once the laguerre coeff
     Coeffs = sort([n,j,s]); 
 % last element of Coeffs is the larger one
     L3 = flip(LaguerrePoly(Coeffs(end)));
-% retrive smaller order coeff by taking the firsts (flipped array)
-    L2 = L3(1:Coeffs(2)+1);
-    L1 = L3(1:Coeffs(1)+1);
+    L2 = flip(LaguerrePoly(Coeffs(end-1)));
+    L1 = flip(LaguerrePoly(Coeffs(end-2)));
 
 % build a factorial array to compute once every needed factorials
     Factar    = zeros(n+j+s+1,1);

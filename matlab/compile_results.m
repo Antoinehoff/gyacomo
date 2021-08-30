@@ -3,7 +3,7 @@ JOBNUM   = JOBNUMMIN; JOBFOUND = 0;
 TJOB_SE  = []; % Start and end times of jobs
 NU_EVOL  = []; % evolution of parameter nu between jobs
 MU_EVOL  = []; % evolution of parameter mu between jobs
-ETAB_EVOL= []; %
+ETAN_EVOL= []; %
 L_EVOL   = []; % 
 DT_EVOL  = []; %
 % FIELDS
@@ -113,7 +113,7 @@ while(CONTINUE)
         TJOB_SE   = [TJOB_SE Ts0D(1) Ts0D(end)]; 
         NU_EVOL   = [NU_EVOL NU NU];
         MU_EVOL   = [MU_EVOL MU MU];
-        ETAB_EVOL = [ETAB_EVOL ETAB ETAB];
+        ETAN_EVOL = [ETAN_EVOL ETAN ETAN];
         L_EVOL    = [L_EVOL L L];
         DT_EVOL   = [DT_EVOL DT_SIM DT_SIM];
     
@@ -135,5 +135,5 @@ clear Nipj_ Nepj_ Ni00_ Ne00_ PHI_ Ts2D_ Ts5D_ GGAMMA_ PGAMMA_ Ts0D_
 
 Sipj = Sipj_; Sepj = Sepj_;
 clear Sipj_ Sepj_
-JOBNUM = LASTJOB
+JOBNUM = LASTJOB;
 filename = sprintf([BASIC.RESDIR,'outputs_%.2d.h5'],JOBNUM);
