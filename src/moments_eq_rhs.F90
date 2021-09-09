@@ -103,8 +103,8 @@ SUBROUTINE moments_eq_rhs_e
           ENDIF
 
           !! Collision
-          IF (CO .EQ. 0) THEN ! Lenhard Bernstein
-            TColl = -nu_ee*(ip+2*ij-3)*moments_e(ip,ij,ikx,iky,iz,updatetlevel)
+          IF (CO .EQ. 0) THEN ! Lenard Bernstein
+            CALL LenardBernstein_e(ip,ij,ikx,iky,iz,TColl)
           ELSEIF (CO .EQ. 1) THEN ! GK Dougherty
             CALL DoughertyGK_e(ip,ij,ikx,iky,iz,TColl)
           ELSE ! COSOLver matrix
@@ -242,8 +242,8 @@ SUBROUTINE moments_eq_rhs_i
           ENDIF
 
           !! Collision
-          IF     (CO .EQ. 0) THEN ! Lenhard Bernstein
-            TColl = -nu_i*(ip+2._dp*ij-3)*moments_i(ip,ij,ikx,iky,iz,updatetlevel)
+          IF     (CO .EQ. 0) THEN ! Lenard Bernstein
+            CALL LenardBernstein_i(ip,ij,ikx,iky,iz,TColl)
           ELSEIF (CO .EQ. 1) THEN ! GK Dougherty
             CALL DoughertyGK_i(ip,ij,ikx,iky,iz,TColl)
           ELSE! COSOLver matrix (Sugama, Coulomb)
