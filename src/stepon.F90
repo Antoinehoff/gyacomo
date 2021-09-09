@@ -6,11 +6,13 @@ SUBROUTINE stepon
   USE closure
   USE collision, ONLY : compute_TColl
   USE fields, ONLY: moments_e, moments_i, phi
+  USE initial_par, ONLY: WIPE_ZF, WIPE_TURB
   USE ghosts
   USE grid
   USE model
   use prec_const
   USE time_integration
+  USE numerics, ONLY: wipe_zonalflow, wipe_turbulence
   USE utility, ONLY: checkfield
 
   IMPLICIT NONE
@@ -39,8 +41,11 @@ SUBROUTINE stepon
       ! Update electrostatic potential phi_n = phi(N_n+1)
       CALL poisson
       ! Update nonlinear term S_n -> S_n+1(phi_n+1,N_n+1)
-      IF ( NON_LIN ) CALL compute_Sapj
-
+      IF ( NON_LIN )         CALL compute_Sapj
+      ! Cancel zonal modes artificially
+      IF ( WIPE_ZF .EQ. 2)   CALL wipe_zonalflow
+      ! Cancel non zonal modes artificially
+      IF ( WIPE_TURB .EQ. 2) CALL wipe_turbulence
       !-  Check before next step
       CALL checkfield_all()
       IF( nlend ) EXIT ! exit do loop
