@@ -3,11 +3,64 @@ module collision
 IMPLICIT NONE
 
 PUBLIC :: compute_TColl
-PUBLIC :: DoughertyGK_e, DoughertyGK_i!, DoughertyGK
+PUBLIC :: LenardBernstein_e, LenardBernstein_i!, LenardBernstein GK
+PUBLIC :: DoughertyGK_e, DoughertyGK_i!, Dougherty GK
 PUBLIC :: load_COSOlver_mat
 PUBLIC :: apply_COSOlver_mat_e, apply_COSOlver_mat_i
 
 CONTAINS
+
+  !******************************************************************************!
+  !! Lenard Bernstein collision operator for electrons
+  !******************************************************************************!
+  SUBROUTINE LenardBernstein_e(ip_,ij_,ikx_,iky_,iz_,TColl_)
+    USE fields, ONLY: moments_e
+    USE grid,   ONLY: parray_e, jarray_e, kxarray, kyarray
+    USE basic
+    USE model,  ONLY: sigmae2_taue_o2, nu_ee
+    USE time_integration, ONLY : updatetlevel
+    IMPLICIT NONE
+    INTEGER,     INTENT(IN)    :: ip_,ij_,ikx_,iky_,iz_
+    COMPLEX(dp), INTENT(OUT)   :: TColl_
+
+    REAL(dp)    :: j_dp, p_dp, be_2
+
+    !** Auxiliary variables **
+    p_dp      = REAL(parray_e(ip_),dp)
+    j_dp      = REAL(jarray_e(ij_),dp)
+    ! be_2      = (kxarray(ikx_)**2 + kyarray(iky_)**2) * sigmae2_taue_o2 ! this is (be/2)^2
+
+    !** Assembling collison operator **
+    ! -nuee (p + 2j) Nepj
+    TColl_ = -nu_ee * (p_dp + 2._dp*j_dp)*moments_e(ip_,ij_,ikx_,iky_,iz_,updatetlevel)
+
+  END SUBROUTINE LenardBernstein_e
+
+    !******************************************************************************!
+    !! Lenard Bernstein collision operator for electrons
+    !******************************************************************************!
+    SUBROUTINE LenardBernstein_i(ip_,ij_,ikx_,iky_,iz_,TColl_)
+      USE fields, ONLY: moments_i
+      USE grid,   ONLY: parray_i, jarray_i, kxarray, kyarray
+      USE basic
+      USE model,  ONLY: sigmai2_taui_o2, nu_i
+      USE time_integration, ONLY : updatetlevel
+      IMPLICIT NONE
+      INTEGER,     INTENT(IN)    :: ip_,ij_,ikx_,iky_,iz_
+      COMPLEX(dp), INTENT(OUT)   :: TColl_
+
+      REAL(dp)    :: j_dp, p_dp, bi_2
+
+      !** Auxiliary variables **
+      p_dp      = REAL(parray_i(ip_),dp)
+      j_dp      = REAL(jarray_i(ij_),dp)
+      ! bi_2      = (kxarray(ikx_)**2 + kyarray(iky_)**2) * sigmai2_taui_o2 ! this is (bi/2)^2
+
+      !** Assembling collison operator **
+      ! -nuii (p + 2j) Nipj
+      TColl_ = -nu_i * (p_dp + 2._dp*j_dp)*moments_i(ip_,ij_,ikx_,iky_,iz_,updatetlevel)
+
+    END SUBROUTINE LenardBernstein_i
 
   !******************************************************************************!
   !! Doughtery gyrokinetic collision operator for electrons
@@ -36,7 +89,7 @@ CONTAINS
     be_       = 2_dp*SQRT(be_2) ! this is be
 
     !** Assembling collison operator **
-    ! Velocity-space diffusion (similar to Lenhard Bernstein)
+    ! Velocity-space diffusion (similar to Lenard Bernstein)
     ! -nuee (p + 2j + b^2/2) Nepj
     TColl_ = -(p_dp + 2._dp*j_dp + 2._dp*be_2)*moments_e(ip_,ij_,ikx_,iky_,iz_,updatetlevel)
 
@@ -142,7 +195,7 @@ CONTAINS
     bi_       = 2_dp*SQRT(bi_2) ! this is be
 
     !** Assembling collison operator **
-    ! Velocity-space diffusion (similar to Lenhard Bernstein)
+    ! Velocity-space diffusion (similar to Lenard Bernstein)
     ! -nui (p + 2j + b^2/2) Nipj
     TColl_ = -(p_dp + 2._dp*j_dp + 2._dp*bi_2)*moments_i(ip_,ij_,ikx_,iky_,iz_,updatetlevel)
 
