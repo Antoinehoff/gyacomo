@@ -173,6 +173,7 @@ CONTAINS
 
   SUBROUTINE set_kxgrid
     USE prec_const
+    USE model, ONLY: NON_LIN
     IMPLICIT NONE
     INTEGER :: i_
 
@@ -210,7 +211,7 @@ CONTAINS
     two_third_kxmax = 2._dp/3._dp*deltakx*(Nkx-1)
     ALLOCATE(AA_x(ikxs:ikxe))
     DO ikx = ikxs,ikxe
-      IF ( (kxarray(ikx) .LT. two_third_kxmax) ) THEN
+      IF ( (kxarray(ikx) .LT. two_third_kxmax) .OR. (.NOT. NON_LIN)) THEN
         AA_x(ikx) = 1._dp;
       ELSE
         AA_x(ikx) = 0._dp;
@@ -220,6 +221,7 @@ CONTAINS
 
   SUBROUTINE set_kygrid
     USE prec_const
+    USE model, ONLY: NON_LIN
     IMPLICIT NONE
     INTEGER :: i_, counter
 
@@ -252,7 +254,8 @@ CONTAINS
     two_third_kymax = 2._dp/3._dp*deltaky*(Nky/2-1);
     ALLOCATE(AA_y(ikys:ikye))
     DO iky = ikys,ikye
-      IF ( (kyarray(iky) .GT. -two_third_kymax) .AND. (kyarray(iky) .LT. two_third_kymax) ) THEN
+      IF ( (kyarray(iky) .GT. -two_third_kymax) .AND. &
+           (kyarray(iky) .LT. two_third_kymax) .OR. (.NOT. NON_LIN)) THEN
         AA_y(iky) = 1._dp;
       ELSE
         AA_y(iky) = 0._dp;
