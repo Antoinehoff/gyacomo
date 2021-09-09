@@ -1,12 +1,12 @@
 %Compute steady radial transport
-tend = Ts0D(end); tstart = tend - TAVG;
+tend = TAVG_1; tstart = TAVG_0;
 [~,its0D] = min(abs(Ts0D-tstart));
 [~,ite0D]   = min(abs(Ts0D-tend));
 SCALE = (2*pi/Nx/Ny)^2;
 gamma_infty_avg = mean(PGAMMA_RI(its0D:ite0D))*SCALE;
 gamma_infty_std = std (PGAMMA_RI(its0D:ite0D))*SCALE;
 % Compute steady shearing rate
-tend = Ts3D(end); tstart = tend - TAVG;
+tend = TAVG_1; tstart = TAVG_0;
 [~,its2D] = min(abs(Ts3D-tstart));
 [~,ite2D]   = min(abs(Ts3D-tend));
 shear_infty_avg = mean(mean(shear_maxx_avgy(:,its2D:ite2D),1));
@@ -22,7 +22,7 @@ fig = figure; FIGNAME = ['ZF_transport_drphi','_',PARAMS];set(gcf, 'Position',  
         ylim([0,5*abs(gamma_infty_avg)]); xlim([Ts0D(1),Ts0D(end)]);
         title(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta=$',num2str(ETAB/ETAN),...
         ', $L=',num2str(L),'$, $N=',num2str(Nx),'$, $(P,J)=(',num2str(PMAXI),',',num2str(JMAXI),')$,',...
-        ' $\mu_{hd}=$',num2str(MU)]);
+        ' $\mu_{hd}=$',num2str(MU),', $\Gamma^{\infty} \approx $',num2str(gamma_infty_avg)]);
         %         
     subplot(312)
         clr      = line_colors(1,:);

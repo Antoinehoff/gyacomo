@@ -2,8 +2,10 @@ CONTINUE = 1;
 JOBNUM   = JOBNUMMIN; JOBFOUND = 0;
 TJOB_SE  = []; % Start and end times of jobs
 NU_EVOL  = []; % evolution of parameter nu between jobs
+CO_EVOL  = []; % evolution of CO
 MU_EVOL  = []; % evolution of parameter mu between jobs
 ETAN_EVOL= []; %
+ETAB_EVOL= []; %
 L_EVOL   = []; % 
 DT_EVOL  = []; %
 % FIELDS
@@ -112,8 +114,10 @@ while(CONTINUE)
         load_params
         TJOB_SE   = [TJOB_SE Ts0D(1) Ts0D(end)]; 
         NU_EVOL   = [NU_EVOL NU NU];
+        CO_EVOL   = [CO_EVOL CO CO];
         MU_EVOL   = [MU_EVOL MU MU];
         ETAN_EVOL = [ETAN_EVOL ETAN ETAN];
+        ETAB_EVOL = [ETAB_EVOL ETAB ETAB];
         L_EVOL    = [L_EVOL L L];
         DT_EVOL   = [DT_EVOL DT_SIM DT_SIM];
     

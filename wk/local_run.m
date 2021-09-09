@@ -38,7 +38,7 @@ SIMID   = 'HD_study';  % Name of the simulation
 NON_LIN = -1;   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % INIT options
 INIT_ZF = 0; ZF_AMP = 0.0;
-INIT_BLOB = 0; WIPE_TURB = 0;
+INIT_BLOB = 0; WIPE_TURB = 0; WIPE_ZF = 0;
 %% OUTPUTS
 W_DOUBLE = 0;
 W_GAMMA  = 1;

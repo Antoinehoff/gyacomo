@@ -1,12 +1,10 @@
 %% Paste the list of continue_run calls
-continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HD_study/150x75_L_100_P_4_J_2_eta_0.6_nu_5e-01_SGGK_mu_3e-02/out.txt')
-continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HD_study/150x75_L_100_P_4_J_2_eta_0.6_nu_1e-01_SGGK_mu_3e-02/out.txt')
-continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HD_study/150x75_L_100_P_4_J_2_eta_0.6_nu_5e-01_SGGK_mu_0e+00/out.txt')
-continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HD_study/150x75_L_100_P_4_J_2_eta_0.6_nu_1e-01_SGGK_mu_0e+00/out.txt')
+
+continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HD_study/150x75_L_100_P_4_J_2_eta_0.6_nu_7e-02_SGGK_mu_0e+00/out.txt')
 
 %% Functions to modify preexisting fort.90 input file and launch on marconi
 function [] = continue_run(outfilename)
-    EXECNAME = 'helaz_3.1';
+    EXECNAME = 'helaz_3.2';
     %% CLUSTER PARAMETERS
     CLUSTER.PART  = 'prod';     % dbg or prod
     CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
@@ -50,12 +48,16 @@ function [] = continue_run(outfilename)
         J2L = str2num(line) + 1;
     end
     % Change job 2 load in fort.90
-    A{39} = ['  job2load      = ',num2str(3)];
+    A{39} = ['  job2load      = ',num2str(J2L)];
     disp(A{39})
     % Change time step
-    A{3} = ['  dt     = 0.01'];
+    A{3} = ['  dt     = 0.005'];
     % Increase endtime
-    A{4} = ['  tmax      = 10000'];
+    A{4} = ['  tmax      = 20000'];
+    % Change collision operator
+    line_= A{43};
+    CO_old = str2num(line_(13:end));
+    A{43} = ['  CO      = ',num2str(1)];
     % Put non linear term back
     A{45} = ['  NL_CLOS = -1'];
     % change HD

@@ -32,6 +32,7 @@ fig  = figure('Color','white','Position', [100, 100, 400, 400]);
         end
         set(pclr, 'edgecolor','none'); axis square;
         caxis([-1,1]);
+        colormap(bluewhitered)
         xlabel(XNAME); ylabel(YNAME); %colorbar;
         title([FIELDNAME,', $t \approx$', sprintf('%.3d',ceil(T(n)))...
             ,', scaling = ',sprintf('%.1e',scale)]);

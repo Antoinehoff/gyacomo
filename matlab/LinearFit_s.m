@@ -30,5 +30,6 @@ function [gamma,fit] = LinearFit_s(time,Na00abs)
 
     % Return gamma(t) for amplitude ratio method
     fit.gammaoft = gammaoft;
+    fit.t        = time;
 
 end % ... end function

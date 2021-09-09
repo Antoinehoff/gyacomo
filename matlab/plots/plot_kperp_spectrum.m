@@ -18,7 +18,12 @@ a1 = field_kp(2)*kp_ip(2).^(13/3);
 a2 = field_kp(2)*kp_ip(2).^(3)./(1+kp_ip(2).^2).^(-2);
 fig = figure; FIGNAME = ['cascade','_',FNAME,'_',PARAMS];set(gcf, 'Position',  [100, 100, 800, 300])
 % scatter(kperp,phi_k_2,'.k','MarkerEdgeAlpha',0.4,'DisplayName','$|\phi_k|^2$'); hold on; grid on;
-plot(kp_ip,field_kp,'^','DisplayName',['$\langle|',FIELDLTX,'|^2\rangle_{k_\perp}$']); hold on;
+if NORMALIZED
+   plt = @(x) x./max(x);
+else
+   plt = @(x) x;
+end
+plot(kp_ip,plt(field_kp),'^','DisplayName',['$\langle|',FIELDLTX,'|^2\rangle_{k_\perp}$']); hold on;
 if TRENDS
 plot(kp_ip,a1*kp_ip.^(-13/3),'-','DisplayName','$k^{-13/3}$');
 plot(kp_ip,a2/100*kp_ip.^(-3)./(1+kp_ip.^2).^2,'-','DisplayName','$k^{-3}/(1+k^2)^2$');

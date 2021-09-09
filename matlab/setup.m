@@ -43,9 +43,10 @@ MODEL.lambdaD = LAMBDAD;
 TIME_INTEGRATION.numerical_scheme  = '''RK4''';
 if (INIT_PHI); INITIAL.init_noisy_phi = '.true.'; else; INITIAL.init_noisy_phi = '.false.';end;
 INITIAL.INIT_ZF = INIT_ZF;
-if (WIPE_TURB); INITIAL.wipe_turb = '.true.'; else; INITIAL.wipe_turb = '.false.';end;
+INITIAL.wipe_turb = WIPE_TURB;
+INITIAL.wipe_zf   = WIPE_ZF;
 if (INIT_BLOB); INITIAL.init_blob = '.true.'; else; INITIAL.init_blob = '.false.';end;
-INITIAL.init_background  = (INIT_ZF>0)*ZF_AMP;
+INITIAL.init_background  = (INIT_ZF>0)*ZF_AMP + BCKGD0;
 INITIAL.init_noiselvl = NOISE0;
 INITIAL.iseed             = 42;
 INITIAL.mat_file   = '''null''';
@@ -70,7 +71,7 @@ switch abs(CO)
     case 4; CONAME = 'FC';
     otherwise; CONAME ='UK';
 end
-if (CO <= 0); CONAME = [CONAME,'DK'];
+if (CO < 0); CONAME = [CONAME,'DK'];
 else;         CONAME = [CONAME,'GK'];
 end
 if    (CLOS == 0); CLOSNAME = 'Trunc.';

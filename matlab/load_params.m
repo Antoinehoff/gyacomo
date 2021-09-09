@@ -30,7 +30,7 @@ end
 if    (CO == -3); CONAME = 'PADK';
 elseif(CO == -2); CONAME = 'SGDK';
 elseif(CO == -1); CONAME = 'DGDK';
-elseif(CO ==  0); CONAME = 'LB';
+elseif(CO ==  0); CONAME = 'LBGK';
 elseif(CO ==  1); CONAME = 'DGGK';
 elseif(CO ==  2); CONAME = 'SGGK';
 elseif(CO ==  3); CONAME = 'PAGK';

@@ -2,7 +2,7 @@ clear all;
 addpath(genpath('../matlab')) % ... add
 SUBMIT = 1; % To submit the job automatically
 % EXECNAME = 'helaz_dbg';
-  EXECNAME = 'helaz_3.1';
+  EXECNAME = 'helaz_3.2';
 for ETAN = [1/0.6]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
@@ -14,13 +14,13 @@ CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
 if(strcmp(CLUSTER.PART,'dbg')); CLUSTER.TIME  = '00:30:00'; end;
 CLUSTER.MEM   = '128GB';     % Memory
 CLUSTER.JNAME = 'HeLaZ';% Job name
-NP_P          = 2;          % MPI processes along p  
+NP_P          = 2;          % MPI processes along p
 NP_KX         = 24;         % MPI processes along kx
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.01;   % Collision frequency
+NU      = 1.0;   % Collision frequency
 ETAN    = 1.0/0.6;    % Density gradient drive (R/Ln)
-NU_HYP  = 1.0;
+NU_HYP  = 0.0;
 %% GRID PARAMETERS
 N       = 150;     % Frequency gridpoints (Nkx = N/2)
 L       = 100;     % Size of the squared frequency domain
@@ -32,7 +32,7 @@ P       = 4;
 J       = 2;
 %% TIME PARAMETERS
 TMAX    = 10000;  % Maximal time unit
-DT      = 1e-2;   % Time step
+DT      = 5e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS3D   = 1/2;      % Sampling per time unit for 3D arrays
@@ -52,7 +52,7 @@ SIMID   = 'HD_study';  % Name of the simulation
 NON_LIN = 1;   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % INIT options
 INIT_ZF = 0; ZF_AMP = 0.0;
-INIT_BLOB = 0; WIPE_TURB = 0;
+INIT_BLOB = 0; WIPE_TURB = 0; WIPE_ZF = 0;
 %% OUTPUTS
 W_DOUBLE = 1;
 W_GAMMA  = 1;
@@ -88,7 +88,7 @@ MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 % Compute processes distribution
 Ntot = NP_P * NP_KX;
 Nnodes = ceil(Ntot/48);
-Nppn   = Ntot/Nnodes; 
+Nppn   = Ntot/Nnodes;
 CLUSTER.NODES =  num2str(Nnodes);  % MPI process along p
 CLUSTER.NTPN  =  num2str(Nppn); % MPI process along kx
 CLUSTER.CPUPT = '1';        % CPU per task

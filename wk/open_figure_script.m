@@ -15,13 +15,13 @@ simname_ = fname_(54:end-8);
 % simname_ = '';
 % simname_ = '';
 % simname_ = '';
-% simname_ = '';
+simname_ = 'simulation_A/DGGK_damping_150x75_L_100_P_4_J_2_eta_0.6_nu_1e-01_SGGK_mu_0e+00';
 
 
 
 
 %%
-figname_ = '/fig/ZF_transport_drphi_';
+figname_ = '/fig/ZF_transport_drphi_*';
 % figname_ = '/fig/space_time_';
 % figname_ = '/fig/phi_shear_phase_space_';
 
@@ -31,5 +31,5 @@ path_    = '../results/';
 
 params_  = simname_(idx-3:end);
 
-
-openfig([path_,simname_,figname_,params_,'.fig']);
+[~,a] =  system(['ls ',[path_,simname_,figname_,'.fig']]);
+openfig(a(1:end-1))
