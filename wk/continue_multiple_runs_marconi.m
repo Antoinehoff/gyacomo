@@ -1,6 +1,5 @@
 %% Paste the list of continue_run calls
-
-continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/HD_study/150x75_L_100_P_4_J_2_eta_0.6_nu_7e-02_SGGK_mu_0e+00/out.txt')
+continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_B/300x150_L_120_P_8_J_4_eta_0.6_nu_5e-01_SGGK_mu_0e+00/out.txt')
 
 %% Functions to modify preexisting fort.90 input file and launch on marconi
 function [] = continue_run(outfilename)
@@ -51,7 +50,7 @@ function [] = continue_run(outfilename)
     A{39} = ['  job2load      = ',num2str(J2L)];
     disp(A{39})
     % Change time step
-    A{3} = ['  dt     = 0.005'];
+    A{3} = ['  dt     = 0.01'];
     % Increase endtime
     A{4} = ['  tmax      = 20000'];
     % Change collision operator
@@ -63,7 +62,7 @@ function [] = continue_run(outfilename)
     % change HD
     line_= A{47};
     mu_old = str2num(line_(13:end));
-    A{47} = ['  mu      = ',num2str(mu_old)];
+    A{47} = ['  mu      = ',num2str(0)];
     % change L
     line_= A{14};
     L_old = str2num(line_(12:end));

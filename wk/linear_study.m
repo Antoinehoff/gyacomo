@@ -1,4 +1,4 @@
-for CO = [1]
+for CO = [2]
     RUN = 1; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
@@ -7,12 +7,12 @@ default_plots_options
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 1.0;   % Collision frequency
+NU      = 0.1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
 ETAB    = 1.0;
 ETAN    = 1/0.6;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
-NU_HYP  = 0.0;   % Hyperdiffusivity coefficient
+NU_HYP  = 3.0;   % Hyperdiffusivity coefficient
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5; % Init noise amplitude
 BCKGD0  = 0.0;    % Init background
@@ -111,8 +111,8 @@ for i = 1:Nparam
         [~,itend]   = min(abs(Ts3D-tend));
         gamma_Ni00(i,ikx) = (LinearFit_s(Ts3D(itstart:itend)',(squeeze(abs(Ni00(ikx,1,1,itstart:itend))))));
         gamma_phi (i,ikx) = (LinearFit_s(Ts3D(itstart:itend)',(squeeze(abs(PHI (ikx,1,1,itstart:itend))))));
-        Ni00_ST(i,ikx,:) = squeeze((Ni00(ikx,1,1,1:TMAX/SPS3D)));
-         PHI_ST(i,ikx,:) = squeeze((PHI (ikx,1,1,1:TMAX/SPS3D)));
+%         Ni00_ST(i,ikx,:) = squeeze((Ni00(ikx,1,1,1:TMAX/SPS3D)));
+%          PHI_ST(i,ikx,:) = squeeze((PHI (ikx,1,1,1:TMAX/SPS3D)));
     end
     tend   = Ts5D(end); tstart   = 0.4*tend;
     [~,itstart] = min(abs(Ts5D-tstart));

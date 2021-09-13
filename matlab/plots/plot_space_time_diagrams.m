@@ -4,9 +4,9 @@ trange = itstart:itend;
 [TY,TX] = meshgrid(x,Ts3D(trange));
 fig = figure; FIGNAME = ['space_time','_',PARAMS];set(gcf, 'Position',  [100, 100, 1200, 600])
     subplot(211)
-%         pclr = pcolor(TX,TY,squeeze(mean(dens_i(:,:,trange).*dyphi(:,:,trange),2))'); set(pclr, 'edgecolor','none'); colorbar;
-        pclr = pcolor(TX,TY,squeeze(mean(ni00(:,:,1,trange).*dyphi(:,:,1,trange),2))'); set(pclr, 'edgecolor','none',...
-            'DisplayName','$\langle n_i\partial_z\phi\rangle_z$'); colorbar;
+        pclr = pcolor(TX,TY,squeeze(mean(dens_i(:,:,1,trange).*dyphi(:,:,1,trange),2))'); set(pclr, 'edgecolor','none'); colorbar;
+%         pclr = pcolor(TX,TY,squeeze(mean(ni00(:,:,1,trange).*dyphi(:,:,1,trange),2))'); set(pclr, 'edgecolor','none',...
+%             'DisplayName','$\langle n_i\partial_z\phi\rangle_z$'); colorbar;
         shading interp
         colormap hot;
 %         caxis([0.0,0.05*max(max(mean(ni00(:,:,its2D:ite2D).*dyphi(:,:,1,its2D:ite2D),2)))]);

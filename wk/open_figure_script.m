@@ -15,7 +15,7 @@ simname_ = fname_(54:end-8);
 % simname_ = '';
 % simname_ = '';
 % simname_ = '';
-simname_ = 'simulation_A/DGGK_damping_150x75_L_100_P_4_J_2_eta_0.6_nu_1e-01_SGGK_mu_0e+00';
+simname_ = 'simulation_A/cw_SGGK_mu_1e-2';
 
 
 

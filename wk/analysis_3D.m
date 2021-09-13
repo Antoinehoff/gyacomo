@@ -6,7 +6,13 @@ outfile ='';
 outfile ='';
 outfile ='';
 outfile ='';
-outfile ='simulation_A/cw_SGGK_mu_1e-2';
+outfile ='';
+outfile ='';
+outfile ='HD_study/200x100_L_200_P_2_J_1_eta_0.6_nu_1e+00_DGGK_CLOS_0_mu_0e+00';
+% outfile ='simulation_B/cw_DGGK'; % to analyse
+% outfile ='simulation_B/cw_SGGK_mu_1e-1';
+% outfile ='simulation_B/cw_DGGK';
+% outfile ='simulation_A/cw_DGGK_eta_0.5';
 % outfile ='simulation_A/LBDK_damping_150x75_L_100_P_4_J_2_eta_0.6_nu_1e-01_SGGK_mu_0e+00';
     BASIC.RESDIR      = ['../results/',outfile,'/'];
     BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/results/',outfile,'/'];
@@ -17,15 +23,14 @@ else% Marconi results
 outfile ='';
 outfile ='';
 outfile ='';
-outfile ='';
-outfile ='';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_B/300x150_L_120_P_8_J_4_eta_0.6_nu_5e-01_SGGK_mu_0e+00/out.txt';
 BASIC.RESDIR      = ['../',outfile(46:end-8),'/'];
 BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'/'];
 end
 
 %% Load the results
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 06; JOBNUMMAX = 20; 
+JOBNUMMIN = 00; JOBNUMMAX = 20; 
 % JOBNUMMIN = 07; JOBNUMMAX = 20; % For CO damping sim A 
 compile_results %Compile the results from first output found to JOBNUMMAX if existing
 
@@ -44,13 +49,13 @@ end
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-TAVG_0 = 1.4e4; TAVG_1 = 1.5e4; % Averaging times duration
+TAVG_0 = 1.2e4; TAVG_1 = 1.3e4; % Averaging times duration
 plot_radial_transport_and_shear
 end
 
 if 0
 %% Space time diagramms
-cmax = 0.0001 % max of the colorbar for transport
+cmax = 0.00001 % max of the colorbar for transport
 tstart = 0; tend = Ts3D(end); % time window
 plot_space_time_diagrams
 end
@@ -72,7 +77,7 @@ end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-t0    =10950; iz = 1; ix = 1; iy = 1;
+t0    =0; iz = 1; ix = 1; iy = 1;
 skip_ =1; DELAY = 2e-3*skip_;
 [~, it03D] = min(abs(Ts3D-t0)); FRAMES_3D = it03D:skip_:numel(Ts3D);
 [~, it05D] = min(abs(Ts5D-t0)); FRAMES_5D = it05D:skip_:numel(Ts5D);
@@ -88,7 +93,7 @@ INTERP = 0; T = Ts3D; FRAMES = FRAMES_3D;
 % FIELD = temp_i-Z_T_i; NAME = 'Ti_NZ';FIELDNAME = 'T_i^{NZ}';
 % FIELD = ne00;         NAME = 'ne00'; FIELDNAME = 'n_e^{00}';
 % FIELD = ni00;   NAME = 'ni00'; FIELDNAME = 'n_i^{00}';
-% FIELD = phi;    NAME = 'phi'; FIELDNAME = '\phi';
+FIELD = phi;    NAME = 'phi'; FIELDNAME = '\phi';
 % FIELD = Gamma_x;  NAME = 'Gamma_x'; FIELDNAME = '\Gamma_x';
 
 % Sliced
@@ -129,7 +134,7 @@ FIELD = phi;           FNAME = 'phi';     FIELDLTX = '\phi';
 % FIELD = dens_e-Z_n_e-(Z_phi-phi);       FNAME = 'Non_adiab_part'; FIELDLTX = 'n_e^{NZ}-\phi^{NZ}';
 
 % Chose when to plot it
-tf = 11000:50:11300;
+tf = 128:1:133;
 
 % Sliced
 ix = 1; iy = 1; iz = 1;

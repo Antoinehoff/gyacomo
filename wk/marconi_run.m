@@ -18,28 +18,28 @@ NP_P          = 2;          % MPI processes along p
 NP_KX         = 24;         % MPI processes along kx
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 1.0;   % Collision frequency
+NU      = 0.5;   % Collision frequency
 ETAN    = 1.0/0.6;    % Density gradient drive (R/Ln)
 NU_HYP  = 0.0;
 %% GRID PARAMETERS
-N       = 150;     % Frequency gridpoints (Nkx = N/2)
-L       = 100;     % Size of the squared frequency domain
+N       = 300;     % Frequency gridpoints (Nkx = N/2)
+L       = 120;     % Size of the squared frequency domain
 Nz      = 1;      % number of perpendicular planes (parallel grid)
 q0      = 1.0;    % q factor ()
 shear   = 0.0;    % magnetic shear
 eps     = 0.0;    % inverse aspect ratio
-P       = 4;
-J       = 2;
+P       = 8;
+J       = 4;
 %% TIME PARAMETERS
 TMAX    = 10000;  % Maximal time unit
 DT      = 5e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS3D   = 1/2;      % Sampling per time unit for 3D arrays
-SPS5D   = 1/500;  % Sampling per time unit for 5D arrays
+SPS5D   = 1/100;  % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints/10
 RESTART = 1;      % To restart from last checkpoint
-JOB2LOAD= 3;
+JOB2LOAD= 0;
 %% OPTIONS AND NAMING
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle ; +/- for GK/DK)
@@ -47,7 +47,7 @@ CO      = 2;
 CLOS    = 0;   % Closure model (0: =0 truncation)
 NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
 % SIMID   = 'test_3D_marconi';  % Name of the simulation
-SIMID   = 'HD_study';  % Name of the simulation
+SIMID   = 'simulation_B';  % Name of the simulation
 % SIMID   = ['v3.0_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
 NON_LIN = 1;   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % INIT options
@@ -79,6 +79,7 @@ HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
 % kmaxcut = 2.5;
 MU      = NU_HYP/(HD_CO*kmax)^4; % Hyperdiffusivity coefficient
 NOISE0  = 1.0e-5;
+BCKGD0  = 0.0;    % Init background
 TAU     = 1.0;    % e/i temperature ratio
 ETAT    = 0.0;    % Temperature gradient
 ETAB    = 1.0;    % Magnetic gradient (1.0 to set R=LB)

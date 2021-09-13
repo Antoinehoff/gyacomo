@@ -92,12 +92,8 @@ subplot(224)
     
 %% Single eigenvalue analysis
 
-% mat_file_name = '/home/ahoffman/HeLaZ/iCa/gk_coulomb_P_2_J_1_N_1_kpm_4.0_NFLR_5.h5';
-% mat_file_name = '/home/ahoffman/HeLaZ/iCa/gk_coulomb_P_6_J_3_N_150_kpm_8.0_NFLR_8.h5';
-% mat_file_name = '/home/ahoffman/cosolver/gk.coulomb.NFLR/k.4/self.NFLR.8.0.h5';
-% mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_6_3_NFLR_8_kp_4_npiflr_8_sigma_3e-3/scanfiles_00000/self.0.h5';
-% mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_6_3_NFLR_8_kp_4_npiflr_0_sigma_5e-4/scanfiles_00000/self.0.h5';
-mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_6_3_NFLR_8_kp_4_bjf/scanfiles_00000/self.0.h5';
+% mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_6_3_NFLR_8_kp_4_bjf/scanfiles_00000/self.0.h5';
+mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_6_3_NFLR_8_kp_4_new_Tljpmf_fort_bjf/scanfiles_00000/self.0.h5';
 matidx = 74;
 
 matidx = sprintf('%5.5i',matidx);disp(matidx);
