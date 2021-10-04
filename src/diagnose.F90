@@ -114,6 +114,7 @@ SUBROUTINE diagnose(kstep)
       IF (write_gamma) THEN
         CALL creatd(fidres, rank, dims, "/data/var0d/gflux_ri", "Radial gyro ion transport")
         CALL creatd(fidres, rank, dims, "/data/var0d/pflux_ri", "Radial part ion transport")
+        CALL creatd(fidres, rank, dims, "/data/var0d/hflux_x", "Radial part ion heat flux")
       ENDIF
       IF (cstep==0) THEN
         iframe0d=0
@@ -348,6 +349,8 @@ SUBROUTINE diagnose_0d
     CALL compute_radial_ion_transport
     CALL append(fidres, "/data/var0d/gflux_ri",gflux_ri,ionode=0)
     CALL append(fidres, "/data/var0d/pflux_ri",pflux_ri,ionode=0)
+    CALL compute_radial_heatflux
+    CALL append(fidres, "/data/var0d/hflux_x",hflux_x,ionode=0)
   ENDIF
 
 END SUBROUTINE diagnose_0d

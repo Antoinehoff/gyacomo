@@ -7,9 +7,10 @@ MODULE processing
     implicit none
 
     REAL(dp), PUBLIC, PROTECTED :: pflux_ri, gflux_ri
+    REAL(dp), PUBLIC, PROTECTED :: hflux_x
 
-    PUBLIC :: compute_radial_ion_transport, compute_density, compute_temperature
-
+    PUBLIC :: compute_density, compute_temperature
+    PUBLIC :: compute_radial_ion_transport, compute_radial_heatflux
 CONTAINS
 
 ! 1D diagnostic to compute the average radial particle transport <n_i v_ExB>_r
@@ -64,6 +65,63 @@ SUBROUTINE compute_radial_ion_transport
         ENDIF
     ENDIF
 END SUBROUTINE compute_radial_ion_transport
+
+! 1D diagnostic to compute the average radial particle transport <n_i v_ExB>_r
+SUBROUTINE compute_radial_heatflux
+    USE fields,           ONLY : moments_i, moments_e, phi
+    USE array,            ONLY : dens_e, dens_i, kernel_e, kernel_i
+    USE time_integration, ONLY : updatetlevel
+    USE model, ONLY : q_e, q_i, tau_e, tau_i
+    IMPLICIT NONE
+    COMPLEX(dp) :: hflux_local
+    REAL(dp)    :: ky_, buffer(1:2), j_dp
+    INTEGER     :: i_, world_rank, world_size, root
+
+    hflux_local = 0._dp ! particle flux
+    IF(ips_i .EQ. 1 .AND. ips_e .EQ. 1) THEN
+        ! Loop to compute gamma_kx = sum_ky sum_j -i k_z Kernel_j Ni00 * phi
+        DO iz = izs,ize
+          DO iky = ikys,ikye
+            ky_ = kyarray(iky)
+            DO ikx = ikxs,ikxe
+              DO ij = ijs_i, ije_i
+                j_dp = REAL(ij-1,dp)
+                hflux_local = hflux_local + imagu*ky_*CONJG(phi(ikx,iky,iz))&
+                 *(2._dp/3._dp * (2._dp*j_dp*kernel_i(ij,ikx,iky,iz) - (j_dp+1)*kernel_i(ij+1,ikx,iky,iz) - j_dp*kernel_i(ij-1,ikx,iky,iz))&
+                 * (moments_i(1,ij,ikx,iky,iz,updatetlevel)+q_i/tau_i*kernel_i(ij,ikx,iky,iz)*phi(ikx,iky,iz)) &
+                + SQRT2/3._dp * kernel_i(ij,ikx,iky,iz) * moments_i(3,ij,ikx,iky,iz,updatetlevel))
+              ENDDO
+              DO ij = ijs_e, ije_e
+                j_dp = REAL(ij-1,dp)
+                hflux_local = hflux_local + imagu*ky_*CONJG(phi(ikx,iky,iz))&
+                 *(2._dp/3._dp * (2._dp*j_dp*kernel_e(ij,ikx,iky,iz) - (j_dp+1)*kernel_e(ij+1,ikx,iky,iz) - j_dp*kernel_e(ij-1,ikx,iky,iz))&
+                 * (moments_e(1,ij,ikx,iky,iz,updatetlevel)+q_e/tau_e*kernel_e(ij,ikx,iky,iz)*phi(ikx,iky,iz)) &
+                + SQRT2/3._dp * kernel_e(ij,ikx,iky,iz) * moments_e(3,ij,ikx,iky,iz,updatetlevel))
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
+        hflux_local = hflux_local/Nz
+
+        buffer(2) = REAL(hflux_local)
+        root = 0
+        !Gather manually among the rank_p=0 processes and perform the sum
+        hflux_x = 0
+        IF (num_procs_kx .GT. 1) THEN
+            !! Everyone sends its local_sum to root = 0
+            IF (rank_kx .NE. root) THEN
+                CALL MPI_SEND(buffer, 2 , MPI_DOUBLE_PRECISION, root, 1234, comm_kx, ierr)
+            ELSE
+                ! Recieve from all the other processes
+                DO i_ = 0,num_procs_kx-1
+                    IF (i_ .NE. rank_kx) &
+                        CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_kx, MPI_STATUS_IGNORE, ierr)
+                        hflux_x = hflux_x + buffer(2)
+                ENDDO
+            ENDIF
+        ENDIF
+    ENDIF
+END SUBROUTINE compute_radial_heatflux
 
 ! Compute the 2D particle density for electron and ions (sum over Laguerre)
 SUBROUTINE compute_density
