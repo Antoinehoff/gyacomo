@@ -58,13 +58,14 @@ MODULE basic
   END INTERFACE allocate_array
 
 CONTAINS
-
   !================================================================================
   SUBROUTINE basic_data
     !   Read basic data for input file
 
     use prec_const
     IMPLICIT NONE
+
+    CALL find_input_file
 
     NAMELIST /BASIC/  nrun, dt, tmax, maxruntime
 
@@ -75,6 +76,28 @@ CONTAINS
     tc_Sapj      = 0.; tc_diag     = 0.; tc_checkfield = 0.
 
   END SUBROUTINE basic_data
+  !================================================================================
+  SUBROUTINE find_input_file
+    IMPLICIT NONE
+    CHARACTER(len=32) :: str, input_file
+    INTEGER :: nargs, fileid, l
+    LOGICAL :: mlexist
+    nargs = COMMAND_ARGUMENT_COUNT()
+    IF((nargs .EQ. 1) .OR. (nargs .EQ. 3)) THEN
+      CALL GET_COMMAND_ARGUMENT(nargs, str, l, ierr)
+      READ(str(1:l),'(i3)')  fileid
+      WRITE(input_file,'(a,a1,i2.2,a3)') 'fort','_',fileid,'.90'
+
+      INQUIRE(file=input_file, exist=mlexist)
+      IF( mlexist ) THEN
+        IF(my_id.EQ.0) write(*,*) 'Reading input ', input_file,'...'
+        OPEN(lu_in, file=input_file)
+      ELSE
+        IF(my_id.EQ.0) write(*,*) 'Reading input fort.90...'
+        OPEN(lu_in, file='fort.90')
+      ENDIF
+    ENDIF
+  END SUBROUTINE find_input_file
   !================================================================================
   SUBROUTINE daytim(str)
     !   Print date and time

@@ -19,13 +19,9 @@ SUBROUTINE ppinit
   CALL MPI_COMM_SIZE (MPI_COMM_WORLD, num_procs, ierr)
 
   nargs = COMMAND_ARGUMENT_COUNT()
-  IF( nargs .NE. 0 .AND. nargs .NE. ndims ) THEN
-     IF(my_id .EQ. 0) WRITE(*, '(a,i4,a)') 'Number of arguments not equal to NDIMS =', ndims, '!'
-     CALL MPI_ABORT(MPI_COMM_WORLD, -1, ierr)
-  END IF
   !
-  IF( nargs .NE. 0 ) THEN
-     DO i=1,nargs
+  IF( nargs .GT. 1 ) THEN
+     DO i=1,ndims
         CALL GET_COMMAND_ARGUMENT(i, str, l, ierr)
         READ(str(1:l),'(i3)')  dims(i)
      END DO
