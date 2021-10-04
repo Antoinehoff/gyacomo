@@ -93,8 +93,12 @@ subplot(224)
 %% Single eigenvalue analysis
 
 % mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_6_3_NFLR_8_kp_4_bjf/scanfiles_00000/self.0.h5';
-mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_6_3_NFLR_8_kp_4_new_Tljpmf_fort_bjf/scanfiles_00000/self.0.h5';
-matidx = 74;
+% mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_4_2_NFLR_2_kp_4/scanfiles_00000/self.0.h5';
+mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_6_P_4_J_2_N_75_kpm_6.0/scanfiles_00049/self.0.h5';
+% mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0/scanfiles_00049/self.0.h5';
+% mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_16_P_4_J_2_N_50_kpm_4.0/scanfiles_00049/self.0.h5';
+% mat_file_name = '/home/ahoffman/cosolver/trunc_gk.coulomb_NFLR_4_P_4_J_2_N_50_kpm_4.0/scanfiles_00049/self.0.h5';
+matidx = 01;
 
 matidx = sprintf('%5.5i',matidx);disp(matidx);
 
@@ -105,19 +109,21 @@ gmax = max(real(eig(MAT)));
 
 wmax = max(imag(eig(MAT)));
 figure
+subplot(121)
 imagesc((MAT)); colormap(bluewhitered)
 title(['$\gamma_{max}=',num2str(gmax),'$'])
+subplot(122)
+plot(real(eig(MAT)),imag(eig(MAT)),'x')
 %% Eigenvalue spectrum analysis    
 if 0
 %%
 mfns = {'/home/ahoffman/HeLaZ/iCa/gk_sugama_P_20_J_10_N_150_kpm_8.0.h5',...
         '/home/ahoffman/HeLaZ/iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5',...
-        '/home/ahoffman/HeLaZ/iCa/gk_coulomb_P_10_J_5_N_20_kpm_8.0_NFLR_0.h5',...
-        '/home/ahoffman/HeLaZ/iCa/gk_coulomb_P_2_J_1_N_20_kpm_8.0_NFLR_5.h5',...
-        '/home/ahoffman/HeLaZ/iCa/gk_coulomb_P_6_J_3_N_150_kpm_8.0_NFLR_0.h5',...
-        '/home/ahoffman/HeLaZ/iCa/gk_coulomb_P_6_J_3_N_150_kpm_8.0_NFLR_8.h5',...
+        '/home/ahoffman/cosolver/gk.coulomb_NFLR_6_P_4_J_2_N_75_kpm_6.0.h5',...
+        '/home/ahoffman/cosolver/gk.coulomb_NFLR_12_P_4_J_2_N_75_kpm_6.0.h5',...
+        '/home/ahoffman/cosolver/gk.coulomb_NFLR_16_P_4_J_2_N_50_kpm_4.0.h5',...
         };
-CONAME_A = {'SG 20 10','PA 20 10', 'FC 10 5 NFLR 0', 'FC 2 1 NFLR 5', 'FC 6 3 NFLR 0', 'FC 6 3 NFLR 8'};
+CONAME_A = {'SG 20 10','PA 20 10', 'FC 4 2 NFLR 6',  'FC 4 2 NFLR 12', 'FC 4 2 NFLR 16'};
 figure
 for j_ = 1:numel(mfns)
     mat_file_name = mfns{j_}; disp(mat_file_name);
@@ -130,15 +136,15 @@ for j_ = 1:numel(mfns)
         gmax(idx_+1) = max(real(eig(MAT))); 
         wmax(idx_+1) = max(imag(eig(MAT))); 
    end
-%    subplot(121)
+   subplot(121)
     plot(kp_a,gmax,'DisplayName',CONAME_A{j_}); hold on;
-%    subplot(122)
-%     plot(kp_a,wmax,'DisplayName',CONAME_A{j_}); hold on;
+   subplot(122)
+    plot(kp_a,wmax,'DisplayName',CONAME_A{j_}); hold on;
 end
-%    subplot(121)
+   subplot(121)
 legend('show'); grid on;
 xlabel('$k_\perp$'); ylabel('$\gamma_{max}$ from Eig(iCa)')
-%    subplot(122)
-% legend('show'); grid on;
-% xlabel('$k_\perp$'); ylabel('$\omega_{max}$ from Eig(iCa)')
+   subplot(122)
+legend('show'); grid on;
+xlabel('$k_\perp$'); ylabel('$\omega_{max}$ from Eig(iCa)')
 end

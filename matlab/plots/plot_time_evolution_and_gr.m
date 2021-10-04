@@ -29,10 +29,12 @@ subplot(111);
     end
     grid on; ylabel('$\sum_{k_r,k_z}|N_i^{pj}|$'); xlabel('$t c_s/R$')
     subplot(222)
-        plot(Ts0D,GGAMMA_RI*(2*pi/Nx/Ny)^2); hold on;
-        plot(Ts0D,PGAMMA_RI*(2*pi/Nx/Ny)^2);
-        legend(['Gyro. flux';'Part. flux']);
-        grid on; xlabel('$t c_s/R$'); ylabel('$\Gamma_{r,i}$')
+%         plot(Ts0D,GGAMMA_RI*(2*pi/Nx/Ny)^2); hold on;
+        yyaxis left; ylabel('$\Gamma_x$');
+        plot(Ts3D,squeeze(sum(sum(sum(Gamma_x,1),2),3)));
+        yyaxis right; ylabel('$Q_x$');
+        plot(Ts3D,squeeze(sum(sum(sum(Q_x,1),2),3)));
+        grid on; xlabel('$t c_s/R$');
     if(~isnan(max(max(g_I(1,:,:)))))
     subplot(223)
         plot(ky,max(g_I(1,:,:),[],3),'-','DisplayName','Primar. instability'); hold on;

@@ -60,7 +60,7 @@ $(OBJDIR)/utility_mod.o
  $(EXEC): $(FOBJ)
 	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
 
- $(OBJDIR)/advance_field.o : src/advance_field.F90 $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o
+ $(OBJDIR)/advance_field.o : src/advance_field.F90 $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/initial_par_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/advance_field.F90 -o $@
 
  $(OBJDIR)/array_mod.o : src/array_mod.F90 $(OBJDIR)/prec_const_mod.o

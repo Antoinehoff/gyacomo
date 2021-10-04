@@ -1,4 +1,5 @@
 %% Paste the list of continue_run calls
+continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x150_L_120_P_8_J_4_eta_0.6_nu_1e-01_SGGK_mu_0e+00/out.txt')
 continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_B/300x150_L_120_P_8_J_4_eta_0.6_nu_5e-01_SGGK_mu_0e+00/out.txt')
 
 %% Functions to modify preexisting fort.90 input file and launch on marconi
@@ -44,19 +45,21 @@ function [] = continue_run(outfilename)
         line = A{39};
         line = line(end-2:end);
         if(line(1) == '='); line = line(end); end;
-        J2L = str2num(line) + 1;
+        J2L = str2num(line)+1;
     end
     % Change job 2 load in fort.90
     A{39} = ['  job2load      = ',num2str(J2L)];
     disp(A{39})
     % Change time step
-    A{3} = ['  dt     = 0.01'];
+    line_= A{3};
+    dt_old = str2num(line_(13:end));
+    A{3} = ['  dt     = ',num2str(dt_old)];
     % Increase endtime
     A{4} = ['  tmax      = 20000'];
     % Change collision operator
     line_= A{43};
     CO_old = str2num(line_(13:end));
-    A{43} = ['  CO      = ',num2str(1)];
+    A{43} = ['  CO      = ',num2str(2)];
     % Put non linear term back
     A{45} = ['  NL_CLOS = -1'];
     % change HD

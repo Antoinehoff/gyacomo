@@ -2,7 +2,7 @@ clear all;
 addpath(genpath('../matlab')) % ... add
 SUBMIT = 1; % To submit the job automatically
 % EXECNAME = 'helaz_dbg';
-  EXECNAME = 'helaz_3.2';
+  EXECNAME = 'helaz_3.8';
 for ETAN = [1/0.6]
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters

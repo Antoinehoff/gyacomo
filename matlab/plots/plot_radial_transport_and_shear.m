@@ -39,6 +39,7 @@ fig = figure; FIGNAME = ['ZF_transport_drphi','_',PARAMS];set(gcf, 'Position',  
         grid on; ylabel('Shear amp.');set(gca,'xticklabel',[]);% legend('show');
     subplot(313)
         [TY,TX] = meshgrid(x,Ts3D);
-        pclr = pcolor(TX,TY,squeeze((mean(dx2phi(:,:,1,:),2)))'); set(pclr, 'edgecolor','none'); legend('Shear ($\langle \partial_x^2\phi\rangle_y$)') %colorbar; 
-        caxis(1*shear_infty_avg*[-1 1]); xlabel('$t c_s/R$'), ylabel('$x/\rho_s$'); colormap(bluewhitered(256))
+        pclr = pcolor(TX,TY,squeeze((mean(dx2phi(:,:,1,:),2)))'); set(pclr, 'edgecolor','none'); legend('$\langle \partial_x^2\phi\rangle_y$') %colorbar; 
+        caxis([-1 1]); 
+        xlabel('$t c_s/R$'), ylabel('$x/\rho_s$'); colormap(bluewhitered(256))
 save_figure

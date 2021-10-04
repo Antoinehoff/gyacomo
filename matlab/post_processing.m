@@ -86,7 +86,13 @@ end
 disp('- post processing')
 % particle flux
 Gamma_x= zeros(Nx,Ny,Nz,Ns3D); % Radial particle transport
+Gamma_y= zeros(Nx,Ny,Nz,Ns3D); % Azymuthal particle transport
 
+% heat flux
+Q_x = zeros(Nx,Ny,Nz,Ns3D);
+Q_y = zeros(Nx,Ny,Nz,Ns3D);
+
+% Epot averages
 phi_maxx_maxy  = zeros(Nz,Ns3D);        % Time evol. of the norm of phi
 phi_avgx_maxy  = zeros(Nz,Ns3D);        % Time evol. of the norm of phi
 phi_maxx_avgy  = zeros(Nz,Ns3D);        % Time evol. of the norm of phi
@@ -121,7 +127,13 @@ for it = 1:numel(Ts3D) % Loop over 2D aX_XYays
     phi_avgx_avgy(iz,it)   = mean(mean(squeeze(phi(:,:,iz,it))));
     
     if(W_DENS)
-    Gamma_x(:,:,iz,it) = dens_i(:,:,iz,it).*dyphi(:,:,iz,it);
+    Gamma_x(:,:,iz,it) = -dens_i(:,:,iz,it).*dyphi(:,:,iz,it);
+    Gamma_y(:,:,iz,it) =  dens_i(:,:,iz,it).*dxphi(:,:,iz,it);
+    end
+    
+    if(W_TEMP)
+    Q_x(:,:,iz,it) = -temp_e(:,:,iz,it).*dyphi(:,:,iz,it);
+    Q_y(:,:,iz,it) =  temp_i(:,:,iz,it).*dxphi(:,:,iz,it);        
     end
 
     shear_maxx_maxy(iz,it)  =  max( max(squeeze(-(dx2phi(:,:,iz,it)))));

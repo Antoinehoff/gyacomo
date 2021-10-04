@@ -21,6 +21,7 @@ fig = figure; FIGNAME = ['space_time','_',PARAMS];set(gcf, 'Position',  [100, 10
             'DisplayName','$\langle \partial_r\phi\rangle_z$'); colorbar;
         fieldmax = max(max(mean(abs(dxphi(:,:,1,its2D:ite2D)),2)));
         caxis([-fieldmax,fieldmax]); c = colorbar; c.Label.String ='\langle v_{E\times B,z}\rangle_z';
+        colormap(bluewhitered)
         xlabel('$t c_s/R$'), ylabel('$x/\rho_s$')
 %         legend('Zonal flow $\langle \partial_r\phi\rangle_z$')        
 save_figure

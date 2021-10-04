@@ -6,10 +6,10 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %% PHYSICAL PARAMETERS
 NU      = 0.1;   % Collision frequency
 ETAN    = 1.0/0.6;    % Density gradient drive (R/Ln)
-NU_HYP  = 1.0;
+NU_HYP  = 0.0;
 %% GRID AND GEOMETRY PARAMETERS
 N       = 150;     % Frequency gridpoints (Nkx = N/2)
-L       = 100;     % Size of the squared frequency domain
+L       = 200;     % Size of the squared frequency domain
 Nz      = 1;      % number of perpendicular planes (parallel grid)
 q0      = 1.0;    % safety factor
 shear   = 0.0;    % magnetic shear
@@ -17,25 +17,25 @@ eps     = 0.0;    % inverse aspect ratio
 P       = 4;
 J       = 2;
 %% TIME PARAMETERS
-TMAX    = 1000;  % Maximal time unit
-DT      = 1e-3;   % Time step
+TMAX    = 100;  % Maximal time unit
+DT      = 2e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
-SPS3D   = 1/2;      % Sampling per time unit for 3D arrays
+SPS3D   = 1;      % Sampling per time unit for 3D arrays
 SPS5D   = 1/20;  % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints/10
 RESTART = 0;      % To restart from last checkpoint
 JOB2LOAD= 0;
 %% OPTIONS AND NAMING
 % Collision operator
-% (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle ; +/- for GK/DK)
-CO      = 1;
+% (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle ; 4 : Coulomb; +/- for GK/DK)
+CO      = 4;
 CLOS    = 0;   % Closure model (0: =0 truncation)
-NL_CLOS = 0;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
-SIMID   = 'HD_study';  % Name of the simulation
+NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
+SIMID   = 'nonlin_FCGK';  % Name of the simulation
 % SIMID   = 'test_3D';  % Name of the simulation
 % SIMID   = ['v3.0_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
-NON_LIN = -1;   % activate non-linearity (is cancelled if KXEQ0 = 1)
+NON_LIN = 1;   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % INIT options
 INIT_ZF = 0; ZF_AMP = 0.0;
 INIT_BLOB = 0; WIPE_TURB = 0; WIPE_ZF = 0;

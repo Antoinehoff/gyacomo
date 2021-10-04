@@ -55,9 +55,10 @@ if (abs(CO) == 2) %Sugama operator
 elseif (abs(CO) == 3) %pitch angle operator
     INITIAL.mat_file = ['''../../../iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5'''];
 elseif (CO == 4) % Full Coulomb GK
-%     INITIAL.mat_file = ['''../../../iCa/gk_coulomb_P_6_J_3_N_150_kpm_8.0_NFLR_8.h5'''];
-    INITIAL.mat_file = ['''../../../iCa/gk_coulomb_P_10_J_5_N_20_kpm_8.0_NFLR_0.h5'''];
-%     INITIAL.mat_file = ['''../../../iCa/gk_coulomb_P_6_J_3_N_150_kpm_8.0_NFLR_k2.h5'''];
+%     INITIAL.mat_file = ['''../../../iCa/gk_coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5'''];
+    INITIAL.mat_file = ['''../../../iCa/gk_coulomb_NFLR_12_P_4_J_2_N_75_kpm_6.0.h5'''];
+%     INITIAL.mat_file = ['''../../../iCa/gk_coulomb_NFLR_6_P_4_J_2_N_50_kpm_4.0.h5'''];
+%     INITIAL.mat_file = ['''../../../iCa/gk_coulomb_NFLR_6_P_4_J_2_N_75_kpm_6.0.h5'''];
 elseif (CO == -1) % DGDK
     disp('Warning, DGDK not debugged')
 end
@@ -71,7 +72,7 @@ switch abs(CO)
     case 4; CONAME = 'FC';
     otherwise; CONAME ='UK';
 end
-if (CO < 0); CONAME = [CONAME,'DK'];
+if (CO <= 0); CONAME = [CONAME,'DK'];
 else;         CONAME = [CONAME,'GK'];
 end
 if    (CLOS == 0); CLOSNAME = 'Trunc.';

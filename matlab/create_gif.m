@@ -7,9 +7,9 @@ YNAME     = latexize(YNAME);
 FIELDNAME = latexize(FIELDNAME);
 
 % Set colormap boundaries
-hmax = max(max(max(FIELD)));
-hmin = min(min(min(FIELD)));
-
+hmax = max(max(max(FIELD(:,:,FRAMES))));
+hmin = min(min(min(FIELD(:,:,FRAMES))));
+scale = -1;
 flag = 0;
 if hmax == hmin 
     disp('Warning : h = hmin = hmax = const')
@@ -25,17 +25,28 @@ fig  = figure('Color','white','Position', [100, 100, 400, 400]);
     in      = 1;
     nbytes = fprintf(2,'frame %d/%d',in,numel(FIELD(1,1,:)));
     for n = FRAMES % loop over selected frames
-        scale = max(max(abs(FIELD(:,:,n))));
-        pclr = pcolor(X,Y,FIELD(:,:,n)/scale); % frame plot
+        scale = max(max(abs(FIELD(:,:,n)))); % Scaling to normalize
+        if NORMALIZED
+            pclr = pcolor(X,Y,FIELD(:,:,n)/scale); % frame plot\
+            caxis([-1,1]);
+        else
+            pclr = pcolor(X,Y,FIELD(:,:,n)); % frame plot\
+            if CONST_CMAP
+                caxis([-1,1]*max(abs([hmin hmax]))); % adaptive color map
+            else
+                caxis([-1,1]*scale); % adaptive color map                
+            end
+            title([FIELDNAME,', $t \approx$', sprintf('%.3d',ceil(T(n)))...
+                ,', scale = ',sprintf('%.1e',scale)]);
+        end
+        title([FIELDNAME,', $t \approx$', sprintf('%.3d',ceil(T(n)))...
+              ,', scaling = ',sprintf('%.1e',scale)]);
         if INTERP
             shading interp; 
         end
         set(pclr, 'edgecolor','none'); axis square;
-        caxis([-1,1]);
         colormap(bluewhitered)
         xlabel(XNAME); ylabel(YNAME); %colorbar;
-        title([FIELDNAME,', $t \approx$', sprintf('%.3d',ceil(T(n)))...
-            ,', scaling = ',sprintf('%.1e',scale)]);
         drawnow 
         % Capture the plot as an image 
         frame = getframe(fig); 
