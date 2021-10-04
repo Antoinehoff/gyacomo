@@ -10,7 +10,7 @@ MODULE initial_par
   ! Initialization through a zonal flow phi
   INTEGER,  PUBLIC, PROTECTED :: INIT_ZF    = 0
   REAL(DP), PUBLIC, PROTECTED :: ZF_AMP     = 1E+3_dp
-  ! Wipe zonal flow in the restart (=1) or at each step (=2)
+  ! Wipe zonal flow in the restart (=1) or at each step (=2), maintain (=-1)
   INTEGER,  PUBLIC, PROTECTED :: WIPE_ZF   = 0
   ! Wipe turbulence in the restart (=1) or at each step (=2)
   INTEGER,  PUBLIC, PROTECTED :: WIPE_TURB = 0
