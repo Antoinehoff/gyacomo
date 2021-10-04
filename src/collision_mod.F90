@@ -464,7 +464,7 @@ CONTAINS
       USE basic
       USE time_integration, ONLY : updatetlevel
       USE utility
-      USE model, ONLY: CO, NON_LIN
+      USE model, ONLY: CO, NON_LIN, sigmae2_taue_o2, sigmai2_taui_o2
       IMPLICIT NONE
       ! Indices for row and columns of the COSOlver matrix (4D compressed 2D matrices)
       INTEGER :: irow_sub, irow_full, icol_sub, icol_full
@@ -488,7 +488,7 @@ CONTAINS
 
       REAL(dp), DIMENSION(:),     ALLOCATABLE :: kp_grid_mat             ! kperp grid of the matrices
       INTEGER  :: ikp_next, ikp_prev, nkp_mat, ikp_mat
-      REAL(dp) ::  kp_next,  kp_prev, kperp_sim, kperp_mat, zerotoone
+      REAL(dp) ::  kp_next,  kp_prev, kperp_sim, kperp_mat, zerotoone, be_2, bi_2
 
       CHARACTER(len=128) :: var_name, kperp_string, ikp_string
 
@@ -499,10 +499,14 @@ CONTAINS
         IF (my_id .EQ. 0) WRITE(*,*) '=== Load GK Sugama matrix ==='
       ELSEIF(CO .EQ. 3) THEN
         IF (my_id .EQ. 0) WRITE(*,*) '=== Load GK pitch angle matrix ==='
+      ELSEIF(CO .EQ. 4) THEN
+        IF (my_id .EQ. 0) WRITE(*,*) '=== Load GK Coulomb matrix ==='
       ELSEIF(CO .EQ. -2) THEN
         IF (my_id .EQ. 0) WRITE(*,*) '=== Load DK Sugama matrix ==='
       ELSEIF(CO .EQ. -3) THEN
         IF (my_id .EQ. 0) WRITE(*,*) '=== Load DK pitch angle matrix ==='
+      ELSEIF(CO .EQ. -4) THEN
+        IF (my_id .EQ. 0) WRITE(*,*) '=== Load DK Coulomb matrix ==='
       ENDIF
 
       ! Opening the compiled cosolver matrices results
@@ -540,7 +544,7 @@ CONTAINS
       CALL allocate_array(  CiepjF_kp, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1), ikps_C,ikpe_C)
 
       DO ikp = ikps_C,ikpe_C ! Loop over everz kperp values
-        ! we put zeros if kp>2/3kpmax because thoses frequenvies are filtered through AA
+        ! we put zeros if kp>2/3kpmax because thoses frequencies are filtered through AA
         IF(kp_grid_mat(ikp) .GT. two_third_kpmax .AND. NON_LIN) THEN
           CiepjT_kp(:,:,ikp) = 0._dp
           CiepjF_kp(:,:,ikp) = 0._dp
@@ -682,23 +686,48 @@ CONTAINS
             DO ikp=1,nkp_mat
               ikp_mat   = ikp ! the first indice of the interval (k0)
               kperp_mat = kp_grid_mat(ikp)
-              IF(kperp_mat .GT. kperp_sim) EXIT
+              IF(kperp_mat .GT. kperp_sim) EXIT ! a matrix with kperp2 > current kx2 + ky2 has been found
             ENDDO
-            ! interval boundaries
-            ikp_prev  = ikp_mat - 1 !index of k0
-            ikp_next  = ikp_mat     !index of k1
-            ! write(*,*) kp_grid_mat(ikp_prev), '<', kperp_sim, '<', kp_grid_mat(ikp_next)
+            IF((abs(CO) .eq. 4) .AND. (kperp_sim .GT. 3.0)) THEN ! hybrid CO for Coulomb collisions
+              ! write(*,*) kp_grid_mat(ikp_mat), '<', kperp_sim
+              !! Fill non existing matrices with diagonal Dougherty damping
+              DO ip_e = 0,Pmaxe ! Loop over rows
+              DO ij_e = 0,Jmaxe
+                irow_sub  = (Jmaxe +1)*ip_e + ij_e +1
+                be_2      = (kxarray(ikx)**2 + kyarray(iky)**2) * sigmae2_taue_o2
+                Ceepj (irow_sub,irow_sub,ikx,iky) = -(real(ip_e,dp) + 2._dp*real(ij_e,dp) + 2._dp*be_2)!Ceepj__kp(:,:,nkp_mat)
+              ENDDO
+              ENDDO
+              DO ip_i = 0,Pmaxi ! Loop over rows
+              DO ij_i = 0,Jmaxi
+                irow_sub  = (Jmaxi +1)*ip_i + ij_i +1
+                bi_2      = (kxarray(ikx)**2 + kyarray(iky)**2) * sigmai2_taui_o2
+                Ciipj (irow_sub,irow_sub,ikx,iky) = -(real(ip_i,dp) + 2._dp*real(ij_i,dp) + 2._dp*bi_2)!0*Ciipj__kp(:,:,nkp_mat)
+              ENDDO
+              ENDDO
+              ! Ceepj (:,:,ikx,iky) = 0*Ceepj__kp(:,:,nkp_mat)
+              ! Ciipj (:,:,ikx,iky) = 0*Ciipj__kp(:,:,nkp_mat)
+              CeipjT(:,:,ikx,iky) = 0*CeipjT_kp(:,:,nkp_mat)
+              CeipjF(:,:,ikx,iky) = 0*CeipjF_kp(:,:,nkp_mat)
+              CiepjT(:,:,ikx,iky) = 0*CiepjT_kp(:,:,nkp_mat)
+              CiepjF(:,:,ikx,iky) = 0*CiepjF_kp(:,:,nkp_mat)
+            ELSE ! Interpolation
+              ! interval boundaries
+              ikp_next  = ikp_mat     !index of k1 (larger than kperp_sim thanks to previous loop)
+              ikp_prev  = ikp_mat - 1 !index of k0 (smaller neighbour to interpolate inbetween)
+              ! write(*,*) kp_grid_mat(ikp_prev), '<', kperp_sim, '<', kp_grid_mat(ikp_next)
 
-            ! 0->1 variable for linear interp, i.e. zero2one = (k-k0)/(k1-k0)
-            zerotoone = (kperp_sim - kp_grid_mat(ikp_prev))/(kp_grid_mat(ikp_next) - kp_grid_mat(ikp_prev))
+              ! 0->1 variable for linear interp, i.e. zero2one = (k-k0)/(k1-k0)
+              zerotoone = (kperp_sim - kp_grid_mat(ikp_prev))/(kp_grid_mat(ikp_next) - kp_grid_mat(ikp_prev))
 
-            ! Linear interpolation between previous and next kperp matrix values
-            Ceepj (:,:,ikx,iky) = (Ceepj__kp(:,:,ikp_next) - Ceepj__kp(:,:,ikp_prev))*zerotoone + Ceepj__kp(:,:,ikp_prev)
-            CeipjT(:,:,ikx,iky) = (CeipjT_kp(:,:,ikp_next) - CeipjT_kp(:,:,ikp_prev))*zerotoone + CeipjT_kp(:,:,ikp_prev)
-            CeipjF(:,:,ikx,iky) = (CeipjF_kp(:,:,ikp_next) - CeipjF_kp(:,:,ikp_prev))*zerotoone + CeipjF_kp(:,:,ikp_prev)
-            Ciipj (:,:,ikx,iky) = (Ciipj__kp(:,:,ikp_next) - Ciipj__kp(:,:,ikp_prev))*zerotoone + Ciipj__kp(:,:,ikp_prev)
-            CiepjT(:,:,ikx,iky) = (CiepjT_kp(:,:,ikp_next) - CiepjT_kp(:,:,ikp_prev))*zerotoone + CiepjT_kp(:,:,ikp_prev)
-            CiepjF(:,:,ikx,iky) = (CiepjF_kp(:,:,ikp_next) - CiepjF_kp(:,:,ikp_prev))*zerotoone + CiepjF_kp(:,:,ikp_prev)
+              ! Linear interpolation between previous and next kperp matrix values
+              Ceepj (:,:,ikx,iky) = (Ceepj__kp(:,:,ikp_next) - Ceepj__kp(:,:,ikp_prev))*zerotoone + Ceepj__kp(:,:,ikp_prev)
+              CeipjT(:,:,ikx,iky) = (CeipjT_kp(:,:,ikp_next) - CeipjT_kp(:,:,ikp_prev))*zerotoone + CeipjT_kp(:,:,ikp_prev)
+              CeipjF(:,:,ikx,iky) = (CeipjF_kp(:,:,ikp_next) - CeipjF_kp(:,:,ikp_prev))*zerotoone + CeipjF_kp(:,:,ikp_prev)
+              Ciipj (:,:,ikx,iky) = (Ciipj__kp(:,:,ikp_next) - Ciipj__kp(:,:,ikp_prev))*zerotoone + Ciipj__kp(:,:,ikp_prev)
+              CiepjT(:,:,ikx,iky) = (CiepjT_kp(:,:,ikp_next) - CiepjT_kp(:,:,ikp_prev))*zerotoone + CiepjT_kp(:,:,ikp_prev)
+              CiepjF(:,:,ikx,iky) = (CiepjF_kp(:,:,ikp_next) - CiepjF_kp(:,:,ikp_prev))*zerotoone + CiepjF_kp(:,:,ikp_prev)
+            ENDIF
           ENDDO
         ENDDO
       ELSE ! DK -> No kperp dep, copy simply to final collision matrices
