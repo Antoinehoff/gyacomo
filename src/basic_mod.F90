@@ -18,7 +18,6 @@ MODULE basic
   INTEGER :: jobnum  = 0           ! Job number
   INTEGER :: step    = 0           ! Calculation step of this run
   INTEGER :: cstep   = 0           ! Current step number (Init from restart file)
-  LOGICAL :: RESTART = .FALSE.     ! Signal end of run
   LOGICAL :: nlend   = .FALSE.     ! Signal end of run
   LOGICAL :: crashed = .FALSE.     ! Signal end of crashed run
 
@@ -67,7 +66,7 @@ CONTAINS
     use prec_const
     IMPLICIT NONE
 
-    NAMELIST /BASIC/  nrun, dt, tmax, RESTART, maxruntime
+    NAMELIST /BASIC/  nrun, dt, tmax, maxruntime
 
     READ(lu_in,basic)
 

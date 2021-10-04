@@ -33,7 +33,7 @@ CONTAINS
   SUBROUTINE initial_readinputs
     ! Read the input parameters
 
-    USE basic, ONLY : lu_in, RESTART
+    USE basic, ONLY : lu_in
     USE prec_const
     IMPLICIT NONE
 

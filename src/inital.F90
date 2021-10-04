@@ -19,8 +19,8 @@ SUBROUTINE inital
   CALL set_updatetlevel(1)
 
   !!!!!! Set the moments arrays Nepj, Nipj and phi!!!!!!
-  ! through loading a previou state
-  IF ( RESTART ) THEN
+  ! through loading a previous state
+  IF ( job2load .GE. 0 ) THEN
     IF (my_id .EQ. 0) WRITE(*,*) 'Load moments'
     CALL load_moments ! get N_0
     CALL poisson ! compute phi_0=phi(N_0)
