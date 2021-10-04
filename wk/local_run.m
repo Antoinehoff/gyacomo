@@ -24,30 +24,26 @@ SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 3D arrays
 SPS5D   = 1/20;  % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints/10
-RESTART = 0;      % To restart from last checkpoint
-JOB2LOAD= 0;
+JOB2LOAD= -1;
 %% OPTIONS AND NAMING
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle ; 4 : Coulomb; +/- for GK/DK)
-CO      = 4;
+CO      = 1;
 CLOS    = 0;   % Closure model (0: =0 truncation)
 NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
-SIMID   = 'nonlin_FCGK';  % Name of the simulation
-% SIMID   = 'test_3D';  % Name of the simulation
+% SIMID   = 'nonlin_FCGK';  % Name of the simulation
+SIMID   = 'test';  % Name of the simulation
 % SIMID   = ['v3.0_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
 NON_LIN = 1;   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % INIT options
 INIT_ZF = 0; ZF_AMP = 0.0;
 INIT_BLOB = 0; WIPE_TURB = 0; WIPE_ZF = 0;
 %% OUTPUTS
-W_DOUBLE = 0;
-W_GAMMA  = 1;
-W_PHI    = 1;
-W_NA00   = 1;
-W_NAPJ   = 1;
-W_SAPJ   = 0;
-W_DENS   = 1;
-W_TEMP   = 1;
+W_DOUBLE = 1;
+W_GAMMA  = 1; W_HF     = 1;
+W_PHI    = 1; W_NA00   = 1;
+W_DENS   = 1; W_TEMP   = 1;
+W_NAPJ   = 1; W_SAPJ   = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% unused
@@ -62,9 +58,9 @@ KPAR    = 0.0;    % Parellel wave vector component
 LAMBDAD = 0.0;
 kmax    = N*pi/L;% Highest fourier mode
 HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
-% kmaxcut = 2.5;
-MU      = NU_HYP/(HD_CO*kmax)^4 % Hyperdiffusivity coefficient
+MU      = NU_HYP/(HD_CO*kmax)^4; % Hyperdiffusivity coefficient
 NOISE0  = 1.0e-5;
+BCKGD0  = 0.0;    % Init background
 TAU     = 1.0;    % e/i temperature ratio
 ETAT    = 0.0;    % Temperature gradient
 ETAB    = 1.0;    % Magnetic gradient (1.0 to set R=LB)
@@ -73,6 +69,6 @@ MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% Setup and file management
 setup
-system('rm fort.90');
+system('rm fort*.90');
 outfile = [BASIC.RESDIR,'out.txt'];
 disp(outfile);

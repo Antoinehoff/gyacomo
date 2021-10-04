@@ -26,7 +26,7 @@ results_old/
 mod/
 obj/
 bin/
-wk/fort.90
+wk/fort*.90
 .directory
 checkpoint/
 FM/
@@ -34,7 +34,7 @@ iCa/
 *.out
 src/srcinfo.h
 src/srcinfo/srcinfo.h
-fort.90
+fort*.90
 local/
 *.sh
 Gallery/

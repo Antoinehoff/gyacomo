@@ -1,18 +1,17 @@
 function [INPUT] = write_fort90(OUTPUTS,GRID,MODEL,INITIAL,TIME_INTEGRATION,BASIC)
 % Write the input script "fort.90" with desired parameters
-INPUT = 'fort.90';
+INPUT = ['fort_',sprintf('%2.2d',OUTPUTS.job2load+1),'.90'];
 fid = fopen(INPUT,'wt');
 
 fprintf(fid,'&BASIC\n');
 fprintf(fid,['  nrun   = ', num2str(BASIC.nrun),'\n']);
 fprintf(fid,['  dt     = ', num2str(BASIC.dt),'\n']);
 fprintf(fid,['  tmax   = ', num2str(BASIC.tmax),'\n']);
-fprintf(fid,['  RESTART    = ', BASIC.RESTART,'\n']);
 fprintf(fid,['  maxruntime = ', num2str(BASIC.maxruntime),'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&GRID\n');
-fprintf(fid,['  pmaxe  =', num2str(GRID.pmaxe),'\n']);
+fprintf(fid,['  pmaxe  = ', num2str(GRID.pmaxe),'\n']);
 fprintf(fid,['  jmaxe  = ', num2str(GRID.jmaxe),'\n']);
 fprintf(fid,['  pmaxi  = ', num2str(GRID.pmaxi),'\n']);
 fprintf(fid,['  jmaxi  = ', num2str(GRID.jmaxi),'\n']);
@@ -32,18 +31,18 @@ fprintf(fid,['  nsave_1d = ', num2str(OUTPUTS.nsave_1d),'\n']);
 fprintf(fid,['  nsave_2d = ', num2str(OUTPUTS.nsave_2d),'\n']);
 fprintf(fid,['  nsave_3d = ', num2str(OUTPUTS.nsave_3d),'\n']);
 fprintf(fid,['  nsave_5d = ', num2str(OUTPUTS.nsave_5d),'\n']);
-fprintf(fid,['  nsave_cp = ', num2str(OUTPUTS.nsave_cp),'\n']);
 fprintf(fid,['  write_doubleprecision = ', OUTPUTS.write_doubleprecision,'\n']);
 fprintf(fid,['  write_gamma = ', OUTPUTS.write_gamma,'\n']);
+fprintf(fid,['  write_hf    = ', OUTPUTS.write_hf,'\n']);
 fprintf(fid,['  write_phi   = ', OUTPUTS.write_phi,'\n']);
 fprintf(fid,['  write_Na00  = ', OUTPUTS.write_Na00,'\n']);
 fprintf(fid,['  write_Napj  = ', OUTPUTS.write_Napj,'\n']);
 fprintf(fid,['  write_Sapj  = ', OUTPUTS.write_Sapj,'\n']);
 fprintf(fid,['  write_dens  = ', OUTPUTS.write_dens,'\n']);
 fprintf(fid,['  write_temp  = ', OUTPUTS.write_temp,'\n']);
-fprintf(fid,['  resfile0      = ', OUTPUTS.resfile0,'\n']);
-fprintf(fid,['  rstfile0      = ', OUTPUTS.rstfile0,'\n']);
-fprintf(fid,['  job2load      = ', num2str(OUTPUTS.job2load),'\n']);
+fprintf(fid,['  resfile0    = ', OUTPUTS.resfile0,'\n']);
+fprintf(fid,['  rstfile0    = ', OUTPUTS.rstfile0,'\n']);
+fprintf(fid,['  job2load    = ', num2str(OUTPUTS.job2load),'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&MODEL_PAR\n');
@@ -85,5 +84,5 @@ fprintf(fid,['  numerical_scheme = ', TIME_INTEGRATION.numerical_scheme,'\n']);
 fprintf(fid,'/');
 
 fclose(fid);
-system(['cp fort.90 ',BASIC.RESDIR,'/.']);
+system(['cp fort*.90 ',BASIC.RESDIR,'/.']);
 end

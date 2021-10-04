@@ -52,7 +52,7 @@ SUBROUTINE tesend
      RETURN
   END IF
   !________________________________________________________________________________
-  !                   5.  NRUN modified throught "stop file"
+  !                   5.  NRUN modified through "stop file"
   !
   IF( (my_id .EQ. 0) .AND. (MOD(cstep, ncheck_stop) == 0) ) THEN
      INQUIRE(file=stop_file, exist=mlexist)

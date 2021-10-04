@@ -111,7 +111,6 @@ BASIC.maxruntime = str2num(CLUSTER.TIME(1:2))*3600 ...
                    + str2num(CLUSTER.TIME(4:5))*60 ...
                    + str2num(CLUSTER.TIME(7:8));
 % Outputs parameters
-if RESTART; BASIC.RESTART = '.true.'; else; BASIC.RESTART = '.false.';end;
 OUTPUTS.nsave_0d = floor(1.0/SPS0D/DT);
 OUTPUTS.nsave_1d = -1;
 OUTPUTS.nsave_2d = floor(1.0/SPS2D/DT);
@@ -120,6 +119,7 @@ OUTPUTS.nsave_5d = floor(1.0/SPS5D/DT);
 OUTPUTS.nsave_cp = floor(1.0/SPSCP/DT);
 if W_DOUBLE; OUTPUTS.write_doubleprecision = '.true.'; else; OUTPUTS.write_doubleprecision = '.false.';end;
 if W_GAMMA;  OUTPUTS.write_gamma = '.true.'; else; OUTPUTS.write_gamma = '.false.';end;
+if W_HF;     OUTPUTS.write_hf    = '.true.'; else; OUTPUTS.write_hf    = '.false.';end;
 if W_PHI;    OUTPUTS.write_phi   = '.true.'; else; OUTPUTS.write_phi   = '.false.';end;
 if W_NA00;   OUTPUTS.write_Na00  = '.true.'; else; OUTPUTS.write_Na00  = '.false.';end;
 if W_NAPJ;   OUTPUTS.write_Napj  = '.true.'; else; OUTPUTS.write_Napj  = '.false.';end;
@@ -147,7 +147,7 @@ system(MAKE);
 %%
 disp(['Set up ',SIMID]);
 disp([resolution,gridname,degngrad]);
-if RESTART
+if JOB2LOAD>=0
 	disp(['- restarting from JOBNUM = ',num2str(JOB2LOAD)]); else
 	disp(['- starting from T = 0']);
 end

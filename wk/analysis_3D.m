@@ -2,15 +2,15 @@ addpath(genpath('../matlab')) % ... add
 addpath(genpath('../matlab/plots')) % ... add
 outfile ='';
 %% Directory of the simulation
-if 0% Local results
+if 1% Local results
 outfile ='';
 outfile ='';
 % outfile ='artificial_ZF_freeze/sim_A';
 % outfile ='simulation_B/cw_FCGK_kp_3.0';
-% outfile ='nonlin_FCGK/150x75_L_200_P_4_J_2_eta_0.6_nu_1e-01_FCGK_mu_0e+00';
+outfile ='nonlin_FCGK/150x75_L_200_P_4_J_2_eta_0.6_nu_1e-01_FCGK_mu_0e+00';
 % outfile ='nonlin_PAGK/100x50_L_200_P_4_J_2_eta_0.6_nu_1e-01_PAGK_mu_0e+00';
 % outfile ='nonlin_FCGK/100x50_L_200_P_4_J_2_eta_0.6_nu_1e-01_FCGK_mu_0e+00';
-outfile ='simulation_A';
+% outfile ='simulation_A';
 % outfile ='simulation_B/cw_SGGK_like_species';
 % outfile ='simulation_A/CO_damping_SGGK';
 % outfile ='simulation_A/cw_DGGK_eta_0.5';

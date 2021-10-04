@@ -14,12 +14,11 @@ function [ RESDIR ] = load_marconi( outfilename )
     disp(CMD);
     system(CMD);
     % Load the fort.90 as well in misc folder
-    CMD = ['scp -r ahoffman@login.marconi.cineca.it:',hostfolder,'/fort.90',' ',miscfolder];
+    CMD = ['scp -r ahoffman@login.marconi.cineca.it:',hostfolder,'/fort*.90',' ',miscfolder];
     disp(CMD);
     system(CMD);
     % Put it also in the result directory
-    CMD = ['scp -r ahoffman@login.marconi.cineca.it:',hostfolder,'/fort.90',' ',resultfolder];
+    CMD = ['scp -r ahoffman@login.marconi.cineca.it:',hostfolder,'/fort*.90',' ',resultfolder];
     disp(CMD);
     system(CMD);
 end
-
