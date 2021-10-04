@@ -6,12 +6,12 @@ MODULE diagnostics_par
   PRIVATE
 
   LOGICAL, PUBLIC, PROTECTED :: write_doubleprecision = .FALSE.
-  LOGICAL, PUBLIC, PROTECTED :: write_gamma
+  LOGICAL, PUBLIC, PROTECTED :: write_gamma, write_hf  ! output particle transport and heat flux
   LOGICAL, PUBLIC, PROTECTED :: write_phi,  write_Na00
   LOGICAL, PUBLIC, PROTECTED :: write_Napj, write_Sapj
   LOGICAL, PUBLIC, PROTECTED :: write_dens, write_temp
 
-  INTEGER, PUBLIC, PROTECTED :: nsave_0d, nsave_1d, nsave_2d, nsave_3d, nsave_5d, nsave_cp
+  INTEGER, PUBLIC, PROTECTED :: nsave_0d, nsave_1d, nsave_2d, nsave_3d, nsave_5d
 
   !  HDF5 file
   CHARACTER(len=256), PUBLIC :: resfile0 = "results"   ! Head of main result file name
@@ -34,8 +34,8 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /OUTPUT_PAR/ nsave_0d, nsave_1d, nsave_2d, nsave_3d, nsave_5d, nsave_cp
-    NAMELIST /OUTPUT_PAR/ write_doubleprecision, write_gamma, write_phi
+    NAMELIST /OUTPUT_PAR/ nsave_0d, nsave_1d, nsave_2d, nsave_3d, nsave_5d
+    NAMELIST /OUTPUT_PAR/ write_doubleprecision, write_gamma, write_hf, write_phi
     NAMELIST /OUTPUT_PAR/ write_Na00, write_Napj, write_Sapj
     NAMELIST /OUTPUT_PAR/ write_dens, write_temp
     NAMELIST /OUTPUT_PAR/ resfile0, rstfile0, job2load

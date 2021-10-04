@@ -114,6 +114,8 @@ SUBROUTINE diagnose(kstep)
       IF (write_gamma) THEN
         CALL creatd(fidres, rank, dims, "/data/var0d/gflux_ri", "Radial gyro ion transport")
         CALL creatd(fidres, rank, dims, "/data/var0d/pflux_ri", "Radial part ion transport")
+      ENDIF
+      IF (write_hf) THEN
         CALL creatd(fidres, rank, dims, "/data/var0d/hflux_x", "Radial part ion heat flux")
       ENDIF
       IF (cstep==0) THEN
@@ -211,13 +213,14 @@ SUBROUTINE diagnose(kstep)
      CALL attach(fidres, TRIM(str),       "Nproc",   num_procs)
      CALL attach(fidres, TRIM(str),       "Np_p" , num_procs_p)
      CALL attach(fidres, TRIM(str),       "Np_kx",num_procs_kx)
-     CALL attach(fidres, TRIM(str), "write_gamma",write_gamma)
-     CALL attach(fidres, TRIM(str),   "write_phi",write_phi)
-     CALL attach(fidres, TRIM(str),  "write_Na00",write_Na00)
-     CALL attach(fidres, TRIM(str),  "write_Napj",write_Napj)
-     CALL attach(fidres, TRIM(str),  "write_Sapj",write_Sapj)
-     CALL attach(fidres, TRIM(str),  "write_dens",write_dens)
-     CALL attach(fidres, TRIM(str),  "write_temp",write_temp)
+     CALL attach(fidres, TRIM(str), "write_gamma", write_gamma)
+     CALL attach(fidres, TRIM(str),    "write_hf",    write_hf)
+     CALL attach(fidres, TRIM(str),   "write_phi",   write_phi)
+     CALL attach(fidres, TRIM(str),  "write_Na00",  write_Na00)
+     CALL attach(fidres, TRIM(str),  "write_Napj",  write_Napj)
+     CALL attach(fidres, TRIM(str),  "write_Sapj",  write_Sapj)
+     CALL attach(fidres, TRIM(str),  "write_dens",  write_dens)
+     CALL attach(fidres, TRIM(str),  "write_temp",  write_temp)
 
      CALL grid_outputinputs(fidres, str)
 
@@ -349,10 +352,11 @@ SUBROUTINE diagnose_0d
     CALL compute_radial_ion_transport
     CALL append(fidres, "/data/var0d/gflux_ri",gflux_ri,ionode=0)
     CALL append(fidres, "/data/var0d/pflux_ri",pflux_ri,ionode=0)
+  ENDIF
+  IF (write_hf) THEN
     CALL compute_radial_heatflux
     CALL append(fidres, "/data/var0d/hflux_x",hflux_x,ionode=0)
   ENDIF
-
 END SUBROUTINE diagnose_0d
 
 
