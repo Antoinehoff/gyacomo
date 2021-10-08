@@ -11,7 +11,9 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED :: jmaxe = 1      ! The maximal electron Laguerre-moment computed
   INTEGER,  PUBLIC, PROTECTED :: pmaxi = 1      ! The maximal ion Hermite-moment computed
   INTEGER,  PUBLIC, PROTECTED :: jmaxi = 1      ! The maximal ion Laguerre-moment computed
-  INTEGER,  PUBLIC, PROTECTED :: maxj  = 1      ! The maximal ion Laguerre-moment computed
+  INTEGER,  PUBLIC, PROTECTED :: maxj  = 1      ! The maximal Laguerre-moment
+  INTEGER,  PUBLIC, PROTECTED :: dmaxe = 1      ! The maximal full GF set of e-moments v^dmax
+  INTEGER,  PUBLIC, PROTECTED :: dmaxi = 1      ! The maximal full GF set of i-moments v^dmax
   INTEGER,  PUBLIC, PROTECTED :: Nx    = 16     ! Number of total internal grid points in x
   REAL(dp), PUBLIC, PROTECTED :: Lx    = 1._dp  ! horizontal length of the spatial box
   INTEGER,  PUBLIC, PROTECTED :: Ny    = 16     ! Number of total internal grid points in y
@@ -37,7 +39,7 @@ MODULE grid
   ! Grids containing position in physical space
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: xarray
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: yarray
-  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: zarray
+  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: zarray, zarray_full
   REAL(dp), PUBLIC, PROTECTED ::  deltax,  deltay, deltaz
   INTEGER,  PUBLIC, PROTECTED  ::  ixs,  ixe,  iys,  iye, izs, ize
   INTEGER,  PUBLIC :: ir,iz ! counters
@@ -45,13 +47,14 @@ MODULE grid
   integer(C_INTPTR_T), PUBLIC :: local_nkx_offset, local_nky_offset
   INTEGER,             PUBLIC :: local_nkp
   INTEGER,             PUBLIC :: local_np_e, local_np_i
+  INTEGER,             PUBLIC :: total_np_e, total_np_i
   integer(C_INTPTR_T), PUBLIC :: local_np_e_offset, local_np_i_offset
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: counts_np_e, counts_np_i
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: displs_np_e, displs_np_i
 
   ! Grids containing position in fourier space
-  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kxarray
-  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kyarray
+  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kxarray, kxarray_full
+  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kyarray, kyarray_full
   REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kparray     ! kperp array
   REAL(dp), PUBLIC, PROTECTED ::  deltakx, deltaky, kx_max, ky_max, kp_max
   INTEGER,  PUBLIC, PROTECTED ::  ikxs, ikxe, ikys, ikye, ikps, ikpe
@@ -61,14 +64,16 @@ MODULE grid
   LOGICAL,  PUBLIC, PROTECTED :: contains_kxmax = .false. ! rank of the proc containing kx=max indices
 
   ! Grid containing the polynomials degrees
-  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_e
-  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_i
-  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: jarray_e
-  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: jarray_i
+  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_e, parray_e_full
+  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_i, parray_i_full
+  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: jarray_e, jarray_e_full
+  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: jarray_i, jarray_i_full
   INTEGER, PUBLIC, PROTECTED ::  ips_e,ipe_e, ijs_e,ije_e ! Start and end indices for pol. deg.
   INTEGER, PUBLIC, PROTECTED ::  ips_i,ipe_i, ijs_i,ije_i
   INTEGER, PUBLIC, PROTECTED ::  ipsg_e,ipeg_e, ijsg_e,ijeg_e ! Ghosts start and end indices
   INTEGER, PUBLIC, PROTECTED ::  ipsg_i,ipeg_i, ijsg_i,ijeg_i
+  INTEGER, PUBLIC, PROTECTED ::  deltape, ip0_e, ip1_e, ip2_e ! Pgrid spacing and moment 0,1,2 index
+  INTEGER, PUBLIC, PROTECTED ::  deltapi, ip0_i, ip1_i, ip2_i
 
   ! Public Functions
   PUBLIC :: init_1Dgrid_distr
@@ -93,17 +98,30 @@ CONTAINS
                     Nx,  Lx,  Ny,  Ly, Nz, q0, shear, eps
     READ(lu_in,grid)
 
+    !! Compute the maximal degree of full GF moments set
+    !   i.e. : all moments N_a^pj s.t. p+2j<=d are simulated (see GF closure)
+    dmaxe = min(pmaxe,2*jmaxe+1)
+    dmaxi = min(pmaxi,2*jmaxi+1)
+
+    ! If no parallel dim (Nz=1), the moment hierarchy is separable between odds and even P
+    !! and since the energy is injected in P=0 and P=2 for density/temperature gradients
+    !! there is no need of simulating the odd p which will only be damped.
+    !! We define in this case a grid Parray = 0,2,4,...,Pmax i.e. deltap = 2 instead of 1
+    !! to spare computation
+    IF(Nz .EQ. 1) THEN
+      deltape = 2; deltapi = 2;
+    ELSE
+      deltape = 1; deltapi = 1;
+    ENDIF
+
   END SUBROUTINE grid_readinputs
 
   SUBROUTINE init_1Dgrid_distr
-
     ! write(*,*) Nx
     local_nkx        = (Nx/2+1)/num_procs_kx
     ! write(*,*) local_nkx
     local_nkx_offset = rank_kx*local_nkx
-
     if (rank_kx .EQ. num_procs_kx-1) local_nkx = (Nx/2+1)-local_nkx_offset
-
   END SUBROUTINE init_1Dgrid_distr
 
   SUBROUTINE set_pgrid
@@ -111,9 +129,19 @@ CONTAINS
     IMPLICIT NONE
     INTEGER :: ip, istart, iend, in
 
+    ! Total number of Hermite polynomials we will evolve
+    total_np_e = (Pmaxe/deltape) + 1
+    total_np_i = (Pmaxi/deltapi) + 1
+    ! Build the full grids on process 0 to diagnose it without comm
+    ALLOCATE(parray_e_full(1:total_np_e))
+    ALLOCATE(parray_i_full(1:total_np_i))
+    ! P
+    DO ip = 1,total_np_e; parray_e_full(ip) = (ip-1)*deltape; END DO
+    DO ip = 1,total_np_i; parray_i_full(ip) = (ip-1)*deltapi; END DO
+    !! Parallel data distribution
     ! Local data distribution
-    CALL decomp1D(pmaxe+1, num_procs_p, rank_p, ips_e, ipe_e)
-    CALL decomp1D(pmaxi+1, num_procs_p, rank_p, ips_i, ipe_i)
+    CALL decomp1D(total_np_e, num_procs_p, rank_p, ips_e, ipe_e)
+    CALL decomp1D(total_np_i, num_procs_p, rank_p, ips_i, ipe_i)
     local_np_e = ipe_e - ips_e + 1
     local_np_i = ipe_i - ips_i + 1
     ! List of shift and local numbers between the different processes (used in scatterv and gatherv)
@@ -122,27 +150,38 @@ CONTAINS
     ALLOCATE(displs_np_e (1:num_procs_p))
     ALLOCATE(displs_np_i (1:num_procs_p))
     DO in = 0,num_procs_p-1
-      CALL decomp1D(pmaxe+1, num_procs_p, in, istart, iend)
+      CALL decomp1D(total_np_e, num_procs_p, in, istart, iend)
       counts_np_e(in+1) = iend-istart+1
       displs_np_e(in+1) = istart-1
-      CALL decomp1D(pmaxi+1, num_procs_p, in, istart, iend)
+      CALL decomp1D(total_np_i, num_procs_p, in, istart, iend)
       counts_np_i(in+1) = iend-istart+1
       displs_np_i(in+1) = istart-1
-    !DGGK operator uses moments at index p=2 (ip=3) for the p=0 term so the
-    ! process that contains ip=1 MUST contain ip=3 as well for both e and i.
-    IF(((ips_e .EQ. 1) .OR. (ips_i .EQ. 1)) .AND. ((ipe_e .LT. 3) .OR. (ipe_i .LT. 3)))&
-     WRITE(*,*) "Warning : distribution along p may not work with DGGK"
     ENDDO
 
     ! local grid computation
     ALLOCATE(parray_e(ips_e:ipe_e))
     ALLOCATE(parray_i(ips_i:ipe_i))
-    DO ip = ips_e,ipe_e; parray_e(ip) = (ip-1); END DO
-    DO ip = ips_i,ipe_i; parray_i(ip) = (ip-1); END DO
+    DO ip = ips_e,ipe_e
+      parray_e(ip) = (ip-1)*deltape
+      ! Storing indices of particular degrees for DG and fluid moments computations
+      IF(parray_e(ip) .EQ. 0) ip0_e = ip
+      IF(parray_e(ip) .EQ. 1) ip1_e = ip
+      IF(parray_e(ip) .EQ. 2) ip2_e = ip
+    END DO
+    DO ip = ips_i,ipe_i
+      parray_i(ip) = (ip-1)*deltapi
+      IF(parray_i(ip) .EQ. 0) ip0_i = ip
+      IF(parray_i(ip) .EQ. 1) ip1_i = ip
+      IF(parray_i(ip) .EQ. 2) ip2_i = ip
+    END DO
+    !DGGK operator uses moments at index p=2 (ip=3) for the p=0 term so the
+    ! process that contains ip=1 MUST contain ip=3 as well for both e and i.
+    IF(((ips_e .EQ. ip0_e) .OR. (ips_i .EQ. ip0_e)) .AND. ((ipe_e .LT. ip2_e) .OR. (ipe_i .LT. ip2_i)))&
+     WRITE(*,*) "Warning : distribution along p may not work with DGGK"
 
     ! Ghosts boundaries
-    ipsg_e = ips_e - 2; ipeg_e = ipe_e + 2;
-    ipsg_i = ips_i - 2; ipeg_i = ipe_i + 2;
+    ipsg_e = ips_e - 2/deltape; ipeg_e = ipe_e + 2/deltape;
+    ipsg_i = ips_i - 2/deltapi; ipeg_i = ipe_i + 2/deltapi;
     ! Precomputations
     pmaxe_dp   = real(pmaxe,dp)
     pmaxi_dp   = real(pmaxi,dp)
@@ -153,6 +192,13 @@ CONTAINS
     IMPLICIT NONE
     INTEGER :: ij
 
+    ! Build the full grids on process 0 to diagnose it without comm
+    ALLOCATE(jarray_e_full(1:jmaxe+1))
+    ALLOCATE(jarray_i_full(1:jmaxi+1))
+    ! J
+    DO ij = 1,jmaxe+1; jarray_e_full(ij) = (ij-1); END DO
+    DO ij = 1,jmaxi+1; jarray_i_full(ij) = (ij-1); END DO
+    ! Local data
     ijs_e = 1; ije_e = jmaxe + 1
     ijs_i = 1; ije_i = jmaxi + 1
     ALLOCATE(jarray_e(ijs_e:ije_e))
@@ -178,19 +224,26 @@ CONTAINS
     INTEGER :: i_
 
     Nkx = Nx/2+1 ! Defined only on positive kx since fields are real
-    ! Start and END indices of grid
-    ikxs = local_nkx_offset + 1
-    ikxe = ikxs + local_nkx - 1
-    ALLOCATE(kxarray(ikxs:ikxe))
-
     ! Grid spacings
     IF (Lx .EQ. 0) THEN
       deltakx = 1._dp
       kx_max  = 0._dp
     ELSE
       deltakx = 2._dp*PI/Lx
-      kx_max  = (Nx/2+1)*deltakx
+      kx_max  = Nkx*deltakx
     ENDIF
+
+    ! Build the full grids on process 0 to diagnose it without comm
+    ALLOCATE(kxarray_full(1:Nkx))
+    DO ikx = 1,Nkx
+     kxarray_full(ikx) = REAL(ikx-1,dp) * deltakx
+    END DO
+
+    !! Parallel distribution
+    ! Start and END indices of grid
+    ikxs = local_nkx_offset + 1
+    ikxe = ikxs + local_nkx - 1
+    ALLOCATE(kxarray(ikxs:ikxe))
 
     ! Creating a grid ordered as dk*(0 1 2 3)
     DO ikx = ikxs,ikxe
@@ -226,11 +279,12 @@ CONTAINS
     INTEGER :: i_, counter
 
     Nky = Ny;
+    ALLOCATE(kyarray_full(1:Nky))
+    ! Local data
     ! Start and END indices of grid
     ikys = 1
     ikye = Nky
     ALLOCATE(kyarray(ikys:ikye))
-
     IF (Ly .EQ. 0) THEN ! 1D linear case
       deltaky    = 1._dp
       kyarray(1) = 0
@@ -249,7 +303,16 @@ CONTAINS
         IF (kyarray(ikx) .EQ. ky_max) ikx_max = ikx
       END DO
     ENDIF
-
+    ! Build the full grids on process 0 to diagnose it without comm
+    ! ky
+    IF (Nky .GT. 1) THEN
+     DO iky = 1,Nky
+       kyarray_full(iky) = deltaky*(MODULO(iky-1,Nky/2)-Nky/2*FLOOR(2.*real(iky-1)/real(Nky)))
+       IF (iky .EQ. Ny/2+1) kyarray_full(iky) = -kyarray_full(iky)
+     END DO
+    ELSE
+     kyarray_full(1) =  0
+    ENDIF
     ! Orszag 2/3 filter
     two_third_kymax = 2._dp/3._dp*deltaky*(Nky/2-1);
     ALLOCATE(AA_y(ikys:ikye))
@@ -288,6 +351,16 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER :: i_
+    ! Build the full grids on process 0 to diagnose it without comm
+    ALLOCATE(zarray_full(1:Nz))
+    ! z
+    IF (Nz .GT. 1) THEN
+      DO iz = 1,Nz
+        zarray_full(iz) = deltaz*(iz-1)
+      END DO
+    ELSE
+      zarray_full(1) =  0
+    ENDIF
     ! Start and END indices of grid
     izs = 1
     ize = Nz

@@ -23,7 +23,7 @@ SUBROUTINE poisson
   COMPLEX(dp) :: buffer(ikxs:ikxe,ikys:ikye)
 
   !! Poisson can be solved only for process containing ip=1
-  IF ( (ips_e .EQ. 1) .AND. (ips_i .EQ. 1) ) THEN
+  IF ( (ips_e .EQ. ip0_e) .AND. (ips_i .EQ. ip0_i) ) THEN
 
     ! Execution time start
     CALL cpu_time(t0_poisson)
@@ -38,7 +38,7 @@ SUBROUTINE poisson
           ! loop over n only if the max polynomial degree
           DO ine=1,jmaxe+1 ! ine = n+1
             Kne = kernel_e(ine,ikx,iky,iz)
-            sum_kernel_mom_e  = sum_kernel_mom_e  + Kne * moments_e(1, ine, ikx, iky, iz, updatetlevel)
+            sum_kernel_mom_e  = sum_kernel_mom_e  + Kne * moments_e(ip0_e, ine, ikx, iky, iz, updatetlevel)
             sum_kernel2_e     = sum_kernel2_e     + Kne**2 ! ... sum recursively ...
           END DO
 
@@ -48,7 +48,7 @@ SUBROUTINE poisson
             ! loop over n only if the max polynomial degree
             DO ini=1,jmaxi+1
               Kni = kernel_i(ini,ikx,iky,iz)
-              sum_kernel_mom_i  = sum_kernel_mom_i  + Kni * moments_i(1, ini, ikx, iky, iz, updatetlevel)
+              sum_kernel_mom_i  = sum_kernel_mom_i  + Kni * moments_i(ip0_i, ini, ikx, iky, iz, updatetlevel)
               sum_kernel2_i     = sum_kernel2_i     + Kni**2 ! ... sum recursively ...
             END DO
 

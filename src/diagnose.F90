@@ -21,11 +21,6 @@ SUBROUTINE diagnose(kstep)
   INTEGER :: dims(1) = (/0/)
   INTEGER :: cp_counter = 0
   CHARACTER(len=256) :: str, fname,test_
-  ! putarr(...,pardim=1) does not work for 2D domain decomposition
-  ! so we need to gather non 5D data on one proc to output it
-  INTEGER     :: parray_e_full(1:pmaxe+1), parray_i_full(1:pmaxi+1)
-  INTEGER     :: jarray_e_full(1:jmaxe+1), jarray_i_full(1:jmaxi+1)
-  REAL(dp)    :: kxarray_full(1:Nkx),  kyarray_full(1:Nky), zarray_full(1:Nz)
 
   CALL cpu_time(t0_diag) ! Measuring time
   !_____________________________________________________________________________
@@ -64,46 +59,15 @@ SUBROUTINE diagnose(kstep)
      CALL creatd(fidres, 0, dims, "/profiler/Tc_step",       "cumulative total step computation time")
      CALL creatd(fidres, 0, dims, "/profiler/time",          "current simulation time")
 
-     ! Build the full grids on process 0 to diagnose it without comm
-     IF (my_id .EQ. 0) THEN
-       ! P
-       DO ip = 1,pmaxe+1; parray_e_full(ip) = (ip-1); END DO
-       DO ip = 1,pmaxi+1; parray_i_full(ip) = (ip-1); END DO
-       ! J
-       DO ij = 1,jmaxe+1; jarray_e_full(ij) = (ij-1); END DO
-       DO ij = 1,jmaxi+1; jarray_i_full(ij) = (ij-1); END DO
-       ! kx
-       DO ikx = 1,Nkx
-         kxarray_full(ikx) = REAL(ikx-1,dp) * deltakx
-       END DO
-       ! ky
-       IF (Nky .GT. 1) THEN
-        DO iky = 1,Nky
-          kyarray_full(iky) = deltaky*(MODULO(iky-1,Nky/2)-Nky/2*FLOOR(2.*real(iky-1)/real(Nky)))
-          if (iky .EQ. Ny/2+1)     kyarray(iky) = -kyarray(iky)
-        END DO
-       ELSE
-        kyarray_full(1) =  0
-       endif
-      ! z
-      IF (Nz .GT. 1) THEN
-       DO iz = 1,Nz
-         zarray_full(iz) = deltaz*(iz-1)
-       END DO
-      ELSE
-       zarray_full(1) =  0
-      endif
-     ENDIF
-
      ! Grid info
      CALL creatg(fidres, "/data/grid", "Grid data")
-     CALL putarr(fidres, "/data/grid/coordkx", kxarray_full(1:Nkx),"kx*rho_s0", ionode=0)
-     CALL putarr(fidres, "/data/grid/coordky", kyarray_full(1:Nky),"ky*rho_s0", ionode=0)
-     CALL putarr(fidres, "/data/grid/coordz",   zarray_full(1:Nz) ,"z/R", ionode=0)
-     CALL putarr(fidres, "/data/grid/coordp_e" , parray_e_full(1:pmaxe+1), "p_e", ionode=0)
-     CALL putarr(fidres, "/data/grid/coordj_e" , jarray_e_full(1:jmaxe+1), "j_e", ionode=0)
-     CALL putarr(fidres, "/data/grid/coordp_i" , parray_i_full(1:pmaxi+1), "p_i", ionode=0)
-     CALL putarr(fidres, "/data/grid/coordj_i" , jarray_i_full(1:jmaxi+1), "j_i", ionode=0)
+     CALL putarr(fidres, "/data/grid/coordkx",   kxarray_full,  "kx*rho_s0", ionode=0)
+     CALL putarr(fidres, "/data/grid/coordky",   kyarray_full,  "ky*rho_s0", ionode=0)
+     CALL putarr(fidres, "/data/grid/coordz",    zarray_full,   "z/R", ionode=0)
+     CALL putarr(fidres, "/data/grid/coordp_e" , parray_e_full, "p_e", ionode=0)
+     CALL putarr(fidres, "/data/grid/coordj_e" , jarray_e_full, "j_e", ionode=0)
+     CALL putarr(fidres, "/data/grid/coordp_i" , parray_i_full, "p_i", ionode=0)
+     CALL putarr(fidres, "/data/grid/coordj_i" , jarray_i_full, "j_i", ionode=0)
 
      !  var0d group (gyro transport)
      IF (nsave_0d .GT. 0) THEN
@@ -224,7 +188,7 @@ SUBROUTINE diagnose(kstep)
 
      CALL grid_outputinputs(fidres, str)
 
-     CALL output_par_outputinputs(fidres, str)
+     CALL diag_par_outputinputs(fidres, str)
 
      CALL model_outputinputs(fidres, str)
 
