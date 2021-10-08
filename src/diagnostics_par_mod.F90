@@ -14,7 +14,7 @@ MODULE diagnostics_par
   INTEGER, PUBLIC, PROTECTED :: nsave_0d, nsave_1d, nsave_2d, nsave_3d, nsave_5d
 
   !  HDF5 file
-  CHARACTER(len=256), PUBLIC :: resfile0 = "results"   ! Head of main result file name
+  CHARACTER(len=256), PUBLIC :: resfile0 = "outputs"   ! Head of main result file name
   CHARACTER(len=256), PUBLIC :: resfile                ! Main result file
   CHARACTER(len=256), PUBLIC :: rstfile                ! restart result file
   INTEGER, PUBLIC            :: job2load               ! jobnum of the checkpoint to load
