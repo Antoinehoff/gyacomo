@@ -16,18 +16,17 @@ MODULE diagnostics_par
   !  HDF5 file
   CHARACTER(len=256), PUBLIC :: resfile0 = "results"   ! Head of main result file name
   CHARACTER(len=256), PUBLIC :: resfile                ! Main result file
+  CHARACTER(len=256), PUBLIC :: rstfile                ! restart result file
   INTEGER, PUBLIC            :: job2load               ! jobnum of the checkpoint to load
   INTEGER, PUBLIC            :: fidres                 ! FID for resfile
-  CHARACTER(len=256), PUBLIC :: rstfile0 = "restart"   ! Head of restart file name
-  CHARACTER(len=256), PUBLIC :: rstfile                ! Full restart file
   INTEGER, PUBLIC            :: fidrst                 ! FID for restart file
 
-  PUBLIC :: output_par_readinputs, output_par_outputinputs
+  PUBLIC :: diag_par_readinputs, diag_par_outputinputs
 
 CONTAINS
 
 
-  SUBROUTINE output_par_readinputs
+  SUBROUTINE diag_par_readinputs
     !    Read the input parameters
 
     USE basic, ONLY : lu_in
@@ -38,14 +37,14 @@ CONTAINS
     NAMELIST /OUTPUT_PAR/ write_doubleprecision, write_gamma, write_hf, write_phi
     NAMELIST /OUTPUT_PAR/ write_Na00, write_Napj, write_Sapj
     NAMELIST /OUTPUT_PAR/ write_dens, write_temp
-    NAMELIST /OUTPUT_PAR/ resfile0, rstfile0, job2load
+    NAMELIST /OUTPUT_PAR/ job2load
 
     READ(lu_in,output_par)
 
-  END SUBROUTINE output_par_readinputs
+  END SUBROUTINE diag_par_readinputs
 
 
-  SUBROUTINE output_par_outputinputs(fidres, str)
+  SUBROUTINE diag_par_outputinputs(fidres, str)
     !
     !    Write the input parameters to the results_xx.h5 file
     !
@@ -60,9 +59,8 @@ CONTAINS
     CALL attach(fidres, TRIM(str), "nsave_1d", nsave_1d)
     CALL attach(fidres, TRIM(str), "nsave_2d", nsave_2d)
     CALL attach(fidres, TRIM(str), "nsave_5d", nsave_5d)
-    CALL attach(fidres, TRIM(str), "resfile0", resfile0)
 
-  END SUBROUTINE output_par_outputinputs
+  END SUBROUTINE diag_par_outputinputs
 
 
 END MODULE diagnostics_par

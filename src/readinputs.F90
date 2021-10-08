@@ -2,7 +2,7 @@ SUBROUTINE readinputs
   ! Additional data specific for a new run
 
   USE grid,             ONLY: grid_readinputs
-  USE diagnostics_par,  ONLY: output_par_readinputs
+  USE diagnostics_par,  ONLY: diag_par_readinputs
   USE model,            ONLY: model_readinputs
   USE initial_par,      ONLY: initial_readinputs
   USE time_integration, ONLY: time_integration_readinputs
@@ -18,7 +18,7 @@ SUBROUTINE readinputs
   CALL grid_readinputs
 
   ! Load diagnostic options from input file
-  CALL output_par_readinputs
+  CALL diag_par_readinputs
 
   ! Load model parameters from input file
   CALL model_readinputs
