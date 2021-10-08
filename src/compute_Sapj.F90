@@ -19,23 +19,20 @@ SUBROUTINE compute_Sapj
   REAL(dp),    DIMENSION(ixs:ixe,iys:iye)     :: fr_real, gz_real
   REAL(dp),    DIMENSION(ixs:ixe,iys:iye)     :: fz_real, gr_real, f_times_g
 
-  INTEGER :: in, is
+  INTEGER :: in, is, p_int, j_int
   INTEGER :: nmax, smax ! Upper bound of the sums
   REAL(dp):: kx, ky, kerneln
-  LOGICAL :: COMPUTE_ONLY_EVEN_P = .true.
   ! Execution time start
   CALL cpu_time(t0_Sapj)
-
-! If we have a parallel dynamic, odd p are coupled with even ones
-IF(Nz .GT. 1) COMPUTE_ONLY_EVEN_P = .false.
 
 zloop: DO iz = izs,ize
   !!!!!!!!!!!!!!!!!!!! ELECTRON non linear term computation (Sepj)!!!!!!!!!!
   ploope: DO ip = ips_e,ipe_e ! Loop over Hermite moments
-
-    ! we check if poly degree is even (eq to index is odd) to spare computation
-    IF ((MODULO(ip,2) .EQ. 1) .OR. (.NOT. COMPUTE_ONLY_EVEN_P)) THEN
+    p_int = parray_e(ip)
     jloope: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
+    j_int=jarray_e(ij)
+    ! GF closure check (spare computations too)
+    GF_CLOSURE_e: IF ((CLOS.EQ.1) .AND. (p_int+2*j_int .GT. dmaxe)) THEN
 
       real_data_c = 0._dp ! initialize sum over real nonlinear term
 
@@ -112,12 +109,8 @@ zloop: DO iz = izs,ize
           Sepj(ip,ij,ikx,iky,iz) = cmpx_data_c(iky,ikx-local_nkx_offset)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
         ENDDO
       ENDDO
+    ENDIF GF_CLOSURE_e
     ENDDO jloope
-
-    ELSE
-      ! Cancel the non lin term if we are dealing with odd Hermite degree
-      Sepj(ip,:,:,:,iz) = 0._dp
-    ENDIF
   ENDDO ploope
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -125,9 +118,11 @@ zloop: DO iz = izs,ize
   ploopi: DO ip = ips_i,ipe_i ! Loop over Hermite moments
 
     ! we check if poly degree is even (eq to index is odd) to spare computation
-    IF (MODULO(ip,2) .EQ. 1 .OR. (.NOT. COMPUTE_ONLY_EVEN_P)) THEN
-
+    !EVEN_P_i: IF (.TRUE. .OR. (MODULO(ip,2) .EQ. 1) .OR. (.NOT. COMPUTE_ONLY_EVEN_P)) THEN
     jloopi: DO ij = ijs_i, ije_i ! Loop over Laguerre moments
+    j_int=jarray_i(ij)
+    ! GF closure check (spare computations too)
+    GF_CLOSURE_i: IF ((CLOS.EQ.1) .AND. (p_int+2*j_int .GT. dmaxi)) THEN
       real_data_c = 0._dp ! initialize sum over real nonlinear term
 
       ! Set non linear sum truncation
@@ -203,12 +198,8 @@ zloop: DO iz = izs,ize
           Sipj(ip,ij,ikx,iky,iz) = cmpx_data_c(iky,ikx-local_nkx_offset)*AA_x(ikx)*AA_y(iky)
         ENDDO
       ENDDO
-
+    ENDIF GF_CLOSURE_i
     ENDDO jloopi
-    ELSE
-      ! Cancel the non lin term if we are dealing with odd Hermite degree
-      Sipj(ip,:,:,:,iz) = 0._dp
-    ENDIF
   ENDDO ploopi
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

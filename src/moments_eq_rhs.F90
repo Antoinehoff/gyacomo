@@ -31,14 +31,17 @@ SUBROUTINE moments_eq_rhs_e
   CALL cpu_time(t0_rhs)
 
   ploope : DO ip = ips_e, ipe_e ! loop over Hermite degree indices
-    p_int= parray_e(ip) ! Hermite polynom. degree
-
+    p_int = parray_e(ip) ! Hermite polynom. degree
     delta_p0 = 0._dp; delta_p1 = 0._dp; delta_p2 = 0._dp
     IF(p_int .EQ. 0) delta_p0 = 1._dp
     IF(p_int .EQ. 1) delta_p1 = 1._dp
     IF(p_int .EQ. 2) delta_p2 = 1._dp
 
     jloope : DO ij = ijs_e, ije_e ! loop over Laguerre degree indices
+    j_int = jarray_e(ij)
+    GF_CLOSURE_e : IF( (CLOS .EQ. 1) .AND. (p_int+2*j_int .GT. Dmaxe) ) THEN
+      !skip
+    ELSE
       ! Loop on kspace
       zloope : DO  iz = izs,ize
         ! Periodic BC for first order derivative
@@ -60,9 +63,9 @@ SUBROUTINE moments_eq_rhs_e
           Tnepj   = xnepj(ip,ij) * (moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
                                +kernel_e(ij,ikx,iky,iz)*qe_taue*phi(ikx,iky,iz)*delta_p0)
           ! term propto n_e^{p+2,j}
-          Tnepp2j = xnepp2j(ip)  * moments_e(ip+2,ij,ikx,iky,iz,updatetlevel)
+          Tnepp2j = xnepp2j(ip)  * moments_e(ip+(2/deltape),ij,ikx,iky,iz,updatetlevel)
           ! term propto n_e^{p-2,j}
-          Tnepm2j = xnepm2j(ip)  * (moments_e(ip-2,ij,ikx,iky,iz,updatetlevel) &
+          Tnepm2j = xnepm2j(ip)  * (moments_e(ip-(2/deltape),ij,ikx,iky,iz,updatetlevel) &
                                +kernel_e(ij,ikx,iky,iz)*qe_taue*phi(ikx,iky,iz)*delta_p2)
           ! term propto n_e^{p,j+1}
           Tnepjp1 = xnepjp1(ij)  * (moments_e(ip,ij+1,ikx,iky,iz,updatetlevel) &
@@ -130,6 +133,7 @@ SUBROUTINE moments_eq_rhs_e
         END DO kxloope
       END DO zloope
 
+    ENDIF GF_CLOSURE_e
     END DO jloope
   END DO ploope
 
@@ -178,6 +182,10 @@ SUBROUTINE moments_eq_rhs_i
     IF(p_int .EQ. 2) delta_p2 = 1._dp
 
     jloopi : DO ij = ijs_i, ije_i  ! This loop is from 1 to jmaxi+1
+      j_int = jarray_i(ij)
+      GF_CLOSURE_i : IF( (CLOS .EQ. 1) .AND. (p_int+2*j_int .GT. Dmaxe) ) THEN
+        !skip
+      ELSE
       ! Loop on kspace
       zloopi : DO  iz = izs,ize
         ! Periodic BC for first order derivative
@@ -199,9 +207,9 @@ SUBROUTINE moments_eq_rhs_i
           Tnipj   = xnipj(ip,ij)   * (moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
                              +kernel_i(ij,ikx,iky,iz)*qi_taui*phi(ikx,iky,iz)*delta_p0)
           ! term propto n_i^{p+2,j}
-          Tnipp2j = xnipp2j(ip) * moments_i(ip+2,ij,ikx,iky,iz,updatetlevel)
+          Tnipp2j = xnipp2j(ip) * moments_i(ip+(2/deltapi),ij,ikx,iky,iz,updatetlevel)
           ! term propto n_i^{p-2,j}
-          Tnipm2j = xnipm2j(ip) * (moments_i(ip-2,ij,ikx,iky,iz,updatetlevel) &
+          Tnipm2j = xnipm2j(ip) * (moments_i(ip-(2/deltapi),ij,ikx,iky,iz,updatetlevel) &
                              +kernel_i(ij,ikx,iky,iz)*qi_taui*phi(ikx,iky,iz)*delta_p2)
           ! term propto n_e^{p,j+1}
           Tnipjp1 = xnipjp1(ij)  * (moments_i(ip,ij+1,ikx,iky,iz,updatetlevel) &
@@ -269,6 +277,7 @@ SUBROUTINE moments_eq_rhs_i
         END DO kxloopi
       END DO zloopi
 
+    ENDIF GF_CLOSURE_i
     END DO jloopi
   END DO ploopi
 
