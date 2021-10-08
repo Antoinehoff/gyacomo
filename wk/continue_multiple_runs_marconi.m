@@ -4,7 +4,8 @@ continue_run('/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_B/
 
 %% Functions to modify preexisting fort.90 input file and launch on marconi
 function [] = continue_run(outfilename)
-    EXECNAME = 'helaz_3.2';
+    EXECNAME = 'helaz_3.81';
+    SBATCH_CMD = 'sbatch batch_script.sh\n';
     %% CLUSTER PARAMETERS
     CLUSTER.PART  = 'prod';     % dbg or prod
     CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
@@ -45,7 +46,7 @@ function [] = continue_run(outfilename)
         line = A{39};
         line = line(end-2:end);
         if(line(1) == '='); line = line(end); end;
-        J2L = str2num(line)+1;
+        J2L = str2num(line)+1; JOB2LOAD=J2L;
     end
     % Change job 2 load in fort.90
     A{39} = ['  job2load      = ',num2str(J2L)];

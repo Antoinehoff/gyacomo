@@ -15,7 +15,7 @@ CLUSTER.TIME  = '20:00:00'; % allocation time hh:mm:ss
 if(strcmp(CLUSTER.PART,'dbg')); CLUSTER.TIME  = '00:30:00'; end;
 CLUSTER.MEM   = '128GB';     % Memory
 CLUSTER.JNAME = 'HeLaZ';% Job name
-NP_P          = 2;          % MPI processes along p
+NP_P          = 1;          % MPI processes along p
 NP_KX         = 48;         % MPI processes along kx
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
@@ -23,27 +23,27 @@ NU      = 0.1;   % Collision frequency
 ETAN    = 1.0/0.6;    % Density gradient drive (R/Ln)
 NU_HYP  = 0.0;
 %% GRID PARAMETERS
-N       = 300;     % Frequency gridpoints (Nkx = N/2)
+N       = 500;     % Frequency gridpoints (Nkx = N/2)
 L       = 120;     % Size of the squared frequency domain
 Nz      = 1;      % number of perpendicular planes (parallel grid)
 q0      = 1.0;    % q factor ()
 shear   = 0.0;    % magnetic shear
 eps     = 0.0;    % inverse aspect ratio
-P       = 8;
-J       = 4;
+P       = 4;
+J       = 2;
 %% TIME PARAMETERS
 TMAX    = 10000;  % Maximal time unit
-DT      = 8e-3;   % Time step
+DT      = 1e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS3D   = 1/2;      % Sampling per time unit for 3D arrays
 SPS5D   = 1/100;  % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints/10
-JOB2LOAD= -1; % start from t=0 if <0, else restart from outputs_$job2load
+JOB2LOAD= 0; % start from t=0 if <0, else restart from outputs_$job2load
 %% OPTIONS AND NAMING
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle ; +/- for GK/DK)
-CO      = 3;
+CO      = 1;
 CLOS    = 0;   % Closure model (0: =0 truncation)
 NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
 % SIMID   = 'test_chained_job';  % Name of the simulation
@@ -94,7 +94,6 @@ CLUSTER.CPUPT = '1';        % CPU per task
 setup
 SBATCH_CMD = 'sbatch batch_script.sh\n';
 write_sbash_marconi
-system('rm fort*.90 setup_and_run.sh batch_script.sh');
 if(mod(NP_P*NP_KX,48)~= 0)
     disp('WARNING : unused cores (ntot cores must be a 48 multiple)');
 end
@@ -114,5 +113,6 @@ if(SUBMIT)
         end
     end
 end
+system('rm fort*.90');
 disp('done');
 end

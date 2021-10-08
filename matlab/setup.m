@@ -126,8 +126,6 @@ if W_NAPJ;   OUTPUTS.write_Napj  = '.true.'; else; OUTPUTS.write_Napj  = '.false
 if W_SAPJ;   OUTPUTS.write_Sapj  = '.true.'; else; OUTPUTS.write_Sapj  = '.false.';end;
 if W_DENS;   OUTPUTS.write_dens  = '.true.'; else; OUTPUTS.write_dens  = '.false.';end;
 if W_TEMP;   OUTPUTS.write_temp  = '.true.'; else; OUTPUTS.write_temp  = '.false.';end;
-OUTPUTS.resfile0    = '''outputs''';
-OUTPUTS.rstfile0    = '''checkpoint''';
 OUTPUTS.job2load    = JOB2LOAD;
 %% Create directories
 if ~exist(SIMDIR, 'dir')
@@ -143,7 +141,7 @@ end
 INPUT = write_fort90(OUTPUTS,GRID,MODEL,INITIAL,TIME_INTEGRATION,BASIC);
 nproc = 1;
 MAKE  = 'cd ..; make; cd wk';
-system(MAKE);
+% system(MAKE);
 %%
 disp(['Set up ',SIMID]);
 disp([resolution,gridname,degngrad]);

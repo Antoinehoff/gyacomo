@@ -40,8 +40,6 @@ fprintf(fid,['  write_Napj  = ', OUTPUTS.write_Napj,'\n']);
 fprintf(fid,['  write_Sapj  = ', OUTPUTS.write_Sapj,'\n']);
 fprintf(fid,['  write_dens  = ', OUTPUTS.write_dens,'\n']);
 fprintf(fid,['  write_temp  = ', OUTPUTS.write_temp,'\n']);
-fprintf(fid,['  resfile0    = ', OUTPUTS.resfile0,'\n']);
-fprintf(fid,['  rstfile0    = ', OUTPUTS.rstfile0,'\n']);
 fprintf(fid,['  job2load    = ', num2str(OUTPUTS.job2load),'\n']);
 fprintf(fid,'/\n');
 

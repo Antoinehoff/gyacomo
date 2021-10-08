@@ -17,7 +17,9 @@ else
 % Setup figure frame
 fig  = figure('Color','white','Position', [100, 100, 400, 400]);
     pcolor(X,Y,FIELD(:,:,1)); % to set up
+    if BWR
     colormap(bluewhitered)
+    end
     axis tight manual % this ensures that getframe() returns a consistent size
     if INTERP
         shading interp;
@@ -45,7 +47,9 @@ fig  = figure('Color','white','Position', [100, 100, 400, 400]);
             shading interp; 
         end
         set(pclr, 'edgecolor','none'); axis square;
+        if BWR
         colormap(bluewhitered)
+        end
         xlabel(XNAME); ylabel(YNAME); %colorbar;
         drawnow 
         % Capture the plot as an image 

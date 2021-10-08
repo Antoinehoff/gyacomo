@@ -1,4 +1,4 @@
-for CO = [1]
+for CO = [3]
     RUN = 1; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
@@ -10,7 +10,7 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 NU      = 0.1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
 ETAB    = 1.0;
-ETAN    = 1/0.6;    % Density gradient
+ETAN    = 1./0.6;    % Density gradient
 ETAT    = 0.0;    % Temperature gradient
 NU_HYP  = 0.0;   % Hyperdiffusivity coefficient
 LAMBDAD = 0.0;
@@ -23,45 +23,38 @@ KXEQ0   = 1;      % put kx = 0
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 %% TIME PARMETERS
-TMAX    = 400;  % Maximal time unit
+TMAX    = 200;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 2;      % Sampling per time unit for 2D arrays
 SPS5D   = 2;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
-RESTART = 0;      % To restart from last checkpoint
-JOB2LOAD= 00;
+JOB2LOAD= -1;
 %% OPTIONS
 % SIMID   = 'v3.6_kobayashi_lin';  % Name of the simulation
 % SIMID   = 'v3.2_CO_damping';  % Name of the simulation
 % SIMID   = 'CO_Patchwork_damping';  % Name of the simulation
-SIMID   = 'test_GF_closure';  % Name of the simulation
+SIMID   = 'test_even_p';  % Name of the simulation
 % SIMID   = 'v3.2_entropy_mode_linear';  % Name of the simulation
 NON_LIN = 0 *(1-KXEQ0);   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle, 4 : Full Couloumb ; +/- for GK/DK)
 % CO      = 1;
 INIT_ZF = 0; ZF_AMP = 0.0;
-CLOS    = 1;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))
+CLOS    = 0;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))
 NL_CLOS = 0;   % nonlinear closure model (0: =0 nmax = jmax, 1: nmax = jmax-j, >1 : nmax = NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)
 INIT_PHI= 0;   % Start simulation with a noisy phi
 %% OUTPUTS
-W_DOUBLE = 0;
-W_GAMMA  = 0;
-W_PHI    = 1;
-W_NA00   = 1;
-W_NAPJ   = 1;
-W_SAPJ   = 0;
-W_DENS   = 0;
-W_TEMP   = 0;
+W_DOUBLE = 1;
+W_GAMMA  = 1; W_HF     = 1;
+W_PHI    = 1; W_NA00   = 1;
+W_DENS   = 1; W_TEMP   = 1;
+W_NAPJ   = 1; W_SAPJ   = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % unused
-% DK    = 0;  % Drift kinetic model (put every kernel_n to 0 except n=0 to 1)
-JOBNUM  = 00;
-KPAR    = 0.0;    % Parellel wave vector component
 HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
 kmax    = N*pi/L;% Highest fourier mode
 MU      = NU_HYP/(HD_CO*kmax)^4; % Hyperdiffusivity coefficient
@@ -76,8 +69,8 @@ if 1
 %% Parameter scan over PJ
 % PA = [2 4];
 % JA = [1 2];
-PA = [5];
-JA = [2];
+PA = [8];
+JA = [4];
 DTA= DT*ones(size(JA));%./sqrt(JA);
 % DTA= DT;
 mup_ = MU_P;
@@ -95,10 +88,12 @@ for i = 1:Nparam
     JMAXE = JA(i); JMAXI = JA(i);
     DT = DTA(i);
     setup
+    system(['rm fort*.90']);
     % Run linear simulation
     if RUN
-        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 1 6; cd ../../../wk'])
-%         system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz; cd ../../../wk'])
+        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 1 6 0; cd ../../../wk'])
+%         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz_3.82 1 6 0; cd ../../../wk'])
+%         system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz 0; cd ../../../wk'])
     end
 %     Load and process results
     %%

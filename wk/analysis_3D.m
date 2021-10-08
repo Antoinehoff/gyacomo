@@ -5,24 +5,21 @@ outfile ='';
 if 1% Local results
 outfile ='';
 outfile ='';
-% outfile ='artificial_ZF_freeze/sim_A';
-% outfile ='simulation_B/cw_FCGK_kp_3.0';
-outfile ='nonlin_FCGK/150x75_L_200_P_4_J_2_eta_0.6_nu_1e-01_FCGK_mu_0e+00';
-% outfile ='nonlin_PAGK/100x50_L_200_P_4_J_2_eta_0.6_nu_1e-01_PAGK_mu_0e+00';
-% outfile ='nonlin_FCGK/100x50_L_200_P_4_J_2_eta_0.6_nu_1e-01_FCGK_mu_0e+00';
-% outfile ='simulation_A';
-% outfile ='simulation_B/cw_SGGK_like_species';
-% outfile ='simulation_A/CO_damping_SGGK';
-% outfile ='simulation_A/cw_DGGK_eta_0.5';
-% outfile ='simulation_B/cw_DGGK';
+outfile ='';
+outfile ='';
+outfile ='';
+outfile ='';
+outfile ='';
+outfile ='';
+outfile ='test_even_p/100x50_L_100_P_4_J_2_eta_0.6_nu_1e-01_DGGK_mu_0e+00';
     BASIC.RESDIR      = ['../results/',outfile,'/'];
     BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/results/',outfile,'/'];
     system(['mkdir -p ',BASIC.MISCDIR]);
     CMD = ['cp ', BASIC.RESDIR,'outputs* ',BASIC.MISCDIR]; disp(CMD);
     system(CMD);
 else% Marconi results
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x150_L_120_P_8_J_4_eta_0.6_nu_1e-01_SGGK_mu_0e+00/out.txt';
-% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_B/300x150_L_120_P_8_J_4_eta_0.6_nu_5e-01_SGGK_mu_0e+00/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x150_L_120_P_8_J_4_eta_0.6_nu_1e-01_SGGK_mu_0e+00/out.txt';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_B/300x150_L_120_P_8_J_4_eta_0.6_nu_5e-01_SGGK_mu_0e+00/out.txt';
 BASIC.RESDIR      = ['../',outfile(46:end-8),'/'];
 BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'/'];
 end
@@ -77,35 +74,36 @@ if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
 t0    =000; iz = 1; ix = 1; iy = 1;
-skip_ =4; DELAY = 2e-3*skip_;
+skip_ =1; DELAY = 2e-3*skip_;
 [~, it03D] = min(abs(Ts3D-t0)); FRAMES_3D = it03D:skip_:numel(Ts3D);
 [~, it05D] = min(abs(Ts5D-t0)); FRAMES_5D = it05D:skip_:numel(Ts5D);
 T = Ts3D; FRAMES = FRAMES_3D;
-INTERP = 0; NORMALIZED = 0; CONST_CMAP = 0;% Gif options
+INTERP = 0; NORMALIZED = 0; CONST_CMAP = 0; BWR =1;% Gif options
 % Field to plot
-% FIELD = dens_e;       NAME = 'ne';   FIELDNAME = 'n_e';
 % FIELD = dens_i;       NAME = 'ni';   FIELDNAME = 'n_i';
-% FIELD = dens_e-Z_n_e; NAME = 'ne_NZ';FIELDNAME = 'n_e^{NZ}';
-FIELD = dens_i-Z_n_i; NAME = 'ni_NZ';FIELDNAME = 'n_i^{NZ}';
-% FIELD = temp_e;       NAME = 'Te';   FIELDNAME = 'n_i';
+% FIELD = dens_i-Z_n_i; NAME = 'ni_NZ';FIELDNAME = 'n_i^{NZ}';
 % FIELD = temp_i;       NAME = 'Ti';   FIELDNAME = 'n_i';
-% FIELD = temp_e-Z_T_e; NAME = 'Te_NZ';FIELDNAME = 'T_e^{NZ}';
 % FIELD = temp_i-Z_T_i; NAME = 'Ti_NZ';FIELDNAME = 'T_i^{NZ}';
 % FIELD = ne00;         NAME = 'ne00'; FIELDNAME = 'n_e^{00}';
-% FIELD = ni00;   NAME = 'ni00'; FIELDNAME = 'n_i^{00}';
-% FIELD = phi;    NAME = 'phi'; FIELDNAME = '\phi';
-% FIELD = Z_phi;    NAME = 'Zphi'; FIELDNAME = '\phi_Z';
-% FIELD = Gamma_x;  NAME = 'Gamma_x'; FIELDNAME = '\Gamma_x';
+% FIELD = ni00;         NAME = 'ni00'; FIELDNAME = 'n_i^{00}';
+FIELD = phi;          NAME = 'phi'; FIELDNAME = '\phi';
+% FIELD = Z_phi;        NAME = 'Zphi'; FIELDNAME = '\phi_Z';
+% FIELD = Gamma_x;      NAME = 'Gamma_x'; FIELDNAME = '\Gamma_x';
 
 % Sliced
 % plt = @(x) real(x(ix, :, :,:)); X = Y_YZ; Y = Z_YZ; XNAME = 'y'; YNAME = 'z'; 
 % plt = @(x) real(x( :,iy, :,:)); X = X_XZ; Y = Z_XZ; XNAME = 'x'; YNAME = 'z'; 
-% plt = @(x) real(x( :, :,iz,:)); X = X_XY; Y = Y_XY; XNAME = 'x'; YNAME = 'y'; 
+plt = @(x) real(x( :, :,iz,:)); X = X_XY; Y = Y_XY; XNAME = 'x'; YNAME = 'y'; 
+
+% % K-space
+% % FIELD = PHI;          NAME = 'PHI'; FIELDNAME = '\tilde \phi';
+% FIELD = Ni00;         NAME = 'Ni00'; FIELDNAME = 'N_i^{00}';
+% plt = @(x) fftshift((abs(x( :, :,1,:))),2); X = fftshift(KX,2); Y = fftshift(KY,2); XNAME = 'k_x'; YNAME = 'k_y'; 
 
 % Averaged
 % plt = @(x) mean(x,1); X = Y_YZ; Y = Z_YZ; XNAME = 'y'; YNAME = 'z'; 
 % plt = @(x) mean(x,2); X = X_XZ; Y = Z_XZ; XNAME = 'x'; YNAME = 'z'; 
-plt = @(x) mean(x,3); X = X_XY; Y = Y_XY; XNAME = 'x'; YNAME = 'y'; 
+% plt = @(x) mean(x,3); X = X_XY; Y = Y_XY; XNAME = 'x'; YNAME = 'y'; 
 
 FIELD = squeeze(plt(FIELD));
 
@@ -233,7 +231,7 @@ end
 
 if 1
 %% zonal vs nonzonal energies for phi(t)
-trange = 200:Ns3D;
+trange = 1:Ns3D;
 Ephi_Z           = zeros(1,Ns3D);
 Ephi_NZ_kgt0      = zeros(1,Ns3D);    
 Ephi_NZ_kgt1      = zeros(1,Ns3D);    

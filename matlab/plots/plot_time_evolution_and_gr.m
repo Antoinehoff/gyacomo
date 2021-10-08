@@ -29,11 +29,12 @@ subplot(111);
     end
     grid on; ylabel('$\sum_{k_r,k_z}|N_i^{pj}|$'); xlabel('$t c_s/R$')
     subplot(222)
-%         plot(Ts0D,GGAMMA_RI*(2*pi/Nx/Ny)^2); hold on;
         yyaxis left; ylabel('$\Gamma_x$');
-        plot(Ts3D,squeeze(sum(sum(sum(Gamma_x,1),2),3)));
+%         plot(Ts3D,squeeze(sum(sum(sum(Gamma_x,1),2),3)));
+        plot(Ts0D,PGAMMA_RI*SCALE); hold on;
         yyaxis right; ylabel('$Q_x$');
-        plot(Ts3D,squeeze(sum(sum(sum(Q_x,1),2),3)));
+%         plot(Ts3D,squeeze(sum(sum(sum(Q_x,1),2),3)));
+        plot(Ts0D,HFLUX_X*SCALE); hold on;
         grid on; xlabel('$t c_s/R$');
     if(~isnan(max(max(g_I(1,:,:)))))
     subplot(223)

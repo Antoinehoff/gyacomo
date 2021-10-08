@@ -7,17 +7,22 @@ DT_SIM    = h5readatt(filename,'/data/input','dt');
 [Pe, Je, Pi, Ji, kx, ky, z] = load_grid_data(filename);
 
 W_GAMMA   = strcmp(h5readatt(filename,'/data/input','write_gamma'),'y');
-W_PHI     = strcmp(h5readatt(filename,'/data/input','write_phi')  ,'y');
-W_NA00    = strcmp(h5readatt(filename,'/data/input','write_Na00') ,'y');
-W_NAPJ    = strcmp(h5readatt(filename,'/data/input','write_Napj') ,'y');
-W_SAPJ    = strcmp(h5readatt(filename,'/data/input','write_Sapj') ,'y');
-W_DENS    = strcmp(h5readatt(filename,'/data/input','write_dens') ,'y');
-W_TEMP    = strcmp(h5readatt(filename,'/data/input','write_temp') ,'y');
+W_HF      = strcmp(h5readatt(filename,'/data/input','write_hf'   ),'y');
+W_PHI     = strcmp(h5readatt(filename,'/data/input','write_phi'  ),'y');
+W_NA00    = strcmp(h5readatt(filename,'/data/input','write_Na00' ),'y');
+W_NAPJ    = strcmp(h5readatt(filename,'/data/input','write_Napj' ),'y');
+W_SAPJ    = strcmp(h5readatt(filename,'/data/input','write_Sapj' ),'y');
+W_DENS    = strcmp(h5readatt(filename,'/data/input','write_dens' ),'y');
+W_TEMP    = strcmp(h5readatt(filename,'/data/input','write_temp' ),'y');
 
 
 if W_GAMMA
     [ GGAMMA_RI, Ts0D, dt0D] = load_0D_data(filename, 'gflux_ri');
       PGAMMA_RI              = load_0D_data(filename, 'pflux_ri');
+end
+
+if W_HF
+    [ HFLUX_X, Ts0D, dt0D] = load_0D_data(filename, 'hflux_x');
 end
 
 if W_PHI

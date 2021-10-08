@@ -1,6 +1,7 @@
 %% load profiling
 % filename = sprintf([BASIC.RESDIR,'outputs_%.2d.h5'],00);
-filename_ = ['/misc/HeLaZ_outputs',filename(3:end)];
+% filename_ = ['/misc/HeLaZ_outputs',filename(3:end)];
+filename_ = ['/home/ahoffman/HeLaZ',filename(3:end)];
 CPUTIME   = double(h5readatt(filename_,'/data/input','cpu_time'));
 DT_SIM    = h5readatt(filename_,'/data/input','dt');
 

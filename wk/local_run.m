@@ -8,8 +8,8 @@ NU      = 0.1;   % Collision frequency
 ETAN    = 1.0/0.6;    % Density gradient drive (R/Ln)
 NU_HYP  = 0.0;
 %% GRID AND GEOMETRY PARAMETERS
-N       = 150;     % Frequency gridpoints (Nkx = N/2)
-L       = 200;     % Size of the squared frequency domain
+N       = 100;     % Frequency gridpoints (Nkx = N/2)
+L       = 100;     % Size of the squared frequency domain
 Nz      = 1;      % number of perpendicular planes (parallel grid)
 q0      = 1.0;    % safety factor
 shear   = 0.0;    % magnetic shear
@@ -32,7 +32,7 @@ CO      = 1;
 CLOS    = 0;   % Closure model (0: =0 truncation)
 NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
 % SIMID   = 'nonlin_FCGK';  % Name of the simulation
-SIMID   = 'test';  % Name of the simulation
+SIMID   = 'test_even_p';  % Name of the simulation
 % SIMID   = ['v3.0_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
 NON_LIN = 1;   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % INIT options

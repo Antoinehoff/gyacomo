@@ -11,6 +11,7 @@ DT_EVOL  = []; %
 % FIELDS
 Nipj_    = []; Nepj_    = [];
 Ni00_    = []; Ne00_    = [];
+HFLUX_   = [];
 GGAMMA_  = [];
 PGAMMA_  = [];
 PHI_     = [];
@@ -74,10 +75,17 @@ while(CONTINUE)
             end            
         end
         
+        if W_GAMMA || W_HF
+            Ts0D_   = cat(1,Ts0D_,Ts0D);
+        end      
+        
         if W_GAMMA
             GGAMMA_ = cat(1,GGAMMA_,GGAMMA_RI);
             PGAMMA_ = cat(1,PGAMMA_,PGAMMA_RI);
-            Ts0D_   = cat(1,Ts0D_,Ts0D);
+        end
+        
+        if W_HF
+            HFLUX_ = cat(1,HFLUX_,HFLUX_X);
         end
         
         if W_PHI || W_NA00
@@ -131,11 +139,11 @@ while(CONTINUE)
     end
     JOBNUM   = JOBNUM + 1;
 end
-GGAMMA_RI = GGAMMA_; PGAMMA_RI = PGAMMA_; Ts0D = Ts0D_;
+GGAMMA_RI = GGAMMA_; PGAMMA_RI = PGAMMA_; HFLUX_X = HFLUX_; Ts0D = Ts0D_;
 Nipj = Nipj_; Nepj = Nepj_; Ts5D = Ts5D_;
 Ni00 = Ni00_; Ne00 = Ne00_; PHI = PHI_; Ts3D = Ts3D_;
 DENS_E = DENS_E_; DENS_I = DENS_I_; TEMP_E = TEMP_E_; TEMP_I = TEMP_I_;
-clear Nipj_ Nepj_ Ni00_ Ne00_ PHI_ Ts2D_ Ts5D_ GGAMMA_ PGAMMA_ Ts0D_
+clear Nipj_ Nepj_ Ni00_ Ne00_ PHI_ Ts2D_ Ts5D_ GGAMMA_ PGAMMA_ Ts0D_ HFLUX_
 
 Sipj = Sipj_; Sepj = Sepj_;
 clear Sipj_ Sepj_
