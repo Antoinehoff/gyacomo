@@ -33,7 +33,13 @@ zloop: DO iz = izs,ize
     j_int=jarray_e(ij)
     ! GF closure check (spare computations too)
     GF_CLOSURE_e: IF ((CLOS.EQ.1) .AND. (p_int+2*j_int .GT. dmaxe)) THEN
-
+        ! Do nothing
+        DO ikx = ikxs, ikxe
+          DO iky = ikys, ikye
+            Sepj(ip,ij,ikx,iky,iz) = 0._dp
+          ENDDO
+        ENDDO
+      ELSE
       real_data_c = 0._dp ! initialize sum over real nonlinear term
 
       ! Set non linear sum truncation
@@ -123,6 +129,13 @@ zloop: DO iz = izs,ize
     j_int=jarray_i(ij)
     ! GF closure check (spare computations too)
     GF_CLOSURE_i: IF ((CLOS.EQ.1) .AND. (p_int+2*j_int .GT. dmaxi)) THEN
+      ! Do nothing
+      DO ikx = ikxs, ikxe
+        DO iky = ikys, ikye
+          Sipj(ip,ij,ikx,iky,iz) = 0._dp
+        ENDDO
+      ENDDO
+    ELSE
       real_data_c = 0._dp ! initialize sum over real nonlinear term
 
       ! Set non linear sum truncation
