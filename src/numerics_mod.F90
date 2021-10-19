@@ -82,7 +82,7 @@ SUBROUTINE evaluate_kernels
       DO iky = ikys,ikye
         ky    = kyarray(iky)
         DO iz = izs,ize
-          kperp2= kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2
+          kperp2= gxx(iz)*kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2
           be_2  =  kperp2 * sigmae2_taue_o2
           kernel_e(ij, ikx, iky,iz) = be_2**j_int * exp(-be_2)/factj
         ENDDO
@@ -95,7 +95,7 @@ SUBROUTINE evaluate_kernels
     DO iky = ikys,ikye
       ky    = kyarray(iky)
       DO iz = izs,ize
-        kperp2= kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2
+        kperp2= gxx(iz)*kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2
         be_2  = kperp2 * sigmae2_taue_o2
         ! Kernel ghost + 1 with Kj+1 = y/(j+1) Kj (/!\ ij = j+1)
         kernel_e(ijeg_e,ikx,iky,iz) = be_2/(real(ijeg_e-1,dp))*kernel_e(ije_e,ikx,iky,iz)
@@ -127,7 +127,7 @@ SUBROUTINE evaluate_kernels
       DO iky = ikys,ikye
         ky    = kyarray(iky)
         DO iz = izs,ize
-          kperp2= kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2
+          kperp2= gxx(iz)*kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2
           bi_2  = kperp2 * sigmai2_taui_o2
           kernel_i(ij, ikx, iky,iz) = bi_2**j_int * exp(-bi_2)/factj
         ENDDO
@@ -140,7 +140,7 @@ SUBROUTINE evaluate_kernels
     DO iky = ikys,ikye
       ky    = kyarray(iky)
       DO iz = izs,ize
-        kperp2= kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2
+        kperp2= gxx(iz)*kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2
         bi_2  =  kperp2 * sigmai2_taui_o2
         ! Kernel ghost + 1 with Kj+1 = y/(j+1) Kj
         kernel_i(ijeg_i,ikx,iky,iz) = bi_2/(real(ijeg_i-1,dp))*kernel_i(ije_i,ikx,iky,iz)

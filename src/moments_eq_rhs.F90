@@ -55,7 +55,7 @@ SUBROUTINE moments_eq_rhs_e
           ky     = kyarray(iky)   ! toroidal wavevector
           i_ky   = imagu * ky     ! toroidal derivative
           IF (Nky .EQ. 1) i_ky = imagu * kxarray(ikx) ! If 1D simulation we put kx as ky
-          kperp2= kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2
+          kperp2= gxx(iz)*kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2
 
           !! Compute moments mixing terms
           ! Perpendicular dynamic
@@ -199,7 +199,7 @@ SUBROUTINE moments_eq_rhs_i
           ky     = kyarray(iky)   ! toroidal wavevector
           i_ky   = imagu * ky     ! toroidal derivative
           IF (Nky .EQ. 1) i_ky = imagu * kxarray(ikx) ! If 1D simulation we put kx as ky
-          kperp2= kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2
+          kperp2= gxx(iz)*kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2
 
           !! Compute moments mixing terms
           ! Perpendicular dynamic
