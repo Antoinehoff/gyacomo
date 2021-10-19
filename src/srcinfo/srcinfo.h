@@ -1,0 +1,10 @@
+character(len=40) VERSION
+character(len=40) BRANCH
+character(len=20) AUTHOR
+character(len=40) EXECDATE
+character(len=40) HOST
+parameter (VERSION='d118c2b-dirty')
+parameter (BRANCH='master')
+parameter (AUTHOR='ahoffman')
+parameter (EXECDATE='Thu Oct 7 17:18:16 CEST 2021')
+parameter (HOST ='spcpc606')

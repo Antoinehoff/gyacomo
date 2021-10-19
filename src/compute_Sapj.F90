@@ -43,7 +43,9 @@ zloop: DO iz = izs,ize
       real_data_c = 0._dp ! initialize sum over real nonlinear term
 
       ! Set non linear sum truncation
-      IF (NL_CLOS .EQ. -2) THEN
+      IF (NL_CLOS .EQ. -3) THEN
+        return
+      ELSEIF (NL_CLOS .EQ. -2) THEN
         nmax = Jmaxe
       ELSEIF (NL_CLOS .EQ. -1) THEN
         nmax = Jmaxe-(ij-1)
@@ -139,7 +141,9 @@ zloop: DO iz = izs,ize
       real_data_c = 0._dp ! initialize sum over real nonlinear term
 
       ! Set non linear sum truncation
-      IF (NL_CLOS .EQ. -2) THEN
+      IF (NL_CLOS .EQ. -3) THEN
+        return
+      ELSEIF (NL_CLOS .EQ. -2) THEN
         nmax = Jmaxi
       ELSEIF (NL_CLOS .EQ. -1) THEN
         nmax = Jmaxi-(ij-1)

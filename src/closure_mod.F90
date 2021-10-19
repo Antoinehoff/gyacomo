@@ -1,7 +1,7 @@
 module closure
 ! Contains the routines to define closures
 USE basic
-USE model,  ONLY: CLOS, tau_e, tau_i, q_e, q_i, eta_B, nu
+USE model,  ONLY: CLOS, tau_e, tau_i, q_e, q_i, nu
 USE grid
 USE array,  ONLY: kernel_e,  kernel_i
 USE fields, ONLY: moments_e, moments_i

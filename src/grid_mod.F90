@@ -342,7 +342,6 @@ CONTAINS
     DO ikp = ikps,ikpe
       kparray(ikp) = REAL(ikp-1,dp) * deltakx
     ENDDO
-    write(*,*) rank_kx, ': ikps = ', ikps, 'ikpe = ',ikpe
     two_third_kpmax = SQRT(two_third_kxmax**2+two_third_kymax**2)
     kp_max = 3._dp/2._dp * two_third_kpmax
   END SUBROUTINE
