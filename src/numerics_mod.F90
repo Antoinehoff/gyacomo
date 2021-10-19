@@ -54,7 +54,7 @@ END SUBROUTINE build_dnjs_table
 !******************************************************************************!
 SUBROUTINE evaluate_kernels
   USE basic
-  USE array, Only : kernel_e, kernel_i, gxy, gyy
+  USE array, Only : kernel_e, kernel_i, gxy, gyy, gxx
   USE grid
   USE model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, lambdaD, CLOS, sigmae2_taue_o2, sigmai2_taui_o2
   IMPLICIT NONE
