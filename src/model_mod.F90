@@ -20,9 +20,11 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED :: sigma_i =  1._dp     !
   REAL(dp), PUBLIC, PROTECTED ::     q_e = -1._dp     ! Charge
   REAL(dp), PUBLIC, PROTECTED ::     q_i =  1._dp     !
-  REAL(dp), PUBLIC, PROTECTED ::   eta_n =  1._dp     ! Density gradient
-  REAL(dp), PUBLIC, PROTECTED ::   eta_T =  1._dp     ! Temperature gradient
-  REAL(dp), PUBLIC, PROTECTED ::   eta_B =  1._dp     ! Magnetic gradient
+  REAL(dp), PUBLIC, PROTECTED ::     K_n =  1._dp     ! Density drive
+  REAL(dp), PUBLIC, PROTECTED ::     K_T =  0._dp     ! Temperature drive
+  REAL(dp), PUBLIC, PROTECTED ::     K_E =  0._dp     ! Backg. electric field drive
+  REAL(dp), PUBLIC, PROTECTED ::   GradB =  1._dp     ! Magnetic gradient
+  REAL(dp), PUBLIC, PROTECTED ::   CurvB =  1._dp     ! Magnetic curvature
   REAL(dp), PUBLIC, PROTECTED :: lambdaD =  1._dp     ! Debye length
 
   REAL(dp), PUBLIC, PROTECTED :: taue_qe         ! factor of the magnetic moment coupling
@@ -50,7 +52,7 @@ CONTAINS
     IMPLICIT NONE
 
     NAMELIST /MODEL_PAR/ CO, CLOS, NL_CLOS, KERN, NON_LIN, mu, mu_p, mu_j, nu, tau_e, tau_i, sigma_e, sigma_i, &
-                         q_e, q_i, eta_n, eta_T, eta_B, lambdaD
+                         q_e, q_i, K_n, K_T, K_E, GradB, CurvB, lambdaD
 
     READ(lu_in,model_par)
 
@@ -92,22 +94,22 @@ CONTAINS
 
     INTEGER, INTENT(in) :: fidres
     CHARACTER(len=256), INTENT(in) :: str
-    CALL attach(fidres, TRIM(str),      "CO",      CO)
-    CALL attach(fidres, TRIM(str),    "CLOS",   CLOS)
-    CALL attach(fidres, TRIM(str),    "KERN",    KERN)
-    CALL attach(fidres, TRIM(str), "NON_LIN", NON_LIN)
-    CALL attach(fidres, TRIM(str),      "nu",      nu)
-    CALL attach(fidres, TRIM(str),      "mu",      mu)
-    CALL attach(fidres, TRIM(str),   "tau_e",   tau_e)
-    CALL attach(fidres, TRIM(str),   "tau_i",   tau_i)
-    CALL attach(fidres, TRIM(str), "sigma_e", sigma_e)
-    CALL attach(fidres, TRIM(str), "sigma_i", sigma_i)
-    CALL attach(fidres, TRIM(str),     "q_e",     q_e)
-    CALL attach(fidres, TRIM(str),     "q_i",     q_i)
-    CALL attach(fidres, TRIM(str),   "eta_n",   eta_n)
-    CALL attach(fidres, TRIM(str),   "eta_T",   eta_T)
-    CALL attach(fidres, TRIM(str),   "eta_B",   eta_B)
-    CALL attach(fidres, TRIM(str), "lambdaD", lambdaD)
+    CALL attach(fidres, TRIM(str),        "CO",      CO)
+    CALL attach(fidres, TRIM(str),      "CLOS",    CLOS)
+    CALL attach(fidres, TRIM(str),      "KERN",    KERN)
+    CALL attach(fidres, TRIM(str),   "NON_LIN", NON_LIN)
+    CALL attach(fidres, TRIM(str),        "nu",      nu)
+    CALL attach(fidres, TRIM(str),        "mu",      mu)
+    CALL attach(fidres, TRIM(str),     "tau_e",   tau_e)
+    CALL attach(fidres, TRIM(str),     "tau_i",   tau_i)
+    CALL attach(fidres, TRIM(str),   "sigma_e", sigma_e)
+    CALL attach(fidres, TRIM(str),   "sigma_i", sigma_i)
+    CALL attach(fidres, TRIM(str),       "q_e",     q_e)
+    CALL attach(fidres, TRIM(str),       "q_i",     q_i)
+    CALL attach(fidres, TRIM(str),   "K_n", K_n)
+    CALL attach(fidres, TRIM(str),   "K_T", K_T)
+    CALL attach(fidres, TRIM(str), "K_E", K_E)
+    CALL attach(fidres, TRIM(str),   "lambdaD", lambdaD)
   END SUBROUTINE model_outputinputs
 
 END MODULE model

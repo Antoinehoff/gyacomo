@@ -44,7 +44,7 @@ SUBROUTINE moments_eq_rhs_e
     ELSE
       ! Loop on kspace
       zloope : DO  iz = izs,ize
-        ! Periodic BC for first order derivative
+        ! Periodic BC for  parallel centered finite differences
         iznext = iz+1; izprev = iz-1;
         IF(iz .EQ.  1) izprev = Nz
         IF(iz .EQ. Nz) iznext = 1
@@ -116,15 +116,23 @@ SUBROUTINE moments_eq_rhs_e
 
           !! Sum of all linear terms (the sign is inverted to match RHS)
           moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) = &
+              ! Perpendicular magnetic gradient/curvature effects
               - imagu*Ckxky(ikx,iky,iz) * (Tnepj + Tnepp2j + Tnepm2j + Tnepjp1 + Tnepjm1)&
+              ! Parallel coupling (Landau Damping)
               - Tpare/2._dp/deltaz*gradz_coeff(iz) &
+              ! Mirror term (parallel magnetic gradient)
               - gradzB(iz)* Tmir  *gradz_coeff(iz) &
-              - i_ky  * Tphi &
+              ! Drives (density + temperature gradients)
+              - i_ky * Tphi &
+              ! Electrostatic background gradients
+              - i_ky * K_E * moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
+              ! Numerical hyperdiffusion (totally artificial, for stability purpose)
               - mu*kperp2**2 * moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
+              ! Collision term
               + TColl
 
           !! Adding non linearity
-          IF ( NON_LIN ) THEN
+          IF ( NON_LIN .AND. (NL_CLOS .GT. -3)) THEN
             moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) = &
               moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) - Sepj(ip,ij,ikx,iky,iz)
           ENDIF
@@ -258,17 +266,25 @@ SUBROUTINE moments_eq_rhs_i
             TColl = TColl_i(ip,ij,ikx,iky,iz)
           ENDIF
 
-          !! Sum of linear terms
-          moments_rhs_i(ip,ij,ikx,iky,iz,updatetlevel) = &
+          !! Sum of all linear terms (the sign is inverted to match RHS)
+          moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) = &
+              ! Perpendicular magnetic gradient/curvature effects
               - imagu*Ckxky(ikx,iky,iz) * (Tnipj + Tnipp2j + Tnipm2j + Tnipjp1 + Tnipjm1)&
+              ! Parallel coupling (Landau Damping)
               - Tpari/2._dp/deltaz*gradz_coeff(iz) &
+              ! Mirror term (parallel magnetic gradient)
               - gradzB(iz)* Tmir  *gradz_coeff(iz) &
-              - i_ky  * Tphi &
+              ! Drives (density + temperature gradients)
+              - i_ky * Tphi &
+              ! Electrostatic background gradients
+              - i_ky * K_E * moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
+              ! Numerical hyperdiffusion (totally artificial, for stability purpose)
               - mu*kperp2**2 * moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
+              ! Collision term
               + TColl
 
           !! Adding non linearity
-          IF ( NON_LIN ) THEN
+          IF ( NON_LIN .AND. (NL_CLOS .GT. -3)) THEN
            moments_rhs_i(ip,ij,ikx,iky,iz,updatetlevel) = &
              moments_rhs_i(ip,ij,ikx,iky,iz,updatetlevel) - Sipj(ip,ij,ikx,iky,iz)
           ENDIF

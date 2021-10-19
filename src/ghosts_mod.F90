@@ -32,11 +32,11 @@ END SUBROUTINE update_ghosts
 ! [a b|C D|e f] : proc n has moments a to f where a,b,e,f are ghosts
 !
 !proc 0: [0 1 2 3 4|5 6]
-!               V V ^ ^ 
+!               V V ^ ^
 !proc 1:       [3 4|5 6 7 8|9 10]
 !                       V V ^  ^
 !proc 2:               [7 8|9 10 11 12|13 14]
-!                                 V  V  ^  ^        
+!                                 V  V  ^  ^
 !proc 3:                        [11 12|13 14 15 16|17 18]
 !                                                   ^  ^
 !Closure by zero truncation :                       0  0
