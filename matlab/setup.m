@@ -5,10 +5,10 @@ GRID.pmaxe = PMAXE;  % Electron Hermite moments
 GRID.jmaxe = JMAXE;  % Electron Laguerre moments
 GRID.pmaxi = PMAXI;  % Ion Hermite moments
 GRID.jmaxi = JMAXI;  % Ion Laguerre moments
-GRID.Nx    = N; % x grid resolution
-GRID.Lx    = L; % x length
-GRID.Ny    = N * (1-KXEQ0) + KXEQ0; % y ''
-GRID.Ly    = L * (1-KXEQ0); % y ''
+GRID.Nx    = Nx; % x grid resolution
+GRID.Lx    = Lx; % x length
+GRID.Ny    = Ny; % y ''
+GRID.Ly    = Ly; % y ''
 GRID.Nz    = Nz;    % z resolution
 GRID.q0    = q0;    % q factor
 GRID.shear = shear; % shear
@@ -27,16 +27,18 @@ MODEL.nu      = NU; % hyper diffusive coefficient nu for HW
 MODEL.tau_e   = TAU;
 MODEL.tau_i   = TAU;
 % mass ratio sqrt(m_a/m_i)
-MODEL.sigma_e = 0.0233380;
+MODEL.sigma_e = SIGMA_E;
 MODEL.sigma_i = 1.0;
 % charge q_a/e
 MODEL.q_e     =-1.0;
 MODEL.q_i     = 1.0;
 if MODEL.q_e == 0; SIMID = [SIMID,'_i']; end;
 % gradients L_perp/L_x
-MODEL.eta_n   = ETAN;        % source term kappa for HW
-MODEL.eta_T   = ETAT;        % Temperature
-MODEL.eta_B   = ETAB;        % Magnetic
+MODEL.K_n     = K_N;        % source term kappa for HW
+MODEL.K_T     = K_T;        % Temperature
+MODEL.K_E     = K_E;        % Electric
+MODEL.GradB   = GRADB;      % Magnetic gradient
+MODEL.CurvB   = CURVB;      % Magnetic curvature
 MODEL.lambdaD = LAMBDAD;
 % if A0KH ~= 0; SIMID = [SIMID,'_Nz_',num2str(L/2/pi*KX0KH),'_A_',num2str(A0KH)]; end;
 % Time integration and intialization parameters
@@ -79,27 +81,45 @@ if    (CLOS == 0); CLOSNAME = 'Trunc.';
 elseif(CLOS == 1); CLOSNAME = 'Clos. 1';
 elseif(CLOS == 2); CLOSNAME = 'Clos. 2';
 end
+% Hermite-Laguerre degrees naming
 if (PMAXE == PMAXI) && (JMAXE == JMAXI)
-    degngrad   = ['P_',num2str(PMAXE),'_J_',num2str(JMAXE)];
+    HLdeg_   = ['_',num2str(PMAXE+1),'x',num2str(JMAXE+1)];
 else
-    degngrad   = ['Pe_',num2str(PMAXE),'_Je_',num2str(JMAXE),...
-        '_Pi_',num2str(PMAXI),'_Ji_',num2str(JMAXI)];
+    HLdeg_   = ['_Pe_',num2str(PMAXE+1),'_Je_',num2str(JMAXE+1),...
+        '_Pi_',num2str(PMAXI+1),'_Ji_',num2str(JMAXI+1)];
 end
-degngrad = [degngrad,'_eta_',num2str(ETAB/ETAN),'_nu_%0.0e_',...
-        CONAME,'_mu_%0.0e'];
-
-degngrad   = sprintf(degngrad,[NU,MU]);
-if ~NON_LIN; degngrad = ['lin_',degngrad]; end
-if (Nz == 1)
-    resolution = [num2str(GRID.Nx),'x',num2str(GRID.Ny/2),'_'];
-    gridname   = ['L_',num2str(L),'_'];
+% temp. dens. drives
+drives_ = [];
+if abs(K_N) > 0; drives_ = [drives_,'_kN_',num2str(K_N)]; end;
+if abs(K_T) > 0; drives_ = [drives_,'_kT_',num2str(K_T)]; end;
+% collision
+coll_ = ['_nu_%0.0e_',CONAME];
+coll_   = sprintf(coll_,NU);
+% nonlinear
+lin_ = [];
+if ~NON_LIN; lin_ = '_lin'; end
+% resolution and boxsize
+res_ = [num2str(GRID.Nx),'x',num2str(GRID.Ny)];
+if  (Lx ~= Ly)
+    geo_   = ['_Lx_',num2str(Lx),'_Ly_',num2str(Ly)];
 else
-    resolution = [num2str(GRID.Nx),'x',num2str(GRID.Ny/2),'x',num2str(GRID.Nz),'_'];
-    gridname   = ['L_',num2str(L),'_q0_',num2str(q0),'_'];
+    geo_   = ['_L_',num2str(Lx)];
 end
-if (exist('PREFIX','var') == 0); PREFIX = []; end;
-if (exist('SUFFIX','var') == 0); SUFFIX = []; end;
-PARAMS = [PREFIX,resolution,gridname,degngrad,SUFFIX];
+if (Nz > 1)  %3D case
+    res_ = [res_,'x',num2str(GRID.Nz)];
+    if abs(q0) > 0
+        geo_   = [geo_,'_q0_',num2str(q0)];
+    end
+    if abs(eps) > 0
+       geo_   = [geo_,'_e_',num2str(eps)];
+    end
+    if abs(shear) > 0
+       geo_   = [geo_,'_s_',num2str(shear)];
+    end
+end
+% put everything together in the param character chain
+u_ = '_'; % underscore variable
+PARAMS = [res_,HLdeg_,geo_,drives_,coll_,lin_];
 BASIC.RESDIR  = [SIMDIR,PARAMS,'/'];
 BASIC.MISCDIR = ['/misc/HeLaZ_outputs/',SIMDIR(4:end),PARAMS,'/'];
 BASIC.PARAMS = PARAMS;
@@ -116,7 +136,6 @@ OUTPUTS.nsave_1d = -1;
 OUTPUTS.nsave_2d = floor(1.0/SPS2D/DT);
 OUTPUTS.nsave_3d = floor(1.0/SPS3D/DT);
 OUTPUTS.nsave_5d = floor(1.0/SPS5D/DT);
-OUTPUTS.nsave_cp = floor(1.0/SPSCP/DT);
 if W_DOUBLE; OUTPUTS.write_doubleprecision = '.true.'; else; OUTPUTS.write_doubleprecision = '.false.';end;
 if W_GAMMA;  OUTPUTS.write_gamma = '.true.'; else; OUTPUTS.write_gamma = '.false.';end;
 if W_HF;     OUTPUTS.write_hf    = '.true.'; else; OUTPUTS.write_hf    = '.false.';end;
@@ -144,7 +163,7 @@ MAKE  = 'cd ..; make; cd wk';
 % system(MAKE);
 %%
 disp(['Set up ',SIMID]);
-disp([resolution,gridname,degngrad]);
+disp([res_,geo_,HLdeg_]);
 if JOB2LOAD>=0
 	disp(['- restarting from JOBNUM = ',num2str(JOB2LOAD)]); else
 	disp(['- starting from T = 0']);

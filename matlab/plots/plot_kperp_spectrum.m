@@ -29,12 +29,12 @@ plot(kp_ip,a1*kp_ip.^(-13/3),'-','DisplayName','$k^{-13/3}$');
 plot(kp_ip,a2/100*kp_ip.^(-3)./(1+kp_ip.^2).^2,'-','DisplayName','$k^{-3}/(1+k^2)^2$');
 end
 if LOGSCALE
-    set(gca, 'XScale', 'log');set(gca, 'YScale', 'log'); 
+    set(gca, 'XScale', 'log');set(gca, 'YScale', 'log');
     xlim([0.1,10]);
 end
 grid on
 xlabel('$k_\perp \rho_s$'); legend('show','Location','northeast')
-title({['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta=$',num2str(ETAB/ETAN),...
+title({['$\nu_{',CONAME,'}=$', num2str(NU), ', $\kappa_N=$',num2str(K_N),...
 ', $L=',num2str(L),'$, $N=',num2str(Nx),'$'];[' $(P,J)=(',num2str(PMAXI),',',num2str(JMAXI),')$,',...
 ' $\mu_{hd}=$',num2str(MU),', $',num2str(round(tstart)),'<t<',num2str(round(tend)),'$']});
 save_figure

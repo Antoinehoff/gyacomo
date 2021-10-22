@@ -92,12 +92,9 @@ subplot(224)
     
 %% Single eigenvalue analysis
 
-% mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_6_3_NFLR_8_kp_4_bjf/scanfiles_00000/self.0.h5';
-% mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_4_2_NFLR_2_kp_4/scanfiles_00000/self.0.h5';
-mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_6_P_4_J_2_N_75_kpm_6.0/scanfiles_00049/self.0.h5';
-% mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0/scanfiles_00049/self.0.h5';
-% mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_16_P_4_J_2_N_50_kpm_4.0/scanfiles_00049/self.0.h5';
-% mat_file_name = '/home/ahoffman/cosolver/trunc_gk.coulomb_NFLR_4_P_4_J_2_N_50_kpm_4.0/scanfiles_00049/self.0.h5';
+% mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_20_P_4_J_2_N_50_kpm_4.0/scanfiles_00005/self.0.h5';
+mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_20_P_6_J_3_N_50_kpm_4.0/scanfiles_00036self.0.h5';
+
 matidx = 01;
 
 matidx = sprintf('%5.5i',matidx);disp(matidx);
@@ -121,7 +118,6 @@ mfns = {'/home/ahoffman/HeLaZ/iCa/gk_sugama_P_20_J_10_N_150_kpm_8.0.h5',...
         '/home/ahoffman/HeLaZ/iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5',...
         '/home/ahoffman/cosolver/gk.coulomb_NFLR_6_P_4_J_2_N_75_kpm_6.0.h5',...
         '/home/ahoffman/cosolver/gk.coulomb_NFLR_12_P_4_J_2_N_75_kpm_6.0.h5',...
-        '/home/ahoffman/cosolver/gk.coulomb_NFLR_16_P_4_J_2_N_50_kpm_4.0.h5',...
         };
 CONAME_A = {'SG 20 10','PA 20 10', 'FC 4 2 NFLR 6',  'FC 4 2 NFLR 12', 'FC 4 2 NFLR 16'};
 figure

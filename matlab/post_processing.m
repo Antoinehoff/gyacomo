@@ -18,9 +18,9 @@ KPERP2 = KY.^2+KX.^2;
 [KZ_XZ,KX_XZ] = meshgrid(z,kx);
 [KZ_YZ,KY_YZ] = meshgrid(z,ky);
 
-Lk = max(Lkx,Lky);
-Nx = max(Nkx,Nky); Ny = Nx;      Nz = numel(z);
-dx = 2*pi/Lk;      dy = 2*pi/Lk; dz = 2*pi/Nz;
+Nx = 2*(Nkx-1);  Ny = Nky;      Nz = numel(z);
+Lx = 2*pi/dkx;   Ly = 2*pi/dky;
+dx = Lx/Nx;      dy = Ly/Ny; dz = 2*pi/Nz;
 x = dx*(-Nx/2:(Nx/2-1)); Lx = max(x)-min(x);
 y = dy*(-Ny/2:(Ny/2-1)); Ly = max(y)-min(y);
 z = dz * (1:Nz);
@@ -77,7 +77,7 @@ for it = 1:numel(Ts3D)
         temp_i (:,:,iz,it) = real(fftshift(ifft2((TEMP_I_),Nx,Ny)));
         Z_T_e  (:,:,iz,it) = real(fftshift(ifft2((TEMP_E_.*(KY==0)),Nx,Ny)));
         Z_T_i  (:,:,iz,it) = real(fftshift(ifft2((TEMP_I_.*(KY==0)),Nx,Ny)));
-        end      
+        end
     end
 end
 
@@ -125,15 +125,15 @@ for it = 1:numel(Ts3D) % Loop over 2D aX_XYays
     phi_avgx_maxy(iz,it)   =  max(mean(squeeze(phi(:,:,iz,it))));
     phi_maxx_avgy(iz,it)   = mean( max(squeeze(phi(:,:,iz,it))));
     phi_avgx_avgy(iz,it)   = mean(mean(squeeze(phi(:,:,iz,it))));
-    
+
     if(W_DENS)
     Gamma_x(:,:,iz,it) = -dens_i(:,:,iz,it).*dyphi(:,:,iz,it);
     Gamma_y(:,:,iz,it) =  dens_i(:,:,iz,it).*dxphi(:,:,iz,it);
     end
-    
+
     if(W_TEMP)
     Q_x(:,:,iz,it) = -temp_e(:,:,iz,it).*dyphi(:,:,iz,it);
-    Q_y(:,:,iz,it) =  temp_i(:,:,iz,it).*dxphi(:,:,iz,it);        
+    Q_y(:,:,iz,it) =  temp_i(:,:,iz,it).*dxphi(:,:,iz,it);
     end
 
     shear_maxx_maxy(iz,it)  =  max( max(squeeze(-(dx2phi(:,:,iz,it)))));
@@ -171,7 +171,7 @@ for ikx = 1:Nkx
 end
 [gmax_I,ikmax_I] = max(max(g_I(1,:,:),[],2),[],3);
 kmax_I = abs(ky(ikmax_I));
-Bohm_transport = ETAB/ETAN*gmax_I/kmax_I^2;
+Bohm_transport = K_N*gmax_I/kmax_I^2;
 
 %% Compute secondary instability growth rate
 disp('- growth rate')
@@ -192,3 +192,25 @@ for ikx = 1:Nkx
 end
 [gmax_II,ikmax_II] = max(max(g_II(1,:,:),[],2),[],3);
 kmax_II = abs(kx(ikmax_II));
+
+%% zonal vs nonzonal energies for phi(t)
+Ephi_Z           = zeros(1,Ns3D);
+Ephi_NZ_kgt0      = zeros(1,Ns3D);
+Ephi_NZ_kgt1      = zeros(1,Ns3D);
+Ephi_NZ_kgt2      = zeros(1,Ns3D);
+high_k_phi       = zeros(1,Ns3D);
+for it = 1:numel(Ts3D)
+%     Ephi_NZ(it) = sum(sum(((KY~=0).*abs(PHI(:,:,1,it)).^2)));
+%     Ephi_Z(it)  = sum(sum(((KY==0).*abs(PHI(:,:,1,it)).^2)));
+    [amp,ikzf] = max(abs((kx~=0).*PHI(:,1,1,it)));
+%     Ephi_NZ(it) = sum(sum(((KX~=0).*(KY~=0).*(KX.^2+KY.^2).*abs(PHI(:,:,1,it)).^2)));
+    Ephi_NZ_kgt0(it) = squeeze(sum(sum(((sqrt(KX.^2+KY.^2)>0.0).*(KX~=0).*(KY~=0).*(KX.^2+KY.^2).*abs(PHI(:,:,1,it)).^2))));
+    Ephi_NZ_kgt1(it) = squeeze(sum(sum(((sqrt(KX.^2+KY.^2)>1.0).*(KX~=0).*(KY~=0).*(KX.^2+KY.^2).*abs(PHI(:,:,1,it)).^2))));
+    Ephi_NZ_kgt2(it) = squeeze(sum(sum(((sqrt(KX.^2+KY.^2)>2.0).*(KX~=0).*(KY~=0).*(KX.^2+KY.^2).*abs(PHI(:,:,1,it)).^2))));
+%     Ephi_Z(it)  = kx(ikzf)^2*abs(PHI(ikzf,1,1,it)).^2;
+    Ephi_Z(it) = squeeze(sum(sum(((KX~=0).*(KY==0).*(KX.^2).*abs(PHI(:,:,1,it)).^2))));
+%     Ephi_NZ(it) = sum(sum(((KX.^2+KY.^2).*abs(PHI(:,:,1,it)).^2)))-Ephi_Z(it);
+    high_k_phi(it)  = squeeze(abs(PHI(18,18,1,it)).^2); % kperp sqrt(2)
+%     high_k_phi(it)  = abs(PHI(40,40,1,it)).^2;% kperp 3.5
+
+end

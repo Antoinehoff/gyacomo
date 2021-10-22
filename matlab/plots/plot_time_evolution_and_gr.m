@@ -1,10 +1,10 @@
 fig = figure; FIGNAME = ['t_evolutions',sprintf('_%.2d',JOBNUM),'_',PARAMS];
 set(gcf, 'Position',  [100, 100, 900, 800])
-subplot(111); 
-    suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\eta=$',num2str(ETAB/ETAN),...
+subplot(111);
+    suptitle(['$\nu_{',CONAME,'}=$', num2str(NU), ', $\kappa_N=$',num2str(K_N),...
         ', $L=',num2str(L),'$, $N=',num2str(Nx),'$, $(P,J)=(',num2str(PMAXI),',',num2str(JMAXI),')$,',...
         ' $\mu_{hd}=$',num2str(MU)]);
-    subplot(421); 
+    subplot(421);
     for ip = 1:Pe_max
         for ij = 1:Je_max
             plt      = @(x) squeeze(x(ip,ij,:));
@@ -45,7 +45,7 @@ subplot(111);
         ylim([0,max(max(g_I(1,:,:)))]); xlim([0,max(ky)]);
         shearplot = 426; phiplot = 428;
     else
-    shearplot = 223; phiplot = 224;      
+    shearplot = 223; phiplot = 224;
     end
     subplot(shearplot)
         plt = @(x) mean(x,1);
@@ -55,7 +55,7 @@ subplot(111);
         plot(Ts3D,plt(shear_maxx_avgy),'DisplayName','$\max_{r}\langle s \rangle_z$'); hold on;
         plot(Ts3D,plt(shear_avgx_maxy),'DisplayName','$\max_{z}\langle s \rangle_r$'); hold on;
         plot(Ts3D,plt(shear_avgx_avgy),'DisplayName','$\langle s \rangle_{r,z}$'); hold on;
-    grid on; xlabel('$t c_s/R$'); ylabel('$shear$'); 
+    grid on; xlabel('$t c_s/R$'); ylabel('$shear$');
     subplot(phiplot)
         clr      = line_colors(min(ip,numel(line_colors(:,1))),:);
         lstyle   = line_styles(min(ij,numel(line_styles)));

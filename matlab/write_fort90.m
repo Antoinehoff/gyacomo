@@ -59,9 +59,11 @@ fprintf(fid,['  sigma_e = ', num2str(MODEL.sigma_e),'\n']);
 fprintf(fid,['  sigma_i = ', num2str(MODEL.sigma_i),'\n']);
 fprintf(fid,['  q_e     = ', num2str(MODEL.q_e),'\n']);
 fprintf(fid,['  q_i     = ', num2str(MODEL.q_i),'\n']);
-fprintf(fid,['  eta_n   = ', num2str(MODEL.eta_n),'\n']);
-fprintf(fid,['  eta_T   = ', num2str(MODEL.eta_T),'\n']);
-fprintf(fid,['  eta_B   = ', num2str(MODEL.eta_B),'\n']);
+fprintf(fid,['  K_n     = ', num2str(MODEL.K_n),'\n']);
+fprintf(fid,['  K_T     = ', num2str(MODEL.K_T),'\n']);
+fprintf(fid,['  K_E     = ', num2str(MODEL.K_E),'\n']);
+fprintf(fid,['  GradB     = ', num2str(MODEL.GradB),'\n']);
+fprintf(fid,['  CurvB     = ', num2str(MODEL.CurvB),'\n']);
 fprintf(fid,['  lambdaD = ', num2str(MODEL.lambdaD),'\n']);
 fprintf(fid,'/\n');
 
