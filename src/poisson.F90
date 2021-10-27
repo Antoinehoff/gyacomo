@@ -14,9 +14,8 @@ SUBROUTINE poisson
 
   INTEGER     :: ini,ine, i_, root_bcast
   REAL(dp)    :: Kne, Kni ! sub kernel factor for recursive build
-  REAL(dp)    :: alphaD
-  REAL(dp)    :: sum_kernel2_e,    sum_kernel2_i    ! Store sum Kn^2
-  COMPLEX(dp) :: sum_kernel_mom_e, sum_kernel_mom_i ! Store sum Kn*Napn
+  REAL(dp)    :: polarisation    ! sum_a(Z_a^2/tau_a (1-sum_n kernel_na^2))
+  COMPLEX(dp) :: q_density       ! charge density sum_a q_a n_a
   REAL(dp)    :: gammaD
   COMPLEX(dp) :: gammaD_phi
   INTEGER     :: count !! mpi integer to broadcast the electric potential at the end
@@ -32,41 +31,33 @@ SUBROUTINE poisson
       kyloop: DO iky = ikys,ikye
         zloop: DO iz = izs,ize
 
-          !!!!!!!!!!!!! Electrons sum(Kernel * Ne0n)  (skm) and sum(Kernel**2) (sk2)
-          sum_kernel_mom_e = 0._dp
-          sum_kernel2_e    = 0._dp
+          q_density      = 0._dp
+          polarisation   = 0._dp
+          !!!!!!!!!!!!! Electron contribution
           ! loop over n only if the max polynomial degree
           DO ine=1,jmaxe+1 ! ine = n+1
-            Kne = kernel_e(ine,ikx,iky,iz)
-            sum_kernel_mom_e  = sum_kernel_mom_e  + Kne * moments_e(ip0_e, ine, ikx, iky, iz, updatetlevel)
-            sum_kernel2_e     = sum_kernel2_e     + Kne**2 ! ... sum recursively ...
+            Kne           = kernel_e(ine,ikx,iky,iz)
+            q_density     = q_density     + q_e*Kne*moments_e(ip0_e, ine, ikx, iky, iz, updatetlevel)
+            polarisation  = polarisation  + qe2_taue*Kne**2 ! ... sum recursively ...
           END DO
 
-          !!!!!!!!!!!!!!!!! Ions sum(Kernel * Ni0n)  (skm) and sum(Kernel**2) (sk2)
-            sum_kernel_mom_i = 0._dp
-            sum_kernel2_i    = 0._dp
-            ! loop over n only if the max polynomial degree
-            DO ini=1,jmaxi+1
-              Kni = kernel_i(ini,ikx,iky,iz)
-              sum_kernel_mom_i  = sum_kernel_mom_i  + Kni * moments_i(ip0_i, ini, ikx, iky, iz, updatetlevel)
-              sum_kernel2_i     = sum_kernel2_i     + Kni**2 ! ... sum recursively ...
-            END DO
+          !!!!!!!!!!!!!!!!! Ions contribution
+          ! loop over n only if the max polynomial degree
+          DO ini=1,jmaxi+1
+            Kni           = kernel_i(ini,ikx,iky,iz)
+            q_density     = q_density     + q_i*Kni*moments_i(ip0_i, ini, ikx, iky, iz, updatetlevel)
+            polarisation  = polarisation  + qi2_taui*Kni**2 ! ... sum recursively ...
+          END DO
 
           !!!!!!!!!!!!!!! Assembling the poisson equation !!!!!!!!!!!!!!!!!!!!!!!!!!
-          alphaD   = (kxarray(ikx)**2 + kyarray(iky)**2) * lambdaD**2
-          gammaD   = alphaD + qe2_taue * (1._dp - sum_kernel2_e) & ! Called Poisson_ in MOLI
-                            + qi2_taui * (1._dp - sum_kernel2_i)
-
-          gammaD_phi = q_e * sum_kernel_mom_e + q_i * sum_kernel_mom_i
-
-          phi(ikx, iky, iz) =  gammaD_phi/gammaD
+          phi(ikx, iky, iz) =  q_density/(qe2_taue + qi2_taui - polarisation)
 
         END DO zloop
       END DO kyloop
     END DO kxloop
 
     ! Cancel origin singularity
-    IF ((ikx_0 .GE. ikxs) .AND. (ikx_0 .LE. ikxe)) phi(ikx_0,iky_0,izs:ize) = 0._dp
+    IF (contains_kx0 .AND. contains_ky0) phi(ikx_0,iky_0,izs:ize) = 0._dp
 
   ENDIF
 
