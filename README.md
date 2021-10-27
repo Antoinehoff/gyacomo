@@ -15,6 +15,8 @@ How to run it
 
 3. HeLaZ 3D
 
+	3.3 HeLaZ 3D has been benchmarked in fluxtube salphaB geometry linear run with molix (B.J.Frei) code and works now for shear = 0 with periodic z BC
+
 	3.2 Stopping file procedure like in GBS is added
 
 	3.1 Implementation of mirror force
