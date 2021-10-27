@@ -12,16 +12,16 @@ outfile ='simulation_A/1024x256_3x2_L_120_kN_1.6667_nu_1e-01_DGGK';
     CMD = ['cp ', BASIC.RESDIR,'outputs* ',BASIC.MISCDIR]; disp(CMD);
     system(CMD);
 else% Marconi results
-% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x150_L_120_P_8_J_4_eta_0.6_nu_1e-01_PAGK_mu_0e+00/out.txt';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x150_L_120_P_8_J_4_eta_0.6_nu_1e-01_PAGK_mu_0e+00/out.txt';
 % outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_B/300x150_L_120_P_8_J_4_eta_0.6_nu_5e-01_SGGK_mu_0e+00/out.txt';
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/500x500_L_120_P_4_J_2_eta_0.6_nu_1e-01_DGGK_mu_0e+00/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/500x500_L_120_P_4_J_2_eta_0.6_nu_1e-01_DGGK_mu_0e+00/out.txt';
 BASIC.RESDIR      = ['../',outfile(46:end-8),'/'];
 BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'/'];
 end
 
 %% Load the results
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 02; JOBNUMMAX = 02; 
+JOBNUMMIN = 03; JOBNUMMAX = 03; 
 % JOBNUMMIN = 07; JOBNUMMAX = 20; % For CO damping sim A 
 compile_results %Compile the results from first output found to JOBNUMMAX if existing
 
@@ -107,8 +107,8 @@ FIELD = squeeze(plt(FIELD));
 GIFNAME   = [NAME,sprintf('_%.2d',JOBNUM),'_',PARAMS];
 
 % Create movie (gif or mp4)
-% create_gif
-create_mov
+create_gif
+% create_mov
 end
 
 if 0
@@ -130,7 +130,7 @@ FIELD = ne00;          FNAME = 'ne00';    FIELDLTX = 'n_e^{00}'
 % FIELD = dens_e-Z_n_e-(Z_phi-phi);       FNAME = 'Non_adiab_part'; FIELDLTX = 'n_e^{NZ}-\phi^{NZ}';
 
 % Chose when to plot it
-tf = 200:200:1000;
+tf = 1500:500:3000;
 
 % Sliced
 ix = 1; iy = 1; iz = 1;
@@ -172,7 +172,7 @@ FIELD = Ne00;   FNAME = 'Ne00'; FIELDLTX = 'N_e^{00}'
 % FIELD_ = fft2(dens_e); FIELD = FIELD_(1:Nx/2+1,:,:,:); FNAME = 'FFT_Dens_e'; FIELDLTX = '\tilde n_e';
 
 % Chose when to plot it
-tf = 200:400:1400;
+tf = 1500:500:3000;
 % tf = 8000;
 
 % Sliced
@@ -212,18 +212,19 @@ plot_param_evol
 end
 
 if 0
-%% Radial shear profile
-tf = 2000+[900:20:1100];
+%% Radial shear profile (with moving average)
+tf = 1000+[0:100:1000];
 ymax = 0;
 figure
 for i_ = 1:numel(tf)
 [~,it] = min(abs(Ts3D-tf(i_)));
-data = squeeze((mean(dxphi(:,:,1,it),2)));
-plot(x,data,'Displayname',sprintf('$t c_s/R=%.0f$',Ts3D(it))); hold on;
+data = squeeze((mean(dx2phi(:,:,1,it),2)));
+step = 50;
+plot(movmean(x,step),movmean(data,step),'Displayname',sprintf('$t c_s/R=%.0f$',Ts3D(it))); hold on;
 ymax = max([ymax abs(min(data)) abs(max(data))]); 
 end
 xlim([min(x), max(x)]); ylim(1.2*[-1 1]*ymax);
-xlabel('$x/\rho_s$'); ylabel('$v_{E\times B,x}$'); grid on
+xlabel('$x/\rho_s$'); ylabel('$s_{E\times B,x}$'); grid on
 end
 
 if 1

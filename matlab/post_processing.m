@@ -165,7 +165,7 @@ g_I          = zeros(Nkx,Nky,Nz);
 for ikx = 1:Nkx
     for iky = 1:Nky
         for iz = 1:Nz
-            [g_I(ikx,iky,iz), ~] = LinearFit_s(Ts3D(its3D_lin:ite3D_lin),squeeze(abs(Ni00(ikx,iky,iz,its3D_lin:ite3D_lin))));
+            [g_I(ikx,iky,iz), ~] = LinearFit_s(Ts3D(its3D_lin:ite3D_lin)',squeeze(abs(Ni00(ikx,iky,iz,its3D_lin:ite3D_lin))));
         end
     end
 end
@@ -186,7 +186,7 @@ g_II          = zeros(Nkx,Nky);
 for ikx = 1:Nkx
     for iky = 1
         for iz = 1:Nz
-            [g_II(ikx,iky,iz), ~] = LinearFit_s(Ts3D(its3D_lin:ite3D_lin),squeeze(abs(Ni00(ikx,iky,iz,its3D_lin:ite3D_lin))));
+            [g_II(ikx,iky,iz), ~] = LinearFit_s(Ts3D(its3D_lin:ite3D_lin)',squeeze(abs(Ni00(ikx,iky,iz,its3D_lin:ite3D_lin))));
         end
     end
 end

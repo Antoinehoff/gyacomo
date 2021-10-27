@@ -9,7 +9,7 @@ MODULE processing
     REAL(dp), PUBLIC, PROTECTED :: pflux_ri, gflux_ri
     REAL(dp), PUBLIC, PROTECTED :: hflux_x
 
-    PUBLIC :: compute_density, compute_temperature
+    PUBLIC :: compute_density, compute_temperature, compute_nadiab_moments
     PUBLIC :: compute_radial_ion_transport, compute_radial_heatflux
 CONTAINS
 
@@ -125,6 +125,46 @@ SUBROUTINE compute_radial_heatflux
         ENDIF
     ENDIF
 END SUBROUTINE compute_radial_heatflux
+
+SUBROUTINE compute_nadiab_moments
+  ! evaluate the non-adiabatique ion moments
+  !
+  ! n_{pi} = N^{pj} + kernel(j) /tau_i phi delta_p0
+  !
+  USE fields,           ONLY : moments_i, moments_e, phi
+  USE array,            ONLY : kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i
+  USE time_integration, ONLY : updatetlevel
+  USE model,            ONLY : qe_taue, qi_taui
+  implicit none
+
+  ! Add non-adiabatique term
+  DO ip=ipsg_e,ipeg_e
+    IF(parray_e(ip) .EQ. 0) THEN
+      DO ij=ijsg_e,ijeg_e
+        nadiab_moments_e(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize)&
+         = moments_e(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel) &
+           + qe_taue*kernel_e(ij,ikxs:ikxe,ikys:ikye,izs:ize)*phi(ikx,iky,iz)
+      ENDDO
+    ELSE
+      nadiab_moments_e(ip,ijsg_e:ijeg_e,ikxs:ikxe,ikys:ikye,izs:ize) &
+      = moments_e(ip,ijsg_e:ijeg_e,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel)
+    ENDIF
+  ENDDO
+  ! Add non-adiabatique term
+  DO ip=ipsg_i,ipeg_i
+    IF(parray_i(ip) .EQ. 0) THEN
+      DO ij=ijsg_i,ijeg_i
+        nadiab_moments_i(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize)&
+         = moments_i(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel) &
+           + qi_taui*kernel_i(ij,ikxs:ikxe,ikys:ikye,izs:ize)*phi(ikx,iky,iz)
+      ENDDO
+    ELSE
+      nadiab_moments_i(ip,ijsg_i:ijeg_i,ikxs:ikxe,ikys:ikye,izs:ize) &
+      = moments_i(ip,ijsg_i:ijeg_i,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel)
+    ENDIF
+  ENDDO
+  !
+END SUBROUTINE compute_nadiab_moments
 
 ! Compute the 2D particle density for electron and ions (sum over Laguerre)
 SUBROUTINE compute_density

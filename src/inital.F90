@@ -14,6 +14,7 @@ SUBROUTINE inital
   USE ghosts
   USE restarts
   USE numerics, ONLY: wipe_turbulence, wipe_zonalflow
+  USE processing, ONLY: compute_nadiab_moments
   IMPLICIT NONE
 
   CALL set_updatetlevel(1)
@@ -62,6 +63,9 @@ SUBROUTINE inital
 
   IF (my_id .EQ. 0) WRITE(*,*) 'Ghosts communication'
   CALL update_ghosts
+
+  IF (my_id .EQ. 0) WRITE(*,*) 'Computing non adiab moments'
+  CALL compute_nadiab_moments
 
   !!!!!! Set Sepj, Sipj and dnjs coeff table !!!!!!
   IF ( NON_LIN ) THEN;

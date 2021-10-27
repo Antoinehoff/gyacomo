@@ -21,11 +21,11 @@ q0      = 2.7;       % safety factor
 shear   = 0.0;       % magnetic shear
 eps     = 0.18;      % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 5;  % Maximal time unit
+TMAX    = 10;  % Maximal time unit
 DT      = 1e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
-SPS3D   = 1;      % Sampling per time unit for 2D arrays
+SPS3D   = 10;      % Sampling per time unit for 2D arrays
 SPS5D   = 1/100;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
@@ -87,10 +87,10 @@ for i = 1:Nparam
     JMAXE = JA(i); JMAXI = JA(i);
     DT = DTA(i);
     setup
-    system(['rm fort*.90']);
+%     system(['rm fort*.90']);
     % Run linear simulation
     if RUN
-        system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz 0; cd ../../../wk'])
+        system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz 0 > out.txt; cd ../../../wk'])
     end
 %     Load and process results
     %%
@@ -98,10 +98,6 @@ for i = 1:Nparam
     load_results
 end
 
-if 1
-%% Plot
-plot_phi_ballooning
-end
 end
 
 if 0

@@ -40,6 +40,10 @@ SUBROUTINE memory
   CALL allocate_array( moments_rhs_e, ips_e,ipe_e, ijs_e,ije_e, ikxs,ikxe, ikys,ikye, izs,ize, 1,ntimelevel )
   CALL allocate_array( moments_rhs_i, ips_i,ipe_i, ijs_i,ije_i, ikxs,ikxe, ikys,ikye, izs,ize, 1,ntimelevel )
 
+  ! Non linear terms and dnjs table
+  CALL allocate_array( nadiab_moments_e, ips_e,ipe_e, ijs_e,ije_e, ikxs,ikxe, ikys,ikye, izs,ize)
+  CALL allocate_array( nadiab_moments_i, ips_i,ipe_i, ijs_i,ije_i, ikxs,ikxe, ikys,ikye, izs,ize)
+
   ! Collision term
   CALL allocate_array(  TColl_e, ips_e,ipe_e, ijs_e,ije_e , ikxs,ikxe, ikys,ikye, izs,ize)
   CALL allocate_array(  TColl_i, ips_i,ipe_i, ijs_i,ije_i , ikxs,ikxe, ikys,ikye, izs,ize)

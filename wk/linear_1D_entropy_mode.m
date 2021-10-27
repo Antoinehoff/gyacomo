@@ -6,23 +6,23 @@ default_plots_options
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.01;   % Collision frequency
+NU      = 0.1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
 K_N     = 1/0.6;   % Density gradient drive
 K_T     = 0.0;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 %% GRID PARAMETERS
-Nx      = 82;     % real space x-gridpoints
+Nx      = 100;     % real space x-gridpoints
 Ny      = 1;     %     ''     y-gridpoints
 Lx      = 150;     % Size of the squared frequency domain
-Ly      = 0;     % Size of the squared frequency domain
+Ly      = 1;     % Size of the squared frequency domain
 Nz      = 1;      % number of perpendicular planes (parallel grid)
 q0      = 1.0;    % safety factor
 shear   = 0.0;    % magnetic shear
 eps     = 0.0;    % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 300;  % Maximal time unit
+TMAX    = 100;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
@@ -35,7 +35,7 @@ SIMID   = 'test_4.1';  % Name of the simulation
 NON_LIN = 0;   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (0:L.Bernstein, 1:Dougherty, 2:Sugama, 3:Pitch angle, 4:Full Couloumb ; +/- for GK/DK)
-CO      = 3;
+CO      = 2;
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))
 NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
@@ -88,9 +88,9 @@ for i = 1:Nparam
     system(['rm fort*.90']);
     % Run linear simulation
     if RUN
-        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 1 6 0; cd ../../../wk'])
-%         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz_3.82 1 6 0; cd ../../../wk'])
-%         system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz 0; cd ../../../wk'])
+%         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 1 6 0; cd ../../../wk'])
+%         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ./../../../bin/helaz 1 2 0; cd ../../../wk'])
+        system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz 0; cd ../../../wk'])
     end
 %     Load and process results
     %%
@@ -111,10 +111,10 @@ for i = 1:Nparam
     end
     gamma_Ni00(i,:) = real(gamma_Ni00(i,:));% .* (gamma_Ni00(i,:)>=0.0));
     gamma_Nipj(i,:) = real(gamma_Nipj(i,:));% .* (gamma_Nipj(i,:)>=0.0));
-    if 1
+    if 0
     %% Fit verification
     figure;
-    for i = 1:4:Nx/2+1
+    for i = 1:1:Nx/2+1
         X_ = Ts3D(:); Y_ = squeeze(abs(Ni00(i,1,1,:)));
         semilogy(X_,Y_,'DisplayName',['k=',num2str(kx(i))]); hold on;
     end

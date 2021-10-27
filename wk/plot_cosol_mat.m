@@ -93,7 +93,7 @@ subplot(224)
 %% Single eigenvalue analysis
 
 % mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_20_P_4_J_2_N_50_kpm_4.0/scanfiles_00005/self.0.h5';
-mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_20_P_6_J_3_N_50_kpm_4.0/scanfiles_00036self.0.h5';
+mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_20_P_6_J_3_N_50_kpm_4.0/scanfiles_00042/self.0.h5';
 
 matidx = 01;
 

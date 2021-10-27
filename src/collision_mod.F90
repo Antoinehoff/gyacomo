@@ -548,7 +548,7 @@ CONTAINS
 
       DO ikp = ikps_C,ikpe_C ! Loop over everz kperp values
         ! we put zeros if kp>2/3kpmax because thoses frequencies are filtered through AA
-        IF(kp_grid_mat(ikp) .GT. two_third_kpmax .AND. NON_LIN) THEN
+        IF( (kp_grid_mat(ikp) .GT. two_third_kpmax) .AND. NON_LIN) THEN
           CiepjT_kp(:,:,ikp) = 0._dp
           CiepjF_kp(:,:,ikp) = 0._dp
           CeipjT_kp(:,:,ikp) = 0._dp
@@ -696,6 +696,8 @@ CONTAINS
             ikp_next  = ikp_mat     !index of k1 (larger than kperp_sim thanks to previous loop)
             ikp_prev  = ikp_mat - 1 !index of k0 (smaller neighbour to interpolate inbetween)
             ! write(*,*) kp_grid_mat(ikp_prev), '<', kperp_sim, '<', kp_grid_mat(ikp_next)
+            if ( (kp_grid_mat(ikp_prev) .GT. kperp_sim) .OR. (kp_grid_mat(ikp_next) .LT. kperp_sim) )&
+              write(*,*) 'Warning, linear interp of collision matrix failed!!'
 
             ! 0->1 variable for linear interp, i.e. zero2one = (k-k0)/(k1-k0)
             zerotoone = (kperp_sim - kp_grid_mat(ikp_prev))/(kp_grid_mat(ikp_next) - kp_grid_mat(ikp_prev))
@@ -718,8 +720,8 @@ CONTAINS
         CiepjF(:,:,1,1) = CiepjF_kp(:,:,1)
       ENDIF
       ! Deallocate auxiliary variables
-      DEALLOCATE (Ceepj__kp ); DEALLOCATE (CeipjT_kp); DEALLOCATE (CeipjF_kp)
-      DEALLOCATE (Ciipj__kp ); DEALLOCATE (CiepjT_kp); DEALLOCATE (CiepjF_kp)
+      DEALLOCATE (Ceepj__kp); DEALLOCATE (CeipjT_kp); DEALLOCATE (CeipjF_kp)
+      DEALLOCATE (Ciipj__kp); DEALLOCATE (CiepjT_kp); DEALLOCATE (CiepjF_kp)
 
       IF( CO_AA_ONLY ) THEN
         CeipjF = 0._dp;

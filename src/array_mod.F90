@@ -6,6 +6,11 @@ MODULE array
   ! Arrays to store the rhs, for time integration (ip,ij,ikx,iky,iz,updatetlevel)
   COMPLEX(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: moments_rhs_e
   COMPLEX(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: moments_rhs_i
+
+  ! Arrays of non-adiabatique moments
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: nadiab_moments_e
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: nadiab_moments_i
+
   ! Non linear term array (ip,ij,ikx,iky,iz)
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Sepj ! electron
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Sipj ! ion

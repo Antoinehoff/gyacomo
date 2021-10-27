@@ -1,5 +1,6 @@
-phi_real=(real(PHI(:,:,:,end)));
-phi_imag=(imag(PHI(:,:,:,end)));
+[~,it] = min(abs(Ts3D - time_2_plot));
+phi_real=(real(PHI(:,:,:,it)));
+phi_imag=(imag(PHI(:,:,:,it)));
 % Apply baollooning tranform
 for iky=2
     dims = size(phi_real);
@@ -29,20 +30,22 @@ for iky=2
     [~,idxLFS] = min(abs(b_angle -0));
     phib = phib_real(:) + 1i * phib_imag(:);
     % Normalize to the outermid plane
-    phib_norm = phib / phib( idxLFS)    ;
-    phib_real_norm  = real( phib_norm);%phib_real(:)/phib_real(idxLFS);
-    phib_imag_norm  = imag( phib_norm);%phib_imag(:)/ phib_imag(idxLFS);
+    phib_norm = phib(:);% / phib( idxLFS)    ;
+    phib_real_norm(:)  = real( phib_norm);%phib_real(:)/phib_real(idxLFS);
+    phib_imag_norm(:)  = imag( phib_norm);%phib_imag(:)/ phib_imag(idxLFS);
     
     
     figure; hold all;
     plot(b_angle/pi, phib_real_norm,'-b');
     plot(b_angle/pi, phib_imag_norm ,'-r');
-    plot(b_angle/pi, phib_real_norm .^2 + phib_imag_norm.^2,'-k');
+    plot(b_angle/pi, sqrt(phib_real_norm .^2 + phib_imag_norm.^2),'-k');
+    legend('real','imag','norm')
     xlabel('$\chi / \pi$')
     ylabel('$\phi_B (\chi)$');
-    title(['$(P,J) =(',num2str(PMAXI),', ', num2str(JMAXI),'$), $\nu =',num2str(NU),...
-        '$, $\epsilon = ',num2str(eps),'$, $k_y = ', num2str(ky( iky)),'$, $q =',num2str(q0),'$, $s = ', num2str(shear),'$, $R_N = ', ...
-        num2str(K_N),'$, $R_{T_i} = ', num2str(K_T),'$, $N_z =',num2str(Nz),'$']);
+    title(['HeLaZ(-) molix(o) benchmark, t=',num2str(Ts3D(it))]);
+%     title(['HeLaZ,$(P,J) =(',num2str(PMAXI),', ', num2str(JMAXI),'$), $\nu =',num2str(NU),...
+%         '$, $\epsilon = ',num2str(eps),'$, $k_y = ', num2str(ky( iky)),'$, $q =',num2str(q0),'$, $s = ', num2str(shear),'$, $R_N = ', ...
+%         num2str(K_N),'$, $R_{T_i} = ', num2str(K_T),'$, $N_z =',num2str(Nz),'$']);
     %set(gca,'Yscale','log')
     %
     

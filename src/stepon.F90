@@ -13,6 +13,7 @@ SUBROUTINE stepon
   use prec_const
   USE time_integration
   USE numerics, ONLY: wipe_zonalflow, wipe_turbulence
+  USE processing, ONLY: compute_nadiab_moments
   USE utility, ONLY: checkfield
 
   IMPLICIT NONE
@@ -23,7 +24,7 @@ SUBROUTINE stepon
    DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
    !----- BEFORE: All fields are updated for step = n
       ! Compute right hand side from current fields
-      ! N_rhs(N_n,phi_n, S_n, Tcoll_n)
+      ! N_rhs(N_n, nadia_n, phi_n, S_n, Tcoll_n)
       CALL moments_eq_rhs_e
       CALL moments_eq_rhs_i
       ! ---- step n -> n+1 transition
@@ -40,6 +41,8 @@ SUBROUTINE stepon
       CALL compute_TColl
       ! Update electrostatic potential phi_n = phi(N_n+1)
       CALL poisson
+      ! Update non adiabatic moments n -> n+1
+      CALL compute_nadiab_moments
       ! Update nonlinear term S_n -> S_n+1(phi_n+1,N_n+1)
       IF ( NON_LIN )         CALL compute_Sapj
       ! Cancel zonal modes artificially
@@ -61,7 +64,7 @@ SUBROUTINE stepon
         CALL cpu_time(t0_checkfield)
 
         IF(NON_LIN) CALL anti_aliasing   ! ensure 0 mode for 2/3 rule
-        IF(NON_LIN) CALL enforce_symetry ! Enforcing symmetry on kx = 0
+        IF(NON_LIN) CALL enforce_symmetry ! Enforcing symmetry on kx = 0
 
         mlend=.FALSE.
         IF(.NOT.nlend) THEN
@@ -109,7 +112,7 @@ SUBROUTINE stepon
         END DO
       END SUBROUTINE anti_aliasing
 
-      SUBROUTINE enforce_symetry ! Force X(k) = X(N-k)* complex conjugate symmetry
+      SUBROUTINE enforce_symmetry ! Force X(k) = X(N-k)* complex conjugate symmetry
         IF ( contains_kx0 ) THEN
           ! Electron moments
           DO ip=ips_e,ipe_e
@@ -142,6 +145,6 @@ SUBROUTINE stepon
           ! must be real at origin
           phi(ikx_0,iky_0,:) = REAL(phi(ikx_0,iky_0,:))
         ENDIF
-      END SUBROUTINE enforce_symetry
+      END SUBROUTINE enforce_symmetry
 
 END SUBROUTINE stepon
