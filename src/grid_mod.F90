@@ -40,8 +40,10 @@ MODULE grid
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: xarray
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: yarray
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: zarray, zarray_full
-  REAL(dp), PUBLIC, PROTECTED ::  deltax,  deltay, deltaz
-  INTEGER,  PUBLIC, PROTECTED  ::  ixs,  ixe,  iys,  iye, izs, ize
+  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: izarray
+  REAL(dp), PUBLIC, PROTECTED ::  deltax,  deltay, deltaz, inv_deltaz
+  INTEGER,  PUBLIC, PROTECTED  ::  ixs,  ixe,  iys,  iye,  izs,  ize
+  INTEGER,  PUBLIC, PROTECTED  ::  izgs, izge ! ghosts
   INTEGER,  PUBLIC :: ir,iz ! counters
   integer(C_INTPTR_T), PUBLIC :: local_nkx, local_nky
   integer(C_INTPTR_T), PUBLIC :: local_nkx_offset, local_nky_offset
@@ -53,32 +55,36 @@ MODULE grid
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: displs_np_e, displs_np_i
 
   ! Grids containing position in fourier space
-  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kxarray, kxarray_full
-  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kyarray, kyarray_full
-  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: kparray     ! kperp array
-  REAL(dp), PUBLIC, PROTECTED ::  deltakx, deltaky, kx_max, ky_max, kp_max
-  INTEGER,  PUBLIC, PROTECTED ::  ikxs, ikxe, ikys, ikye, ikps, ikpe
+  REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kxarray, kxarray_full
+  REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kyarray, kyarray_full
+  REAL(dp), PUBLIC, PROTECTED ::  deltakx, deltaky, kx_max, ky_max!, kp_max
+  REAL(dp), PUBLIC, PROTECTED ::  local_kxmax, local_kymax
+  INTEGER,  PUBLIC, PROTECTED ::  ikxs, ikxe, ikys, ikye!, ikps, ikpe
   INTEGER,  PUBLIC, PROTECTED :: ikx_0, iky_0, ikx_max, iky_max ! Indices of k-grid origin and max
-  INTEGER,  PUBLIC :: ikx, iky, ip, ij, ikp ! counters
-  LOGICAL,  PUBLIC, PROTECTED :: contains_kx0   = .false. ! rank of the proc containing kx=0 indices
-  LOGICAL,  PUBLIC, PROTECTED :: contains_kxmax = .false. ! rank of the proc containing kx=max indices
+  INTEGER,  PUBLIC            :: ikx, iky, ip, ij, ikp, pp2 ! counters
+  LOGICAL,  PUBLIC, PROTECTED :: contains_kx0   = .false. ! flag if the proc contains kx=0 index
+  LOGICAL,  PUBLIC, PROTECTED :: contains_ky0   = .false. ! flag if the proc contains ky=0 index
+  LOGICAL,  PUBLIC, PROTECTED :: contains_kxmax = .false. ! flag if the proc contains kx=kxmax index
 
   ! Grid containing the polynomials degrees
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_e, parray_e_full
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_i, parray_i_full
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: jarray_e, jarray_e_full
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: jarray_i, jarray_i_full
-  INTEGER, PUBLIC, PROTECTED ::  ips_e,ipe_e, ijs_e,ije_e ! Start and end indices for pol. deg.
-  INTEGER, PUBLIC, PROTECTED ::  ips_i,ipe_i, ijs_i,ije_i
-  INTEGER, PUBLIC, PROTECTED ::  ipsg_e,ipeg_e, ijsg_e,ijeg_e ! Ghosts start and end indices
-  INTEGER, PUBLIC, PROTECTED ::  ipsg_i,ipeg_i, ijsg_i,ijeg_i
-  INTEGER, PUBLIC, PROTECTED ::  deltape, ip0_e, ip1_e, ip2_e ! Pgrid spacing and moment 0,1,2 index
-  INTEGER, PUBLIC, PROTECTED ::  deltapi, ip0_i, ip1_i, ip2_i
+  INTEGER,  PUBLIC, PROTECTED ::  ips_e,ipe_e, ijs_e,ije_e ! Start and end indices for pol. deg.
+  INTEGER,  PUBLIC, PROTECTED ::  ips_i,ipe_i, ijs_i,ije_i
+  INTEGER,  PUBLIC, PROTECTED ::  ipsg_e,ipeg_e, ijsg_e,ijeg_e ! Ghosts start and end indices
+  INTEGER,  PUBLIC, PROTECTED ::  ipsg_i,ipeg_i, ijsg_i,ijeg_i
+  INTEGER,  PUBLIC, PROTECTED ::  deltape, ip0_e, ip1_e, ip2_e ! Pgrid spacing and moment 0,1,2 index
+  INTEGER,  PUBLIC, PROTECTED ::  deltapi, ip0_i, ip1_i, ip2_i
+
+  ! Usefull inverse numbers
+  REAL(dp), PUBLIC, PROTECTED :: inv_Nx, inv_Ny
 
   ! Public Functions
   PUBLIC :: init_1Dgrid_distr
   PUBLIC :: set_pgrid, set_jgrid
-  PUBLIC :: set_kxgrid, set_kygrid, set_kpgrid, set_zgrid
+  PUBLIC :: set_kxgrid, set_kygrid, set_zgrid
   PUBLIC :: grid_readinputs, grid_outputinputs
   PUBLIC :: bare, bari
 
@@ -110,9 +116,15 @@ CONTAINS
     !! to spare computation
     IF(Nz .EQ. 1) THEN
       deltape = 2; deltapi = 2;
+      pp2     = 1; ! index p+2 is ip+1
     ELSE
       deltape = 1; deltapi = 1;
+      pp2     = 2; ! index p+2 is ip+1
     ENDIF
+
+    ! Usefull precomputations
+    inv_Nx = 1._dp/REAL(Nx,dp)
+    inv_Ny = 1._dp/REAL(Ny,dp)
 
   END SUBROUTINE grid_readinputs
 
@@ -144,6 +156,9 @@ CONTAINS
     CALL decomp1D(total_np_i, num_procs_p, rank_p, ips_i, ipe_i)
     local_np_e = ipe_e - ips_e + 1
     local_np_i = ipe_i - ips_i + 1
+    ! Ghosts boundaries
+    ipsg_e = ips_e - 2/deltape; ipeg_e = ipe_e + 2/deltape;
+    ipsg_i = ips_i - 2/deltapi; ipeg_i = ipe_i + 2/deltapi;
     ! List of shift and local numbers between the different processes (used in scatterv and gatherv)
     ALLOCATE(counts_np_e (1:num_procs_p))
     ALLOCATE(counts_np_i (1:num_procs_p))
@@ -159,16 +174,16 @@ CONTAINS
     ENDDO
 
     ! local grid computation
-    ALLOCATE(parray_e(ips_e:ipe_e))
-    ALLOCATE(parray_i(ips_i:ipe_i))
-    DO ip = ips_e,ipe_e
+    ALLOCATE(parray_e(ipsg_e:ipeg_e))
+    ALLOCATE(parray_i(ipsg_i:ipeg_i))
+    DO ip = ipsg_e,ipeg_e
       parray_e(ip) = (ip-1)*deltape
       ! Storing indices of particular degrees for DG and fluid moments computations
       IF(parray_e(ip) .EQ. 0) ip0_e = ip
       IF(parray_e(ip) .EQ. 1) ip1_e = ip
       IF(parray_e(ip) .EQ. 2) ip2_e = ip
     END DO
-    DO ip = ips_i,ipe_i
+    DO ip = ipsg_i,ipeg_i
       parray_i(ip) = (ip-1)*deltapi
       IF(parray_i(ip) .EQ. 0) ip0_i = ip
       IF(parray_i(ip) .EQ. 1) ip1_i = ip
@@ -178,10 +193,6 @@ CONTAINS
     ! process that contains ip=1 MUST contain ip=3 as well for both e and i.
     IF(((ips_e .EQ. ip0_e) .OR. (ips_i .EQ. ip0_e)) .AND. ((ipe_e .LT. ip2_e) .OR. (ipe_i .LT. ip2_i)))&
      WRITE(*,*) "Warning : distribution along p may not work with DGGK"
-
-    ! Ghosts boundaries
-    ipsg_e = ips_e - 2/deltape; ipeg_e = ipe_e + 2/deltape;
-    ipsg_i = ips_i - 2/deltapi; ipeg_i = ipe_i + 2/deltapi;
     ! Precomputations
     pmaxe_dp   = real(pmaxe,dp)
     pmaxi_dp   = real(pmaxi,dp)
@@ -201,17 +212,15 @@ CONTAINS
     ! Local data
     ijs_e = 1; ije_e = jmaxe + 1
     ijs_i = 1; ije_i = jmaxi + 1
-    ALLOCATE(jarray_e(ijs_e:ije_e))
-    ALLOCATE(jarray_i(ijs_i:ije_i))
-    DO ij = ijs_e,ije_e; jarray_e(ij) = ij-1; END DO
-    DO ij = ijs_i,ije_i; jarray_i(ij) = ij-1; END DO
-
-    maxj  = MAX(jmaxi, jmaxe)
-
     ! Ghosts boundaries
     ijsg_e = ijs_e - 1; ijeg_e = ije_e + 1;
     ijsg_i = ijs_i - 1; ijeg_i = ije_i + 1;
+    ALLOCATE(jarray_e(ijsg_e:ijeg_e))
+    ALLOCATE(jarray_i(ijsg_i:ijeg_i))
+    DO ij = ijsg_e,ijeg_e; jarray_e(ij) = ij-1; END DO
+    DO ij = ijsg_i,ijeg_i; jarray_i(ij) = ij-1; END DO
     ! Precomputations
+    maxj  = MAX(jmaxi, jmaxe)
     jmaxe_dp   = real(jmaxe,dp)
     jmaxi_dp   = real(jmaxi,dp)
   END SUBROUTINE set_jgrid
@@ -225,8 +234,8 @@ CONTAINS
 
     Nkx = Nx/2+1 ! Defined only on positive kx since fields are real
     ! Grid spacings
-    IF (Lx .EQ. 0) THEN
-      deltakx = 1._dp
+    IF (Nx .EQ. 1) THEN
+      deltakx = 0._dp
       kx_max  = 0._dp
     ELSE
       deltakx = 2._dp*PI/Lx
@@ -241,10 +250,13 @@ CONTAINS
 
     !! Parallel distribution
     ! Start and END indices of grid
+    ! ikxs = 1
+    ! ikxe = Nkx
     ikxs = local_nkx_offset + 1
     ikxe = ikxs + local_nkx - 1
     ALLOCATE(kxarray(ikxs:ikxe))
 
+    local_kxmax = 0._dp
     ! Creating a grid ordered as dk*(0 1 2 3)
     DO ikx = ikxs,ikxe
       kxarray(ikx) = REAL(ikx-1,dp) * deltakx
@@ -252,6 +264,10 @@ CONTAINS
       IF (kxarray(ikx) .EQ. 0) THEN
         ikx_0 = ikx
         contains_kx0 = .true.
+      ENDIF
+      ! Finding local kxmax value
+      IF (ABS(kxarray(ikx)) .GT. local_kxmax) THEN
+        local_kxmax = ABS(kxarray(ikx))
       ENDIF
       ! Finding kxmax idx
       IF (kxarray(ikx) .EQ. kx_max) THEN
@@ -285,40 +301,48 @@ CONTAINS
     ikys = 1
     ikye = Nky
     ALLOCATE(kyarray(ikys:ikye))
-    IF (Ly .EQ. 0) THEN ! 1D linear case
-      deltaky    = 1._dp
-      kyarray(1) = 0
-      iky_0      = 1
-      iky_max    = 1
-    ELSE
-      deltaky = 2._dp*PI/Ly
-      ky_max  = (Ny/2)*deltakx
+    IF (Ny .EQ. 1) THEN ! "cancel" y dimension
+      deltaky         = 1._dp
+      kyarray(1)      = 0._dp
+      iky_0           = 1
+      contains_ky0    = .true.
+      ky_max          = 0._dp
+      iky_max         = 1
+      kyarray_full(1) = 0._dp
+      local_kymax     = 0._dp
+    ELSE ! Build apprpopriate grid
+      deltaky     = 2._dp*PI/Ly
+      ky_max      = (Ny/2)*deltakx
       ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
+      local_kymax = 0._dp
       DO iky = ikys,ikye
         kyarray(iky) = deltaky*(MODULO(iky-1,Nky/2)-Nky/2*FLOOR(2.*real(iky-1)/real(Nky)))
         if (iky .EQ. Ny/2+1)     kyarray(iky) = -kyarray(iky)
         ! Finding ky=0
-        IF (kyarray(iky) .EQ. 0) iky_0 = iky
+        IF (kyarray(iky) .EQ. 0) THEN
+          iky_0 = iky
+          contains_ky0 = .true.
+        ENDIF
+        ! Finding local kymax
+        IF (ABS(kyarray(ikx)) .GT. local_kymax) THEN
+          local_kymax = ABS(kyarray(iky))
+        ENDIF
         ! Finding kymax
         IF (kyarray(ikx) .EQ. ky_max) ikx_max = ikx
       END DO
-    ENDIF
-    ! Build the full grids on process 0 to diagnose it without comm
-    ! ky
-    IF (Nky .GT. 1) THEN
-     DO iky = 1,Nky
-       kyarray_full(iky) = deltaky*(MODULO(iky-1,Nky/2)-Nky/2*FLOOR(2.*real(iky-1)/real(Nky)))
-       IF (iky .EQ. Ny/2+1) kyarray_full(iky) = -kyarray_full(iky)
-     END DO
-    ELSE
-     kyarray_full(1) =  0
+      ! Build the full grids on process 0 to diagnose it without comm
+      ! ky
+      DO iky = 1,Nky
+        kyarray_full(iky) = deltaky*(MODULO(iky-1,Nky/2)-Nky/2*FLOOR(2.*real(iky-1)/real(Nky)))
+        IF (iky .EQ. Ny/2+1) kyarray_full(iky) = -kyarray_full(iky)
+      END DO
     ENDIF
     ! Orszag 2/3 filter
     two_third_kymax = 2._dp/3._dp*deltaky*(Nky/2-1);
     ALLOCATE(AA_y(ikys:ikye))
     DO iky = ikys,ikye
-      IF ( (kyarray(iky) .GT. -two_third_kymax) .AND. &
-           (kyarray(iky) .LT. two_third_kymax) .OR. (.NOT. NON_LIN)) THEN
+      IF ( ((kyarray(iky) .GT. -two_third_kymax) .AND. &
+           (kyarray(iky) .LT. two_third_kymax))   .OR. (.NOT. NON_LIN)) THEN
         AA_y(iky) = 1._dp;
       ELSE
         AA_y(iky) = 0._dp;
@@ -326,40 +350,11 @@ CONTAINS
     END DO
   END SUBROUTINE set_kygrid
 
-  SUBROUTINE set_kpgrid !Precompute the grid of kperp
-    IMPLICIT NONE
-    INTEGER :: iky_sym, tmp_, counter
-    REAL(dp):: local_kp_min, local_kp_max
-    ! Find the min and max kperp to load subsequent GK matrices
-    local_kp_min = kxarray(ikxs) !smallest local kperp is on the kx axis
-    local_kp_max = SQRT(kxarray(ikxe)**2 + kyarray(Nky/2+1)**2)
-    ikps = ikxs
-    ikpe = INT(CEILING(local_kp_max/deltakx))+2
-    ! local number of different kperp
-    local_nkp = ikpe - ikps + 1
-    ! Allocate 1D array of kperp values and indices
-    ALLOCATE(kparray(ikps:ikpe))
-    DO ikp = ikps,ikpe
-      kparray(ikp) = REAL(ikp-1,dp) * deltakx
-    ENDDO
-    two_third_kpmax = SQRT(two_third_kxmax**2+two_third_kymax**2)
-    kp_max = 3._dp/2._dp * two_third_kpmax
-  END SUBROUTINE
 
   SUBROUTINE set_zgrid
     USE prec_const
     IMPLICIT NONE
-    INTEGER :: i_
-    ! Build the full grids on process 0 to diagnose it without comm
-    ALLOCATE(zarray_full(1:Nz))
-    ! z
-    IF (Nz .GT. 1) THEN
-      DO iz = 1,Nz
-        zarray_full(iz) = deltaz*(iz-1)
-      END DO
-    ELSE
-      zarray_full(1) =  0
-    ENDIF
+    INTEGER :: i_, ngz
     ! Start and END indices of grid
     izs = 1
     ize = Nz
@@ -368,12 +363,35 @@ CONTAINS
       deltaz    = 1._dp
       zarray(1) = 0
     ELSE
-      deltaz = q0*2._dp*PI/REAL(Nz+1,dp)
+      deltaz       = 2._dp*PI/REAL(Nz,dp)
+      inv_deltaz = 1._dp/deltaz
       DO iz = izs,ize
-        zarray(iz) = REAL((iz-1),dp)*deltaz
+        zarray(iz) = REAL((iz-1),dp)*deltaz - PI
       ENDDO
     ENDIF
     if(my_id.EQ.0) write(*,*) '#parallel planes = ', Nz
+    ! Build the full grids on process 0 to diagnose it without comm
+    ALLOCATE(zarray_full(1:Nz))
+    ! z from -pi to pi
+    IF (Nz .GT. 1) THEN
+      DO iz = 1,Nz
+        zarray_full(iz) = deltaz*(iz-1) - PI
+      END DO
+    ELSE
+      zarray_full(1) =  0
+    ENDIF
+
+    ! Boundary conditions for FDF ddz derivative
+    ! 4 stencil deritative -> 2 ghosts each sides
+    ngz = 2
+    ALLOCATE(izarray((1-ngz):(Nz+ngz)))
+    DO iz = 1,Nz
+      izarray(iz) = iz !points to usuall indices
+    END DO
+    ! Periodic BC for  parallel centered finite differences
+    izarray(-1)   = Nz-1; izarray(0)    = Nz;
+    izarray(Nz+1) =    1; izarray(Nz+2) =  2;
+
   END SUBROUTINE set_zgrid
 
   SUBROUTINE grid_outputinputs(fidres, str)

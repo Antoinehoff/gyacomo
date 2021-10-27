@@ -21,17 +21,21 @@ subroutine auxval
   ENDIF
   ! Init the grids
   CALL set_pgrid ! parallel kin (MPI distributed)
+  
   CALL set_jgrid ! perp kin
 
   CALL set_kxgrid ! radial modes (MPI distributed by FFTW)
+
   CALL set_kygrid ! azymuthal modes
-  CALL set_kpgrid ! perpendicular modes
+
   CALL set_zgrid  ! field aligned angle
 
   CALL memory ! Allocate memory for global arrays
 
   CALL eval_magnetic_geometry ! precompute coeff for lin equation
+
   CALL compute_lin_coeff ! precompute coeff for lin equation and geometry
+
   CALL evaluate_kernels ! precompute the kernels
 
   IF ( NON_LIN ) THEN;
@@ -62,6 +66,9 @@ subroutine auxval
        '              ikys  = ', ikys , ', ikye   = ', ikye
        WRITE(*,'(A22,I3,A11,I3)')&
        '              izs   = ', izs  , ', ize    = ', ize
+       ! write(*,*) 'local kx =', kxarray
+       ! write(*,*) 'local ky =', kyarray
+       ! write(*,*) 'local iz =', izarray
       IF (my_id .NE. num_procs-1) WRITE (*,*) ''
       IF (my_id .EQ. num_procs-1) WRITE(*,*) '------------------------------------------'
     ENDIF

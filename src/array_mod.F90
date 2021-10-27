@@ -40,6 +40,8 @@ MODULE array
   ! Geoemtrical operators
   ! Curvature
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z
+  ! kperp array
+  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE, PUBLIC :: kparray ! dimensions: kx, ky, z
   ! Jacobian
   REAL(dp), DIMENSION(:), ALLOCATABLE :: Jacobian ! dimensions: z
   ! Metric
