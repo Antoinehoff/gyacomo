@@ -37,6 +37,8 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED :: qi_sigmai_sqrtTaui   !
   REAL(dp), PUBLIC, PROTECTED :: sigmae2_taue_o2      ! factor of the Kernel argument
   REAL(dp), PUBLIC, PROTECTED :: sigmai2_taui_o2      !
+  REAL(dp), PUBLIC, PROTECTED :: sqrt_sigmae2_taue_o2      ! factor of the Kernel argument
+  REAL(dp), PUBLIC, PROTECTED :: sqrt_sigmai2_taui_o2  
   REAL(dp), PUBLIC, PROTECTED :: nu_e,  nu_i          ! electron-ion, ion-ion collision frequency
   REAL(dp), PUBLIC, PROTECTED :: nu_ee, nu_ie         ! e-e, i-e coll. frequ.
   REAL(dp), PUBLIC, PROTECTED :: qe2_taue, qi2_taui   ! factor of the gammaD sum
@@ -68,6 +70,8 @@ CONTAINS
     qi2_taui        = (q_i**2)/tau_i
     sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the Kernel argument
     sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp
+    sqrt_sigmae2_taue_o2 = SQRT(sigma_e**2 * tau_e/2._dp) ! to avoid multiple SQRT eval
+    sqrt_sigmai2_taui_o2 = SQRT(sigma_i**2 * tau_i/2._dp)
     !! We use the ion-ion collision as normalization with definition
     !   nu_ii = 4 sqrt(pi)/3 T_i^(-3/2) m_i^(-1/2) q^4 n_i0 ln(Lambda)
     !
