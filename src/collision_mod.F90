@@ -68,9 +68,9 @@ CONTAINS
   SUBROUTINE DoughertyGK_e(ip_,ij_,ikx_,iky_,iz_,TColl_)
     USE fields, ONLY: moments_e, phi
     USE grid,   ONLY: parray_e, jarray_e, kxarray, kyarray, Jmaxe, ip0_e, ip1_e, ip2_e
-    USE array,  ONLY: kernel_e
+    USE array,  ONLY: kernel_e, kparray
     USE basic
-    USE model,  ONLY: sigmae2_taue_o2, qe_taue, nu_ee
+    USE model,  ONLY: sigmae2_taue_o2, qe_taue, nu_ee, sqrt_sigmae2_taue_o2
     USE time_integration, ONLY : updatetlevel
     IMPLICIT NONE
     INTEGER,     INTENT(IN)    :: ip_,ij_,ikx_,iky_,iz_
@@ -78,15 +78,16 @@ CONTAINS
 
     COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_, T_
     COMPLEX(dp) :: nadiab_moment_0j
-    REAL(dp)    :: Knp0, Knp1, Knm1
+    REAL(dp)    :: Knp0, Knp1, Knm1, kp
     INTEGER     :: in_
     REAL(dp)    :: n_dp, j_dp, p_dp, be_, be_2
 
     !** Auxiliary variables **
     p_dp      = REAL(parray_e(ip_),dp)
     j_dp      = REAL(jarray_e(ij_),dp)
-    be_2      = (kxarray(ikx_)**2 + kyarray(iky_)**2) * sigmae2_taue_o2 ! this is (be/2)^2
-    be_       = 2_dp*SQRT(be_2) ! this is be
+    kp        = kparray(ikx_,iky_,iz_)
+    be_2      = kp**2 * sigmae2_taue_o2 ! this is (be/2)^2
+    be_       = 2_dp*kp * sqrt_sigmae2_taue_o2  ! this is be
 
     !** Assembling collison operator **
     ! Velocity-space diffusion (similar to Lenard Bernstein)
@@ -173,9 +174,9 @@ CONTAINS
   SUBROUTINE DoughertyGK_i(ip_,ij_,ikx_,iky_,iz_,TColl_)
     USE fields, ONLY: moments_i, phi
     USE grid,   ONLY: parray_i, jarray_i, kxarray, kyarray, Jmaxi, ip0_i, ip1_i, ip2_i
-    USE array,  ONLY: kernel_i
+    USE array,  ONLY: kernel_i, kparray
     USE basic
-    USE model,  ONLY: sigmai2_taui_o2, qi_taui, nu_i
+    USE model,  ONLY: sigmai2_taui_o2, qi_taui, nu_i, sqrt_sigmai2_taui_o2
     USE time_integration, ONLY : updatetlevel
     IMPLICIT NONE
     INTEGER,     INTENT(IN)    :: ip_,ij_,ikx_,iky_,iz_
@@ -184,15 +185,16 @@ CONTAINS
     COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_, T_
     COMPLEX(dp) :: bi_, bi_2
     COMPLEX(dp) :: nadiab_moment_0j
-    REAL(dp)    :: Knp0, Knp1, Knm1
+    REAL(dp)    :: Knp0, Knp1, Knm1, kp
     INTEGER     :: in_
     REAL(dp)    :: n_dp, j_dp, p_dp
 
     !** Auxiliary variables **
     p_dp      = REAL(parray_i(ip_),dp)
     j_dp      = REAL(jarray_i(ij_),dp)
-    bi_2      = (kxarray(ikx_)**2 + kyarray(iky_)**2) * sigmai2_taui_o2 ! this is (bi/2)^2
-    bi_       = 2_dp*SQRT(bi_2) ! this is be
+    kp        = kparray(ikx_,iky_,iz_)
+    bi_2      = kp**2 *sigmai2_taui_o2 ! this is (bi/2)^2
+    bi_       = 2_dp*kp*sqrt_sigmai2_taui_o2  ! this is bi
 
     !** Assembling collison operator **
     ! Velocity-space diffusion (similar to Lenard Bernstein)
@@ -310,11 +312,11 @@ CONTAINS
               ENDDO
               IF (num_procs_p .GT. 1) THEN
                 ! Sum up all the sub collision terms on root 0
-                CALL MPI_REDUCE(local_sum_e, buffer_e, total_np_e, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
+                CALL MPI_REDUCE(local_sum_e, buffer_e, total_np_e, MPI_DOUBLE_COMPLEX, MPI_SUM, 1003, comm_p, ierr)
                 ! distribute the sum over the process among p
                 CALL MPI_SCATTERV(buffer_e, counts_np_e, displs_np_e, MPI_DOUBLE_COMPLEX,&
                                   TColl_distr_e, local_np_e, MPI_DOUBLE_COMPLEX,&
-                                  0, comm_p, ierr)
+                                  1003, comm_p, ierr)
               ELSE
                 TColl_distr_e = local_sum_e
               ENDIF
@@ -331,12 +333,12 @@ CONTAINS
               ENDDO
               IF (num_procs_p .GT. 1) THEN
                 ! Reduce the local_sums to root = 0
-                CALL MPI_REDUCE(local_sum_i, buffer_i, total_np_i, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
+                CALL MPI_REDUCE(local_sum_i, buffer_i, total_np_i, MPI_DOUBLE_COMPLEX, MPI_SUM, 1004, comm_p, ierr)
                 ! buffer contains the entire collision term along p, we scatter it between
                 ! the other processes (use of scatterv since Pmax/Np is not an integer)
                 CALL MPI_SCATTERV(buffer_i, counts_np_i, displs_np_i, MPI_DOUBLE_COMPLEX,&
                                   TColl_distr_i, local_np_i, MPI_DOUBLE_COMPLEX, &
-                                  0, comm_p, ierr)
+                                  1004, comm_p, ierr)
               ELSE
                 TColl_distr_i = local_sum_i
               ENDIF
@@ -491,7 +493,8 @@ CONTAINS
 
       REAL(dp), DIMENSION(:),     ALLOCATABLE :: kp_grid_mat             ! kperp grid of the matrices
       INTEGER  :: ikp_next, ikp_prev, nkp_mat, ikp_mat
-      REAL(dp) ::  kp_next,  kp_prev, kperp_sim, kperp_mat, zerotoone, be_2, bi_2
+      REAL(dp) :: kp_max
+      REAL(dp) :: kp_next,  kp_prev, kperp_sim, kperp_mat, zerotoone, be_2, bi_2
 
       CHARACTER(len=128) :: var_name, kperp_string, ikp_string
 
@@ -527,8 +530,11 @@ CONTAINS
       CALL getsize(fid, '/coordkperp', nkp_mat) ! Get the dimension kperp grid of the matrices
       CALL allocate_array(kp_grid_mat, 1,nkp_mat)
       CALL getarr(fid, '/coordkperp', kp_grid_mat)
-      IF (NON_LIN) THEN ! check that we have enough kperps mat
-        IF ( (kp_grid_mat(nkp_mat) .LT. two_third_kpmax) .AND. (my_id .EQ. 0)) WRITE(*,*) '!! Matrix kperp grid too small !!'
+
+      ! check that we have enough kperps mat
+      kp_max = SQRT(MAXVAL(kxarray)**2+MAXVAL(kyarray)**2)
+      IF (NON_LIN) THEN
+        IF ( (kp_grid_mat(nkp_mat) .LT. 2./3.*kp_max) .AND. (my_id .EQ. 0)) WRITE(*,*) '!! Matrix kperp grid too small !!'
       ELSE
         IF ( (kp_grid_mat(nkp_mat) .LT. kp_max) .AND. (my_id .EQ. 0)) WRITE(*,*) '!! Matrix kperp grid too small !!'
       ENDIF
