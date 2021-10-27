@@ -41,8 +41,8 @@ SUBROUTINE memory
   CALL allocate_array( moments_rhs_i, ips_i,ipe_i, ijs_i,ije_i, ikxs,ikxe, ikys,ikye, izs,ize, 1,ntimelevel )
 
   ! Non linear terms and dnjs table
-  CALL allocate_array( nadiab_moments_e, ips_e,ipe_e, ijs_e,ije_e, ikxs,ikxe, ikys,ikye, izs,ize)
-  CALL allocate_array( nadiab_moments_i, ips_i,ipe_i, ijs_i,ije_i, ikxs,ikxe, ikys,ikye, izs,ize)
+  CALL allocate_array( nadiab_moments_e, ipsg_e,ipeg_e, ijsg_e,ijeg_e, ikxs,ikxe, ikys,ikye, izs,ize)
+  CALL allocate_array( nadiab_moments_i, ipsg_i,ipeg_i, ijsg_i,ijeg_i, ikxs,ikxe, ikys,ikye, izs,ize)
 
   ! Collision term
   CALL allocate_array(  TColl_e, ips_e,ipe_e, ijs_e,ije_e , ikxs,ikxe, ikys,ikye, izs,ize)
@@ -90,7 +90,8 @@ SUBROUTINE memory
   CALL allocate_array( xphijm1, ips_i,ipe_i, ijs_i,ije_i)
 
   ! Curvature and geometry
-  CALL allocate_array( Ckxky, ikxs,ikxe, ikys,ikye, izs,ize)
+  CALL allocate_array( Ckxky,   ikxs,ikxe, ikys,ikye, izs,ize)
+  CALL allocate_array( kparray, ikxs,ikxe, ikys,ikye, izs,ize)
   CALL allocate_array(Jacobian,izs,ize)
   CALL allocate_array(gxx, izs,ize)
   CALL allocate_array(gxy, izs,ize)

@@ -143,7 +143,7 @@ SUBROUTINE compute_nadiab_moments
       DO ij=ijsg_e,ijeg_e
         nadiab_moments_e(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize)&
          = moments_e(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel) &
-           + qe_taue*kernel_e(ij,ikxs:ikxe,ikys:ikye,izs:ize)*phi(ikx,iky,iz)
+           + qe_taue*kernel_e(ij,ikxs:ikxe,ikys:ikye,izs:ize)*phi(ikxs:ikxe,ikys:ikye,izs:ize)
       ENDDO
     ELSE
       nadiab_moments_e(ip,ijsg_e:ijeg_e,ikxs:ikxe,ikys:ikye,izs:ize) &
@@ -156,7 +156,7 @@ SUBROUTINE compute_nadiab_moments
       DO ij=ijsg_i,ijeg_i
         nadiab_moments_i(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize)&
          = moments_i(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel) &
-           + qi_taui*kernel_i(ij,ikxs:ikxe,ikys:ikye,izs:ize)*phi(ikx,iky,iz)
+           + qi_taui*kernel_i(ij,ikxs:ikxe,ikys:ikye,izs:ize)*phi(ikxs:ikxe,ikys:ikye,izs:ize)
       ENDDO
     ELSE
       nadiab_moments_i(ip,ijsg_i:ijeg_i,ikxs:ikxe,ikys:ikye,izs:ize) &
