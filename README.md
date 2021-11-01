@@ -77,10 +77,8 @@ How to run it
 
 # Roadmap
 
-3. 3D version
+3. 3D shearless periodic version
 
-	3.1 Flux-tube
+	3.x Benchmark with Gene and 3D transport analysis
 
-	3.2 Benchmark and 3D transport analysis
-
-4. full-f terms? Evolving backgrounds?
+4. Shear and complex boundary conditions
