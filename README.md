@@ -15,6 +15,10 @@ How to run it
 
 3. HeLaZ 3D
 
+	3.5 *Incoming* Staggered grid for parallel odd/even coupling
+
+	3.4 HeLaZ can run with adiabatic electrons now!
+
 	3.3 HeLaZ 3D has been benchmarked in fluxtube salphaB geometry linear run with molix (B.J.Frei) code and works now for shear = 0 with periodic z BC
 
 	3.2 Stopping file procedure like in GBS is added
