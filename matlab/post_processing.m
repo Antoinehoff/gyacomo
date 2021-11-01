@@ -23,7 +23,6 @@ Lx = 2*pi/dkx;   Ly = 2*pi/dky;
 dx = Lx/Nx;      dy = Ly/Ny; dz = 2*pi/Nz;
 x = dx*(-Nx/2:(Nx/2-1)); Lx = max(x)-min(x);
 y = dy*(-Ny/2:(Ny/2-1)); Ly = max(y)-min(y);
-z = dz * (1:Nz);
 [Y_XY,X_XY] = meshgrid(y,x);
 [Z_XZ,X_XZ] = meshgrid(z,x);
 [Z_YZ,Y_YZ] = meshgrid(z,y);
@@ -153,45 +152,45 @@ for it = 1:numel(Ts5D) % Loop over 5D aX_XYays
 end
 
 %% Compute primary instability growth rate
-disp('- growth rate')
-% Find max value of transport (end of linear mode)
-[tmp,tmax] = max(GGAMMA_RI*(2*pi/Nx/Ny)^2);
-[~,itmax]  = min(abs(Ts3D-tmax));
-tstart = 0.1 * Ts3D(itmax); tend = 0.5 * Ts3D(itmax);
-[~,its3D_lin] = min(abs(Ts3D-tstart));
-[~,ite3D_lin]   = min(abs(Ts3D-tend));
-
-g_I          = zeros(Nkx,Nky,Nz);
-for ikx = 1:Nkx
-    for iky = 1:Nky
-        for iz = 1:Nz
-            [g_I(ikx,iky,iz), ~] = LinearFit_s(Ts3D(its3D_lin:ite3D_lin)',squeeze(abs(Ni00(ikx,iky,iz,its3D_lin:ite3D_lin))));
-        end
-    end
-end
-[gmax_I,ikmax_I] = max(max(g_I(1,:,:),[],2),[],3);
-kmax_I = abs(ky(ikmax_I));
-Bohm_transport = K_N*gmax_I/kmax_I^2;
+% disp('- growth rate')
+% % Find max value of transport (end of linear mode)
+% [tmp,tmax] = max(GGAMMA_RI*(2*pi/Nx/Ny)^2);
+% [~,itmax]  = min(abs(Ts3D-tmax));
+% tstart = 0.1 * Ts3D(itmax); tend = 0.5 * Ts3D(itmax);
+% [~,its3D_lin] = min(abs(Ts3D-tstart));
+% [~,ite3D_lin]   = min(abs(Ts3D-tend));
+% 
+% g_I          = zeros(Nkx,Nky,Nz);
+% for ikx = 1:Nkx
+%     for iky = 1:Nky
+%         for iz = 1:Nz
+%             [g_I(ikx,iky,iz), ~] = LinearFit_s(Ts3D(its3D_lin:ite3D_lin)',squeeze(abs(Ni00(ikx,iky,iz,its3D_lin:ite3D_lin))));
+%         end
+%     end
+% end
+% [gmax_I,ikmax_I] = max(max(g_I(1,:,:),[],2),[],3);
+% kmax_I = abs(ky(ikmax_I));
+% Bohm_transport = K_N*gmax_I/kmax_I^2;
 
 %% Compute secondary instability growth rate
-disp('- growth rate')
-% Find max value of transport (end of linear mode)
-% [tmp,tmax] = max(GGAMMA_RI*(2*pi/Nx/Ny)^2);
-% [~,itmax]  = min(abs(Ts2D-tmax));
-% tstart = Ts2D(itmax); tend = 1.5*Ts2D(itmax);
-[~,its3D_lin] = min(abs(Ts3D-tstart));
-[~,ite3D_lin]   = min(abs(Ts3D-tend));
-
-g_II          = zeros(Nkx,Nky);
-for ikx = 1:Nkx
-    for iky = 1
-        for iz = 1:Nz
-            [g_II(ikx,iky,iz), ~] = LinearFit_s(Ts3D(its3D_lin:ite3D_lin)',squeeze(abs(Ni00(ikx,iky,iz,its3D_lin:ite3D_lin))));
-        end
-    end
-end
-[gmax_II,ikmax_II] = max(max(g_II(1,:,:),[],2),[],3);
-kmax_II = abs(kx(ikmax_II));
+% disp('- growth rate')
+% % Find max value of transport (end of linear mode)
+% % [tmp,tmax] = max(GGAMMA_RI*(2*pi/Nx/Ny)^2);
+% % [~,itmax]  = min(abs(Ts2D-tmax));
+% % tstart = Ts2D(itmax); tend = 1.5*Ts2D(itmax);
+% [~,its3D_lin] = min(abs(Ts3D-tstart));
+% [~,ite3D_lin]   = min(abs(Ts3D-tend));
+% 
+% g_II          = zeros(Nkx,Nky);
+% for ikx = 1:Nkx
+%     for iky = 1
+%         for iz = 1:Nz
+%             [g_II(ikx,iky,iz), ~] = LinearFit_s(Ts3D(its3D_lin:ite3D_lin)',squeeze(abs(Ni00(ikx,iky,iz,its3D_lin:ite3D_lin))));
+%         end
+%     end
+% end
+% [gmax_II,ikmax_II] = max(max(g_II(1,:,:),[],2),[],3);
+% kmax_II = abs(kx(ikmax_II));
 
 %% zonal vs nonzonal energies for phi(t)
 Ephi_Z           = zeros(1,Ns3D);
@@ -210,7 +209,7 @@ for it = 1:numel(Ts3D)
 %     Ephi_Z(it)  = kx(ikzf)^2*abs(PHI(ikzf,1,1,it)).^2;
     Ephi_Z(it) = squeeze(sum(sum(((KX~=0).*(KY==0).*(KX.^2).*abs(PHI(:,:,1,it)).^2))));
 %     Ephi_NZ(it) = sum(sum(((KX.^2+KY.^2).*abs(PHI(:,:,1,it)).^2)))-Ephi_Z(it);
-    high_k_phi(it)  = squeeze(abs(PHI(18,18,1,it)).^2); % kperp sqrt(2)
+%     high_k_phi(it)  = squeeze(abs(PHI(18,18,1,it)).^2); % kperp sqrt(2)
 %     high_k_phi(it)  = abs(PHI(40,40,1,it)).^2;% kperp 3.5
 
 end

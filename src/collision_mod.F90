@@ -67,8 +67,8 @@ CONTAINS
   !******************************************************************************!
   SUBROUTINE DoughertyGK_e(ip_,ij_,ikx_,iky_,iz_,TColl_)
     USE fields, ONLY: moments_e, phi
-    USE grid,   ONLY: parray_e, jarray_e, kxarray, kyarray, Jmaxe, ip0_e, ip1_e, ip2_e
-    USE array,  ONLY: kernel_e, kparray
+    USE grid,   ONLY: parray_e, jarray_e, kxarray, kyarray, kparray, Jmaxe, ip0_e, ip1_e, ip2_e
+    USE array,  ONLY: kernel_e
     USE basic
     USE model,  ONLY: sigmae2_taue_o2, qe_taue, nu_ee, sqrt_sigmae2_taue_o2
     USE time_integration, ONLY : updatetlevel
@@ -173,8 +173,8 @@ CONTAINS
   !******************************************************************************!
   SUBROUTINE DoughertyGK_i(ip_,ij_,ikx_,iky_,iz_,TColl_)
     USE fields, ONLY: moments_i, phi
-    USE grid,   ONLY: parray_i, jarray_i, kxarray, kyarray, Jmaxi, ip0_i, ip1_i, ip2_i
-    USE array,  ONLY: kernel_i, kparray
+    USE grid,   ONLY: parray_i, jarray_i, kxarray, kyarray, kparray, Jmaxi, ip0_i, ip1_i, ip2_i
+    USE array,  ONLY: kernel_i
     USE basic
     USE model,  ONLY: sigmai2_taui_o2, qi_taui, nu_i, sqrt_sigmai2_taui_o2
     USE time_integration, ONLY : updatetlevel
@@ -303,6 +303,7 @@ CONTAINS
       DO ikx = ikxs,ikxe
         DO iky = ikys,ikye
           DO iz = izs,ize
+            IF(KIN_E) THEN
             ! Electrons
             DO ij = 1,Jmaxe+1
               ! Loop over all p to compute sub collision term
@@ -325,6 +326,7 @@ CONTAINS
                 TColl_e(ip,ij,ikx,iky,iz) = TColl_distr_e(ip)
               ENDDO
             ENDDO
+            ENDIF
             ! Ions
             DO ij = 1,Jmaxi+1
               DO ip = 1,total_np_i
@@ -419,7 +421,7 @@ CONTAINS
     USE basic
     USE time_integration, ONLY : updatetlevel
     USE utility
-    USE model, ONLY: CO, nu_i, nu_ie, CLOS
+    USE model, ONLY: CO, nu_i, nu_ie, CLOS, KIN_E
     IMPLICIT NONE
     INTEGER,     INTENT(IN)    :: ip_, ij_ ,ikx_, iky_, iz_
     COMPLEX(dp), INTENT(OUT)   :: TColl_
@@ -440,12 +442,16 @@ CONTAINS
       jloopii: DO ij2 = ijs_i,ije_i
         j2_int = jarray_i(ij2)
         IF((CLOS .NE. 1) .OR. (p2_int+2*j2_int .LE. dmaxi))&
+        ! Ion-ion collision
         TColl_ = TColl_ + moments_i(ip2,ij2,ikx_,iky_,iz_,updatetlevel) &
-            *( nu_ie * CiepjT(bari(p_int,j_int), bari(p2_int,j2_int), ikx_C, iky_C) &
-              +nu_i  * Ciipj (bari(p_int,j_int), bari(p2_int,j2_int), ikx_C, iky_C))
+            * nu_i  * Ciipj (bari(p_int,j_int), bari(p2_int,j2_int), ikx_C, iky_C)
+        IF(KIN_E) & ! Ion-electron collision test
+        TColl_ = TColl_ + moments_i(ip2,ij2,ikx_,iky_,iz_,updatetlevel) &
+            * nu_ie * CiepjT(bari(p_int,j_int), bari(p2_int,j2_int), ikx_C, iky_C)
       ENDDO jloopii
     ENDDO ploopii
 
+    IF(KIN_E) THEN ! Ion-electron collision field
     ploopie: DO ip2 = ips_e,ipe_e ! sum the ion-electron field terms
       p2_int = parray_e(ip2)
       jloopie: DO ij2 = ijs_e,ije_e
@@ -455,6 +461,7 @@ CONTAINS
           *(nu_ie * CiepjF(bari(p_int,j_int), bare(p2_int,j2_int), ikx_C, iky_C))
       ENDDO jloopie
     ENDDO ploopie
+    ENDIF
 
   END SUBROUTINE apply_COSOlver_mat_i
 

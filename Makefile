@@ -114,7 +114,7 @@ $(OBJDIR)/utility_mod.o
  $(OBJDIR)/initial_par_mod.o : src/initial_par_mod.F90 $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/initial_par_mod.F90 -o $@
 
- $(OBJDIR)/geometry_mod.o : src/geometry_mod.F90 $(OBJDIR)/array_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/prec_const_mod.o
+ $(OBJDIR)/geometry_mod.o : src/geometry_mod.F90 $(OBJDIR)/array_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/utility_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/geometry_mod.F90 -o $@
 
  $(OBJDIR)/main.o : src/main.F90 $(OBJDIR)/prec_const_mod.o

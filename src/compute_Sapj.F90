@@ -25,8 +25,9 @@ SUBROUTINE compute_Sapj
   ! Execution time start
   CALL cpu_time(t0_Sapj)
 
-zloop: DO iz = izs,ize
   !!!!!!!!!!!!!!!!!!!! ELECTRON non linear term computation (Sepj)!!!!!!!!!!
+  IF(KIN_E) THEN
+  zloope: DO iz = izs,ize
   ploope: DO ip = ips_e,ipe_e ! Loop over Hermite moments
     p_int = parray_e(ip)
     jloope: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
@@ -118,9 +119,12 @@ zloop: DO iz = izs,ize
     ENDIF GF_CLOSURE_e
     ENDDO jloope
   ENDDO ploope
+ENDDO zloope
+ENDIF
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   !!!!!!!!!!!!!!!!!!!! ION non linear term computation (Sipj)!!!!!!!!!!
+zloopi: DO iz = izs,ize
   ploopi: DO ip = ips_i,ipe_i ! Loop over Hermite moments
 
     ! we check if poly degree is even (eq to index is odd) to spare computation
@@ -214,11 +218,10 @@ zloop: DO iz = izs,ize
     ENDIF GF_CLOSURE_i
     ENDDO jloopi
   ENDDO ploopi
+ENDDO zloopi
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! Execution time END
   CALL cpu_time(t1_Sapj)
   tc_Sapj = tc_Sapj + (t1_Sapj - t0_Sapj)
-
-ENDDO zloop
 END SUBROUTINE compute_Sapj

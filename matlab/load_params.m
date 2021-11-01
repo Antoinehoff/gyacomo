@@ -1,9 +1,12 @@
 CO      = h5readatt(filename,'/data/input','CO');
 % K_N    = h5readatt(filename,'/data/input','eta_n');
 % K_T    = h5readatt(filename,'/data/input','eta_T');
-K_N    = h5readatt(filename,'/data/input','K_n');
-K_T    = h5readatt(filename,'/data/input','K_T');
-K_E    = h5readatt(filename,'/data/input','K_E');
+K_N     = h5readatt(filename,'/data/input','K_n');
+K_T     = h5readatt(filename,'/data/input','K_T');
+K_E     = h5readatt(filename,'/data/input','K_E');
+Q0      = h5readatt(filename,'/data/input','q0');
+SHEAR   = h5readatt(filename,'/data/input','shear');
+EPS     = h5readatt(filename,'/data/input','eps');
 PMAXI   = h5readatt(filename,'/data/input','pmaxi');
 JMAXI   = h5readatt(filename,'/data/input','jmaxi');
 PMAXE   = h5readatt(filename,'/data/input','pmaxe');

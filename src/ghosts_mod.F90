@@ -3,6 +3,7 @@ USE basic
 USE fields, ONLY : moments_e, moments_i
 USE grid
 USE time_integration
+USE model, ONLY : KIN_E
 
 IMPLICIT NONE
 
@@ -17,7 +18,7 @@ SUBROUTINE update_ghosts
 
     IF (num_procs_p .GT. 1) THEN ! Do it only if we share the p
         CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        CALL update_ghosts_p_e
+        IF(KIN_E) CALL update_ghosts_p_e
 
         CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
         CALL update_ghosts_p_i

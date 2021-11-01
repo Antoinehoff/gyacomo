@@ -40,8 +40,6 @@ MODULE array
   ! Geoemtrical operators
   ! Curvature
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z
-  ! kperp array
-  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE, PUBLIC :: kparray ! dimensions: kx, ky, z
   ! Jacobian
   REAL(dp), DIMENSION(:), ALLOCATABLE :: Jacobian ! dimensions: z
   ! Metric
@@ -62,6 +60,8 @@ MODULE array
   ! Kernel function evaluation (ij,ikx,iky,iz)
   REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: kernel_e
   REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: kernel_i
+  ! Poisson operator (ikx,iky,iz)
+  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_poisson_op
 
   !! Diagnostics
   ! Gyrocenter density for electron and ions (ikx,iky,iz)

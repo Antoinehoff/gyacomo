@@ -71,7 +71,7 @@ SUBROUTINE compute_radial_heatflux
     USE fields,           ONLY : moments_i, moments_e, phi
     USE array,            ONLY : dens_e, dens_i, kernel_e, kernel_i
     USE time_integration, ONLY : updatetlevel
-    USE model, ONLY : q_e, q_i, tau_e, tau_i
+    USE model, ONLY : q_e, q_i, tau_e, tau_i, KIN_E
     IMPLICIT NONE
     COMPLEX(dp) :: hflux_local
     REAL(dp)    :: ky_, buffer(1:2), j_dp
@@ -91,6 +91,7 @@ SUBROUTINE compute_radial_heatflux
                  * (moments_i(ip0_i,ij,ikx,iky,iz,updatetlevel)+q_i/tau_i*kernel_i(ij,ikx,iky,iz)*phi(ikx,iky,iz)) &
                 + SQRT2/3._dp * kernel_i(ij,ikx,iky,iz) * moments_i(ip2_i,ij,ikx,iky,iz,updatetlevel))
               ENDDO
+              IF(KIN_E) THEN
               DO ij = ijs_e, ije_e
                 j_dp = REAL(ij-1,dp)
                 hflux_local = hflux_local - imagu*ky_*CONJG(phi(ikx,iky,iz))&
@@ -101,6 +102,7 @@ SUBROUTINE compute_radial_heatflux
                                   +q_e/tau_e * kernel_e(  ij,ikx,iky,iz) * phi(ikx,iky,iz)) &
                   +SQRT2/3._dp * kernel_e(ij,ikx,iky,iz) *                                                                                                     moments_e(ip2_e,ij,ikx,iky,iz,updatetlevel))
               ENDDO
+              ENDIF
             ENDDO
           ENDDO
         ENDDO
@@ -134,10 +136,11 @@ SUBROUTINE compute_nadiab_moments
   USE fields,           ONLY : moments_i, moments_e, phi
   USE array,            ONLY : kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i
   USE time_integration, ONLY : updatetlevel
-  USE model,            ONLY : qe_taue, qi_taui
+  USE model,            ONLY : qe_taue, qi_taui, KIN_E
   implicit none
 
   ! Add non-adiabatique term
+  IF(KIN_E) THEN
   DO ip=ipsg_e,ipeg_e
     IF(parray_e(ip) .EQ. 0) THEN
       DO ij=ijsg_e,ijeg_e
@@ -150,6 +153,7 @@ SUBROUTINE compute_nadiab_moments
       = moments_e(ip,ijsg_e:ijeg_e,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel)
     ENDIF
   ENDDO
+  ENDIF
   ! Add non-adiabatique term
   DO ip=ipsg_i,ipeg_i
     IF(parray_i(ip) .EQ. 0) THEN
@@ -171,20 +175,22 @@ SUBROUTINE compute_density
   USE fields,           ONLY : moments_i, moments_e, phi
   USE array,            ONLY : dens_e, dens_i, kernel_e, kernel_i
   USE time_integration, ONLY : updatetlevel
-  USE model, ONLY : q_e, q_i, tau_e, tau_i
+  USE model, ONLY : q_e, q_i, tau_e, tau_i, KIN_E
   IMPLICIT NONE
 
-  IF( (ips_i .EQ. 1) .AND. (ips_e .EQ. 1) ) THEN
+  IF ( (ips_e .EQ. ip0_e) .AND. (ips_i .EQ. ip0_i) ) THEN
       ! Loop to compute dens_i = sum_j kernel_j Ni0j at each k
       DO iky = ikys,ikye
         DO ikx = ikxs,ikxe
           DO iz = izs,ize
+            IF(KIN_E) THEN
             ! electron density
             dens_e(ikx,iky,iz) = 0._dp
             DO ij = ijs_e, ije_e
                 dens_e(ikx,iky,iz) = dens_e(ikx,iky,iz) + kernel_e(ij,ikx,iky,iz) * &
                  (moments_e(ip0_e,ij,ikx,iky,iz,updatetlevel)+q_e/tau_e*kernel_e(ij,ikx,iky,iz)*phi(ikx,iky,iz))
             ENDDO
+            ENDIF
             ! ion density
             dens_i(ikx,iky,iz) = 0._dp
             DO ij = ijs_i, ije_i
@@ -195,6 +201,7 @@ SUBROUTINE compute_density
         ENDDO
       ENDDO
   ENDIF
+  IF(KIN_E)&
   CALL manual_3D_bcast(dens_e(ikxs:ikxe,ikys:ikye,izs:ize))
   CALL manual_3D_bcast(dens_i(ikxs:ikxe,ikys:ikye,izs:ize))
 END SUBROUTINE compute_density
@@ -204,7 +211,7 @@ SUBROUTINE compute_temperature
   USE fields,           ONLY : moments_i, moments_e, phi
   USE array,            ONLY : temp_e, temp_i, kernel_e, kernel_i
   USE time_integration, ONLY : updatetlevel
-  USE model, ONLY : q_e, q_i, tau_e, tau_i
+  USE model, ONLY : q_e, q_i, tau_e, tau_i, KIN_E
   IMPLICIT NONE
   REAL(dp)    :: j_dp
   COMPLEX(dp) :: Tperp, Tpar
@@ -215,6 +222,7 @@ SUBROUTINE compute_temperature
         DO ikx = ikxs,ikxe
           DO iz = izs,ize
             ! electron temperature
+            IF(KIN_E) THEN
             temp_e(ikx,iky,iz) = 0._dp
             DO ij = ijs_e, ije_e
               j_dp = REAL(ij-1,dp)
@@ -223,7 +231,7 @@ SUBROUTINE compute_temperature
                  * (moments_e(ip0_e,ij,ikx,iky,iz,updatetlevel)+q_e/tau_e*kernel_e(ij,ikx,iky,iz)*phi(ikx,iky,iz)) &
                 + SQRT2/3._dp * kernel_e(ij,ikx,iky,iz) * moments_e(ip2_e,ij,ikx,iky,iz,updatetlevel)
             ENDDO
-
+            ENDIF
             ! ion temperature
             temp_i(ikx,iky,iz) = 0._dp
             DO ij = ijs_i, ije_i
@@ -237,6 +245,7 @@ SUBROUTINE compute_temperature
         ENDDO
       ENDDO
   ENDIF
+  IF(KIN_E)&
   CALL manual_3D_bcast(temp_e(ikxs:ikxe,ikys:ikye,izs:ize))
   CALL manual_3D_bcast(temp_i(ikxs:ikxe,ikys:ikye,izs:ize))
 END SUBROUTINE compute_temperature

@@ -21,7 +21,7 @@ subroutine auxval
   ENDIF
   ! Init the grids
   CALL set_pgrid ! parallel kin (MPI distributed)
-  
+
   CALL set_jgrid ! perp kin
 
   CALL set_kxgrid ! radial modes (MPI distributed by FFTW)
@@ -37,6 +37,8 @@ subroutine auxval
   CALL compute_lin_coeff ! precompute coeff for lin equation and geometry
 
   CALL evaluate_kernels ! precompute the kernels
+
+  CALL evaluate_poisson_op ! precompute the kernels
 
   IF ( NON_LIN ) THEN;
     CALL build_dnjs_table ! precompute the Laguerre nonlin product coeffs

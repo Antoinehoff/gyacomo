@@ -8,9 +8,11 @@ module geometry
   use array
   use fields
   use basic
+  use utility, ONLY: simpson_rule_z
 
 implicit none
   public
+  COMPLEX(dp), PROTECTED :: iInt_Jacobian
 
 contains
 
@@ -18,6 +20,7 @@ contains
     ! evalute metrix, elements, jacobian and gradient
     implicit none
     REAL(dp) :: kx,ky
+    COMPLEX(dp), DIMENSION(izs:ize) :: integrant
     !
     IF( (Ny .EQ. 1) .AND. (Nz .EQ. 1)) THEN !1D perp linear run
       IF( my_id .eq. 0 ) WRITE(*,*) '1D perpendicular geometry'
@@ -41,6 +44,11 @@ contains
           ENDDO
        ENDDO
     ENDDO
+    !
+    ! Compute the inverse z integrated Jacobian (useful for flux averaging)
+    integrant = Jacobian ! Convert into complex array
+    CALL simpson_rule_z(integrant,iInt_Jacobian)
+    iInt_Jacobian = 1._dp/iInt_Jacobian ! reverse it
   END SUBROUTINE eval_magnetic_geometry
   !
   !--------------------------------------------------------------------------------

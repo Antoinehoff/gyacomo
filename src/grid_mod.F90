@@ -57,6 +57,7 @@ MODULE grid
   ! Grids containing position in fourier space
   REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kxarray, kxarray_full
   REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kyarray, kyarray_full
+  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE, PUBLIC :: kparray
   REAL(dp), PUBLIC, PROTECTED ::  deltakx, deltaky, kx_max, ky_max!, kp_max
   REAL(dp), PUBLIC, PROTECTED ::  local_kxmax, local_kymax
   INTEGER,  PUBLIC, PROTECTED ::  ikxs, ikxe, ikys, ikye!, ikps, ikpe

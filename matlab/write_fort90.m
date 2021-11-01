@@ -49,6 +49,7 @@ fprintf(fid,['  CO      = ', num2str(MODEL.CO),'\n']);
 fprintf(fid,['  CLOS    = ', num2str(MODEL.CLOS),'\n']);
 fprintf(fid,['  NL_CLOS = ', num2str(MODEL.NL_CLOS),'\n']);
 fprintf(fid,['  NON_LIN = ', MODEL.NON_LIN,'\n']);
+fprintf(fid,['  KIN_E   = ', MODEL.KIN_E,'\n']);
 fprintf(fid,['  mu      = ', num2str(MODEL.mu),'\n']);
 fprintf(fid,['  mu_p    = ', num2str(MODEL.mu_p),'\n']);
 fprintf(fid,['  mu_j    = ', num2str(MODEL.mu_j),'\n']);

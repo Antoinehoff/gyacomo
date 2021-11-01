@@ -10,6 +10,7 @@ MODULE model
   INTEGER,  PUBLIC, PROTECTED :: NL_CLOS =  0         ! nonlinear truncation method
   INTEGER,  PUBLIC, PROTECTED ::    KERN =  0         ! Kernel model
   LOGICAL,  PUBLIC, PROTECTED :: NON_LIN =  .true.    ! To turn on non linear bracket term
+  LOGICAL,  PUBLIC, PROTECTED ::   KIN_E =  .true.    ! Simulate kinetic electron (adiabatic otherwise)
   REAL(dp), PUBLIC, PROTECTED ::      mu =  0._dp     ! spatial      Hyperdiffusivity coefficient (for num. stability)
   REAL(dp), PUBLIC, PROTECTED ::    mu_p =  0._dp     ! kinetic para hyperdiffusivity coefficient (for num. stability)
   REAL(dp), PUBLIC, PROTECTED ::    mu_j =  0._dp     ! kinetic perp hyperdiffusivity coefficient (for num. stability)
@@ -38,7 +39,7 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED :: sigmae2_taue_o2      ! factor of the Kernel argument
   REAL(dp), PUBLIC, PROTECTED :: sigmai2_taui_o2      !
   REAL(dp), PUBLIC, PROTECTED :: sqrt_sigmae2_taue_o2      ! factor of the Kernel argument
-  REAL(dp), PUBLIC, PROTECTED :: sqrt_sigmai2_taui_o2  
+  REAL(dp), PUBLIC, PROTECTED :: sqrt_sigmai2_taui_o2
   REAL(dp), PUBLIC, PROTECTED :: nu_e,  nu_i          ! electron-ion, ion-ion collision frequency
   REAL(dp), PUBLIC, PROTECTED :: nu_ee, nu_ie         ! e-e, i-e coll. frequ.
   REAL(dp), PUBLIC, PROTECTED :: qe2_taue, qi2_taui   ! factor of the gammaD sum
@@ -53,7 +54,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /MODEL_PAR/ CO, CLOS, NL_CLOS, KERN, NON_LIN, mu, mu_p, mu_j, nu, tau_e, tau_i, sigma_e, sigma_i, &
+    NAMELIST /MODEL_PAR/ CO, CLOS, NL_CLOS, KERN, NON_LIN, KIN_E, mu, mu_p, mu_j, nu, tau_e, tau_i, sigma_e, sigma_i, &
                          q_e, q_i, K_n, K_T, K_E, GradB, CurvB, lambdaD
 
     READ(lu_in,model_par)
@@ -102,6 +103,7 @@ CONTAINS
     CALL attach(fidres, TRIM(str),      "CLOS",    CLOS)
     CALL attach(fidres, TRIM(str),      "KERN",    KERN)
     CALL attach(fidres, TRIM(str),   "NON_LIN", NON_LIN)
+    CALL attach(fidres, TRIM(str),     "KIN_E",   KIN_E)
     CALL attach(fidres, TRIM(str),        "nu",      nu)
     CALL attach(fidres, TRIM(str),        "mu",      mu)
     CALL attach(fidres, TRIM(str),     "tau_e",   tau_e)
@@ -110,9 +112,9 @@ CONTAINS
     CALL attach(fidres, TRIM(str),   "sigma_i", sigma_i)
     CALL attach(fidres, TRIM(str),       "q_e",     q_e)
     CALL attach(fidres, TRIM(str),       "q_i",     q_i)
-    CALL attach(fidres, TRIM(str),   "K_n", K_n)
-    CALL attach(fidres, TRIM(str),   "K_T", K_T)
-    CALL attach(fidres, TRIM(str), "K_E", K_E)
+    CALL attach(fidres, TRIM(str),       "K_n",     K_n)
+    CALL attach(fidres, TRIM(str),       "K_T",     K_T)
+    CALL attach(fidres, TRIM(str),       "K_E",     K_E)
     CALL attach(fidres, TRIM(str),   "lambdaD", lambdaD)
   END SUBROUTINE model_outputinputs
 

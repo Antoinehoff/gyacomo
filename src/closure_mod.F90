@@ -1,7 +1,7 @@
 module closure
 ! Contains the routines to define closures
 USE basic
-USE model,  ONLY: CLOS, tau_e, tau_i, q_e, q_i, nu
+USE model,  ONLY: CLOS, tau_e, tau_i, q_e, q_i, nu, KIN_E
 USE grid
 USE array,  ONLY: kernel_e,  kernel_i
 USE fields, ONLY: moments_e, moments_i
@@ -31,12 +31,14 @@ SUBROUTINE apply_closure_model
     DO ikx = ikxs,ikxe
       DO iky = ikys,ikye
         DO iz = izs,ize
+          IF(KIN_E) THEN
           DO ip = ipsg_e,ipeg_e
             DO ij = ijsg_e,ijeg_e
               IF ( parray_e(ip)+2*jarray_e(ip) .GT. dmaxe) &
               moments_e(ip,ij,ikx,iky,iz,updatetlevel) = 0._dp
             ENDDO
           ENDDO
+          ENDIF
           DO ip = ipsg_i,ipeg_i
             DO ij = ijsg_i,ijeg_i
               IF ( parray_i(ip)+2*jarray_i(ip) .GT. dmaxi) &
@@ -65,6 +67,7 @@ SUBROUTINE ghosts_truncation
     DO ikx = ikxs,ikxe
       DO iky = ikys,ikye
         DO iz = izs,ize
+          IF(KIN_E) THEN
           DO ip = ipsg_e,ipeg_e
             moments_e(ip,ijsg_e,ikx,iky,iz,updatetlevel) = 0._dp
             moments_e(ip,ijeg_e,ikx,iky,iz,updatetlevel) = 0._dp
@@ -79,7 +82,7 @@ SUBROUTINE ghosts_truncation
           ENDDO
           kernel_e(ijsg_e,ikx,iky,iz)      = 0._dp
           kernel_e(ijeg_e,ikx,iky,iz)      = 0._dp
-
+          ENDIF
           DO ip = ipsg_i,ipeg_i
             moments_i(ip,ijsg_i,ikx,iky,iz,updatetlevel) = 0._dp
             moments_i(ip,ijeg_i,ikx,iky,iz,updatetlevel) = 0._dp

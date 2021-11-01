@@ -13,14 +13,14 @@ K_T     = 0.0;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 %% GRID PARAMETERS
-Nx      = 100;     % real space x-gridpoints
-Ny      = 1;     %     ''     y-gridpoints
-Lx      = 150;     % Size of the squared frequency domain
-Ly      = 1;     % Size of the squared frequency domain
-Nz      = 1;      % number of perpendicular planes (parallel grid)
-q0      = 1.0;    % safety factor
-shear   = 0.0;    % magnetic shear
-eps     = 0.0;    % inverse aspect ratio
+NX      = 100;     % real space x-gridpoints
+NY      = 1;     %     ''     y-gridpoints
+LX      = 150;     % Size of the squared frequency domain
+LY      = 1;     % Size of the squared frequency domain
+NZ      = 1;      % number of perpendicular planes (parallel grid)
+Q0      = 1.0;    % safety factor
+SHEAR   = 0.0;    % magnetic shear
+EPS     = 0.0;    % inverse aspect ratio
 %% TIME PARMETERS
 TMAX    = 100;  % Maximal time unit
 DT      = 1e-2;   % Time step
@@ -31,8 +31,9 @@ SPS5D   = 1;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
 %% OPTIONS
-SIMID   = 'test_4.1';  % Name of the simulation
+SIMID   = 'Linear_entropy_mode';  % Name of the simulation
 NON_LIN = 0;   % activate non-linearity (is cancelled if KXEQ0 = 1)
+KIN_E   = 1;
 % Collision operator
 % (0:L.Bernstein, 1:Dougherty, 2:Sugama, 3:Pitch angle, 4:Full Couloumb ; +/- for GK/DK)
 CO      = 2;
@@ -51,7 +52,7 @@ W_NAPJ   = 1; W_SAPJ   = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % unused
 HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
-kmax    = Nx*pi/Lx;% Highest fourier mode
+kmax    = NX*pi/LX;% Highest fourier mode
 NU_HYP  = 0.0;    % Hyperdiffusivity coefficient
 MU      = NU_HYP/(HD_CO*kmax)^4; % Hyperdiffusivity coefficient
 INIT_BLOB = 0; WIPE_TURB = 0; WIPE_ZF = 0;
@@ -76,9 +77,9 @@ mup_ = MU_P;
 muj_ = MU_J;
 Nparam = numel(PA);
 param_name = 'PJ';
-gamma_Ni00 = zeros(Nparam,floor(Nx/2)+1);
-gamma_Nipj = zeros(Nparam,floor(Nx/2)+1);
-gamma_phi  = zeros(Nparam,floor(Nx/2)+1);
+gamma_Ni00 = zeros(Nparam,floor(NX/2)+1);
+gamma_Nipj = zeros(Nparam,floor(NX/2)+1);
+gamma_phi  = zeros(Nparam,floor(NX/2)+1);
 for i = 1:Nparam
     % Change scan parameter
     PMAXE = PA(i); PMAXI = PA(i);
@@ -96,7 +97,7 @@ for i = 1:Nparam
     %%
     filename = ['../results/',SIMID,'/',PARAMS,'/outputs_00.h5'];
     load_results
-    for ikx = 1:Nx/2+1
+    for ikx = 1:NX/2+1
         tend   = max(Ts3D(abs(Ni00(ikx,1,1,:))~=0));
         tstart   = 0.6*tend;
         [~,itstart] = min(abs(Ts3D-tstart));
@@ -138,10 +139,9 @@ plt = @(x) x;
     end
     grid on; xlabel('$k_y\rho_s^{R}$'); ylabel('$\gamma(\phi)L_\perp/c_s$'); xlim([0.0,max(kx)]);
     title(['$\kappa_N=',num2str(K_N),'$, $\nu_{',CONAME,'}=',num2str(NU),'$'])
-%     title(['$\nabla N = 0$', ', $\nu=',num2str(NU),'$'])
     legend('show'); %xlim([0.01,10])
-saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.fig']);
-saveas(fig,[SIMDIR,'gamma_Ni_vs_',param_name,'_',PARAMS,'.png']);
+saveas(fig,[SIMDIR,'/',PARAMS,'/gamma_vs_',param_name,'_',PARAMS,'.fig']);
+saveas(fig,[SIMDIR,'/',PARAMS,'/gamma_vs_',param_name,'_',PARAMS,'.png']);
 end
 end
 if 0

@@ -109,16 +109,19 @@ SUBROUTINE diagnose(kstep)
       IF (write_phi) CALL creatg(fidres, "/data/var3d/phi", "phi")
 
       IF (write_Na00) THEN
+       IF(KIN_E)&
        CALL creatg(fidres, "/data/var3d/Ne00", "Ne00")
        CALL creatg(fidres, "/data/var3d/Ni00", "Ni00")
       ENDIF
 
       IF (write_dens) THEN
+        IF(KIN_E)&
        CALL creatg(fidres, "/data/var3d/dens_e", "dens_e")
        CALL creatg(fidres, "/data/var3d/dens_i", "dens_i")
       ENDIF
 
       IF (write_temp) THEN
+        IF(KIN_E)&
        CALL creatg(fidres, "/data/var3d/temp_e", "temp_e")
        CALL creatg(fidres, "/data/var3d/temp_i", "temp_i")
       ENDIF
@@ -136,11 +139,13 @@ SUBROUTINE diagnose(kstep)
        CALL creatd(fidres, rank, dims, "/data/var5d/cstep", "iteration number")
 
        IF (write_Napj) THEN
+         IF(KIN_E)&
         CALL creatg(fidres, "/data/var5d/moments_e", "moments_e")
         CALL creatg(fidres, "/data/var5d/moments_i", "moments_i")
        ENDIF
 
        IF (write_Sapj) THEN
+         IF(KIN_E)&
         CALL creatg(fidres, "/data/var5d/moments_e", "Sipj")
         CALL creatg(fidres, "/data/var5d/moments_i", "Sepj")
        ENDIF
@@ -291,6 +296,7 @@ SUBROUTINE diagnose_0d
   USE diagnostics_par
   USE prec_const
   USE processing
+  USE model, ONLY: KIN_E
 
   IMPLICIT NONE
   ! Time measurement data
@@ -335,6 +341,7 @@ SUBROUTINE diagnose_2d
   USE diagnostics_par
   USE prec_const
   USE processing
+  USE model, ONLY: KIN_E
 
   IMPLICIT NONE
 
@@ -389,6 +396,7 @@ SUBROUTINE diagnose_3d
   USE diagnostics_par
   USE prec_const
   USE processing
+  USE model, ONLY: KIN_E
 
   IMPLICIT NONE
 
@@ -403,26 +411,30 @@ SUBROUTINE diagnose_3d
   IF (write_phi) CALL write_field3d(phi (:,:,:), 'phi')
 
   IF (write_Na00) THEN
-    IF ( (ips_e .EQ. 1) .AND. (ips_i .EQ. 1) ) THEN
+    IF(KIN_E)THEN
+    IF (ips_e .EQ. 1) THEN
       Ne00(ikxs:ikxe,ikys:ikye,izs:ize) = moments_e(ips_e,1,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel)
-      Ni00(ikxs:ikxe,ikys:ikye,izs:ize) = moments_i(ips_e,1,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel)
     ENDIF
-
     CALL manual_3D_bcast(Ne00(ikxs:ikxe,ikys:ikye,izs:ize))
     CALL write_field3d(Ne00(ikxs:ikxe,ikys:ikye,izs:ize), 'Ne00')
-
+    ENDIF
+    IF (ips_i .EQ. 1) THEN
+      Ni00(ikxs:ikxe,ikys:ikye,izs:ize) = moments_i(ips_e,1,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel)
+    ENDIF
     CALL manual_3D_bcast(Ni00(ikxs:ikxe,ikys:ikye,izs:ize))
     CALL write_field3d(Ni00(ikxs:ikxe,ikys:ikye,izs:ize), 'Ni00')
   ENDIF
 
   IF (write_dens) THEN
     CALL compute_density
+    IF(KIN_E)&
     CALL write_field3d(dens_e(ikxs:ikxe,ikys:ikye,izs:ize), 'dens_e')
     CALL write_field3d(dens_i(ikxs:ikxe,ikys:ikye,izs:ize), 'dens_i')
   ENDIF
 
   IF (write_temp) THEN
     CALL compute_temperature
+    IF(KIN_E)&
     CALL write_field3d(temp_e(ikxs:ikxe,ikys:ikye,izs:ize), 'temp_e')
     CALL write_field3d(temp_i(ikxs:ikxe,ikys:ikye,izs:ize), 'temp_i')
   ENDIF
@@ -463,6 +475,7 @@ SUBROUTINE diagnose_5d
    USE time_integration
    USE diagnostics_par
    USE prec_const
+   USE model, ONLY: KIN_E
    IMPLICIT NONE
 
    CALL append(fidres,  "/data/var5d/time",           time,ionode=0)
@@ -472,11 +485,13 @@ SUBROUTINE diagnose_5d
    CALL attach(fidres,"/data/var5d/" , "frames", iframe5d)
 
    IF (write_Napj) THEN
+     IF(KIN_E)&
     CALL write_field5d_e(moments_e(ips_e:ipe_e,ijs_e:ije_e,:,:,:,updatetlevel), 'moments_e')
     CALL write_field5d_i(moments_i(ips_i:ipe_i,ijs_i:ije_i,:,:,:,updatetlevel), 'moments_i')
    ENDIF
 
    IF (write_Sapj) THEN
+     IF(KIN_E)&
      CALL write_field5d_e(Sepj(ips_e:ipe_e,ijs_e:ije_e,:,:,:), 'Sepj')
      CALL write_field5d_i(Sipj(ips_i:ipe_i,ijs_i:ije_i,:,:,:), 'Sipj')
    ENDIF

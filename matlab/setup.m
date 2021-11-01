@@ -5,20 +5,22 @@ GRID.pmaxe = PMAXE;  % Electron Hermite moments
 GRID.jmaxe = JMAXE;  % Electron Laguerre moments
 GRID.pmaxi = PMAXI;  % Ion Hermite moments
 GRID.jmaxi = JMAXI;  % Ion Laguerre moments
-GRID.Nx    = Nx; % x grid resolution
-GRID.Lx    = Lx; % x length
-GRID.Ny    = Ny; % y ''
-GRID.Ly    = Ly; % y ''
-GRID.Nz    = Nz;    % z resolution
-GRID.q0    = q0;    % q factor
-GRID.shear = shear; % shear
-GRID.eps   = eps;   % inverse aspect ratio
+GRID.Nx    = NX; % x grid resolution
+GRID.Lx    = LX; % x length
+GRID.Ny    = NY; % y ''
+GRID.Ly    = LY; % y ''
+GRID.Nz    = NZ;    % z resolution
+GRID.q0    = Q0;    % q factor
+GRID.shear = SHEAR; % shear
+GRID.eps   = EPS;   % inverse aspect ratio
 
 % Model parameters
 MODEL.CO      = CO;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
 MODEL.CLOS    = CLOS;
 MODEL.NL_CLOS = NL_CLOS;
 if NON_LIN; MODEL.NON_LIN = '.true.'; else; MODEL.NON_LIN = '.false.';end;
+MODEL.KIN_E = KIN_E;
+if KIN_E; MODEL.KIN_E = '.true.'; else; MODEL.KIN_E = '.false.';end;
 MODEL.mu      = MU;
 MODEL.mu_p    = MU_P;
 MODEL.mu_j    = MU_J;
@@ -98,28 +100,30 @@ coll_   = sprintf(coll_,NU);
 % nonlinear
 lin_ = [];
 if ~NON_LIN; lin_ = '_lin'; end
+adiabe_ = [];
+if ~KIN_E; adiabe_ = '_adiabe'; end
 % resolution and boxsize
 res_ = [num2str(GRID.Nx),'x',num2str(GRID.Ny)];
-if  (Lx ~= Ly)
-    geo_   = ['_Lx_',num2str(Lx),'_Ly_',num2str(Ly)];
+if  (LX ~= LY)
+    geo_   = ['_Lx_',num2str(LX),'_Ly_',num2str(LY)];
 else
-    geo_   = ['_L_',num2str(Lx)];
+    geo_   = ['_L_',num2str(LX)];
 end
-if (Nz > 1)  %3D case
-    res_ = [res_,'x',num2str(GRID.Nz)];
-    if abs(q0) > 0
-        geo_   = [geo_,'_q0_',num2str(q0)];
+if (NZ > 1)  %3D case
+    res_ = [res_,'x',num2str(NZ)];
+    if abs(Q0) > 0
+        geo_   = [geo_,'_q0_',num2str(Q0)];
     end
-    if abs(eps) > 0
-       geo_   = [geo_,'_e_',num2str(eps)];
+    if abs(EPS) > 0
+       geo_   = [geo_,'_e_',num2str(EPS)];
     end
-    if abs(shear) > 0
-       geo_   = [geo_,'_s_',num2str(shear)];
+    if abs(SHEAR) > 0
+       geo_   = [geo_,'_s_',num2str(SHEAR)];
     end
 end
 % put everything together in the param character chain
 u_ = '_'; % underscore variable
-PARAMS = [res_,HLdeg_,geo_,drives_,coll_,lin_];
+PARAMS = [res_,HLdeg_,geo_,drives_,coll_,lin_,adiabe_];
 BASIC.RESDIR  = [SIMDIR,PARAMS,'/'];
 BASIC.MISCDIR = ['/misc/HeLaZ_outputs/',SIMDIR(4:end),PARAMS,'/'];
 BASIC.PARAMS = PARAMS;

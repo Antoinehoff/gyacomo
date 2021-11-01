@@ -6,15 +6,10 @@ MODULE numerics
     USE coeff
     implicit none
 
-    PUBLIC :: compute_derivatives, build_dnjs_table, evaluate_kernels, compute_lin_coeff
+    PUBLIC :: build_dnjs_table, evaluate_kernels, evaluate_poisson_op, compute_lin_coeff
     PUBLIC :: wipe_turbulence, wipe_zonalflow
 
 CONTAINS
-
-! Compute the 2D particle temperature for electron and ions (sum over Laguerre)
-SUBROUTINE compute_derivatives
-
-END SUBROUTINE compute_derivatives
 
 !******************************************************************************!
 !!!!!!! Build the Laguerre-Laguerre coupling coefficient table for nonlin
@@ -54,9 +49,10 @@ END SUBROUTINE build_dnjs_table
 !******************************************************************************!
 SUBROUTINE evaluate_kernels
   USE basic
-  USE array, Only : kernel_e, kernel_i, kparray
+  USE array, Only : kernel_e, kernel_i
   USE grid
-  USE model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, lambdaD, CLOS, sigmae2_taue_o2, sigmai2_taui_o2
+  USE model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, &
+                    lambdaD, CLOS, sigmae2_taue_o2, sigmai2_taui_o2, KIN_E
   IMPLICIT NONE
   INTEGER    :: j_int
   REAL(dp)   :: j_dp, y_, kp2_, kx_, ky_
@@ -65,12 +61,14 @@ DO ikx = ikxs,ikxe
 DO iky = ikys,ikye
 DO iz = izs,ize
   !!!!! Electron kernels !!!!!
+  IF(KIN_E) THEN
   DO ij = ijsg_e, ijeg_e
     j_int = jarray_e(ij)
     j_dp  = REAL(j_int,dp)
     y_    =  sigmae2_taue_o2 * kparray(ikx,iky,iz)**2
     kernel_e(ij,ikx,iky,iz) = y_**j_int*EXP(-y_)/GAMMA(j_dp+1._dp)!factj
   ENDDO
+  ENDIF
   !!!!! Ion kernels !!!!!
   DO ij = ijsg_i, ijeg_i
     j_int = jarray_i(ij)
@@ -85,10 +83,55 @@ ENDDO
 END SUBROUTINE evaluate_kernels
 !******************************************************************************!
 
+!******************************************************************************!
+!!!!!!! Evaluate polarisation operator for Poisson equation
+!******************************************************************************!
+SUBROUTINE evaluate_poisson_op
+  USE basic
+  USE array, Only : kernel_e, kernel_i, inv_poisson_op
+  USE grid
+  USE model, ONLY : tau_e, tau_i, q_e, q_i, KIN_E
+  IMPLICIT NONE
+  REAL(dp)    :: pol_i, pol_e     ! (Z_a^2/tau_a (1-sum_n kernel_na^2))
+  INTEGER     :: ini,ine
+
+  kxloop: DO ikx = ikxs,ikxe
+  kyloop: DO iky = ikys,ikye
+  zloop:  DO iz  =  izs,ize
+  IF( (kxarray(ikx).EQ.0._dp) .AND. (kyarray(iky).EQ.0._dp) ) THEN
+      inv_poisson_op(ikx, iky, iz) =  0._dp
+    ELSE
+    !!!!!!!!!!!!!!!!! Ion contribution
+    ! loop over n only if the max polynomial degree
+    pol_i = 0._dp
+    DO ini=1,jmaxi+1
+      pol_i = pol_i  + qi2_taui*kernel_i(ini,ikx,iky,iz)**2 ! ... sum recursively ...
+    END DO
+    !!!!!!!!!!!!! Electron contribution\
+    pol_e = 0._dp
+    ! Kinetic model
+    IF (KIN_E) THEN
+      ! loop over n only if the max polynomial degree
+      DO ine=1,jmaxe+1 ! ine = n+1
+        pol_e = pol_e  + qe2_taue*kernel_e(ine,ikx,iky,iz)**2 ! ... sum recursively ...
+      END DO
+    ! Adiabatic model
+    ELSE
+      pol_e = 1._dp - qe2_taue
+    ENDIF
+    inv_poisson_op(ikx, iky, iz) =  1._dp/(qe2_taue + qi2_taui - pol_i - pol_e)
+  ENDIF
+  END DO zloop
+  END DO kyloop
+  END DO kxloop
+
+END SUBROUTINE evaluate_poisson_op
+!******************************************************************************!
+
 SUBROUTINE compute_lin_coeff
   USE array
   USE model, ONLY: taue_qe, taui_qi, sqrtTaue_qe, sqrtTaui_qi, &
-                   K_T, K_n, CurvB, GradB
+                   K_T, K_n, CurvB, GradB, KIN_E
   USE prec_const
   USE grid,  ONLY: parray_e, parray_i, jarray_e, jarray_i, &
                    ip,ij, ips_e,ipe_e, ips_i,ipe_i, ijs_e,ije_e, ijs_i,ije_i
@@ -97,6 +140,7 @@ SUBROUTINE compute_lin_coeff
   REAL(dp)    :: p_dp, j_dp
   REAL(dp)    :: kx, ky, z
   !! Electrons linear coefficients for moment RHS !!!!!!!!!!
+  IF(KIN_E)THEN
   DO ip = ips_e, ipe_e
     p_int= parray_e(ip)   ! Hermite degree
     p_dp = REAL(p_int,dp) ! REAL of Hermite degree
@@ -133,6 +177,7 @@ SUBROUTINE compute_lin_coeff
     xnepjp1(ij) = -taue_qe * GradB * (j_dp + 1._dp)
     xnepjm1(ij) = -taue_qe * GradB * j_dp
   ENDDO
+  ENDIF
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !! Ions linear coefficients for moment RHS !!!!!!!!!!
   DO ip = ips_i, ipe_i

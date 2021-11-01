@@ -9,7 +9,7 @@ SUBROUTINE stepon
   USE initial_par, ONLY: WIPE_ZF, WIPE_TURB
   USE ghosts
   USE grid
-  USE model
+  USE model, ONLY : NON_LIN, KIN_E
   use prec_const
   USE time_integration
   USE numerics, ONLY: wipe_zonalflow, wipe_turbulence
@@ -25,7 +25,7 @@ SUBROUTINE stepon
    !----- BEFORE: All fields are updated for step = n
       ! Compute right hand side from current fields
       ! N_rhs(N_n, nadia_n, phi_n, S_n, Tcoll_n)
-      CALL moments_eq_rhs_e
+      IF(KIN_E) CALL moments_eq_rhs_e
       CALL moments_eq_rhs_i
       ! ---- step n -> n+1 transition
       ! Advance from updatetlevel to updatetlevel+1 (according to num. scheme)
@@ -69,11 +69,13 @@ SUBROUTINE stepon
         mlend=.FALSE.
         IF(.NOT.nlend) THEN
            mlend=mlend .or. checkfield(phi,' phi')
+           IF(KIN_E) THEN
            DO ip=ips_e,ipe_e
              DO ij=ijs_e,ije_e
               mlend=mlend .or. checkfield(moments_e(ip,ij,:,:,:,updatetlevel),' moments_e')
              ENDDO
            ENDDO
+           ENDIF
            DO ip=ips_i,ipe_i
              DO ij=ijs_i,ije_i
               mlend=mlend .or. checkfield(moments_i(ip,ij,:,:,:,updatetlevel),' moments_i')
@@ -88,6 +90,7 @@ SUBROUTINE stepon
       END SUBROUTINE checkfield_all
 
       SUBROUTINE anti_aliasing
+        IF(KIN_E)THEN
         DO ip=ips_e,ipe_e
           DO ij=ijs_e,ije_e
             DO ikx=ikxs,ikxe
@@ -99,6 +102,7 @@ SUBROUTINE stepon
             END DO
           END DO
         END DO
+        ENDIF
         DO ip=ips_i,ipe_i
           DO ij=ijs_i,ije_i
             DO ikx=ikxs,ikxe
@@ -115,6 +119,7 @@ SUBROUTINE stepon
       SUBROUTINE enforce_symmetry ! Force X(k) = X(N-k)* complex conjugate symmetry
         IF ( contains_kx0 ) THEN
           ! Electron moments
+          IF(KIN_E) THEN
           DO ip=ips_e,ipe_e
             DO ij=ijs_e,ije_e
               DO iz=izs,ize
@@ -126,6 +131,7 @@ SUBROUTINE stepon
               END DO
             END DO
           END DO
+          ENDIF
           ! Ion moments
           DO ip=ips_i,ipe_i
             DO ij=ijs_i,ije_i

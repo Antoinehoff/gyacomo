@@ -20,20 +20,22 @@ CONTAINS
     USE time_integration
     USE grid
     use prec_const
-    USE model,  ONLY: CLOS
+    USE model,  ONLY: CLOS, KIN_E
     use fields, ONLY: moments_e,     moments_i
     use array,  ONLY: moments_rhs_e, moments_rhs_i
     IMPLICIT NONE
     INTEGER :: p_int, j_int
 
     CALL cpu_time(t0_adv_field)
-    DO ip=ips_e,ipe_e
-      p_int = parray_e(ip)
-      DO ij=ijs_e,ije_e
-        IF((CLOS .NE. 1) .OR. (ip-1+2*(ij-1)+1 .LE. dmaxe))&
-        CALL advance_field(moments_e(ip,ij,:,:,:,:), moments_rhs_e(ip,ij,:,:,:,:))
+    IF(KIN_E) THEN
+      DO ip=ips_e,ipe_e
+        p_int = parray_e(ip)
+        DO ij=ijs_e,ije_e
+          IF((CLOS .NE. 1) .OR. (ip-1+2*(ij-1)+1 .LE. dmaxe))&
+          CALL advance_field(moments_e(ip,ij,:,:,:,:), moments_rhs_e(ip,ij,:,:,:,:))
+        ENDDO
       ENDDO
-    ENDDO
+    ENDIF
     DO ip=ips_i,ipe_i
       p_int = parray_i(ip)
       DO ij=ijs_i,ije_i

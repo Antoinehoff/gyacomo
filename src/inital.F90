@@ -274,7 +274,7 @@ SUBROUTINE init_phi
   IMPLICIT NONE
 
   REAL(dp) :: noise
-  REAL(dp) :: kx, ky, sigma, gain, ky_shift
+  REAL(dp) :: kx, ky, kp, sigma, gain, ky_shift
   INTEGER, DIMENSION(12) :: iseedarr
 
   ! Seed random number generator
@@ -286,8 +286,9 @@ SUBROUTINE init_phi
     DO ikx=ikxs,ikxe
       DO iky=ikys,ikye
         DO iz=izs,ize
+          kp = kparray(ikx,iky,iz)
           CALL RANDOM_NUMBER(noise)
-          phi(ikx,iky,iz) = (init_background + init_noiselvl*(noise-0.5_dp))!*AA_x(ikx)*AA_y(iky)
+          phi(ikx,iky,iz) = (init_background + init_noiselvl*(noise-0.5_dp))*EXP(-0.1*kp**2)!*AA_x(ikx)*AA_y(iky)
         ENDDO
       END DO
     END DO

@@ -11,15 +11,16 @@ TAU     = 1.0;       % e/i temperature ratio
 K_N     = 2.22;      % Density gradient drive
 K_T     = 6.0;       % Temperature '''
 SIGMA_E = 0.05196;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+KIN_E   = 1;         % Kinetic (1) or adiabatic (0) electron model
 %% GRID PARAMETERS
-Nx      = 1;         % real space x-gridpoints
-Ny      = 2;         %     ''     y-gridpoints
-Lx      = 0;         % Size of the squared frequency domain
-Ly      = 2*pi/0.25; % Size of the squared frequency domain
-Nz      = 24;        % number of perpendicular planes (parallel grid)
-q0      = 2.7;       % safety factor
-shear   = 0.0;       % magnetic shear
-eps     = 0.18;      % inverse aspect ratio
+NX      = 1;         % real space x-gridpoints
+NY      = 2;         %     ''     y-gridpoints
+LX      = 0;         % Size of the squared frequency domain
+LY      = 2*pi/0.25; % Size of the squared frequency domain
+NZ      = 24;        % number of perpendicular planes (parallel grid)
+Q0      = 2.7;       % safety factor
+SHEAR   = 0.0;       % magnetic shear
+EPS     = 0.18;      % inverse aspect ratio
 %% TIME PARMETERS
 TMAX    = 10;  % Maximal time unit
 DT      = 1e-3;   % Time step
@@ -90,7 +91,7 @@ for i = 1:Nparam
 %     system(['rm fort*.90']);
     % Run linear simulation
     if RUN
-        system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz 0 > out.txt; cd ../../../wk'])
+        system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz 0; cd ../../../wk'])
     end
 %     Load and process results
     %%

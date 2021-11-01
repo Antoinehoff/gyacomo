@@ -68,6 +68,8 @@ SUBROUTINE moments_eq_rhs_e
           ! term propto n_e^{p,j-1}
           Tnepjm1 = xnepjm1(ij) * nadiab_moments_e(ip,ij-1,ikx,iky,iz)
           ! Parallel dynamic
+          Tpare = 0._dp; Tmir = 0._dp
+          IF(Nz .GT. 1) THEN
           ! ddz derivative for Landau damping term
           Tpare = xnepp1j(ip) * &
             ( onetwelfth*nadiab_moments_e(ip+1,ij,ikx,iky,izm2)&
@@ -90,7 +92,7 @@ SUBROUTINE moments_eq_rhs_e
           UNepm1jm1 = zNepm1jm1(ip,ij) * nadiab_moments_e(ip-1,ij-1,ikx,iky,iz)
 
           Tmir = Tnepp1j + Tnepp1jm1 + Tnepm1j + Tnepm1jm1 + UNepm1j + UNepm1jp1 + UNepm1jm1
-
+          ENDIF
           !! Electrical potential term
           IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
           Tphi = phi(ikx,iky,iz) * (xphij(ip,ij)*kernel_e(ij,ikx,iky,iz) &
@@ -213,6 +215,8 @@ SUBROUTINE moments_eq_rhs_i
           ! term propto n_e^{p,j-1}
           Tnipjm1 = xnipjm1(ij)  * nadiab_moments_i(ip,ij-1,ikx,iky,iz)
           ! Parallel dynamic
+          Tpari = 0._dp; Tmir = 0._dp
+          IF(Nz .GT. 1) THEN
           ! term propto N_i^{p,j+1}, centered FDF
           Tpari = xnipp1j(ip) * &
             ( onetwelfth*nadiab_moments_i(ip+1,ij,ikx,iky,izm2)&
@@ -235,7 +239,7 @@ SUBROUTINE moments_eq_rhs_i
           Unipm1jm1 = znipm1jm1(ip,ij) * nadiab_moments_i(ip-1,ij-1,ikx,iky,iz)
 
           Tmir = Tnipp1j + Tnipp1jm1 + Tnipm1j + Tnipm1jm1 + UNipm1j + UNipm1jp1 + UNipm1jm1
-
+          ENDIF
           !! Electrical potential term
           IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
             Tphi = phi(ikx,iky,iz) * (xphij(ip,ij)*kernel_i(ij,ikx,iky,iz) &
