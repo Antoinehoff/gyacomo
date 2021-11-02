@@ -4,8 +4,8 @@ outfile ='';
 %% Directory of the simulation
 if 1% Local results
 outfile ='';
-outfile ='';
-outfile ='fluxtube_salphaB_s0/50x100x20_5x3_L_300_q0_2.7_e_0.18_kN_2.22_kT_6_nu_1e-01_DGGK_lin';
+outfile ='fluxtube_salphaB_s0/50x100x20_5x3_L_300_q0_2.7_e_0.18_kN_2.22_kT_6_nu_1e-01_DGGK_adiabe';
+% outfile ='fluxtube_salphaB_s0/50x100x20_5x3_L_300_q0_2.7_e_0.18_kN_2.22_kT_6_nu_1e-01_DGGK_lin';
 % outfile ='fluxtube_salphaB_s0/64x64x16_5x3_L_200_q0_2.7_e_0.18_kN_2.22_kT_6_nu_1e-01_DGGK';
 % outfile ='simulation_A/1024x256_3x2_L_120_kN_1.6667_nu_1e-01_DGGK';
 % outfile ='Linear_Device/64x64x20_5x2_Lx_20_Ly_150_q0_25_kN_0.24_kT_0.03_nu_1e-02_DGGK';
@@ -15,16 +15,15 @@ outfile ='fluxtube_salphaB_s0/50x100x20_5x3_L_300_q0_2.7_e_0.18_kN_2.22_kT_6_nu_
     CMD = ['cp ', BASIC.RESDIR,'outputs* ',BASIC.MISCDIR]; disp(CMD);
     system(CMD);
 else% Marconi results
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x300_L_120_P_8_J_4_eta_0.6_nu_1e-01_PAGK_mu_0e+00/out.txt';
-% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_B/300x150_L_120_P_8_J_4_eta_0.6_nu_5e-01_SGGK_mu_0e+00/out.txt';
-% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/500x500_L_120_P_4_J_2_eta_0.6_nu_1e-01_DGGK_mu_0e+00/out.txt';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x200_L_200_P_8_J_4_eta_0.6_nu_1e-01_PAGK_mu_0e+00/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x300_L_120_P_8_J_4_eta_0.6_nu_1e-01_PAGK_mu_0e+00/out.txt';
 BASIC.RESDIR      = ['../',outfile(46:end-8),'/'];
 BASIC.MISCDIR     = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'/'];
 end
 
 %% Load the results
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 20; 
+JOBNUMMIN = 00; JOBNUMMAX = 00; 
 % JOBNUMMIN = 07; JOBNUMMAX = 20; % For CO damping sim A 
 compile_results %Compile the results from first output found to JOBNUMMAX if existing
 
@@ -46,7 +45,7 @@ end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-t0    =000; iz = 2; ix = 1; iy = 1;
+t0    =000; iz = 1; ix = 1; iy = 1;
 skip_ =1; FPS = 30; DELAY = 1/FPS;
 [~, it03D] = min(abs(Ts3D-t0)); FRAMES_3D = it03D:skip_:numel(Ts3D);
 [~, it05D] = min(abs(Ts5D-t0)); FRAMES_5D = it05D:skip_:numel(Ts5D);
@@ -64,12 +63,12 @@ FIELD = phi;          NAME = 'phi'; FIELDNAME = '\phi';
 % FIELD = Gamma_x;      NAME = 'Gamma_x'; FIELDNAME = '\Gamma_x';
 
 % Sliced
-plt = @(x) real(x(ix, :, :,:)); X = Y_YZ; Y = Z_YZ; XNAME = 'y'; YNAME = 'z'; 
+% plt = @(x) real(x(ix, :, :,:)); X = Y_YZ; Y = Z_YZ; XNAME = 'y'; YNAME = 'z'; 
 % plt = @(x) real(x( :,iy, :,:)); X = X_XZ; Y = Z_XZ; XNAME = 'x'; YNAME = 'z'; 
-% plt = @(x) real(x( :, :,iz,:)); X = X_XY; Y = Y_XY; XNAME = 'x'; YNAME = 'y'; 
+plt = @(x) real(x( :, :,iz,:)); X = X_XY; Y = Y_XY; XNAME = 'x'; YNAME = 'y'; 
 
 % K-space
-% FIELD = PHI;          NAME = 'PHI'; FIELDNAME = '\tilde \phi';
+% FIELD = PHI.*(KY~=0);          NAME = 'NZPHI'; FIELDNAME = '\tilde \phi_{k_y\neq0}';
 % FIELD = Ne00;         NAME = 'Ne00'; FIELDNAME = 'N_e^{00}';
 % FIELD = Ni00;         NAME = 'Ni00'; FIELDNAME = 'N_i^{00}';
 % plt = @(x) fftshift((abs(x( :, :,1,:))),2); X = fftshift(KX,2); Y = fftshift(KY,2); XNAME = 'k_x'; YNAME = 'k_y'; 
@@ -145,13 +144,14 @@ if 0
 
 % Chose the field to plot
 % FIELD = Ni00;   FNAME = 'Ni00'; FIELDLTX = 'N_i^{00}';
-% FIELD = Ne00;   FNAME = 'Ne00'; FIELDLTX = 'N_e^{00}'
-FIELD = PHI; FNAME = 'PHI'; FIELDLTX = '\tilde\phi';
+FIELD = Ne00;   FNAME = 'Ne00'; FIELDLTX = 'N_e^{00}'
+% FIELD = PHI; FNAME = 'PHI'; FIELDLTX = '\tilde\phi';
 % FIELD_ = fft2(Gamma_x); FIELD = FIELD_(1:Nx/2+1,:,:,:); FNAME = 'Gamma_x'; FIELDLTX = '\tilde\Gamma_x';
 % FIELD_ = fft2(dens_e); FIELD = FIELD_(1:Nx/2+1,:,:,:); FNAME = 'FFT_Dens_e'; FIELDLTX = '\tilde n_e';
 
 % Chose when to plot it
-tf = [0 15 27 28 30];
+% tf = [0 15 27 28 30];
+tf = 200:200:1200;
 % tf = 8000;
 
 % Planar plot: choose a plane to plot at x0/y0/z0 coordinates
@@ -178,7 +178,7 @@ fig = figure; FIGNAME = [FNAME,TNAME,'_snaps','_',PARAMS]; set(gcf, 'Position', 
     subplot(1,numel(tf),i_)
         DATA = plt_2(squeeze(plt(FIELD,it)));
         pclr = pcolor(plt_x(X),plt_y(Y),plt_z(DATA)); set(pclr, 'edgecolor','none');pbaspect([0.5 1 1])
-%         caxis([0 1]*5e3);
+        caxis([0 1]*1e3);
 %         caxis([-1 1]*5);
         xlabel(latexize(XNAME)); ylabel(latexize(YNAME));
         if(i_ > 1); set(gca,'ytick',[]); end;
@@ -217,7 +217,8 @@ end
 
 if 0
 %% zonal vs nonzonal energies for phi(t)
-it0 = 01; itend = Ns3D;
+t0 = 200;  [~, it0] = min(abs(Ts3D-t0)); 
+itend = Ns3D;
 trange = it0:itend;
 pltx = @(x) x;%-x(1);
 plty = @(x) x./max(squeeze(x));
@@ -237,9 +238,10 @@ subplot(121)
     xlabel('$t c_s/R$'); grid on;% xlim([0 500]);
 
 subplot(122)
-    plot(plty(Ephi_Z(trange)),plty(Ephi_NZ_kgt0(trange)));
+%     plot(plty(Ephi_Z(trange)),plty(Ephi_NZ_kgt0(trange)));
+    plot3(plty(Ephi_Z(trange)),plty(Ephi_NZ_kgt0(trange)),Ts3D(trange));
     title('Phase space'); legend(CONAME)
-    xlabel('$E_Z$'); ylabel('$E_{NZ}$'); grid on;% xlim([0 500]);
+    xlabel('$E_Z$'); ylabel('$E_{NZ}$'); zlabel('time'); grid on;% xlim([0 500]);
 end
 
 if 0
@@ -281,7 +283,7 @@ FIELD = Ne00.*conj(Ne00);   FNAME = 'Ne002'; FIELDLTX = '|N_e^{00}|^2'
 % FIELD_ = fft2(dens_e); FIELD = FIELD_(1:Nx/2+1,:,:,:); FNAME = 'FFT_Dens_e'; FIELDLTX = '\tilde n_e';
 
 % Chose when to plot it
-tf = 1500:200:2500;
+tf = 200:200:1200;
 % tf = 8000;
 
 % Sliced
@@ -308,7 +310,7 @@ end
 if 0
 %% |phi_k|^2 spectra (Kobayashi 2015 fig 3)
 % tstart = 0.8*Ts3D(end); tend = Ts3D(end); % Time window
-tstart = 1000; tend = 4000;
+tstart = 0000; tend = 1000;
 % tstart = 10000; tend = 12000;
 % Chose the field to plot
 % FIELD = Ni00;   FNAME = 'Ni00'; FIELDLTX = 'N_i^{00}';

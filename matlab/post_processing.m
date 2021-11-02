@@ -52,8 +52,22 @@ dx2phi = zeros(Nx,Ny,Nz,Ns3D); % "
 
 for it = 1:numel(Ts3D)
     for iz = 1:numel(z)
-        NE_ = Ne00(:,:,iz,it); NI_ = Ni00(:,:,iz,it); PH_ = PHI(:,:,iz,it);
-        ne00  (:,:,iz,it) = real(fftshift(ifft2((NE_),Nx,Ny)));
+        if KIN_E
+            NE_ = Ne00(:,:,iz,it); 
+            ne00  (:,:,iz,it) = real(fftshift(ifft2((NE_),Nx,Ny)));
+            if(W_DENS)
+            DENS_E_ = DENS_E(:,:,iz,it);
+            dens_e (:,:,iz,it) = real(fftshift(ifft2((DENS_E_),Nx,Ny)));
+            Z_n_e  (:,:,iz,it) = real(fftshift(ifft2((DENS_E_.*(KY==0)),Nx,Ny)));
+            end
+            if(W_TEMP)
+            TEMP_E_ = TEMP_E(:,:,iz,it);
+            dyTe(:,:,iz,it)  = real(fftshift(ifft2(1i*KY.*(TEMP_E_),Nx,Ny)));
+            temp_e (:,:,iz,it) = real(fftshift(ifft2((TEMP_E_),Nx,Ny)));
+            Z_T_e  (:,:,iz,it) = real(fftshift(ifft2((TEMP_E_.*(KY==0)),Nx,Ny)));
+            end
+        end
+        NI_ = Ni00(:,:,iz,it); PH_ = PHI(:,:,iz,it);
         ni00  (:,:,iz,it) = real(fftshift(ifft2((NI_),Nx,Ny)));
         phi   (:,:,iz,it) = real(fftshift(ifft2((PH_),Nx,Ny)));
         Z_phi (:,:,iz,it) = real(fftshift(ifft2((PH_.*(KY==0)),Nx,Ny)));
@@ -61,20 +75,15 @@ for it = 1:numel(Ts3D)
         dx2phi(:,:,iz,it) = real(fftshift(ifft2(-KX.^2.*(PH_),Nx,Ny)));
         dyphi (:,:,iz,it) = real(fftshift(ifft2(1i*KY.*(PH_),Nx,Ny)));
         if(W_DENS)
-        DENS_E_ = DENS_E(:,:,iz,it); DENS_I_ = DENS_I(:,:,iz,it);
+        DENS_I_ = DENS_I(:,:,iz,it);
         dyni   (:,:,iz,it) = real(fftshift(ifft2(1i*KY.*(DENS_I_),Nx,Ny)));
-        dens_e (:,:,iz,it) = real(fftshift(ifft2((DENS_E_),Nx,Ny)));
         dens_i (:,:,iz,it) = real(fftshift(ifft2((DENS_I_),Nx,Ny)));
-        Z_n_e  (:,:,iz,it) = real(fftshift(ifft2((DENS_E_.*(KY==0)),Nx,Ny)));
         Z_n_i  (:,:,iz,it) = real(fftshift(ifft2((DENS_I_.*(KY==0)),Nx,Ny)));
         end
         if(W_TEMP)
-        TEMP_E_ = TEMP_E(:,:,iz,it); TEMP_I_ = TEMP_I(:,:,iz,it);
-        dyTe(:,:,iz,it)  = real(fftshift(ifft2(1i*KY.*(TEMP_E_),Nx,Ny)));
+        TEMP_I_ = TEMP_I(:,:,iz,it);
         dyTi(:,:,iz,it)  = real(fftshift(ifft2(1i*KY.*(TEMP_I_),Nx,Ny)));
-        temp_e (:,:,iz,it) = real(fftshift(ifft2((TEMP_E_),Nx,Ny)));
         temp_i (:,:,iz,it) = real(fftshift(ifft2((TEMP_I_),Nx,Ny)));
-        Z_T_e  (:,:,iz,it) = real(fftshift(ifft2((TEMP_E_.*(KY==0)),Nx,Ny)));
         Z_T_i  (:,:,iz,it) = real(fftshift(ifft2((TEMP_I_.*(KY==0)),Nx,Ny)));
         end
     end
@@ -119,7 +128,6 @@ phi_kp_t = zeros(numel(kp_ip),Nz,Ns3D);
 %
 for it = 1:numel(Ts3D) % Loop over 2D aX_XYays
     for iz = 1:numel(z)
-    NE_ = Ne00(:,:,iz,it); NI_ = Ni00(:,:,iz,it); PH_ = PHI(:,:,iz,it);
     phi_maxx_maxy(iz,it)   =  max( max(squeeze(phi(:,:,iz,it))));
     phi_avgx_maxy(iz,it)   =  max(mean(squeeze(phi(:,:,iz,it))));
     phi_maxx_avgy(iz,it)   = mean( max(squeeze(phi(:,:,iz,it))));
@@ -147,7 +155,9 @@ end
 %
 for it = 1:numel(Ts5D) % Loop over 5D aX_XYays
     [~, it2D] = min(abs(Ts3D-Ts5D(it)));
-    Ne_norm(:,:,it)= sum(sum(abs(Nepj(:,:,:,:,it)),3),4)/Nkx/Nky;
+    if KIN_E
+        Ne_norm(:,:,it)= sum(sum(abs(Nepj(:,:,:,:,it)),3),4)/Nkx/Nky;
+    end
     Ni_norm(:,:,it)= sum(sum(abs(Nipj(:,:,:,:,it)),3),4)/Nkx/Nky;
 end
 

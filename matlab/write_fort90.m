@@ -23,6 +23,7 @@ fprintf(fid,['  Nz     = ', num2str(GRID.Nz),'\n']);
 fprintf(fid,['  q0     = ', num2str(GRID.q0),'\n']);
 fprintf(fid,['  shear  = ', num2str(GRID.shear),'\n']);
 fprintf(fid,['  eps    = ', num2str(GRID.eps),'\n']);
+fprintf(fid,['  SG     = ',           GRID.SG,'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&OUTPUT_PAR\n');

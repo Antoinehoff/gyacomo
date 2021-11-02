@@ -94,15 +94,21 @@ while(CONTINUE)
             PHI_  = cat(4,PHI_,PHI);
         end
         if W_NA00
+            if KIN_E
+             Ne00_ = cat(4,Ne00_,Ne00);
+            end
             Ni00_ = cat(4,Ni00_,Ni00);
-            Ne00_ = cat(4,Ne00_,Ne00);
         end
         if W_DENS
+            if KIN_E
             DENS_E_ = cat(4,DENS_E_,DENS_E);
+            end
             DENS_I_ = cat(4,DENS_I_,DENS_I);
         end
         if W_TEMP
-            TEMP_E_ = cat(4,TEMP_E_,TEMP_E);
+            if KIN_E 
+                TEMP_E_ = cat(4,TEMP_E_,TEMP_E);
+            end
             TEMP_I_ = cat(4,TEMP_I_,TEMP_I);
         end
         if W_NAPJ || W_SAPJ
@@ -110,11 +116,15 @@ while(CONTINUE)
         end
         if W_NAPJ
             Nipj_ = cat(6,Nipj_,Nipj);
-            Nepj_ = cat(6,Nepj_,Nepj);
+            if KIN_E
+                Nepj_ = cat(6,Nepj_,Nepj);
+            end
         end
         if W_SAPJ
      	  Sipj_ = cat(6,Sipj_,Sipj);
-          Sepj_ = cat(6,Sepj_,Sepj);
+          if KIN_E
+           Sepj_ = cat(6,Sepj_,Sepj);
+          end
         end
 
         % Evolution of simulation parameters

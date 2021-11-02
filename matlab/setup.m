@@ -13,7 +13,7 @@ GRID.Nz    = NZ;    % z resolution
 GRID.q0    = Q0;    % q factor
 GRID.shear = SHEAR; % shear
 GRID.eps   = EPS;   % inverse aspect ratio
-
+if SG; GRID.SG = '.true.'; else; GRID.SG = '.false.';end;
 % Model parameters
 MODEL.CO      = CO;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
 MODEL.CLOS    = CLOS;

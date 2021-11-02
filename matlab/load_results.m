@@ -14,8 +14,8 @@ W_NAPJ    = strcmp(h5readatt(filename,'/data/input','write_Napj' ),'y');
 W_SAPJ    = strcmp(h5readatt(filename,'/data/input','write_Sapj' ),'y');
 W_DENS    = strcmp(h5readatt(filename,'/data/input','write_dens' ),'y');
 W_TEMP    = strcmp(h5readatt(filename,'/data/input','write_temp' ),'y');
-% KIN_E     = strcmp(h5readatt(filename,'/data/input',     'KIN_E' ),'y');
-KIN_E     = 1;
+KIN_E     = strcmp(h5readatt(filename,'/data/input',     'KIN_E' ),'y');
+% KIN_E     = 1;
 
 
 if W_GAMMA

@@ -17,7 +17,8 @@ system(['cd ',SIMDIR,';',' ./../../../bin/helaz 0; cd ../../../wk'])
 % Compare the results with molix at a given time
 time_2_plot = 5.0;
 [Y_,X_]=molix_plot_phi([SIMDIR,'molix_phi.h5'],time_2_plot);
-[ PHI, Ts3D, dt3D] = load_3D_data([SIMDIR,'outputs_00.h5'], 'phi');
+filename = [SIMDIR,'/outputs_00.h5'];
+[ PHI, Ts3D, dt3D] = load_3D_data(filename, 'phi');
 [Pe, Je, Pi, Ji, kx, ky, z] = load_grid_data(filename);
 
 plot_phi_ballooning; hold on
