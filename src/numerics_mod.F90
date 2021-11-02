@@ -57,6 +57,7 @@ SUBROUTINE evaluate_kernels
   INTEGER    :: j_int
   REAL(dp)   :: j_dp, y_, kp2_, kx_, ky_
 
+DO eo  = 0,1
 DO ikx = ikxs,ikxe
 DO iky = ikys,ikye
 DO iz = izs,ize
@@ -65,17 +66,18 @@ DO iz = izs,ize
   DO ij = ijsg_e, ijeg_e
     j_int = jarray_e(ij)
     j_dp  = REAL(j_int,dp)
-    y_    =  sigmae2_taue_o2 * kparray(ikx,iky,iz)**2
-    kernel_e(ij,ikx,iky,iz) = y_**j_int*EXP(-y_)/GAMMA(j_dp+1._dp)!factj
+    y_    =  sigmae2_taue_o2 * kparray(ikx,iky,iz,eo)**2
+    kernel_e(ij,ikx,iky,iz,eo) = y_**j_int*EXP(-y_)/GAMMA(j_dp+1._dp)!factj
   ENDDO
   ENDIF
   !!!!! Ion kernels !!!!!
   DO ij = ijsg_i, ijeg_i
     j_int = jarray_i(ij)
     j_dp  = REAL(j_int,dp)
-    y_    =  sigmai2_taui_o2 * kparray(ikx,iky,iz)**2
-    kernel_i(ij,ikx,iky,iz) = y_**j_int*EXP(-y_)/GAMMA(j_dp+1._dp)!factj
+    y_    =  sigmai2_taui_o2 * kparray(ikx,iky,iz,eo)**2
+    kernel_i(ij,ikx,iky,iz,eo) = y_**j_int*EXP(-y_)/GAMMA(j_dp+1._dp)!factj
   ENDDO
+ENDDO
 ENDDO
 ENDDO
 ENDDO
@@ -98,6 +100,7 @@ SUBROUTINE evaluate_poisson_op
   kxloop: DO ikx = ikxs,ikxe
   kyloop: DO iky = ikys,ikye
   zloop:  DO iz  =  izs,ize
+  ! This term is evalued on the even z grid since poisson uses only p=0 and phi
   IF( (kxarray(ikx).EQ.0._dp) .AND. (kyarray(iky).EQ.0._dp) ) THEN
       inv_poisson_op(ikx, iky, iz) =  0._dp
     ELSE
@@ -105,7 +108,7 @@ SUBROUTINE evaluate_poisson_op
     ! loop over n only if the max polynomial degree
     pol_i = 0._dp
     DO ini=1,jmaxi+1
-      pol_i = pol_i  + qi2_taui*kernel_i(ini,ikx,iky,iz)**2 ! ... sum recursively ...
+      pol_i = pol_i  + qi2_taui*kernel_i(ini,ikx,iky,iz,0)**2 ! ... sum recursively ...
     END DO
     !!!!!!!!!!!!! Electron contribution\
     pol_e = 0._dp
@@ -113,7 +116,7 @@ SUBROUTINE evaluate_poisson_op
     IF (KIN_E) THEN
       ! loop over n only if the max polynomial degree
       DO ine=1,jmaxe+1 ! ine = n+1
-        pol_e = pol_e  + qe2_taue*kernel_e(ine,ikx,iky,iz)**2 ! ... sum recursively ...
+        pol_e = pol_e  + qe2_taue*kernel_e(ine,ikx,iky,iz,0)**2 ! ... sum recursively ...
       END DO
     ! Adiabatic model
     ELSE

@@ -6,7 +6,8 @@ SUBROUTINE poisson
   USE array
   USE fields
   USE grid
-  USE utility
+  USE calculus, ONLY : simpson_rule_z
+  USE utility,  ONLY : manual_3D_bcast
   use model, ONLY : qe2_taue, qi2_taui, q_e, q_i, lambdaD, KIN_E
   USE processing, ONLY : compute_density
   USE prec_const
@@ -31,7 +32,7 @@ SUBROUTINE poisson
         rho_i = 0._dp
         DO ini=1,jmaxi+1
           rho_i = rho_i &
-           +q_i*kernel_i(ini,ikx,iky,:)*moments_i(ip0_i,ini,ikx,iky,:,updatetlevel)
+           +q_i*kernel_i(ini,ikx,iky,:,0)*moments_i(ip0_i,ini,ikx,iky,:,updatetlevel)
         END DO
 
         !!!! Compute electron gyro charge density
@@ -39,15 +40,15 @@ SUBROUTINE poisson
         IF (KIN_E) THEN ! Kinetic electrons
           DO ine=1,jmaxe+1
             rho_e = rho_e &
-             +q_e*kernel_e(ine,ikx,iky,:)*moments_e(ip0_e,ine, ikx,iky,:,updatetlevel)
+             +q_e*kernel_e(ine,ikx,iky,:,0)*moments_e(ip0_e,ine, ikx,iky,:,updatetlevel)
           END DO
         ELSE  ! Adiabatic electrons
           ! Adiabatic charge density (linked to flux averaged phi)
           fa_phi = 0._dp
           IF(kyarray(iky).EQ.0._dp) THEN
             DO ini=1,jmaxi+1
-                rho_e(:) = Jacobian(:)*moments_i(ip0_i,ini,ikx,iky,:,updatetlevel)&
-                           *kernel_i(ini,ikx,iky,:)*(inv_poisson_op(ikx,iky,:)-1._dp)
+                rho_e(:) = Jacobian(:,0)*moments_i(ip0_i,ini,ikx,iky,:,updatetlevel)&
+                           *kernel_i(ini,ikx,iky,:,0)*(inv_poisson_op(ikx,iky,:)-1._dp)
                 call simpson_rule_z(rho_e,intf_)
                 fa_phi = fa_phi + intf_
             ENDDO

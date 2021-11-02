@@ -79,13 +79,14 @@ CONTAINS
     COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_, T_
     COMPLEX(dp) :: nadiab_moment_0j
     REAL(dp)    :: Knp0, Knp1, Knm1, kp
-    INTEGER     :: in_
+    INTEGER     :: in_, eo_
     REAL(dp)    :: n_dp, j_dp, p_dp, be_, be_2
 
     !** Auxiliary variables **
     p_dp      = REAL(parray_e(ip_),dp)
+    eo_       = MODULO(parray_e(ip_),2)
     j_dp      = REAL(jarray_e(ij_),dp)
-    kp        = kparray(ikx_,iky_,iz_)
+    kp        = kparray(ikx_,iky_,iz_,eo_)
     be_2      = kp**2 * sigmae2_taue_o2 ! this is (be/2)^2
     be_       = 2_dp*kp * sqrt_sigmae2_taue_o2  ! this is be
 
@@ -97,7 +98,7 @@ CONTAINS
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     IF( p_dp .EQ. 0 ) THEN ! Kronecker p0
       ! Get adiabatic moment
-      TColl_ = TColl_ - (p_dp + 2._dp*j_dp + 2._dp*be_2) * qe_taue * Kernel_e(ij_,ikx_,iky_,iz_)*phi(ikx_,iky_,iz_)
+      TColl_ = TColl_ - (p_dp + 2._dp*j_dp + 2._dp*be_2) * qe_taue * Kernel_e(ij_,ikx_,iky_,iz_,eo_)*phi(ikx_,iky_,iz_)
         !** build required fluid moments **
         n_     = 0._dp
         upar_  = 0._dp; uperp_ = 0._dp
@@ -105,9 +106,9 @@ CONTAINS
         DO in_ = 1,jmaxe+1
           n_dp = REAL(in_-1,dp)
           ! Store the kernels for sparing readings
-          Knp0 =  Kernel_e(in_  ,ikx_,iky_,iz_)
-          Knp1 =  Kernel_e(in_+1,ikx_,iky_,iz_)
-          Knm1 =  Kernel_e(in_-1,ikx_,iky_,iz_)
+          Knp0 =  Kernel_e(in_  ,ikx_,iky_,iz_,eo_)
+          Knp1 =  Kernel_e(in_+1,ikx_,iky_,iz_,eo_)
+          Knm1 =  Kernel_e(in_-1,ikx_,iky_,iz_,eo_)
           ! Nonadiabatic moments (only different from moments when p=0)
           nadiab_moment_0j   = moments_e(ip0_e,in_  ,ikx_,iky_,iz_,updatetlevel) + qe_taue*Knp0*phi(ikx_,iky_,iz_)
           ! Density
@@ -121,10 +122,10 @@ CONTAINS
         ENDDO
       T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
       ! Add energy restoring term
-      TColl_ = TColl_ + T_* 4._dp *  j_dp          * Kernel_e(ij_  ,ikx_,iky_,iz_)
-      TColl_ = TColl_ - T_* 2._dp * (j_dp + 1._dp) * Kernel_e(ij_+1,ikx_,iky_,iz_)
-      TColl_ = TColl_ - T_* 2._dp *  j_dp          * Kernel_e(ij_-1,ikx_,iky_,iz_)
-      TColl_ = TColl_ + uperp_*be_* (Kernel_e(ij_,ikx_,iky_,iz_) - Kernel_e(ij_-1,ikx_,iky_,iz_))
+      TColl_ = TColl_ + T_* 4._dp *  j_dp          * Kernel_e(ij_  ,ikx_,iky_,iz_,eo_)
+      TColl_ = TColl_ - T_* 2._dp * (j_dp + 1._dp) * Kernel_e(ij_+1,ikx_,iky_,iz_,eo_)
+      TColl_ = TColl_ - T_* 2._dp *  j_dp          * Kernel_e(ij_-1,ikx_,iky_,iz_,eo_)
+      TColl_ = TColl_ + uperp_*be_* (Kernel_e(ij_,ikx_,iky_,iz_,eo_) - Kernel_e(ij_-1,ikx_,iky_,iz_,eo_))
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -133,9 +134,9 @@ CONTAINS
       upar_  = 0._dp
       DO in_ = 1,jmaxe+1
         ! Parallel velocity
-         upar_  = upar_  + Kernel_e(in_,ikx_,iky_,iz_) * moments_e(ip1_e,in_,ikx_,iky_,iz_,updatetlevel)
+         upar_  = upar_  + Kernel_e(in_,ikx_,iky_,iz_,eo_) * moments_e(ip1_e,in_,ikx_,iky_,iz_,updatetlevel)
       ENDDO
-      TColl_ = TColl_ + upar_*Kernel_e(ij_,ikx_,iky_,iz_)
+      TColl_ = TColl_ + upar_*Kernel_e(ij_,ikx_,iky_,iz_,eo_)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 2 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -147,9 +148,9 @@ CONTAINS
       DO in_ = 1,jmaxe+1
         n_dp = REAL(in_-1,dp)
         ! Store the kernels for sparing readings
-        Knp0 =  Kernel_e(in_  ,ikx_,iky_,iz_)
-        Knp1 =  Kernel_e(in_+1,ikx_,iky_,iz_)
-        Knm1 =  Kernel_e(in_-1,ikx_,iky_,iz_)
+        Knp0 =  Kernel_e(in_  ,ikx_,iky_,iz_,eo_)
+        Knp1 =  Kernel_e(in_+1,ikx_,iky_,iz_,eo_)
+        Knm1 =  Kernel_e(in_-1,ikx_,iky_,iz_,eo_)
         ! Nonadiabatic moments (only different from moments when p=0)
         nadiab_moment_0j = moments_e(ip0_e,in_,ikx_,iky_,iz_,updatetlevel) + qe_taue*Knp0*phi(ikx_,iky_,iz_)
         ! Density
@@ -160,7 +161,7 @@ CONTAINS
         Tperp_ = Tperp_ + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1._dp)*Knp1 - n_dp*Knm1)*nadiab_moment_0j
       ENDDO
       T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
-      TColl_ = TColl_ + T_*SQRT2*Kernel_e(ij_,ikx_,iky_,iz_)
+      TColl_ = TColl_ + T_*SQRT2*Kernel_e(ij_,ikx_,iky_,iz_,eo_)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     ENDIF
@@ -186,13 +187,14 @@ CONTAINS
     COMPLEX(dp) :: bi_, bi_2
     COMPLEX(dp) :: nadiab_moment_0j
     REAL(dp)    :: Knp0, Knp1, Knm1, kp
-    INTEGER     :: in_
+    INTEGER     :: in_, eo_
     REAL(dp)    :: n_dp, j_dp, p_dp
 
     !** Auxiliary variables **
     p_dp      = REAL(parray_i(ip_),dp)
+    eo_       = MODULO(parray_i(ip_),2)
     j_dp      = REAL(jarray_i(ij_),dp)
-    kp        = kparray(ikx_,iky_,iz_)
+    kp        = kparray(ikx_,iky_,iz_,eo_)
     bi_2      = kp**2 *sigmai2_taui_o2 ! this is (bi/2)^2
     bi_       = 2_dp*kp*sqrt_sigmai2_taui_o2  ! this is bi
 
@@ -204,7 +206,7 @@ CONTAINS
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     IF( p_dp .EQ. 0 ) THEN ! Kronecker p0
       ! Get adiabatic moment
-      TColl_ = TColl_ - (p_dp + 2._dp*j_dp + 2._dp*bi_2) * qi_taui * Kernel_i(ij_,ikx_,iky_,iz_)*phi(ikx_,iky_,iz_)
+      TColl_ = TColl_ - (p_dp + 2._dp*j_dp + 2._dp*bi_2) * qi_taui * Kernel_i(ij_,ikx_,iky_,iz_,eo_)*phi(ikx_,iky_,iz_)
         !** build required fluid moments **
         n_     = 0._dp
         upar_  = 0._dp; uperp_ = 0._dp
@@ -212,9 +214,9 @@ CONTAINS
         DO in_ = 1,jmaxi+1
           n_dp = REAL(in_-1,dp)
           ! Store the kernels for sparing readings
-          Knp0 =  Kernel_i(in_  ,ikx_,iky_,iz_)
-          Knp1 =  Kernel_i(in_+1,ikx_,iky_,iz_)
-          Knm1 =  Kernel_i(in_-1,ikx_,iky_,iz_)
+          Knp0 =  Kernel_i(in_  ,ikx_,iky_,iz_,eo_)
+          Knp1 =  Kernel_i(in_+1,ikx_,iky_,iz_,eo_)
+          Knm1 =  Kernel_i(in_-1,ikx_,iky_,iz_,eo_)
           ! Nonadiabatic moments (only different from moments when p=0)
           nadiab_moment_0j   = moments_i(ip0_i,in_  ,ikx_,iky_,iz_,updatetlevel) + qi_taui*Knp0*phi(ikx_,iky_,iz_)
           ! Density
@@ -228,10 +230,10 @@ CONTAINS
         ENDDO
         T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
       ! Add energy restoring term
-      TColl_ = TColl_ + T_* 4._dp *  j_dp          * Kernel_i(ij_  ,ikx_,iky_,iz_)
-      TColl_ = TColl_ - T_* 2._dp * (j_dp + 1._dp) * Kernel_i(ij_+1,ikx_,iky_,iz_)
-      TColl_ = TColl_ - T_* 2._dp *  j_dp          * Kernel_i(ij_-1,ikx_,iky_,iz_)
-      TColl_ = TColl_ + uperp_*bi_* (Kernel_i(ij_,ikx_,iky_,iz_) - Kernel_i(ij_-1,ikx_,iky_,iz_))
+      TColl_ = TColl_ + T_* 4._dp *  j_dp          * Kernel_i(ij_  ,ikx_,iky_,iz_,eo_)
+      TColl_ = TColl_ - T_* 2._dp * (j_dp + 1._dp) * Kernel_i(ij_+1,ikx_,iky_,iz_,eo_)
+      TColl_ = TColl_ - T_* 2._dp *  j_dp          * Kernel_i(ij_-1,ikx_,iky_,iz_,eo_)
+      TColl_ = TColl_ + uperp_*bi_* (Kernel_i(ij_,ikx_,iky_,iz_,eo_) - Kernel_i(ij_-1,ikx_,iky_,iz_,eo_))
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -240,9 +242,9 @@ CONTAINS
       upar_  = 0._dp
       DO in_ = 1,jmaxi+1
         ! Parallel velocity
-         upar_  = upar_  + Kernel_i(in_,ikx_,iky_,iz_) * moments_i(ip1_i,in_,ikx_,iky_,iz_,updatetlevel)
+         upar_  = upar_  + Kernel_i(in_,ikx_,iky_,iz_,eo_) * moments_i(ip1_i,in_,ikx_,iky_,iz_,updatetlevel)
       ENDDO
-      TColl_ = TColl_ + upar_*Kernel_i(ij_,ikx_,iky_,iz_)
+      TColl_ = TColl_ + upar_*Kernel_i(ij_,ikx_,iky_,iz_,eo_)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 2 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -254,9 +256,9 @@ CONTAINS
       DO in_ = 1,jmaxi+1
         n_dp = REAL(in_-1,dp)
         ! Store the kernels for sparing readings
-        Knp0 =  Kernel_i(in_  ,ikx_,iky_,iz_)
-        Knp1 =  Kernel_i(in_+1,ikx_,iky_,iz_)
-        Knm1 =  Kernel_i(in_-1,ikx_,iky_,iz_)
+        Knp0 =  Kernel_i(in_  ,ikx_,iky_,iz_,eo_)
+        Knp1 =  Kernel_i(in_+1,ikx_,iky_,iz_,eo_)
+        Knm1 =  Kernel_i(in_-1,ikx_,iky_,iz_,eo_)
         ! Nonadiabatic moments (only different from moments when p=0)
         nadiab_moment_0j = moments_i(ip0_i,in_,ikx_,iky_,iz_,updatetlevel) + qi_taui*Knp0*phi(ikx_,iky_,iz_)
         ! Density
@@ -267,7 +269,7 @@ CONTAINS
         Tperp_ = Tperp_ + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1._dp)*Knp1 - n_dp*Knm1)*nadiab_moment_0j
       ENDDO
       T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
-      TColl_ = TColl_ + T_*SQRT2*Kernel_i(ij_,ikx_,iky_,iz_)
+      TColl_ = TColl_ + T_*SQRT2*Kernel_i(ij_,ikx_,iky_,iz_,eo_)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     ENDIF
@@ -313,11 +315,11 @@ CONTAINS
               ENDDO
               IF (num_procs_p .GT. 1) THEN
                 ! Sum up all the sub collision terms on root 0
-                CALL MPI_REDUCE(local_sum_e, buffer_e, total_np_e, MPI_DOUBLE_COMPLEX, MPI_SUM, 1003, comm_p, ierr)
+                CALL MPI_REDUCE(local_sum_e, buffer_e, total_np_e, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
                 ! distribute the sum over the process among p
                 CALL MPI_SCATTERV(buffer_e, counts_np_e, displs_np_e, MPI_DOUBLE_COMPLEX,&
                                   TColl_distr_e, local_np_e, MPI_DOUBLE_COMPLEX,&
-                                  1003, comm_p, ierr)
+                                  0, comm_p, ierr)
               ELSE
                 TColl_distr_e = local_sum_e
               ENDIF
@@ -335,12 +337,12 @@ CONTAINS
               ENDDO
               IF (num_procs_p .GT. 1) THEN
                 ! Reduce the local_sums to root = 0
-                CALL MPI_REDUCE(local_sum_i, buffer_i, total_np_i, MPI_DOUBLE_COMPLEX, MPI_SUM, 1004, comm_p, ierr)
+                CALL MPI_REDUCE(local_sum_i, buffer_i, total_np_i, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
                 ! buffer contains the entire collision term along p, we scatter it between
                 ! the other processes (use of scatterv since Pmax/Np is not an integer)
                 CALL MPI_SCATTERV(buffer_i, counts_np_i, displs_np_i, MPI_DOUBLE_COMPLEX,&
                                   TColl_distr_i, local_np_i, MPI_DOUBLE_COMPLEX, &
-                                  1004, comm_p, ierr)
+                                  0, comm_p, ierr)
               ELSE
                 TColl_distr_i = local_sum_i
               ENDIF
@@ -694,7 +696,7 @@ CONTAINS
         IF (my_id .EQ. 0 ) WRITE(*,*) '...Interpolation from matrices kperp to simulation kx,ky...'
         DO ikx = ikxs,ikxe
           DO iky = ikys,ikye
-            kperp_sim = SQRT(kxarray(ikx)**2+kyarray(iky)**2) ! current simulation kperp
+            kperp_sim = kparray(ikx,iky,1,0) ! current simulation kperp
 
             ! Find the interval in kp grid mat where kperp_sim is contained
             ! Loop over the whole kp mat grid to find the smallest kperp that is

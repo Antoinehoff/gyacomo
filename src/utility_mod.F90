@@ -4,8 +4,7 @@ MODULE utility
 
   use prec_const
   IMPLICIT NONE
-  PUBLIC :: manual_2D_bcast, manual_3D_bcast,&
-            simpson_rule_z, o2e_z, e2o_z
+  PUBLIC :: manual_2D_bcast, manual_3D_bcast
 
 CONTAINS
 
@@ -149,75 +148,5 @@ SUBROUTINE manual_3D_bcast(field_)
     ENDIF
   ENDIF
 END SUBROUTINE manual_3D_bcast
-
-SUBROUTINE simpson_rule_z(f,intf)
- ! integrate f(z) over z using the simpon's rule. Assume periodic boundary conditions (f(ize+1) = f(izs))
- !from molix BJ Frei
- use prec_const
- use grid
- !
- implicit none
- !
- complex(dp),dimension(izs:ize), intent(in) :: f
- COMPLEX(dp), intent(out) :: intf
- !
- COMPLEX(dp) :: buff_
- !
- IF(Nz .GT. 1) THEN
-   IF(mod(Nz,2) .ne. 0 ) THEN
-      ERROR STOP 'Simpson rule: Nz must be an even number  !!!!'
-   ENDIF
-   !
-   buff_ = 0._dp
-   !
-   DO iz = izs, Nz/2
-      IF(iz .eq. Nz/2) THEN ! ... iz = ize
-         buff_ = buff_ + (f(izs) + 4._dp*f(ize) + f(ize-1 ))
-      ELSE
-         buff_ = buff_ + (f(2*iz+1) + 4._dp*f(2*iz) + f(2*iz-1 ))
-      ENDIF
-   ENDDO
-   !
-   !
-   intf = buff_*deltaz/3._dp
-   !
- ELSE
-   intf = f(izs)
- ENDIF
-END SUBROUTINE simpson_rule_z
-
-SUBROUTINE o2e_z(fo,fe)
- ! gives the value of a field from the odd grid to the even one
- use prec_const
- use grid
- !
- implicit none
- !
- COMPLEX(dp),dimension(1:Nz), intent(in)  :: fo
- COMPLEX(dp),dimension(1:Nz), intent(out) :: fe !
- !
- DO iz = 2,Nz
-   fe(iz) = 0.5_dp*(fo(iz)+fo(iz-1))
- ENDDO
- ! Periodic boundary conditions
- fe(1) = 0.5_dp*(fo(1) + fo(Nz))
-END SUBROUTINE o2e_z
-
-SUBROUTINE e2o_z(fe,fo)
- ! gives the value of a field from the even grid to the odd one
- use prec_const
- use grid
- !
- implicit none
- !
- COMPLEX(dp),dimension(1:Nz), intent(in)  :: fe
- COMPLEX(dp),dimension(1:Nz), intent(out) :: fo
- !
- DO iz = 1,Nz-1
-   fo(iz) = 0.5_dp*(fe(iz+1)+fe(iz))
- ENDDO
- ! Periodic boundary conditions
- fo(Nz) = 0.5_dp*(fe(1) + fe(Nz))
-END SUBROUTINE e2o_z
 
 END MODULE utility

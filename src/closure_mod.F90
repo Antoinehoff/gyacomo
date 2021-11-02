@@ -80,8 +80,8 @@ SUBROUTINE ghosts_truncation
             moments_e(ipeg_e-1,ij,ikx,iky,iz,updatetlevel) = 0._dp
             ENDIF
           ENDDO
-          kernel_e(ijsg_e,ikx,iky,iz)      = 0._dp
-          kernel_e(ijeg_e,ikx,iky,iz)      = 0._dp
+          kernel_e(ijsg_e,ikx,iky,iz,:)      = 0._dp
+          kernel_e(ijeg_e,ikx,iky,iz,:)      = 0._dp
           ENDIF
           DO ip = ipsg_i,ipeg_i
             moments_i(ip,ijsg_i,ikx,iky,iz,updatetlevel) = 0._dp
@@ -95,8 +95,8 @@ SUBROUTINE ghosts_truncation
             moments_i(ipeg_i-1,ij,ikx,iky,iz,updatetlevel) = 0._dp
             ENDIF
           ENDDO
-          kernel_i(ijsg_i,ikx,iky,iz)      = 0._dp
-          kernel_i(ijeg_i,ikx,iky,iz)      = 0._dp
+          kernel_i(ijsg_i,ikx,iky,iz,:)      = 0._dp
+          kernel_i(ijeg_i,ikx,iky,iz,:)      = 0._dp
         ENDDO
       ENDDO
     ENDDO

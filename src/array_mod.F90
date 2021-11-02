@@ -39,27 +39,23 @@ MODULE array
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xphij, xphijp1, xphijm1
   ! Geoemtrical operators
   ! Curvature
-  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z
+  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z, odd/even p
   ! Jacobian
-  REAL(dp), DIMENSION(:), ALLOCATABLE :: Jacobian ! dimensions: z
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: Jacobian ! dimensions: z, odd/even p
   ! Metric
-  REAL(dp), DIMENSION(:), ALLOCATABLE :: gxx, gxy, gyy, gxz, gyz
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: gxx, gxy, gyy, gxz, gyz ! dimensions: z, odd/even p
   ! derivatives of magnetic field strength
-  REAL(dp), DIMENSION(:), allocatable :: gradzB  ! dimensions: z
-  REAL(dp), DIMENSION(:), allocatable :: gradxB
+  REAL(dp), DIMENSION(:,:), allocatable :: gradzB  ! dimensions: z, odd/even p
+  REAL(dp), DIMENSION(:,:), allocatable :: gradxB
   ! Relative magnetic field strength
-  REAL(dp), DIMENSION(:), allocatable :: hatB
+  REAL(dp), DIMENSION(:,:), allocatable :: hatB
   ! Relative strength of major radius
-  REAL(dp), DIMENSION(:), allocatable :: hatR
-  ! Geometrical factors
-  REAL(dp), DIMENSION(:), allocatable :: Gamma1
-  REAL(dp), DIMENSION(:), allocatable :: Gamma2
-  REAL(dp), DIMENSION(:), allocatable :: Gamma3
+  REAL(dp), DIMENSION(:,:), allocatable :: hatR
   ! Some geometrical coefficients
-  REAL(dp), DIMENSION(:) , allocatable :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
-  ! Kernel function evaluation (ij,ikx,iky,iz)
-  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: kernel_e
-  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: kernel_i
+  REAL(dp), DIMENSION(:,:) , allocatable :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
+  ! Kernel function evaluation (ij,ikx,iky,iz,odd/even p)
+  REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: kernel_e
+  REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: kernel_i
   ! Poisson operator (ikx,iky,iz)
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_poisson_op
 

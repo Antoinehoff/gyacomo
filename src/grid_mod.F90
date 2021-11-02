@@ -37,13 +37,16 @@ MODULE grid
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: AA_y
 
   ! Grids containing position in physical space
-  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: xarray
-  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: yarray
-  REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: zarray, zarray_full
-  INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: izarray
-  REAL(dp), PUBLIC, PROTECTED ::  deltax,  deltay, deltaz, inv_deltaz
+  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: xarray
+  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: yarray
+  ! Local and global z grids, 2D since it has to store odd and even grids
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE, PUBLIC :: zarray
+  REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: zarray_full
+  INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC :: izarray
+  REAL(dp), PUBLIC, PROTECTED  ::  deltax,  deltay, deltaz, inv_deltaz
   INTEGER,  PUBLIC, PROTECTED  ::  ixs,  ixe,  iys,  iye,  izs,  ize
   INTEGER,  PUBLIC, PROTECTED  ::  izgs, izge ! ghosts
+  LOGICAL,  PUBLIC, PROTECTED  ::  SG = .true.! shifted grid flag
   INTEGER,  PUBLIC :: ir,iz ! counters
   integer(C_INTPTR_T), PUBLIC :: local_nkx, local_nky
   integer(C_INTPTR_T), PUBLIC :: local_nkx_offset, local_nky_offset
@@ -57,12 +60,13 @@ MODULE grid
   ! Grids containing position in fourier space
   REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kxarray, kxarray_full
   REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kyarray, kyarray_full
-  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE, PUBLIC :: kparray
+  ! Kperp array depends on kx, ky, z (geometry), eo (even or odd zgrid)
+  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE, PUBLIC :: kparray
   REAL(dp), PUBLIC, PROTECTED ::  deltakx, deltaky, kx_max, ky_max!, kp_max
   REAL(dp), PUBLIC, PROTECTED ::  local_kxmax, local_kymax
   INTEGER,  PUBLIC, PROTECTED ::  ikxs, ikxe, ikys, ikye!, ikps, ikpe
   INTEGER,  PUBLIC, PROTECTED :: ikx_0, iky_0, ikx_max, iky_max ! Indices of k-grid origin and max
-  INTEGER,  PUBLIC            :: ikx, iky, ip, ij, ikp, pp2 ! counters
+  INTEGER,  PUBLIC            :: ikx, iky, ip, ij, ikp, pp2, eo ! counters
   LOGICAL,  PUBLIC, PROTECTED :: contains_kx0   = .false. ! flag if the proc contains kx=0 index
   LOGICAL,  PUBLIC, PROTECTED :: contains_ky0   = .false. ! flag if the proc contains ky=0 index
   LOGICAL,  PUBLIC, PROTECTED :: contains_kxmax = .false. ! flag if the proc contains kx=kxmax index
@@ -102,7 +106,7 @@ CONTAINS
     INTEGER :: lu_in   = 90              ! File duplicated from STDIN
 
     NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, &
-                    Nx,  Lx,  Ny,  Ly, Nz, q0, shear, eps
+                    Nx,  Lx,  Ny,  Ly, Nz, q0, shear, eps, SG
     READ(lu_in,grid)
 
     !! Compute the maximal degree of full GF moments set
@@ -356,19 +360,35 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER :: i_, ngz
+    REAL    :: grids_shift
     ! Start and END indices of grid
-    izs = 1
-    ize = Nz
-    ALLOCATE(zarray(izs:ize))
+    izs     = 1
+    ize     = Nz
+    ALLOCATE(zarray(izs:ize,0:1))
     IF (Nz .EQ. 1) THEN ! full perp case
-      deltaz    = 1._dp
-      zarray(1) = 0
-    ELSE
-      deltaz       = 2._dp*PI/REAL(Nz,dp)
+      deltaz      = 1._dp
+      zarray(1,0) = 0._dp
+      zarray(1,1) = 0._dp
+      SG          = .false. ! unique perp plane at z=0
+      izgs        = izs
+      izge        = ize
+    ELSE ! Parallel dimension exists
+      deltaz     = 2._dp*PI/REAL(Nz,dp)
       inv_deltaz = 1._dp/deltaz
+      IF(SG) THEN ! Shifted grids option
+        grids_shift = deltaz/2._dp ! we shift both z grid
+      ELSE
+        grids_shift = 0._dp
+      ENDIF
       DO iz = izs,ize
-        zarray(iz) = REAL((iz-1),dp)*deltaz - PI
+        ! Even z grid (Napj with p even and phi)
+        zarray(iz,0) = REAL((iz-1),dp)*deltaz - PI
+        ! Odd  z grid (Napj with p odd)
+        zarray(iz,1) = REAL((iz-1),dp)*deltaz - PI + grids_shift
       ENDDO
+      ! 2 ghosts cell for four point stencil
+      izgs = izs-2
+      izge = ize+2
     ENDIF
     if(my_id.EQ.0) write(*,*) '#parallel planes = ', Nz
     ! Build the full grids on process 0 to diagnose it without comm
@@ -421,6 +441,7 @@ CONTAINS
     CALL attach(fidres, TRIM(str),  "Lkx",  Lkx)
     CALL attach(fidres, TRIM(str),  "Nky",  Nky)
     CALL attach(fidres, TRIM(str),  "Lky",  Lky)
+    CALL attach(fidres, TRIM(str),   "SG",   SG)
   END SUBROUTINE grid_outputinputs
 
   FUNCTION bare(p_,j_)

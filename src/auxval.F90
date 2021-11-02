@@ -29,6 +29,7 @@ subroutine auxval
   CALL set_kygrid ! azymuthal modes
 
   CALL set_zgrid  ! field aligned angle
+  IF ((my_id .EQ. 0) .AND. SG) WRITE(*,*) '--2 staggered z grids--'
 
   CALL memory ! Allocate memory for global arrays
 

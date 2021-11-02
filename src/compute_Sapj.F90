@@ -29,20 +29,10 @@ SUBROUTINE compute_Sapj
   IF(KIN_E) THEN
   zloope: DO iz = izs,ize
   ploope: DO ip = ips_e,ipe_e ! Loop over Hermite moments
-    p_int = parray_e(ip)
+    eo = MODULO(parray_e(ip),2)
     jloope: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
-    j_int=jarray_e(ij)
-    ! GF closure check (spare computations too)
-    GF_CLOSURE_e: IF ((CLOS.EQ.1) .AND. (p_int+2*j_int .GT. dmaxe)) THEN
-        ! Do nothing
-        DO ikx = ikxs, ikxe
-          DO iky = ikys, ikye
-            Sepj(ip,ij,ikx,iky,iz) = 0._dp
-          ENDDO
-        ENDDO
-      ELSE
+      j_int=jarray_e(ij)
       real_data_c = 0._dp ! initialize sum over real nonlinear term
-
       ! Set non linear sum truncation
       IF (NL_CLOS .EQ. -2) THEN
         nmax = Jmaxe
@@ -58,7 +48,7 @@ SUBROUTINE compute_Sapj
           kyloope: DO iky = ikys,ikye ! Loop over ky
             kx     = kxarray(ikx)
             ky     = kyarray(iky)
-            kerneln = kernel_e(in, ikx, iky, iz)
+            kerneln = kernel_e(in, ikx, iky, iz, eo)
 
             ! First convolution terms
             Fx_cmpx(ikx,iky) = imagu*kx* phi(ikx,iky,iz) * kerneln
@@ -116,7 +106,6 @@ SUBROUTINE compute_Sapj
           Sepj(ip,ij,ikx,iky,iz) = cmpx_data_c(iky,ikx-local_nkx_offset)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
         ENDDO
       ENDDO
-    ENDIF GF_CLOSURE_e
     ENDDO jloope
   ENDDO ploope
 ENDDO zloope
@@ -126,22 +115,12 @@ ENDIF
   !!!!!!!!!!!!!!!!!!!! ION non linear term computation (Sipj)!!!!!!!!!!
 zloopi: DO iz = izs,ize
   ploopi: DO ip = ips_i,ipe_i ! Loop over Hermite moments
-
+    eo = MODULO(parray_i(ip),2)
     ! we check if poly degree is even (eq to index is odd) to spare computation
     !EVEN_P_i: IF (.TRUE. .OR. (MODULO(ip,2) .EQ. 1) .OR. (.NOT. COMPUTE_ONLY_EVEN_P)) THEN
     jloopi: DO ij = ijs_i, ije_i ! Loop over Laguerre moments
-    j_int=jarray_i(ij)
-    ! GF closure check (spare computations too)
-    GF_CLOSURE_i: IF ((CLOS.EQ.1) .AND. (p_int+2*j_int .GT. dmaxi)) THEN
-      ! Do nothing
-      DO ikx = ikxs, ikxe
-        DO iky = ikys, ikye
-          Sipj(ip,ij,ikx,iky,iz) = 0._dp
-        ENDDO
-      ENDDO
-    ELSE
+      j_int=jarray_i(ij)
       real_data_c = 0._dp ! initialize sum over real nonlinear term
-
       ! Set non linear sum truncation
       IF (NL_CLOS .EQ. -2) THEN
         nmax = Jmaxi
@@ -157,7 +136,7 @@ zloopi: DO iz = izs,ize
           kyloopi: DO iky = ikys,ikye ! Loop over ky
             kx      = kxarray(ikx)
             ky      = kyarray(iky)
-            kerneln = kernel_i(in, ikx, iky, iz)
+            kerneln = kernel_i(in, ikx, iky, iz, eo)
 
             ! First convolution terms
             Fx_cmpx(ikx,iky) = imagu*kx* phi(ikx,iky,iz) * kerneln
@@ -215,7 +194,6 @@ zloopi: DO iz = izs,ize
           Sipj(ip,ij,ikx,iky,iz) = cmpx_data_c(iky,ikx-local_nkx_offset)*AA_x(ikx)*AA_y(iky)
         ENDDO
       ENDDO
-    ENDIF GF_CLOSURE_i
     ENDDO jloopi
   ENDDO ploopi
 ENDDO zloopi

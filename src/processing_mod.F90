@@ -35,7 +35,7 @@ SUBROUTINE compute_radial_ion_transport
                       imagu * ky_ * moments_i(ip0_i,1,ikx,iky,iz,updatetlevel) * CONJG(phi(ikx,iky,iz))
                   DO ij = ijs_i, ije_i
                       pflux_local = pflux_local + &
-                          imagu * ky_ * kernel_i(ij,ikx,iky,iz) * moments_i(ip0_i,ij,ikx,iky,iz,updatetlevel) * CONJG(phi(ikx,iky,iz))
+                          imagu * ky_ * kernel_i(ij,ikx,iky,iz,0) * moments_i(ip0_i,ij,ikx,iky,iz,updatetlevel) * CONJG(phi(ikx,iky,iz))
                   ENDDO
               ENDDO
           ENDDO
@@ -87,20 +87,20 @@ SUBROUTINE compute_radial_heatflux
               DO ij = ijs_i, ije_i
                 j_dp = REAL(ij-1,dp)
                 hflux_local = hflux_local - imagu*ky_*CONJG(phi(ikx,iky,iz))&
-                 *(2._dp/3._dp * (2._dp*j_dp*kernel_i(ij,ikx,iky,iz) - (j_dp+1)*kernel_i(ij+1,ikx,iky,iz) - j_dp*kernel_i(ij-1,ikx,iky,iz))&
-                 * (moments_i(ip0_i,ij,ikx,iky,iz,updatetlevel)+q_i/tau_i*kernel_i(ij,ikx,iky,iz)*phi(ikx,iky,iz)) &
-                + SQRT2/3._dp * kernel_i(ij,ikx,iky,iz) * moments_i(ip2_i,ij,ikx,iky,iz,updatetlevel))
+                 *(2._dp/3._dp * (2._dp*j_dp*kernel_i(ij,ikx,iky,iz,0) - (j_dp+1)*kernel_i(ij+1,ikx,iky,iz,0) - j_dp*kernel_i(ij-1,ikx,iky,iz,0))&
+                 * (moments_i(ip0_i,ij,ikx,iky,iz,updatetlevel)+q_i/tau_i*kernel_i(ij,ikx,iky,iz,0)*phi(ikx,iky,iz)) &
+                + SQRT2/3._dp * kernel_i(ij,ikx,iky,iz,0) * moments_i(ip2_i,ij,ikx,iky,iz,updatetlevel))
               ENDDO
               IF(KIN_E) THEN
               DO ij = ijs_e, ije_e
                 j_dp = REAL(ij-1,dp)
                 hflux_local = hflux_local - imagu*ky_*CONJG(phi(ikx,iky,iz))&
-                 *(2._dp/3._dp *(2._dp*j_dp * kernel_e(  ij,ikx,iky,iz) &
-                                  -(j_dp+1)  * kernel_e(ij+1,ikx,iky,iz) &
-                                  -j_dp      * kernel_e(ij-1,ikx,iky,iz))&
+                 *(2._dp/3._dp *(2._dp*j_dp  * kernel_e(ij  ,ikx,iky,iz,0) &
+                                  -(j_dp+1)  * kernel_e(ij+1,ikx,iky,iz,0) &
+                                  -j_dp      * kernel_e(ij-1,ikx,iky,iz,0))&
                                *(moments_e(ip0_e,ij,ikx,iky,iz,updatetlevel)&
-                                  +q_e/tau_e * kernel_e(  ij,ikx,iky,iz) * phi(ikx,iky,iz)) &
-                  +SQRT2/3._dp * kernel_e(ij,ikx,iky,iz) *                                                                                                     moments_e(ip2_e,ij,ikx,iky,iz,updatetlevel))
+                                  +q_e/tau_e * kernel_e(ij  ,ikx,iky,iz,0) * phi(ikx,iky,iz)) &
+                  +SQRT2/3._dp * kernel_e(ij,ikx,iky,iz,0) *                                                                                                     moments_e(ip2_e,ij,ikx,iky,iz,updatetlevel))
               ENDDO
               ENDIF
             ENDDO
@@ -146,7 +146,7 @@ SUBROUTINE compute_nadiab_moments
       DO ij=ijsg_e,ijeg_e
         nadiab_moments_e(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize)&
          = moments_e(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel) &
-           + qe_taue*kernel_e(ij,ikxs:ikxe,ikys:ikye,izs:ize)*phi(ikxs:ikxe,ikys:ikye,izs:ize)
+           + qe_taue*kernel_e(ij,ikxs:ikxe,ikys:ikye,izs:ize,0)*phi(ikxs:ikxe,ikys:ikye,izs:ize)
       ENDDO
     ELSE
       nadiab_moments_e(ip,ijsg_e:ijeg_e,ikxs:ikxe,ikys:ikye,izs:ize) &
@@ -160,7 +160,7 @@ SUBROUTINE compute_nadiab_moments
       DO ij=ijsg_i,ijeg_i
         nadiab_moments_i(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize)&
          = moments_i(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel) &
-           + qi_taui*kernel_i(ij,ikxs:ikxe,ikys:ikye,izs:ize)*phi(ikxs:ikxe,ikys:ikye,izs:ize)
+           + qi_taui*kernel_i(ij,ikxs:ikxe,ikys:ikye,izs:ize,0)*phi(ikxs:ikxe,ikys:ikye,izs:ize)
       ENDDO
     ELSE
       nadiab_moments_i(ip,ijsg_i:ijeg_i,ikxs:ikxe,ikys:ikye,izs:ize) &
@@ -187,15 +187,15 @@ SUBROUTINE compute_density
             ! electron density
             dens_e(ikx,iky,iz) = 0._dp
             DO ij = ijs_e, ije_e
-                dens_e(ikx,iky,iz) = dens_e(ikx,iky,iz) + kernel_e(ij,ikx,iky,iz) * &
-                 (moments_e(ip0_e,ij,ikx,iky,iz,updatetlevel)+q_e/tau_e*kernel_e(ij,ikx,iky,iz)*phi(ikx,iky,iz))
+                dens_e(ikx,iky,iz) = dens_e(ikx,iky,iz) + kernel_e(ij,ikx,iky,iz,0) * &
+                 (moments_e(ip0_e,ij,ikx,iky,iz,updatetlevel)+q_e/tau_e*kernel_e(ij,ikx,iky,iz,0)*phi(ikx,iky,iz))
             ENDDO
             ENDIF
             ! ion density
             dens_i(ikx,iky,iz) = 0._dp
             DO ij = ijs_i, ije_i
-                dens_i(ikx,iky,iz) = dens_i(ikx,iky,iz) + kernel_i(ij,ikx,iky,iz) * &
-                (moments_i(ip0_i,ij,ikx,iky,iz,updatetlevel)+q_i/tau_i*kernel_i(ij,ikx,iky,iz)*phi(ikx,iky,iz))
+                dens_i(ikx,iky,iz) = dens_i(ikx,iky,iz) + kernel_i(ij,ikx,iky,iz,0) * &
+                (moments_i(ip0_i,ij,ikx,iky,iz,updatetlevel)+q_i/tau_i*kernel_i(ij,ikx,iky,iz,0)*phi(ikx,iky,iz))
             ENDDO
           ENDDO
         ENDDO
@@ -227,9 +227,9 @@ SUBROUTINE compute_temperature
             DO ij = ijs_e, ije_e
               j_dp = REAL(ij-1,dp)
               temp_e(ikx,iky,iz) = temp_e(ikx,iky,iz) + &
-                2._dp/3._dp * (2._dp*j_dp*kernel_e(ij,ikx,iky,iz) - (j_dp+1)*kernel_e(ij+1,ikx,iky,iz) - j_dp*kernel_e(ij-1,ikx,iky,iz))&
-                 * (moments_e(ip0_e,ij,ikx,iky,iz,updatetlevel)+q_e/tau_e*kernel_e(ij,ikx,iky,iz)*phi(ikx,iky,iz)) &
-                + SQRT2/3._dp * kernel_e(ij,ikx,iky,iz) * moments_e(ip2_e,ij,ikx,iky,iz,updatetlevel)
+                2._dp/3._dp * (2._dp*j_dp*kernel_e(ij,ikx,iky,iz,0) - (j_dp+1)*kernel_e(ij+1,ikx,iky,iz,0) - j_dp*kernel_e(ij-1,ikx,iky,iz,0))&
+                 * (moments_e(ip0_e,ij,ikx,iky,iz,updatetlevel)+q_e/tau_e*kernel_e(ij,ikx,iky,iz,0)*phi(ikx,iky,iz)) &
+                + SQRT2/3._dp * kernel_e(ij,ikx,iky,iz,0) * moments_e(ip2_e,ij,ikx,iky,iz,updatetlevel)
             ENDDO
             ENDIF
             ! ion temperature
@@ -237,9 +237,9 @@ SUBROUTINE compute_temperature
             DO ij = ijs_i, ije_i
               j_dp = REAL(ij-1,dp)
               temp_i(ikx,iky,iz) = temp_i(ikx,iky,iz) + &
-                2._dp/3._dp * (2._dp*j_dp*kernel_i(ij,ikx,iky,iz) - (j_dp+1)*kernel_i(ij+1,ikx,iky,iz) - j_dp*kernel_i(ij-1,ikx,iky,iz))&
-                 * (moments_i(ip0_i,ij,ikx,iky,iz,updatetlevel)+q_i/tau_i*kernel_i(ij,ikx,iky,iz)*phi(ikx,iky,iz)) &
-                + SQRT2/3._dp * kernel_i(ij,ikx,iky,iz) * moments_i(ip2_i,ij,ikx,iky,iz,updatetlevel)
+                2._dp/3._dp * (2._dp*j_dp*kernel_i(ij,ikx,iky,iz,0) - (j_dp+1)*kernel_i(ij+1,ikx,iky,iz,0) - j_dp*kernel_i(ij-1,ikx,iky,iz,0))&
+                 * (moments_i(ip0_i,ij,ikx,iky,iz,updatetlevel)+q_i/tau_i*kernel_i(ij,ikx,iky,iz,0)*phi(ikx,iky,iz)) &
+                + SQRT2/3._dp * kernel_i(ij,ikx,iky,iz,0) * moments_i(ip2_i,ij,ikx,iky,iz,updatetlevel)
             ENDDO
           ENDDO
         ENDDO

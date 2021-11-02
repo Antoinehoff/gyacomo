@@ -8,7 +8,7 @@ module geometry
   use array
   use fields
   use basic
-  use utility, ONLY: simpson_rule_z
+  use calculus, ONLY: simpson_rule_z
 
 implicit none
   public
@@ -33,20 +33,22 @@ contains
     ! Evaluate perpendicular wavenumber
     !  k_\perp^2 = g^{xx} k_x^2 + 2 g^{xy}k_x k_y + k_y^2 g^{yy}
     !  normalized to rhos_
+    DO eo = 0,1
     DO iz = izs,ize
        DO iky = ikys, ikye
          ky = kyarray(iky)
           DO ikx = ikxs, ikxe
             kx = kxarray(ikx)
-             kparray(ikx, iky, iz) = &
-              SQRT( gxx(iz)*kx**2 + 2._dp*gxy(iz)*kx*ky + gyy(iz)*ky**2)/hatB(iz)
+             kparray(ikx, iky, iz, eo) = &
+              SQRT( gxx(iz,eo)*kx**2 + 2._dp*gxy(iz,eo)*kx*ky + gyy(iz,eo)*ky**2)/hatB(iz,eo)
               ! there is a factor 1/B from the normalization; important to match GENE
           ENDDO
        ENDDO
     ENDDO
+    ENDDO
     !
     ! Compute the inverse z integrated Jacobian (useful for flux averaging)
-    integrant = Jacobian ! Convert into complex array
+    integrant = Jacobian(:,0) ! Convert into complex array
     CALL simpson_rule_z(integrant,iInt_Jacobian)
     iInt_Jacobian = 1._dp/iInt_Jacobian ! reverse it
   END SUBROUTINE eval_magnetic_geometry
@@ -59,39 +61,41 @@ contains
   implicit none
   REAL(dp) :: z, kx, ky
 
+  parity: DO eo = 0,1
   zloop: DO iz = izs,ize
-    z = zarray(iz)
+    z = zarray(iz,eo)
 
     ! metric
-      gxx(iz) = 1._dp
-      gxy(iz) = shear*z
-      gyy(iz) = 1._dp + (shear*z)**2
+      gxx(iz,eo) = 1._dp
+      gxy(iz,eo) = shear*z
+      gyy(iz,eo) = 1._dp + (shear*z)**2
 
     ! Relative strengh of radius
-      hatR(iz) = 1._dp + eps*COS(z)
+      hatR(iz,eo) = 1._dp + eps*COS(z)
 
     ! Jacobian
-      Jacobian(iz) = q0*hatR(iz)
+      Jacobian(iz,eo) = q0*hatR(iz,eo)
 
     ! Relative strengh of modulus of B
-      hatB(iz) = 1._dp / hatR(iz)
+      hatB(iz,eo) = 1._dp / hatR(iz,eo)
 
     ! Derivative of the magnetic field strenght
-      gradxB(iz) = -COS(z)
-      gradzB(iz) = eps * SIN(z) / hatR(iz)
+      gradxB(iz,eo) = -COS(z)
+      gradzB(iz,eo) = eps * SIN(z) / hatR(iz,eo)
 
     ! Curvature operator
       DO iky = ikys, ikye
         ky = kyarray(iky)
          DO ikx= ikxs, ikxe
            kx = kxarray(ikx)
-           Ckxky(ikx, iky, iz) = (-SIN(z)*kx - (COS(z) + shear* z* SIN(z))*ky) * hatB(iz) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
+           Ckxky(ikx, iky, iz,eo) = (-SIN(z)*kx - (COS(z) + shear* z* SIN(z))*ky) * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
          ENDDO
       ENDDO
     ! coefficient in the front of parallel derivative
-      gradz_coeff(iz) = 1._dp / Jacobian(iz) / hatB(iz)
+      gradz_coeff(iz,eo) = 1._dp / Jacobian(iz,eo) / hatB(iz,eo)
 
   ENDDO zloop
+  ENDDO parity
 
   END SUBROUTINE eval_salphaB_geometry
   !
@@ -103,34 +107,36 @@ contains
     implicit none
     REAL(dp) :: z, kx, ky
 
+    parity: DO eo = 0,1
     zloop: DO iz = izs,ize
-     z = zarray(iz)
+     z = zarray(iz,eo)
 
     ! metric
-       gxx(iz) = 1._dp
-       gxy(iz) = 0._dp
-       gyy(iz) = 1._dp
+       gxx(iz,eo) = 1._dp
+       gxy(iz,eo) = 0._dp
+       gyy(iz,eo) = 1._dp
 
     ! Relative strengh of radius
-       hatR(iz) = 1._dp
+       hatR(iz,eo) = 1._dp
 
     ! Jacobian
-       Jacobian(iz) = 1._dp
+       Jacobian(iz,eo) = 1._dp
 
     ! Relative strengh of modulus of B
-       hatB(iz) = 1._dp
+       hatB(iz,eo) = 1._dp
 
     ! Curvature operator
        DO iky = ikys, ikye
          ky = kyarray(iky)
           DO ikx= ikxs, ikxe
             kx = kxarray(ikx)
-            Ckxky(ikx, iky, iz) = -kx ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
+            Ckxky(ikx, iky, iz,eo) = -kx ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
           ENDDO
        ENDDO
     ! coefficient in the front of parallel derivative
-       gradz_coeff(iz) = 1._dp
-    ENDDO zloop
+       gradz_coeff(iz,eo) = 1._dp
+  ENDDO zloop
+  ENDDO parity
 
    END SUBROUTINE eval_1D_geometry
    !
