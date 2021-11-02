@@ -15,7 +15,7 @@ How to run it
 
 3. HeLaZ 3D
 
-	3.5 *Incoming* Staggered grid for parallel odd/even coupling
+	3.5 Staggered grid for parallel odd/even coupling
 
 	3.4 HeLaZ can run with adiabatic electrons now!
 
