@@ -1,64 +1,63 @@
-CO      = h5readatt(filename,'/data/input','CO');
-% K_N    = h5readatt(filename,'/data/input','eta_n');
-% K_T    = h5readatt(filename,'/data/input','eta_T');
-K_N     = h5readatt(filename,'/data/input','K_n');
-K_T     = h5readatt(filename,'/data/input','K_T');
-K_E     = h5readatt(filename,'/data/input','K_E');
-Q0      = h5readatt(filename,'/data/input','q0');
-SHEAR   = h5readatt(filename,'/data/input','shear');
-EPS     = h5readatt(filename,'/data/input','eps');
-PMAXI   = h5readatt(filename,'/data/input','pmaxi');
-JMAXI   = h5readatt(filename,'/data/input','jmaxi');
-PMAXE   = h5readatt(filename,'/data/input','pmaxe');
-JMAXE   = h5readatt(filename,'/data/input','jmaxe');
-NON_LIN = h5readatt(filename,'/data/input','NON_LIN');
-NU      = h5readatt(filename,'/data/input','nu');
-Nx      = h5readatt(filename,'/data/input','Nx');
-Ny      = h5readatt(filename,'/data/input','Ny');
-L       = h5readatt(filename,'/data/input','Lx');
-CLOS    = h5readatt(filename,'/data/input','CLOS');
-DT_SIM  = h5readatt(filename,'/data/input','dt');
-MU      = h5readatt(filename,'/data/input','mu');
+DATA.CO      = h5readatt(filename,'/data/input','CO');
+DATA.K_N    = h5readatt(filename,'/data/input','eta_n');
+DATA.K_T    = h5readatt(filename,'/data/input','eta_T');
+% DATA.K_N     = h5readatt(filename,'/data/input','K_n');
+% DATA.K_T     = h5readatt(filename,'/data/input','K_T');
+% DATA.K_E     = h5readatt(filename,'/data/input','K_E');
+DATA.Q0      = h5readatt(filename,'/data/input','q0');
+DATA.SHEAR   = h5readatt(filename,'/data/input','shear');
+DATA.EPS     = h5readatt(filename,'/data/input','eps');
+DATA.PMAXI   = h5readatt(filename,'/data/input','pmaxi');
+DATA.JMAXI   = h5readatt(filename,'/data/input','jmaxi');
+DATA.PMAXE   = h5readatt(filename,'/data/input','pmaxe');
+DATA.JMAXE   = h5readatt(filename,'/data/input','jmaxe');
+DATA.NON_LIN = h5readatt(filename,'/data/input','NON_LIN');
+DATA.NU      = h5readatt(filename,'/data/input','nu');
+DATA.Nx      = h5readatt(filename,'/data/input','Nx');
+DATA.Ny      = h5readatt(filename,'/data/input','Ny');
+DATA.L       = h5readatt(filename,'/data/input','Lx');
+DATA.CLOS    = h5readatt(filename,'/data/input','CLOS');
+DATA.DT_SIM  = h5readatt(filename,'/data/input','dt');
+DATA.MU      = h5readatt(filename,'/data/input','mu');
 % MU      = str2num(filename(end-18:end-14)); %bad...
-W_GAMMA   = h5readatt(filename,'/data/input','write_gamma') == 'y';
-W_PHI     = h5readatt(filename,'/data/input','write_phi')   == 'y';
-W_NA00    = h5readatt(filename,'/data/input','write_Na00')  == 'y';
-W_NAPJ    = h5readatt(filename,'/data/input','write_Napj')  == 'y';
-W_SAPJ    = h5readatt(filename,'/data/input','write_Sapj')  == 'y';
+DATA.W_GAMMA   = h5readatt(filename,'/data/input','write_gamma') == 'y';
+DATA.W_PHI     = h5readatt(filename,'/data/input','write_phi')   == 'y';
+DATA.W_NA00    = h5readatt(filename,'/data/input','write_Na00')  == 'y';
+DATA.W_NAPJ    = h5readatt(filename,'/data/input','write_Napj')  == 'y';
+DATA.W_SAPJ    = h5readatt(filename,'/data/input','write_Sapj')  == 'y';
 
-if NON_LIN == 'y'
-    NON_LIN = 1;
+if DATA.NON_LIN == 'y'
+    DATA.NON_LIN = 1;
 else
-    NON_LIN = 0;
+    DATA.NON_LIN = 0;
 end
 
-switch abs(CO)
-    case 0; CONAME = 'LB';
-    case 1; CONAME = 'DG';
-    case 2; CONAME = 'SG';
-    case 3; CONAME = 'PA';
-    case 4; CONAME = 'FC';
-    otherwise; CONAME ='UK';
+switch abs(DATA.CO)
+    case 0; DATA.CONAME = 'LB';
+    case 1; DATA.CONAME = 'DG';
+    case 2; DATA.CONAME = 'SG';
+    case 3; DATA.CONAME = 'PA';
+    case 4; DATA.CONAME = 'FC';
+    otherwise; DATA.CONAME ='UK';
 end
-if (CO <= 0); CONAME = [CONAME,'DK'];
-else;         CONAME = [CONAME,'GK'];
+if (DATA.CO <= 0); DATA.CONAME = [DATA.CONAME,'DK'];
+else;         DATA.CONAME = [DATA.CONAME,'GK'];
 end
 
-if    (CLOS == 0); CLOSNAME = 'Trunc.';
-elseif(CLOS == 1); CLOSNAME = 'Clos. 1';
-elseif(CLOS == 2); CLOSNAME = 'Clos. 2';
+if    (DATA.CLOS == 0); DATA.CLOSNAME = 'Trunc.';
+elseif(DATA.CLOS == 1); DATA.CLOSNAME = 'Clos. 1';
+elseif(DATA.CLOS == 2); DATA.CLOSNAME = 'Clos. 2';
 end
-if (PMAXE == PMAXI) && (JMAXE == JMAXI)
-    degngrad   = ['P_',num2str(PMAXE),'_J_',num2str(JMAXE)];
+if (DATA.PMAXE == DATA.PMAXI) && (DATA.JMAXE == DATA.JMAXI)
+    degngrad   = ['P_',num2str(DATA.PMAXE),'_J_',num2str(DATA.JMAXE)];
 else
-    degngrad   = ['Pe_',num2str(PMAXE),'_Je_',num2str(JMAXE),...
-        '_Pi_',num2str(PMAXI),'_Ji_',num2str(JMAXI)];
+    degngrad   = ['Pe_',num2str(DATA.PMAXE),'_Je_',num2str(DATA.JMAXE),...
+        '_Pi_',num2str(DATA.PMAXI),'_Ji_',num2str(DATA.JMAXI)];
 end
 degngrad = [degngrad,'_Kn_%1.1f_nu_%0.0e_',...
-        CONAME,'_CLOS_',num2str(CLOS),'_mu_%0.0e'];
-degngrad   = sprintf(degngrad,[K_N,NU,MU]);
-if ~NON_LIN; degngrad = ['lin_',degngrad]; end
-resolution = [num2str(Nx),'x',num2str(Ny/2),'_'];
-gridname   = ['L_',num2str(L),'_'];
-PARAMS = [resolution,gridname,degngrad];
-% BASIC.RESDIR = [SIMDIR,PARAMS,'/'];
+        DATA.CONAME,'_CLOS_',num2str(DATA.CLOS),'_mu_%0.0e'];
+degngrad   = sprintf(degngrad,[DATA.K_N,DATA.NU,DATA.MU]);
+if ~DATA.NON_LIN; degngrad = ['lin_',degngrad]; end
+resolution = [num2str(DATA.Nx),'x',num2str(DATA.Ny),'_'];
+gridname   = ['L_',num2str(DATA.L),'_'];
+DATA.PARAMS = [resolution,gridname,degngrad];

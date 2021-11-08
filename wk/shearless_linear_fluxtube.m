@@ -13,17 +13,18 @@ K_T     = 6.0;       % Temperature '''
 SIGMA_E = 0.05196;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 1;         % Kinetic (1) or adiabatic (0) electron model
 %% GRID PARAMETERS
-NX      = 1;         % real space x-gridpoints
-NY      = 2;         %     ''     y-gridpoints
-LX      = 0;         % Size of the squared frequency domain
+NX      = 2;         % real space x-gridpoints
+NY      = 16;        %     ''     y-gridpoints
+LX      = 2*pi/0.25; % Size of the squared frequency domain
 LY      = 2*pi/0.25; % Size of the squared frequency domain
 NZ      = 24;        % number of perpendicular planes (parallel grid)
 Q0      = 2.7;       % safety factor
 SHEAR   = 0.0;       % magnetic shear
 EPS     = 0.18;      % inverse aspect ratio
+SG      = 1;         % Staggered z grids option
 %% TIME PARMETERS
-TMAX    = 10;  % Maximal time unit
-DT      = 1e-3;   % Time step
+TMAX    = 40;  % Maximal time unit
+DT      = 8e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 10;      % Sampling per time unit for 2D arrays
@@ -49,7 +50,7 @@ W_NAPJ   = 1; W_SAPJ   = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % unused
 HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
-kmax    = Nx*pi/Lx;% Highest fourier mode
+kmax    = NX*pi/LX;% Highest fourier mode
 NU_HYP  = 0.0;    % Hyperdiffusivity coefficient
 MU      = NU_HYP/(HD_CO*kmax)^4; % Hyperdiffusivity coefficient
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
@@ -65,7 +66,6 @@ KXEQ0   = 0;      % put kx = 0
 NON_LIN = 0;   % activate non-linearity (is cancelled if KXEQ0 = 1)
 %% PARAMETER SCANS
 
-if 1
 %% Parameter scan over PJ
 % PA = [2 4];
 % JA = [1 2];
@@ -77,11 +77,11 @@ mup_ = MU_P;
 muj_ = MU_J;
 Nparam = numel(PA);
 param_name = 'PJ';
-gamma_Ni00 = zeros(Nparam,floor(Nx/2)+1);
-gamma_Nipj = zeros(Nparam,floor(Nx/2)+1);
-gamma_phi  = zeros(Nparam,floor(Nx/2)+1);
-% Ni00_ST  = zeros(Nparam,floor(Nx/2)+1,TMAX/SPS3D);
-%  PHI_ST  = zeros(Nparam,floor(Nx/2)+1,TMAX/SPS3D);
+Nkx = NX;
+Nky = NY/2+1;
+gamma_Ni00 = zeros(Nparam,Nkx,Nky);
+gamma_Nipj = zeros(Nparam,Nkx,Nky);
+gamma_phi  = zeros(Nparam,Nkx,Nky);
 for i = 1:Nparam
     % Change scan parameter
     PMAXE = PA(i); PMAXI = PA(i);
@@ -90,21 +90,68 @@ for i = 1:Nparam
     setup
 %     system(['rm fort*.90']);
     % Run linear simulation
-    if RUN
+    if 0
         system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz 0; cd ../../../wk'])
     end
 %     Load and process results
     %%
     filename = ['../results/',SIMID,'/',PARAMS,'/outputs_00.h5'];
     load_results
+
+    for ikx = 1:Nkx
+    for iky = 1:Nky
+        tend   = max(Ts3D(abs(Ni00(ikx,iky,1,:))~=0));
+        tstart   = 0.2*tend;
+        [~,itstart] = min(abs(Ts3D-tstart));
+        [~,itend]   = min(abs(Ts3D-tend));
+        trange = itstart:itend;
+        % exp fit on moment 00
+        X_ = Ts3D(trange); Y_ = squeeze(abs(Ni00(ikx,iky,1,trange)));
+        gamma_Ni00(i,ikx,iky) = LinearFit_s(X_,Y_);
+        % exp fit on phi
+        X_ = Ts3D(trange); Y_ = squeeze(abs(PHI(ikx,iky,1,trange)));
+        gamma_phi (i,ikx,iky) = LinearFit_s(X_,Y_);
+    end
+    end
+    gamma_Ni00(i,:,:) = real(gamma_Ni00(i,:,:));% .* (gamma_Ni00(i,:)>=0.0));
+    gamma_Nipj(i,:,:) = real(gamma_Nipj(i,:,:));% .* (gamma_Nipj(i,:)>=0.0));
+    if 0
+    %% Fit verification
+    figure;
+    for i = 1:1:Nky
+        X_ = Ts3D(:); Y_ = squeeze(abs(Ni00(1,i,1,:)));
+        semilogy(X_,Y_,'DisplayName',['k=',num2str(ky(i))]); hold on;
+    end
+    end
 end
 
+if 1
+%% Plot
+SCALE = 1;%sqrt(2);
+fig = figure; FIGNAME = 'linear_study';
+plt = @(x) squeeze(x);
+% subplot(211)
+    for i = 1:Nparam
+        clr       = line_colors(mod(i-1,numel(line_colors(:,1)))+1,:);
+        linestyle = line_styles(floor((i-1)/numel(line_colors(:,1)))+1);
+        plot(plt(SCALE*ky(1:Nky)),plt(gamma_phi(i,2,1:end)),...
+            'Color',clr,...
+            'LineStyle',linestyle{1},'Marker','^',...
+...%             'DisplayName',['$\kappa_N=',num2str(K_N),'$, $\nu_{',CONAME,'}=',num2str(NU),'$, $P=',num2str(PA(i)),'$, $J=',num2str(JA(i)),'$']);
+            'DisplayName',[CONAME,', $P,J=',num2str(PA(i)),',',num2str(JA(i)),'$']);
+        hold on;
+    end
+    grid on; xlabel('$k_y\rho_s^{R}$'); ylabel('$\gamma(\phi)L_\perp/c_s$'); xlim([0.0,max(ky)]);
+    title(['$\kappa_N=',num2str(K_N),'$, $\nu_{',CONAME,'}=',num2str(NU),'$'])
+    legend('show'); %xlim([0.01,10])
+saveas(fig,[SIMDIR,'/',PARAMS,'/gamma_vs_',param_name,'_',PARAMS,'.fig']);
+saveas(fig,[SIMDIR,'/',PARAMS,'/gamma_vs_',param_name,'_',PARAMS,'.png']);
 end
 
 if 0
 %% Trajectories of some modes
 figure;
-for i = 1:10:Nx/2+1
-    semilogy(Ts3D,squeeze(abs(Ne00(i,2,1,:))),'DisplayName',['k=',num2str(kx(i))]); hold on;
+for i = 1:1:Nky
+    semilogy(Ts3D,squeeze(abs(Ni00(1,i,1,:))),'DisplayName',['k=',num2str(ky(i))]); hold on;
 end
 end

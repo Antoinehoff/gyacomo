@@ -13,16 +13,17 @@ K_T     = 0.0;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 %% GRID PARAMETERS
-NX      = 100;     % real space x-gridpoints
+NX      = 150;     % real space x-gridpoints
 NY      = 1;     %     ''     y-gridpoints
-LX      = 150;     % Size of the squared frequency domain
+LX      = 200;     % Size of the squared frequency domain
 LY      = 1;     % Size of the squared frequency domain
 NZ      = 1;      % number of perpendicular planes (parallel grid)
 Q0      = 1.0;    % safety factor
 SHEAR   = 0.0;    % magnetic shear
 EPS     = 0.0;    % inverse aspect ratio
+SG      = 1;         % Staggered z grids option
 %% TIME PARMETERS
-TMAX    = 100;  % Maximal time unit
+TMAX    = 200;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
@@ -36,7 +37,7 @@ NON_LIN = 0;   % activate non-linearity (is cancelled if KXEQ0 = 1)
 KIN_E   = 1;
 % Collision operator
 % (0:L.Bernstein, 1:Dougherty, 2:Sugama, 3:Pitch angle, 4:Full Couloumb ; +/- for GK/DK)
-CO      = 2;
+CO      = 4;
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))
 NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
@@ -89,9 +90,9 @@ for i = 1:Nparam
     system(['rm fort*.90']);
     % Run linear simulation
     if RUN
-%         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 1 6 0; cd ../../../wk'])
+        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 1 6 0; cd ../../../wk'])
 %         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ./../../../bin/helaz 1 2 0; cd ../../../wk'])
-        system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz 0; cd ../../../wk'])
+%         system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz 0; cd ../../../wk'])
     end
 %     Load and process results
     %%

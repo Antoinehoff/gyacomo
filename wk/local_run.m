@@ -12,11 +12,11 @@ SIGMA_E = 0.05196;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 NU_HYP  = 0.0;
 KIN_E   = 0;         % Kinetic (1) or adiabatic (2) electron model
 %% GRID PARAMETERS
-NX      = 50;     % Spatial radial resolution ( = 2x radial modes)
-LX      = 300;    % Radial window size
+NX      = 100;     % Spatial radial resolution ( = 2x radial modes)
+LX      = 200;    % Radial window size
 NY      = 100;     % Spatial azimuthal resolution (= azim modes)
-LY      = 300;    % Azimuthal window size
-NZ      = 20;     % number of perpendicular planes (parallel grid)
+LY      = 100;    % Azimuthal window size
+NZ      = 30;     % number of perpendicular planes (parallel grid)
 P       = 4;
 J       = 2;
 %% GEOMETRY PARAMETERS
@@ -27,8 +27,8 @@ GRADB   = 1.0;       % Magnetic  gradient
 CURVB   = 1.0;       % Magnetic  curvature
 SG      = 1;         % Staggered z grids option
 %% TIME PARAMETERS
-TMAX    = 50;  % Maximal time unit
-DT      = 2e-2;   % Time step
+TMAX    = 200;  % Maximal time unit
+DT      = 5e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS3D   = 5;      % Sampling per time unit for 3D arrays
@@ -40,7 +40,7 @@ JOB2LOAD= -1;
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle ; 4 : Coulomb; +/- for GK/DK)
 CO      = 1;
 CLOS    = 0;   % Closure model (0: =0 truncation)
-NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
+NL_CLOS = 0;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
 SIMID   = 'fluxtube_salphaB_s0';  % Name of the simulation
 % SIMID   = 'simulation_A';  % Name of the simulation
 % SIMID   = ['v3.0_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation

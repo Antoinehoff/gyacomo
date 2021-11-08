@@ -1,12 +1,14 @@
+function [DATA] = compile_results(DIRECTORY,JOBNUMMIN,JOBNUMMAX)
+DATA = {};
 CONTINUE = 1;
 JOBNUM   = JOBNUMMIN; JOBFOUND = 0;
-TJOB_SE  = []; % Start and end times of jobs
-NU_EVOL  = []; % evolution of parameter nu between jobs
-CO_EVOL  = []; % evolution of CO
-MU_EVOL  = []; % evolution of parameter mu between jobs
-K_N_EVOL = []; %
-L_EVOL   = []; % 
-DT_EVOL  = []; %
+DATA.TJOB_SE  = []; % Start and end times of jobs
+DATA.NU_EVOL  = []; % evolution of parameter nu between jobs
+DATA.CO_EVOL  = []; % evolution of CO
+DATA.MU_EVOL  = []; % evolution of parameter mu between jobs
+DATA.K_N_EVOL = []; %
+DATA.L_EVOL   = []; % 
+DATA.DT_EVOL  = []; %
 % FIELDS
 Nipj_    = []; Nepj_    = [];
 Ni00_    = []; Ne00_    = [];
@@ -25,10 +27,27 @@ Sipj_    = []; Sepj_    = [];
 Pe_old   = 1e9; Pi_old = Pe_old; Je_old = Pe_old; Ji_old = Pe_old;
 Pi_max=0; Pe_max=0; Ji_max=0; Je_max=0;
 while(CONTINUE)
-    filename = sprintf([BASIC.MISCDIR,'outputs_%.2d.h5'],JOBNUM);
+    filename = sprintf([DIRECTORY,'outputs_%.2d.h5'],JOBNUM);
     if (exist(filename, 'file') == 2 && JOBNUM <= JOBNUMMAX)
         % Load results of simulation #JOBNUM
-        load_results
+%         load_results
+        %% load results %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        disp(['Loading ',filename])
+        % Loading from output file
+        CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
+        DT_SIM    = h5readatt(filename,'/data/input','dt');
+        [Pe, Je, Pi, Ji, kx, ky, z] = load_grid_data(filename);
+        W_GAMMA   = strcmp(h5readatt(filename,'/data/input','write_gamma'),'y');
+        W_HF      = 0;%strcmp(h5readatt(filename,'/data/input','write_hf'   ),'y');
+        W_PHI     = strcmp(h5readatt(filename,'/data/input','write_phi'  ),'y');
+        W_NA00    = strcmp(h5readatt(filename,'/data/input','write_Na00' ),'y');
+        W_NAPJ    = strcmp(h5readatt(filename,'/data/input','write_Napj' ),'y');
+        W_SAPJ    = strcmp(h5readatt(filename,'/data/input','write_Sapj' ),'y');
+        W_DENS    = strcmp(h5readatt(filename,'/data/input','write_dens' ),'y');
+        W_TEMP    = strcmp(h5readatt(filename,'/data/input','write_temp' ),'y');
+%         KIN_E     = strcmp(h5readatt(filename,'/data/input',     'KIN_E' ),'y');
+        KIN_E     = 1;
+        
         % Check polynomials degrees
         Pe_new= numel(Pe); Je_new= numel(Je);
         Pi_new= numel(Pi); Ji_new= numel(Ji);
@@ -74,50 +93,54 @@ while(CONTINUE)
             end
         end
 
-        if W_GAMMA || W_HF
-            Ts0D_   = cat(1,Ts0D_,Ts0D);
-        end
 
         if W_GAMMA
-            GGAMMA_ = cat(1,GGAMMA_,GGAMMA_RI);
-            PGAMMA_ = cat(1,PGAMMA_,PGAMMA_RI);
+            [ GGAMMA_RI, Ts0D, ~] = load_0D_data(filename, 'gflux_ri');
+            PGAMMA_RI            = load_0D_data(filename, 'pflux_ri');
+            GGAMMA_ = cat(1,GGAMMA_,GGAMMA_RI); clear GGAMMA_RI
+            PGAMMA_ = cat(1,PGAMMA_,PGAMMA_RI); clear PGAMMA_RI
         end
 
         if W_HF
-            HFLUX_ = cat(1,HFLUX_,HFLUX_X);
+            [ HFLUX_X, Ts0D, ~] = load_0D_data(filename, 'hflux_x');
+            HFLUX_ = cat(1,HFLUX_,HFLUX_X); clear HFLUX_X
         end
 
-        if W_PHI || W_NA00
-        	Ts3D_   = cat(1,Ts3D_,Ts3D);
-        end
         if W_PHI
-            PHI_  = cat(4,PHI_,PHI);
+            [ PHI, Ts3D, ~] = load_3D_data(filename, 'phi');
+            PHI_  = cat(4,PHI_,PHI); clear PHI
         end
         if W_NA00
             if KIN_E
-             Ne00_ = cat(4,Ne00_,Ne00);
+             Ne00  = load_3D_data(filename, 'Ne00');
+             Ne00_ = cat(4,Ne00_,Ne00); clear Ne00
             end
-            Ni00_ = cat(4,Ni00_,Ni00);
+            [Ni00, Ts3D, ~] = load_3D_data(filename, 'Ni00');
+             Ni00_ = cat(4,Ni00_,Ni00); clear Ni00
         end
         if W_DENS
             if KIN_E
-            DENS_E_ = cat(4,DENS_E_,DENS_E);
+        [DENS_E, Ts3D, ~] = load_3D_data(filename, 'dens_e');
+            DENS_E_ = cat(4,DENS_E_,DENS_E); clear DENS_E
             end
-            DENS_I_ = cat(4,DENS_I_,DENS_I);
+        [DENS_I, Ts3D, ~] = load_3D_data(filename, 'dens_i');
+            DENS_I_ = cat(4,DENS_I_,DENS_I); clear DENS_I
         end
         if W_TEMP
             if KIN_E 
-                TEMP_E_ = cat(4,TEMP_E_,TEMP_E);
+        [TEMP_E, Ts3D, ~] = load_3D_data(filename, 'temp_e');
+                TEMP_E_ = cat(4,TEMP_E_,TEMP_E); clear TEMP_E
             end
-            TEMP_I_ = cat(4,TEMP_I_,TEMP_I);
+        [TEMP_I, Ts3D, ~] = load_3D_data(filename, 'temp_i');
+            TEMP_I_ = cat(4,TEMP_I_,TEMP_I); clear TEMP_I
         end
-        if W_NAPJ || W_SAPJ
-            Ts5D_   = cat(1,Ts5D_,Ts5D);
-        end
+
         if W_NAPJ
-            Nipj_ = cat(6,Nipj_,Nipj);
+        [Nipj, Ts5D, ~] = load_5D_data(filename, 'moments_i');
+            Nipj_ = cat(6,Nipj_,Nipj); clear Nipj
             if KIN_E
-                Nepj_ = cat(6,Nepj_,Nepj);
+                Nepj  = load_5D_data(filename, 'moments_e');
+                Nepj_ = cat(6,Nepj_,Nepj); clear Nepj
             end
         end
         if W_SAPJ
@@ -126,16 +149,19 @@ while(CONTINUE)
            Sepj_ = cat(6,Sepj_,Sepj);
           end
         end
+        Ts0D_   = cat(1,Ts0D_,Ts0D);
+        Ts3D_   = cat(1,Ts3D_,Ts3D);
+        Ts5D_   = cat(1,Ts5D_,Ts5D);
 
         % Evolution of simulation parameters
         load_params
-        TJOB_SE   = [TJOB_SE Ts0D(1) Ts0D(end)];
-        NU_EVOL   = [NU_EVOL NU NU];
-        CO_EVOL   = [CO_EVOL CO CO];
-        MU_EVOL   = [MU_EVOL MU MU];
-        K_N_EVOL = [K_N_EVOL K_N K_N];
-        L_EVOL    = [L_EVOL L L];
-        DT_EVOL   = [DT_EVOL DT_SIM DT_SIM];
+        DATA.TJOB_SE   = [DATA.TJOB_SE  Ts0D(1) Ts0D(end)];
+        DATA.NU_EVOL   = [DATA.NU_EVOL  DATA.NU     DATA.NU];
+        DATA.CO_EVOL   = [DATA.CO_EVOL  DATA.CO     DATA.CO];
+        DATA.MU_EVOL   = [DATA.MU_EVOL  DATA.MU     DATA.MU];
+        DATA.K_N_EVOL  = [DATA.K_N_EVOL DATA.K_N    DATA.K_N];
+        DATA.L_EVOL    = [DATA.L_EVOL   DATA.L      DATA.L];
+        DATA.DT_EVOL   = [DATA.DT_EVOL  DATA.DT_SIM DATA.DT_SIM];
 
         JOBFOUND = JOBFOUND + 1;
         LASTJOB  = JOBNUM;
@@ -147,13 +173,40 @@ while(CONTINUE)
     end
     JOBNUM   = JOBNUM + 1;
 end
-GGAMMA_RI = GGAMMA_; PGAMMA_RI = PGAMMA_; HFLUX_X = HFLUX_; Ts0D = Ts0D_;
-Nipj = Nipj_; Nepj = Nepj_; Ts5D = Ts5D_;
-Ni00 = Ni00_; Ne00 = Ne00_; PHI = PHI_; Ts3D = Ts3D_;
-DENS_E = DENS_E_; DENS_I = DENS_I_; TEMP_E = TEMP_E_; TEMP_I = TEMP_I_;
-clear Nipj_ Nepj_ Ni00_ Ne00_ PHI_ Ts2D_ Ts5D_ GGAMMA_ PGAMMA_ Ts0D_ HFLUX_
 
-Sipj = Sipj_; Sepj = Sepj_;
-clear Sipj_ Sepj_
+%% Build grids
+Nkx = numel(kx); Nky = numel(ky);
+[KY,KX] = meshgrid(ky,kx);
+Lkx = max(kx)-min(kx); Lky = max(ky)-min(ky);
+dkx = Lkx/(Nkx-1); dky = Lky/(Nky-1);
+KPERP2 = KY.^2+KX.^2;
+[~,ikx0] = min(abs(kx)); [~,iky0] = min(abs(ky));
+
+Nx = 2*(Nkx-1);  Ny = Nky;      Nz = numel(z);
+Lx = 2*pi/dkx;   Ly = 2*pi/dky;
+dx = Lx/Nx;      dy = Ly/Ny; dz = 2*pi/Nz;
+x = dx*(-Nx/2:(Nx/2-1)); Lx = max(x)-min(x);
+y = dy*(-Ny/2:(Ny/2-1)); Ly = max(y)-min(y);
+%% Add everything in output structure
+% Fields
+DATA.GGAMMA_RI = GGAMMA_; DATA.PGAMMA_RI = PGAMMA_; DATA.HFLUX_X = HFLUX_;
+DATA.Nipj = Nipj_; DATA.Ni00 = Ni00_; DATA.DENS_I = DENS_I_; DATA.TEMP_I = TEMP_I_;
+if(KIN_E)
+DATA.Nepj = Nepj_; DATA.Ne00 = Ne00_; DATA.DENS_E = DENS_E_; DATA.TEMP_E = TEMP_E_;
+end
+DATA.Ts5D = Ts5D_; DATA.Ts3D = Ts3D_; DATA.Ts0D = Ts0D_;
+DATA.PHI  = PHI_; 
+% grids
+DATA.Pe = Pe; DATA.Pi = Pi; 
+DATA.kx = kx; DATA.ky = ky; DATA.z = z;
+DATA.x  = x;  DATA.y  = y;
+DATA.ikx0 = ikx0; DATA.iky0 = iky0;
+DATA.Nx = Nx; DATA.Ny = Ny; DATA.Nz = Nz; DATA.Nkx = Nkx; DATA.Nky = Nky; 
+DATA.Pmaxe = numel(Pe); DATA.Pmaxi = numel(Pi); DATA.Jmaxe = numel(Je); DATA.Jmaxi = numel(Ji);
+DATA.dir      = DIRECTORY;
+DATA.localdir = ['..',DIRECTORY(20:end)];
+
 JOBNUM = LASTJOB;
-filename = sprintf([BASIC.RESDIR,'outputs_%.2d.h5'],JOBNUM);
+
+filename = sprintf([DIRECTORY,'outputs_%.2d.h5'],JOBNUM);
+end

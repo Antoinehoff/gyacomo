@@ -3,8 +3,7 @@ addpath(genpath('../matlab')) % ... add
 SUBMIT = 1; % To submit the job automatically
 CHAIN  = 2; % To chain jobs (CHAIN = n will launch n jobs in chain)
 % EXECNAME = 'helaz_dbg';
-  EXECNAME = 'helaz_3.9';
-for K_N = [1/0.6]
+  EXECNAME = 'helaz_3.5';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -20,33 +19,34 @@ NP_KX         = 24;         % MPI processes along kx
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
 NU      = 0.1;   % Collision frequency
-K_N    = 1.0/0.6;    % Density gradient drive (R/Ln)
+K_N     = 1.0/0.6;    % Density gradient drive (R/Ln)
 NU_HYP  = 0.0;
+SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 %% GRID PARAMETERS
-Nx      = 300;     % Realspace x-gridpoints
-Ny      = 300;     % Realspace y-gridpoints
-Lx      = 120;     % Size of the squared frequency domain
-Ly      = 120;     % Size of the squared frequency domain
-Nz      = 1;      % number of perpendicular planes (parallel grid)
-q0      = 1.0;    % q factor ()
-shear   = 0.0;    % magnetic shear
-eps     = 0.0;    % inverse aspect ratio
-P       = 8;
-J       = 4;
+NX      = 300;     % Realspace x-gridpoints
+NY      = 300;     % Realspace y-gridpoints
+LX      = 120;     % Size of the squared frequency domain
+LY      = 120;     % Size of the squared frequency domain
+NZ      = 1;      % number of perpendicular planes (parallel grid)
+Q0      = 1.0;    % q factor ()
+SHEAR   = 0.0;    % magnetic shear
+EPS     = 0.0;    % inverse aspect ratio
+P       = 4;
+J       = 2;
 %% TIME PARAMETERS
 TMAX    = 10000;  % Maximal time unit
-DT      = 8e-3;   % Time step
+DT      = 2e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS3D   = 1/2;      % Sampling per time unit for 3D arrays
-SPS5D   = 1/100;  % Sampling per time unit for 5D arrays
-JOB2LOAD= 2; % start from t=0 if <0, else restart from outputs_$job2load
+SPS5D   = 1/50;  % Sampling per time unit for 5D arrays
+JOB2LOAD= -1; % start from t=0 if <0, else restart from outputs_$job2load
 %% OPTIONS AND NAMING
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle ; +/- for GK/DK)
-CO      = 3;
+CO      = 2;
 CLOS    = 0;   % Closure model (0: =0 truncation)
-NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
+NL_CLOS = 0;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
 % SIMID   = 'test_chained_job';  % Name of the simulation
 SIMID   = 'simulation_A';  % Name of the simulation
 % SIMID   = ['v3.0_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
@@ -63,6 +63,10 @@ W_NAPJ   = 1; W_SAPJ   = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% unused
+KIN_E   = 1;         % Kinetic (1) or adiabatic (2) electron model
+GRADB   = 1.0;       % Magnetic  gradient
+CURVB   = 1.0;       % Magnetic  curvature
+SG      = 0;         % Staggered z grids option
 PMAXE   = P;    % Highest electron Hermite polynomial degree
 JMAXE   = J;     % Highest ''       Laguerre ''
 PMAXI   = P;     % Highest ion      Hermite polynomial degree
@@ -72,14 +76,15 @@ KX0KH   = 0; A0KH = 0; % Background phi mode to drive Ray-Tay inst.
 KXEQ0   = 0;      % put kx = 0
 KPAR    = 0.0;    % Parellel wave vector component
 LAMBDAD = 0.0;
-kmax    = Nx*pi/Lx;% Highest fourier mode
+kmax    = NX*pi/LX;% Highest fourier mode
 HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
 % kmaxcut = 2.5;
 MU      = NU_HYP/(HD_CO*kmax)^4; % Hyperdiffusivity coefficient
 NOISE0  = 1.0e-5;
 BCKGD0  = 0.0;    % Init background
 TAU     = 1.0;    % e/i temperature ratio
-K_T    = 0.0;    % Temperature gradient
+K_T     = 0.0;    % Temperature gradient
+K_E     = 0.0;    % ES '''
 INIT_PHI= 1;   % Start simulation with a noisy phi and moments
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
@@ -115,4 +120,3 @@ if(SUBMIT)
 end
 system('rm fort*.90');
 disp('done');
-end

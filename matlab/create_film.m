@@ -1,11 +1,24 @@
-title1 = GIFNAME;
-FIGDIR = BASIC.RESDIR;
-GIFNAME = [FIGDIR, GIFNAME,'.gif'];
+function create_film(DATA,OPTIONS,format)
+%% Plot options
+FPS = 30; DELAY = 1/FPS;
+INTERP = OPTIONS.INTERP; BWR = 1; NORMALIZED = 1;
+T = DATA.Ts3D;
+%% Processing
+toplot = process_field(DATA,OPTIONS);
 
-XNAME     = latexize(XNAME);
-YNAME     = latexize(YNAME);
-FIELDNAME = latexize(FIELDNAME);
-
+%%
+FILENAME  = [toplot.FILENAME,format];
+XNAME     = ['$',toplot.XNAME,'$'];
+YNAME     = ['$',toplot.YNAME,'$'];
+FIELDNAME = ['$',toplot.FIELDNAME,'$'];
+FIELD     = toplot.FIELD; X = toplot.X; Y = toplot.Y;
+FRAMES    = toplot.FRAMES;
+switch format
+    case '.avi'
+        vidfile = VideoWriter(FILENAME,'Uncompressed AVI');
+        vidfile.FrameRate = FPS;
+        open(vidfile);  
+end
 % Set colormap boundaries
 hmax = max(max(max(FIELD(:,:,FRAMES))));
 hmin = min(min(min(FIELD(:,:,FRAMES))));
@@ -15,7 +28,7 @@ if hmax == hmin
     disp('Warning : h = hmin = hmax = const')
 else
 % Setup figure frame
-fig  = figure('Color','white','Position', [100, 100, 400, 400]);
+fig  = figure('Color','white','Position', toplot.DIMENSIONS);
     pcolor(X,Y,FIELD(:,:,1)); % to set up
     if BWR
     colormap(bluewhitered)
@@ -46,7 +59,7 @@ fig  = figure('Color','white','Position', [100, 100, 400, 400]);
         if INTERP
             shading interp; 
         end
-        set(pclr, 'edgecolor','none'); axis square;
+        set(pclr, 'edgecolor','none'); pbaspect(toplot.ASPECT);
         if BWR
         colormap(bluewhitered)
         end
@@ -54,14 +67,22 @@ fig  = figure('Color','white','Position', [100, 100, 400, 400]);
         drawnow 
         % Capture the plot as an image 
         frame = getframe(fig); 
-        im = frame2im(frame); 
-        [imind,cm] = rgb2ind(im,32); 
-        % Write to the GIF File 
-        if in == 1 
-          imwrite(imind,cm,GIFNAME,'gif', 'Loopcount',inf); 
-        else 
-          imwrite(imind,cm,GIFNAME,'gif','WriteMode','append', 'DelayTime',DELAY); 
-        end 
+        switch format
+            case '.gif'
+                im = frame2im(frame); 
+                [imind,cm] = rgb2ind(im,32); 
+                % Write to the GIF File 
+                if in == 1 
+                  imwrite(imind,cm,FILENAME,'gif', 'Loopcount',inf); 
+                else 
+                  imwrite(imind,cm,FILENAME,'gif','WriteMode','append', 'DelayTime',DELAY);
+                end 
+            case '.avi'
+                writeVideo(vidfile,frame); 
+            otherwise
+                disp('Unknown format');
+                break
+        end
         % terminal info
         while nbytes > 0
           fprintf('\b')
@@ -71,6 +92,12 @@ fig  = figure('Color','white','Position', [100, 100, 400, 400]);
         in = in + 1;
     end
     disp(' ')
-    disp(['Gif saved @ : ',GIFNAME])
+    switch format
+        case '.gif'
+            disp(['Gif saved @ : ',FILENAME])
+        case '.avi'
+            disp(['Video saved @ : ',FILENAME])
+            close(vidfile);
+    end
 end
-
+end

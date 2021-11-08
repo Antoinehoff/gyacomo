@@ -16,7 +16,8 @@ function [ RESDIR ] = load_marconi( outfilename )
 %     disp(CMD);
 %     system(CMD); 
     % SCP the output file from marconi to misc folder of SPCPC
-    CMD = ['scp -r ahoffman@login.marconi.cineca.it:',hostfile,' ',miscfolder];
+%     CMD = ['scp -r ahoffman@login.marconi.cineca.it:',hostfile,' ',miscfolder];
+    CMD = ['rsync ahoffman@login.marconi.cineca.it:',hostfile,' ',miscfolder];
     disp(CMD);
     system(CMD);
     % Load the fort.90 as well in misc folder

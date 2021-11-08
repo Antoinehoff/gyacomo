@@ -7,26 +7,6 @@ Ns3D      = numel(Ts3D);
 Ts5D      = Ts5D';
 Ts3D      = Ts3D';
 
-%% Build grids
-Nkx = numel(kx); Nky = numel(ky);
-[KY,KX] = meshgrid(ky,kx);
-Lkx = max(kx)-min(kx); Lky = max(ky)-min(ky);
-dkx = Lkx/(Nkx-1); dky = Lky/(Nky-1);
-KPERP2 = KY.^2+KX.^2;
-[~,ikx0] = min(abs(kx)); [~,iky0] = min(abs(ky));
-[KY_XY,KX_XY] = meshgrid(ky,kx);
-[KZ_XZ,KX_XZ] = meshgrid(z,kx);
-[KZ_YZ,KY_YZ] = meshgrid(z,ky);
-
-Nx = 2*(Nkx-1);  Ny = Nky;      Nz = numel(z);
-Lx = 2*pi/dkx;   Ly = 2*pi/dky;
-dx = Lx/Nx;      dy = Ly/Ny; dz = 2*pi/Nz;
-x = dx*(-Nx/2:(Nx/2-1)); Lx = max(x)-min(x);
-y = dy*(-Ny/2:(Ny/2-1)); Ly = max(y)-min(y);
-[Y_XY,X_XY] = meshgrid(y,x);
-[Z_XZ,X_XZ] = meshgrid(z,x);
-[Z_YZ,Y_YZ] = meshgrid(z,y);
-
 %% Analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('Analysis :')
 disp('- iFFT')
