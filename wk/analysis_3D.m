@@ -2,12 +2,12 @@ addpath(genpath('../matlab')) % ... add
 addpath(genpath('../matlab/plots')) % ... add
 outfile ='';
 %% Directory of the simulation
-if 0% Local results
+if 1% Local results
 outfile ='';
 outfile ='';
 outfile ='';
-outfile ='';
-outfile ='fluxtube_salphaB_s0/100x100x30_5x3_Lx_200_Ly_100_q0_2.7_e_0.18_kN_2.22_kT_8_nu_1e-01_DGGK_adiabe';
+outfile ='simulation_A/CO_damping_FCGK';
+% outfile ='fluxtube_salphaB_s0/100x100x30_5x3_Lx_200_Ly_100_q0_2.7_e_0.18_kN_2.22_kT_8_nu_1e-01_DGGK_adiabe';
 % outfile ='fluxtube_salphaB_s0/50x100x20_5x3_L_300_q0_2.7_e_0.18_kN_2.22_kT_8_nu_1e-01_DGGK_adiabe';
 % outfile ='fluxtube_salphaB_s0/50x100x20_5x3_L_300_q0_2.7_e_0.18_kN_2.22_kT_8_nu_1e-01_DGGK_adiabe_Sg';
     LOCALDIR  = ['../results/',outfile,'/'];
@@ -24,7 +24,7 @@ end
 
 %% Load the results
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 20; 
+JOBNUMMIN = 07; JOBNUMMAX = 07; 
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 
 
