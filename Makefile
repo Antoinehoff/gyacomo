@@ -1,7 +1,7 @@
 include local/dirs.inc
 include local/make.inc
 
-EXEC = $(BINDIR)/helaz
+EXEC = $(BINDIR)/helaz3
 
 F90 = mpiifort
 #F90 = ftn #for piz-daint cluster
