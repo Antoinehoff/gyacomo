@@ -4,12 +4,12 @@ addpath(genpath('../matlab')) % ... add
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;   % Collision frequency
+NU      = 0.01;   % Collision frequency
 K_N     = 2.22;      % Density gradient drive
-K_T     = 8.0;       % Temperature '''
+K_T     = 6.9;       % Temperature '''
 K_E     = 0.00;    % Electrostat gradient
 SIGMA_E = 0.05196;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
-NU_HYP  = 0.0;
+NU_HYP  = 0.01;
 KIN_E   = 0;         % Kinetic (1) or adiabatic (2) electron model
 %% GRID PARAMETERS
 NX      = 100;     % Spatial radial resolution ( = 2x radial modes)
@@ -20,18 +20,18 @@ NZ      = 30;     % number of perpendicular planes (parallel grid)
 P       = 4;
 J       = 2;
 %% GEOMETRY PARAMETERS
-Q0      = 2.7;       % safety factor
+Q0      = 1.4;       % safety factor
 SHEAR   = 0.0;       % magnetic shear
 EPS     = 0.18;      % inverse aspect ratio
 GRADB   = 1.0;       % Magnetic  gradient
 CURVB   = 1.0;       % Magnetic  curvature
 SG      = 1;         % Staggered z grids option
 %% TIME PARAMETERS
-TMAX    = 200;  % Maximal time unit
+TMAX    = 500;  % Maximal time unit
 DT      = 5e-2;   % Time step
-SPS0D   = 1;      % Sampling per time unit for profiler
+SPS0D   = 2;      % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
-SPS3D   = 5;      % Sampling per time unit for 3D arrays
+SPS3D   = 1/2;      % Sampling per time unit for 3D arrays
 SPS5D   = 1/200;  % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints/10
 JOB2LOAD= -1;
@@ -41,7 +41,7 @@ JOB2LOAD= -1;
 CO      = 1;
 CLOS    = 0;   % Closure model (0: =0 truncation)
 NL_CLOS = 0;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
-SIMID   = 'fluxtube_salphaB_s0';  % Name of the simulation
+SIMID   = 'Cyclone';  % Name of the simulation
 % SIMID   = 'simulation_A';  % Name of the simulation
 % SIMID   = ['v3.0_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
 NON_LIN = 1;   % activate non-linearity (is cancelled if KXEQ0 = 1)

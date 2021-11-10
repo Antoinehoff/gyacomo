@@ -1,13 +1,13 @@
 function create_film(DATA,OPTIONS,format)
 %% Plot options
 FPS = 30; DELAY = 1/FPS;
-INTERP = OPTIONS.INTERP; BWR = 1; NORMALIZED = 1;
+BWR = 1; NORMALIZED = 1;
 T = DATA.Ts3D;
 %% Processing
 toplot = process_field(DATA,OPTIONS);
 
 %%
-FILENAME  = [toplot.FILENAME,format];
+FILENAME  = [DATA.localdir,toplot.FILENAME,format];
 XNAME     = ['$',toplot.XNAME,'$'];
 YNAME     = ['$',toplot.YNAME,'$'];
 FIELDNAME = ['$',toplot.FIELDNAME,'$'];
@@ -28,13 +28,13 @@ if hmax == hmin
     disp('Warning : h = hmin = hmax = const')
 else
 % Setup figure frame
-fig  = figure('Color','white','Position', toplot.DIMENSIONS);
+fig  = figure('Color','white','Position', toplot.DIMENSIONS.*[1 1 1.2 1]);
     pcolor(X,Y,FIELD(:,:,1)); % to set up
     if BWR
     colormap(bluewhitered)
     end
     axis tight manual % this ensures that getframe() returns a consistent size
-    if INTERP
+    if toplot.INTERP
         shading interp;
     end
     in      = 1;
@@ -56,7 +56,7 @@ fig  = figure('Color','white','Position', toplot.DIMENSIONS);
         end
         title([FIELDNAME,', $t \approx$', sprintf('%.3d',ceil(T(n)))...
               ,', scaling = ',sprintf('%.1e',scale)]);
-        if INTERP
+        if toplot.INTERP
             shading interp; 
         end
         set(pclr, 'edgecolor','none'); pbaspect(toplot.ASPECT);

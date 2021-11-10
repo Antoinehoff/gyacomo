@@ -1,9 +1,9 @@
 DATA.CO      = h5readatt(filename,'/data/input','CO');
-DATA.K_N    = h5readatt(filename,'/data/input','eta_n');
-DATA.K_T    = h5readatt(filename,'/data/input','eta_T');
-% DATA.K_N     = h5readatt(filename,'/data/input','K_n');
-% DATA.K_T     = h5readatt(filename,'/data/input','K_T');
-% DATA.K_E     = h5readatt(filename,'/data/input','K_E');
+% DATA.K_N    = h5readatt(filename,'/data/input','eta_n');
+% DATA.K_T    = h5readatt(filename,'/data/input','eta_T');
+DATA.K_N     = h5readatt(filename,'/data/input','K_n');
+DATA.K_T     = h5readatt(filename,'/data/input','K_T');
+DATA.K_E     = h5readatt(filename,'/data/input','K_E');
 DATA.Q0      = h5readatt(filename,'/data/input','q0');
 DATA.SHEAR   = h5readatt(filename,'/data/input','shear');
 DATA.EPS     = h5readatt(filename,'/data/input','eps');

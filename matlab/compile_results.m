@@ -45,8 +45,8 @@ while(CONTINUE)
         W_SAPJ    = strcmp(h5readatt(filename,'/data/input','write_Sapj' ),'y');
         W_DENS    = strcmp(h5readatt(filename,'/data/input','write_dens' ),'y');
         W_TEMP    = strcmp(h5readatt(filename,'/data/input','write_temp' ),'y');
-%         KIN_E     = strcmp(h5readatt(filename,'/data/input',     'KIN_E' ),'y');
-        KIN_E     = 1;
+        KIN_E     = strcmp(h5readatt(filename,'/data/input',     'KIN_E' ),'y');
+%         KIN_E     = 1;
         
         % Check polynomials degrees
         Pe_new= numel(Pe); Je_new= numel(Je);

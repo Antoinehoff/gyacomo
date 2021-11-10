@@ -4,9 +4,8 @@ outfile ='';
 %% Directory of the simulation
 if 1% Local results
 outfile ='';
-outfile ='';
-outfile ='';
-outfile ='simulation_A/CO_damping_FCGK';
+outfile ='Cyclone/100x100x30_5x3_Lx_200_Ly_100_q0_1.4_e_0.18_kN_2.22_kT_6.9_nu_1e-02_DGGK_adiabe';
+% outfile ='simulation_A/CO_damping_FCGK';
 % outfile ='fluxtube_salphaB_s0/100x100x30_5x3_Lx_200_Ly_100_q0_2.7_e_0.18_kN_2.22_kT_8_nu_1e-01_DGGK_adiabe';
 % outfile ='fluxtube_salphaB_s0/50x100x20_5x3_L_300_q0_2.7_e_0.18_kN_2.22_kT_8_nu_1e-01_DGGK_adiabe';
 % outfile ='fluxtube_salphaB_s0/50x100x20_5x3_L_300_q0_2.7_e_0.18_kN_2.22_kT_8_nu_1e-01_DGGK_adiabe_Sg';
@@ -16,15 +15,19 @@ outfile ='simulation_A/CO_damping_FCGK';
     CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
     system(CMD);
 else% Marconi results
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x200_L_200_P_8_J_4_eta_0.6_nu_1e-01_PAGK_mu_0e+00/out.txt';
-% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x300_L_120_P_8_J_4_eta_0.6_nu_1e-01_PAGK_mu_0e+00/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x200_L_200_P_8_J_4_eta_0.6_nu_1e-01_PAGK_mu_0e+00/out.txt';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/500x500_L_120_P_4_J_2_eta_0.6_nu_1e-01_DGGK_mu_0e+00/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x150_L_120_P_8_J_4_eta_0.6_nu_1e-01_SGGK_mu_0e+00/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/cw_FCGK_kp_3.0/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/nonlin_FCGK/150x75_L_200_P_4_J_2_eta_0.6_nu_1e-01_FCGK_mu_0e+00/out.txt';
+
 % BASIC.RESDIR      = ['../',outfile(46:end-8),'/'];
-MISCDIR = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'/'];
+MISCDIR = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'^{NZ}/'];
 end
 
 %% Load the results
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 07; JOBNUMMAX = 07; 
+JOBNUMMIN = 00; JOBNUMMAX = 13; 
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 
 
@@ -35,7 +38,7 @@ FMT = '.fig';
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-TAVG_0 = 1500; TAVG_1 = 5000; % Averaging times duration
+TAVG_0 = 100; TAVG_1 = 500; % Averaging times duration
 fig = plot_radial_transport_and_shear(data,TAVG_0,TAVG_1);
 save_figure(data,fig)
 end
@@ -46,10 +49,11 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
+% options.NAME      = '\Gamma_x';
 options.NAME      = 'n_i^{NZ}';
 options.PLAN      = 'xy';
-options.COMP      = 1;
-options.TIME      = 00:20:6000;
+options.COMP      = 16;
+options.TIME      = 0:1:data.Ts3D(end);
 % options.TIME      = 140:0.5:160;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -60,10 +64,11 @@ if 0
 % Options
 options.INTERP    = 0;
 options.POLARPLOT = 0;
+% options.NAME      = '\Gamma_x';
 options.NAME      = 'n_i^{NZ}';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 options.COMP      = 1;
-options.TIME      = [100 400 2500 5500];
+options.TIME      = [50 800 1200];
 data.a = data.EPS * 1000;
 fig = photomaton(data,options);
 save_figure(data,fig)
@@ -73,8 +78,8 @@ if 0
 %% 3D plot on the geometry
 options.INTERP    = 1;
 options.NAME      = 'n_i';
-options.PLANES    = 1;
-options.TIME      = 5000;
+options.PLANES    = 16;
+options.TIME      = 50;
 data.rho_o_R      = 1e-3; % Sound larmor radius over Machine size ratio
 FIGURE = show_geometry(data,options);
 end
@@ -83,11 +88,6 @@ if 0
 %%
 TAVG_0 = 1000; TAVG_1 = 5000; % Averaging times duration
 ZF_fourier_analysis
-end
-
-if 0
-%%
-plot_param_evol
 end
 
 if 0
