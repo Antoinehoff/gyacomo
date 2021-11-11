@@ -12,7 +12,7 @@ MODULE calculus
    (/ onetwentyfourth,-nineeighths, nineeighths,-onetwentyfourth /) ! fd4 odd to even stencil
   REAL(dp), dimension(-1:2) :: dz_e2o = &
    (/ onetwentyfourth,-nineeighths, nineeighths,-onetwentyfourth /) ! fd4 odd to even stencil
-   
+
   PUBLIC :: simpson_rule_z, interp_z, grad_z
 
 CONTAINS
@@ -26,26 +26,30 @@ SUBROUTINE grad_z(target,f,ddzf)
   INTEGER, INTENT(IN) :: target
   COMPLEX(dp),dimension( izs:ize ), intent(in)  :: f
   COMPLEX(dp),dimension( izs:ize ), intent(out) :: ddzf
-  IF(SG) THEN
-    IF(TARGET .EQ. 0) THEN
-      CALL grad_z_o2e(f,ddzf)
-    ELSE
-      CALL grad_z_e2o(f,ddzf)
+  IF(Nz .GT. 3) THEN ! Cannot apply four points stencil on less than four points grid
+    IF(SG) THEN
+      IF(TARGET .EQ. 0) THEN
+        CALL grad_z_o2e(f,ddzf)
+      ELSE
+        CALL grad_z_e2o(f,ddzf)
+      ENDIF
+    ELSE ! No staggered grid -> usual centered finite differences
+      DO iz = 3,Nz-2
+       ddzf(iz) = dz_usu(-2)*f(iz-2) + dz_usu(-1)*f(iz-1) &
+                 +dz_usu( 1)*f(iz+1) + dz_usu( 2)*f(iz+2)
+      ENDDO
+      ! Periodic boundary conditions
+      ddzf(Nz-1) = dz_usu(-2)*f(Nz-3) + dz_usu(-1)*f(Nz-2) &
+                  +dz_usu(+1)*f(Nz  ) + dz_usu(+2)*f(1   )
+      ddzf(Nz  ) = dz_usu(-2)*f(Nz-2) + dz_usu(-1)*f(Nz-1) &
+                  +dz_usu(+1)*f(1   ) + dz_usu(+2)*f(2   )
+      ddzf(1   ) = dz_usu(-2)*f(Nz-1) + dz_usu(-1)*f(Nz  ) &
+                  +dz_usu(+1)*f(2   ) + dz_usu(+2)*f(3   )
+      ddzf(2   ) = dz_usu(-2)*f(Nz  ) + dz_usu(-1)*f(1   ) &
+                  +dz_usu(+1)*f(3   ) + dz_usu(+2)*f(4)
     ENDIF
-  ELSE ! No staggered grid -> usual centered finite differences
-    DO iz = 3,Nz-2
-     ddzf(iz) = dz_usu(-2)*f(iz-2) + dz_usu(-1)*f(iz-1) &
-               +dz_usu( 1)*f(iz+1) + dz_usu( 2)*f(iz+2)
-    ENDDO
-    ! Periodic boundary conditions
-    ddzf(Nz-1) = dz_usu(-2)*f(Nz-3) + dz_usu(-1)*f(Nz-2) &
-                +dz_usu(+1)*f(Nz  ) + dz_usu(+2)*f(1   )
-    ddzf(Nz  ) = dz_usu(-2)*f(Nz-2) + dz_usu(-1)*f(Nz-1) &
-                +dz_usu(+1)*f(1   ) + dz_usu(+2)*f(2   )
-    ddzf(1   ) = dz_usu(-2)*f(Nz-1) + dz_usu(-1)*f(Nz  ) &
-                +dz_usu(+1)*f(2   ) + dz_usu(+2)*f(3   )
-    ddzf(2   ) = dz_usu(-2)*f(Nz  ) + dz_usu(-1)*f(1   ) &
-                +dz_usu(+1)*f(3   ) + dz_usu(+2)*f(4)
+  ELSE
+    ddzf = 0._dp
   ENDIF
 END SUBROUTINE grad_z
 

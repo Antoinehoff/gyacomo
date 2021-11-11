@@ -12,7 +12,8 @@ SUBROUTINE memory
   IMPLICIT NONE
 
   ! Electrostatic potential
-  CALL allocate_array(phi, ikxs,ikxe, ikys,ikye, izs,ize)
+  CALL allocate_array(           phi, ikxs,ikxe, ikys,ikye, izs,ize)
+  CALL allocate_array(        phi_ZF, ikxs,ikxe, izs,ize)
   CALL allocate_array(inv_poisson_op, ikxs,ikxe, ikys,ikye, izs,ize)
 
   !Electrons arrays
@@ -24,6 +25,7 @@ SUBROUTINE memory
   CALL allocate_array(        moments_e, ipsg_e,ipeg_e, ijsg_e,ijeg_e, ikxs,ikxe, ikys,ikye, izs,ize, 1,ntimelevel )
   CALL allocate_array(    moments_rhs_e,  ips_e,ipe_e,   ijs_e,ije_e,  ikxs,ikxe, ikys,ikye, izs,ize, 1,ntimelevel )
   CALL allocate_array( nadiab_moments_e, ipsg_e,ipeg_e, ijsg_e,ijeg_e, ikxs,ikxe, ikys,ikye, izs,ize)
+  CALL allocate_array(     moments_e_ZF, ipsg_e,ipeg_e, ijsg_e,ijeg_e, ikxs,ikxe, izs,ize)
   CALL allocate_array(          TColl_e,  ips_e,ipe_e,   ijs_e,ije_e , ikxs,ikxe, ikys,ikye, izs,ize)
   CALL allocate_array(             Sepj,  ips_e,ipe_e,   ijs_e,ije_e,  ikxs,ikxe, ikys,ikye, izs,ize)
   CALL allocate_array(           xnepj,   ips_e,ipe_e,   ijs_e,ije_e)
@@ -50,6 +52,7 @@ SUBROUTINE memory
   CALL allocate_array(        moments_i, ipsg_i,ipeg_i, ijsg_i,ijeg_i, ikxs,ikxe, ikys,ikye, izs,ize, 1,ntimelevel )
   CALL allocate_array(    moments_rhs_i,  ips_i,ipe_i,   ijs_i,ije_i,  ikxs,ikxe, ikys,ikye, izs,ize, 1,ntimelevel )
   CALL allocate_array( nadiab_moments_i, ipsg_i,ipeg_i, ijsg_i,ijeg_i, ikxs,ikxe, ikys,ikye, izs,ize)
+  CALL allocate_array(     moments_i_ZF, ipsg_i,ipeg_i, ijsg_i,ijeg_i, ikxs,ikxe, izs,ize)
   CALL allocate_array(          TColl_i,  ips_i,ipe_i,   ijs_i,ije_i,  ikxs,ikxe, ikys,ikye, izs,ize)
   CALL allocate_array(             Sipj,  ips_i,ipe_i,   ijs_i,ije_i,  ikxs,ikxe, ikys,ikye, izs,ize)
   CALL allocate_array( xnipj,   ips_i,ipe_i, ijs_i,ije_i)

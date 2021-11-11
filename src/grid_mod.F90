@@ -30,7 +30,7 @@ MODULE grid
   ! For Orszag filter
   REAL(dp), PUBLIC, PROTECTED :: two_third_kxmax
   REAL(dp), PUBLIC, PROTECTED :: two_third_kymax
-  REAL(dp), PUBLIC, PROTECTED :: two_third_kpmax
+  REAL(dp), PUBLIC :: two_third_kpmax
 
   ! 1D Antialiasing arrays (2/3 rule)
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC :: AA_x
@@ -285,7 +285,7 @@ CONTAINS
     two_third_kxmax = 2._dp/3._dp*deltakx*(Nkx-1)
     ALLOCATE(AA_x(ikxs:ikxe))
     DO ikx = ikxs,ikxe
-      IF ( (kxarray(ikx) .LT. two_third_kxmax) .OR. (.NOT. NON_LIN)) THEN
+      IF ( (kxarray(ikx) .LT. two_third_kxmax) .OR. (NON_LIN .EQ. 0)) THEN
         AA_x(ikx) = 1._dp;
       ELSE
         AA_x(ikx) = 0._dp;
@@ -347,7 +347,7 @@ CONTAINS
     ALLOCATE(AA_y(ikys:ikye))
     DO iky = ikys,ikye
       IF ( ((kyarray(iky) .GT. -two_third_kymax) .AND. &
-           (kyarray(iky) .LT. two_third_kymax))   .OR. (.NOT. NON_LIN)) THEN
+           (kyarray(iky) .LT. two_third_kymax))   .OR. (NON_LIN .EQ. 0)) THEN
         AA_y(iky) = 1._dp;
       ELSE
         AA_y(iky) = 0._dp;

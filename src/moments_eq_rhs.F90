@@ -127,10 +127,9 @@ SUBROUTINE moments_eq_rhs_e
               + TColl
 
           !! Adding non linearity
-          IF ( NON_LIN ) THEN
             moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) = &
               moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) - Sepj(ip,ij,ikx,iky,iz)
-          ENDIF
+
          END DO zloope
         END DO kyloope
       END DO kxloope
@@ -266,10 +265,8 @@ SUBROUTINE moments_eq_rhs_i
               + TColl
 
           !! Adding non linearity
-          IF ( NON_LIN ) THEN
            moments_rhs_i(ip,ij,ikx,iky,iz,updatetlevel) = &
              moments_rhs_i(ip,ij,ikx,iky,iz,updatetlevel) - Sipj(ip,ij,ikx,iky,iz)
-          ENDIF
           END DO zloopi
         END DO kyloopi
       END DO kxloopi

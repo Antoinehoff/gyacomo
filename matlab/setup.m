@@ -18,8 +18,8 @@ if SG; GRID.SG = '.true.'; else; GRID.SG = '.false.';end;
 MODEL.CO      = CO;  % Collision operator (0 : L.Bernstein, -1 : Full Coulomb, -2 : Dougherty)
 MODEL.CLOS    = CLOS;
 MODEL.NL_CLOS = NL_CLOS;
-if NON_LIN; MODEL.NON_LIN = '.true.'; else; MODEL.NON_LIN = '.false.';end;
-MODEL.KIN_E = KIN_E;
+MODEL.NON_LIN = NON_LIN;
+MODEL.KIN_E   = KIN_E;
 if KIN_E; MODEL.KIN_E = '.true.'; else; MODEL.KIN_E = '.false.';end;
 MODEL.mu      = MU;
 MODEL.mu_p    = MU_P;

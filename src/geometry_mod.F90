@@ -17,7 +17,7 @@ implicit none
 contains
 
   subroutine eval_magnetic_geometry
-    ! evalute metrix, elements, jacobian and gradient
+    ! evalute metrix, elementwo_third_kpmaxts, jacobian and gradient
     implicit none
     REAL(dp) :: kx,ky
     COMPLEX(dp), DIMENSION(izs:ize) :: integrant
@@ -46,6 +46,7 @@ contains
        ENDDO
     ENDDO
     ENDDO
+    two_third_kpmax = 2._dp/3._dp * MAXVAL(kparray)
     !
     ! Compute the inverse z integrated Jacobian (useful for flux averaging)
     integrant = Jacobian(:,0) ! Convert into complex array

@@ -4,11 +4,12 @@
 SUBROUTINE inital
 
   USE basic
-  USE model, ONLY : CO, NON_LIN
+  USE model, ONLY : CO
   USE initial_par
   USE prec_const
   USE time_integration
-  USE array, ONLY : Sepj,Sipj
+  USE array, ONLY : moments_e_ZF, moments_i_ZF, phi_ZF
+  USE fields
   USE collision
   USE closure
   USE ghosts
@@ -67,11 +68,14 @@ SUBROUTINE inital
   IF (my_id .EQ. 0) WRITE(*,*) 'Computing non adiab moments'
   CALL compute_nadiab_moments
 
+  ! Store Zonal moments for semi linear run or for freezing ZF
+  moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,iky_0,izs:ize,updatetlevel)
+  moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,iky_0,izs:ize,updatetlevel)
+  phi_ZF(ikxs:ikxe,izs:ize) = phi(ikxs:ikxe,iky_0,izs:ize)
+
   !!!!!! Set Sepj, Sipj and dnjs coeff table !!!!!!
-  IF ( NON_LIN ) THEN;
-    IF (my_id .EQ. 0) WRITE(*,*) 'Init Sapj'
-    CALL compute_Sapj ! compute S_0 = S(phi_0,N_0)
-  ENDIF
+  IF (my_id .EQ. 0) WRITE(*,*) 'Init Sapj'
+  CALL compute_Sapj ! compute S_0 = S(phi_0,N_0)
 
   !!!!!! Load the COSOlver collision operator coefficients !!!!!!
   IF (ABS(CO) .GT. 1) THEN
@@ -79,6 +83,7 @@ SUBROUTINE inital
     ! Compute collision
     CALL compute_TColl ! compute C_0 = C(N_0)
   ENDIF
+
 END SUBROUTINE inital
 !******************************************************************************!
 
@@ -147,7 +152,7 @@ SUBROUTINE init_moments
     END DO
 
     ! Putting to zero modes that are not in the 2/3 Orszag rule
-    IF (NON_LIN) THEN
+    IF (NON_LIN .GT. 0) THEN
       DO ikx=ikxs,ikxe
       DO iky=ikys,ikye
       DO iz=izs,ize
@@ -241,7 +246,7 @@ SUBROUTINE init_gyrodens
     END DO
 
     ! Putting to zero modes that are not in the 2/3 Orszag rule
-    IF (NON_LIN) THEN
+    IF (NON_LIN .GT. 0) THEN
       DO ikx=ikxs,ikxe
       DO iky=ikys,ikye
       DO iz=izs,ize

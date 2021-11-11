@@ -9,7 +9,7 @@ MODULE model
   INTEGER,  PUBLIC, PROTECTED ::    CLOS =  0         ! linear truncation method
   INTEGER,  PUBLIC, PROTECTED :: NL_CLOS =  0         ! nonlinear truncation method
   INTEGER,  PUBLIC, PROTECTED ::    KERN =  0         ! Kernel model
-  LOGICAL,  PUBLIC, PROTECTED :: NON_LIN =  .true.    ! To turn on non linear bracket term
+  INTEGER,  PUBLIC, PROTECTED :: NON_LIN =  0         ! To turn on non linear bracket term
   LOGICAL,  PUBLIC, PROTECTED ::   KIN_E =  .true.    ! Simulate kinetic electron (adiabatic otherwise)
   REAL(dp), PUBLIC, PROTECTED ::      mu =  0._dp     ! spatial      Hyperdiffusivity coefficient (for num. stability)
   REAL(dp), PUBLIC, PROTECTED ::    mu_p =  0._dp     ! kinetic para hyperdiffusivity coefficient (for num. stability)

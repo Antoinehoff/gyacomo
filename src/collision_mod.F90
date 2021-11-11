@@ -541,8 +541,8 @@ CONTAINS
       CALL getarr(fid, '/coordkperp', kp_grid_mat)
 
       ! check that we have enough kperps mat
-      kp_max = SQRT(MAXVAL(kxarray)**2+MAXVAL(kyarray)**2)
-      IF (NON_LIN) THEN
+      WRITE(*,*) kp_max
+      IF (NON_LIN .GT. 0) THEN
         IF ( (kp_grid_mat(nkp_mat) .LT. 2./3.*kp_max) .AND. (my_id .EQ. 0)) WRITE(*,*) '!! Matrix kperp grid too small !!'
       ELSE
         IF ( (kp_grid_mat(nkp_mat) .LT. kp_max) .AND. (my_id .EQ. 0)) WRITE(*,*) '!! Matrix kperp grid too small !!'
@@ -563,7 +563,7 @@ CONTAINS
 
       DO ikp = ikps_C,ikpe_C ! Loop over everz kperp values
         ! we put zeros if kp>2/3kpmax because thoses frequencies are filtered through AA
-        IF( (kp_grid_mat(ikp) .GT. two_third_kpmax) .AND. NON_LIN) THEN
+        IF( (kp_grid_mat(ikp) .GT. two_third_kpmax) .AND. (NON_LIN .GT. 0)) THEN
           CiepjT_kp(:,:,ikp) = 0._dp
           CiepjF_kp(:,:,ikp) = 0._dp
           CeipjT_kp(:,:,ikp) = 0._dp
@@ -696,8 +696,9 @@ CONTAINS
         IF (my_id .EQ. 0 ) WRITE(*,*) '...Interpolation from matrices kperp to simulation kx,ky...'
         DO ikx = ikxs,ikxe
           DO iky = ikys,ikye
+            ! Check for nonlinear case if we are in the anti aliased domain or the filtered one
             kperp_sim = kparray(ikx,iky,1,0) ! current simulation kperp
-
+            IF( (NON_LIN .EQ. 0) .OR. (kperp_sim .LT. two_third_kpmax) ) THEN
             ! Find the interval in kp grid mat where kperp_sim is contained
             ! Loop over the whole kp mat grid to find the smallest kperp that is
             ! larger than the current kperp_sim (brute force...)
@@ -711,9 +712,9 @@ CONTAINS
             ikp_next  = ikp_mat     !index of k1 (larger than kperp_sim thanks to previous loop)
             ikp_prev  = ikp_mat - 1 !index of k0 (smaller neighbour to interpolate inbetween)
             ! write(*,*) kp_grid_mat(ikp_prev), '<', kperp_sim, '<', kp_grid_mat(ikp_next)
-            if ( (kp_grid_mat(ikp_prev) .GT. kperp_sim) .OR. (kp_grid_mat(ikp_next) .LT. kperp_sim) )&
-              write(*,*) 'Warning, linear interp of collision matrix failed!!'
-
+            if ( (kp_grid_mat(ikp_prev) .GT. kperp_sim) .OR. (kp_grid_mat(ikp_next) .LT. kperp_sim) ) THEN
+              write(*,*) 'Warning, linear interp of collision matrix failed!! '
+            ENDIF
             ! 0->1 variable for linear interp, i.e. zero2one = (k-k0)/(k1-k0)
             zerotoone = (kperp_sim - kp_grid_mat(ikp_prev))/(kp_grid_mat(ikp_next) - kp_grid_mat(ikp_prev))
 
@@ -724,6 +725,14 @@ CONTAINS
             Ciipj (:,:,ikx,iky) = (Ciipj__kp(:,:,ikp_next) - Ciipj__kp(:,:,ikp_prev))*zerotoone + Ciipj__kp(:,:,ikp_prev)
             CiepjT(:,:,ikx,iky) = (CiepjT_kp(:,:,ikp_next) - CiepjT_kp(:,:,ikp_prev))*zerotoone + CiepjT_kp(:,:,ikp_prev)
             CiepjF(:,:,ikx,iky) = (CiepjF_kp(:,:,ikp_next) - CiepjF_kp(:,:,ikp_prev))*zerotoone + CiepjF_kp(:,:,ikp_prev)
+          ELSE ! Out of anti anti aliased domain
+            Ceepj (:,:,ikx,iky) = 0._dp
+            CeipjT(:,:,ikx,iky) = 0._dp
+            CeipjF(:,:,ikx,iky) = 0._dp
+            Ciipj (:,:,ikx,iky) = 0._dp
+            CiepjT(:,:,ikx,iky) = 0._dp
+            CiepjF(:,:,ikx,iky) = 0._dp
+          ENDIF
           ENDDO
         ENDDO
       ELSE ! DK -> No kperp dep, copy simply to final collision matrices

@@ -44,7 +44,7 @@ SUBROUTINE stepon
       ! Update non adiabatic moments n -> n+1
       CALL compute_nadiab_moments
       ! Update nonlinear term S_n -> S_n+1(phi_n+1,N_n+1)
-      IF ( NON_LIN )         CALL compute_Sapj
+      CALL compute_Sapj
       ! Cancel zonal modes artificially
       IF ( WIPE_ZF .EQ. 2)   CALL wipe_zonalflow
       ! Cancel non zonal modes artificially
@@ -63,8 +63,8 @@ SUBROUTINE stepon
         ! Execution time start
         CALL cpu_time(t0_checkfield)
 
-        IF(NON_LIN) CALL anti_aliasing   ! ensure 0 mode for 2/3 rule
-        IF(NON_LIN) CALL enforce_symmetry ! Enforcing symmetry on kx = 0
+        IF(NON_LIN .GT. 0) CALL anti_aliasing   ! ensure 0 mode for 2/3 rule
+        IF(NON_LIN .GT. 0) CALL enforce_symmetry ! Enforcing symmetry on kx = 0
 
         mlend=.FALSE.
         IF(.NOT.nlend) THEN
