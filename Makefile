@@ -2,6 +2,7 @@ include local/dirs.inc
 include local/make.inc
 
 EXEC = $(BINDIR)/helaz3
+EDBG = $(BINDIR)/helaz3_dbg
 
 F90 = mpiifort
 #F90 = ftn #for piz-daint cluster
@@ -12,7 +13,13 @@ EXTINC += -I$(FMDIR)/mod
 EXTLIBS += -L$(FFTWDIR)/lib
 EXTINC += -I$(FFTWDIR)/include
 
-all: dirs src/srcinfo.h $(EXEC)
+all: dirs src/srcinfo.h
+all: F90FLAGS = -O3 -xHOST
+all: $(EXEC)
+
+dbg: dirs src/srcinfo.h
+dbg: F90FLAGS = -g -traceback -CB
+dbg: $(EDBG)
 
 install: dirs src/srcinfo.h $(EXEC) mvmod
 
@@ -58,6 +65,9 @@ $(OBJDIR)/restarts_mod.o $(OBJDIR)/stepon.o $(OBJDIR)/tesend.o $(OBJDIR)/time_in
 $(OBJDIR)/utility_mod.o
 
  $(EXEC): $(FOBJ)
+	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
+
+ $(EDBG): $(FOBJ)
 	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
 
  $(OBJDIR)/advance_field.o : src/advance_field.F90 $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/initial_par_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o
