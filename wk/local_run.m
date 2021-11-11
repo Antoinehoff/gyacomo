@@ -44,7 +44,7 @@ NL_CLOS = 0;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=
 SIMID   = 'Cyclone';  % Name of the simulation
 % SIMID   = 'simulation_A';  % Name of the simulation
 % SIMID   = ['v3.0_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
-NON_LIN = 1;   % activate non-linearity (is cancelled if KXEQ0 = 1)
+NON_LIN  = 1;   % Non linear model (0: linear, 0.5: semi linear, 1: non linear)
 % INIT options
 INIT_PHI= 0;   % Start simulation with a noisy phi (0= noisy moments 00)
 INIT_ZF   = 0; ZF_AMP = 0.0;
