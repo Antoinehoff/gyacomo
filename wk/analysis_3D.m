@@ -2,13 +2,17 @@ addpath(genpath('../matlab')) % ... add
 addpath(genpath('../matlab/plots')) % ... add
 outfile ='';
 %% Directory of the simulation
-if 0% Local results
+if 1% Local results
 outfile ='';
-outfile ='Cyclone/100x100x30_5x3_Lx_200_Ly_100_q0_1.4_e_0.18_kN_2.22_kT_6.9_nu_1e-02_DGGK_adiabe';
-% outfile ='simulation_A/CO_damping_FCGK';
-% outfile ='fluxtube_salphaB_s0/100x100x30_5x3_Lx_200_Ly_100_q0_2.7_e_0.18_kN_2.22_kT_8_nu_1e-01_DGGK_adiabe';
-% outfile ='fluxtube_salphaB_s0/50x100x20_5x3_L_300_q0_2.7_e_0.18_kN_2.22_kT_8_nu_1e-01_DGGK_adiabe';
-% outfile ='fluxtube_salphaB_s0/50x100x20_5x3_L_300_q0_2.7_e_0.18_kN_2.22_kT_8_nu_1e-01_DGGK_adiabe_Sg';
+outfile ='';
+outfile ='';
+outfile ='';
+outfile ='';
+outfile ='';
+outfile ='';
+outfile ='';
+% outfile ='nonlin_FCGK/nadiab_op_continue';
+% outfile ='Cyclone/150x150x30_5x3_Lx_200_Ly_150_q0_1.4_e_0.18_kN_2.22_kT_6.9_nu_5e-02_SGGK_adiabe';
     LOCALDIR  = ['../results/',outfile,'/'];
     MISCDIR   = ['/misc/HeLaZ_outputs/results/',outfile,'/'];
     system(['mkdir -p ',MISCDIR]);
@@ -20,14 +24,14 @@ outfile ='';
 outfile ='';
 outfile ='';
 outfile ='';
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x300_5x3_L_120_kN_1.6667_nu_1e-01_SGGK/out.txt';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x150_L_120_P_8_J_4_eta_0.6_nu_1e-01_SGGK_mu_0e+00/out.txt';
 % BASIC.RESDIR      = ['../',outfile(46:end-8),'/'];
 MISCDIR = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'/'];
 end
 
 %% Load the results
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 13; 
+JOBNUMMIN = 00; JOBNUMMAX = 20; 
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 
 
@@ -38,7 +42,7 @@ FMT = '.fig';
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-TAVG_0 = 500; TAVG_1 = 1000; % Averaging times duration
+TAVG_0 = 11000; TAVG_1 = 11600; % Averaging times duration
 fig = plot_radial_transport_and_shear(data,TAVG_0,TAVG_1);
 save_figure(data,fig)
 end
@@ -47,13 +51,13 @@ end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
-% options.NAME      = '\Gamma_x';
-options.NAME      = 'n_i';
+options.NAME      = '\phi^{NZ}';
+% options.NAME      = 'n_i';
 options.PLAN      = 'kxky';
 options.COMP      = 1;
-options.TIME      = 450:1:data.Ts3D(end);
+options.TIME      = 1500:10:5500;
 % options.TIME      = 140:0.5:160;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -65,10 +69,11 @@ if 0
 options.INTERP    = 0;
 options.POLARPLOT = 0;
 % options.NAME      = '\Gamma_x';
+% options.NAME      = 'n_i^{NZ}|';
 options.NAME      = 'n_i';
-options.PLAN      = 'kxky';
+options.PLAN      = 'kxz';
 options.COMP      = 1;
-options.TIME      = [50 100 1200];
+options.TIME      = [50 70 200 500];
 data.a = data.EPS * 1000;
 fig = photomaton(data,options);
 save_figure(data,fig)

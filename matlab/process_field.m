@@ -34,12 +34,10 @@ switch OPTIONS.PLAN
         XNAME = '$k_x$'; YNAME = '$z$';
         [Y,X] = meshgrid(DATA.z,DATA.kx);
         REALP = 0; COMPDIM = 2; POLARPLOT = 0; SCALE = 0;
-        OPTIONS.COMP = 'max';
     case 'kyz'
         XNAME = '$k_y$'; YNAME = '$z$';
         [Y,X] = meshgrid(DATA.z,DATA.ky);
         REALP = 0; COMPDIM = 1; POLARPLOT = 0; SCALE = 0;
-        OPTIONS.COMP = 'max';
 end
 Xmax_ = max(max(abs(X))); Ymax_ = max(max(abs(Y)));
 Lmin_ = min([Xmax_,Ymax_]);
@@ -81,17 +79,25 @@ switch OPTIONS.COMP
         case 1
             i = OPTIONS.COMP;
             compr = @(x) x(i,:,:);
-            COMPNAME = sprintf([directions{COMPDIM},'=','%2.1f'],DATA.y(i));
+            if REALP
+                COMPNAME = sprintf(['x=','%2.1f'],DATA.x(i));
+            else
+                COMPNAME = sprintf(['k_x=','%2.1f'],DATA.kx(i));
+            end
             FIELDNAME = [LTXNAME,'(',COMPNAME,')'];
         case 2
             i = OPTIONS.COMP;
             compr = @(x) x(:,i,:);
-            COMPNAME = sprintf([directions{COMPDIM},'=','%2.1f'],DATA.y(i));
+            if REALP
+                COMPNAME = sprintf(['y=','%2.1f'],DATA.y(i));
+            else
+                COMPNAME = sprintf(['k_y=','%2.1f'],DATA.ky(i));
+            end
             FIELDNAME = [LTXNAME,'(',COMPNAME,')'];
         case 3
             i = OPTIONS.COMP;
             compr = @(x) x(:,:,i);
-            COMPNAME = sprintf([directions{COMPDIM},'=','%2.1f'],DATA.z(i)/pi);
+            COMPNAME = sprintf(['z=','%2.1f'],DATA.z(i));
             FIELDNAME = [LTXNAME,'(',COMPNAME,')'];
     end
 end
@@ -181,7 +187,27 @@ switch OPTIONS.NAME
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                
         end
-        case '\Gamma_y'
+    case '\phi^{NZ}'
+        NAME = 'phiNZ';
+        if COMPDIM == 3
+            for it = FRAMES
+                tmp = squeeze(compr(DATA.PHI(:,:,:,it).*(KY~=0)));
+                FIELD(:,:,it) = squeeze(process(tmp));
+            end
+        else
+            if REALP
+                tmp = zeros(Nx,Ny,Nz);
+            else
+                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+            end
+            for it = FRAMES
+                for iz = 1:numel(DATA.z)
+                    tmp(:,:,iz) = squeeze(process(DATA.PHI(:,:,iz,it).*(KY~=0)));
+                end
+                FIELD(:,:,it) = squeeze(compr(tmp));
+            end                
+        end
+   case '\Gamma_y'
         NAME     = 'Gy';
         [KY, ~] = meshgrid(DATA.ky, DATA.kx);
         Gx      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));

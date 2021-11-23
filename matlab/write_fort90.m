@@ -1,4 +1,4 @@
-function [INPUT] = write_fort90(OUTPUTS,GRID,MODEL,INITIAL,TIME_INTEGRATION,BASIC)
+function [INPUT] = write_fort90(OUTPUTS,GRID,MODEL,COLL,INITIAL,TIME_INTEGRATION,BASIC)
 % Write the input script "fort.90" with desired parameters
 INPUT = ['fort_',sprintf('%2.2d',OUTPUTS.job2load+1),'.90'];
 fid = fopen(INPUT,'wt');
@@ -46,10 +46,9 @@ fprintf(fid,'/\n');
 
 fprintf(fid,'&MODEL_PAR\n');
 fprintf(fid,'  ! Collisionality\n');
-fprintf(fid,['  CO      = ', num2str(MODEL.CO),'\n']);
 fprintf(fid,['  CLOS    = ', num2str(MODEL.CLOS),'\n']);
 fprintf(fid,['  NL_CLOS = ', num2str(MODEL.NL_CLOS),'\n']);
-fprintf(fid,['  NON_LIN = ', MODEL.NON_LIN,'\n']);
+fprintf(fid,['  LINEARITY = ', MODEL.LINEARITY,'\n']);
 fprintf(fid,['  KIN_E   = ', MODEL.KIN_E,'\n']);
 fprintf(fid,['  mu      = ', num2str(MODEL.mu),'\n']);
 fprintf(fid,['  mu_p    = ', num2str(MODEL.mu_p),'\n']);
@@ -69,16 +68,23 @@ fprintf(fid,['  CurvB     = ', num2str(MODEL.CurvB),'\n']);
 fprintf(fid,['  lambdaD = ', num2str(MODEL.lambdaD),'\n']);
 fprintf(fid,'/\n');
 
+fprintf(fid,'&COLLISION_PAR\n');
+fprintf(fid,['  collision_model = ', COLL.collision_model,'\n']);
+fprintf(fid,['  gyrokin_CO      = ', COLL.gyrokin_CO,'\n']);
+fprintf(fid,['  interspecies    = ', COLL.interspecies,'\n']);
+fprintf(fid,['  mat_file        = ', COLL.mat_file,'\n']);
+fprintf(fid,'/\n');
+
+
 fprintf(fid,'&INITIAL_CON\n');
 fprintf(fid,['  INIT_NOISY_PHI    = ', INITIAL.init_noisy_phi,'\n']);
 fprintf(fid,['  INIT_ZF       = ', num2str(INITIAL.INIT_ZF),'\n']);
-fprintf(fid,['  WIPE_ZF       = ', num2str(INITIAL.wipe_zf),'\n']);
+fprintf(fid,['  ACT_ON_MODES       = ', INITIAL.ACT_ON_MODES,'\n']);
 fprintf(fid,['  WIPE_TURB     = ', num2str(INITIAL.wipe_turb),'\n']);
 fprintf(fid,['  INIT_BLOB     = ', INITIAL.init_blob,'\n']);
 fprintf(fid,['  init_background  = ', num2str(INITIAL.init_background),'\n']);
 fprintf(fid,['  init_noiselvl = ', num2str(INITIAL.init_noiselvl),'\n']);
 fprintf(fid,['  iseed         = ', num2str(INITIAL.iseed),'\n']);
-fprintf(fid,['  mat_file      = ', INITIAL.mat_file,'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&TIME_INTEGRATION_PAR\n');

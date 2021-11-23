@@ -2,8 +2,8 @@ clear all;
 addpath(genpath('../matlab')) % ... add
 SUBMIT = 1; % To submit the job automatically
 CHAIN  = 2; % To chain jobs (CHAIN = n will launch n jobs in chain)
-% EXECNAME = 'helaz_dbg';
-  EXECNAME = 'helaz_3.5';
+% EXECNAME = 'helaz3_dbg';
+  EXECNAME = 'helaz3';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -50,10 +50,10 @@ NL_CLOS = 0;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=
 % SIMID   = 'test_chained_job';  % Name of the simulation
 SIMID   = 'simulation_A';  % Name of the simulation
 % SIMID   = ['v3.0_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
-NON_LIN = 1;   % activate non-linearity (is cancelled if KXEQ0 = 1)
+LINEARITY = 1;   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % INIT options
 INIT_ZF = 0; ZF_AMP = 0.0;
-INIT_BLOB = 0; WIPE_TURB = 0; WIPE_ZF = 0;
+INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 %% OUTPUTS
 W_DOUBLE = 1;
 W_GAMMA  = 1; W_HF     = 1;

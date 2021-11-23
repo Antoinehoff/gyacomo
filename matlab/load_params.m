@@ -11,7 +11,8 @@ DATA.PMAXI   = h5readatt(filename,'/data/input','pmaxi');
 DATA.JMAXI   = h5readatt(filename,'/data/input','jmaxi');
 DATA.PMAXE   = h5readatt(filename,'/data/input','pmaxe');
 DATA.JMAXE   = h5readatt(filename,'/data/input','jmaxe');
-DATA.NON_LIN = h5readatt(filename,'/data/input','NON_LIN');
+% DATA.LINEARITY = h5readatt(filename,'/data/input','NON_LIN');
+% DATA.LINEARITY = h5readatt(filename,'/data/input','LINEARITY');
 DATA.NU      = h5readatt(filename,'/data/input','nu');
 DATA.Nx      = h5readatt(filename,'/data/input','Nx');
 DATA.Ny      = h5readatt(filename,'/data/input','Ny');
@@ -26,23 +27,13 @@ DATA.W_NA00    = h5readatt(filename,'/data/input','write_Na00')  == 'y';
 DATA.W_NAPJ    = h5readatt(filename,'/data/input','write_Napj')  == 'y';
 DATA.W_SAPJ    = h5readatt(filename,'/data/input','write_Sapj')  == 'y';
 
-if DATA.NON_LIN == 'y'
-    DATA.NON_LIN = 1;
-else
-    DATA.NON_LIN = 0;
-end
+% if DATA.LINEARITY == 'y'
+%     DATA.LINEARITY = 1;
+% else
+%     DATA.LINEARITY = 0;
+% end
 
-switch abs(DATA.CO)
-    case 0; DATA.CONAME = 'LB';
-    case 1; DATA.CONAME = 'DG';
-    case 2; DATA.CONAME = 'SG';
-    case 3; DATA.CONAME = 'PA';
-    case 4; DATA.CONAME = 'FC';
-    otherwise; DATA.CONAME ='UK';
-end
-if (DATA.CO <= 0); DATA.CONAME = [DATA.CONAME,'DK'];
-else;         DATA.CONAME = [DATA.CONAME,'GK'];
-end
+DATA.CONAME = DATA.CO;
 
 if    (DATA.CLOS == 0); DATA.CLOSNAME = 'Trunc.';
 elseif(DATA.CLOS == 1); DATA.CLOSNAME = 'Clos. 1';
@@ -57,7 +48,7 @@ end
 degngrad = [degngrad,'_Kn_%1.1f_nu_%0.0e_',...
         DATA.CONAME,'_CLOS_',num2str(DATA.CLOS),'_mu_%0.0e'];
 degngrad   = sprintf(degngrad,[DATA.K_N,DATA.NU,DATA.MU]);
-if ~DATA.NON_LIN; degngrad = ['lin_',degngrad]; end
+% if ~DATA.LINEARITY; degngrad = ['lin_',degngrad]; end
 resolution = [num2str(DATA.Nx),'x',num2str(DATA.Ny),'_'];
 gridname   = ['L_',num2str(DATA.L),'_'];
 DATA.PARAMS = [resolution,gridname,degngrad];

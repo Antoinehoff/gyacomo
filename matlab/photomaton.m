@@ -16,10 +16,10 @@ FIGURE.fig = figure; set(gcf, 'Position',  toplot.DIMENSIONS.*[1 1 numel(FRAMES)
             scale = 1;
         end
         pclr = pcolor(toplot.X,toplot.Y,toplot.FIELD(:,:,FRAMES(i_))./scale); set(pclr, 'edgecolor','none');pbaspect(toplot.ASPECT)
-        if ~strcmp(OPTIONS.PLAN,'kxky')
-            caxis([-1,1]);
-            colormap(bluewhitered);
-        end
+%         if ~strcmp(OPTIONS.PLAN,'kxky')
+%             caxis([-1,1]);
+%             colormap(bluewhitered);
+%         end
         xlabel(toplot.XNAME); ylabel(toplot.YNAME);
 %         if i_ > 1; set(gca,'ytick',[]); end; 
         title([sprintf('$t c_s/R=%.0f$',DATA.Ts3D(FRAMES(i_))),', max = ',sprintf('%.1e',scale)]);

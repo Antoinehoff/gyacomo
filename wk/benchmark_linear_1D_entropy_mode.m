@@ -6,7 +6,7 @@ cd ..
 system('make');
 cd wk
 % Run HeLaZ in sequential
-system(['cd ',SIMDIR,';',' ./../../../bin/helaz 0; cd ../../../wk']);
+system(['cd ',SIMDIR,';',' ./../../../bin/helaz3.03 0; cd ../../../wk']);
 % Run HeLaZ in parallel (discrepencies can occur at marginal growth rate)
 % since the random seed will not be the same)
 % system(['cd ',SIMDIR,';',' mpirun -np 6 ./../../../bin/helaz 1 6 0; cd ../../../wk'])
@@ -30,7 +30,7 @@ end
 
 %% Plot
 SCALE = 1;%sqrt(2);
-openfig([SIMDIR,'/benchmark_data.fig']); hold on;
+openfig([SIMDIR,'/benchmark_data_nadiab.fig']); hold on;
 plot(kx,gamma_phi,'-x','DisplayName','new results');
 hold on;
 legend('show');

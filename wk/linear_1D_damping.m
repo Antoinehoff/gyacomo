@@ -32,7 +32,7 @@ JOB2LOAD= -1;
 NOISE0  = 0.0; % Init noise amplitude
 BCKGD0  = 1.0;    % Init background
 SIMID   = 'Linear_damping';  % Name of the simulation
-NON_LIN = 0;   % activate non-linearity (is cancelled if KXEQ0 = 1)
+LINEARITY = 0;   % activate non-linearity (is cancelled if KXEQ0 = 1)
 KIN_E   = 1;
 % Collision operator
 % (0:L.Bernstein, 1:Dougherty, 2:Sugama, 3:Pitch angle, 4:Full Couloumb ; +/- for GK/DK)
@@ -55,7 +55,7 @@ HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
 kmax    = NX*pi/LX;% Highest fourier mode
 NU_HYP  = 0.0;    % Hyperdiffusivity coefficient
 MU      = NU_HYP/(HD_CO*kmax)^4; % Hyperdiffusivity coefficient
-INIT_BLOB = 0; WIPE_TURB = 0; WIPE_ZF = 0;
+INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 LAMBDAD = 0.0;

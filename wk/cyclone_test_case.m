@@ -4,7 +4,7 @@ addpath(genpath('../matlab')) % ... add
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.01;   % Collision frequency
+NU      = 0.05;   % Collision frequency
 K_N     = 2.22;      % Density gradient drive
 K_T     = 6.9;       % Temperature '''
 K_E     = 0.00;    % Electrostat gradient
@@ -12,10 +12,10 @@ SIGMA_E = 0.05196;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 NU_HYP  = 0.01;
 KIN_E   = 0;         % Kinetic (1) or adiabatic (2) electron model
 %% GRID PARAMETERS
-NX      = 100;     % Spatial radial resolution ( = 2x radial modes)
+NX      = 150;     % Spatial radial resolution ( = 2x radial modes)
 LX      = 200;    % Radial window size
-NY      = 100;     % Spatial azimuthal resolution (= azim modes)
-LY      = 100;    % Azimuthal window size
+NY      = 150;     % Spatial azimuthal resolution (= azim modes)
+LY      = 150;    % Azimuthal window size
 NZ      = 30;     % number of perpendicular planes (parallel grid)
 P       = 4;
 J       = 2;
@@ -28,7 +28,7 @@ CURVB   = 1.0;       % Magnetic  curvature
 SG      = 1;         % Staggered z grids option
 %% TIME PARAMETERS
 TMAX    = 500;  % Maximal time unit
-DT      = 5e-2;   % Time step
+DT      = 2.5e-2;   % Time step
 SPS0D   = 2;      % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS3D   = 1/2;      % Sampling per time unit for 3D arrays
@@ -38,17 +38,17 @@ JOB2LOAD= -1;
 %% OPTIONS AND NAMING
 % Collision operator
 % (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle ; 4 : Coulomb; +/- for GK/DK)
-CO      = 1;
+CO      = 2;
 CLOS    = 0;   % Closure model (0: =0 truncation)
 NL_CLOS = 0;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
 SIMID   = 'Cyclone';  % Name of the simulation
 % SIMID   = 'simulation_A';  % Name of the simulation
 % SIMID   = ['v3.0_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
-NON_LIN  = 1;   % Non linear model (0: linear, 0.5: semi linear, 1: non linear)
+LINEARITY  = 1;   % Non linear model (0: linear, 0.5: semi linear, 1: non linear)
 % INIT options
 INIT_PHI= 0;   % Start simulation with a noisy phi (0= noisy moments 00)
 INIT_ZF   = 0; ZF_AMP = 0.0;
-INIT_BLOB = 0; WIPE_TURB = 0; WIPE_ZF = 0;
+INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 %% OUTPUTS
 W_DOUBLE = 1;
 W_GAMMA  = 1; W_HF     = 1;

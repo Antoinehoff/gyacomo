@@ -41,8 +41,8 @@ while(CONTINUE)
         W_HF      = 0;%strcmp(h5readatt(filename,'/data/input','write_hf'   ),'y');
         W_PHI     = strcmp(h5readatt(filename,'/data/input','write_phi'  ),'y');
         W_NA00    = strcmp(h5readatt(filename,'/data/input','write_Na00' ),'y');
-        W_NAPJ    = strcmp(h5readatt(filename,'/data/input','write_Napj' ),'y');
-        W_SAPJ    = strcmp(h5readatt(filename,'/data/input','write_Sapj' ),'y');
+        W_NAPJ    = 0;%strcmp(h5readatt(filename,'/data/input','write_Napj' ),'y');
+        W_SAPJ    = 0;%strcmp(h5readatt(filename,'/data/input','write_Sapj' ),'y');
         W_DENS    = strcmp(h5readatt(filename,'/data/input','write_dens' ),'y');
         W_TEMP    = strcmp(h5readatt(filename,'/data/input','write_temp' ),'y');
         KIN_E     = strcmp(h5readatt(filename,'/data/input',     'KIN_E' ),'y');
@@ -135,6 +135,7 @@ while(CONTINUE)
             TEMP_I_ = cat(4,TEMP_I_,TEMP_I); clear TEMP_I
         end
 
+        Ts5D = [];
         if W_NAPJ
         [Nipj, Ts5D, ~] = load_5D_data(filename, 'moments_i');
             Nipj_ = cat(6,Nipj_,Nipj); clear Nipj

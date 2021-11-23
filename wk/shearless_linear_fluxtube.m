@@ -58,12 +58,12 @@ MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 K_E     = 0.00;   % Electrostat '''
 GRADB   = 1.0;
 CURVB   = 1.0;
-INIT_BLOB = 0; WIPE_TURB = 0; WIPE_ZF = 0; INIT_PHI= 0;
+INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0; INIT_PHI= 0;
 NOISE0  = 0.0e-4; % Init noise amplitude
 BCKGD0  = 1.0e-4; % Init background
 LAMBDAD = 0.0;
 KXEQ0   = 0;      % put kx = 0
-NON_LIN = 0;   % activate non-linearity (is cancelled if KXEQ0 = 1)
+LINEARITY = 0;   % activate non-linearity (is cancelled if KXEQ0 = 1)
 %% PARAMETER SCANS
 
 %% Parameter scan over PJ

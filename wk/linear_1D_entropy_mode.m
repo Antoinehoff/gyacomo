@@ -33,11 +33,13 @@ SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
 %% OPTIONS
 SIMID   = 'Linear_entropy_mode';  % Name of the simulation
-NON_LIN = 0;   % activate non-linearity (is cancelled if KXEQ0 = 1)
+LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 KIN_E   = 1;
 % Collision operator
-% (0:L.Bernstein, 1:Dougherty, 2:Sugama, 3:Pitch angle, 4:Full Couloumb ; +/- for GK/DK)
-CO      = 4;
+% (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
+CO      = 'LD';
+GKCO    = 1; % gyrokinetic operator
+ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))
 NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
@@ -56,7 +58,7 @@ HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
 kmax    = NX*pi/LX;% Highest fourier mode
 NU_HYP  = 0.0;    % Hyperdiffusivity coefficient
 MU      = NU_HYP/(HD_CO*kmax)^4; % Hyperdiffusivity coefficient
-INIT_BLOB = 0; WIPE_TURB = 0; WIPE_ZF = 0;
+INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 LAMBDAD = 0.0;
@@ -90,7 +92,7 @@ for i = 1:Nparam
     system(['rm fort*.90']);
     % Run linear simulation
     if RUN
-        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz 1 6 0; cd ../../../wk'])
+        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz3 1 6 0; cd ../../../wk'])
 %         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ./../../../bin/helaz 1 2 0; cd ../../../wk'])
 %         system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz 0; cd ../../../wk'])
     end
