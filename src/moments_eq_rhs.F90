@@ -23,7 +23,6 @@ SUBROUTINE moments_eq_rhs_e
   COMPLEX(dp) :: Tnepj, Tnepp2j, Tnepm2j, Tnepjp1, Tnepjm1, Tpare, Tphi ! Terms from b x gradB and drives
   COMPLEX(dp) :: Tmir, Tnepp1j, Tnepm1j, Tnepp1jm1, Tnepm1jm1 ! Terms from mirror force with non adiab moments
   COMPLEX(dp) :: UNepm1j, UNepm1jp1, UNepm1jm1 ! Terms from mirror force with adiab moments
-  COMPLEX(dp) :: TColl ! terms of the rhs
   COMPLEX(dp) :: i_ky
   INTEGER     :: izm2, izm1, izp1, izp2 ! indices for centered FDF ddz
   ! To store derivatives and odd-even z grid interpolations
@@ -101,13 +100,13 @@ SUBROUTINE moments_eq_rhs_e
           ENDIF
 
           !! Collision
-          IF (CO .EQ. 0) THEN ! Lenard Bernstein
-            CALL LenardBernstein_e(ip,ij,ikx,iky,iz,TColl)
-          ELSEIF (CO .EQ. 1) THEN ! GK Dougherty
-            CALL DoughertyGK_e(ip,ij,ikx,iky,iz,TColl)
-          ELSE ! COSOLver matrix
-            TColl = TColl_e(ip,ij,ikx,iky,iz)
-          ENDIF
+          ! IF (CO .EQ. 0) THEN ! Lenard Bernstein
+          !   CALL LenardBernstein_e(ip,ij,ikx,iky,iz,TColl)
+          ! ELSEIF (CO .EQ. 1) THEN ! GK Dougherty
+          !   CALL DoughertyGK_e(ip,ij,ikx,iky,iz,TColl)
+          ! ELSE ! COSOLver matrix
+          !   TColl = TColl_e(ip,ij,ikx,iky,iz)
+          ! ENDIF
 
           !! Sum of all linear terms (the sign is inverted to match RHS)
           moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) = &
@@ -124,7 +123,7 @@ SUBROUTINE moments_eq_rhs_e
               ! Numerical hyperdiffusion (totally artificial, for stability purpose)
               - mu*kperp2**2 * moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
               ! Collision term
-              + TColl
+              + TColl_e(ip,ij,ikx,iky,iz)
 
           !! Adding non linearity
             moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) = &
@@ -165,7 +164,6 @@ SUBROUTINE moments_eq_rhs_i
   COMPLEX(dp) :: Tnipj, Tnipp2j, Tnipm2j, Tnipjp1, Tnipjm1, Tpari, Tphi
   COMPLEX(dp) :: Tmir, Tnipp1j, Tnipm1j, Tnipp1jm1, Tnipm1jm1 ! Terms from mirror force with non adiab moments
   COMPLEX(dp) :: UNipm1j, UNipm1jp1, UNipm1jm1 ! Terms from mirror force with adiab moments
-  COMPLEX(dp) :: TColl ! terms of the rhs
   COMPLEX(dp) :: i_ky
   INTEGER     :: izm2, izm1, izp1, izp2 ! indices for centered FDF ddz
   ! To store derivatives and odd-even z grid interpolations
@@ -239,13 +237,13 @@ SUBROUTINE moments_eq_rhs_i
           ENDIF
 
           !! Collision
-          IF     (CO .EQ. 0) THEN ! Lenard Bernstein
-            CALL LenardBernstein_i(ip,ij,ikx,iky,iz,TColl)
-          ELSEIF (CO .EQ. 1) THEN ! GK Dougherty
-            CALL DoughertyGK_i(ip,ij,ikx,iky,iz,TColl)
-          ELSE! COSOLver matrix (Sugama, Coulomb)
-            TColl = TColl_i(ip,ij,ikx,iky,iz)
-          ENDIF
+          ! IF     (CO .EQ. 0) THEN ! Lenard Bernstein
+          !   CALL LenardBernstein_i(ip,ij,ikx,iky,iz,TColl)
+          ! ELSEIF (CO .EQ. 1) THEN ! GK Dougherty
+          !   CALL DoughertyGK_i(ip,ij,ikx,iky,iz,TColl)
+          ! ELSE! COSOLver matrix (Sugama, Coulomb)
+          !   TColl = TColl_i(ip,ij,ikx,iky,iz)
+          ! ENDIF
 
           !! Sum of all linear terms (the sign is inverted to match RHS)
           moments_rhs_i(ip,ij,ikx,iky,iz,updatetlevel) = &
@@ -262,7 +260,7 @@ SUBROUTINE moments_eq_rhs_i
               ! Numerical hyperdiffusion (totally artificial, for stability purpose)
               - mu*kperp2**2 * moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
               ! Collision term
-              + TColl
+              + TColl_i(ip,ij,ikx,iky,iz)
 
           !! Adding non linearity
            moments_rhs_i(ip,ij,ikx,iky,iz,updatetlevel) = &

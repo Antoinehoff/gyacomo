@@ -11,10 +11,15 @@ MODULE array
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: nadiab_moments_e
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: nadiab_moments_i
 
-  ! Arrays to store the initial zonal modes (semi linear simulation)
+  ! Arrays to store special initial modes (semi linear simulation)
+  ! Zonal ones (ky=0)
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_e_ZF
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_i_ZF
   COMPLEX(dp), DIMENSION(:,:),     ALLOCATABLE :: phi_ZF
+  ! Entropy modes (kx=0)
+  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_e_EM
+  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_i_EM
+  COMPLEX(dp), DIMENSION(:,:),     ALLOCATABLE :: phi_EM
 
   ! Non linear term array (ip,ij,ikx,iky,iz)
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Sepj ! electron

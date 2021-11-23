@@ -32,7 +32,6 @@ CONTAINS
     NAMELIST /TIME_INTEGRATION_PAR/ numerical_scheme
 
     READ(lu_in,time_integration_par)
-    !WRITE(*,time_integration_par)
 
     CALL set_numerical_scheme
 

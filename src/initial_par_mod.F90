@@ -10,8 +10,8 @@ MODULE initial_par
   ! Initialization through a zonal flow phi
   INTEGER,  PUBLIC, PROTECTED :: INIT_ZF    = 0
   REAL(DP), PUBLIC, PROTECTED :: ZF_AMP     = 1E+3_dp
-  ! Wipe zonal flow in the restart (=1) or at each step (=2), maintain (=-1)
-  INTEGER,  PUBLIC, PROTECTED :: WIPE_ZF   = 0
+  ! Act on modes artificially (keep/wipe, zonal, non zonal, entropy mode etc.)
+  CHARACTER(len=32),  PUBLIC, PROTECTED :: ACT_ON_MODES = 'nothing'
   ! Wipe turbulence in the restart (=1) or at each step (=2)
   INTEGER,  PUBLIC, PROTECTED :: WIPE_TURB = 0
   ! Init a Gaussian blob density in the middle
@@ -22,8 +22,6 @@ MODULE initial_par
   REAL(dp), PUBLIC, PROTECTED :: init_noiselvl=1E-6_dp
   ! Initialization for random number generator
   INTEGER,  PUBLIC, PROTECTED :: iseed=42
-
-  CHARACTER(len=128), PUBLIC :: mat_file    ! COSOlver matrix file names
 
   PUBLIC :: initial_outputinputs, initial_readinputs
 
@@ -39,13 +37,12 @@ CONTAINS
 
     NAMELIST /INITIAL_CON/ INIT_NOISY_PHI
     NAMELIST /INITIAL_CON/ INIT_ZF
-    NAMELIST /INITIAL_CON/ WIPE_ZF
+    NAMELIST /INITIAL_CON/ ACT_ON_MODES
     NAMELIST /INITIAL_CON/ WIPE_TURB
     NAMELIST /INITIAL_CON/ INIT_BLOB
     NAMELIST /INITIAL_CON/ init_background
     NAMELIST /INITIAL_CON/ init_noiselvl
     NAMELIST /INITIAL_CON/ iseed
-    NAMELIST /INITIAL_CON/ mat_file
 
     READ(lu_in,initial_con)
     !WRITE(*,initial_con)

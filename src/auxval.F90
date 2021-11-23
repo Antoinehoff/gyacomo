@@ -14,7 +14,7 @@ subroutine auxval
   INTEGER :: irows,irowe, irow, icol, i_
   IF (my_id .EQ. 0) WRITE(*,*) '=== Set auxiliary values ==='
 
-  IF (NON_LIN .GT. 0) THEN
+  IF (LINEARITY .NE. 'linear') THEN
     CALL init_grid_distr_and_plans(Nx,Ny)
   ELSE
     CALL init_1Dgrid_distr
@@ -41,7 +41,7 @@ subroutine auxval
 
   CALL evaluate_poisson_op ! precompute the kernels
 
-  IF ( NON_LIN .GT. 0 ) THEN;
+  IF ( LINEARITY .NE. 'linear' ) THEN;
     CALL build_dnjs_table ! precompute the Laguerre nonlin product coeffs
   ENDIF
 

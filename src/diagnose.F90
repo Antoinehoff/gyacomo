@@ -11,6 +11,7 @@ SUBROUTINE diagnose(kstep)
   USE time_integration
   USE utility
   USE prec_const
+  USE collision, ONLY: coll_outputinputs
   IMPLICIT NONE
 
   INCLUDE 'srcinfo.h'
@@ -196,6 +197,8 @@ SUBROUTINE diagnose(kstep)
      CALL diag_par_outputinputs(fidres, str)
 
      CALL model_outputinputs(fidres, str)
+
+     CALL coll_outputinputs(fidres, str)
 
      CALL initial_outputinputs(fidres, str)
 

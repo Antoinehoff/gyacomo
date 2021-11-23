@@ -7,7 +7,7 @@ MODULE numerics
     implicit none
 
     PUBLIC :: build_dnjs_table, evaluate_kernels, evaluate_poisson_op, compute_lin_coeff
-    PUBLIC :: wipe_turbulence, wipe_zonalflow
+    PUBLIC :: wipe_turbulence, play_with_modes, save_EM_ZF_modes
 
 CONTAINS
 
@@ -282,41 +282,83 @@ SUBROUTINE wipe_turbulence
   ENDDO
 END SUBROUTINE
 !******************************************************************************!
-!!!!!!! Remove all ky==0 modes to conserve only non zonal modes in a restart
+!!!!!!! Routine that can artificially increase or wipe modes
 !******************************************************************************!
-SUBROUTINE wipe_zonalflow
+SUBROUTINE save_EM_ZF_modes
   USE fields
+  USE array, ONLY : moments_e_ZF, moments_i_ZF, phi_ZF, moments_e_EM,moments_i_EM,phi_EM
   USE grid
+  USE time_integration, ONLY: updatetlevel
+  USE initial_par, ONLY: ACT_ON_MODES
   IMPLICIT NONE
-  DO ikx=ikxs,ikxe
-  DO iky=ikys,ikye
-  DO iz=izs,ize
-    DO ip=ips_e,ipe_e
-    DO ij=ijs_e,ije_e
-      IF( iky .EQ. iky_0) THEN
-        moments_e( ip,ij,ikx,iky,iz, :) = 0e-3_dp*moments_e( ip,ij,ikx,iky,iz, :)
-      ELSE
-        moments_e( ip,ij,ikx,iky,iz, :) = 1e+0_dp*moments_e( ip,ij,ikx,iky,iz, :)
-      ENDIF
+  ! Store Zonal and entropy modes
+  moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,iky_0,izs:ize,updatetlevel)
+  moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,iky_0,izs:ize,updatetlevel)
+  phi_ZF(ikxs:ikxe,izs:ize) = phi(ikxs:ikxe,iky_0,izs:ize)
+  IF(contains_kx0) THEN
+    moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx_0,ikys:ikye,izs:ize,updatetlevel)
+    moments_i_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx_0,ikys:ikye,izs:ize,updatetlevel)
+    phi_EM(ikys:ikye,izs:ize) = phi(ikx_0,ikys:ikye,izs:ize)
+  ELSE
+    moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = 0._dp
+    moments_i_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = 0._dp
+    phi_EM(ikys:ikye,izs:ize) = 0._dp
+  ENDIF
+END SUBROUTINE
+
+SUBROUTINE play_with_modes
+  USE fields
+  USE array, ONLY : moments_e_ZF, moments_i_ZF, phi_ZF, moments_e_EM,moments_i_EM,phi_EM
+  USE grid
+  USE time_integration, ONLY: updatetlevel
+  USE initial_par, ONLY: ACT_ON_MODES
+  IMPLICIT NONE
+  REAL(dp) :: AMP = 1.5_dp
+
+  SELECT CASE(ACT_ON_MODES)
+  CASE('wipe_zonal') ! Errase the zonal flow
+    moments_e(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = 0._dp
+    moments_i(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = 0._dp
+    phi(ikxs:ikxe,iky_0,izs:ize) = 0._dp
+  CASE('wipe_entropymode')
+    moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx_0,ikys:ikye,izs:ize,updatetlevel) = 0._dp
+    moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx_0,ikys:ikye,izs:ize,updatetlevel) = 0._dp
+    phi(ikx_0,ikys:ikye,izs:ize) = 0._dp
+  CASE('wipe_turbulence')
+    DO ikx = ikxs,ikxe
+      DO iky = ikys, ikye
+        IF ( (ikx .NE. ikx_0) .AND. (iky .NE. iky_0) ) THEN
+          moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx,iky,izs:ize,updatetlevel) = 0._dp
+          moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx,iky,izs:ize,updatetlevel) = 0._dp
+          phi(ikx,iky,izs:ize) = 0._dp
+        ENDIF
+      ENDDO
     ENDDO
+  CASE('wipe_nonzonal')
+    DO ikx = ikxs,ikxe
+      DO iky = ikys, ikye
+        IF ( (ikx .NE. ikx_0) ) THEN
+          moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx,iky,izs:ize,updatetlevel) = 0._dp
+          moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx,iky,izs:ize,updatetlevel) = 0._dp
+          phi(ikx,iky,izs:ize) = 0._dp
+        ENDIF
+      ENDDO
     ENDDO
-    DO ip=ips_i,ipe_i
-    DO ij=ijs_i,ije_i
-      IF( iky .EQ. iky_0) THEN
-        moments_i( ip,ij,ikx,iky,iz, :) = 0e-3_dp*moments_i( ip,ij,ikx,iky,iz, :)
-      ELSE
-        moments_i( ip,ij,ikx,iky,iz, :) = 1e+0_dp*moments_i( ip,ij,ikx,iky,iz, :)
-      ENDIF
-    ENDDO
-    ENDDO
-    IF( iky .EQ. iky_0) THEN
-      phi(ikx,iky,iz) = 0e-3_dp*phi(ikx,iky,iz)
-    ELSE
-      phi(ikx,iky,iz) = 1e+0_dp*phi(ikx,iky,iz)
+  CASE('freeze_zonal')
+    moments_e(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize)
+    moments_i(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize)
+    phi(ikxs:ikxe,iky_0,izs:ize) = phi_ZF(ikxs:ikxe,izs:ize)
+  CASE('freeze_entropymode')
+    IF(contains_kx0) THEN
+      moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx_0,ikys:ikye,izs:ize,updatetlevel) = moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize)
+      moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx_0,ikys:ikye,izs:ize,updatetlevel) = moments_i_EM(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,izs:ize)
+      phi(ikx_0,ikys:ikye,izs:ize) = phi_EM(ikys:ikye,izs:ize)
     ENDIF
-  ENDDO
-  ENDDO
-  ENDDO
+  CASE('amplify_zonal')
+    moments_e(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = AMP*moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize)
+    moments_i(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = AMP*moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize)
+    phi(ikxs:ikxe,iky_0,izs:ize) = AMP*phi_ZF(ikxs:ikxe,izs:ize)
+  END SELECT
 END SUBROUTINE
 
 END MODULE numerics

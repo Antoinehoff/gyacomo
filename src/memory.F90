@@ -6,7 +6,8 @@ SUBROUTINE memory
   USE fields
   USE grid
   USE time_integration
-  USE model, ONLY: CO, NON_LIN, KIN_E
+  USE model, ONLY: LINEARITY, KIN_E
+  USE collision
 
   USE prec_const
   IMPLICIT NONE
@@ -14,6 +15,7 @@ SUBROUTINE memory
   ! Electrostatic potential
   CALL allocate_array(           phi, ikxs,ikxe, ikys,ikye, izs,ize)
   CALL allocate_array(        phi_ZF, ikxs,ikxe, izs,ize)
+  CALL allocate_array(        phi_EM, ikys,ikye, izs,ize)
   CALL allocate_array(inv_poisson_op, ikxs,ikxe, ikys,ikye, izs,ize)
 
   !Electrons arrays
@@ -26,6 +28,7 @@ SUBROUTINE memory
   CALL allocate_array(    moments_rhs_e,  ips_e,ipe_e,   ijs_e,ije_e,  ikxs,ikxe, ikys,ikye, izs,ize, 1,ntimelevel )
   CALL allocate_array( nadiab_moments_e, ipsg_e,ipeg_e, ijsg_e,ijeg_e, ikxs,ikxe, ikys,ikye, izs,ize)
   CALL allocate_array(     moments_e_ZF, ipsg_e,ipeg_e, ijsg_e,ijeg_e, ikxs,ikxe, izs,ize)
+  CALL allocate_array(     moments_e_EM, ipsg_e,ipeg_e, ijsg_e,ijeg_e, ikys,ikye, izs,ize)
   CALL allocate_array(          TColl_e,  ips_e,ipe_e,   ijs_e,ije_e , ikxs,ikxe, ikys,ikye, izs,ize)
   CALL allocate_array(             Sepj,  ips_e,ipe_e,   ijs_e,ije_e,  ikxs,ikxe, ikys,ikye, izs,ize)
   CALL allocate_array(           xnepj,   ips_e,ipe_e,   ijs_e,ije_e)
@@ -53,6 +56,7 @@ SUBROUTINE memory
   CALL allocate_array(    moments_rhs_i,  ips_i,ipe_i,   ijs_i,ije_i,  ikxs,ikxe, ikys,ikye, izs,ize, 1,ntimelevel )
   CALL allocate_array( nadiab_moments_i, ipsg_i,ipeg_i, ijsg_i,ijeg_i, ikxs,ikxe, ikys,ikye, izs,ize)
   CALL allocate_array(     moments_i_ZF, ipsg_i,ipeg_i, ijsg_i,ijeg_i, ikxs,ikxe, izs,ize)
+  CALL allocate_array(     moments_i_EM, ipsg_i,ipeg_i, ijsg_i,ijeg_i, ikys,ikye, izs,ize)
   CALL allocate_array(          TColl_i,  ips_i,ipe_i,   ijs_i,ije_i,  ikxs,ikxe, ikys,ikye, izs,ize)
   CALL allocate_array(             Sipj,  ips_i,ipe_i,   ijs_i,ije_i,  ikxs,ikxe, ikys,ikye, izs,ize)
   CALL allocate_array( xnipj,   ips_i,ipe_i, ijs_i,ije_i)
@@ -95,16 +99,7 @@ SUBROUTINE memory
 
   !___________________ 2x5D ARRAYS __________________________
   !! Collision matrices
-  IF (CO .LT. -1) THEN !DK collision matrix (same for every k)
-    IF (KIN_E) THEN
-    CALL allocate_array(  Ceepj, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1), 1,1, 1,1)
-    CALL allocate_array( CeipjT, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1), 1,1, 1,1)
-    CALL allocate_array( CeipjF, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxi+1)*(jmaxi+1), 1,1, 1,1)
-    CALL allocate_array( CiepjT, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1), 1,1, 1,1)
-    CALL allocate_array( CiepjF, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxe+1)*(jmaxe+1), 1,1, 1,1)
-    ENDIF
-    CALL allocate_array(  Ciipj, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1), 1,1, 1,1)
-  ELSEIF (CO .GT. 1) THEN !GK collision matrices (one for each kperp)
+  IF (gyrokin_CO) THEN !GK collision matrices (one for each kperp)
     IF (KIN_E) THEN
     CALL allocate_array(  Ceepj, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1), ikxs,ikxe, ikys,ikye)
     CALL allocate_array( CeipjT, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1), ikxs,ikxe, ikys,ikye)
@@ -113,6 +108,14 @@ SUBROUTINE memory
     CALL allocate_array( CiepjF, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxe+1)*(jmaxe+1), ikxs,ikxe, ikys,ikye)
     ENDIF
     CALL allocate_array(  Ciipj, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1), ikxs,ikxe, ikys,ikye)
-  ENDIF
-
+  ELSE !DK collision matrix (same for every k)
+      IF (KIN_E) THEN
+      CALL allocate_array(  Ceepj, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1), 1,1, 1,1)
+      CALL allocate_array( CeipjT, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxe+1)*(jmaxe+1), 1,1, 1,1)
+      CALL allocate_array( CeipjF, 1,(pmaxe+1)*(jmaxe+1), 1,(pmaxi+1)*(jmaxi+1), 1,1, 1,1)
+      CALL allocate_array( CiepjT, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1), 1,1, 1,1)
+      CALL allocate_array( CiepjF, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxe+1)*(jmaxe+1), 1,1, 1,1)
+      ENDIF
+      CALL allocate_array(  Ciipj, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1), 1,1, 1,1)
+ ENDIF
 END SUBROUTINE memory

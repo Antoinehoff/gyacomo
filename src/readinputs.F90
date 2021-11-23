@@ -3,6 +3,7 @@ SUBROUTINE readinputs
 
   USE grid,             ONLY: grid_readinputs
   USE diagnostics_par,  ONLY: diag_par_readinputs
+  USE collision,        ONLY: collision_readinputs
   USE model,            ONLY: model_readinputs
   USE initial_par,      ONLY: initial_readinputs
   USE time_integration, ONLY: time_integration_readinputs
@@ -22,6 +23,9 @@ SUBROUTINE readinputs
 
   ! Load model parameters from input file
   CALL model_readinputs
+
+  ! Load collision parameters from input file
+  CALL collision_readinputs
 
   ! Load initial condition parameters from input file
   CALL initial_readinputs

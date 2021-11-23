@@ -57,7 +57,7 @@ CONTAINS
     USE array
     USE grid
     use prec_const
-    use initial_par, ONLY: WIPE_ZF
+    use initial_par, ONLY: ACT_ON_MODES
     IMPLICIT NONE
 
     COMPLEX(dp), DIMENSION ( ikxs:ikxe, ikys:ikye, izs:ize, ntimelevel ) :: f

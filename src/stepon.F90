@@ -6,13 +6,13 @@ SUBROUTINE stepon
   USE closure
   USE collision, ONLY : compute_TColl
   USE fields, ONLY: moments_e, moments_i, phi
-  USE initial_par, ONLY: WIPE_ZF, WIPE_TURB
+  USE initial_par, ONLY: ACT_ON_MODES, WIPE_TURB
   USE ghosts
   USE grid
-  USE model, ONLY : NON_LIN, KIN_E
+  USE model, ONLY : LINEARITY, KIN_E
   use prec_const
   USE time_integration
-  USE numerics, ONLY: wipe_zonalflow, wipe_turbulence
+  USE numerics, ONLY: play_with_modes, wipe_turbulence
   USE processing, ONLY: compute_nadiab_moments
   USE utility, ONLY: checkfield
 
@@ -45,8 +45,8 @@ SUBROUTINE stepon
       CALL compute_nadiab_moments
       ! Update nonlinear term S_n -> S_n+1(phi_n+1,N_n+1)
       CALL compute_Sapj
-      ! Cancel zonal modes artificially
-      IF ( WIPE_ZF .EQ. 2)   CALL wipe_zonalflow
+      ! Store or cancel/maintain zonal modes artificially
+      CALL play_with_modes
       ! Cancel non zonal modes artificially
       IF ( WIPE_TURB .EQ. 2) CALL wipe_turbulence
       !-  Check before next step
@@ -63,8 +63,8 @@ SUBROUTINE stepon
         ! Execution time start
         CALL cpu_time(t0_checkfield)
 
-        IF(NON_LIN .GT. 0) CALL anti_aliasing   ! ensure 0 mode for 2/3 rule
-        IF(NON_LIN .GT. 0) CALL enforce_symmetry ! Enforcing symmetry on kx = 0
+        IF(LINEARITY .NE. 'linear') CALL anti_aliasing   ! ensure 0 mode for 2/3 rule
+        IF(LINEARITY .NE. 'linear') CALL enforce_symmetry ! Enforcing symmetry on kx = 0
 
         mlend=.FALSE.
         IF(.NOT.nlend) THEN

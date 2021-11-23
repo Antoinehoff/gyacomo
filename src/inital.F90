@@ -4,7 +4,6 @@
 SUBROUTINE inital
 
   USE basic
-  USE model, ONLY : CO
   USE initial_par
   USE prec_const
   USE time_integration
@@ -14,7 +13,7 @@ SUBROUTINE inital
   USE closure
   USE ghosts
   USE restarts
-  USE numerics, ONLY: wipe_turbulence, wipe_zonalflow
+  USE numerics, ONLY: wipe_turbulence, play_with_modes, save_EM_ZF_modes
   USE processing, ONLY: compute_nadiab_moments
   IMPLICIT NONE
 
@@ -41,17 +40,11 @@ SUBROUTINE inital
     ENDIF
   ENDIF
 
-  ! Option for wiping the ZF modes (ky==0)
-  IF ( WIPE_ZF .GT. 0 ) THEN
-    IF (my_id .EQ. 0) WRITE(*,*) '-Wiping ZF modes'
-    CALL wipe_zonalflow
-  ENDIF
+  ! Save zonal and entropy modes
+  CALL save_EM_ZF_modes
 
-  ! Option for wiping the turbulence and check growth of secondary inst.
-  IF ( WIPE_TURB .GT. 0 ) THEN
-    IF (my_id .EQ. 0) WRITE(*,*) '-Wiping turbulence'
-    CALL wipe_turbulence
-  ENDIF
+  ! Freeze/Wipe some selected modes (entropy,zonal,turbulent)
+  CALL play_with_modes
 
   ! Option for initializing a gaussian blob on the zonal profile
   IF ( INIT_BLOB ) THEN
@@ -68,21 +61,14 @@ SUBROUTINE inital
   IF (my_id .EQ. 0) WRITE(*,*) 'Computing non adiab moments'
   CALL compute_nadiab_moments
 
-  ! Store Zonal moments for semi linear run or for freezing ZF
-  moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,iky_0,izs:ize,updatetlevel)
-  moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,iky_0,izs:ize,updatetlevel)
-  phi_ZF(ikxs:ikxe,izs:ize) = phi(ikxs:ikxe,iky_0,izs:ize)
-
   !!!!!! Set Sepj, Sipj and dnjs coeff table !!!!!!
   IF (my_id .EQ. 0) WRITE(*,*) 'Init Sapj'
   CALL compute_Sapj ! compute S_0 = S(phi_0,N_0)
 
   !!!!!! Load the COSOlver collision operator coefficients !!!!!!
-  IF (ABS(CO) .GT. 1) THEN
-    CALL load_COSOlver_mat
-    ! Compute collision
-    CALL compute_TColl ! compute C_0 = C(N_0)
-  ENDIF
+  IF(cosolver_coll) CALL load_COSOlver_mat
+  ! Compute collision
+  CALL compute_TColl ! compute C_0 = C(N_0)
 
 END SUBROUTINE inital
 !******************************************************************************!
@@ -97,7 +83,7 @@ SUBROUTINE init_moments
   USE prec_const
   USE utility, ONLY: checkfield
   USE initial_par
-  USE model, ONLY : NON_LIN
+  USE model, ONLY : LINEARITY
   IMPLICIT NONE
 
   REAL(dp) :: noise
@@ -152,7 +138,7 @@ SUBROUTINE init_moments
     END DO
 
     ! Putting to zero modes that are not in the 2/3 Orszag rule
-    IF (NON_LIN .GT. 0) THEN
+    IF (LINEARITY .NE. 'linear') THEN
       DO ikx=ikxs,ikxe
       DO iky=ikys,ikye
       DO iz=izs,ize
@@ -183,7 +169,7 @@ SUBROUTINE init_gyrodens
   USE prec_const
   USE utility, ONLY: checkfield
   USE initial_par
-  USE model, ONLY : NON_LIN
+  USE model, ONLY : LINEARITY
   IMPLICIT NONE
 
   REAL(dp) :: noise
@@ -246,7 +232,7 @@ SUBROUTINE init_gyrodens
     END DO
 
     ! Putting to zero modes that are not in the 2/3 Orszag rule
-    IF (NON_LIN .GT. 0) THEN
+    IF (LINEARITY .NE. 'linear') THEN
       DO ikx=ikxs,ikxe
       DO iky=ikys,ikye
       DO iz=izs,ize

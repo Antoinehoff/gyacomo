@@ -233,7 +233,7 @@ CONTAINS
 
   SUBROUTINE set_kxgrid
     USE prec_const
-    USE model, ONLY: NON_LIN
+    USE model, ONLY: LINEARITY
     IMPLICIT NONE
     INTEGER :: i_
 
@@ -285,7 +285,7 @@ CONTAINS
     two_third_kxmax = 2._dp/3._dp*deltakx*(Nkx-1)
     ALLOCATE(AA_x(ikxs:ikxe))
     DO ikx = ikxs,ikxe
-      IF ( (kxarray(ikx) .LT. two_third_kxmax) .OR. (NON_LIN .EQ. 0)) THEN
+      IF ( (kxarray(ikx) .LT. two_third_kxmax) .OR. (LINEARITY .EQ. 'linear')) THEN
         AA_x(ikx) = 1._dp;
       ELSE
         AA_x(ikx) = 0._dp;
@@ -295,7 +295,7 @@ CONTAINS
 
   SUBROUTINE set_kygrid
     USE prec_const
-    USE model, ONLY: NON_LIN
+    USE model, ONLY: LINEARITY
     IMPLICIT NONE
     INTEGER :: i_, counter
 
@@ -329,11 +329,11 @@ CONTAINS
           contains_ky0 = .true.
         ENDIF
         ! Finding local kymax
-        IF (ABS(kyarray(ikx)) .GT. local_kymax) THEN
+        IF (ABS(kyarray(iky)) .GT. local_kymax) THEN
           local_kymax = ABS(kyarray(iky))
         ENDIF
         ! Finding kymax
-        IF (kyarray(ikx) .EQ. ky_max) ikx_max = ikx
+        IF (kyarray(iky) .EQ. ky_max) ikx_max = ikx
       END DO
       ! Build the full grids on process 0 to diagnose it without comm
       ! ky
@@ -347,7 +347,7 @@ CONTAINS
     ALLOCATE(AA_y(ikys:ikye))
     DO iky = ikys,ikye
       IF ( ((kyarray(iky) .GT. -two_third_kymax) .AND. &
-           (kyarray(iky) .LT. two_third_kymax))   .OR. (NON_LIN .EQ. 0)) THEN
+           (kyarray(iky) .LT. two_third_kymax))   .OR. (LINEARITY .EQ. 'linear')) THEN
         AA_y(iky) = 1._dp;
       ELSE
         AA_y(iky) = 0._dp;

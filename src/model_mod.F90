@@ -5,11 +5,11 @@ MODULE model
   IMPLICIT NONE
   PRIVATE
 
-  INTEGER,  PUBLIC, PROTECTED ::      CO =  0         ! Collision Operator
   INTEGER,  PUBLIC, PROTECTED ::    CLOS =  0         ! linear truncation method
   INTEGER,  PUBLIC, PROTECTED :: NL_CLOS =  0         ! nonlinear truncation method
   INTEGER,  PUBLIC, PROTECTED ::    KERN =  0         ! Kernel model
-  INTEGER,  PUBLIC, PROTECTED :: NON_LIN =  0         ! To turn on non linear bracket term
+  CHARACTER(len=16), &
+            PUBLIC, PROTECTED ::LINEARITY= 'linear'   ! To turn on non linear bracket term
   LOGICAL,  PUBLIC, PROTECTED ::   KIN_E =  .true.    ! Simulate kinetic electron (adiabatic otherwise)
   REAL(dp), PUBLIC, PROTECTED ::      mu =  0._dp     ! spatial      Hyperdiffusivity coefficient (for num. stability)
   REAL(dp), PUBLIC, PROTECTED ::    mu_p =  0._dp     ! kinetic para hyperdiffusivity coefficient (for num. stability)
@@ -54,7 +54,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /MODEL_PAR/ CO, CLOS, NL_CLOS, KERN, NON_LIN, KIN_E, mu, mu_p, mu_j, nu, tau_e, tau_i, sigma_e, sigma_i, &
+    NAMELIST /MODEL_PAR/ CLOS, NL_CLOS, KERN, LINEARITY, KIN_E, mu, mu_p, mu_j, nu, tau_e, tau_i, sigma_e, sigma_i, &
                          q_e, q_i, K_n, K_T, K_E, GradB, CurvB, lambdaD
 
     READ(lu_in,model_par)
@@ -99,10 +99,9 @@ CONTAINS
 
     INTEGER, INTENT(in) :: fidres
     CHARACTER(len=256), INTENT(in) :: str
-    CALL attach(fidres, TRIM(str),        "CO",      CO)
     CALL attach(fidres, TRIM(str),      "CLOS",    CLOS)
     CALL attach(fidres, TRIM(str),      "KERN",    KERN)
-    CALL attach(fidres, TRIM(str),   "NON_LIN", NON_LIN)
+    CALL attach(fidres, TRIM(str), "LINEARITY", LINEARITY)
     CALL attach(fidres, TRIM(str),     "KIN_E",   KIN_E)
     CALL attach(fidres, TRIM(str),        "nu",      nu)
     CALL attach(fidres, TRIM(str),        "mu",      mu)
