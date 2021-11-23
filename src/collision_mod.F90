@@ -579,7 +579,7 @@ CONTAINS
       !! Some terminal info
       SELECT CASE (collision_model)
       CASE ('SG')
-        WRITE(*,*) '=== Load Sugama matrix ==='
+        IF (my_id .EQ. 0)  WRITE(*,*) '=== Load Sugama matrix ==='
       CASE ('LR')
         IF (my_id .EQ. 0) WRITE(*,*) '=== Load Lorentz matrix ==='
       CASE ('LD')
