@@ -1,6 +1,7 @@
 MODULE restarts
 USE basic
-USE futils,          ONLY: openf, closef, getarr, getatt, isgroup, isdataset,getarrnd
+USE futils,          ONLY: openf, closef, getarr, getatt, isgroup,&
+                           isdataset, getarrnd, putarrnd
 USE grid
 USE fields
 USE diagnostics_par
@@ -15,7 +16,7 @@ INTEGER :: pmaxe_cp, jmaxe_cp, pmaxi_cp, jmaxi_cp, n0
 COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: moments_e_cp
 COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: moments_i_cp
 
-PUBLIC :: load_moments
+PUBLIC :: load_moments!, write_restart
 
 CONTAINS
 

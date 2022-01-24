@@ -17,10 +17,12 @@ if SG; GRID.SG = '.true.'; else; GRID.SG = '.false.';end;
 % Model parameters
 MODEL.CLOS    = CLOS;
 MODEL.NL_CLOS = NL_CLOS;
-MODEL.LINEARITY = LINEARITY;
+MODEL.LINEARITY = ['''',LINEARITY,''''];
 MODEL.KIN_E   = KIN_E;
 if KIN_E; MODEL.KIN_E = '.true.'; else; MODEL.KIN_E = '.false.';end;
-MODEL.mu      = MU;
+MODEL.mu_x    = MU_X;
+MODEL.mu_y    = MU_Y;
+MODEL.mu_z    = 0;
 MODEL.mu_p    = MU_P;
 MODEL.mu_j    = MU_J;
 MODEL.nu      = NU; % hyper diffusive coefficient nu for HW
@@ -42,7 +44,7 @@ MODEL.GradB   = GRADB;      % Magnetic gradient
 MODEL.CurvB   = CURVB;      % Magnetic curvature
 MODEL.lambdaD = LAMBDAD;
 % Collision parameters
-COLL.collision_model = CO;
+COLL.collision_model = ['''',CO,''''];
 if (GKCO); COLL.gyrokin_CO = '.true.'; else; COLL.gyrokin_CO = '.false.';end;
 if (ABCO); COLL.interspecies = '.true.'; else; COLL.interspecies = '.false.';end;
 COLL.mat_file   = '''null''';
@@ -56,14 +58,11 @@ switch CO
 end
 % Time integration and intialization parameters
 TIME_INTEGRATION.numerical_scheme  = '''RK4''';
-if (INIT_PHI); INITIAL.init_noisy_phi = '.true.'; else; INITIAL.init_noisy_phi = '.false.';end;
-INITIAL.INIT_ZF = INIT_ZF;
-INITIAL.wipe_turb = WIPE_TURB;
-INITIAL.ACT_ON_MODES   = ACT_ON_MODES;
-if (INIT_BLOB); INITIAL.init_blob = '.true.'; else; INITIAL.init_blob = '.false.';end;
-INITIAL.init_background  = (INIT_ZF>0)*ZF_AMP + BCKGD0;
-INITIAL.init_noiselvl = NOISE0;
-INITIAL.iseed             = 42;
+INITIAL.INIT_OPT = ['''',INIT_OPT,''''];
+INITIAL.ACT_ON_MODES   = ['''',ACT_ON_MODES,''''];
+INITIAL.init_background  = BCKGD0;
+INITIAL.init_noiselvl    = NOISE0;
+INITIAL.iseed            = 42;
 
 % Naming and creating input file
 CONAME = CO;

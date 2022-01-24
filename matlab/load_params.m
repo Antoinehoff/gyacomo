@@ -20,6 +20,8 @@ DATA.L       = h5readatt(filename,'/data/input','Lx');
 DATA.CLOS    = h5readatt(filename,'/data/input','CLOS');
 DATA.DT_SIM  = h5readatt(filename,'/data/input','dt');
 DATA.MU      = h5readatt(filename,'/data/input','mu');
+DATA.MUx     = -99;%h5readatt(filename,'/data/input','mu_x');
+DATA.MUy     = -99;%h5readatt(filename,'/data/input','mu_y');
 % MU      = str2num(filename(end-18:end-14)); %bad...
 DATA.W_GAMMA   = h5readatt(filename,'/data/input','write_gamma') == 'y';
 DATA.W_PHI     = h5readatt(filename,'/data/input','write_phi')   == 'y';

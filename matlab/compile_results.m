@@ -5,7 +5,8 @@ JOBNUM   = JOBNUMMIN; JOBFOUND = 0;
 DATA.TJOB_SE  = []; % Start and end times of jobs
 DATA.NU_EVOL  = []; % evolution of parameter nu between jobs
 DATA.CO_EVOL  = []; % evolution of CO
-DATA.MU_EVOL  = []; % evolution of parameter mu between jobs
+DATA.MUx_EVOL  = []; % evolution of parameter mu between jobs
+DATA.MUy_EVOL  = []; % evolution of parameter mu between jobs
 DATA.K_N_EVOL = []; %
 DATA.L_EVOL   = []; % 
 DATA.DT_EVOL  = []; %
@@ -159,7 +160,8 @@ while(CONTINUE)
         DATA.TJOB_SE   = [DATA.TJOB_SE  Ts0D(1) Ts0D(end)];
         DATA.NU_EVOL   = [DATA.NU_EVOL  DATA.NU     DATA.NU];
         DATA.CO_EVOL   = [DATA.CO_EVOL  DATA.CO     DATA.CO];
-        DATA.MU_EVOL   = [DATA.MU_EVOL  DATA.MU     DATA.MU];
+        DATA.MUx_EVOL  = [DATA.MUx_EVOL DATA.MUx    DATA.MUx];
+        DATA.MUy_EVOL  = [DATA.MUy_EVOL DATA.MUy    DATA.MUy];
         DATA.K_N_EVOL  = [DATA.K_N_EVOL DATA.K_N    DATA.K_N];
         DATA.L_EVOL    = [DATA.L_EVOL   DATA.L      DATA.L];
         DATA.DT_EVOL   = [DATA.DT_EVOL  DATA.DT_SIM DATA.DT_SIM];
@@ -206,7 +208,11 @@ DATA.Nx = Nx; DATA.Ny = Ny; DATA.Nz = Nz; DATA.Nkx = Nkx; DATA.Nky = Nky;
 DATA.Pmaxe = numel(Pe); DATA.Pmaxi = numel(Pi); DATA.Jmaxe = numel(Je); DATA.Jmaxi = numel(Ji);
 DATA.dir      = DIRECTORY;
 DATA.localdir = ['..',DIRECTORY(20:end)];
-
+DATA.param_title=['$\nu_{',DATA.CONAME,'}=$', num2str(DATA.NU), ...
+    ', $\kappa_N=$',num2str(DATA.K_N),', $L=',num2str(DATA.L),'$, $N=',...
+    num2str(DATA.Nx),'$, $(P,J)=(',num2str(DATA.PMAXI),',',...
+    num2str(DATA.JMAXI),')$,',' $\mu_{hd}=$(',num2str(DATA.MUx),...
+    ',',num2str(DATA.MUy),')'];
 JOBNUM = LASTJOB;
 
 filename = sprintf([DIRECTORY,'outputs_%.2d.h5'],JOBNUM);

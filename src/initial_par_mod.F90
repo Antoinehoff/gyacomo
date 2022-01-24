@@ -5,17 +5,13 @@ MODULE initial_par
   IMPLICIT NONE
   PRIVATE
 
-  ! Initialization through a noisy phi
-  LOGICAL,  PUBLIC, PROTECTED :: INIT_NOISY_PHI = .false.
+  ! Initialization option (phi/mom00/allmom/blob)
+  CHARACTER(len=32), PUBLIC, PROTECTED :: INIT_OPT = 'phi'
   ! Initialization through a zonal flow phi
   INTEGER,  PUBLIC, PROTECTED :: INIT_ZF    = 0
   REAL(DP), PUBLIC, PROTECTED :: ZF_AMP     = 1E+3_dp
   ! Act on modes artificially (keep/wipe, zonal, non zonal, entropy mode etc.)
   CHARACTER(len=32),  PUBLIC, PROTECTED :: ACT_ON_MODES = 'nothing'
-  ! Wipe turbulence in the restart (=1) or at each step (=2)
-  INTEGER,  PUBLIC, PROTECTED :: WIPE_TURB = 0
-  ! Init a Gaussian blob density in the middle
-  LOGICAL,  PUBLIC, PROTECTED :: INIT_BLOB = .false.
   ! Initial background level
   REAL(dp), PUBLIC, PROTECTED :: init_background=0._dp
   ! Initial noise amplitude
@@ -35,11 +31,8 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /INITIAL_CON/ INIT_NOISY_PHI
-    NAMELIST /INITIAL_CON/ INIT_ZF
+    NAMELIST /INITIAL_CON/ INIT_OPT
     NAMELIST /INITIAL_CON/ ACT_ON_MODES
-    NAMELIST /INITIAL_CON/ WIPE_TURB
-    NAMELIST /INITIAL_CON/ INIT_BLOB
     NAMELIST /INITIAL_CON/ init_background
     NAMELIST /INITIAL_CON/ init_noiselvl
     NAMELIST /INITIAL_CON/ iseed
@@ -59,9 +52,7 @@ CONTAINS
     INTEGER, INTENT(in) :: fidres
     CHARACTER(len=256), INTENT(in) :: str
 
-    CALL attach(fidres, TRIM(str), "INIT_NOISY_PHI", INIT_NOISY_PHI)
-
-    CALL attach(fidres, TRIM(str), "INIT_ZF", INIT_ZF)
+    CALL attach(fidres, TRIM(str), "INIT_OPT", INIT_OPT)
 
     CALL attach(fidres, TRIM(str), "init_background", init_background)
 

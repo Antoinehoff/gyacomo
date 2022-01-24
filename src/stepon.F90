@@ -6,13 +6,13 @@ SUBROUTINE stepon
   USE closure
   USE collision, ONLY : compute_TColl
   USE fields, ONLY: moments_e, moments_i, phi
-  USE initial_par, ONLY: ACT_ON_MODES, WIPE_TURB
+  USE initial_par, ONLY: ACT_ON_MODES
   USE ghosts
   USE grid
   USE model, ONLY : LINEARITY, KIN_E
   use prec_const
   USE time_integration
-  USE numerics, ONLY: play_with_modes, wipe_turbulence
+  USE numerics, ONLY: play_with_modes
   USE processing, ONLY: compute_nadiab_moments
   USE utility, ONLY: checkfield
 
@@ -47,8 +47,6 @@ SUBROUTINE stepon
       CALL compute_Sapj
       ! Store or cancel/maintain zonal modes artificially
       CALL play_with_modes
-      ! Cancel non zonal modes artificially
-      IF ( WIPE_TURB .EQ. 2) CALL wipe_turbulence
       !-  Check before next step
       CALL checkfield_all()
       IF( nlend ) EXIT ! exit do loop

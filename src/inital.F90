@@ -13,7 +13,7 @@ SUBROUTINE inital
   USE closure
   USE ghosts
   USE restarts
-  USE numerics, ONLY: wipe_turbulence, play_with_modes, save_EM_ZF_modes
+  USE numerics, ONLY: play_with_modes, save_EM_ZF_modes
   USE processing, ONLY: compute_nadiab_moments
   IMPLICIT NONE
 
@@ -27,17 +27,26 @@ SUBROUTINE inital
     CALL poisson ! compute phi_0=phi(N_0)
   ! through initialization
   ELSE
+    SELECT CASE (INIT_OPT)
     ! set phi with noise and set moments to 0
-    IF (INIT_NOISY_PHI) THEN
+    CASE ('phi')
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy phi'
       CALL init_phi
     ! set moments_00 (GC density) with noise and compute phi afterwards
-    ELSE
+    CASE('mom00')
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy gyrocenter density'
       CALL init_gyrodens ! init only gyrocenter density
       ! CALL init_moments ! init all moments randomly (unadvised)
       CALL poisson ! get phi_0 = phi(N_0)
-    ENDIF
+    CASE('allmom')
+      IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy moments'
+      CALL init_moments ! init all moments
+      CALL poisson ! get phi_0 = phi(N_0)
+    CASE('blob')
+      IF (my_id .EQ. 0) WRITE(*,*) '--init a blob'
+      CALL initialize_blob
+      CALL poisson ! get phi_0 = phi(N_0)
+    END SELECT
   ENDIF
 
   ! Save zonal and entropy modes
@@ -45,12 +54,6 @@ SUBROUTINE inital
 
   ! Freeze/Wipe some selected modes (entropy,zonal,turbulent)
   CALL play_with_modes
-
-  ! Option for initializing a gaussian blob on the zonal profile
-  IF ( INIT_BLOB ) THEN
-    IF (my_id .EQ. 0) WRITE(*,*) '--init a blob'
-    CALL initialize_blob
-  ENDIF
 
   IF (my_id .EQ. 0) WRITE(*,*) 'Apply closure'
   CALL apply_closure_model
@@ -332,6 +335,16 @@ SUBROUTINE initialize_blob
     DO ij=ijs_i,ije_i
       IF( (iky .NE. iky_0) .AND. (ip .EQ. 1) .AND. (ij .EQ. 1)) THEN
         moments_i( ip,ij,ikx,iky,iz, :) = moments_i( ip,ij,ikx,iky,iz, :) &
+        + gain*sigma/SQRT2 * exp(-(kx**2+ky**2)*sigma**2/4._dp) &
+          * AA_x(ikx)*AA_y(iky)!&
+          ! * exp(sigmai2_taui_o2*(kx**2+ky**2))
+      ENDIF
+    ENDDO
+    ENDDO
+    DO ip=ips_e,ipe_e
+    DO ij=ijs_e,ije_e
+      IF( (iky .NE. iky_0) .AND. (ip .EQ. 1) .AND. (ij .EQ. 1)) THEN
+        moments_e( ip,ij,ikx,iky,iz, :) = moments_e( ip,ij,ikx,iky,iz, :) &
         + gain*sigma/SQRT2 * exp(-(kx**2+ky**2)*sigma**2/4._dp) &
           * AA_x(ikx)*AA_y(iky)!&
           ! * exp(sigmai2_taui_o2*(kx**2+ky**2))

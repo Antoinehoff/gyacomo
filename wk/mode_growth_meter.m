@@ -1,12 +1,18 @@
-MODES_SELECTOR = 1; %(1:Zonal, 2: NZonal, 3: ky=kx)
-NORMALIZED = 1;
-options.K2PLOT = 0.01:0.05:1.0;
-options.TIME   =500:0.5:1000;
+MODES_SELECTOR = 2; %(1:Zonal, 2: NZonal, 3: ky=kx)
+NORMALIZED = 0;
+options.K2PLOT = 0.01:0.01:1.0;
+options.TIME   =4000:1:4200;
 DATA = data;
 OPTIONS = options;
 
 t  = OPTIONS.TIME;
 iz = 1;
+[~,ikzf] = max(squeeze(mean(abs(squeeze(DATA.PHI(:,1,1,:))),2)));
+
+FRAMES = zeros(size(OPTIONS.TIME));
+for i = 1:numel(OPTIONS.TIME)
+    [~,FRAMES(i)] =min(abs(OPTIONS.TIME(i)-DATA.Ts3D));
+end
 
 if MODES_SELECTOR == 1
     if NORMALIZED
@@ -37,16 +43,11 @@ elseif MODES_SELECTOR == 3
     MODESTR = 'Diag modes';
 end 
 
-
-FRAMES = zeros(size(OPTIONS.TIME));
-for i = 1:numel(OPTIONS.TIME)
-    [~,FRAMES(i)] =min(abs(OPTIONS.TIME(i)-DATA.Ts3D));
-end
-
-MODES = zeros(size(OPTIONS.K2PLOT));
-for i = 1:numel(OPTIONS.K2PLOT)
-    [~,MODES(i)] =min(abs(OPTIONS.K2PLOT(i)-k));
-end
+MODES = 1:numel(k);
+% MODES = zeros(size(OPTIONS.K2PLOT));
+% for i = 1:numel(OPTIONS.K2PLOT)
+%     [~,MODES(i)] =min(abs(OPTIONS.K2PLOT(i)-k));
+% end
 
 
 % plt = @(x,ik) abs(squeeze(x(1,ik,iz,FRAMES)))./max(abs(squeeze(x(1,ik,iz,FRAMES))));
@@ -74,7 +75,10 @@ subplot(1,3,2)
     mod2plot = round(linspace(2,numel(MODES),15));
     for i_ = mod2plot
         semilogy(t,plt(DATA.PHI,MODES(i_))); hold on;
-        semilogy(t,exp(gamma(i_).*t+amp(i_)),'--k')
+%         semilogy(t,exp(gamma(i_).*t+amp(i_)),'--k')
+    end
+    if MODES_SELECTOR == 1
+        semilogy(t,plt(DATA.PHI,ikzf),'--k');
     end
     xlim([t(1) t(end)]); %ylim([1e-5 1])
     xlabel('$t c_s /\rho_s$'); ylabel(['$|\phi_{',kstr,'}|$']);
@@ -83,5 +87,8 @@ subplot(1,3,2)
 subplot(1,3,3)
     plot(k(MODES),gamma); hold on;
     plot(k(MODES(mod2plot)),gamma(mod2plot),'x')
+    if MODES_SELECTOR == 1
+        plot(k(ikzf),gamma(ikzf),'ok');
+    end
     xlabel(['$',kstr,'\rho_s$']); ylabel('$\gamma$');
     title('Growth rates')

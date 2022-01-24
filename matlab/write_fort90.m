@@ -50,7 +50,9 @@ fprintf(fid,['  CLOS    = ', num2str(MODEL.CLOS),'\n']);
 fprintf(fid,['  NL_CLOS = ', num2str(MODEL.NL_CLOS),'\n']);
 fprintf(fid,['  LINEARITY = ', MODEL.LINEARITY,'\n']);
 fprintf(fid,['  KIN_E   = ', MODEL.KIN_E,'\n']);
-fprintf(fid,['  mu      = ', num2str(MODEL.mu),'\n']);
+fprintf(fid,['  mu_x    = ', num2str(MODEL.mu_x),'\n']);
+fprintf(fid,['  mu_y    = ', num2str(MODEL.mu_y),'\n']);
+fprintf(fid,['  mu_z    = ', num2str(MODEL.mu_z),'\n']);
 fprintf(fid,['  mu_p    = ', num2str(MODEL.mu_p),'\n']);
 fprintf(fid,['  mu_j    = ', num2str(MODEL.mu_j),'\n']);
 fprintf(fid,['  nu      = ', num2str(MODEL.nu),'\n']);
@@ -77,11 +79,8 @@ fprintf(fid,'/\n');
 
 
 fprintf(fid,'&INITIAL_CON\n');
-fprintf(fid,['  INIT_NOISY_PHI    = ', INITIAL.init_noisy_phi,'\n']);
-fprintf(fid,['  INIT_ZF       = ', num2str(INITIAL.INIT_ZF),'\n']);
-fprintf(fid,['  ACT_ON_MODES       = ', INITIAL.ACT_ON_MODES,'\n']);
-fprintf(fid,['  WIPE_TURB     = ', num2str(INITIAL.wipe_turb),'\n']);
-fprintf(fid,['  INIT_BLOB     = ', INITIAL.init_blob,'\n']);
+fprintf(fid,['  INIT_OPT      = ', INITIAL.INIT_OPT,'\n']);
+fprintf(fid,['  ACT_ON_MODES  = ', INITIAL.ACT_ON_MODES,'\n']);
 fprintf(fid,['  init_background  = ', num2str(INITIAL.init_background),'\n']);
 fprintf(fid,['  init_noiselvl = ', num2str(INITIAL.init_noiselvl),'\n']);
 fprintf(fid,['  iseed         = ', num2str(INITIAL.iseed),'\n']);

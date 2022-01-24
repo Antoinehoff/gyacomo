@@ -1,4 +1,4 @@
-function [gamma,fit] = LinearFit_s(time,Na00abs)
+function [gamma,t,gammaoft] = LinearFit_s(time,Na00abs)
   % LinearFit computes the growth rate and frequency from the time evolution of Napj
   % - adapted from MOLI (B.J. Frei)
   %
@@ -29,7 +29,6 @@ function [gamma,fit] = LinearFit_s(time,Na00abs)
     gamma = mean(gammaoft); % ... take the mean of gamma over the time window
 
     % Return gamma(t) for amplitude ratio method
-    fit.gammaoft = gammaoft;
-    fit.t        = time;
+    t        = 0.5*(time(2:end)+time(1:end-1));
 
 end % ... end function

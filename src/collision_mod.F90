@@ -49,6 +49,9 @@ CONTAINS
         interspecies  = .false.
       CASE ('LD') ! Landau
         cosolver_coll = .true.
+      CASE DEFAULT
+        cosolver_coll = .false.
+        interspecies  = .false.
     END SELECT
 
   END SUBROUTINE collision_readinputs
@@ -72,18 +75,20 @@ CONTAINS
 
   SUBROUTINE compute_TColl
     USE basic
+    USE model, ONLY : nu
     IMPLICIT NONE
     ! Execution time start
     CALL cpu_time(t0_coll)
-
-    SELECT CASE(collision_model)
-      CASE ('LB')
-        CALL compute_lenard_bernstein
-      CASE ('DG')
-        CALL compute_dougherty
-      CASE DEFAULT
-        CALL compute_cosolver_coll
-    END SELECT
+    IF (nu .NE. 0) THEN
+      SELECT CASE(collision_model)
+        CASE ('LB')
+          CALL compute_lenard_bernstein
+        CASE ('DG')
+          CALL compute_dougherty
+        CASE DEFAULT
+          CALL compute_cosolver_coll
+      END SELECT
+    ENDIF
 
     ! Execution time end
     CALL cpu_time(t1_coll)

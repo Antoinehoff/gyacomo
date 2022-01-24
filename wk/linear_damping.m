@@ -8,40 +8,43 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %% PHYSICAL PARAMETERS
 NU      = 0.1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
+K_N     = 0.0;   % Density gradient drive
+K_T     = 0.0;   % Temperature '''
+K_E     = 0.0;   % Electrostat '''
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 %% GRID PARAMETERS
-NX      = 150;     % real space x-gridpoints
+NX      = 64;     % real space x-gridpoints
 NY      = 1;     %     ''     y-gridpoints
-LX      = 200;     % Size of the squared frequency domain
+LX      = 100;     % Size of the squared frequency domain
 LY      = 1;     % Size of the squared frequency domain
 NZ      = 1;      % number of perpendicular planes (parallel grid)
 Q0      = 1.0;    % safety factor
 SHEAR   = 0.0;    % magnetic shear
 EPS     = 0.0;    % inverse aspect ratio
-SG      = 0;         % Staggered z grids option
+SG      = 1;         % Staggered z grids option
 %% TIME PARMETERS
-TMAX    = 20;  % Maximal time unit
-DT      = 1e-2;   % Time step
+TMAX    = 500;  % Maximal time unit
+DT      = 2e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
-SPS3D   = 5;      % Sampling per time unit for 2D arrays
-SPS5D   = 1/5;    % Sampling per time unit for 5D arrays
+SPS3D   = 1;      % Sampling per time unit for 2D arrays
+SPS5D   = 1;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
 %% OPTIONS
-NOISE0  = 0.0; % Init noise amplitude
-BCKGD0  = 1.0;    % Init background
-SIMID   = 'Linear_damping';  % Name of the simulation
-LINEARITY = 0;   % activate non-linearity (is cancelled if KXEQ0 = 1)
+SIMID   = 'damping_analysis';  % Name of the simulation
+LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 KIN_E   = 1;
 % Collision operator
-% (0:L.Bernstein, 1:Dougherty, 2:Sugama, 3:Pitch angle, 4:Full Couloumb ; +/- for GK/DK)
-CO      = 4;
+% (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
+CO      = 'DG';
+GKCO    = 1; % gyrokinetic operator
+ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))
 NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)
-INIT_PHI= 0;   % Start simulation with a noisy phi
+INIT_OPT= 'mom00';   % Start simulation with a noisy mom00/phi/allmom
 %% OUTPUTS
 W_DOUBLE = 1;
 W_GAMMA  = 1; W_HF     = 1;
@@ -56,22 +59,24 @@ kmax    = NX*pi/LX;% Highest fourier mode
 NU_HYP  = 0.0;    % Hyperdiffusivity coefficient
 MU      = NU_HYP/(HD_CO*kmax)^4; % Hyperdiffusivity coefficient
 INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
-MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
-MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
+MU_X    = 0.0;     % 
+MU_Y    = 0.0;     % 
+MU_Z    = 0.0;     %
+MU_P    = 0.0;     %
+MU_J    = 0.0;     % 
 LAMBDAD = 0.0;
+NOISE0  = 0*1.0e-5; % Init noise amplitude
+BCKGD0  = 1.0;    % Init background
 GRADB   = 0.0;
 CURVB   = 0.0;
-K_N     = 0.0;   % Density gradient drive
-K_T     = 0.0;   % Temperature '''
-K_E     = 0.0;   % Electrostat '''
 %% PARAMETER SCANS
 
 if 1
 %% Parameter scan over PJ
-% PA = [2 4];
-% JA = [1 2];
-PA = [2];
-JA = [1];
+PA = [4];
+JA = [2];
+% PA = [2 4 8];
+% JA = [1 2 4];
 DTA= DT*ones(size(JA));%./sqrt(JA);
 % DTA= DT;
 mup_ = MU_P;
@@ -91,34 +96,36 @@ for i = 1:Nparam
     % Run linear simulation
     if RUN
         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz3 1 6 0; cd ../../../wk'])
-%         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ./../../../bin/helaz3 1 2 0; cd ../../../wk'])
-%         system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz3 0; cd ../../../wk'])
+%         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ./../../../bin/helaz 1 2 0; cd ../../../wk'])
+%         system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz 0; cd ../../../wk'])
     end
 %     Load and process results
     %%
     filename = ['../results/',SIMID,'/',PARAMS,'/outputs_00.h5'];
     load_results
+    tfit = []; gfit = [];
     for ikx = 1:NX/2+1
-        tend   = 2;%max(Ts3D(abs(Ni00(ikx,1,1,:))~=0));
-        tstart   = 0;
+        tend   = max(Ts3D);
+        tstart   = 0.5*tend;
         [~,itstart] = min(abs(Ts3D-tstart));
         [~,itend]   = min(abs(Ts3D-tend));
         trange = itstart:itend;
         % exp fit on moment 00
         X_ = Ts3D(trange); Y_ = squeeze(abs(Ni00(ikx,1,1,trange)));
-        gamma_Ni00(i,ikx) = LinearFit_s(X_,Y_);
+        [gamma_Ni00(i,ikx),tfit(ikx,:),gfit(ikx,:)] = LinearFit_s(X_,Y_);
         % exp fit on phi
         X_ = Ts3D(trange); Y_ = squeeze(abs(PHI(ikx,1,1,trange)));
         gamma_phi (i,ikx) = LinearFit_s(X_,Y_);
     end
     gamma_Ni00(i,:) = real(gamma_Ni00(i,:));% .* (gamma_Ni00(i,:)>=0.0));
     gamma_Nipj(i,:) = real(gamma_Nipj(i,:));% .* (gamma_Nipj(i,:)>=0.0));
-    if 0
+    if 1
     %% Fit verification
     figure;
-    for i = 1:1:NX/2+1
-        X_ = Ts3D(:); Y_ = squeeze(abs(Ni00(i,1,1,:)));
-        semilogy(X_,Y_,'DisplayName',['k=',num2str(kx(i))]); hold on;
+    for i = 1:5:NX/2+1
+%         X_ = Ts3D(:); Y_ = squeeze(abs(Ni00(i,1,1,:)));
+%         semilogy(X_,Y_,'DisplayName',['k=',num2str(kx(i))]); hold on;
+        plot(tfit(ikx,:),gfit(i,:),'DisplayName',['k=',num2str(kx(i))]); hold on;
     end
 end
 

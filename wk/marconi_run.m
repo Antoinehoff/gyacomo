@@ -3,7 +3,8 @@ addpath(genpath('../matlab')) % ... add
 SUBMIT = 1; % To submit the job automatically
 CHAIN  = 2; % To chain jobs (CHAIN = n will launch n jobs in chain)
 % EXECNAME = 'helaz3_dbg';
-  EXECNAME = 'helaz3';
+  EXECNAME = 'helaz3.03';
+  SIMID = 'simulation_A_new';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -35,25 +36,24 @@ P       = 4;
 J       = 2;
 %% TIME PARAMETERS
 TMAX    = 10000;  % Maximal time unit
-DT      = 2e-3;   % Time step
+DT      = 7e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for profiler
 SPS2D   = 1;      % Sampling per time unit for 2D arrays
 SPS3D   = 1/2;      % Sampling per time unit for 3D arrays
 SPS5D   = 1/50;  % Sampling per time unit for 5D arrays
-JOB2LOAD= -1; % start from t=0 if <0, else restart from outputs_$job2load
+JOB2LOAD= 0; % start from t=0 if <0, else restart from outputs_$job2load
 %% OPTIONS AND NAMING
 % Collision operator
-% (0 : L.Bernstein, 1 : Dougherty, 2: Sugama, 3 : Pitch angle ; +/- for GK/DK)
-CO      = 2;
+% (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
+CO      = 'LR';
+GKCO    = 1; % gyrokinetic operator
+ABCO    = 1; % interspecies collisions
 CLOS    = 0;   % Closure model (0: =0 truncation)
-NL_CLOS = 0;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
-% SIMID   = 'test_chained_job';  % Name of the simulation
-SIMID   = 'simulation_A';  % Name of the simulation
-% SIMID   = ['v3.0_P_',num2str(P),'_J_',num2str(J)];  % Name of the simulation
-LINEARITY = 1;   % activate non-linearity (is cancelled if KXEQ0 = 1)
+NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
+LINEARITY = 'nonlinear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % INIT options
 INIT_ZF = 0; ZF_AMP = 0.0;
-INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
+INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 'donothing';
 %% OUTPUTS
 W_DOUBLE = 1;
 W_GAMMA  = 1; W_HF     = 1;
@@ -111,6 +111,8 @@ if(SUBMIT)
             SBATCH_CMD = ['sbatch --dependency=afterok:',jobid_,' batch_script.sh\n'];
             disp(SBATCH_CMD);
             JOB2LOAD= JOB2LOAD+1;
+%             DT = 1e-1;
+%             NL_CLOS = -1;
             setup
             write_sbash_marconi
             [~,job_info_] = system('ssh ahoffman@login.marconi.cineca.it sh HeLaZ/wk/setup_and_run.sh');
@@ -118,5 +120,5 @@ if(SUBMIT)
         end
     end
 end
-system('rm fort*.90');
+% system('rm fort*.90');
 disp('done');

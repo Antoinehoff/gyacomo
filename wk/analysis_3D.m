@@ -8,11 +8,85 @@ outfile ='';
 outfile ='';
 outfile ='';
 outfile ='';
-outfile ='';
-outfile ='';
-outfile ='';
-% outfile ='nonlin_FCGK/nadiab_op_continue';
-% outfile ='Cyclone/150x150x30_5x3_Lx_200_Ly_150_q0_1.4_e_0.18_kN_2.22_kT_6.9_nu_5e-02_SGGK_adiabe';
+%% nu = 5e-1
+% Sugama
+% outfile ='Hallenbert_nu_5e-01/200x32_5x3_L_120_kN_1.5_kT_0.375_nu_5e-01_SGGK';% also in 7x4
+% outfile ='Hallenbert_nu_5e-01/200x32_5x3_L_120_kN_1.6_kT_0.4_nu_5e-01_SGGK';
+% outfile ='Hallenbert_nu_5e-01/200x32_5x3_L_120_kN_1.7_kT_0.425_nu_5e-01_SGGK';% also in 7x4
+% outfile ='Hallenbert_nu_5e-01/200x32_5x3_L_120_kN_1.8_kT_0.45_nu_5e-01_SGGK';
+% outfile ='Hallenbert_nu_5e-01/200x32_5x3_L_120_kN_1.9_kT_0.475_nu_5e-01_SGGK';%also in 7x4
+
+%% nu = 1e-1
+% Landau
+% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.5_kT_0.375_nu_1e-01_LDGK';
+% outfile ='Hallenbert_nu_1e-01/150x50_5x3_L_120_kN_1.6_kT_0.4_nu_1e-01_LDGK';
+% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.6_kT_0.4_nu_1e-01_LDGK';
+% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.7_kT_0.425_nu_1e-01_LDGK';
+% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.8_kT_0.45_nu_1e-01_LDGK';
+% outfile ='Hallenbert_nu_1e-01/150x50_5x3_L_120_kN_1.8_kT_0.45_nu_1e-01_LDGK';
+% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.9_kT_0.475_nu_1e-01_LDGK';
+
+% Sugama
+% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.5_kT_0.375_nu_1e-01_SGGK';
+% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.7_kT_0.425_nu_1e-01_SGGK';
+% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.8_kT_0.45_nu_1e-01_SGGK';
+% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.9_kT_0.475_nu_1e-01_SGGK';
+
+% Dougherty
+% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.5_kT_0.375_nu_1e-01_DGGK';
+% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.6_kT_0.4_nu_1e-01_DGGK';
+% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.7_kT_0.425_nu_1e-01_DGGK';
+% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.8_kT_0.45_nu_1e-01_DGGK';
+
+%% nu = 5e-2
+% outfile ='Hallenbert_nu_5e-02/200x32_11x6_L_120_kN_1.8_kT_0.45_nu_5e-02_SGGK';%For GENE benchmark % to analyse (added HD)
+% outfile ='Hallenbert_nu_5e-02/200x32_11x6_Lx_120_Ly_60_kN_1.8_kT_0.45_nu_5e-02_SGGK';
+
+% testing various NL closures
+% outfile ='Hallenbert_nu_5e-02/200x32_7x4_Lx_120_Ly_60_kN_1.8_kT_0.45_nu_5e-02_SGGK';
+outfile ='Hallenbert_nu_5e-02/200x32_5x3_Lx_120_Ly_60_kN_1.8_kT_0.45_nu_5e-02_SGDK';
+
+%% nu = 1e-2
+% Landau
+% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.5_kT_0.375_nu_1e-02_LDGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.6_kT_0.4_nu_1e-02_LDGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.7_kT_0.425_nu_1e-02_LDGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.8_kT_0.45_nu_1e-02_LDGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.9_kT_0.475_nu_1e-02_LDGK';
+
+% Sugama
+% outfile ='kobayashi_2015_fig1/150x150_5x3_L_100_kN_1.4_nu_5e-03_SGGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_7x4_L_120_kN_1.5_kT_0.375_nu_1e-02_SGGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.5_kT_0.375_nu_1e-02_SGGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.6_kT_0.4_nu_1e-02_SGGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_7x4_L_120_kN_1.6_kT_0.4_nu_1e-02_SGGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.7_kT_0.425_nu_1e-02_SGGK';
+% outfile ='Hallenbert_nu_1e-02/300x64_5x3_L_120_kN_1.7_kT_0.425_nu_1e-02_SGGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_11x6_L_120_kN_1.7_kT_0.425_nu_1e-02_SGGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.8_kT_0.45_nu_1e-02_SGGK'; % To analyse (added HD)
+% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.9_kT_0.475_nu_1e-02_SGGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_11x6_L_120_kN_1.9_kT_0.475_nu_1e-02_SGGK';
+% Dougherty
+% outfile ='Hallenbert_nu_1e-02/200x32_7x4_L_120_kN_1.5_kT_0.375_nu_1e-02_DGGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.6_kT_0.4_nu_1e-02_DGGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_8x5_L_120_kN_1.6_kT_0.4_nu_0e+00_DGGK';
+% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.8_kT_0.45_nu_1e-02_DGGK';
+
+%% nu = 5e-3
+% outfile ='Hallenbert_nu_5e-03/200x32_5x3_Lx_120_Ly_60_kN_1.8_eta_0.25_nuSG_5e-03_muxy_5e-2';
+% outfile ='Hallenbert_nu_5e-03/200x32_5x3_Lx_120_Ly_60_kN_1.8_eta_0.25_nuSG_5e-03_mux_5e-2_muy_6e-1';
+% outfile ='Hallenbert_nu_5e-03/200x32_11x6_Lx_120_Ly_60_kN_1.8_eta_0.25_nuSG_5e-03_mux_5e-2_muy_6e-1';
+% outfile ='Hallenbert_nu_5e-03/200x32_11x6_Lx_120_Ly_60_kN_1.8_eta_0.25_nuSG_5e-03_muxy_5e-2';
+
+%% nu = 0
+% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120x240_kN_1.6_kT_0.4_nu_0_mu_0.05';
+% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.6_kT_0.4_nu_0_mu_0.05';
+% outfile ='Hallenbert_fig2b/200x32_5x3_Lx_120_Ly_60_kN_2.5_eta_0.25_nu_0_muxy_5e-2';
+% outfile ='Hallenbert_fig2b/200x32_5x3_Lx_120_Ly_60_kN_2.5_eta_0.25_nu_0_muxy_1e-1';
+% outfile ='Hallenbert_fig2b/200x32_11x6_Lx_120_Ly_60_kN_2.5_eta_0.25_nu_0_muxy_5e-2';
+% outfile ='Hallenbert_fig2c/200x32_11x6_Lx_120_Ly_60_kN_2.0_eta_0.25_nu_0_muxy_5e-2';
+% outfile ='Hallenbert_fig2c/200x32_5x3_Lx_120_Ly_60_kN_2.0_eta_0.25_nu_0_muxy_5e-2';
+
     LOCALDIR  = ['../results/',outfile,'/'];
     MISCDIR   = ['/misc/HeLaZ_outputs/results/',outfile,'/'];
     system(['mkdir -p ',MISCDIR]);
@@ -23,15 +97,15 @@ outfile ='';
 outfile ='';
 outfile ='';
 outfile ='';
-outfile ='';
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x150_L_120_P_8_J_4_eta_0.6_nu_1e-01_SGGK_mu_0e+00/out.txt';
+outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A_new/300x300_5x3_L_120_kN_1.6667_nu_1e-01_SGGK/out.txt';
+% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x150_L_120_P_8_J_4_eta_0.6_nu_1e-01_SGGK_mu_0e+00/out.txt';
 % BASIC.RESDIR      = ['../',outfile(46:end-8),'/'];
 MISCDIR = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'/'];
 end
 
 %% Load the results
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 20; 
+JOBNUMMIN = 00; JOBNUMMAX = 10; 
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 
 
@@ -42,22 +116,33 @@ FMT = '.fig';
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-TAVG_0 = 11000; TAVG_1 = 11600; % Averaging times duration
-fig = plot_radial_transport_and_shear(data,TAVG_0,TAVG_1);
+TAVG_0 =100; TAVG_1 = 80000; % Averaging times duration
+% chose your field to plot in spacetime diag (uzf,szf,Gx)
+fig = plot_radial_transport_and_spacetime(data,TAVG_0,TAVG_1,'phi');
 save_figure(data,fig)
 end
 
+if 0
+%% ZF caracteristics (space time diagrams
+TAVG_0 = 500; TAVG_1 = 18000; % Averaging times duration
+% chose your field to plot in spacetime diag (uzf,szf,Gx)
+fig = ZF_spacetime(data,TAVG_0,TAVG_1);
+save_figure(data,fig)
+end
 
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.NAME      = '\phi^{NZ}';
+options.NAME      = '\phi';
+% options.NAME      = 'v_y';
+% options.NAME      = 'n_i^{NZ}';
+% options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 options.COMP      = 1;
-options.TIME      = 1500:10:5500;
+options.TIME      =200:3:800;
 % options.TIME      = 140:0.5:160;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -68,13 +153,15 @@ if 0
 % Options
 options.INTERP    = 0;
 options.POLARPLOT = 0;
+options.AXISEQUAL = 0;
+% options.NAME      = '\phi';
 % options.NAME      = '\Gamma_x';
-% options.NAME      = 'n_i^{NZ}|';
-options.NAME      = 'n_i';
-options.PLAN      = 'kxz';
-options.COMP      = 1;
-options.TIME      = [50 70 200 500];
-data.a = data.EPS * 1000;
+options.NAME      = 'n_i^{NZ}';
+% options.NAME      = 'k^2n_e';
+options.PLAN      = 'kxky';
+options.COMP      = 'avg';
+options.TIME      = 1.2e4+[600 800 1000];
+data.a = data.EPS * 2000;
 fig = photomaton(data,options);
 save_figure(data,fig)
 end
@@ -83,10 +170,11 @@ if 0
 %% 3D plot on the geometry
 options.INTERP    = 1;
 options.NAME      = 'n_i';
-options.PLANES    = 16;
-options.TIME      = 50;
+options.PLANES    = 1;
+options.TIME      = 1.2e4+[0 500 1000];
 data.rho_o_R      = 1e-3; % Sound larmor radius over Machine size ratio
-FIGURE = show_geometry(data,options);
+fig = show_geometry(data,options);
+save_figure(data,fig)
 end
 
 if 0
@@ -171,7 +259,7 @@ if 0
 %% Zonal profiles (ky=0)
 
 % Chose the field to plot
-FIELD = Ne00.*conj(Ne00);   FNAME = 'Ne002'; FIELDLTX = '|N_e^{00}|^2'
+FIELD = data.Ne00.*conj(data.Ne00);   FNAME = 'Ne002'; FIELDLTX = '|N_e^{00}|^2'
 % FIELD = Ni00.*conj(Ni00);   FNAME = 'Ni002'; FIELDLTX = '|N_i^{00}|^2'
 % FIELD = abs(PHI); FNAME = 'absPHI'; FIELDLTX = '|\tilde\phi|';
 % FIELD = PHI.*conj(PHI); FNAME = 'PHI2'; FIELDLTX = '|\tilde\phi|^2';
@@ -189,13 +277,13 @@ TNAME = [];
 fig = figure; FIGNAME = ['Zonal_',FNAME,TNAME,'_snaps','_',PARAMS]; set(gcf, 'Position',  [100, 100, 600,400])
 plt_2 = @(x) (fftshift(x,2));
     for i_ = 1:numel(tf)
-    [~,it] = min(abs(Ts3D-tf(i_))); TNAME = [TNAME,'_',num2str(Ts3D(it))];
-    DATA = plt_2(squeeze(plt(FIELD,it)));
-    semilogy(kx(2:end),DATA,'-','DisplayName',sprintf('$t c_s/R=%.0f$',Ts3D(it))); hold on; grid on;
+    [~,it] = min(abs(data.Ts3D-tf(i_))); TNAME = [TNAME,'_',num2str(data.Ts3D(it))];
+    d2plot = plt_2(squeeze(plt(FIELD,it)));
+    semilogy(data.kx(2:end),d2plot,'-','DisplayName',sprintf('$t c_s/R=%.0f$',data.Ts3D(it))); hold on; grid on;
     xlabel(latexize(XNAME));
     end
 title(['$',FIELDLTX,'$ Zonal Spectrum']); legend('show');
-save_figure
+
 end
 
 if 0

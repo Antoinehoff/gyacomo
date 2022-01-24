@@ -8,14 +8,14 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %% PHYSICAL PARAMETERS
 NU      = 0.1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-K_N     = 1/0.6;   % Density gradient drive
-K_T     = 0.0;   % Temperature '''
+K_N     = 1.8;   % Density gradient drive
+K_T     = 0.25*K_N;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 %% GRID PARAMETERS
-NX      = 150;     % real space x-gridpoints
+NX      = 64;     % real space x-gridpoints
 NY      = 1;     %     ''     y-gridpoints
-LX      = 200;     % Size of the squared frequency domain
+LX      = 100;     % Size of the squared frequency domain
 LY      = 1;     % Size of the squared frequency domain
 NZ      = 1;      % number of perpendicular planes (parallel grid)
 Q0      = 1.0;    % safety factor
@@ -23,8 +23,8 @@ SHEAR   = 0.0;    % magnetic shear
 EPS     = 0.0;    % inverse aspect ratio
 SG      = 1;         % Staggered z grids option
 %% TIME PARMETERS
-TMAX    = 200;  % Maximal time unit
-DT      = 1e-2;   % Time step
+TMAX    = 100;  % Maximal time unit
+DT      = 1e-2c;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
@@ -32,19 +32,19 @@ SPS5D   = 1;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
 %% OPTIONS
-SIMID   = 'Linear_entropy_mode';  % Name of the simulation
+SIMID   = 'Linear_Hallenbert';  % Name of the simulation
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 KIN_E   = 1;
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-CO      = 'LD';
-GKCO    = 1; % gyrokinetic operator
+CO      = 'SG';
+GKCO    = 0; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))
 NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)
-INIT_PHI= 0;   % Start simulation with a noisy phi
+INIT_OPT= 'mom00';   % Start simulation with a noisy mom00/phi/allmom
 %% OUTPUTS
 W_DOUBLE = 1;
 W_GAMMA  = 1; W_HF     = 1;
@@ -56,11 +56,13 @@ W_NAPJ   = 1; W_SAPJ   = 0;
 % unused
 HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
 kmax    = NX*pi/LX;% Highest fourier mode
-NU_HYP  = 0.0;    % Hyperdiffusivity coefficient
-MU      = NU_HYP/(HD_CO*kmax)^4; % Hyperdiffusivity coefficient
+MU      = 0.05; % Hyperdiffusivity coefficient
 INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
-MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
-MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
+MU_X    = MU;     % 
+MU_Y    = MU;     % 
+MU_Z    = 0.0;     %
+MU_P    = 0.0;     %
+MU_J    = 0.0;     % 
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5; % Init noise amplitude
 BCKGD0  = 0.0;    % Init background
@@ -70,10 +72,10 @@ CURVB   = 1.0;
 
 if 1
 %% Parameter scan over PJ
-% PA = [2 4];
-% JA = [1 2];
-PA = [4];
-JA = [2];
+% PA = [20];
+% JA = [10];
+PA = [4 6 8];
+JA = [2 3 4];
 DTA= DT*ones(size(JA));%./sqrt(JA);
 % DTA= DT;
 mup_ = MU_P;
@@ -118,7 +120,7 @@ for i = 1:Nparam
     if 0
     %% Fit verification
     figure;
-    for i = 1:1:Nx/2+1
+    for i = 1:1:NX/2+1
         X_ = Ts3D(:); Y_ = squeeze(abs(Ni00(i,1,1,:)));
         semilogy(X_,Y_,'DisplayName',['k=',num2str(kx(i))]); hold on;
     end
@@ -131,7 +133,9 @@ fig = figure; FIGNAME = 'linear_study';
 plt = @(x) x;
 % subplot(211)
     for i = 1:Nparam
-        clr       = line_colors(mod(i-1,numel(line_colors(:,1)))+1,:);
+%         colors = line_colors;
+        colors = jet(Nparam);
+        clr       = colors(mod(i-1,numel(line_colors(:,1)))+1,:);
         linestyle = line_styles(floor((i-1)/numel(line_colors(:,1)))+1);
         plot(plt(SCALE*kx),plt(gamma_phi(i,1:end)),...
             'Color',clr,...

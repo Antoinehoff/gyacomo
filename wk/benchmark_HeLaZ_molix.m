@@ -7,7 +7,7 @@ cd ..
 system('make');
 cd wk
 SIMDIR = '../results/benchmarks/shearless_molix_Kin_e/';
-system(['cd ',SIMDIR,';',' ./../../../bin/helaz 0; cd ../../../wk'])
+system(['cd ',SIMDIR,';',' ./../../../bin/helaz3.04 0; cd ../../../wk'])
 
 % Run molix
 % cd ../../molix

@@ -147,6 +147,69 @@ switch OPTIONS.NAME
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                
         end
+    case 'n_e'
+        NAME = 'ne';
+        if COMPDIM == 3
+            for it = FRAMES
+                tmp = squeeze(compr(DATA.DENS_E(:,:,:,it)));
+                FIELD(:,:,it) = squeeze(process(tmp));
+            end
+        else
+            if REALP
+                tmp = zeros(Nx,Ny,Nz);
+            else
+                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+            end
+            for it = FRAMES
+                for iz = 1:numel(DATA.z)
+                    tmp(:,:,iz) = squeeze(process(DATA.DENS_E(:,:,iz,it)));
+                end
+                FIELD(:,:,it) = squeeze(compr(tmp));
+            end                
+        end
+    case 'k^2n_e'
+        NAME = 'k2ne';
+        [KY, KX] = meshgrid(DATA.ky, DATA.kx);
+        if COMPDIM == 3
+            for it = FRAMES
+                for iz = 1:DATA.Nz
+                tmp = squeeze(compr(-(KX.^2+KY.^2).*DATA.DENS_E(:,:,iz,it)));
+                end
+                FIELD(:,:,it) = squeeze(process(tmp));
+            end
+        else
+            if REALP
+                tmp = zeros(Nx,Ny,Nz);
+            else
+                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+            end
+            for it = FRAMES
+                for iz = 1:numel(DATA.z)
+                    tmp(:,:,iz) = squeeze(process(-(KX.^2+KY.^2).*DATA.DENS_E(:,:,iz,it)));
+                end
+                FIELD(:,:,it) = squeeze(compr(tmp));
+            end                
+        end  
+    case 'n_e^{NZ}'
+        NAME = 'neNZ';
+        if COMPDIM == 3
+            for it = FRAMES
+                tmp = squeeze(compr(DATA.DENS_E(:,:,:,it).*(KY~=0)));
+                FIELD(:,:,it) = squeeze(process(tmp));
+            end
+        else
+            if REALP
+                tmp = zeros(Nx,Ny,Nz);
+            else
+                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+            end
+            for it = FRAMES
+                for iz = 1:numel(DATA.z)
+                    tmp(:,:,iz) = squeeze(process(DATA.DENS_E(:,:,iz,it).*(KY~=0)));
+                end
+                FIELD(:,:,it) = squeeze(compr(tmp));
+            end                
+        end        
     case 'n_i'
         NAME = 'ni';
         if COMPDIM == 3
@@ -207,58 +270,78 @@ switch OPTIONS.NAME
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                
         end
-   case '\Gamma_y'
-        NAME     = 'Gy';
-        [KY, ~] = meshgrid(DATA.ky, DATA.kx);
-        Gx      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
+   case 'v_y'
+        NAME     = 'vy';
+        [~, KX] = meshgrid(DATA.ky, DATA.kx);
+        vE      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
         for it = FRAMES % Compute the 3D real transport for each frame
             for iz = 1:DATA.Nz
-            Gx(:,:,iz,it)  = real(ifft2(-1i*KY.*(DATA.PHI(:,:,iz,it)),DATA.Nx,DATA.Ny))...
-                .*real(ifft2(DATA.DENS_I(:,:,iz,it),DATA.Nx,DATA.Ny));
+            vE(:,:,iz,it)  = real(ifft2(-1i*KX.*(DATA.PHI(:,:,iz,it)),DATA.Nx,DATA.Ny));
             end
         end
         if REALP % plot in real space
             for it = FRAMES
-                FIELD(:,:,it) = squeeze(compr(Gx(:,:,:,it)));
+                FIELD(:,:,it) = squeeze(compr(vE(:,:,:,it)));
             end
         else % Plot spectrum
             process = @(x) abs(fftshift(x,2));
-            shift_x = @(x) fftshift(x,2);
-            shift_y = @(x) fftshift(x,2);
             tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
             for it = FRAMES
                 for iz = 1:numel(DATA.z)
-                tmp(:,:,iz) = process(squeeze(fft2(Gx(:,:,iz,it),DATA.Nkx,DATA.Nky)));
+                    tmp(:,:,iz) = squeeze(process(-1i*KX.*(DATA.PHI(:,:,iz,it))));
                 end
-            FIELD(:,:,it) = squeeze(compr(tmp));
-            end  
-        end  
-        case '\Gamma_x'
-        NAME     = 'Gx';
+                FIELD(:,:,it) = squeeze(compr(tmp));
+            end   
+        end 
+   case 'v_x'
+        NAME     = 'vx';
         [KY, ~] = meshgrid(DATA.ky, DATA.kx);
-        Gx      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
+        vE      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
         for it = FRAMES % Compute the 3D real transport for each frame
             for iz = 1:DATA.Nz
-            Gx(:,:,iz,it)  = real((ifft2(-1i*KY.*(DATA.PHI(:,:,iz,it)),DATA.Nx,DATA.Ny)))...
-                .*real((ifft2(DATA.DENS_I(:,:,iz,it),DATA.Nx,DATA.Ny)));
+            vE(:,:,iz,it)  = real(ifft2(-1i*KY.*(DATA.PHI(:,:,iz,it)),DATA.Nx,DATA.Ny));
             end
         end
         if REALP % plot in real space
             for it = FRAMES
-                FIELD(:,:,it) = squeeze(compr(Gx(:,:,:,it)));
+                FIELD(:,:,it) = squeeze(compr(vE(:,:,:,it)));
             end
         else % Plot spectrum
             process = @(x) abs(fftshift(x,2));
-            shift_x = @(x) fftshift(x,2);
-            shift_y = @(x) fftshift(x,2);
-            tmp = zeros(DATA.Nx,DATA.Ny,Nz);
+            tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
             for it = FRAMES
                 for iz = 1:numel(DATA.z)
-                tmp(:,:,iz) = process(squeeze(fft2(Gx(:,:,iz,it),DATA.Nx,DATA.Ny)));
+                    tmp(:,:,iz) = squeeze(process(-1i*KY.*(DATA.PHI(:,:,iz,it))));
                 end
-            FIELD(:,:,it) = squeeze(compr(tmp(1:DATA.Nkx,1:DATA.Nky,:)));
-            end  
-        end    
+                FIELD(:,:,it) = squeeze(compr(tmp));
+            end   
+        end 
+    case '\Gamma_x'
+    NAME     = 'Gx';
+    [KY, ~] = meshgrid(DATA.ky, DATA.kx);
+    Gx      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
+    for it = FRAMES % Compute the 3D real transport for each frame
+        for iz = 1:DATA.Nz
+        Gx(:,:,iz,it)  = real((ifft2(-1i*KY.*(DATA.PHI(:,:,iz,it)),DATA.Nx,DATA.Ny)))...
+            .*real((ifft2(DATA.DENS_I(:,:,iz,it),DATA.Nx,DATA.Ny)));
+        end
+    end
+    if REALP % plot in real space
+        for it = FRAMES
+            FIELD(:,:,it) = squeeze(compr(Gx(:,:,:,it)));
+        end
+    else % Plot spectrum
+        process = @(x) abs(fftshift(x,2));
+        shift_x = @(x) fftshift(x,2);
+        shift_y = @(x) fftshift(x,2);
+        tmp = zeros(DATA.Nx,DATA.Ny,Nz);
+        for it = FRAMES
+            for iz = 1:numel(DATA.z)
+            tmp(:,:,iz) = process(squeeze(fft2(Gx(:,:,iz,it),DATA.Nx,DATA.Ny)));
+            end
+        FIELD(:,:,it) = squeeze(compr(tmp(1:DATA.Nkx,1:DATA.Nky,:)));
+        end  
+    end    
 end
 TOPLOT.FIELD     = FIELD;
 TOPLOT.X         = shift_x(X);

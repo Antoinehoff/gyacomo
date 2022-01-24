@@ -12,22 +12,20 @@ if DATA.Nz > 1 % Torus flux tube geometry
     x_tor = (R + a.*cos(p)) .* cos(t);
     y_tor = (R + a.*cos(p)) .* sin(t);
     z_tor = a.*sin(p);
+    DIMENSIONS = [50 50 1200 600];
 else % Zpinch geometry
     Nturns = 0.1; Tgeom = 0;
-    a      = 1; % Torus minor radius
+    a      = 0.7; % Torus minor radius
     R      = 0; % Torus major radius
     q      = 0; 
     theta  = linspace(-Nturns*pi, Nturns*pi, 100); % Poloidal angle
-    phi    = linspace(-0.1, 0.1, 3); % cylinder height
+    phi    = linspace(-0.1, 0.1, 5); % cylinder height
     [t, p] = meshgrid(phi, theta);
     x_tor = a.*cos(p);
     z_tor = a.*sin(p);
     y_tor = t;
+    DIMENSIONS = [50 50 numel(OPTIONS.TIME)*400 500];
 end
-FIGURE.fig = figure; set(gcf, 'Position',  [50 50 1200 600])
-torus=surf(x_tor, y_tor, z_tor); hold on;alpha 1.0;%light('Position',[-1 1 1],'Style','local')
-set(torus,'edgecolor',[1 1 1]*0.8,'facecolor','none')
-xlabel('X');ylabel('Y');zlabel('Z');
 % field line coordinates
 Xfl = @(z) (R+a*cos(z)).*cos(q*z);
 Yfl = @(z) (R+a*cos(z)).*sin(q*z);
@@ -49,16 +47,10 @@ yY  = @(z) bZ(z).*xX(z)-bX(z).*xZ(z)./sqrt((bY(z).*xZ(z)-bZ(z).*xY(z)).^2+(bZ(z)
 yZ  = @(z) bX(z).*xY(z)-bY(z).*xX(z)./sqrt((bY(z).*xZ(z)-bZ(z).*xY(z)).^2+(bZ(z).*xX(z)-bX(z).*xZ(z)).^2+(bX(z).*xY(z)-bY(z).*xX(z)).^2);
 yvec= @(z) [yX(z); yY(z); yZ(z)];
 % Plot high res field line
-theta  = linspace(-Nturns*pi, Nturns*pi, 512)   ; % Poloidal angle
-plot3(Xfl(theta),Yfl(theta),Zfl(theta))
 % Planes plot
 theta  = DATA.z   ; % Poloidal angle
-plot3(Xfl(theta),Yfl(theta),Zfl(theta),'ok')
 % Plot x,y,bvec at these points
-scale = 0.15;
-quiver3(Xfl(theta),Yfl(theta),Zfl(theta),scale*xX(theta),scale*xY(theta),scale*xZ(theta),0,'r');
-quiver3(Xfl(theta),Yfl(theta),Zfl(theta),scale*yX(theta),scale*yY(theta),scale*yZ(theta),0,'g');
-quiver3(Xfl(theta),Yfl(theta),Zfl(theta),scale*bX(theta),scale*bY(theta),scale*bZ(theta),0,'b');
+scale = 0.10;
 
 %% Plot plane result
 OPTIONS.POLARPLOT = 0;
@@ -66,31 +58,52 @@ OPTIONS.PLAN      = 'xy';
 r_o_R             = DATA.rho_o_R;
 [Y,X]             = meshgrid(r_o_R*DATA.y,r_o_R*DATA.x);
 max_              = 0;
-FIELDS            = zeros(DATA.Nx,DATA.Ny,numel(OPTIONS.PLANES));
+FIELDS            = zeros(DATA.Nx,DATA.Ny,DATA.Nz);
 
+FIGURE.fig = figure; FIGURE.FIGNAME = ['geometry','_',DATA.PARAMS]; set(gcf, 'Position',  DIMENSIONS)
 for it_ = 1:numel(OPTIONS.TIME)
-[~,it] = min(abs(OPTIONS.TIME(it_)-DATA.Ts3D));
-for iz = OPTIONS.PLANES
-    OPTIONS.COMP   = iz;
-    toplot         = process_field(DATA,OPTIONS);
-    FIELDS(:,:,iz) = toplot.FIELD(:,:,it); 
-    tmp            = max(max(abs(FIELDS(:,:,iz))));
-    if (tmp > max_) max_ = tmp;
-end
-for iz = OPTIONS.PLANES
-    z_             = DATA.z(iz);    
-    Xp = Xfl(z_) + X*xX(z_) + Y*yX(z_);
-    Yp = Yfl(z_) + X*xY(z_) + Y*yY(z_);
-    Zp = Zfl(z_) + X*xZ(z_) + Y*yZ(z_);
-    s=surface(Xp,Yp,Zp,FIELDS(:,:,iz)/max_);
-    s.EdgeColor = 'none';
-    colormap(bluewhitered);
-    caxis([-1,1]);
-end
-end
-%%
-axis equal
-view([1,-2,1])
+subplot(1,numel(OPTIONS.TIME),it_)
+    %plot magnetic geometry
+    magnetic_topo=surf(x_tor, y_tor, z_tor); hold on;alpha 1.0;%light('Position',[-1 1 1],'Style','local')
+    set(magnetic_topo,'edgecolor',[1 1 1]*0.8,'facecolor','none')
+    %plot field line
+    theta  = linspace(-Nturns*pi, Nturns*pi, 512)   ; % Poloidal angle
+    plot3(Xfl(theta),Yfl(theta),Zfl(theta))
+    %plot vector basis
+    theta  = DATA.z   ; % Poloidal angle
+    plot3(Xfl(theta),Yfl(theta),Zfl(theta),'ok'); hold on;
+    quiver3(Xfl(theta),Yfl(theta),Zfl(theta),scale*xX(theta),scale*xY(theta),scale*xZ(theta),0,'r');
+    quiver3(Xfl(theta),Yfl(theta),Zfl(theta),scale*yX(theta),scale*yY(theta),scale*yZ(theta),0,'g');
+    quiver3(Xfl(theta),Yfl(theta),Zfl(theta),scale*bX(theta),scale*bY(theta),scale*bZ(theta),0,'b');
+    xlabel('X');ylabel('Y');zlabel('Z');
+    %Plot time dependent data
+    [~,it] = min(abs(OPTIONS.TIME(it_)-DATA.Ts3D));
+    for iz = OPTIONS.PLANES
+        OPTIONS.COMP   = iz;
+        toplot         = process_field(DATA,OPTIONS);
+        FIELDS(:,:,iz) = toplot.FIELD(:,:,it); 
+        tmp            = max(max(abs(FIELDS(:,:,iz))));
+        if (tmp > max_) max_ = tmp;
+    end
+    for iz = OPTIONS.PLANES
+        z_             = DATA.z(iz);    
+        Xp = Xfl(z_) + X*xX(z_) + Y*yX(z_);
+        Yp = Yfl(z_) + X*xY(z_) + Y*yY(z_);
+        Zp = Zfl(z_) + X*xZ(z_) + Y*yZ(z_);
+        s=surface(Xp,Yp,Zp,FIELDS(:,:,iz)/max_);
+        s.EdgeColor = 'none';
+        colormap(bluewhitered);
+%         caxis([-1,1]);
+    end
+    if DATA.Nz == 1
+        xlim([0.65 0.75]);
+        ylim([-0.1 0.1]);
+        zlim([-0.2 0.2]);
+    end
+    end
+    %%
+    % axis equal
+    view([1,-2,1])
 
 end
 

@@ -7,7 +7,7 @@ MODULE numerics
     implicit none
 
     PUBLIC :: build_dnjs_table, evaluate_kernels, evaluate_poisson_op, compute_lin_coeff
-    PUBLIC :: wipe_turbulence, play_with_modes, save_EM_ZF_modes
+    PUBLIC :: play_with_modes, save_EM_ZF_modes
 
 CONTAINS
 
@@ -244,43 +244,6 @@ SUBROUTINE compute_lin_coeff
 
 END SUBROUTINE compute_lin_coeff
 
-!******************************************************************************!
-!!!!!!! Remove all ky!=0 modes to conserve only zonal modes in a restart
-!******************************************************************************!
-SUBROUTINE wipe_turbulence
-  USE fields
-  USE grid
-  IMPLICIT NONE
-  DO ikx=ikxs,ikxe
-  DO iky=ikys,ikye
-  DO iz=izs,ize
-    DO ip=ips_e,ipe_e
-    DO ij=ijs_e,ije_e
-      IF( iky .NE. iky_0) THEN
-        moments_e( ip,ij,ikx,iky,iz, :) = 0e-3_dp*moments_e( ip,ij,ikx,iky,iz, :)
-      ELSE
-        moments_e( ip,ij,ikx,iky,iz, :) = 1e+0_dp*moments_e( ip,ij,ikx,iky,iz, :)
-      ENDIF
-    ENDDO
-    ENDDO
-    DO ip=ips_i,ipe_i
-    DO ij=ijs_i,ije_i
-      IF( iky .NE. iky_0) THEN
-        moments_i( ip,ij,ikx,iky,iz, :) = 0e-3_dp*moments_i( ip,ij,ikx,iky,iz, :)
-      ELSE
-        moments_i( ip,ij,ikx,iky,iz, :) = 1e+0_dp*moments_i( ip,ij,ikx,iky,iz, :)
-      ENDIF
-    ENDDO
-    ENDDO
-    IF( iky .NE. iky_0) THEN
-      phi(ikx,iky,iz) = 0e-3_dp*phi(ikx,iky,iz)
-    ELSE
-      phi(ikx,iky,iz) = 1e+0_dp*phi(ikx,iky,iz)
-    ENDIF
-  ENDDO
-  ENDDO
-  ENDDO
-END SUBROUTINE
 !******************************************************************************!
 !!!!!!! Routine that can artificially increase or wipe modes
 !******************************************************************************!
