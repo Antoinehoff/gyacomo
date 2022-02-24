@@ -38,6 +38,10 @@ switch OPTIONS.PLAN
         XNAME = '$k_y$'; YNAME = '$z$';
         [Y,X] = meshgrid(DATA.z,DATA.ky);
         REALP = 0; COMPDIM = 1; POLARPLOT = 0; SCALE = 0;
+    case 'sx'
+        XNAME = '$v_\parallel$'; YNAME = '$\mu$';
+        [Y,X] = meshgrid(OPTIONS.XPERP,OPTIONS.SPAR);
+        REALP = 1; COMPDIM = 3; POLARPLOT = 0; SCALE = 0;
 end
 Xmax_ = max(max(abs(X))); Ymax_ = max(max(abs(Y)));
 Lmin_ = min([Xmax_,Ymax_]);
@@ -316,34 +320,82 @@ switch OPTIONS.NAME
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end   
         end 
-    case '\Gamma_x'
-    NAME     = 'Gx';
-    [KY, ~] = meshgrid(DATA.ky, DATA.kx);
-    Gx      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
-    for it = FRAMES % Compute the 3D real transport for each frame
-        for iz = 1:DATA.Nz
-        Gx(:,:,iz,it)  = real((ifft2(-1i*KY.*(DATA.PHI(:,:,iz,it)),DATA.Nx,DATA.Ny)))...
-            .*real((ifft2(DATA.DENS_I(:,:,iz,it),DATA.Nx,DATA.Ny)));
-        end
-    end
-    if REALP % plot in real space
-        for it = FRAMES
-            FIELD(:,:,it) = squeeze(compr(Gx(:,:,:,it)));
-        end
-    else % Plot spectrum
-        process = @(x) abs(fftshift(x,2));
-        shift_x = @(x) fftshift(x,2);
-        shift_y = @(x) fftshift(x,2);
-        tmp = zeros(DATA.Nx,DATA.Ny,Nz);
-        for it = FRAMES
-            for iz = 1:numel(DATA.z)
-            tmp(:,:,iz) = process(squeeze(fft2(Gx(:,:,iz,it),DATA.Nx,DATA.Ny)));
+   case 's_y'
+        NAME     = 'sy';
+        [~, KX] = meshgrid(DATA.ky, DATA.kx);
+        vE      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
+        for it = FRAMES % Compute the 3D real transport for each frame
+            for iz = 1:DATA.Nz
+            vE(:,:,iz,it)  = real(ifft2(KX.^2.*(DATA.PHI(:,:,iz,it)),DATA.Nx,DATA.Ny));
             end
-        FIELD(:,:,it) = squeeze(compr(tmp(1:DATA.Nkx,1:DATA.Nky,:)));
+        end
+        if REALP % plot in real space
+            for it = FRAMES
+                FIELD(:,:,it) = squeeze(compr(vE(:,:,:,it)));
+            end
+        else % Plot spectrum
+            process = @(x) abs(fftshift(x,2));
+            tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+            for it = FRAMES
+                for iz = 1:numel(DATA.z)
+                    tmp(:,:,iz) = squeeze(process(KX.^2.*(DATA.PHI(:,:,iz,it))));
+                end
+                FIELD(:,:,it) = squeeze(compr(tmp));
+            end   
+        end 
+    case '\Gamma_x'
+        NAME     = 'Gx';
+        [KY, ~] = meshgrid(DATA.ky, DATA.kx);
+        Gx      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
+        for it = FRAMES % Compute the 3D real transport for each frame
+            for iz = 1:DATA.Nz
+            Gx(:,:,iz,it)  = real((ifft2(-1i*KY.*(DATA.PHI(:,:,iz,it)),DATA.Nx,DATA.Ny)))...
+                .*real((ifft2(DATA.DENS_I(:,:,iz,it),DATA.Nx,DATA.Ny)));
+            end
+        end
+        if REALP % plot in real space
+            for it = FRAMES
+                FIELD(:,:,it) = squeeze(compr(Gx(:,:,:,it)));
+            end
+        else % Plot spectrum
+            process = @(x) abs(fftshift(x,2));
+            shift_x = @(x) fftshift(x,2);
+            shift_y = @(x) fftshift(x,2);
+            tmp = zeros(DATA.Nx,DATA.Ny,Nz);
+            for it = FRAMES
+                for iz = 1:numel(DATA.z)
+                tmp(:,:,iz) = process(squeeze(fft2(Gx(:,:,iz,it),DATA.Nx,DATA.Ny)));
+                end
+            FIELD(:,:,it) = squeeze(compr(tmp(1:DATA.Nkx,1:DATA.Nky,:)));
+            end  
+        end    
+    case 'f_i'
+        shift_x = @(x) x; shift_y = @(y) y;
+        NAME = 'fi'; OPTIONS.SPECIE = 'i';
+        [~,it0_] =min(abs(OPTIONS.TIME(1)-DATA.Ts5D));
+        [~,it1_]=min(abs(OPTIONS.TIME(end)-DATA.Ts5D));
+        dit_ = 1;%ceil((it1_-it0_+1)/10); 
+        FRAMES = it0_:dit_:it1_;
+        iz = 1;
+        for it = FRAMES
+            OPTIONS.T = DATA.Ts5D(it);
+            [~,~,FIELD(:,:,it)] = compute_fa(DATA,OPTIONS);
         end  
-    end    
+    case 'f_e'
+        shift_x = @(x) x; shift_y = @(y) y;
+        NAME = 'fe'; OPTIONS.SPECIE = 'e';
+        [~,it0_] =min(abs(OPTIONS.TIME(1)-DATA.Ts5D));
+        [~,it1_]=min(abs(OPTIONS.TIME(end)-DATA.Ts5D));
+        dit_ = 1;%ceil((it1_-it0_+1)/10); 
+        FRAMES = it0_:dit_:it1_;
+        iz = 1;
+        for it = FRAMES
+            OPTIONS.T = DATA.Ts5D(it);
+            [~,~,FIELD(:,:,it)] = compute_fa(DATA,OPTIONS);
+        end  
 end
 TOPLOT.FIELD     = FIELD;
+TOPLOT.FRAMES    = FRAMES;
 TOPLOT.X         = shift_x(X);
 TOPLOT.Y         = shift_y(Y);
 TOPLOT.FIELDNAME = FIELDNAME;

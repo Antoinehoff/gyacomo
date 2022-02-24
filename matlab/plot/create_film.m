@@ -2,7 +2,11 @@ function create_film(DATA,OPTIONS,format)
 %% Plot options
 FPS = 30; DELAY = 1/FPS;
 BWR = 1; NORMALIZED = 1;
-T = DATA.Ts3D;
+if ~strcmp(OPTIONS.PLAN,'sx')
+    T = DATA.Ts3D;
+else
+    T = DATA.Ts5D;
+end
 %% Processing
 toplot = process_field(DATA,OPTIONS);
 
@@ -29,40 +33,49 @@ if hmax == hmin
 else
 % Setup figure frame
 fig  = figure('Color','white','Position', toplot.DIMENSIONS.*[1 1 1.2 1]);
-    pcolor(X,Y,FIELD(:,:,1)); % to set up
-    if BWR
-    colormap(bluewhitered)
-    end
-    axis tight manual % this ensures that getframe() returns a consistent size
-    if toplot.INTERP
-        shading interp;
+    if ~strcmp(OPTIONS.PLAN,'sx')
+        pcolor(X,Y,FIELD(:,:,1)); % to set up
+        if BWR
+        colormap(bluewhitered)
+        end
+        axis tight manual % this ensures that getframe() returns a consistent size
+        if toplot.INTERP
+            shading interp;
+        end
+    else
+      contour(toplot.X,toplot.Y,FIELD(:,:,1),128);        
     end
     in      = 1;
     nbytes = fprintf(2,'frame %d/%d',in,numel(FIELD(1,1,:)));
     for n = FRAMES % loop over selected frames
         scale = max(max(abs(FIELD(:,:,n)))); % Scaling to normalize
-        if NORMALIZED
-            pclr = pcolor(X,Y,FIELD(:,:,n)/scale); % frame plot\
-            caxis([-1,1]);
-        else
-            pclr = pcolor(X,Y,FIELD(:,:,n)); % frame plot\
-            if CONST_CMAP
-                caxis([-1,1]*max(abs([hmin hmax]))); % adaptive color map
+        if ~strcmp(OPTIONS.PLAN,'sx')
+            if NORMALIZED
+                pclr = pcolor(X,Y,FIELD(:,:,n)/scale); % frame plot\
+                caxis([-1,1]);
             else
-                caxis([-1,1]*scale); % adaptive color map                
+                pclr = pcolor(X,Y,FIELD(:,:,n)); % frame plot\
+                if CONST_CMAP
+                    caxis([-1,1]*max(abs([hmin hmax]))); % adaptive color map
+                else
+                    caxis([-1,1]*scale); % adaptive color map                
+                end
+                title([FIELDNAME,', $t \approx$', sprintf('%.3d',ceil(T(n)))...
+                    ,', scale = ',sprintf('%.1e',scale)]);
             end
-            title([FIELDNAME,', $t \approx$', sprintf('%.3d',ceil(T(n)))...
-                ,', scale = ',sprintf('%.1e',scale)]);
+            if toplot.INTERP
+                shading interp; 
+            end
+            set(pclr, 'edgecolor','none'); pbaspect(toplot.ASPECT);
+            if BWR
+            colormap(bluewhitered)
+            end
+        else % show velocity distr.
+           contour(toplot.X,toplot.Y,FIELD(:,:,n)/scale,128);
         end
         title([FIELDNAME,', $t \approx$', sprintf('%.3d',ceil(T(n)))...
               ,', scaling = ',sprintf('%.1e',scale)]);
-        if toplot.INTERP
-            shading interp; 
-        end
-        set(pclr, 'edgecolor','none'); pbaspect(toplot.ASPECT);
-        if BWR
-        colormap(bluewhitered)
-        end
+
         xlabel(XNAME); ylabel(YNAME); %colorbar;
         drawnow 
         % Capture the plot as an image 

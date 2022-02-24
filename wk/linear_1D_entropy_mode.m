@@ -6,16 +6,16 @@ default_plots_options
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;   % Collision frequency
+NU      = 0.01;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-K_N     = 1.8;   % Density gradient drive
+K_N     = 1.7;   % Density gradient drive
 K_T     = 0.25*K_N;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 %% GRID PARAMETERS
 NX      = 64;     % real space x-gridpoints
 NY      = 1;     %     ''     y-gridpoints
-LX      = 100;     % Size of the squared frequency domain
+LX      = 120;     % Size of the squared frequency domain
 LY      = 1;     % Size of the squared frequency domain
 NZ      = 1;      % number of perpendicular planes (parallel grid)
 Q0      = 1.0;    % safety factor
@@ -23,8 +23,8 @@ SHEAR   = 0.0;    % magnetic shear
 EPS     = 0.0;    % inverse aspect ratio
 SG      = 1;         % Staggered z grids option
 %% TIME PARMETERS
-TMAX    = 100;  % Maximal time unit
-DT      = 1e-2c;   % Time step
+TMAX    = 300;  % Maximal time unit
+DT      = 2e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
@@ -32,13 +32,13 @@ SPS5D   = 1;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
 %% OPTIONS
-SIMID   = 'Linear_Hallenbert';  % Name of the simulation
+SIMID   = 'Linear_scan';  % Name of the simulation
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 KIN_E   = 1;
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
 CO      = 'SG';
-GKCO    = 0; % gyrokinetic operator
+GKCO    = 1; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))
@@ -54,9 +54,9 @@ W_NAPJ   = 1; W_SAPJ   = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % unused
-HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
+HD_CO   = 0.0;    % Hyper diffusivity cutoff ratio
 kmax    = NX*pi/LX;% Highest fourier mode
-MU      = 0.05; % Hyperdiffusivity coefficient
+MU      = 0.0; % Hyperdiffusivity coefficient
 INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_X    = MU;     % 
 MU_Y    = MU;     % 
@@ -71,17 +71,21 @@ CURVB   = 1.0;
 %% PARAMETER SCANS
 
 if 1
-%% Parameter scan over PJ
-% PA = [20];
-% JA = [10];
-PA = [4 6 8];
-JA = [2 3 4];
-DTA= DT*ones(size(JA));%./sqrt(JA);
-% DTA= DT;
-mup_ = MU_P;
-muj_ = MU_J;
+% Parameter scan over PJ
+PA = [4 6 8 10];
+JA = [2 3 4  5];
 Nparam = numel(PA);
-param_name = 'PJ';
+% Parameter scan over KN
+% PA = [4]; JA = [2];
+%     PMAXE = PA(1); PMAXI = PA(1);
+%     JMAXE = JA(1); JMAXI = JA(1);
+% KNA    = 1.5:0.05:2.5;
+% ETA    = 0.25;
+% Nparam = numel(KNA);
+%
+DTA= DT*ones(1,Nparam)./sqrt(JA);
+% DTA= DT;
+param_name = 'KN';
 gamma_Ni00 = zeros(Nparam,floor(NX/2)+1);
 gamma_Nipj = zeros(Nparam,floor(NX/2)+1);
 gamma_phi  = zeros(Nparam,floor(NX/2)+1);
@@ -89,12 +93,15 @@ for i = 1:Nparam
     % Change scan parameter
     PMAXE = PA(i); PMAXI = PA(i);
     JMAXE = JA(i); JMAXI = JA(i);
+%     K_N = KNA(i); K_T = ETA*K_N;
     DT = DTA(i);
     setup
     system(['rm fort*.90']);
     % Run linear simulation
     if RUN
         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz3 1 6 0; cd ../../../wk'])
+% disp([param_name,'=',num2str(K_N)]);
+% system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz3 1 6 0 > out.txt; cd ../../../wk']);
 %         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ./../../../bin/helaz 1 2 0; cd ../../../wk'])
 %         system(['cd ../results/',SIMID,'/',PARAMS,'/; ./../../../bin/helaz 0; cd ../../../wk'])
     end
@@ -127,7 +134,7 @@ for i = 1:Nparam
 end
 
 if 1
-%% Plot
+%% Plot for PJ scan
 SCALE = 1;%sqrt(2);
 fig = figure; FIGNAME = 'linear_study';
 plt = @(x) x;
@@ -150,6 +157,19 @@ plt = @(x) x;
 saveas(fig,[SIMDIR,'/',PARAMS,'/gamma_vs_',param_name,'_',PARAMS,'.fig']);
 saveas(fig,[SIMDIR,'/',PARAMS,'/gamma_vs_',param_name,'_',PARAMS,'.png']);
 end
+end
+
+if 0
+%% Plot for KN scan
+fig = figure; FIGNAME = 'linear_study';
+[Y,X] = meshgrid(kx,KNA);
+pclr = pcolor(Y,X,gamma_phi);set(pclr, 'edgecolor','none'); colorbar;
+shading interp
+% imagesc(kx,KNA,gamma_phi); 
+set(gca,'YDir','normal')
+colormap(bluewhitered); xlim([kx(2) kx(end)]);
+title(['$\gamma^p$, $\nu_{',CONAME,'}=',num2str(NU),'$'])
+xlabel('$k_x$'); ylabel('$\kappa_N$');
 end
 if 0
 %% Space time

@@ -29,7 +29,14 @@ path = '/home/ahoffman/gene/linear_zpinch_results/';
 % fname ='GENE_LIN_Kn_1.9_KT_0.475_nuSG_0.047_64x32.txt';
 % fname ='GENE_LIN_Kn_1.9_KT_0.475_nuSG_0.235_64x32.txt';
 % fname ='GENE_LIN_Kn_1.7_KT_0.425_nuSG_0.235_64x32.txt';
-fname ='GENE_LIN_Kn_1.8_KT_0.45_nuSGDK_0.047_32x16.txt';
+% fname ='GENE_LIN_Kn_1.8_KT_0.45_nuSGDK_0.047_32x16.txt';
+% fname ='GENE_LIN_Kn_1.8_KT_0.475_nu_0_mu_5e-2.txt';
+% fname ='GENE_LIN_Kn_1.8_KT_0.45_nuSGDK_0.0235_64x32.txt';
+% fname ='GENE_LIN_Kn_1.8_KT_0.45_nuSGDK_0.0235_32x16.txt';
+% fname ='GENE_LIN_Kn_2.0_KT_0.5_nu_0_32x16.txt';
+% fname ='GENE_LIN_Kn_2.0_KT_0.5_nuSGDK_0.0235_32x16.txt';
+% fname ='GENE_LIN_Kn_1.6_KT_0.4_nu_0_32x16.txt';
+fname ='GENE_LIN_Kn_2.5_KT_0.625_nu_0_32x16.txt';
 data_ = load([path,fname]);
 
 figure

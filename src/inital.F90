@@ -46,6 +46,10 @@ SUBROUTINE inital
       IF (my_id .EQ. 0) WRITE(*,*) '--init a blob'
       CALL initialize_blob
       CALL poisson ! get phi_0 = phi(N_0)
+    CASE('ppj')
+      IF (my_id .EQ. 0) WRITE(*,*) 'ppj init ~ GENE'
+      call init_ppj
+      CALL poisson ! get phi_0 = phi(N_0)
     END SELECT
   ENDIF
 
@@ -355,4 +359,125 @@ SUBROUTINE initialize_blob
   ENDDO
   ENDDO
 END SUBROUTINE initialize_blob
+!******************************************************************************!
+
+
+!******************************************************************************!
+!!!!!!! Initialize the gyrocenter in a ppj gene manner (power law)
+!******************************************************************************!
+SUBROUTINE init_ppj
+  USE basic
+  USE grid
+  USE fields
+  USE prec_const
+  USE utility, ONLY: checkfield
+  USE initial_par
+  USE model, ONLY : LINEARITY, KIN_E
+  IMPLICIT NONE
+
+  REAL(dp) :: noise
+  REAL(dp) :: kx, ky, sigma, gain, ky_shift
+  INTEGER, DIMENSION(12) :: iseedarr
+
+  ! Seed random number generator
+  iseedarr(:)=iseed
+  CALL RANDOM_SEED(PUT=iseedarr+my_id)
+
+    !**** Broad noise initialization *******************************************
+    ! Electrons
+    IF (KIN_E) THEN
+    DO ip=ips_e,ipe_e
+      DO ij=ijs_e,ije_e
+        IF ( (ip .EQ. 1) .AND. (ij .EQ. 1) ) THEN
+          DO ikx=ikxs,ikxe
+            kx = kxarray(ikx)
+            DO iky=ikys,ikye
+              ky = kyarray(iky)
+              DO iz=izs,ize
+                IF (kx .NE. 0) THEN
+                  IF(ky .NE. 0) THEN
+                    moments_e(ip,ij,ikx,iky,iz,:) = 0._dp
+                  ELSE
+                    moments_e(ip,ij,ikx,iky,iz,:) = 0.5_dp * ky_min/(ABS(ky)+ky_min)
+                  ENDIF
+                ELSE
+                  IF(ky .NE. 0) THEN
+                    moments_e(ip,ij,ikx,iky,iz,:) = (kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
+                  ELSE
+                    moments_e(ip,ij,ikx,iky,iz,:) = 0.5_dp*(kx_min/(ABS(kx)+kx_min))
+                  ENDIF
+                ENDIF
+              END DO
+            END DO
+          END DO
+
+          IF ( contains_kx0 ) THEN
+            DO iky=2,Nky/2 !symmetry at kx = 0 for all z
+              moments_e(ip,ij,ikx_0,iky,:,:) = moments_e( ip,ij,ikx_0,Nky+2-iky,:, :)
+            END DO
+          ENDIF
+        ELSE
+          moments_e(ip,ij,:,:,:,:) = 0._dp
+        ENDIF
+      END DO
+    END DO
+    ENDIF
+
+    ! Ions
+    DO ip=ips_i,ipe_i
+      DO ij=ijs_i,ije_i
+        IF ( (ip .EQ. 1) .AND. (ij .EQ. 1) ) THEN
+          DO ikx=ikxs,ikxe
+            kx = kxarray(ikx)
+            DO iky=ikys,ikye
+              ky = kyarray(iky)
+              DO iz=izs,ize
+                IF (kx .NE. 0) THEN
+                  IF(ky .NE. 0) THEN
+                    moments_i(ip,ij,ikx,iky,iz,:) = 0._dp
+                  ELSE
+                    moments_i(ip,ij,ikx,iky,iz,:) = 0.5_dp * ky_min/(ABS(ky)+ky_min)
+                  ENDIF
+                ELSE
+                  IF(ky .NE. 0) THEN
+                    moments_i(ip,ij,ikx,iky,iz,:) = (kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
+                  ELSE
+                    moments_i(ip,ij,ikx,iky,iz,:) = 0.5_dp*(kx_min/(ABS(kx)+kx_min))
+                  ENDIF
+                ENDIF
+              END DO
+            END DO
+          END DO
+
+          IF ( contains_kx0 ) THEN
+            DO iky=2,Nky/2 !symmetry at kx = 0 for all z
+              moments_i( ip,ij,ikx_0,iky,:,:) = moments_i( ip,ij,ikx_0,Nky+2-iky,:,:)
+            END DO
+          ENDIF
+        ELSE
+          moments_i(ip,ij,:,:,:,:) = 0._dp
+        ENDIF
+      END DO
+    END DO
+
+    ! Putting to zero modes that are not in the 2/3 Orszag rule
+    IF (LINEARITY .NE. 'linear') THEN
+      DO ikx=ikxs,ikxe
+      DO iky=ikys,ikye
+      DO iz=izs,ize
+        DO ip=ips_e,ipe_e
+        DO ij=ijs_e,ije_e
+          moments_e( ip,ij,ikx,iky,iz, :) = moments_e( ip,ij,ikx,iky,iz, :)*AA_x(ikx)*AA_y(iky)
+        ENDDO
+        ENDDO
+        DO ip=ips_i,ipe_i
+        DO ij=ijs_i,ije_i
+          moments_i( ip,ij,ikx,iky,iz, :) = moments_i( ip,ij,ikx,iky,iz, :)*AA_x(ikx)*AA_y(iky)
+        ENDDO
+        ENDDO
+      ENDDO
+      ENDDO
+      ENDDO
+    ENDIF
+END SUBROUTINE init_ppj
 !******************************************************************************!

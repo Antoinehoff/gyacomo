@@ -17,20 +17,28 @@ FIGURE.fig = figure; set(gcf, 'Position',  toplot.DIMENSIONS.*[1 1 Ncols Nrows])
         else
             scale = 1;
         end
-        pclr = pcolor(toplot.X,toplot.Y,toplot.FIELD(:,:,FRAMES(i_))./scale); set(pclr, 'edgecolor','none');
-        if OPTIONS.AXISEQUAL
-            pbaspect(toplot.ASPECT)
-        end
-        if ~strcmp(OPTIONS.PLAN,'kxky')
-            caxis([-1,1]);
-            colormap(bluewhitered);
+        if ~strcmp(OPTIONS.PLAN,'sx')
+            tshot = DATA.Ts3D(FRAMES(i_));
+            pclr = pcolor(toplot.X,toplot.Y,toplot.FIELD(:,:,FRAMES(i_))./scale); set(pclr, 'edgecolor','none');
+            if OPTIONS.AXISEQUAL
+                pbaspect(toplot.ASPECT)
+            end
+            if ~strcmp(OPTIONS.PLAN,'kxky')
+                caxis([-1,1]);
+                colormap(bluewhitered);
+            end
+            if OPTIONS.INTERP
+                shading interp; 
+            end
+        else
+            contour(toplot.X,toplot.Y,toplot.FIELD(:,:,FRAMES(i_))./scale,128);
+%             pclr = pcolor(toplot.X,toplot.Y,toplot.FIELD(:,:,FRAMES(i_))./scale); set(pclr, 'edgecolor','none'); shading interp
+            tshot = DATA.Ts5D(FRAMES(i_));
         end
         xlabel(toplot.XNAME); ylabel(toplot.YNAME);
 %         if i_ > 1; set(gca,'ytick',[]); end; 
-        title([sprintf('$t c_s/R=%.0f$',DATA.Ts3D(FRAMES(i_))),', max = ',sprintf('%.1e',scale)]);
-        if OPTIONS.INTERP
-            shading interp; 
-        end
+        title([sprintf('$t c_s/R=%.0f$',tshot),', max = ',sprintf('%.1e',scale)]);
+
     end
     legend(['$',toplot.FIELDNAME,'$']);
     FIGURE.FIGNAME = [FNAME,'_snaps',TNAME];

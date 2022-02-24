@@ -1,4 +1,4 @@
-function [FIGURE] = plot_radial_transport_and_spacetime(DATA, TAVG_0, TAVG_1,stfname)
+function [FIGURE] = plot_radial_transport_and_spacetime(DATA, TAVG_0, TAVG_1,stfname,Nmvm)
     %Compute steady radial transport
     tend = TAVG_1; tstart = TAVG_0;
     [~,its0D] = min(abs(DATA.Ts0D-tstart));
@@ -34,16 +34,17 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, TAVG_0, TAVG_1,stf
     [~,ite3D]   = min(abs(DATA.Ts3D-tend));
 
 %% Figure    
+mvm = @(x) movmean(x,Nmvm);
     FIGURE.fig = figure; FIGURE.FIGNAME = ['ZF_transport_drphi','_',DATA.PARAMS]; set(gcf, 'Position',  [100, 100, 1200, 600])
     subplot(311)
 %     yyaxis left
-        plot(DATA.Ts0D,DATA.PGAMMA_RI*SCALE,'DisplayName','$\langle n_i \partial_y\phi \rangle_y$'); hold on;
-        plot(DATA.Ts3D,Gamma_t_mtlb,'DisplayName','matlab comp.'); hold on;
+        plot(mvm(DATA.Ts0D),mvm(DATA.PGAMMA_RI*SCALE),'DisplayName','$\langle n_i \partial_y\phi \rangle_y$'); hold on;
+        plot(mvm(DATA.Ts3D),mvm(Gamma_t_mtlb),'DisplayName','matlab comp.'); hold on;
         plot(DATA.Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*gamma_infty_avg, '-k',...
             'DisplayName',['$\Gamma^{\infty} = $',num2str(gamma_infty_avg),'$\pm$',num2str(gamma_infty_std)]);
         grid on; set(gca,'xticklabel',[]); ylabel('$\Gamma_x$')
         ylim([0,5*abs(gamma_infty_avg)]); xlim([DATA.Ts0D(1),DATA.Ts0D(end)]);
-        title([DATA.param_title,', $\Gamma^{\infty} \approx $',num2str(gamma_infty_avg)]);
+        title([DATA.param_title,', $\Gamma^{\infty} = $',num2str(gamma_infty_avg),'$\pm$',num2str(gamma_infty_std)]);
     % plot
     subplot(312)
     it0 = 1; itend = Ns3D;
@@ -64,6 +65,9 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, TAVG_0, TAVG_1,stf
     Ns3D = numel(DATA.Ts3D);
     [KY, KX] = meshgrid(DATA.ky, DATA.kx);
     plt = @(x) mean(x(:,:,1,:),2);
+    kycut = max(DATA.ky);
+    kxcut = max(DATA.kx);
+    LP = (abs(KY)<kycut).*(abs(KX)<kxcut); %Low pass filter
     switch stfname
         case 'phi'
                 phi            = zeros(DATA.Nx,DATA.Ny,1,Ns3D);
@@ -74,19 +78,19 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, TAVG_0, TAVG_1,stf
         case 'v_y'
                 dxphi            = zeros(DATA.Nx,DATA.Ny,1,Ns3D);
                 for it = 1:numel(DATA.Ts3D)
-                    dxphi(:,:,1,it)  = ifourier_GENE(-1i*KX.*(DATA.PHI(:,:,1,it)),[DATA.Nx,DATA.Ny]);
+                    dxphi(:,:,1,it)  = ifourier_GENE(-1i*KX.*(DATA.PHI(:,:,1,it)).*LP,[DATA.Nx,DATA.Ny]);
                 end
                 f2plot = dxphi; fname = '$\langle \partial_x\phi\rangle_y$';
         case 'v_x'
                 dyphi            = zeros(DATA.Nx,DATA.Ny,1,Ns3D);
                 for it = 1:numel(DATA.Ts3D)
-                    dyphi(:,:,1,it)  = ifourier_GENE(1i*KY.*(DATA.PHI(:,:,1,it)),[DATA.Nx,DATA.Ny]);
+                    dyphi(:,:,1,it)  = ifourier_GENE(1i*KY.*(DATA.PHI(:,:,1,it)).*LP,[DATA.Nx,DATA.Ny]);
                 end
                 f2plot = dyphi; fname = '$\langle \partial_y\phi\rangle_y$';
         case 'szf'
             dx2phi           = zeros(DATA.Nx,DATA.Ny,1,Ns3D);
             for it = 1:numel(DATA.Ts3D)
-                dx2phi(:,:,1,it) = ifourier_GENE(-KX.^2.*(DATA.PHI(:,:,1,it)),[DATA.Nx,DATA.Ny]);
+                dx2phi(:,:,1,it) = ifourier_GENE(-KX.^2.*(DATA.PHI(:,:,1,it)).*LP,[DATA.Nx,DATA.Ny]);
             end
             f2plot = dx2phi; fname = '$\langle \partial_x^2\phi\rangle_y$';
     end

@@ -1,12 +1,12 @@
 % Options
 SHOW_FILM = 0;
-U_TIME   =11000; % >0 for frozen velocity at a given time, -1 for evolving field
+U_TIME   =2400; % >0 for frozen velocity at a given time, -1 for evolving field
 Evolve_U = 1; % 0 for frozen velocity at a given time, 1 for evolving field
 Tfin   = 1000;
-dt_    = 0.1;
+dt_    = 0.2;
 Nstep  = ceil(Tfin/dt_);
 % Init tracers
-Np      = 40; %number of tracers
+Np      = 100; %number of tracers
 % color = tcolors;
 color = jet(Np);
 tcolors = distinguishable_colors(Np); %Their colors
@@ -21,12 +21,30 @@ Disp_y = zeros(Np,Nstep);
 xmax = max(data.x); xmin = min(data.x);
 ymax = max(data.y); ymin = min(data.y);
 
-% Xp = 0.8*xmax*(0.5-rand(Np));
-% Yp = 0.8*ymax*(0.5-rand(Np));
-dp_ = (xmax-xmin)/(Np-1);
-Xp = linspace(xmin+dp_/2,xmax-dp_/2,Np);
-Yp = zeros(1,Np);
-Zp = zeros(Np);
+INIT = 'round';
+switch INIT
+    case 'lin'
+        % Evenly distributed initial positions
+        dp_ = (xmax-xmin)/(Np-1);
+        Xp = linspace(xmin+dp_/2,xmax-dp_/2,Np);
+        Yp = zeros(1,Np);
+        Zp = zeros(Np);
+    case 'round'
+        % All particles arround a same point
+        xc = 0; yc = 0;
+        theta = rand(1,Np)*2*pi; r = 0.1;
+        Xp = xc + r*cos(theta);
+        Yp = yc + r*sin(theta);
+        Zp = zeros(Np);
+    case 'gauss'
+        % normal distribution arround a point
+        xc = 0; yc = 0; sgm = 1.0;
+        dx = normrnd(0,sgm,[1,Np]); dx = dx - mean(dx);
+        Xp = xc + dx;
+        dy = normrnd(0,sgm,[1,Np]); dy = dy - mean(dy);
+        Yp = yc + dy;
+        Zp = zeros(Np);        
+end
 
 % position grid and velocity field
 [YY_, XX_ ,ZZ_] = meshgrid(data.y,data.x,data.z);
@@ -41,8 +59,22 @@ ni = zeros(size(XX_));
 for iz = 1:data.Nz
     Ux(:,:,iz) = real(ifft2( 1i*KY.*(data.PHI(:,:,iz,itu_)),data.Nx,data.Ny));
     Uy(:,:,iz) = real(ifft2(-1i*KX.*(data.PHI(:,:,iz,itu_)),data.Nx,data.Ny));
+    ni(:,:,iz) = real(ifft2(data.DENS_I(:,:,iz,itu_),data.Nx,data.Ny));
 end
 
+%% FILM options
+FPS = 30; DELAY = 1/FPS;
+FORMAT = '.gif';
+if SHOW_FILM
+    FILENAME  = [data.localdir,'tracer_evolution',FORMAT];
+    switch FORMAT
+        case '.avi'
+            vidfile = VideoWriter(FILENAME,'Uncompressed AVI');
+            vidfile.FrameRate = FPS;
+            open(vidfile);  
+    end 
+    fig = figure;
+end
 
 %
 %Time loop
@@ -50,10 +82,7 @@ t_ = 0;
 it = 1;
 itu_old = 0;
 nbytes = fprintf(2,'frame %d/%d',it,Nstep);
-if SHOW_FILM
-    fig = figure;
-end
-while(t_<Tfin)
+while(t_<Tfin && it <= Nstep)
    if Evolve_U
     [~,itu_] = min(abs(U_TIME+t_-data.Ts3D));
    end
@@ -106,7 +135,7 @@ while(t_<Tfin)
                 iz1 = izC; 
             end
             x0   = data.x(ix0); x1 = data.x(ix1); %left right
-            y0   = data.x(iy0); y1 = data.y(iy1); %down top
+            y0   = data.y(iy0); y1 = data.y(iy1); %down top
             z0   = data.z(iz0); z1 = data.z(iz1); %back front
             if(e_x > 0)
                 ai__ = (x_ - x0)/(x1-x0); % interp coeff x
@@ -146,8 +175,9 @@ while(t_<Tfin)
             
             u___  =  linterp(u__0,u__1,a__i);
 
-            % push the particle
-            q = sign(-u___(3));
+%             push the particle
+%             q = sign(-u___(3));
+            q = -u___(3);
 %             q =1;
             x_ = x_ + dt_*u___(1)*q;
             y_ = y_ + dt_*u___(2)*q;
@@ -174,14 +204,14 @@ while(t_<Tfin)
         Xp(ip) = x_; Yp(ip) = y_;
     end
     %% Movie
-    if Evolve_U && (itu_old ~= itu_) && SHOW_FILM
+    if SHOW_FILM && (~Evolve_U || (itu_old ~= itu_))
     % updating the velocity field
         clf(fig);
         F2P = real(ifft2(data.PHI(:,:,iz,itu_),data.Nx,data.Ny));
         scale = max(max(abs(F2P))); % Scaling to normalize
         pclr = pcolor(XX_,YY_,F2P/scale); 
         colormap(bluewhitered);
-        set(pclr, 'edgecolor','none'); hold on; caxis([-5,5]);
+        set(pclr, 'edgecolor','none'); hold on; caxis([-2,2]); shading interp
         for ip = 1:Np
             ia0 = max(1,it-Na);
             plot(Traj_x(ip,ia0:it),Traj_y(ip,ia0:it),'.','Color',color(ip,:)); hold on
@@ -194,6 +224,24 @@ while(t_<Tfin)
         axis equal
         xlim([xmin xmax]); ylim([ymin ymax]);
         drawnow
+        % Capture the plot as an image 
+        frame = getframe(fig); 
+        switch FORMAT
+            case '.gif'
+                im = frame2im(frame); 
+                [imind,cm] = rgb2ind(im,32); 
+                % Write to the GIF File 
+                if it == 1 
+                  imwrite(imind,cm,FILENAME,'gif', 'Loopcount',inf); 
+                else 
+                  imwrite(imind,cm,FILENAME,'gif','WriteMode','append', 'DelayTime',DELAY);
+                end 
+            case '.avi'
+                writeVideo(vidfile,frame); 
+            otherwise
+                disp('Unknown format');
+                break
+        end
     end
     t_ = t_ + dt_; it = it + 1; itu_old = itu_;
     % terminal info
@@ -203,6 +251,15 @@ while(t_<Tfin)
     end
     nbytes = fprintf(2,'frame %d/%d',it,Nstep);
 end
+disp(' ')
+switch FORMAT
+    case '.gif'
+        disp(['Gif saved @ : ',FILENAME])
+    case '.avi'
+        disp(['Video saved @ : ',FILENAME])
+        close(vidfile);
+end
+
 Nt = it;
 %% Plot trajectories and statistics
 xtot = Disp_x;
@@ -230,11 +287,24 @@ ylabel('$x_p$');
 xlim(U_TIME + [0 Tfin]);
 
 subplot(222);
-    plot(time_,mean(xtot,1)); hold on
-    fit = polyfit(time_,mean(xtot,1),1);
-    plot(time_,fit(1)*time_+fit(2),'--k','DisplayName',['$\alpha=',num2str(fit(1)),'$']); hold on
-ylabel('$\langle x \rangle_p$');
-xlim(U_TIME + [0 Tfin]);
+    itf = floor(Nt/2); %fit end time
+    % x^2 displacement
+    plot(time_,mean(xtot.^2,1),'DisplayName','$\langle x.^2\rangle_p$'); hold on
+    fit = polyfit(time_(1:itf),mean(xtot(:,1:itf).^2,1),1);
+    plot(time_,fit(1)*time_+fit(2),'--k'); hold on
+    ylabel('$\langle x^2 \rangle_p$');
+
+%     % y^2 displacement
+%     fit = polyfit(time_(1:itf),mean(ytot(:,1:itf).^2,1),1);
+%     plot(time_,fit(1)*time_+fit(2),'--k','DisplayName',['$\alpha=',num2str(fit(1)),'$']); hold on
+%     plot(time_,mean(ytot.^2,1),'DisplayName','$\langle y.^2\rangle_p$'); 
+%     
+%     % r^2 displacement
+%     fit = polyfit(time_(1:itf),mean(xtot(:,1:itf).^2+ytot(:,1:itf).^2,1),1);
+%     plot(time_,fit(1)*time_+fit(2),'--k','DisplayName',['$\alpha=',num2str(fit(1)),'$']); hold on
+%     plot(time_,mean(xtot.^2+ytot.^2,1),'DisplayName','$\langle r.^2\rangle_p$'); 
+%     ylabel('$\langle x^2 \rangle_p$');
+%     xlim(U_TIME + [0 Tfin]);
 
 subplot(223);
 for ip = 1:Np
@@ -247,14 +317,8 @@ ylabel('$y_p$');
 xlim(U_TIME + [0 Tfin]);
 
 subplot(224);
-    plot(time_,mean(ytot,1)); hold on
-xlabel('time');
-ylabel('$\langle y \rangle_p$');
-xlim(U_TIME + [0 Tfin]);
+histogram(xtot(:,1),20); hold on
+histogram(xtot(:,end),20)
+xlabel('position');
+ylabel('$n$');
 
-if 0
-    %%
-   figure
-%    hist(reshape(xtot,[Np*(Nt-1) 1],Np))
-   hist(xtot(:,2000),Np/20)
-end

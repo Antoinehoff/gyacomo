@@ -62,7 +62,7 @@ MODULE grid
   REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kyarray, kyarray_full
   ! Kperp array depends on kx, ky, z (geometry), eo (even or odd zgrid)
   REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE, PUBLIC :: kparray
-  REAL(dp), PUBLIC, PROTECTED ::  deltakx, deltaky, kx_max, ky_max!, kp_max
+  REAL(dp), PUBLIC, PROTECTED ::  deltakx, deltaky, kx_max, ky_max, kx_min, ky_min!, kp_max
   REAL(dp), PUBLIC, PROTECTED ::  local_kxmax, local_kymax
   INTEGER,  PUBLIC, PROTECTED ::  ikxs, ikxe, ikys, ikye!, ikps, ikpe
   INTEGER,  PUBLIC, PROTECTED :: ikx_0, iky_0, ikx_max, iky_max ! Indices of k-grid origin and max
@@ -242,9 +242,11 @@ CONTAINS
     IF (Nx .EQ. 1) THEN
       deltakx = 0._dp
       kx_max  = 0._dp
+      kx_min  = 0._dp
     ELSE
       deltakx = 2._dp*PI/Lx
       kx_max  = Nkx*deltakx
+      kx_min  = deltakx
     ENDIF
 
     ! Build the full grids on process 0 to diagnose it without comm
@@ -313,11 +315,13 @@ CONTAINS
       contains_ky0    = .true.
       ky_max          = 0._dp
       iky_max         = 1
+      ky_min          = 0._dp
       kyarray_full(1) = 0._dp
       local_kymax     = 0._dp
     ELSE ! Build apprpopriate grid
       deltaky     = 2._dp*PI/Ly
       ky_max      = (Ny/2)*deltakx
+      ky_min      = deltaky
       ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
       local_kymax = 0._dp
       DO iky = ikys,ikye

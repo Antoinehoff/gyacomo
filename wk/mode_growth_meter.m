@@ -1,42 +1,45 @@
-MODES_SELECTOR = 2; %(1:Zonal, 2: NZonal, 3: ky=kx)
-NORMALIZED = 0;
-options.K2PLOT = 0.01:0.01:1.0;
-options.TIME   =4000:1:4200;
-DATA = data;
-OPTIONS = options;
+function [FIGURE] = mode_growth_meter(DATA,OPTIONS)
 
+NORMALIZED = OPTIONS.NORMALIZED;
+Nma   = OPTIONS.NMA; %Number moving average
 t  = OPTIONS.TIME;
 iz = 1;
 [~,ikzf] = max(squeeze(mean(abs(squeeze(DATA.PHI(:,1,1,:))),2)));
 
 FRAMES = zeros(size(OPTIONS.TIME));
+
 for i = 1:numel(OPTIONS.TIME)
     [~,FRAMES(i)] =min(abs(OPTIONS.TIME(i)-DATA.Ts3D));
 end
 
+FIGURE.fig = figure; set(gcf, 'Position',  [100 100 1200 700])
+FIGURE.FIGNAME = 'mode_growth_meter';
+for i = 1:2
+MODES_SELECTOR = i; %(1:Zonal, 2: NZonal, 3: ky=kx)
+
 if MODES_SELECTOR == 1
     if NORMALIZED
-        plt = @(x,ik) movmean(abs(squeeze(x(ik,1,iz,FRAMES)))./max(abs(squeeze(x(ik,1,iz,FRAMES)))),1);
+        plt = @(x,ik) movmean(abs(squeeze(x(ik,1,iz,FRAMES)))./max(abs(squeeze(x(ik,1,iz,FRAMES)))),Nma);
     else
-        plt = @(x,ik) movmean(abs(squeeze(x(ik,1,iz,FRAMES))),1);
+        plt = @(x,ik) movmean(abs(squeeze(x(ik,1,iz,FRAMES))),Nma);
     end
     kstr = 'k_x';
     k = DATA.kx;
     MODESTR = 'Zonal modes';
 elseif MODES_SELECTOR == 2
     if NORMALIZED
-        plt = @(x,ik) movmean(abs(squeeze(x(1,ik,iz,FRAMES)))./max(abs(squeeze(x(1,ik,iz,FRAMES)))),1);
+        plt = @(x,ik) movmean(abs(squeeze(x(1,ik,iz,FRAMES)))./max(abs(squeeze(x(1,ik,iz,FRAMES)))),Nma);
     else
-        plt = @(x,ik) movmean(abs(squeeze(x(1,ik,iz,FRAMES))),1);
+        plt = @(x,ik) movmean(abs(squeeze(x(1,ik,iz,FRAMES))),Nma);
     end
     kstr = 'k_y';
     k = DATA.ky;
     MODESTR = 'NZ modes';
 elseif MODES_SELECTOR == 3
     if NORMALIZED
-        plt = @(x,ik) movmean(abs(squeeze(x(ik,ik,iz,FRAMES)))./max(abs(squeeze(x(ik,ik,iz,FRAMES)))),1);
+        plt = @(x,ik) movmean(abs(squeeze(x(ik,ik,iz,FRAMES)))./max(abs(squeeze(x(ik,ik,iz,FRAMES)))),Nma);
     else
-        plt = @(x,ik) movmean(abs(squeeze(x(ik,ik,iz,FRAMES))),1);
+        plt = @(x,ik) movmean(abs(squeeze(x(ik,ik,iz,FRAMES))),Nma);
     end
     kstr = 'k_y=k_x';
     k = DATA.ky;
@@ -63,16 +66,16 @@ for ik = MODES
 end
 
 %plot
-figure; set(gcf, 'Position',  [100 100 1200 350])
-subplot(1,3,1)
+subplot(2,3,1+3*(i-1))
     [YY,XX] = meshgrid(t,fftshift(k,1));
     pclr = pcolor(XX,YY,abs(plt(fftshift(DATA.PHI,MODES_SELECTOR),1:numel(k))));set(pclr, 'edgecolor','none');  hold on;
+%     pclr = imagesc(t,fftshift(k,1),abs(plt(fftshift(DATA.PHI,MODES_SELECTOR),1:numel(k))));
 %     xlim([t(1) t(end)]); %ylim([1e-5 1])
     xlabel(['$',kstr,'\rho_s$']); ylabel('$t c_s /\rho_s$');
     title(MODESTR)  
     
-subplot(1,3,2)
-    mod2plot = round(linspace(2,numel(MODES),15));
+subplot(2,3,2+3*(i-1))
+    mod2plot = [2:OPTIONS.NMODES+1];
     for i_ = mod2plot
         semilogy(t,plt(DATA.PHI,MODES(i_))); hold on;
 %         semilogy(t,exp(gamma(i_).*t+amp(i_)),'--k')
@@ -84,7 +87,7 @@ subplot(1,3,2)
     xlabel('$t c_s /\rho_s$'); ylabel(['$|\phi_{',kstr,'}|$']);
     title('Measure time window')
     
-subplot(1,3,3)
+subplot(2,3,3+3*(i-1))
     plot(k(MODES),gamma); hold on;
     plot(k(MODES(mod2plot)),gamma(mod2plot),'x')
     if MODES_SELECTOR == 1
@@ -92,3 +95,5 @@ subplot(1,3,3)
     end
     xlabel(['$',kstr,'\rho_s$']); ylabel('$\gamma$');
     title('Growth rates')
+end
+end

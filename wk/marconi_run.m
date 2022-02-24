@@ -1,10 +1,10 @@
 clear all;
 addpath(genpath('../matlab')) % ... add
 SUBMIT = 1; % To submit the job automatically
-CHAIN  = 2; % To chain jobs (CHAIN = n will launch n jobs in chain)
+CHAIN  = 0; % To chain jobs (CHAIN = n will launch n jobs in chain)
 % EXECNAME = 'helaz3_dbg';
-  EXECNAME = 'helaz3.03';
-  SIMID = 'simulation_A_new';
+  EXECNAME = 'helaz3';
+  SIMID = 'HP_fig2b_conv';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -13,15 +13,16 @@ CLUSTER.PART  = 'prod';     % dbg or prod
 % CLUSTER.PART  = 'dbg';
 CLUSTER.TIME  = '24:00:00'; % allocation time hh:mm:ss
 if(strcmp(CLUSTER.PART,'dbg')); CLUSTER.TIME  = '00:30:00'; end;
-CLUSTER.MEM   = '128GB';     % Memory
-CLUSTER.JNAME = 'HeLaZ';% Job name
-NP_P          = 2;          % MPI processes along p
-NP_KX         = 24;         % MPI processes along kx
+CLUSTER.MEM   = '16GB';     % Memory
+CLUSTER.JNAME = 'nu0_b_conv';% Job name
+NP_P          = 1;          % MPI processes along p
+NP_KX         = 12;         % MPI processes along kx
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;   % Collision frequency
-K_N     = 1.0/0.6;    % Density gradient drive (R/Ln)
-NU_HYP  = 0.0;
+NU      = 0.0;   % Collision frequency
+K_N     = 2.5;    % Density gradient drive (R/Ln)
+K_T     = K_N/4;    % Temperature gradient
+MU      = 0.1;
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 %% GRID PARAMETERS
 NX      = 300;     % Realspace x-gridpoints
@@ -35,17 +36,17 @@ EPS     = 0.0;    % inverse aspect ratio
 P       = 4;
 J       = 2;
 %% TIME PARAMETERS
-TMAX    = 10000;  % Maximal time unit
-DT      = 7e-3;   % Time step
-SPS0D   = 1;      % Sampling per time unit for profiler
-SPS2D   = 1;      % Sampling per time unit for 2D arrays
+TMAX    = 1000;  % Maximal time unit
+DT      = 1e-2;   % Time step
+SPS0D   = 1/2;      % Sampling per time unit for profiler
+SPS2D   = 1/2;      % Sampling per time unit for 2D arrays
 SPS3D   = 1/2;      % Sampling per time unit for 3D arrays
 SPS5D   = 1/50;  % Sampling per time unit for 5D arrays
-JOB2LOAD= 0; % start from t=0 if <0, else restart from outputs_$job2load
+JOB2LOAD= -1; % start from t=0 if <0, else restart from outputs_$job2load
 %% OPTIONS AND NAMING
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-CO      = 'LR';
+CO      = 'DG';
 GKCO    = 1; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 CLOS    = 0;   % Closure model (0: =0 truncation)
@@ -53,9 +54,10 @@ NL_CLOS = -1;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >
 LINEARITY = 'nonlinear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % INIT options
 INIT_ZF = 0; ZF_AMP = 0.0;
-INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 'donothing';
+INIT_OPT     = 'phi'; 
+ACT_ON_MODES = 'donothing';
 %% OUTPUTS
-W_DOUBLE = 1;
+W_DOUBLE = 0;
 W_GAMMA  = 1; W_HF     = 1;
 W_PHI    = 1; W_NA00   = 1;
 W_DENS   = 1; W_TEMP   = 1;
@@ -76,16 +78,12 @@ KX0KH   = 0; A0KH = 0; % Background phi mode to drive Ray-Tay inst.
 KXEQ0   = 0;      % put kx = 0
 KPAR    = 0.0;    % Parellel wave vector component
 LAMBDAD = 0.0;
-kmax    = NX*pi/LX;% Highest fourier mode
-HD_CO   = 0.5;    % Hyper diffusivity cutoff ratio
-% kmaxcut = 2.5;
-MU      = NU_HYP/(HD_CO*kmax)^4; % Hyperdiffusivity coefficient
+MU_X    = 1e-1; % Hyperdiffusivity coefficient
+MU_Y    = 1e-1; % Hyperdiffusivity coefficient
 NOISE0  = 1.0e-5;
 BCKGD0  = 0.0;    % Init background
 TAU     = 1.0;    % e/i temperature ratio
-K_T     = 0.0;    % Temperature gradient
 K_E     = 0.0;    % ES '''
-INIT_PHI= 1;   % Start simulation with a noisy phi and moments
 MU_P    = 0.0;     % Hermite  hyperdiffusivity -mu_p*(d/dvpar)^4 f
 MU_J    = 0.0;     % Laguerre hyperdiffusivity -mu_j*(d/dvperp)^4 f
 % Compute processes distribution

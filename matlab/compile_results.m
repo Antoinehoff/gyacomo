@@ -42,7 +42,7 @@ while(CONTINUE)
         W_HF      = 0;%strcmp(h5readatt(filename,'/data/input','write_hf'   ),'y');
         W_PHI     = strcmp(h5readatt(filename,'/data/input','write_phi'  ),'y');
         W_NA00    = strcmp(h5readatt(filename,'/data/input','write_Na00' ),'y');
-        W_NAPJ    = 0;%strcmp(h5readatt(filename,'/data/input','write_Napj' ),'y');
+        W_NAPJ    = strcmp(h5readatt(filename,'/data/input','write_Napj' ),'y');
         W_SAPJ    = 0;%strcmp(h5readatt(filename,'/data/input','write_Sapj' ),'y');
         W_DENS    = strcmp(h5readatt(filename,'/data/input','write_dens' ),'y');
         W_TEMP    = strcmp(h5readatt(filename,'/data/input','write_temp' ),'y');
@@ -201,6 +201,7 @@ DATA.Ts5D = Ts5D_; DATA.Ts3D = Ts3D_; DATA.Ts0D = Ts0D_;
 DATA.PHI  = PHI_; 
 % grids
 DATA.Pe = Pe; DATA.Pi = Pi; 
+DATA.Je = Je; DATA.Ji = Ji; 
 DATA.kx = kx; DATA.ky = ky; DATA.z = z;
 DATA.x  = x;  DATA.y  = y;
 DATA.ikx0 = ikx0; DATA.iky0 = iky0;

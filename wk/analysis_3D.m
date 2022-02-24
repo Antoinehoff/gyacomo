@@ -1,109 +1,14 @@
 addpath(genpath('../matlab')) % ... add
-addpath(genpath('../matlab/plots')) % ... add
-outfile ='';
-%% Directory of the simulation
-if 1% Local results
-outfile ='';
-outfile ='';
-outfile ='';
-outfile ='';
-outfile ='';
-%% nu = 5e-1
-% Sugama
-% outfile ='Hallenbert_nu_5e-01/200x32_5x3_L_120_kN_1.5_kT_0.375_nu_5e-01_SGGK';% also in 7x4
-% outfile ='Hallenbert_nu_5e-01/200x32_5x3_L_120_kN_1.6_kT_0.4_nu_5e-01_SGGK';
-% outfile ='Hallenbert_nu_5e-01/200x32_5x3_L_120_kN_1.7_kT_0.425_nu_5e-01_SGGK';% also in 7x4
-% outfile ='Hallenbert_nu_5e-01/200x32_5x3_L_120_kN_1.8_kT_0.45_nu_5e-01_SGGK';
-% outfile ='Hallenbert_nu_5e-01/200x32_5x3_L_120_kN_1.9_kT_0.475_nu_5e-01_SGGK';%also in 7x4
-
-%% nu = 1e-1
-% Landau
-% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.5_kT_0.375_nu_1e-01_LDGK';
-% outfile ='Hallenbert_nu_1e-01/150x50_5x3_L_120_kN_1.6_kT_0.4_nu_1e-01_LDGK';
-% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.6_kT_0.4_nu_1e-01_LDGK';
-% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.7_kT_0.425_nu_1e-01_LDGK';
-% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.8_kT_0.45_nu_1e-01_LDGK';
-% outfile ='Hallenbert_nu_1e-01/150x50_5x3_L_120_kN_1.8_kT_0.45_nu_1e-01_LDGK';
-% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.9_kT_0.475_nu_1e-01_LDGK';
-
-% Sugama
-% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.5_kT_0.375_nu_1e-01_SGGK';
-% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.7_kT_0.425_nu_1e-01_SGGK';
-% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.8_kT_0.45_nu_1e-01_SGGK';
-% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.9_kT_0.475_nu_1e-01_SGGK';
-
-% Dougherty
-% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.5_kT_0.375_nu_1e-01_DGGK';
-% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.6_kT_0.4_nu_1e-01_DGGK';
-% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.7_kT_0.425_nu_1e-01_DGGK';
-% outfile ='Hallenbert_nu_1e-01/200x32_5x3_L_120_kN_1.8_kT_0.45_nu_1e-01_DGGK';
-
-%% nu = 5e-2
-% outfile ='Hallenbert_nu_5e-02/200x32_11x6_L_120_kN_1.8_kT_0.45_nu_5e-02_SGGK';%For GENE benchmark % to analyse (added HD)
-% outfile ='Hallenbert_nu_5e-02/200x32_11x6_Lx_120_Ly_60_kN_1.8_kT_0.45_nu_5e-02_SGGK';
-
-% testing various NL closures
-% outfile ='Hallenbert_nu_5e-02/200x32_7x4_Lx_120_Ly_60_kN_1.8_kT_0.45_nu_5e-02_SGGK';
-outfile ='Hallenbert_nu_5e-02/200x32_5x3_Lx_120_Ly_60_kN_1.8_kT_0.45_nu_5e-02_SGDK';
-
-%% nu = 1e-2
-% Landau
-% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.5_kT_0.375_nu_1e-02_LDGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.6_kT_0.4_nu_1e-02_LDGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.7_kT_0.425_nu_1e-02_LDGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.8_kT_0.45_nu_1e-02_LDGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.9_kT_0.475_nu_1e-02_LDGK';
-
-% Sugama
-% outfile ='kobayashi_2015_fig1/150x150_5x3_L_100_kN_1.4_nu_5e-03_SGGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_7x4_L_120_kN_1.5_kT_0.375_nu_1e-02_SGGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.5_kT_0.375_nu_1e-02_SGGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.6_kT_0.4_nu_1e-02_SGGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_7x4_L_120_kN_1.6_kT_0.4_nu_1e-02_SGGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.7_kT_0.425_nu_1e-02_SGGK';
-% outfile ='Hallenbert_nu_1e-02/300x64_5x3_L_120_kN_1.7_kT_0.425_nu_1e-02_SGGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_11x6_L_120_kN_1.7_kT_0.425_nu_1e-02_SGGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.8_kT_0.45_nu_1e-02_SGGK'; % To analyse (added HD)
-% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.9_kT_0.475_nu_1e-02_SGGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_11x6_L_120_kN_1.9_kT_0.475_nu_1e-02_SGGK';
-% Dougherty
-% outfile ='Hallenbert_nu_1e-02/200x32_7x4_L_120_kN_1.5_kT_0.375_nu_1e-02_DGGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.6_kT_0.4_nu_1e-02_DGGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_8x5_L_120_kN_1.6_kT_0.4_nu_0e+00_DGGK';
-% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.8_kT_0.45_nu_1e-02_DGGK';
-
-%% nu = 5e-3
-% outfile ='Hallenbert_nu_5e-03/200x32_5x3_Lx_120_Ly_60_kN_1.8_eta_0.25_nuSG_5e-03_muxy_5e-2';
-% outfile ='Hallenbert_nu_5e-03/200x32_5x3_Lx_120_Ly_60_kN_1.8_eta_0.25_nuSG_5e-03_mux_5e-2_muy_6e-1';
-% outfile ='Hallenbert_nu_5e-03/200x32_11x6_Lx_120_Ly_60_kN_1.8_eta_0.25_nuSG_5e-03_mux_5e-2_muy_6e-1';
-% outfile ='Hallenbert_nu_5e-03/200x32_11x6_Lx_120_Ly_60_kN_1.8_eta_0.25_nuSG_5e-03_muxy_5e-2';
-
-%% nu = 0
-% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120x240_kN_1.6_kT_0.4_nu_0_mu_0.05';
-% outfile ='Hallenbert_nu_1e-02/200x32_5x3_L_120_kN_1.6_kT_0.4_nu_0_mu_0.05';
-% outfile ='Hallenbert_fig2b/200x32_5x3_Lx_120_Ly_60_kN_2.5_eta_0.25_nu_0_muxy_5e-2';
-% outfile ='Hallenbert_fig2b/200x32_5x3_Lx_120_Ly_60_kN_2.5_eta_0.25_nu_0_muxy_1e-1';
-% outfile ='Hallenbert_fig2b/200x32_11x6_Lx_120_Ly_60_kN_2.5_eta_0.25_nu_0_muxy_5e-2';
-% outfile ='Hallenbert_fig2c/200x32_11x6_Lx_120_Ly_60_kN_2.0_eta_0.25_nu_0_muxy_5e-2';
-% outfile ='Hallenbert_fig2c/200x32_5x3_Lx_120_Ly_60_kN_2.0_eta_0.25_nu_0_muxy_5e-2';
-
-    LOCALDIR  = ['../results/',outfile,'/'];
-    MISCDIR   = ['/misc/HeLaZ_outputs/results/',outfile,'/'];
-    system(['mkdir -p ',MISCDIR]);
-    CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
-    system(CMD);
-else% Marconi results
-outfile ='';
-outfile ='';
-outfile ='';
-outfile ='';
-outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A_new/300x300_5x3_L_120_kN_1.6667_nu_1e-01_SGGK/out.txt';
-% outfile ='/marconi_scratch/userexternal/ahoffman/HeLaZ/results/simulation_A/300x150_L_120_P_8_J_4_eta_0.6_nu_1e-01_SGGK_mu_0e+00/out.txt';
-% BASIC.RESDIR      = ['../',outfile(46:end-8),'/'];
-MISCDIR = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'/'];
-end
+addpath(genpath('../matlab/plot')) % ... add
+addpath(genpath('../matlab/compute')) % ... add
+addpath(genpath('../matlab/load')) % ... add
 
 %% Load the results
+LOCALDIR  = ['../results/',outfile,'/'];
+MISCDIR   = ['/misc/HeLaZ_outputs/results/',outfile,'/'];
+system(['mkdir -p ',MISCDIR]);
+CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
+system(CMD);
 % Load outputs from jobnummin up to jobnummax
 JOBNUMMIN = 00; JOBNUMMAX = 10; 
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
@@ -116,18 +21,16 @@ FMT = '.fig';
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-TAVG_0 =100; TAVG_1 = 80000; % Averaging times duration
+TAVG_0 = 500; TAVG_1 = 10000; % Averaging times duration
 % chose your field to plot in spacetime diag (uzf,szf,Gx)
-fig = plot_radial_transport_and_spacetime(data,TAVG_0,TAVG_1,'phi');
+fig = plot_radial_transport_and_spacetime(data,TAVG_0,TAVG_1,'v_y',1);
 save_figure(data,fig)
 end
 
 if 0
-%% ZF caracteristics (space time diagrams
-TAVG_0 = 500; TAVG_1 = 18000; % Averaging times duration
-% chose your field to plot in spacetime diag (uzf,szf,Gx)
-fig = ZF_spacetime(data,TAVG_0,TAVG_1);
-save_figure(data,fig)
+%% statistical transport averaging
+options.T = [1500 5000];
+fig = statistical_transport_averaging(data,options);
 end
 
 if 0
@@ -141,9 +44,11 @@ options.NAME      = '\phi';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
 options.PLAN      = 'xy';
+% options.NAME      = 'f_e';
+% options.PLAN      = 'sx';
 options.COMP      = 1;
-options.TIME      =200:3:800;
-% options.TIME      = 140:0.5:160;
+% options.TIME      = data.Ts5D;
+options.TIME      = 0:3:1000;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
 end
@@ -153,14 +58,17 @@ if 0
 % Options
 options.INTERP    = 0;
 options.POLARPLOT = 0;
-options.AXISEQUAL = 0;
+options.AXISEQUAL = 1;
 % options.NAME      = '\phi';
+% options.NAME      = 'v_y';
+options.NAME      = 'n_e^{NZ}';
 % options.NAME      = '\Gamma_x';
-options.NAME      = 'n_i^{NZ}';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
+% options.NAME      = 'f_e';
+% options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = 1.2e4+[600 800 1000];
+options.TIME      = [550:20:800];
 data.a = data.EPS * 2000;
 fig = photomaton(data,options);
 save_figure(data,fig)
@@ -171,136 +79,85 @@ if 0
 options.INTERP    = 1;
 options.NAME      = 'n_i';
 options.PLANES    = 1;
-options.TIME      = 1.2e4+[0 500 1000];
+options.TIME      = [0 500 1000];
 data.rho_o_R      = 1e-3; % Sound larmor radius over Machine size ratio
 fig = show_geometry(data,options);
 save_figure(data,fig)
 end
 
 if 0
-%%
-TAVG_0 = 1000; TAVG_1 = 5000; % Averaging times duration
-ZF_fourier_analysis
+%% Kinetic distribution function sqrt(<f_a^2>xy) (GENE vsp)
+options.SPAR      = linspace(-3,3,64)+(6/127/2);
+options.XPERP     = linspace( 0,6,64);
+% options.SPAR      = vp';
+% options.XPERP     = mu';
+options.Z         = 1;
+options.T         = 4000;
+options.CTR       = 1;
+options.ONED      = 0;
+fig = plot_fa(data,options);
+save_figure(data,fig)
 end
 
 if 0
-%% Radial shear profile (with moving average)
-tf = 1000+[0:100:1000];
-ymax = 0;
-figure
-for i_ = 1:numel(tf)
-[~,it] = min(abs(Ts3D-tf(i_)));
-data = squeeze((mean(dx2phi(:,:,1,it),2)));
-step = 50;
-plot(movmean(x,step),movmean(data,step),'Displayname',sprintf('$t c_s/R=%.0f$',Ts3D(it))); hold on;
-ymax = max([ymax abs(min(data)) abs(max(data))]); 
-end
-xlim([min(x), max(x)]); ylim(1.2*[-1 1]*ymax);
-xlabel('$x/\rho_s$'); ylabel('$s_{E\times B,x}$'); grid on
+%% Hermite-Laguerre spectrum
+% options.TIME = 'avg';
+options.TIME = 1000:4000;
+options.P2J  = 1;
+options.ST   = 1;
+options.NORMALIZED = 0;
+fig = show_moments_spectrum(data,options);
+save_figure(data,fig)
 end
 
 if 0
-%% zonal vs nonzonal energies for phi(t)
-t0 = 200;  [~, it0] = min(abs(Ts3D-t0)); 
-itend = Ns3D;
-trange = it0:itend;
-pltx = @(x) x;%-x(1);
-plty = @(x) x./max(squeeze(x));
-fig = figure; FIGNAME = ['ZF_turb_energy_vs_time_',PARAMS];
-set(gcf, 'Position',  [100, 100, 1400, 500])
-subplot(121)
-%     yyaxis left
-    semilogy(pltx(Ts3D(trange)),plty(Ephi_Z(trange)),'DisplayName',['Zonal, ',CONAME]); hold on;
-%     yyaxis right
-    semilogy(pltx(Ts3D(trange)),plty(Ephi_NZ_kgt0(trange)),'DisplayName',['NZ, $k_p>0$, ',CONAME]);
-    semilogy(pltx(Ts3D(trange)),plty(Ephi_NZ_kgt1(trange)),'DisplayName',['NZ, $k_p>1$, ',CONAME]);
-    semilogy(pltx(Ts3D(trange)),plty(Ephi_NZ_kgt2(trange)),'DisplayName',['NZ, $k_p>2$, ',CONAME]);
-%     semilogy(pltx(Ts0D),plty(PGAMMA_RI),'DisplayName',['$\Gamma_x$, ',CONAME]);
-    title('Energy'); legend('Location','southeast')
-    xlim([Ts3D(it0), Ts3D(itend)]);
-    ylim([1e-3, 1.5])
-    xlabel('$t c_s/R$'); grid on;% xlim([0 500]);
-
-subplot(122)
-%     plot(plty(Ephi_Z(trange)),plty(Ephi_NZ_kgt0(trange)));
-    plot3(plty(Ephi_Z(trange)),plty(Ephi_NZ_kgt0(trange)),Ts3D(trange));
-    title('Phase space'); legend(CONAME)
-    xlabel('$E_Z$'); ylabel('$E_{NZ}$'); zlabel('time'); grid on;% xlim([0 500]);
+%% 1D spectrum
+options.TIME   = 1000:3000;
+options.NORM   = 1;
+% options.NAME   = '\phi';
+% options.NAME      = 'n_i';
+options.NAME      ='\Gamma_x';
+options.PLAN   = 'kxky';
+options.COMPZ  = 1;
+options.OK     = 0;
+options.COMPXY = 'max';
+options.COMPT  = 'avg';
+options.PLOT   = 'semilogy';
+fig = spectrum_1D(data,options);
+% save_figure(data,fig)
 end
 
 if 0
-%% Conservation laws
-Nxmax = Nx/2;
-Nymax = Ny/2;
-mflux_x_i = squeeze(sum((Gamma_x(     1,1:Nxmax,:)+Gamma_x(     1,2:Nxmax+1,:))/2,2)./sum(Gamma_x(     1,1:Nxmax,:)));
-mflux_x_o = squeeze(sum((Gamma_x(  Nxmax,1:Nxmax,:)+Gamma_x(  Nxmax,2:Nxmax+1,:))/2,2)./sum(Gamma_x(  Nxmax,1:Nxmax,:)));
-mflux_y_i = squeeze(sum((Gamma_y(1:Nxmax,     1,:)+Gamma_y(2:Nxmax+1,     1,:))/2,1)./sum(Gamma_y(1:Nxmax,     1,:)));
-mflux_y_o = squeeze(sum((Gamma_y(1:Nxmax,  Nymax,:)+Gamma_y(2:Nxmax+1,  Nymax,:))/2,1)./sum(Gamma_y(1:Nxmax,  Nymax,:)));
-
-mass_cons = mflux_x_i - mflux_x_o + mflux_y_i - mflux_y_o;
-%%
-figure
-plt = @(x) squeeze(mean(mean(x(:,:,1,:),1),2));
-subplot(211)
-    plot(Ts3D,plt(dens_e+dens_i),'DisplayName','$\delta n_e + \delta n_i$'); hold on;
-    plot(Ts3D,plt(ne00+ni00),'DisplayName','$\delta n_e^{00} + \delta n_i^{00}$'); hold on;
-    plot(Ts3D,plt(temp_e+temp_i),'DisplayName','$\delta T_e + \delta T_i$'); hold on;
-    legend('show'); grid on; xlim([Ts3D(1) Ts3D(end)])
-subplot(212);
-    plot(Ts3D,mass_cons*(2*pi/Nx/Ny)^2,'DisplayName','in-out'); hold on
-%     plot(Ts3D,squeeze(mflux_x_i),'DisplayName','Flux i x');
-%     plot(Ts3D,squeeze(mflux_x_o),'DisplayName','Flux o x');
-%     plot(Ts3D,squeeze(mflux_y_i),'DisplayName','Flux i y');
-%     plot(Ts3D,squeeze(mflux_y_o),'DisplayName','Flux o y');
-    legend('show'); grid on; xlim([Ts3D(1) Ts3D(end)]); %ylim([-0.1, 2]*mean(mflux_x_i))
+%% 1D real plot
+options.TIME   = 1500:100:2500;
+options.NORM   = 0;
+% options.NAME   = '\phi';
+% options.NAME      = 'n_i';
+% options.NAME      ='\Gamma_x';
+options.NAME      ='s_y';
+options.COMPZ  = 1;
+options.COMPXY = 'avg';
+options.COMPT  = 'avg';
+options.MOVMT  = 1;
+fig = real_plot_1D(data,options);
+% save_figure(data,fig)
 end
 
 if 0
-%% Zonal profiles (ky=0)
-
-% Chose the field to plot
-FIELD = data.Ne00.*conj(data.Ne00);   FNAME = 'Ne002'; FIELDLTX = '|N_e^{00}|^2'
-% FIELD = Ni00.*conj(Ni00);   FNAME = 'Ni002'; FIELDLTX = '|N_i^{00}|^2'
-% FIELD = abs(PHI); FNAME = 'absPHI'; FIELDLTX = '|\tilde\phi|';
-% FIELD = PHI.*conj(PHI); FNAME = 'PHI2'; FIELDLTX = '|\tilde\phi|^2';
-% FIELD_ = fft2(Gamma_x); FIELD = FIELD_(1:Nx/2+1,:,:,:); FNAME = 'Gamma_x'; FIELDLTX = '\tilde\Gamma_x';
-% FIELD_ = fft2(dens_e); FIELD = FIELD_(1:Nx/2+1,:,:,:); FNAME = 'FFT_Dens_e'; FIELDLTX = '\tilde n_e';
-
-% Chose when to plot it
-tf = 200:200:1200;
-% tf = 8000;
-
-% Sliced
-plt = @(x,it) x( 2:end, 1,1,it)./max(max(x( 2:end, 1,1,:))); XNAME = 'k_x';
-%
-TNAME = [];
-fig = figure; FIGNAME = ['Zonal_',FNAME,TNAME,'_snaps','_',PARAMS]; set(gcf, 'Position',  [100, 100, 600,400])
-plt_2 = @(x) (fftshift(x,2));
-    for i_ = 1:numel(tf)
-    [~,it] = min(abs(data.Ts3D-tf(i_))); TNAME = [TNAME,'_',num2str(data.Ts3D(it))];
-    d2plot = plt_2(squeeze(plt(FIELD,it)));
-    semilogy(data.kx(2:end),d2plot,'-','DisplayName',sprintf('$t c_s/R=%.0f$',data.Ts3D(it))); hold on; grid on;
-    xlabel(latexize(XNAME));
-    end
-title(['$',FIELDLTX,'$ Zonal Spectrum']); legend('show');
-
+%% Mode evolution
+options.NORMALIZED = 0;
+options.K2PLOT = 0.01:0.01:1.0;
+options.TIME   =500:1:3000;
+options.NMA    = 1;
+options.NMODES = 20;
+fig = mode_growth_meter(data,options);
+save_figure(data,fig)
 end
 
 if 0
-%% Time evolutions and growth rate
-plot_time_evolution_and_gr
-end
-
-if 0
-%% |phi_k|^2 spectra (Kobayashi 2015 fig 3)
-% tstart = 0.8*Ts3D(end); tend = Ts3D(end); % Time window
-tstart = 0000; tend = 1000;
-% tstart = 10000; tend = 12000;
-% Chose the field to plot
-% FIELD = Ni00;   FNAME = 'Ni00'; FIELDLTX = 'N_i^{00}';
-% FIELD = Ne00;   FNAME = 'Ne00'; FIELDLTX = 'N_e^{00}'
-FIELD = PHI; FNAME = 'PHI'; FIELDLTX = '\tilde\phi';
-% FIELD_ = fft2(Gamma_x); FIELD = FIELD_(1:76,:,:,:); FNAME = 'Gamma_x'; FIELDLTX = '\tilde\Gamma_x';
-LOGSCALE = 1; TRENDS = 1; NORMALIZED = 0;
-plot_kperp_spectrum
+%% ZF caracteristics (space time diagrams
+TAVG_0 = 200; TAVG_1 = 3000; % Averaging times duration
+% chose your field to plot in spacetime diag (uzf,szf,Gx)
+fig = ZF_spacetime(data,TAVG_0,TAVG_1);
+save_figure(data,fig)
 end
