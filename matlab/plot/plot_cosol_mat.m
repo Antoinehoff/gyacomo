@@ -64,11 +64,11 @@ subplot(224)
 
     
     %% FCGK
-P_ = 6; J_ = 3;
-mat_file_name = '/home/ahoffman/HeLaZ/iCa/gk_coulomb_P_6_J_3_N_150_kpm_8.0_NFLR_8.h5';
-kp = 1.0; matidx = round(kp/(8/150));
-% matidx = sprintf('%5.5i',matidx);
-% mat_file_name = '/home/ahoffman/HeLaZ/iCa/gk_coulomb_P_6_J_3_N_1_kpm_4.0_NFLR_20_m_0.h5';
+P_ = 4; J_ = 2;
+mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5';
+kp = 1.0;
+kp_a =  h5read(mat_file_name,'/coordkperp');
+[~,matidx] = min(abs(kp_a-kp));
 matidx = sprintf('%5.5i',matidx);
 FCGK_self = h5read(mat_file_name,['/',matidx,'/Caapj/Ciipj']);
 FCGK_ei = h5read(mat_file_name,['/',matidx,'/Ceipj/CeipjF'])+h5read(mat_file_name,'/00000/Ceipj/CeipjT');
@@ -116,7 +116,8 @@ if 0
 %%
 mfns = {'/home/ahoffman/HeLaZ/iCa/gk_sugama_P_20_J_10_N_150_kpm_8.0.h5',...
         '/home/ahoffman/HeLaZ/iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5',...
-        '/home/ahoffman/cosolver/gk.coulomb_NFLR_6_P_4_J_2_N_75_kpm_6.0.h5',...
+        '/home/ahoffman/cosolver/gk.coulomb_NFLR_6_P_4_J_2_N_50_kpm_4.0.h5',...
+        '/home/ahoffman/cosolver/gk.coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5',...
         '/home/ahoffman/cosolver/gk.coulomb_NFLR_12_P_4_J_2_N_75_kpm_6.0.h5',...
         };
 CONAME_A = {'SG 20 10','PA 20 10', 'FC 4 2 NFLR 6',  'FC 4 2 NFLR 12', 'FC 4 2 NFLR 16'};
@@ -124,13 +125,14 @@ figure
 for j_ = 1:numel(mfns)
     mat_file_name = mfns{j_}; disp(mat_file_name);
     kp_a =  h5read(mat_file_name,'/coordkperp');
+%     kp_a = kp_a(kp_a<=3);
     gmax = zeros(size(kp_a));
     wmax = zeros(size(kp_a));
    for idx_ = 0:numel(kp_a)-1
         matidx = sprintf('%5.5i',idx_);
         MAT = h5read(mat_file_name,['/',matidx,'/Caapj/Ciipj']);
-        gmax(idx_+1) = max(real(eig(MAT))); 
-        wmax(idx_+1) = max(imag(eig(MAT))); 
+        gmax(idx_+1) = max(abs(real(eig(MAT)))); 
+        wmax(idx_+1) = max(abs(imag(eig(MAT)))); 
    end
    subplot(121)
     plot(kp_a,gmax,'DisplayName',CONAME_A{j_}); hold on;
@@ -143,4 +145,36 @@ xlabel('$k_\perp$'); ylabel('$\gamma_{max}$ from Eig(iCa)')
    subplot(122)
 legend('show'); grid on;
 xlabel('$k_\perp$'); ylabel('$\omega_{max}$ from Eig(iCa)')
+end
+
+%% Van Kampen plot
+if 0
+%%
+kperp= 3.9;
+mfns = {'/home/ahoffman/HeLaZ/iCa/gk_sugama_P_20_J_10_N_150_kpm_8.0.h5',...
+        '/home/ahoffman/HeLaZ/iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5',...
+        '/home/ahoffman/cosolver/gk.coulomb_NFLR_6_P_4_J_2_N_50_kpm_4.0.h5',...
+        '/home/ahoffman/cosolver/gk.coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5',...
+        '/home/ahoffman/cosolver/gk.coulomb_NFLR_12_P_4_J_2_N_75_kpm_6.0.h5',...
+        };
+CONAME_A = {'SG 20 10','PA 20 10', 'FC 4 2 NFLR 6',  'FC 4 2 NFLR 12', 'FC 4 2 NFLR 12 extended'};
+grow = {};
+puls = {};
+for j_ = 1:numel(mfns)
+    mat_file_name = mfns{j_}; disp(mat_file_name);
+    kp_a          =  h5read(mat_file_name,'/coordkperp');
+    [~,idx_]       = min(abs(kp_a-kperp));
+    matidx        = sprintf('%5.5i',idx_);
+    MAT           = h5read(mat_file_name,['/',matidx,'/Caapj/Ciipj']);
+    grow{j_}  = real(eig(MAT)); 
+    puls{j_}  = imag(eig(MAT)); 
+end
+
+figure
+for j_ = 1:numel(mfns)
+%    plot(puls{j_}, grow{j_},'o','DisplayName',CONAME_A{j_}); hold on;
+   plot(grow{j_},'o','DisplayName',CONAME_A{j_}); hold on;
+end
+legend('show'); grid on;
+xlabel('$\omega$ from Eig(iCa)'); ylabel('$\gamma$ from Eig(iCa)')
 end

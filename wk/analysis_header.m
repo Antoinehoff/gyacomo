@@ -88,7 +88,7 @@ outfile ='';
 
 %% nu = 0
 
-outfile ='Hallenbert_fig2a/200x32_21x11_Lx_120_Ly_60_kN_1.6_eta_0.4_nu_0_muxy_1e-2';
+% outfile ='Hallenbert_fig2a/200x32_21x11_Lx_120_Ly_60_kN_1.6_eta_0.4_nu_0_muxy_1e-2';
 % outfile ='Hallenbert_fig2a/200x32_11x6_Lx_120_Ly_60_kN_1.6_eta_0.4_nu_0_muxy_1e-2';
 % outfile ='Hallenbert_fig2a/200x32_5x3_Lx_120_Ly_60_kN_1.6_eta_0.4_nu_0_muxy_1e-2';
 % outfile ='Hallenbert_fig2a/200x32_5x3_Lx_120_Ly_60_kN_1.6_eta_0.4_nuDGGK_0.1_muxy_1e-2';
@@ -138,8 +138,11 @@ outfile ='Hallenbert_fig2a/200x32_21x11_Lx_120_Ly_60_kN_1.6_eta_0.4_nu_0_muxy_1e
 
 % outfile = 'nu_0.1_transport_scan/colless_kn_1.6_HD';
 
+% outfile = 'nu_0.1_transport_scan/large_box_kN_2.1_nu_0.1';
+
 % outfile = 'predator_prey/SG_Kn_1.7_nu_0.01';
 
+outfile = 'ZF_damping_DK/SG_4x2_nu_0.1';
 % else% Marconi results
 % outfile ='';
 % outfile ='';

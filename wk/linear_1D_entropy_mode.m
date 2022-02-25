@@ -6,7 +6,7 @@ default_plots_options
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.01;   % Collision frequency
+NU      = 0.1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
 K_N     = 1.7;   % Density gradient drive
 K_T     = 0.25*K_N;   % Temperature '''
@@ -23,7 +23,7 @@ SHEAR   = 0.0;    % magnetic shear
 EPS     = 0.0;    % inverse aspect ratio
 SG      = 1;         % Staggered z grids option
 %% TIME PARMETERS
-TMAX    = 300;  % Maximal time unit
+TMAX    = 100;  % Maximal time unit
 DT      = 2e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
@@ -37,8 +37,8 @@ LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 KIN_E   = 1;
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-CO      = 'SG';
-GKCO    = 1; % gyrokinetic operator
+CO      = 'DG';
+GKCO    = 0; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))
@@ -72,11 +72,11 @@ CURVB   = 1.0;
 
 if 1
 % Parameter scan over PJ
-PA = [4 6 8 10];
-JA = [2 3 4  5];
+% PA = [4 6 8 10];
+% JA = [2 3 4  5];
 Nparam = numel(PA);
 % Parameter scan over KN
-% PA = [4]; JA = [2];
+PA = [4]; JA = [2];
 %     PMAXE = PA(1); PMAXI = PA(1);
 %     JMAXE = JA(1); JMAXI = JA(1);
 % KNA    = 1.5:0.05:2.5;

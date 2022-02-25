@@ -27,6 +27,7 @@ SUBROUTINE stepon
       ! N_rhs(N_n, nadia_n, phi_n, S_n, Tcoll_n)
       IF(KIN_E) CALL moments_eq_rhs_e
       CALL moments_eq_rhs_i
+
       ! ---- step n -> n+1 transition
       ! Advance from updatetlevel to updatetlevel+1 (according to num. scheme)
       CALL advance_time_level
@@ -37,12 +38,12 @@ SUBROUTINE stepon
       CALL apply_closure_model
       ! Exchanges the ghosts values of N_n+1
       CALL update_ghosts
-      ! Update collision C_n+1 = C(N_n+1)
-      CALL compute_TColl
       ! Update electrostatic potential phi_n = phi(N_n+1)
       CALL poisson
       ! Update non adiabatic moments n -> n+1
       CALL compute_nadiab_moments
+      ! Update collision C_n+1 = C(N_n+1)
+      CALL compute_TColl
       ! Update nonlinear term S_n -> S_n+1(phi_n+1,N_n+1)
       CALL compute_Sapj
       ! Store or cancel/maintain zonal modes artificially

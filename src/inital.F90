@@ -24,6 +24,7 @@ SUBROUTINE inital
   IF ( job2load .GE. 0 ) THEN
     IF (my_id .EQ. 0) WRITE(*,*) 'Load moments'
     CALL load_moments ! get N_0
+    
     CALL poisson ! compute phi_0=phi(N_0)
   ! through initialization
   ELSE

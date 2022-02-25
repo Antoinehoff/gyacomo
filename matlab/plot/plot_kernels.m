@@ -1,6 +1,6 @@
 if 0
 %% Kernels
-kmax=7;
+kmax=5;
 nmax=6;
 kx = linspace(0,kmax,100);
 
@@ -11,8 +11,9 @@ for n_ = 0:nmax
 end
 ylim_ = ylim;
 plot(kx(end)*[2/3 2/3],ylim_,'--k','DisplayName','AA');
-plot(kx,J0,'-r','DisplayName','$J_0$');
-legend('show')
+% J0 = besselj(0,kx);
+% plot(kx,J0,'-r','DisplayName','$J_0$');
+legend('show'); xlabel('k'); title('Kernel functions $\mathcal{K}_n$');
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -52,7 +53,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if 0
 %% from Sum_n Kn x Ln x Lj to Sum_n Kn Sum_s dnjs x Ls
-vperp = [5];
+vperp = [2];
 kx    = linspace(0,10,200);
 Jmax  = 15;
 j     = 10;

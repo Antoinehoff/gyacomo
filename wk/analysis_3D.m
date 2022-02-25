@@ -29,7 +29,7 @@ end
 
 if 0
 %% statistical transport averaging
-options.T = [1500 5000];
+options.T = [5000 6000];
 fig = statistical_transport_averaging(data,options);
 end
 
@@ -112,7 +112,7 @@ end
 
 if 0
 %% 1D spectrum
-options.TIME   = 1000:3000;
+options.TIME   = 5000:10:5200;
 options.NORM   = 1;
 % options.NAME   = '\phi';
 % options.NAME      = 'n_i';
@@ -147,7 +147,7 @@ if 0
 %% Mode evolution
 options.NORMALIZED = 0;
 options.K2PLOT = 0.01:0.01:1.0;
-options.TIME   =500:1:3000;
+options.TIME   = 5000:1:5050;
 options.NMA    = 1;
 options.NMODES = 20;
 fig = mode_growth_meter(data,options);
