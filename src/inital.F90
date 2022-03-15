@@ -15,6 +15,7 @@ SUBROUTINE inital
   USE restarts
   USE numerics, ONLY: play_with_modes, save_EM_ZF_modes
   USE processing, ONLY: compute_nadiab_moments
+  USE model, ONLY: KIN_E, LINEARITY
   IMPLICIT NONE
 
   CALL set_updatetlevel(1)
@@ -24,7 +25,7 @@ SUBROUTINE inital
   IF ( job2load .GE. 0 ) THEN
     IF (my_id .EQ. 0) WRITE(*,*) 'Load moments'
     CALL load_moments ! get N_0
-    
+
     CALL poisson ! compute phi_0=phi(N_0)
   ! through initialization
   ELSE
@@ -91,7 +92,7 @@ SUBROUTINE init_moments
   USE prec_const
   USE utility, ONLY: checkfield
   USE initial_par
-  USE model, ONLY : LINEARITY
+  USE model, ONLY : LINEARITY, KIN_E
   IMPLICIT NONE
 
   REAL(dp) :: noise
@@ -103,9 +104,10 @@ SUBROUTINE init_moments
   CALL RANDOM_SEED(PUT=iseedarr+my_id)
 
     !**** Broad noise initialization *******************************************
+    ! Electron init
+    IF(KIN_E) THEN
     DO ip=ips_e,ipe_e
       DO ij=ijs_e,ije_e
-
         DO ikx=ikxs,ikxe
           DO iky=ikys,ikye
             DO iz=izs,ize
@@ -114,16 +116,15 @@ SUBROUTINE init_moments
             END DO
           END DO
         END DO
-
         IF ( contains_kx0 ) THEN
           DO iky=2,Nky/2 !symmetry at kx = 0 for all z
             moments_e(ip,ij,ikx_0,iky,:,:) = moments_e( ip,ij,ikx_0,Nky+2-iky,:, :)
           END DO
         ENDIF
-
       END DO
     END DO
-
+    ENDIF
+    ! Ion init
     DO ip=ips_i,ipe_i
       DO ij=ijs_i,ije_i
 
@@ -150,11 +151,13 @@ SUBROUTINE init_moments
       DO ikx=ikxs,ikxe
       DO iky=ikys,ikye
       DO iz=izs,ize
+        IF(KIN_E) THEN
         DO ip=ips_e,ipe_e
         DO ij=ijs_e,ije_e
           moments_e( ip,ij,ikx,iky,iz, :) = moments_e( ip,ij,ikx,iky,iz, :)*AA_x(ikx)*AA_y(iky)
         ENDDO
         ENDDO
+        ENDIF
         DO ip=ips_i,ipe_i
         DO ij=ijs_i,ije_i
           moments_i( ip,ij,ikx,iky,iz, :) = moments_i( ip,ij,ikx,iky,iz, :)*AA_x(ikx)*AA_y(iky)
@@ -177,7 +180,7 @@ SUBROUTINE init_gyrodens
   USE prec_const
   USE utility, ONLY: checkfield
   USE initial_par
-  USE model, ONLY : LINEARITY
+  USE model, ONLY: KIN_E, LINEARITY
   IMPLICIT NONE
 
   REAL(dp) :: noise
@@ -189,9 +192,9 @@ SUBROUTINE init_gyrodens
   CALL RANDOM_SEED(PUT=iseedarr+my_id)
 
     !**** Broad noise initialization *******************************************
+    IF(KIN_E) THEN
     DO ip=ips_e,ipe_e
       DO ij=ijs_e,ije_e
-
         DO ikx=ikxs,ikxe
           DO iky=ikys,ikye
             DO iz=izs,ize
@@ -204,19 +207,17 @@ SUBROUTINE init_gyrodens
             END DO
           END DO
         END DO
-
         IF ( contains_kx0 ) THEN
           DO iky=2,Nky/2 !symmetry at kx = 0 for all z
             moments_e(ip,ij,ikx_0,iky,:,:) = moments_e( ip,ij,ikx_0,Nky+2-iky,:, :)
           END DO
         ENDIF
-
       END DO
     END DO
+    ENDIF
 
     DO ip=ips_i,ipe_i
       DO ij=ijs_i,ije_i
-
         DO ikx=ikxs,ikxe
           DO iky=ikys,ikye
             DO iz=izs,ize
@@ -229,13 +230,11 @@ SUBROUTINE init_gyrodens
             END DO
           END DO
         END DO
-
         IF ( contains_kx0 ) THEN
           DO iky=2,Nky/2 !symmetry at kx = 0 for all z
             moments_i( ip,ij,ikx_0,iky,:,:) = moments_i( ip,ij,ikx_0,Nky+2-iky,:,:)
           END DO
         ENDIF
-
       END DO
     END DO
 
@@ -244,11 +243,13 @@ SUBROUTINE init_gyrodens
       DO ikx=ikxs,ikxe
       DO iky=ikys,ikye
       DO iz=izs,ize
+        IF(KIN_E) THEN
         DO ip=ips_e,ipe_e
         DO ij=ijs_e,ije_e
           moments_e( ip,ij,ikx,iky,iz, :) = moments_e( ip,ij,ikx,iky,iz, :)*AA_x(ikx)*AA_y(iky)
         ENDDO
         ENDDO
+        ENDIF
         DO ip=ips_i,ipe_i
         DO ij=ijs_i,ije_i
           moments_i( ip,ij,ikx,iky,iz, :) = moments_i( ip,ij,ikx,iky,iz, :)*AA_x(ikx)*AA_y(iky)
@@ -270,6 +271,7 @@ SUBROUTINE init_phi
   USE fields
   USE prec_const
   USE initial_par
+  USE model, ONLY: KIN_E, LINEARITY
   IMPLICIT NONE
 
   REAL(dp) :: noise
@@ -300,7 +302,8 @@ SUBROUTINE init_phi
     ENDIF
 
     !**** ensure no previous moments initialization
-    moments_e = 0._dp; moments_i = 0._dp
+    IF(KIN_E) moments_e = 0._dp
+    moments_i = 0._dp
 
     !**** Zonal Flow initialization *******************************************
     ! put a mode at ikx = mode number + 1, symmetry is already included since kx>=0
@@ -310,7 +313,7 @@ SUBROUTINE init_phi
         DO iz = izs,ize
           phi(INIT_ZF+1,iky_0,iz) = ZF_AMP*(2._dp*PI)**2/deltakx/deltaky/2._dp * COS((iz-1)/Nz*2._dp*PI)
           moments_i(1,1,INIT_ZF+1,iky_0,iz,:) = kxarray(INIT_ZF+1)**2*phi(INIT_ZF+1,iky_0,iz)* COS((iz-1)/Nz*2._dp*PI)
-          moments_e(1,1,INIT_ZF+1,iky_0,iz,:) = 0._dp
+          IF(KIN_E) moments_e(1,1,INIT_ZF+1,iky_0,iz,:) = 0._dp
         ENDDO
       ENDIF
     ENDIF
@@ -325,7 +328,7 @@ END SUBROUTINE init_phi
 SUBROUTINE initialize_blob
   USE fields
   USE grid
-  USE model, ONLY: sigmai2_taui_o2
+  USE model, ONLY: sigmai2_taui_o2, KIN_E, LINEARITY
   IMPLICIT NONE
   REAL(dp) ::kx, ky, sigma, gain
   sigma = 0.5_dp
@@ -346,6 +349,7 @@ SUBROUTINE initialize_blob
       ENDIF
     ENDDO
     ENDDO
+    IF(KIN_E) THEN
     DO ip=ips_e,ipe_e
     DO ij=ijs_e,ije_e
       IF( (iky .NE. iky_0) .AND. (ip .EQ. 1) .AND. (ij .EQ. 1)) THEN
@@ -356,6 +360,7 @@ SUBROUTINE initialize_blob
       ENDIF
     ENDDO
     ENDDO
+    ENDIF
   ENDDO
   ENDDO
   ENDDO
@@ -373,7 +378,8 @@ SUBROUTINE init_ppj
   USE prec_const
   USE utility, ONLY: checkfield
   USE initial_par
-  USE model, ONLY : LINEARITY, KIN_E
+  USE model, ONLY: KIN_E, LINEARITY
+
   IMPLICIT NONE
 
   REAL(dp) :: noise
