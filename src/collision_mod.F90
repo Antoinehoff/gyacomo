@@ -125,17 +125,23 @@ CONTAINS
     INTEGER,     INTENT(IN)    :: ip_,ij_,ikx_,iky_,iz_
     COMPLEX(dp), INTENT(OUT)   :: TColl_
 
-    REAL(dp)    :: j_dp, p_dp, be_2
+    REAL(dp)    :: j_dp, p_dp, be_2, kp
+    INTEGER     :: eo_
 
     !** Auxiliary variables **
+    eo_       = MODULO(parray_e(ip_),2)
     p_dp      = REAL(parray_e(ip_),dp)
     j_dp      = REAL(jarray_e(ij_),dp)
-    ! be_2      = (kxarray(ikx_)**2 + kyarray(iky_)**2) * sigmae2_taue_o2 ! this is (be/2)^2
+    kp        = kparray(ikx_,iky_,iz_,eo_)
+    be_2      = kp**2 * sigmae2_taue_o2 ! this is (be/2)^2
+    eo_       = MODULO(parray_e(ip_),2)
 
     !** Assembling collison operator **
     ! -nuee (p + 2j) Nepj
-    TColl_ = -nu_ee * (p_dp + 2._dp*j_dp)*moments_e(ip_,ij_,ikx_,iky_,iz_,updatetlevel)
-
+    TColl_ = -nu_ee * (p_dp + 2._dp*j_dp)*nadiab_moments_e(ip_,ij_,ikx_,iky_,iz_)
+    IF(gyrokin_CO) THEN
+      TColl_ = TColl_ - nu_ee *2._dp*be_2*nadiab_moments_e(ip_,ij_,ikx_,iky_,iz_)
+    ENDIF
   END SUBROUTINE LenardBernstein_e
 
     !******************************************************************************!
@@ -151,17 +157,22 @@ CONTAINS
       INTEGER,     INTENT(IN)    :: ip_,ij_,ikx_,iky_,iz_
       COMPLEX(dp), INTENT(OUT)   :: TColl_
 
-      REAL(dp)    :: j_dp, p_dp, bi_2
+      REAL(dp)    :: j_dp, p_dp, kp, bi_2
+      INTEGER     :: eo_
 
       !** Auxiliary variables **
+      eo_       = MODULO(parray_i(ip_),2)
       p_dp      = REAL(parray_i(ip_),dp)
       j_dp      = REAL(jarray_i(ij_),dp)
-      ! bi_2      = (kxarray(ikx_)**2 + kyarray(iky_)**2) * sigmai2_taui_o2 ! this is (bi/2)^2
+      kp        = kparray(ikx_,iky_,iz_,eo_)
+      bi_2      = kp**2 * sigmai2_taui_o2 ! this is (be/2)^2
 
       !** Assembling collison operator **
       ! -nuii (p + 2j) Nipj
-      TColl_ = -nu_i * (p_dp + 2._dp*j_dp)*moments_i(ip_,ij_,ikx_,iky_,iz_,updatetlevel)
-
+      TColl_ = -nu_i * (p_dp + 2._dp*j_dp)*nadiab_moments_i(ip_,ij_,ikx_,iky_,iz_)
+      IF(gyrokin_CO) THEN
+        TColl_ = TColl_ - nu_i *2._dp*bi_2*nadiab_moments_i(ip_,ij_,ikx_,iky_,iz_)
+      ENDIF
     END SUBROUTINE LenardBernstein_i
 
   !******************************************************************************!
@@ -857,6 +868,7 @@ CONTAINS
       DEALLOCATE (Ciipj__kp); DEALLOCATE (CiepjT_kp); DEALLOCATE (CiepjF_kp)
 
       IF( .NOT. interspecies ) THEN
+        IF(my_id.EQ.0) write(*,*) "--Like Species operator--"
         CeipjF = 0._dp;
         CeipjT = 0._dp;
         CiepjF = 0._dp;
