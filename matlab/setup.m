@@ -51,10 +51,13 @@ COLL.mat_file   = '''null''';
 switch CO
     case 'SG'
         COLL.mat_file = '''../../../iCa/gk_sugama_P_20_J_10_N_150_kpm_8.0.h5''';
+%         COLL.mat_file = '''../../../iCa/gk.hacked_sugama_P_10_J_5_N_150_kpm_8.0.h5''';
+%         COLL.mat_file = '''../../../iCa/gk.hacked_sugama_P_4_J_2_N_75_kpm_5.0.h5''';
     case 'LR'
         COLL.mat_file = '''../../../iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5''';
     case 'LD'
-        COLL.mat_file = '''../../../iCa/gk_coulomb_NFLR_12_P_4_J_2_N_75_kpm_6.0.h5''';
+%         COLL.mat_file = '''../../../iCa/gk_coulomb_NFLR_12_P_4_J_2_N_75_kpm_6.0.h5''';
+        COLL.mat_file = '''../../../iCa/gk_coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5''';
 end
 % Time integration and intialization parameters
 TIME_INTEGRATION.numerical_scheme  = '''RK4''';

@@ -45,21 +45,6 @@ mvm = @(x) movmean(x,Nmvm);
         grid on; set(gca,'xticklabel',[]); ylabel('$\Gamma_x$')
         ylim([0,5*abs(gamma_infty_avg)]); xlim([DATA.Ts0D(1),DATA.Ts0D(end)]);
         title([DATA.param_title,', $\Gamma^{\infty} = $',num2str(gamma_infty_avg),'$\pm$',num2str(gamma_infty_std)]);
-    % plot
-    subplot(312)
-    it0 = 1; itend = Ns3D;
-    trange = it0:itend;
-    plt1 = @(x) x;%-x(1);
-    plt2 = @(x) x./max((x(its3D:ite3D)));
-%     plty = @(x) x(500:end)./max(squeeze(x(500:end)));
-        yyaxis left
-        plot(plt1(DATA.Ts3D(trange)),plt2(E_Zmode_SK(trange)),'DisplayName','$k_{zf}^2|\phi_{kzf}|^2$');
-        ylim([-0.1, 1.5]); ylabel('$E_{Z}$')
-        yyaxis right
-        plot(plt1(DATA.Ts3D(trange)),plt2(E_NZmode_SK(trange)),'DisplayName','$(1+k^2)|\phi^k|^2$');
-        xlim([DATA.Ts3D(it0), DATA.Ts3D(itend)]);
-        ylim([-0.1, 1.5]); ylabel('$E_{NZ}$')
-        xlabel('$t c_s/R$'); grid on; set(gca,'xticklabel',[]);% xlim([0 500]);
     %% radial shear radial profile
         % computation
     Ns3D = numel(DATA.Ts3D);
@@ -108,4 +93,21 @@ mvm = @(x) movmean(x,Nmvm);
         subplot(311)
         plot(DATA.Ts3D,squeeze(mean(plt(f2plot),1)));
     end
+%% Zonal vs NZonal energies    
+    subplot(312)
+    it0 = 1; itend = Ns3D;
+    trange = it0:itend;
+    plt1 = @(x) x;%-x(1);
+    plt2 = @(x) x./max((x(its3D:ite3D)));
+    toplot = sum(squeeze(plt(f2plot)).^2,1); %ST from before
+%     plty = @(x) x(500:end)./max(squeeze(x(500:end)));
+        yyaxis left
+%         plot(plt1(DATA.Ts3D(trange)),plt2(E_Zmode_SK(trange)),'DisplayName','$k_{zf}^2|\phi_{kzf}|^2$');
+        plot(plt1(DATA.Ts3D(trange)),plt2(toplot(trange)),'DisplayName','Sum $A^2$');
+        ylim([-0.1, 1.5]); ylabel('$E_{Z}$')
+        yyaxis right
+        plot(plt1(DATA.Ts3D(trange)),plt2(E_NZmode_SK(trange)),'DisplayName','$(1+k^2)|\phi^k|^2$');
+        xlim([DATA.Ts3D(it0), DATA.Ts3D(itend)]);
+        ylim([-0.1, 1.5]); ylabel('$E_{NZ}$')
+        xlabel('$t c_s/R$'); grid on; set(gca,'xticklabel',[]);% xlim([0 500]);
 end

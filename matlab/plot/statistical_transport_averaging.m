@@ -5,9 +5,9 @@ Trange  = options.T;
 [~,it1] = min(abs(Trange(end)-data.Ts0D)); 
 gamma   = data.PGAMMA_RI(it0:it1)*scale;
 dt_const = numel(unique(round(diff(data.Ts0D(it0:it1))*100)))==1;
-if ~dt_const
-    disp('DT not const on given interval');
-else
+% if ~dt_const
+%     disp('DT not const on given interval');
+% else
     
     Ntot = (it1-it0)+1;
 
@@ -29,6 +29,6 @@ else
 %     subplot(212)
 %     errorbar(N_seg,transp_seg_avg,transp_seg_std);
 %     xlabel('Averaging #points'); ylabel('transport value');
-end
+% end
 end
 

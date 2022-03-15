@@ -10,7 +10,7 @@ system(['mkdir -p ',MISCDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 system(CMD);
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 10; 
+JOBNUMMIN = 00; JOBNUMMAX = 20; 
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 
 
@@ -21,7 +21,7 @@ FMT = '.fig';
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-TAVG_0 = 500; TAVG_1 = 10000; % Averaging times duration
+TAVG_0 = 1000; TAVG_1 = 11000; % Averaging times duration
 % chose your field to plot in spacetime diag (uzf,szf,Gx)
 fig = plot_radial_transport_and_spacetime(data,TAVG_0,TAVG_1,'v_y',1);
 save_figure(data,fig)
@@ -29,7 +29,7 @@ end
 
 if 0
 %% statistical transport averaging
-options.T = [5000 6000];
+options.T = [1500 2500];
 fig = statistical_transport_averaging(data,options);
 end
 
@@ -39,16 +39,16 @@ if 0
 options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.NAME      = '\phi';
-% options.NAME      = 'v_y';
+% options.NAME      = 'v_x';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+% options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 1;
 % options.TIME      = data.Ts5D;
-options.TIME      = 0:3:1000;
+options.TIME      = 900:10:2000;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
 end
@@ -56,19 +56,19 @@ end
 if 0
 %% 2D snapshots
 % Options
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
 % options.NAME      = '\phi';
-% options.NAME      = 'v_y';
-options.NAME      = 'n_e^{NZ}';
+options.NAME      = 'v_y';
+% options.NAME      = 'n_e^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
 options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [550:20:800];
+options.TIME      = [000:200:1000];
 data.a = data.EPS * 2000;
 fig = photomaton(data,options);
 save_figure(data,fig)
@@ -92,7 +92,7 @@ options.XPERP     = linspace( 0,6,64);
 % options.SPAR      = vp';
 % options.XPERP     = mu';
 options.Z         = 1;
-options.T         = 4000;
+options.T         = 5500;
 options.CTR       = 1;
 options.ONED      = 0;
 fig = plot_fa(data,options);
@@ -104,7 +104,7 @@ if 0
 % options.TIME = 'avg';
 options.TIME = 1000:4000;
 options.P2J  = 1;
-options.ST   = 1;
+options.ST   = 0;
 options.NORMALIZED = 0;
 fig = show_moments_spectrum(data,options);
 save_figure(data,fig)
@@ -112,15 +112,15 @@ end
 
 if 0
 %% 1D spectrum
-options.TIME   = 5000:10:5200;
+options.TIME   = 5000:10:5050;
 options.NORM   = 1;
-% options.NAME   = '\phi';
+options.NAME   = '\phi';
 % options.NAME      = 'n_i';
-options.NAME      ='\Gamma_x';
+% options.NAME      ='\Gamma_x';
 options.PLAN   = 'kxky';
 options.COMPZ  = 1;
 options.OK     = 0;
-options.COMPXY = 'max';
+options.COMPXY = 'sum';
 options.COMPT  = 'avg';
 options.PLOT   = 'semilogy';
 fig = spectrum_1D(data,options);
@@ -147,7 +147,7 @@ if 0
 %% Mode evolution
 options.NORMALIZED = 0;
 options.K2PLOT = 0.01:0.01:1.0;
-options.TIME   = 5000:1:5050;
+options.TIME   = 4900:1:5100;
 options.NMA    = 1;
 options.NMODES = 20;
 fig = mode_growth_meter(data,options);

@@ -120,15 +120,18 @@ outfile ='';
 % outfile = 'nu_0.1_transport_scan/colless_kn_1.7_to_2.0';
 % outfile = 'nu_0.1_transport_scan/colless_kn_2.1_to_2.5';
 
+% outfile = 'nu_0.1_transport_scan/LB_kn_2.0';
 
 % outfile = 'nu_0.1_transport_scan/DG_kn_1.8_to_2.1';
 % outfile = 'nu_0.1_transport_scan/DG_kn_2.2_to_2.5';
+% outfile = 'nu_0.1_transport_scan/DG_conv_kN_1.9';
 
 % outfile = 'nu_0.1_transport_scan/SG_kn_1.7_to_2.0';
 % outfile = 'nu_0.1_transport_scan/SG_10x5_conv_test';
 % outfile = 'nu_0.1_transport_scan/SG_kn_2.2_to_2.5';
 
 % outfile = 'nu_0.1_transport_scan/LD_kn_2.0_to_2.5';
+% outfile = 'nu_0.1_transport_scan/LD_kn_1.7_to_2.5';
 
 % outfile = 'nu_0.1_transport_scan/LR_kn_1.7_to_2.0';
 % outfile = 'nu_0.1_transport_scan/LR_kn_2.1_to_2.5';
@@ -139,10 +142,16 @@ outfile ='';
 % outfile = 'nu_0.1_transport_scan/colless_kn_1.6_HD';
 
 % outfile = 'nu_0.1_transport_scan/large_box_kN_2.1_nu_0.1';
+% outfile = 'nu_0.1_transport_scan/large_box_kN_2.0_nu_0.1';
 
-% outfile = 'predator_prey/SG_Kn_1.7_nu_0.01';
+outfile = 'predator_prey_nu_scan/DG_Kn_1.7_nu_0.01';
 
-outfile = 'ZF_damping_DK/SG_4x2_nu_0.1';
+% outfile = 'ZF_damping_linear_nu_0_20x10_kn_1.6_GK/LR_4x2_nu_0.1';
+% outfile = 'ZF_damping_nu_0_20x10_kn_1.6_GK/HSG_4x2_nu_0.1';
+% outfile = 'ZF_damping_nu_0_5x3_kn_2.5_GK/LR_4x2_nu_0.1';
+% outfile = 'hacked_sugama/hacked_B_kn_1.6_200x32_L_120x60_nu_0.1';
+
+% outfile = 'shearless_cyclone/200x32x24_5x4_Lx_120_Ly_60_q0_1.4_e_0.18_kN_2.22_kT_6.9_nu_0';
 % else% Marconi results
 % outfile ='';
 % outfile ='';

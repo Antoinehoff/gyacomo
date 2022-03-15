@@ -69,7 +69,7 @@ end
 subplot(2,3,1+3*(i-1))
     [YY,XX] = meshgrid(t,fftshift(k,1));
     pclr = pcolor(XX,YY,abs(plt(fftshift(DATA.PHI,MODES_SELECTOR),1:numel(k))));set(pclr, 'edgecolor','none');  hold on;
-%     pclr = imagesc(t,fftshift(k,1),abs(plt(fftshift(DATA.PHI,MODES_SELECTOR),1:numel(k))));
+    set(gca,'YDir','normal')
 %     xlim([t(1) t(end)]); %ylim([1e-5 1])
     xlabel(['$',kstr,'\rho_s$']); ylabel('$t c_s /\rho_s$');
     title(MODESTR)  
