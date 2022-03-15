@@ -121,7 +121,7 @@ SUBROUTINE moments_eq_rhs_e
               ! Electrostatic background gradients
               - i_ky * K_E * moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
               ! Numerical hyperdiffusion (totally artificial, for stability purpose)
-              - (mu_x*kx**2 + mu_y*ky**2)*moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
+              - (mu_x*kx**4 + mu_y*ky**4)*moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
               ! Collision term
               + TColl_e(ip,ij,ikx,iky,iz)
 
@@ -258,7 +258,7 @@ SUBROUTINE moments_eq_rhs_i
               ! Electrostatic background gradients
               - i_ky * K_E * moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
               ! Numerical hyperdiffusion (totally artificial, for stability purpose)
-              - (mu_x*kx**2 + mu_y*ky**2)*moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
+              - (mu_x*kx**4 + mu_y*ky**4)*moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
               ! Collision term
               + TColl_i(ip,ij,ikx,iky,iz)
 
