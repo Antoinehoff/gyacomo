@@ -253,16 +253,20 @@ SUBROUTINE save_EM_ZF_modes
   USE grid
   USE time_integration, ONLY: updatetlevel
   USE initial_par, ONLY: ACT_ON_MODES
+  USE model, ONLY: KIN_E
   IMPLICIT NONE
   ! Store Zonal and entropy modes
+  IF(KIN_E) &
   moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,iky_0,izs:ize,updatetlevel)
   moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,iky_0,izs:ize,updatetlevel)
   phi_ZF(ikxs:ikxe,izs:ize) = phi(ikxs:ikxe,iky_0,izs:ize)
   IF(contains_kx0) THEN
+    IF(KIN_E) &
     moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx_0,ikys:ikye,izs:ize,updatetlevel)
     moments_i_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx_0,ikys:ikye,izs:ize,updatetlevel)
     phi_EM(ikys:ikye,izs:ize) = phi(ikx_0,ikys:ikye,izs:ize)
   ELSE
+    IF(KIN_E) &
     moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = 0._dp
     moments_i_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = 0._dp
     phi_EM(ikys:ikye,izs:ize) = 0._dp
@@ -275,15 +279,18 @@ SUBROUTINE play_with_modes
   USE grid
   USE time_integration, ONLY: updatetlevel
   USE initial_par, ONLY: ACT_ON_MODES
+  USE model, ONLY: KIN_E
   IMPLICIT NONE
   REAL(dp) :: AMP = 1.5_dp
 
   SELECT CASE(ACT_ON_MODES)
   CASE('wipe_zonal') ! Errase the zonal flow
+    IF(KIN_E) &
     moments_e(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = 0._dp
     moments_i(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = 0._dp
     phi(ikxs:ikxe,iky_0,izs:ize) = 0._dp
   CASE('wipe_entropymode')
+    IF(KIN_E) &
     moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx_0,ikys:ikye,izs:ize,updatetlevel) = 0._dp
     moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx_0,ikys:ikye,izs:ize,updatetlevel) = 0._dp
     phi(ikx_0,ikys:ikye,izs:ize) = 0._dp
@@ -291,6 +298,7 @@ SUBROUTINE play_with_modes
     DO ikx = ikxs,ikxe
       DO iky = ikys, ikye
         IF ( (ikx .NE. ikx_0) .AND. (iky .NE. iky_0) ) THEN
+          IF(KIN_E) &
           moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx,iky,izs:ize,updatetlevel) = 0._dp
           moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx,iky,izs:ize,updatetlevel) = 0._dp
           phi(ikx,iky,izs:ize) = 0._dp
@@ -301,6 +309,7 @@ SUBROUTINE play_with_modes
     DO ikx = ikxs,ikxe
       DO iky = ikys, ikye
         IF ( (ikx .NE. ikx_0) ) THEN
+          IF(KIN_E) &
           moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx,iky,izs:ize,updatetlevel) = 0._dp
           moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx,iky,izs:ize,updatetlevel) = 0._dp
           phi(ikx,iky,izs:ize) = 0._dp
@@ -308,16 +317,19 @@ SUBROUTINE play_with_modes
       ENDDO
     ENDDO
   CASE('freeze_zonal')
+    IF(KIN_E) &
     moments_e(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize)
     moments_i(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize)
     phi(ikxs:ikxe,iky_0,izs:ize) = phi_ZF(ikxs:ikxe,izs:ize)
   CASE('freeze_entropymode')
     IF(contains_kx0) THEN
+      IF(KIN_E) &
       moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx_0,ikys:ikye,izs:ize,updatetlevel) = moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize)
       moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx_0,ikys:ikye,izs:ize,updatetlevel) = moments_i_EM(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,izs:ize)
       phi(ikx_0,ikys:ikye,izs:ize) = phi_EM(ikys:ikye,izs:ize)
     ENDIF
   CASE('amplify_zonal')
+    IF(KIN_E) &
     moments_e(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = AMP*moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize)
     moments_i(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = AMP*moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize)
     phi(ikxs:ikxe,iky_0,izs:ize) = AMP*phi_ZF(ikxs:ikxe,izs:ize)
