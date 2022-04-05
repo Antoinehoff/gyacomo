@@ -1,16 +1,17 @@
-addpath(genpath('../matlab')) % ... add
-addpath(genpath('../matlab/plot')) % ... add
-addpath(genpath('../matlab/compute')) % ... add
-addpath(genpath('../matlab/load')) % ... add
+helazdir = '/home/ahoffman/HeLaZ/';
+addpath(genpath([helazdir,'matlab'])) % ... add
+addpath(genpath([helazdir,'matlab/plot'])) % ... add
+addpath(genpath([helazdir,'matlab/compute'])) % ... add
+addpath(genpath([helazdir,'matlab/load'])) % ... add
 
 %% Load the results
-LOCALDIR  = ['../results/',outfile,'/'];
+LOCALDIR  = [helazdir,'results/',outfile,'/'];
 MISCDIR   = ['/misc/HeLaZ_outputs/results/',outfile,'/'];
 system(['mkdir -p ',MISCDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 system(CMD);
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 20; 
+JOBNUMMIN = 00; JOBNUMMAX = 10; 
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 
 
@@ -19,17 +20,18 @@ default_plots_options
 disp('Plots')
 FMT = '.fig';
 
-if 1
+if 0
 %% Space time diagramm (fig 11 Ivanov 2020)
-TAVG_0 = 1000; TAVG_1 = 11000; % Averaging times duration
+TAVG_0 = 0; TAVG_1 = 400; % Averaging times duration
+compz  = 'avg';
 % chose your field to plot in spacetime diag (uzf,szf,Gx)
-fig = plot_radial_transport_and_spacetime(data,TAVG_0,TAVG_1,'v_y',1);
+fig = plot_radial_transport_and_spacetime(data,TAVG_0,TAVG_1,'phi',1,compz);
 save_figure(data,fig)
 end
 
 if 0
 %% statistical transport averaging
-options.T = [1500 2500];
+options.T = [16000 17000];
 fig = statistical_transport_averaging(data,options);
 end
 
@@ -39,16 +41,18 @@ if 0
 options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.NAME      = '\phi';
-% options.NAME      = 'v_x';
+% options.NAME      = 'N_i^{00}';
+% options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-% options.PLAN      = 'xy';
+options.PLAN      = 'yz';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 1;
-% options.TIME      = data.Ts5D;
-options.TIME      = 900:10:2000;
+% options.TIME      = dat.Ts5D;
+options.TIME      = 0:0.5:400;
+data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
 end
@@ -56,19 +60,20 @@ end
 if 0
 %% 2D snapshots
 % Options
-options.INTERP    = 1;
+options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
-% options.NAME      = '\phi';
-options.NAME      = 'v_y';
-% options.NAME      = 'n_e^{NZ}';
+options.NAME      = '\phi';
+% options.NAME      = 'v_y';
+% options.NAME      = 'N_i^{00}';
+% options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'yz';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [000:200:1000];
+options.TIME      = [10 20 100];
 data.a = data.EPS * 2000;
 fig = photomaton(data,options);
 save_figure(data,fig)
@@ -78,9 +83,10 @@ if 0
 %% 3D plot on the geometry
 options.INTERP    = 1;
 options.NAME      = 'n_i';
-options.PLANES    = 1;
-options.TIME      = [0 500 1000];
-data.rho_o_R      = 1e-3; % Sound larmor radius over Machine size ratio
+options.PLANES    = 1:3:30;
+options.TIME      = [100];
+options.PLT_MTOPO = 1;
+data.rho_o_R      = 2e-3; % Sound larmor radius over Machine size ratio
 fig = show_geometry(data,options);
 save_figure(data,fig)
 end
@@ -102,25 +108,24 @@ end
 if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
-options.TIME = 1000:4000;
 options.P2J  = 1;
-options.ST   = 0;
+options.ST   = 1;
 options.NORMALIZED = 0;
 fig = show_moments_spectrum(data,options);
 save_figure(data,fig)
 end
 
 if 0
-%% 1D spectrum
-options.TIME   = 5000:10:5050;
-options.NORM   = 1;
+%% Time averaged spectrum
+options.TIME   = 1000:5000;
+options.NORM   = 0;
 options.NAME   = '\phi';
-% options.NAME      = 'n_i';
-% options.NAME      ='\Gamma_x';
+options.NAME      = 'n_i';
+options.NAME      ='\Gamma_x';
 options.PLAN   = 'kxky';
-options.COMPZ  = 1;
+options.COMPZ  = 'avg';
 options.OK     = 0;
-options.COMPXY = 'sum';
+options.COMPXY = 0;
 options.COMPT  = 'avg';
 options.PLOT   = 'semilogy';
 fig = spectrum_1D(data,options);
@@ -145,9 +150,9 @@ end
 
 if 0
 %% Mode evolution
-options.NORMALIZED = 0;
+options.NORMALIZED = 1;
 options.K2PLOT = 0.01:0.01:1.0;
-options.TIME   = 4900:1:5100;
+options.TIME   = 20:1:600;
 options.NMA    = 1;
 options.NMODES = 20;
 fig = mode_growth_meter(data,options);
@@ -155,9 +160,21 @@ save_figure(data,fig)
 end
 
 if 0
-%% ZF caracteristics (space time diagrams
+%% ZF caracteristics (space time diagrams)
 TAVG_0 = 200; TAVG_1 = 3000; % Averaging times duration
 % chose your field to plot in spacetime diag (uzf,szf,Gx)
 fig = ZF_spacetime(data,TAVG_0,TAVG_1);
 save_figure(data,fig)
+end
+
+if 0
+%% Metric infos
+fig = plot_metric(data);
+end
+
+if 1
+%% linear growth rate for 3D fluxtube
+trange = [0 100];
+nplots = 1;
+lg = compute_fluxtube_growth_rate(data,trange,nplots);
 end

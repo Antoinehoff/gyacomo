@@ -5,6 +5,7 @@ SUBROUTINE diagnose(kstep)
   USE grid
   USE diagnostics_par
   USE futils, ONLY: creatf, creatg, creatd, closef, putarr, putfile, attach, openf, putarrnd
+  USE array
   USE model
   USE initial_par
   USE fields
@@ -70,6 +71,24 @@ SUBROUTINE diagnose(kstep)
      CALL putarr(fidres, "/data/grid/coordp_i" , parray_i_full, "p_i", ionode=0)
      CALL putarr(fidres, "/data/grid/coordj_i" , jarray_i_full, "j_i", ionode=0)
 
+     ! Metric info
+     CALL   creatg(fidres, "/data/metric", "Metric data")
+     CALL putarrnd(fidres, "/data/metric/gxx",            gxx(izs:ize,0:1), (/1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gxy",            gxy(izs:ize,0:1), (/1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gyy",            gyy(izs:ize,0:1), (/1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gyz",            gyz(izs:ize,0:1), (/1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gzz",            gzz(izs:ize,0:1), (/1, 1/))
+     CALL putarrnd(fidres, "/data/metric/hatR",          hatR(izs:ize,0:1), (/1, 1/))
+     CALL putarrnd(fidres, "/data/metric/hatZ",          hatZ(izs:ize,0:1), (/1, 1/))
+     CALL putarrnd(fidres, "/data/metric/hatB",          hatB(izs:ize,0:1), (/1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gradxB",      gradxB(izs:ize,0:1), (/1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gradyB",      gradyB(izs:ize,0:1), (/1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gradzB",      gradzB(izs:ize,0:1), (/1, 1/))
+     CALL putarrnd(fidres, "/data/metric/Jacobian",    Jacobian(izs:ize,0:1), (/1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gradz_coeff", gradz_coeff(izs:ize,0:1), (/1, 1/))
+     CALL putarrnd(fidres, "/data/metric/Ckxky",       Ckxky(ikxs:ikxe,ikys:ikye,izs:ize,0:1), (/1, 3/))
+     CALL putarrnd(fidres, "/data/metric/kernel_i",    kernel_i(ijs_i:ije_i,ikxs:ikxe,ikys:ikye,izs:ize,0:1), (/1, 3/))
+
      !  var0d group (gyro transport)
      IF (nsave_0d .GT. 0) THEN
       CALL creatg(fidres, "/data/var0d", "0d profiles")
@@ -121,10 +140,24 @@ SUBROUTINE diagnose(kstep)
        CALL creatg(fidres, "/data/var3d/dens_i", "dens_i")
       ENDIF
 
+      IF (write_fvel) THEN
+        IF(KIN_E) THEN
+        CALL creatg(fidres, "/data/var3d/upar_e", "upar_e")
+        CALL creatg(fidres, "/data/var3d/uper_e", "uper_e")
+        ENDIF
+        CALL creatg(fidres, "/data/var3d/upar_i", "upar_i")
+        CALL creatg(fidres, "/data/var3d/uper_i", "uper_i")
+      ENDIF
+
       IF (write_temp) THEN
-        IF(KIN_E)&
-       CALL creatg(fidres, "/data/var3d/temp_e", "temp_e")
-       CALL creatg(fidres, "/data/var3d/temp_i", "temp_i")
+        IF(KIN_E) THEN
+        CALL creatg(fidres, "/data/var3d/Tper_e", "Tper_e")
+        CALL creatg(fidres, "/data/var3d/Tpar_e", "Tpar_e")
+        CALL creatg(fidres, "/data/var3d/temp_e", "temp_e")
+        ENDIF
+        CALL creatg(fidres, "/data/var3d/Tper_i", "Tper_i")
+        CALL creatg(fidres, "/data/var3d/Tpar_i", "Tpar_i")
+        CALL creatg(fidres, "/data/var3d/temp_i", "temp_i")
       ENDIF
 
       IF (cstep==0) THEN
@@ -190,6 +223,7 @@ SUBROUTINE diagnose(kstep)
      CALL attach(fidres, TRIM(str),  "write_Napj",  write_Napj)
      CALL attach(fidres, TRIM(str),  "write_Sapj",  write_Sapj)
      CALL attach(fidres, TRIM(str),  "write_dens",  write_dens)
+     CALL attach(fidres, TRIM(str),  "write_fvel",  write_fvel)
      CALL attach(fidres, TRIM(str),  "write_temp",  write_temp)
 
      CALL grid_outputinputs(fidres, str)
@@ -338,7 +372,7 @@ SUBROUTINE diagnose_2d
   USE basic
   USE futils, ONLY: append, getatt, attach, putarrnd
   USE fields
-  USE array, ONLY: Ne00, Ni00, dens_e, dens_i, temp_e, temp_i
+  USE array
   USE grid, ONLY: ikxs,ikxe, ikys,ikye, Nkx, Nky, local_nkx, ikx, iky, ips_e, ips_i
   USE time_integration
   USE diagnostics_par
@@ -393,7 +427,7 @@ SUBROUTINE diagnose_3d
   USE basic
   USE futils, ONLY: append, getatt, attach, putarrnd
   USE fields
-  USE array, ONLY: Ne00, Ni00, dens_e, dens_i, temp_e, temp_i
+  USE array
   USE grid, ONLY: ikxs,ikxe, ikys,ikye, Nkx, Nky, local_nkx, ikx, iky, ips_e, ips_i
   USE time_integration
   USE diagnostics_par
@@ -411,32 +445,49 @@ SUBROUTINE diagnose_3d
   iframe3d=iframe3d+1
   CALL attach(fidres,"/data/var3d/" , "frames", iframe3d)
 
-  IF (write_phi) CALL write_field3d(phi (:,:,:), 'phi')
+  IF (write_phi) CALL write_field3d(phi (ikxs:ikxe,ikys:ikye,izs:ize), 'phi')
 
   IF (write_Na00) THEN
     IF(KIN_E)THEN
     IF (ips_e .EQ. 1) THEN
       Ne00(ikxs:ikxe,ikys:ikye,izs:ize) = moments_e(ips_e,1,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel)
     ENDIF
-    CALL manual_3D_bcast(Ne00(ikxs:ikxe,ikys:ikye,izs:ize))
+    ! CALL manual_3D_bcast(Ne00(ikxs:ikxe,ikys:ikye,izs:ize))
     CALL write_field3d(Ne00(ikxs:ikxe,ikys:ikye,izs:ize), 'Ne00')
     ENDIF
     IF (ips_i .EQ. 1) THEN
       Ni00(ikxs:ikxe,ikys:ikye,izs:ize) = moments_i(ips_e,1,ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel)
     ENDIF
-    CALL manual_3D_bcast(Ni00(ikxs:ikxe,ikys:ikye,izs:ize))
+    ! CALL manual_3D_bcast(Ni00(ikxs:ikxe,ikys:ikye,izs:ize))
     CALL write_field3d(Ni00(ikxs:ikxe,ikys:ikye,izs:ize), 'Ni00')
   ENDIF
 
+  !! Fuid moments
+  IF (write_dens .OR. write_fvel .OR. write_temp) &
+  CALL compute_fluid_moments
+
   IF (write_dens) THEN
-    CALL compute_density
     IF(KIN_E)&
     CALL write_field3d(dens_e(ikxs:ikxe,ikys:ikye,izs:ize), 'dens_e')
     CALL write_field3d(dens_i(ikxs:ikxe,ikys:ikye,izs:ize), 'dens_i')
   ENDIF
 
+  IF (write_fvel) THEN
+    IF(KIN_E)&
+    CALL write_field3d(upar_e(ikxs:ikxe,ikys:ikye,izs:ize), 'upar_e')
+    CALL write_field3d(upar_i(ikxs:ikxe,ikys:ikye,izs:ize), 'upar_i')
+    IF(KIN_E)&
+    CALL write_field3d(uper_e(ikxs:ikxe,ikys:ikye,izs:ize), 'uper_e')
+    CALL write_field3d(uper_i(ikxs:ikxe,ikys:ikye,izs:ize), 'uper_i')
+  ENDIF
+
   IF (write_temp) THEN
-    CALL compute_temperature
+    IF(KIN_E)&
+    CALL write_field3d(Tpar_e(ikxs:ikxe,ikys:ikye,izs:ize), 'Tpar_e')
+    CALL write_field3d(Tpar_i(ikxs:ikxe,ikys:ikye,izs:ize), 'Tpar_i')
+    IF(KIN_E)&
+    CALL write_field3d(Tper_e(ikxs:ikxe,ikys:ikye,izs:ize), 'Tper_e')
+    CALL write_field3d(Tper_i(ikxs:ikxe,ikys:ikye,izs:ize), 'Tper_i')
     IF(KIN_E)&
     CALL write_field3d(temp_e(ikxs:ikxe,ikys:ikye,izs:ize), 'temp_e')
     CALL write_field3d(temp_i(ikxs:ikxe,ikys:ikye,izs:ize), 'temp_i')
@@ -459,7 +510,7 @@ CONTAINS
     IF (num_procs .EQ. 1) THEN ! no data distribution
       CALL putarr(fidres, dset_name, field(ikxs:ikxe, ikys:ikye, izs:ize), ionode=0)
     ELSE
-      CALL putarrnd(fidres, dset_name, field(ikxs:ikxe, ikys:ikye, izs:ize),  (/1, 1/))
+      CALL putarrnd(fidres, dset_name, field(ikxs:ikxe, ikys:ikye, izs:ize),  (/1, 3/))
     ENDIF
     CALL attach(fidres, dset_name, "time", time)
 
@@ -516,7 +567,7 @@ SUBROUTINE diagnose_5d
      IF (num_procs .EQ. 1) THEN
        CALL putarr(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,ikys:ikye,izs:ize), ionode=0)
      ELSE
-       CALL putarrnd(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,ikys:ikye,izs:ize),  (/1,3/))
+       CALL putarrnd(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,ikys:ikye,izs:ize),  (/1,3,5/))
      ENDIF
      CALL attach(fidres, dset_name, 'cstep', cstep)
      CALL attach(fidres, dset_name, 'time', time)

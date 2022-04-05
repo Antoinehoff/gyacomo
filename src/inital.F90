@@ -13,9 +13,10 @@ SUBROUTINE inital
   USE closure
   USE ghosts
   USE restarts
-  USE numerics, ONLY: play_with_modes, save_EM_ZF_modes
-  USE processing, ONLY: compute_nadiab_moments
-  USE model, ONLY: KIN_E, LINEARITY
+  USE numerics,   ONLY: play_with_modes, save_EM_ZF_modes
+  USE processing, ONLY: compute_nadiab_moments, compute_fluid_moments
+  USE model,      ONLY: KIN_E, LINEARITY
+  USE nonlinear,  ONLY: compute_Sapj, nonlinear_init
   IMPLICIT NONE
 
   CALL set_updatetlevel(1)
@@ -25,7 +26,7 @@ SUBROUTINE inital
   IF ( job2load .GE. 0 ) THEN
     IF (my_id .EQ. 0) WRITE(*,*) 'Load moments'
     CALL load_moments ! get N_0
-
+    CALL update_ghosts_z_moments
     CALL poisson ! compute phi_0=phi(N_0)
   ! through initialization
   ELSE
@@ -34,50 +35,59 @@ SUBROUTINE inital
     CASE ('phi')
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy phi'
       CALL init_phi
+      CALL update_ghosts_z_phi
     ! set moments_00 (GC density) with noise and compute phi afterwards
     CASE('mom00')
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy gyrocenter density'
       CALL init_gyrodens ! init only gyrocenter density
-      ! CALL init_moments ! init all moments randomly (unadvised)
-      CALL poisson ! get phi_0 = phi(N_0)
+      CALL update_ghosts_z_moments
+      CALL poisson
+    ! init all moments randomly (unadvised)
     CASE('allmom')
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy moments'
       CALL init_moments ! init all moments
-      CALL poisson ! get phi_0 = phi(N_0)
+      CALL update_ghosts_z_moments
+      CALL poisson
+    ! init a gaussian blob in gyrodens
     CASE('blob')
       IF (my_id .EQ. 0) WRITE(*,*) '--init a blob'
       CALL initialize_blob
-      CALL poisson ! get phi_0 = phi(N_0)
+      CALL update_ghosts_z_moments
+      CALL poisson
+    ! init moments 00 with a power law similarly to GENE
     CASE('ppj')
       IF (my_id .EQ. 0) WRITE(*,*) 'ppj init ~ GENE'
       call init_ppj
-      CALL poisson ! get phi_0 = phi(N_0)
+      CALL update_ghosts_z_moments
+      CALL poisson
     END SELECT
   ENDIF
+  ! closure of j>J, p>P and j<0, p<0 moments
+  IF (my_id .EQ. 0) WRITE(*,*) 'Apply closure'
+  CALL apply_closure_model
+  ! ghosts for p parallelization
+  IF (my_id .EQ. 0) WRITE(*,*) 'Ghosts communication'
+  CALL update_ghosts_p_moments
+  CALL update_ghosts_z_moments
+  !! End of phi and moments initialization
 
-  ! Save zonal and entropy modes
+  ! Save (kx,0) and (0,ky) modes for num exp
   CALL save_EM_ZF_modes
-
   ! Freeze/Wipe some selected modes (entropy,zonal,turbulent)
   CALL play_with_modes
 
-  IF (my_id .EQ. 0) WRITE(*,*) 'Apply closure'
-  CALL apply_closure_model
-
-  IF (my_id .EQ. 0) WRITE(*,*) 'Ghosts communication'
-  CALL update_ghosts
-
-  IF (my_id .EQ. 0) WRITE(*,*) 'Computing non adiab moments'
-  CALL compute_nadiab_moments
-
-  !!!!!! Set Sepj, Sipj and dnjs coeff table !!!!!!
-  IF (my_id .EQ. 0) WRITE(*,*) 'Init Sapj'
-  CALL compute_Sapj ! compute S_0 = S(phi_0,N_0)
-
-  !!!!!! Load the COSOlver collision operator coefficients !!!!!!
+  ! Load the COSOlver collision operator coefficients
   IF(cosolver_coll) CALL load_COSOlver_mat
-  ! Compute collision
-  CALL compute_TColl ! compute C_0 = C(N_0)
+
+  !! Preparing auxiliary arrays at initial state
+  ! particle density, fluid velocity and temperature (used in diagnose)
+  IF (my_id .EQ. 0) WRITE(*,*) 'Computing fluid moments'
+  CALL compute_fluid_moments
+
+  ! init auxval for nonlinear
+  CALL nonlinear_init
+  ! compute nonlinear for t=0 diagnostic
+  CALL compute_Sapj ! compute S_0 = S(phi_0,N_0)
 
 END SUBROUTINE inital
 !******************************************************************************!
@@ -379,16 +389,16 @@ SUBROUTINE init_ppj
   USE utility, ONLY: checkfield
   USE initial_par
   USE model, ONLY: KIN_E, LINEARITY
+  USE geometry, ONLY: Jacobian, iInt_Jacobian
 
   IMPLICIT NONE
 
   REAL(dp) :: noise
-  REAL(dp) :: kx, ky, sigma, gain, ky_shift
+  REAL(dp) :: kx, ky, sigma_z, amplitude, ky_shift, z
   INTEGER, DIMENSION(12) :: iseedarr
 
-  ! Seed random number generator
-  iseedarr(:)=iseed
-  CALL RANDOM_SEED(PUT=iseedarr+my_id)
+  sigma_z = pi/4.0
+  amplitude = 0.1
 
     !**** Broad noise initialization *******************************************
     ! Electrons
@@ -401,19 +411,24 @@ SUBROUTINE init_ppj
             DO iky=ikys,ikye
               ky = kyarray(iky)
               DO iz=izs,ize
-                IF (kx .NE. 0) THEN
-                  IF(ky .NE. 0) THEN
+                z = zarray(iz,0)
+                IF (kx .EQ. 0) THEN
+                  IF(ky .EQ. 0) THEN
                     moments_e(ip,ij,ikx,iky,iz,:) = 0._dp
                   ELSE
                     moments_e(ip,ij,ikx,iky,iz,:) = 0.5_dp * ky_min/(ABS(ky)+ky_min)
                   ENDIF
                 ELSE
-                  IF(ky .NE. 0) THEN
+                  IF(ky .GT. 0) THEN
                     moments_e(ip,ij,ikx,iky,iz,:) = (kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
                   ELSE
                     moments_e(ip,ij,ikx,iky,iz,:) = 0.5_dp*(kx_min/(ABS(kx)+kx_min))
                   ENDIF
                 ENDIF
+                ! z-dep
+                moments_e(ip,ij,ikx,iky,iz,:) = moments_e(ip,ij,ikx,iky,iz,:) * &
+                ! (1 + exp(-(z/sigma_z)**2/2.0)*sqrt(2.0*sqrt(pi)/sigma_z))
+                (Jacobian(iz,0)*iInt_Jacobian)**2
               END DO
             END DO
           END DO
@@ -439,19 +454,24 @@ SUBROUTINE init_ppj
             DO iky=ikys,ikye
               ky = kyarray(iky)
               DO iz=izs,ize
-                IF (kx .NE. 0) THEN
-                  IF(ky .NE. 0) THEN
+                z = zarray(iz,0)
+                IF (kx .EQ. 0) THEN
+                  IF(ky .EQ. 0) THEN
                     moments_i(ip,ij,ikx,iky,iz,:) = 0._dp
                   ELSE
                     moments_i(ip,ij,ikx,iky,iz,:) = 0.5_dp * ky_min/(ABS(ky)+ky_min)
                   ENDIF
                 ELSE
-                  IF(ky .NE. 0) THEN
+                  IF(ky .GT. 0) THEN
                     moments_i(ip,ij,ikx,iky,iz,:) = (kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
                   ELSE
                     moments_i(ip,ij,ikx,iky,iz,:) = 0.5_dp*(kx_min/(ABS(kx)+kx_min))
                   ENDIF
                 ENDIF
+                ! z-dep
+                moments_i(ip,ij,ikx,iky,iz,:) = moments_i(ip,ij,ikx,iky,iz,:) * &
+                ! (1 + exp(-(z/sigma_z)**2/2.0)*sqrt(2.0*sqrt(pi)/sigma_z))
+                (Jacobian(iz,0)*iInt_Jacobian)**2
               END DO
             END DO
           END DO

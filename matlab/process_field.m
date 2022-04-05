@@ -151,6 +151,26 @@ switch OPTIONS.NAME
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                
         end
+    case 'N_i^{00}'
+        NAME = 'Ni00';
+        if COMPDIM == 3
+            for it = FRAMES
+                tmp = squeeze(compr(DATA.Ni00(:,:,:,it)));
+                FIELD(:,:,it) = squeeze(process(tmp));
+            end
+        else
+            if REALP
+                tmp = zeros(Nx,Ny,Nz);
+            else
+                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+            end
+            for it = FRAMES
+                for iz = 1:numel(DATA.z)
+                    tmp(:,:,iz) = squeeze(process(DATA.Ni00(:,:,iz,it)));
+                end
+                FIELD(:,:,it) = squeeze(compr(tmp));
+            end                
+        end
     case 'n_e'
         NAME = 'ne';
         if COMPDIM == 3
@@ -230,6 +250,26 @@ switch OPTIONS.NAME
             for it = FRAMES
                 for iz = 1:numel(DATA.z)
                     tmp(:,:,iz) = squeeze(process(DATA.DENS_I(:,:,iz,it)));
+                end
+                FIELD(:,:,it) = squeeze(compr(tmp));
+            end                
+        end
+    case 'T_i'
+        NAME = 'Ti';
+        if COMPDIM == 3
+            for it = FRAMES
+                tmp = squeeze(compr(DATA.TEMP_I(:,:,:,it)));
+                FIELD(:,:,it) = squeeze(process(tmp));
+            end
+        else
+            if REALP
+                tmp = zeros(Nx,Ny,Nz);
+            else
+                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+            end
+            for it = FRAMES
+                for iz = 1:numel(DATA.z)
+                    tmp(:,:,iz) = squeeze(process(DATA.TEMP_I(:,:,iz,it)));
                 end
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                

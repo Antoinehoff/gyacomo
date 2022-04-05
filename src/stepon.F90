@@ -4,7 +4,6 @@ SUBROUTINE stepon
   USE array , ONLY: moments_rhs_e, moments_rhs_i, Sepj, Sipj
   USE basic
   USE closure
-  USE collision, ONLY : compute_TColl
   USE fields, ONLY: moments_e, moments_i, phi
   USE initial_par, ONLY: ACT_ON_MODES
   USE ghosts
@@ -13,9 +12,8 @@ SUBROUTINE stepon
   use prec_const
   USE time_integration
   USE numerics, ONLY: play_with_modes
-  USE processing, ONLY: compute_nadiab_moments
+  USE processing, ONLY: compute_nadiab_moments, compute_fluid_moments
   USE utility, ONLY: checkfield
-
   IMPLICIT NONE
 
   INTEGER :: num_step
@@ -25,29 +23,30 @@ SUBROUTINE stepon
    !----- BEFORE: All fields are updated for step = n
       ! Compute right hand side from current fields
       ! N_rhs(N_n, nadia_n, phi_n, S_n, Tcoll_n)
-      IF(KIN_E) CALL moments_eq_rhs_e
-      CALL moments_eq_rhs_i
+      CALL compute_RHS
 
       ! ---- step n -> n+1 transition
       ! Advance from updatetlevel to updatetlevel+1 (according to num. scheme)
       CALL advance_time_level
+      ! ----
+
       ! Update moments with the hierarchy RHS (step by step)
       ! N_n+1 = N_n + N_rhs(n)
       CALL advance_moments
-      ! Closure enforcement of N_n+1
+      ! Closure enforcement of moments
       CALL apply_closure_model
       ! Exchanges the ghosts values of N_n+1
-      CALL update_ghosts
+      CALL update_ghosts_p_moments
+      CALL update_ghosts_z_moments
+
       ! Update electrostatic potential phi_n = phi(N_n+1)
       CALL poisson
-      ! Update non adiabatic moments n -> n+1
-      CALL compute_nadiab_moments
-      ! Update collision C_n+1 = C(N_n+1)
-      CALL compute_TColl
-      ! Update nonlinear term S_n -> S_n+1(phi_n+1,N_n+1)
-      CALL compute_Sapj
+      CALL update_ghosts_z_phi
+
+      ! Numerical experiments
       ! Store or cancel/maintain zonal modes artificially
       CALL play_with_modes
+
       !-  Check before next step
       CALL checkfield_all()
       IF( nlend ) EXIT ! exit do loop
@@ -57,6 +56,23 @@ SUBROUTINE stepon
    END DO
 
    CONTAINS
+     !!!! Basic structure to simplify stepon
+     SUBROUTINE compute_RHS
+       USE moments_eq_rhs, ONLY: moments_eq_rhs_e,moments_eq_rhs_i
+       USE collision, ONLY: compute_TColl
+       USE nonlinear, ONLY: compute_Sapj
+       IMPLICIT NONE
+         ! compute auxiliary non adiabatic moments arrays
+         CALL compute_nadiab_moments
+         ! compute nonlinear term ("if linear" is included inside)
+         CALL compute_Sapj
+         ! compute collision term ("if coll, if nu >0" is included inside)
+         CALL compute_TColl
+         ! compute the moments equation rhs for electrons and ions
+         IF (KIN_E) &
+         CALL moments_eq_rhs_e
+         CALL moments_eq_rhs_i
+     END SUBROUTINE compute_RHS
 
       SUBROUTINE checkfield_all ! Check all the fields for inf or nan
         ! Execution time start

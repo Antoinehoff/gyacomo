@@ -19,6 +19,16 @@ PGAMMA_  = [];
 PHI_     = [];
 DENS_E_  = [];
 DENS_I_  = [];
+UPAR_E_  = [];
+UPAR_I_  = [];
+UPER_E_  = [];
+UPER_I_  = [];
+TPAR_E_  = [];
+TPAR_I_  = [];
+TPER_E_  = [];
+TPER_I_  = [];
+TEMP_E_  = [];
+TEMP_I_  = [];
 TEMP_E_  = [];
 TEMP_I_  = [];
 Ts0D_    = [];
@@ -39,15 +49,14 @@ while(CONTINUE)
         DT_SIM    = h5readatt(filename,'/data/input','dt');
         [Pe, Je, Pi, Ji, kx, ky, z] = load_grid_data(filename);
         W_GAMMA   = strcmp(h5readatt(filename,'/data/input','write_gamma'),'y');
-        W_HF      = 0;%strcmp(h5readatt(filename,'/data/input','write_hf'   ),'y');
+        W_HF      = strcmp(h5readatt(filename,'/data/input','write_hf'   ),'y');
         W_PHI     = strcmp(h5readatt(filename,'/data/input','write_phi'  ),'y');
         W_NA00    = strcmp(h5readatt(filename,'/data/input','write_Na00' ),'y');
         W_NAPJ    = strcmp(h5readatt(filename,'/data/input','write_Napj' ),'y');
-        W_SAPJ    = 0;%strcmp(h5readatt(filename,'/data/input','write_Sapj' ),'y');
+        W_SAPJ    = strcmp(h5readatt(filename,'/data/input','write_Sapj' ),'y');
         W_DENS    = strcmp(h5readatt(filename,'/data/input','write_dens' ),'y');
         W_TEMP    = strcmp(h5readatt(filename,'/data/input','write_temp' ),'y');
         KIN_E     = strcmp(h5readatt(filename,'/data/input',     'KIN_E' ),'y');
-%         KIN_E     = 1;
         
         % Check polynomials degrees
         Pe_new= numel(Pe); Je_new= numel(Je);
@@ -127,11 +136,31 @@ while(CONTINUE)
         [DENS_I, Ts3D, ~] = load_3D_data(filename, 'dens_i');
             DENS_I_ = cat(4,DENS_I_,DENS_I); clear DENS_I
         end
+        if 0
+            if KIN_E
+        [UPAR_E, Ts3D, ~] = load_3D_data(filename, 'upar_e');
+            UPAR_E_ = cat(4,UPAR_E_,UPAR_E); clear UPAR_E
+        [UPER_E, Ts3D, ~] = load_3D_data(filename, 'uper_e');
+%             UPER_E_ = cat(4,UPER_E_,UPER_E); clear UPER_E
+            end
+        [UPAR_I, Ts3D, ~] = load_3D_data(filename, 'upar_i');
+            UPAR_I_ = cat(4,UPAR_I_,UPAR_I); clear UPAR_I
+        [UPER_I, Ts3D, ~] = load_3D_data(filename, 'uper_i');
+            UPER_I_ = cat(4,UPER_I_,UPER_I); clear UPER_I
+        end
         if W_TEMP
             if KIN_E 
+%         [TPAR_E, Ts3D, ~] = load_3D_data(filename, 'Tpar_e');
+%             TPAR_E_ = cat(4,TPAR_E_,TPAR_E); clear TPAR_E
+%         [TPER_E, Ts3D, ~] = load_3D_data(filename, 'Tper_e');
+%             TPER_E_ = cat(4,TPER_E_,TPER_E); clear TPER_E
         [TEMP_E, Ts3D, ~] = load_3D_data(filename, 'temp_e');
                 TEMP_E_ = cat(4,TEMP_E_,TEMP_E); clear TEMP_E
             end
+%         [TPAR_I, Ts3D, ~] = load_3D_data(filename, 'Tpar_i');
+%             TPAR_I_ = cat(4,TPAR_I_,TPAR_I); clear TPAR_I
+%         [TPER_I, Ts3D, ~] = load_3D_data(filename, 'Tper_i');
+%             TPER_I_ = cat(4,TPER_I_,TPER_I); clear TPER_I
         [TEMP_I, Ts3D, ~] = load_3D_data(filename, 'temp_i');
             TEMP_I_ = cat(4,TEMP_I_,TEMP_I); clear TEMP_I
         end
@@ -178,19 +207,38 @@ while(CONTINUE)
 end
 
 %% Build grids
-Nkx = numel(kx); Nky = numel(ky);
-[KY,KX] = meshgrid(ky,kx);
-Lkx = max(kx)-min(kx); Lky = max(ky)-min(ky);
-dkx = Lkx/(Nkx-1); dky = Lky/(Nky-1);
-KPERP2 = KY.^2+KX.^2;
-[~,ikx0] = min(abs(kx)); [~,iky0] = min(abs(ky));
 
-Nx = 2*(Nkx-1);  Ny = Nky;      Nz = numel(z);
-Lx = 2*pi/dkx;   Ly = 2*pi/dky;
-dx = Lx/Nx;      dy = Ly/Ny; dz = 2*pi/Nz;
-x = dx*(-Nx/2:(Nx/2-1)); Lx = max(x)-min(x);
-y = dy*(-Ny/2:(Ny/2-1)); Ly = max(y)-min(y);
+Nkx = numel(kx); 
+if Nkx > 1
+    dkx = kx(2); 
+    Lx = 2*pi/dkx;   
+else
+    dkx = 0;
+    Lx  = 0;   
+end
+[~,ikx0] = min(abs(kx)); 
+Nx = 2*Nkx-1;  
+x  = linspace(-Lx/2,Lx/2,Nx+1); x = x(1:end-1);
+
+Nky = numel(ky);
+if Nky > 1
+    dky = ky(2);
+    Ly = 2*pi/dky;
+else
+    dky = 0;
+    Ly  = 0;
+end    
+[~,iky0] = min(abs(ky));
+Ny = Nky;      
+y  = linspace(-Ly/2,Ly/2,Ny+1); y = y(1:end-1);
+
+Nz = numel(z);
+
+[KY,KX] = meshgrid(ky,kx);
+KPERP2 = KY.^2+KX.^2;
 %% Add everything in output structure
+% scaling
+DATA.scale = -(1/Nx/Ny)^2;
 % Fields
 DATA.GGAMMA_RI = GGAMMA_; DATA.PGAMMA_RI = PGAMMA_; DATA.HFLUX_X = HFLUX_;
 DATA.Nipj = Nipj_; DATA.Ni00 = Ni00_; DATA.DENS_I = DENS_I_; DATA.TEMP_I = TEMP_I_;

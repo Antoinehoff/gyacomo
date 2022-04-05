@@ -71,7 +71,6 @@ subroutine auxval
        '              izs   = ', izs  , ', ize    = ', ize
        ! write(*,*) 'local kx =', kxarray
        ! write(*,*) 'local ky =', kyarray
-       ! write(*,*) 'local iz =', izarray
       IF (my_id .NE. num_procs-1) WRITE (*,*) ''
       IF (my_id .EQ. num_procs-1) WRITE(*,*) '------------------------------------------'
     ENDIF

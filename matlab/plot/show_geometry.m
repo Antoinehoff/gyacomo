@@ -64,11 +64,13 @@ FIGURE.fig = figure; FIGURE.FIGNAME = ['geometry','_',DATA.PARAMS]; set(gcf, 'Po
 for it_ = 1:numel(OPTIONS.TIME)
 subplot(1,numel(OPTIONS.TIME),it_)
     %plot magnetic geometry
+    if OPTIONS.PLT_MTOPO
     magnetic_topo=surf(x_tor, y_tor, z_tor); hold on;alpha 1.0;%light('Position',[-1 1 1],'Style','local')
-    set(magnetic_topo,'edgecolor',[1 1 1]*0.8,'facecolor','none')
+    set(magnetic_topo,'edgecolor',[1 1 1]*0.7,'facecolor','none')
+    end
     %plot field line
     theta  = linspace(-Nturns*pi, Nturns*pi, 512)   ; % Poloidal angle
-    plot3(Xfl(theta),Yfl(theta),Zfl(theta))
+    plot3(Xfl(theta),Yfl(theta),Zfl(theta)); hold on;
     %plot vector basis
     theta  = DATA.z   ; % Poloidal angle
     plot3(Xfl(theta),Yfl(theta),Zfl(theta),'ok'); hold on;
@@ -100,9 +102,9 @@ subplot(1,numel(OPTIONS.TIME),it_)
         ylim([-0.1 0.1]);
         zlim([-0.2 0.2]);
     end
-    end
+end
     %%
-    % axis equal
+    axis equal
     view([1,-2,1])
 
 end

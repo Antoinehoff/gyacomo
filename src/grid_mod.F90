@@ -19,6 +19,8 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED :: Ny    = 16     ! Number of total internal grid points in y
   REAL(dp), PUBLIC, PROTECTED :: Ly    = 1._dp  ! vertical length of the spatial box
   INTEGER,  PUBLIC, PROTECTED :: Nz    = 1      ! Number of total perpendicular planes
+  REAL(dp), PUBLIC, PROTECTED :: Npol  = 1._dp  ! number of poloidal turns
+  INTEGER,  PUBLIC, PROTECTED :: Odz   = 4      ! order of z interp and derivative schemes
   REAL(dp), PUBLIC, PROTECTED :: q0    = 1._dp  ! safety factor
   REAL(dp), PUBLIC, PROTECTED :: shear = 0._dp  ! magnetic field shear
   REAL(dp), PUBLIC, PROTECTED :: eps   = 0._dp ! inverse aspect ratio
@@ -42,21 +44,29 @@ MODULE grid
   ! Local and global z grids, 2D since it has to store odd and even grids
   REAL(dp), DIMENSION(:,:), ALLOCATABLE, PUBLIC :: zarray
   REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: zarray_full
-  INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC :: izarray
+  ! local z weights for computing simpson rule
+  INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC :: zweights_SR
   REAL(dp), PUBLIC, PROTECTED  ::  deltax,  deltay, deltaz, inv_deltaz
   INTEGER,  PUBLIC, PROTECTED  ::  ixs,  ixe,  iys,  iye,  izs,  ize
   INTEGER,  PUBLIC, PROTECTED  ::  izgs, izge ! ghosts
   LOGICAL,  PUBLIC, PROTECTED  ::  SG = .true.! shifted grid flag
   INTEGER,  PUBLIC :: ir,iz ! counters
+  ! Data about parallel distribution for kx
   integer(C_INTPTR_T), PUBLIC :: local_nkx, local_nky
   integer(C_INTPTR_T), PUBLIC :: local_nkx_offset, local_nky_offset
   INTEGER,             PUBLIC :: local_nkp
+  ! "" for p
   INTEGER,             PUBLIC :: local_np_e, local_np_i
   INTEGER,             PUBLIC :: total_np_e, total_np_i
   integer(C_INTPTR_T), PUBLIC :: local_np_e_offset, local_np_i_offset
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: counts_np_e, counts_np_i
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: displs_np_e, displs_np_i
-
+  ! "" for z
+  INTEGER,             PUBLIC :: local_nz
+  INTEGER,             PUBLIC :: total_nz
+  integer(C_INTPTR_T), PUBLIC :: local_nz_offset
+  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: counts_nz
+  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: displs_nz
   ! Grids containing position in fourier space
   REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kxarray, kxarray_full
   REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kyarray, kyarray_full
@@ -78,13 +88,15 @@ MODULE grid
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: jarray_i, jarray_i_full
   INTEGER,  PUBLIC, PROTECTED ::  ips_e,ipe_e, ijs_e,ije_e ! Start and end indices for pol. deg.
   INTEGER,  PUBLIC, PROTECTED ::  ips_i,ipe_i, ijs_i,ije_i
-  INTEGER,  PUBLIC, PROTECTED ::  ipsg_e,ipeg_e, ijsg_e,ijeg_e ! Ghosts start and end indices
-  INTEGER,  PUBLIC, PROTECTED ::  ipsg_i,ipeg_i, ijsg_i,ijeg_i
+  INTEGER,  PUBLIC, PROTECTED ::  ipgs_e,ipge_e, ijgs_e,ijge_e ! Ghosts start and end indices
+  INTEGER,  PUBLIC, PROTECTED ::  ipgs_i,ipge_i, ijgs_i,ijge_i
   INTEGER,  PUBLIC, PROTECTED ::  deltape, ip0_e, ip1_e, ip2_e ! Pgrid spacing and moment 0,1,2 index
   INTEGER,  PUBLIC, PROTECTED ::  deltapi, ip0_i, ip1_i, ip2_i
-
+  LOGICAL,  PUBLIC, PROTECTED ::  CONTAINS_ip0_e, CONTAINS_ip0_i
+  LOGICAL,  PUBLIC, PROTECTED ::  CONTAINS_ip1_e, CONTAINS_ip1_i
+  LOGICAL,  PUBLIC, PROTECTED ::  CONTAINS_ip2_e, CONTAINS_ip2_i
   ! Usefull inverse numbers
-  REAL(dp), PUBLIC, PROTECTED :: inv_Nx, inv_Ny
+  REAL(dp), PUBLIC, PROTECTED :: inv_Nx, inv_Ny, inv_Nz
 
   ! Public Functions
   PUBLIC :: init_1Dgrid_distr
@@ -106,7 +118,7 @@ CONTAINS
     INTEGER :: lu_in   = 90              ! File duplicated from STDIN
 
     NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, &
-                    Nx,  Lx,  Ny,  Ly, Nz, q0, shear, eps, SG
+                    Nx,  Lx,  Ny,  Ly, Nz, Npol, q0, shear, eps, SG
     READ(lu_in,grid)
 
     !! Compute the maximal degree of full GF moments set
@@ -162,8 +174,8 @@ CONTAINS
     local_np_e = ipe_e - ips_e + 1
     local_np_i = ipe_i - ips_i + 1
     ! Ghosts boundaries
-    ipsg_e = ips_e - 2/deltape; ipeg_e = ipe_e + 2/deltape;
-    ipsg_i = ips_i - 2/deltapi; ipeg_i = ipe_i + 2/deltapi;
+    ipgs_e = ips_e - 2/deltape; ipge_e = ipe_e + 2/deltape;
+    ipgs_i = ips_i - 2/deltapi; ipge_i = ipe_i + 2/deltapi;
     ! List of shift and local numbers between the different processes (used in scatterv and gatherv)
     ALLOCATE(counts_np_e (1:num_procs_p))
     ALLOCATE(counts_np_i (1:num_procs_p))
@@ -179,20 +191,45 @@ CONTAINS
     ENDDO
 
     ! local grid computation
-    ALLOCATE(parray_e(ipsg_e:ipeg_e))
-    ALLOCATE(parray_i(ipsg_i:ipeg_i))
-    DO ip = ipsg_e,ipeg_e
+    CONTAINS_ip0_e = .FALSE.
+    CONTAINS_ip1_e = .FALSE.
+    CONTAINS_ip2_e = .FALSE.
+    CONTAINS_ip0_i = .FALSE.
+    CONTAINS_ip1_i = .FALSE.
+    CONTAINS_ip2_i = .FALSE.
+    ALLOCATE(parray_e(ipgs_e:ipge_e))
+    ALLOCATE(parray_i(ipgs_i:ipge_i))
+    DO ip = ipgs_e,ipge_e
       parray_e(ip) = (ip-1)*deltape
-      ! Storing indices of particular degrees for DG and fluid moments computations
-      IF(parray_e(ip) .EQ. 0) ip0_e = ip
-      IF(parray_e(ip) .EQ. 1) ip1_e = ip
-      IF(parray_e(ip) .EQ. 2) ip2_e = ip
+      ! Storing indices of particular degrees for fluid moments computations
+      IF(parray_e(ip) .EQ. 0) THEN
+        ip0_e          = ip
+        CONTAINS_ip0_e = .TRUE.
+      ENDIF
+      IF(parray_e(ip) .EQ. 1) THEN
+        ip1_e          = ip
+        CONTAINS_ip1_e = .TRUE.
+      ENDIF
+      IF(parray_e(ip) .EQ. 2) THEN
+        ip2_e          = ip
+        CONTAINS_ip2_e = .TRUE.
+      ENDIF
     END DO
-    DO ip = ipsg_i,ipeg_i
+    DO ip = ipgs_i,ipge_i
       parray_i(ip) = (ip-1)*deltapi
-      IF(parray_i(ip) .EQ. 0) ip0_i = ip
-      IF(parray_i(ip) .EQ. 1) ip1_i = ip
-      IF(parray_i(ip) .EQ. 2) ip2_i = ip
+      ! Storing indices of particular degrees for fluid moments computations
+      IF(parray_i(ip) .EQ. 0) THEN
+        ip0_i          = ip
+        CONTAINS_ip0_i = .TRUE.
+      ENDIF
+      IF(parray_i(ip) .EQ. 1) THEN
+        ip1_i          = ip
+        CONTAINS_ip1_i = .TRUE.
+      ENDIF
+      IF(parray_i(ip) .EQ. 2) THEN
+        ip2_i          = ip
+        CONTAINS_ip2_i = .TRUE.
+      ENDIF
     END DO
     !DGGK operator uses moments at index p=2 (ip=3) for the p=0 term so the
     ! process that contains ip=1 MUST contain ip=3 as well for both e and i.
@@ -218,12 +255,12 @@ CONTAINS
     ijs_e = 1; ije_e = jmaxe + 1
     ijs_i = 1; ije_i = jmaxi + 1
     ! Ghosts boundaries
-    ijsg_e = ijs_e - 1; ijeg_e = ije_e + 1;
-    ijsg_i = ijs_i - 1; ijeg_i = ije_i + 1;
-    ALLOCATE(jarray_e(ijsg_e:ijeg_e))
-    ALLOCATE(jarray_i(ijsg_i:ijeg_i))
-    DO ij = ijsg_e,ijeg_e; jarray_e(ij) = ij-1; END DO
-    DO ij = ijsg_i,ijeg_i; jarray_i(ij) = ij-1; END DO
+    ijgs_e = ijs_e - 1; ijge_e = ije_e + 1;
+    ijgs_i = ijs_i - 1; ijge_i = ije_i + 1;
+    ALLOCATE(jarray_e(ijgs_e:ijge_e))
+    ALLOCATE(jarray_i(ijgs_i:ijge_i))
+    DO ij = ijgs_e,ijge_e; jarray_e(ij) = ij-1; END DO
+    DO ij = ijgs_i,ijge_i; jarray_i(ij) = ij-1; END DO
     ! Precomputations
     maxj  = MAX(jmaxi, jmaxe)
     jmaxe_dp   = real(jmaxe,dp)
@@ -236,7 +273,6 @@ CONTAINS
     USE model, ONLY: LINEARITY
     IMPLICIT NONE
     INTEGER :: i_
-
     Nkx = Nx/2+1 ! Defined only on positive kx since fields are real
     ! Grid spacings
     IF (Nx .EQ. 1) THEN
@@ -248,21 +284,16 @@ CONTAINS
       kx_max  = Nkx*deltakx
       kx_min  = deltakx
     ENDIF
-
     ! Build the full grids on process 0 to diagnose it without comm
     ALLOCATE(kxarray_full(1:Nkx))
     DO ikx = 1,Nkx
      kxarray_full(ikx) = REAL(ikx-1,dp) * deltakx
     END DO
-
     !! Parallel distribution
     ! Start and END indices of grid
-    ! ikxs = 1
-    ! ikxe = Nkx
     ikxs = local_nkx_offset + 1
     ikxe = ikxs + local_nkx - 1
     ALLOCATE(kxarray(ikxs:ikxe))
-
     local_kxmax = 0._dp
     ! Creating a grid ordered as dk*(0 1 2 3)
     DO ikx = ikxs,ikxe
@@ -282,7 +313,6 @@ CONTAINS
         contains_kxmax = .true.
       ENDIF
     END DO
-
     ! Orszag 2/3 filter
     two_third_kxmax = 2._dp/3._dp*deltakx*(Nkx-1)
     ALLOCATE(AA_x(ikxs:ikxe))
@@ -363,60 +393,76 @@ CONTAINS
   SUBROUTINE set_zgrid
     USE prec_const
     IMPLICIT NONE
-    INTEGER :: i_, ngz
-    REAL    :: grids_shift
-    ! Start and END indices of grid
-    izs     = 1
-    ize     = Nz
-    ALLOCATE(zarray(izs:ize,0:1))
-    IF (Nz .EQ. 1) THEN ! full perp case
-      deltaz      = 1._dp
-      zarray(1,0) = 0._dp
-      zarray(1,1) = 0._dp
-      SG          = .false. ! unique perp plane at z=0
-      izgs        = izs
-      izge        = ize
-    ELSE ! Parallel dimension exists
-      deltaz     = 2._dp*PI/REAL(Nz,dp)
-      inv_deltaz = 1._dp/deltaz
-      IF(SG) THEN ! Shifted grids option
-        grids_shift = deltaz/2._dp ! we shift both z grid
-      ELSE
-        grids_shift = 0._dp
-      ENDIF
-      DO iz = izs,ize
-        ! Even z grid (Napj with p even and phi)
-        zarray(iz,0) = REAL((iz-1),dp)*deltaz - PI
-        ! Odd  z grid (Napj with p odd)
-        zarray(iz,1) = REAL((iz-1),dp)*deltaz - PI + grids_shift
-      ENDDO
-      ! 2 ghosts cell for four point stencil
-      izgs = izs-2
-      izge = ize+2
+    INTEGER :: i_, fid
+    REAL    :: grid_shift, Lz
+    INTEGER :: ip, istart, iend, in
+    total_nz = Nz
+    ! Length of the flux tube (in ballooning angle)
+    Lz         = 2_dp*pi*Npol
+    ! Z stepping (#interval = #points since periodic)
+    deltaz     = Lz/REAL(Nz,dp)
+    inv_deltaz = 1._dp/deltaz
+    IF (SG) THEN
+      grid_shift = deltaz/2._dp
+    ELSE
+      grid_shift = 0._dp
     ENDIF
-    if(my_id.EQ.0) write(*,*) '#parallel planes = ', Nz
     ! Build the full grids on process 0 to diagnose it without comm
     ALLOCATE(zarray_full(1:Nz))
-    ! z from -pi to pi
-    IF (Nz .GT. 1) THEN
-      DO iz = 1,Nz
-        zarray_full(iz) = deltaz*(iz-1) - PI
-      END DO
-    ELSE
-      zarray_full(1) =  0
-    ENDIF
-
-    ! Boundary conditions for FDF ddz derivative
-    ! 4 stencil deritative -> 2 ghosts each sides
-    ngz = 2
-    ALLOCATE(izarray((1-ngz):(Nz+ngz)))
-    DO iz = 1,Nz
-      izarray(iz) = iz !points to usuall indices
+    DO iz = 1,total_nz
+      zarray_full(iz) = REAL(iz-1,dp)*deltaz - PI*REAL(Npol,dp)
     END DO
-    ! Periodic BC for  parallel centered finite differences
-    izarray(-1)   = Nz-1; izarray(0)    = Nz;
-    izarray(Nz+1) =    1; izarray(Nz+2) =  2;
-
+    !! Parallel data distribution
+    ! Local data distribution
+    CALL decomp1D(total_nz, num_procs_z, rank_z, izs, ize)
+    local_nz = ize - izs + 1
+    ! Ghosts boundaries (depend on the order of z operators)
+    IF(Nz .EQ. 1) THEN
+      izgs = izs;     izge = ize;
+    ELSEIF(Nz .GE. 4) THEN
+      izgs = izs - 2; izge = ize + 2;
+    ELSE
+      ERROR STOP 'Error stop: Nz is not appropriate!!'
+    ENDIF
+    ! List of shift and local numbers between the different processes (used in scatterv and gatherv)
+    ALLOCATE(counts_nz (1:num_procs_z))
+    ALLOCATE(displs_nz (1:num_procs_z))
+    DO in = 0,num_procs_z-1
+      CALL decomp1D(total_nz, num_procs_z, in, istart, iend)
+      counts_nz(in+1) = iend-istart+1
+      displs_nz(in+1) = istart-1
+    ENDDO
+    ! Local z array
+    ALLOCATE(zarray(izgs:izge,0:1))
+    DO iz = izgs,izge
+      IF(iz .EQ. 0) THEN
+        zarray(iz,0) = zarray_full(total_nz)
+        zarray(iz,1) = zarray_full(total_nz) + grid_shift
+      ELSEIF(iz .EQ. -1) THEN
+        zarray(iz,0) = zarray_full(total_nz-1)
+        zarray(iz,1) = zarray_full(total_nz-1) + grid_shift
+      ELSEIF(iz .EQ. total_nz + 1) THEN
+        zarray(iz,0) = zarray_full(1)
+        zarray(iz,1) = zarray_full(1) + grid_shift
+      ELSEIF(iz .EQ. total_nz + 2) THEN
+        zarray(iz,0) = zarray_full(2)
+        zarray(iz,1) = zarray_full(2) + grid_shift
+      ELSE
+        zarray(iz,0) = zarray_full(iz)
+        zarray(iz,1) = zarray_full(iz) + grid_shift
+      ENDIF
+    ENDDO
+    ! Weitghs for Simpson rule
+    ALLOCATE(zweights_SR(izs:ize))
+    DO iz = izs,ize
+      IF((iz .EQ. 1) .OR. (iz .EQ. Nz)) THEN
+        zweights_SR(iz) = 1._dp
+      ELSEIF(MODULO(iz-1,2)) THEN
+        zweights_SR(iz) = 4._dp
+      ELSE
+        zweights_SR(iz) = 2._dp
+      ENDIF
+    ENDDO
   END SUBROUTINE set_zgrid
 
   SUBROUTINE grid_outputinputs(fidres, str)

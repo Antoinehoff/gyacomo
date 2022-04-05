@@ -47,22 +47,22 @@ MODULE array
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: ynipp1j, ynipm1j,   ynipp1jm1, ynipm1jm1 ! mirror lin coeff for non adiab mom
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: zNipm1j, zNipm1jp1, zNipm1jm1            ! mirror lin coeff for adiab mom
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xphij, xphijp1, xphijm1
-  ! Geoemtrical operators
+  ! Geometrical operators
   ! Curvature
   REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z, odd/even p
   ! Jacobian
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: Jacobian ! dimensions: z, odd/even p
   ! Metric
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: gxx, gxy, gyy, gxz, gyz ! dimensions: z, odd/even p
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: gxx, gxy, gxz, gyy, gyz, gzz ! dimensions: z, odd/even p
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: dxdr, dxdZ, Rc, phic, Zc
   ! derivatives of magnetic field strength
-  REAL(dp), DIMENSION(:,:), allocatable :: gradzB  ! dimensions: z, odd/even p
-  REAL(dp), DIMENSION(:,:), allocatable :: gradxB
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: gradxB, gradyB, gradzB
   ! Relative magnetic field strength
-  REAL(dp), DIMENSION(:,:), allocatable :: hatB
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: hatB
   ! Relative strength of major radius
-  REAL(dp), DIMENSION(:,:), allocatable :: hatR
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: hatR, hatZ
   ! Some geometrical coefficients
-  REAL(dp), DIMENSION(:,:) , allocatable :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
+  REAL(dp), DIMENSION(:,:) , ALLOCATABLE :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
   ! Kernel function evaluation (ij,ikx,iky,iz,odd/even p)
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: kernel_e
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: kernel_i
@@ -78,7 +78,17 @@ MODULE array
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: dens_e
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: dens_i
 
+  ! particle fluid velocity for electron and ions (ikx,iky,iz)
+  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: upar_e
+  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: upar_i
+  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: uper_e
+  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: uper_i
+
   ! particle temperature for electron and ions (ikx,iky,iz)
+  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Tpar_e
+  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Tpar_i
+  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Tper_e
+  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Tper_i
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: temp_e
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: temp_i
 

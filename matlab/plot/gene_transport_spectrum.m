@@ -1,9 +1,9 @@
 % folder = '/misc/gene_results/NL_Zpinch_Kn_1.8_eta_0.25_nuSG_5e-2_mu_1e-2_SGDK_36x20/';
 % folder = '/misc/gene_results/HP_fig_2c_mu_5e-2/';
-folder = '/misc/gene_results/HP_fig_2b_mu_5e-2/';
+% folder = '/misc/gene_results/HP_fig_2b_mu_5e-2/';
 % folder = '/misc/gene_results/HP_fig_2c_gyroLES/';
 % folder = '/misc/gene_results/NL_Zpinch_Kn_1.8_eta_0.25_nuSG_5e-2_mu_1e-2_SGDK_128x32x48x32/';
-
+folder = '/misc/gene_results/shearless_cyclone/output/';
 file = 'coord.dat.h5';
 vp = h5read([folder,file],'/coord/vp');
 mu = h5read([folder,file],'/coord/mu');
@@ -17,7 +17,7 @@ file = 'field.dat.h5';
 time  = h5read([folder,file],'/field/time');
 
 KDIM = 'ky';
-TIMES = 2500:100:3500;
+TIMES = time;
 switch KDIM
     case 'kx'
         sdim  = 2;

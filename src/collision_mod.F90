@@ -79,15 +79,26 @@ CONTAINS
     IMPLICIT NONE
     ! Execution time start
     CALL cpu_time(t0_coll)
+    
     IF (nu .NE. 0) THEN
       SELECT CASE(collision_model)
         CASE ('LB')
           CALL compute_lenard_bernstein
         CASE ('DG')
           CALL compute_dougherty
-        CASE DEFAULT
+        CASE ('SG','LR','LD')
           CALL compute_cosolver_coll
+        CASE ('none')
+          IF(KIN_E) &
+          TColl_e = 0._dp
+          TColl_i = 0._dp
+        CASE DEFAULT
+          ERROR STOP 'Error stop: collision operator not recognized!!'
       END SELECT
+    ELSE
+      IF(KIN_E) &
+      TColl_e = 0._dp
+      TColl_i = 0._dp
     ENDIF
 
     ! Execution time end

@@ -12,7 +12,7 @@ MODULE basic
   real(dp) :: time   = 0           ! Current simulation time (Init from restart file)
 
   INTEGER :: comm0                 ! Default communicator with a topology
-  INTEGER :: comm_p, comm_kx          ! Communicators for 1-dim cartesian subgrids of comm0
+  INTEGER :: comm_p, comm_kx, comm_z! Communicators for 1-dim cartesian subgrids of comm0
   INTEGER :: commr_p0              ! Communicators along kx for only rank 0 on p
 
   INTEGER :: jobnum  = 0           ! Job number
@@ -26,9 +26,12 @@ MODULE basic
   INTEGER :: num_procs             ! number of MPI processes
   INTEGER :: num_procs_p           ! Number of processes in p
   INTEGER :: num_procs_kx          ! Number of processes in r
-  INTEGER :: rank_0, rank_p, rank_kx! Ranks in comm0, comm_p, comm_kx
+  INTEGER :: num_procs_z           ! Number of processes in z
+  INTEGER :: rank_0                ! Ranks in comm0
+  INTEGER :: rank_p, rank_kx, rank_z! Ranks in comm_p, comm_kx, comm_z
   INTEGER :: nbr_L, nbr_R          ! Left and right neighbours (along p)
   INTEGER :: nbr_T, nbr_B          ! Top and bottom neighbours (along kx)
+  INTEGER :: nbr_U, nbr_D          ! Upstream and downstream neighbours (along z)
 
   INTEGER :: iframe0d              ! counting the number of times 0d datasets are outputed (for diagnose)
   INTEGER :: iframe1d              ! counting the number of times 1d datasets are outputed (for diagnose)
@@ -83,7 +86,7 @@ CONTAINS
     INTEGER :: nargs, fileid, l
     LOGICAL :: mlexist
     nargs = COMMAND_ARGUMENT_COUNT()
-    IF((nargs .EQ. 1) .OR. (nargs .EQ. 3)) THEN
+    IF((nargs .EQ. 1) .OR. (nargs .EQ. 4)) THEN
       CALL GET_COMMAND_ARGUMENT(nargs, str, l, ierr)
       READ(str(1:l),'(i3)')  fileid
       WRITE(input_file,'(a,a1,i2.2,a3)') 'fort','_',fileid,'.90'

@@ -9,7 +9,7 @@ MODULE diagnostics_par
   LOGICAL, PUBLIC, PROTECTED :: write_gamma, write_hf  ! output particle transport and heat flux
   LOGICAL, PUBLIC, PROTECTED :: write_phi,  write_Na00
   LOGICAL, PUBLIC, PROTECTED :: write_Napj, write_Sapj
-  LOGICAL, PUBLIC, PROTECTED :: write_dens, write_temp
+  LOGICAL, PUBLIC, PROTECTED :: write_dens, write_fvel, write_temp
 
   INTEGER, PUBLIC, PROTECTED :: nsave_0d, nsave_1d, nsave_2d, nsave_3d, nsave_5d
 
@@ -36,7 +36,7 @@ CONTAINS
     NAMELIST /OUTPUT_PAR/ nsave_0d, nsave_1d, nsave_2d, nsave_3d, nsave_5d
     NAMELIST /OUTPUT_PAR/ write_doubleprecision, write_gamma, write_hf, write_phi
     NAMELIST /OUTPUT_PAR/ write_Na00, write_Napj, write_Sapj
-    NAMELIST /OUTPUT_PAR/ write_dens, write_temp
+    NAMELIST /OUTPUT_PAR/ write_dens, write_fvel, write_temp
     NAMELIST /OUTPUT_PAR/ job2load
 
     READ(lu_in,output_par)

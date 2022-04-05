@@ -60,23 +60,27 @@ SUBROUTINE evaluate_kernels
 DO eo  = 0,1
 DO ikx = ikxs,ikxe
 DO iky = ikys,ikye
-DO iz = izs,ize
+DO iz  = izgs,izge
   !!!!! Electron kernels !!!!!
   IF(KIN_E) THEN
-  DO ij = ijsg_e, ijeg_e
+  DO ij = ijgs_e, ijge_e
     j_int = jarray_e(ij)
     j_dp  = REAL(j_int,dp)
     y_    =  sigmae2_taue_o2 * kparray(ikx,iky,iz,eo)**2
     kernel_e(ij,ikx,iky,iz,eo) = y_**j_int*EXP(-y_)/GAMMA(j_dp+1._dp)!factj
   ENDDO
+  IF (ijs_e .EQ. 1) &
+  kernel_e(ijgs_e,ikx,iky,iz,eo) = 0._dp
   ENDIF
   !!!!! Ion kernels !!!!!
-  DO ij = ijsg_i, ijeg_i
+  DO ij = ijgs_i, ijge_i
     j_int = jarray_i(ij)
     j_dp  = REAL(j_int,dp)
     y_    =  sigmai2_taui_o2 * kparray(ikx,iky,iz,eo)**2
     kernel_i(ij,ikx,iky,iz,eo) = y_**j_int*EXP(-y_)/GAMMA(j_dp+1._dp)!factj
   ENDDO
+  IF (ijs_i .EQ. 1) &
+  kernel_i(ijgs_i,ikx,iky,iz,eo) = 0._dp
 ENDDO
 ENDDO
 ENDDO
@@ -99,7 +103,7 @@ SUBROUTINE evaluate_poisson_op
 
   kxloop: DO ikx = ikxs,ikxe
   kyloop: DO iky = ikys,ikye
-  zloop:  DO iz  =  izs,ize
+  zloop:  DO iz  = izgs,izge
   ! This term is evalued on the even z grid since poisson uses only p=0 and phi
   IF( (kxarray(ikx).EQ.0._dp) .AND. (kyarray(iky).EQ.0._dp) ) THEN
       inv_poisson_op(ikx, iky, iz) =  0._dp

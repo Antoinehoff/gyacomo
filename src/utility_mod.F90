@@ -114,8 +114,10 @@ SUBROUTINE manual_3D_bcast(field_)
   IMPLICIT NONE
   COMPLEX(dp), INTENT(INOUT) :: field_(ikxs:ikxe,ikys:ikye,izs:ize)
   COMPLEX(dp) :: buffer(ikxs:ikxe,ikys:ikye,izs:ize)
-  INTEGER     :: i_, root, world_rank, world_size
+  INTEGER     :: i_, root, world_rank, world_size, count
   root = 0;
+  count = (ikxe-ikxs+1) * (ikye-ikys+1) * (ize-izs+1);
+
   CALL MPI_COMM_RANK(comm_p,world_rank,ierr)
   CALL MPI_COMM_SIZE(comm_p,world_size,ierr)
   IF (world_size .GT. 1) THEN
@@ -132,11 +134,11 @@ SUBROUTINE manual_3D_bcast(field_)
       ! Send it to all the other processes
       DO i_ = 0,num_procs_p-1
         IF (i_ .NE. world_rank) &
-        CALL MPI_SEND(buffer, local_nkx * Nky * Nz, MPI_DOUBLE_COMPLEX, i_, 0, comm_p, ierr)
+        CALL MPI_SEND(buffer, count, MPI_DOUBLE_COMPLEX, i_, 0, comm_p, ierr)
       ENDDO
     ELSE
       ! Recieve buffer from root
-      CALL MPI_RECV(buffer, local_nkx * Nky * Nz, MPI_DOUBLE_COMPLEX, root, 0, comm_p, MPI_STATUS_IGNORE, ierr)
+      CALL MPI_RECV(buffer, count, MPI_DOUBLE_COMPLEX, root, 0, comm_p, MPI_STATUS_IGNORE, ierr)
       ! Write it in phi
       DO ikx = ikxs,ikxe
         DO iky = ikys,ikye

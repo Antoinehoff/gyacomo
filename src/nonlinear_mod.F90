@@ -1,8 +1,4 @@
-SUBROUTINE compute_Sapj
-  ! This routine is meant to compute the non linear term for each specie and degree
-  !! In real space Sapj ~ b*(grad(phi) x grad(g)) which in moments in fourier becomes
-  !! Sapj = Sum_n (ikx Kn phi)#(iky Sum_s d_njs Naps) - (iky Kn phi)#(ikx Sum_s d_njs Naps)
-  !! where # denotes the convolution.
+MODULE nonlinear
   USE array, ONLY : dnjs, Sepj, Sipj, kernel_i, kernel_e,&
                     moments_e_ZF, moments_i_ZF, phi_ZF
   USE initial_par, ONLY : ACT_ON_MODES
@@ -16,15 +12,34 @@ SUBROUTINE compute_Sapj
   IMPLICIT NONE
   INCLUDE 'fftw3-mpi.f03'
 
-  COMPLEX(dp), DIMENSION(ikxs:ikxe,ikys:ikye) :: F_cmpx, G_cmpx
-  COMPLEX(dp), DIMENSION(ikxs:ikxe,ikys:ikye) :: Fx_cmpx, Gy_cmpx
-  COMPLEX(dp), DIMENSION(ikxs:ikxe,ikys:ikye) :: Fy_cmpx, Gx_cmpx, F_conv_G
-  REAL(dp),    DIMENSION(ixs:ixe,iys:iye)     :: fr_real, gz_real
-  REAL(dp),    DIMENSION(ixs:ixe,iys:iye)     :: fz_real, gr_real, f_times_g
+  COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: F_cmpx, G_cmpx
+  COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: Fx_cmpx, Gy_cmpx
+  COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: Fy_cmpx, Gx_cmpx, F_conv_G
 
   INTEGER :: in, is, p_int, j_int
   INTEGER :: nmax, smax ! Upper bound of the sums
   REAL(dp):: kx, ky, kerneln
+  PUBLIC :: compute_Sapj, nonlinear_init
+
+CONTAINS
+
+SUBROUTINE nonlinear_init
+  ALLOCATE( F_cmpx(ikxs:ikxe,ikys:ikye))
+  ALLOCATE( G_cmpx(ikxs:ikxe,ikys:ikye))
+
+  ALLOCATE(Fx_cmpx(ikxs:ikxe,ikys:ikye))
+  ALLOCATE(Gy_cmpx(ikxs:ikxe,ikys:ikye))
+  ALLOCATE(Fy_cmpx(ikxs:ikxe,ikys:ikye))
+  ALLOCATE(Gx_cmpx(ikxs:ikxe,ikys:ikye))
+
+  ALLOCATE(F_conv_G(ikxs:ikxe,ikys:ikye))
+END SUBROUTINE nonlinear_init
+
+SUBROUTINE compute_Sapj
+  ! This routine is meant to compute the non linear term for each specie and degree
+  !! In real space Sapj ~ b*(grad(phi) x grad(g)) which in moments in fourier becomes
+  !! Sapj = Sum_n (ikx Kn phi)#(iky Sum_s d_njs Naps) - (iky Kn phi)#(ikx Sum_s d_njs Naps)
+  !! where # denotes the convolution.
 
   ! Execution time start
   CALL cpu_time(t0_Sapj)
@@ -47,7 +62,7 @@ SUBROUTINE compute_Sapj
   CALL cpu_time(t1_Sapj)
   tc_Sapj = tc_Sapj + (t1_Sapj - t0_Sapj)
 
-CONTAINS
+END SUBROUTINE compute_Sapj
 
 SUBROUTINE compute_nonlinear
   IMPLICIT NONE
@@ -402,4 +417,4 @@ zloopi: DO iz = izs,ize
 ENDDO zloopi
 END SUBROUTINE compute_semi_linear_NZ
 
-END SUBROUTINE compute_Sapj
+END MODULE nonlinear
