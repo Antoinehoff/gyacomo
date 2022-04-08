@@ -79,7 +79,7 @@ CONTAINS
     IMPLICIT NONE
     ! Execution time start
     CALL cpu_time(t0_coll)
-    
+
     IF (nu .NE. 0) THEN
       SELECT CASE(collision_model)
         CASE ('LB')
@@ -539,13 +539,13 @@ CONTAINS
     INTEGER,     INTENT(IN)  :: ip_, ij_ ,ikx_, iky_, iz_
     COMPLEX(dp), INTENT(OUT) :: TColl_
 
-    INTEGER     :: ip2,ij2, p_int,j_int, p2_int,j2_int, ikx_C, iky_C
+    INTEGER     :: ip2,ij2, p_int,j_int, p2_int,j2_int, ikx_C, iky_C, iz_C
     p_int = parray_e_full(ip_); j_int = jarray_e_full(ij_);
 
     IF (gyrokin_CO) THEN ! GK operator (k-dependant)
-      ikx_C = ikx_; iky_C = iky_
+      ikx_C = ikx_; iky_C = iky_; iz_C = iz_
     ELSE ! DK operator (only one mat for every k)
-      ikx_C = 1;   iky_C = 1
+      ikx_C = 1;   iky_C = 1; iz_C = 1;
     ENDIF
 
     TColl_ = 0._dp ! Initialization of the local sum
@@ -557,8 +557,8 @@ CONTAINS
         j2_int = jarray_e(ij2)
         IF((CLOS .NE. 1) .OR. (p2_int+2*j2_int .LE. dmaxe))&
         TColl_ = TColl_ + nadiab_moments_e(ip2,ij2,ikx_,iky_,iz_) &
-           *( nu_e  * CeipjT(bare(p_int,j_int), bare(p2_int,j2_int),ikx_C, iky_C) &
-             +nu_ee * Ceepj (bare(p_int,j_int), bare(p2_int,j2_int),ikx_C, iky_C))
+           *( nu_e  * CeipjT(bare(p_int,j_int), bare(p2_int,j2_int),ikx_C, iky_C, iz_C) &
+             +nu_ee * Ceepj (bare(p_int,j_int), bare(p2_int,j2_int),ikx_C, iky_C, iz_C))
       ENDDO jloopee
     ENDDO ploopee
 
@@ -569,7 +569,7 @@ CONTAINS
         j2_int = jarray_i(ij2)
         IF((CLOS .NE. 1) .OR. (p2_int+2*j2_int .LE. dmaxi))&
         TColl_ = TColl_ + nadiab_moments_i(ip2,ij2,ikx_,iky_,iz_) &
-          *(nu_e * CeipjF(bare(p_int,j_int), bari(p2_int,j2_int),ikx_C, iky_C))
+          *(nu_e * CeipjF(bare(p_int,j_int), bari(p2_int,j2_int),ikx_C, iky_C, iz_C))
       END DO jloopei
     ENDDO ploopei
 
@@ -583,13 +583,13 @@ CONTAINS
     INTEGER,     INTENT(IN)    :: ip_, ij_ ,ikx_, iky_, iz_
     COMPLEX(dp), INTENT(OUT)   :: TColl_
 
-    INTEGER     :: ip2,ij2, p_int,j_int, p2_int,j2_int, ikx_C, iky_C
+    INTEGER     :: ip2,ij2, p_int,j_int, p2_int,j2_int, ikx_C, iky_C, iz_C
     p_int = parray_i_full(ip_); j_int = jarray_i_full(ij_);
 
     IF (gyrokin_CO) THEN ! GK operator (k-dependant)
-      ikx_C = ikx_; iky_C = iky_
+      ikx_C = ikx_; iky_C = iky_; iz_C = iz_;
     ELSE ! DK operator (only one mat for every k)
-      ikx_C = 1;   iky_C = 1
+      ikx_C = 1;   iky_C = 1; iz_C = 1;
     ENDIF
 
     TColl_ = 0._dp ! Initialization
@@ -601,10 +601,10 @@ CONTAINS
         IF((CLOS .NE. 1) .OR. (p2_int+2*j2_int .LE. dmaxi))&
         ! Ion-ion collision
         TColl_ = TColl_ + nadiab_moments_i(ip2,ij2,ikx_,iky_,iz_) &
-            * nu_i  * Ciipj (bari(p_int,j_int), bari(p2_int,j2_int), ikx_C, iky_C)
+            * nu_i  * Ciipj (bari(p_int,j_int), bari(p2_int,j2_int), ikx_C, iky_C, iz_C)
         IF(KIN_E) & ! Ion-electron collision test
         TColl_ = TColl_ + nadiab_moments_i(ip2,ij2,ikx_,iky_,iz_) &
-            * nu_ie * CiepjT(bari(p_int,j_int), bari(p2_int,j2_int), ikx_C, iky_C)
+            * nu_ie * CiepjT(bari(p_int,j_int), bari(p2_int,j2_int), ikx_C, iky_C, iz_C)
       ENDDO jloopii
     ENDDO ploopii
 
@@ -615,7 +615,7 @@ CONTAINS
         j2_int = jarray_e(ij2)
         IF((CLOS .NE. 1) .OR. (p2_int+2*j2_int .LE. dmaxe))&
         TColl_ = TColl_ + nadiab_moments_e(ip2,ij2,ikx_,iky_,iz_) &
-          *(nu_ie * CiepjF(bari(p_int,j_int), bare(p2_int,j2_int), ikx_C, iky_C))
+          *(nu_ie * CiepjF(bari(p_int,j_int), bare(p2_int,j2_int), ikx_C, iky_C, iz_C))
       ENDDO jloopie
     ENDDO ploopie
     ENDIF
@@ -830,49 +830,51 @@ CONTAINS
         IF (my_id .EQ. 0 ) WRITE(*,*) '...Interpolation from matrices kperp to simulation kx,ky...'
         DO ikx = ikxs,ikxe
           DO iky = ikys,ikye
-            ! Check for nonlinear case if we are in the anti aliased domain or the filtered one
-            kperp_sim = kparray(ikx,iky,1,0) ! current simulation kperp
-            ! Find the interval in kp grid mat where kperp_sim is contained
-            ! Loop over the whole kp mat grid to find the smallest kperp that is
-            ! larger than the current kperp_sim (brute force...)
-            DO ikp=1,nkp_mat
-              ikp_mat   = ikp ! the first indice of the interval (k0)
-              kperp_mat = kp_grid_mat(ikp)
-              IF(kperp_mat .GT. kperp_sim) EXIT ! a matrix with kperp2 > current kx2 + ky2 has been found
+            DO iz = izs,ize
+              ! Check for nonlinear case if we are in the anti aliased domain or the filtered one
+              kperp_sim = kparray(ikx,iky,iz,0) ! current simulation kperp
+              ! Find the interval in kp grid mat where kperp_sim is contained
+              ! Loop over the whole kp mat grid to find the smallest kperp that is
+              ! larger than the current kperp_sim (brute force...)
+              DO ikp=1,nkp_mat
+                ikp_mat   = ikp ! the first indice of the interval (k0)
+                kperp_mat = kp_grid_mat(ikp)
+                IF(kperp_mat .GT. kperp_sim) EXIT ! a matrix with kperp2 > current kx2 + ky2 has been found
+              ENDDO
+              ! Interpolation
+              ! interval boundaries
+              ikp_next  = ikp_mat     !index of k1 (larger than kperp_sim thanks to previous loop)
+              ikp_prev  = ikp_mat - 1 !index of k0 (smaller neighbour to interpolate inbetween)
+              if ( (kp_grid_mat(ikp_prev) .GT. kperp_sim) .OR. (kp_grid_mat(ikp_next) .LT. kperp_sim) ) THEN
+                ! write(*,*) 'Warning, linear interp of collision matrix failed!! '
+                ! write(*,*) kp_grid_mat(ikp_prev), '<', kperp_sim, '<', kp_grid_mat(ikp_next)
+              ENDIF
+              ! 0->1 variable for linear interp, i.e. zero2one = (k-k0)/(k1-k0)
+              zerotoone = (kperp_sim - kp_grid_mat(ikp_prev))/(kp_grid_mat(ikp_next) - kp_grid_mat(ikp_prev))
+              ! Linear interpolation between previous and next kperp matrix values
+              Ceepj (:,:,ikx,iky,iz) = (Ceepj__kp(:,:,ikp_next) - Ceepj__kp(:,:,ikp_prev))*zerotoone + Ceepj__kp(:,:,ikp_prev)
+              Ciipj (:,:,ikx,iky,iz) = (Ciipj__kp(:,:,ikp_next) - Ciipj__kp(:,:,ikp_prev))*zerotoone + Ciipj__kp(:,:,ikp_prev)
+              IF(interspecies) THEN
+                CeipjT(:,:,ikx,iky,iz) = (CeipjT_kp(:,:,ikp_next) - CeipjT_kp(:,:,ikp_prev))*zerotoone + CeipjT_kp(:,:,ikp_prev)
+                CeipjF(:,:,ikx,iky,iz) = (CeipjF_kp(:,:,ikp_next) - CeipjF_kp(:,:,ikp_prev))*zerotoone + CeipjF_kp(:,:,ikp_prev)
+                CiepjT(:,:,ikx,iky,iz) = (CiepjT_kp(:,:,ikp_next) - CiepjT_kp(:,:,ikp_prev))*zerotoone + CiepjT_kp(:,:,ikp_prev)
+                CiepjF(:,:,ikx,iky,iz) = (CiepjF_kp(:,:,ikp_next) - CiepjF_kp(:,:,ikp_prev))*zerotoone + CiepjF_kp(:,:,ikp_prev)
+              ELSE
+                CeipjT(:,:,ikx,iky,iz) = 0._dp
+                CeipjF(:,:,ikx,iky,iz) = 0._dp
+                CiepjT(:,:,ikx,iky,iz) = 0._dp
+                CiepjF(:,:,ikx,iky,iz) = 0._dp
+              ENDIF
             ENDDO
-            ! Interpolation
-            ! interval boundaries
-            ikp_next  = ikp_mat     !index of k1 (larger than kperp_sim thanks to previous loop)
-            ikp_prev  = ikp_mat - 1 !index of k0 (smaller neighbour to interpolate inbetween)
-            if ( (kp_grid_mat(ikp_prev) .GT. kperp_sim) .OR. (kp_grid_mat(ikp_next) .LT. kperp_sim) ) THEN
-              ! write(*,*) 'Warning, linear interp of collision matrix failed!! '
-              ! write(*,*) kp_grid_mat(ikp_prev), '<', kperp_sim, '<', kp_grid_mat(ikp_next)
-            ENDIF
-            ! 0->1 variable for linear interp, i.e. zero2one = (k-k0)/(k1-k0)
-            zerotoone = (kperp_sim - kp_grid_mat(ikp_prev))/(kp_grid_mat(ikp_next) - kp_grid_mat(ikp_prev))
-            ! Linear interpolation between previous and next kperp matrix values
-            Ceepj (:,:,ikx,iky) = (Ceepj__kp(:,:,ikp_next) - Ceepj__kp(:,:,ikp_prev))*zerotoone + Ceepj__kp(:,:,ikp_prev)
-            Ciipj (:,:,ikx,iky) = (Ciipj__kp(:,:,ikp_next) - Ciipj__kp(:,:,ikp_prev))*zerotoone + Ciipj__kp(:,:,ikp_prev)
-            IF(interspecies) THEN
-              CeipjT(:,:,ikx,iky) = (CeipjT_kp(:,:,ikp_next) - CeipjT_kp(:,:,ikp_prev))*zerotoone + CeipjT_kp(:,:,ikp_prev)
-              CeipjF(:,:,ikx,iky) = (CeipjF_kp(:,:,ikp_next) - CeipjF_kp(:,:,ikp_prev))*zerotoone + CeipjF_kp(:,:,ikp_prev)
-              CiepjT(:,:,ikx,iky) = (CiepjT_kp(:,:,ikp_next) - CiepjT_kp(:,:,ikp_prev))*zerotoone + CiepjT_kp(:,:,ikp_prev)
-              CiepjF(:,:,ikx,iky) = (CiepjF_kp(:,:,ikp_next) - CiepjF_kp(:,:,ikp_prev))*zerotoone + CiepjF_kp(:,:,ikp_prev)
-            ELSE
-              CeipjT(:,:,ikx,iky) = 0._dp
-              CeipjF(:,:,ikx,iky) = 0._dp
-              CiepjT(:,:,ikx,iky) = 0._dp
-              CiepjF(:,:,ikx,iky) = 0._dp
-            ENDIF
           ENDDO
         ENDDO
       ELSE ! DK -> No kperp dep, copy simply to final collision matrices
-        Ceepj (:,:,1,1) = Ceepj__kp (:,:,1)
-        CeipjT(:,:,1,1) = CeipjT_kp(:,:,1)
-        CeipjF(:,:,1,1) = CeipjF_kp(:,:,1)
-        Ciipj (:,:,1,1) = Ciipj__kp (:,:,1)
-        CiepjT(:,:,1,1) = CiepjT_kp(:,:,1)
-        CiepjF(:,:,1,1) = CiepjF_kp(:,:,1)
+        Ceepj (:,:,1,1,1) = Ceepj__kp(:,:,1)
+        CeipjT(:,:,1,1,1) = CeipjT_kp(:,:,1)
+        CeipjF(:,:,1,1,1) = CeipjF_kp(:,:,1)
+        Ciipj (:,:,1,1,1) = Ciipj__kp(:,:,1)
+        CiepjT(:,:,1,1,1) = CiepjT_kp(:,:,1)
+        CiepjF(:,:,1,1,1) = CiepjF_kp(:,:,1)
       ENDIF
       ! Deallocate auxiliary variables
       DEALLOCATE (Ceepj__kp); DEALLOCATE (CeipjT_kp); DEALLOCATE (CeipjF_kp)

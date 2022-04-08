@@ -25,11 +25,11 @@ MODULE array
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Sepj ! electron
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Sipj ! ion
 
-  ! To load collision matrix (ip1,ij1,ip2,ij2)
-  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Ceepj, CeipjT
-  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: CeipjF
-  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Ciipj, CiepjT
-  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: CiepjF
+  ! To load collision matrix (ip,ij,ikx,iky,iz)
+  REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Ceepj, CeipjT
+  REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: CeipjF
+  REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Ciipj, CiepjT
+  REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: CiepjF
 
   ! Collision term (ip,ij,ikx,iky,iz)
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: TColl_e, TColl_i
