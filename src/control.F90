@@ -57,7 +57,6 @@ SUBROUTINE control
 
      step  = step  + 1
      cstep = cstep + 1
-
      CALL stepon
 
      time  = time  + dt

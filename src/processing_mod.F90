@@ -169,39 +169,39 @@ SUBROUTINE compute_nadiab_moments
   implicit none
 
   ! Electron non adiab moments
-  DO ikx = ikxs,ikxe
-  DO iky = ikys,ikye
-  DO iz  = izgs,izge
-  IF(KIN_E) THEN
-  DO ip=ipgs_e,ipge_e
-    IF(parray_e(ip) .EQ. 0) THEN
-      DO ij=ijgs_e,ijge_e
-        nadiab_moments_e(ip,ij,ikx,iky,iz) = moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
-                                  + qe_taue*kernel_e(ij,ikx,iky,iz,0)*phi(ikx,iky,iz)
-      ENDDO
-    ELSE
-      DO ij=ijgs_e,ijge_e
-        nadiab_moments_e(ip,ij,ikx,iky,iz) = moments_e(ip,ij,ikx,iky,iz,updatetlevel)
-      ENDDO
-    ENDIF
-  ENDDO
-  ENDIF
-  ! Ions non adiab moments
-  DO ip=ipgs_i,ipge_i
-    IF(parray_i(ip) .EQ. 0) THEN
-      DO ij=ijgs_i,ijge_i
-        nadiab_moments_i(ip,ij,ikx,iky,iz) = moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
-                                  + qi_taui*kernel_i(ij,ikx,iky,iz,0)*phi(ikx,iky,iz)
-      ENDDO
-    ELSE
-      DO ij=ijgs_i,ijge_i
-        nadiab_moments_i(ip,ij,ikx,iky,iz) = moments_i(ip,ij,ikx,iky,iz,updatetlevel)
+  xloop: DO ikx = ikxs,ikxe
+  yloop: DO iky = ikys,ikye
+  zloop: DO iz  = izgs,izge
+    IF(KIN_E) THEN
+      DO ip=ipgs_e,ipge_e
+        IF(parray_e(ip) .EQ. 0) THEN
+          DO ij=ijgs_e,ijge_e
+            nadiab_moments_e(ip,ij,ikx,iky,iz) = moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
+                                      + qe_taue*kernel_e(ij,ikx,iky,iz,0)*phi(ikx,iky,iz)
+          ENDDO
+        ELSE
+          DO ij=ijgs_e,ijge_e
+            nadiab_moments_e(ip,ij,ikx,iky,iz) = moments_e(ip,ij,ikx,iky,iz,updatetlevel)
+          ENDDO
+        ENDIF
       ENDDO
     ENDIF
-  ENDDO
-  ENDDO
-  ENDDO
-  ENDDO
+    ! Ions non adiab moments
+    DO ip=ipgs_i,ipge_i
+      IF(parray_i(ip) .EQ. 0) THEN
+        DO ij=ijgs_i,ijge_i
+          nadiab_moments_i(ip,ij,ikx,iky,iz) = moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
+                                    + qi_taui*kernel_i(ij,ikx,iky,iz,0)*phi(ikx,iky,iz)
+        ENDDO
+      ELSE
+        DO ij=ijgs_i,ijge_i
+          nadiab_moments_i(ip,ij,ikx,iky,iz) = moments_i(ip,ij,ikx,iky,iz,updatetlevel)
+        ENDDO
+      ENDIF
+    ENDDO
+  ENDDO zloop
+  ENDDO yloop
+  ENDDO xloop
   !
 END SUBROUTINE compute_nadiab_moments
 
@@ -264,7 +264,7 @@ SUBROUTINE compute_uperp
             uperp = 0._dp
             DO ij = ijs_i, ije_i
               uperp = uperp + kernel_i(ij,ikx,iky,iz,0) *&
-               0.5_dp*(nadiab_moments_i(ip0_i,ij,ikx,iky,iz) - nadiab_moments_i(ip0_e,ij-1,ikx,iky,iz))
+               0.5_dp*(nadiab_moments_i(ip0_i,ij,ikx,iky,iz) - nadiab_moments_i(ip0_i,ij-1,ikx,iky,iz))
              ENDDO
             uper_i(ikx,iky,iz) = uperp
           ENDDO

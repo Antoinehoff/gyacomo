@@ -248,7 +248,7 @@ zloopi: DO iz = izs,ize
             Gx_cmpx(ikx,iky) = 0._dp
             IF(iky .EQ. iky_0) THEN
               Fx_cmpx(ikx,iky) = imagu*kx* phi(ikx,iky,iz) * kerneln
-              smax = MIN( (in-1)+(ij-1), jmaxe );
+              smax = MIN( (in-1)+(ij-1), jmaxi );
               DO is = 1, smax+1 ! sum truncation on number of moments
                 Gx_cmpx(ikx,iky) = Gx_cmpx(ikx,iky) + &
                   dnjs(in,ij,is) * moments_i(ip,is,ikx,iky,iz,updatetlevel)
@@ -377,7 +377,7 @@ zloopi: DO iz = izs,ize
           kyloopi: DO iky = ikys,ikye ! Loop over ky
             ! Zonal terms (=0 for all ky not 0)
             Fx_cmpx(ikx,iky) = imagu*kx* phi(ikx,iky,iz) * kerneln
-            smax = MIN( (in-1)+(ij-1), jmaxe );
+            smax = MIN( (in-1)+(ij-1), jmaxi );
             DO is = 1, smax+1 ! sum truncation on number of moments
               Gx_cmpx(ikx,iky) = Gx_cmpx(ikx,iky) + &
                 dnjs(in,ij,is) * moments_i(ip,is,ikx,iky,iz,updatetlevel)

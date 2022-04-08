@@ -69,6 +69,7 @@ SUBROUTINE inital
   IF (my_id .EQ. 0) WRITE(*,*) 'Ghosts communication'
   CALL update_ghosts_p_moments
   CALL update_ghosts_z_moments
+  CALL update_ghosts_z_phi
   !! End of phi and moments initialization
 
   ! Save (kx,0) and (0,ky) modes for num exp
@@ -77,7 +78,8 @@ SUBROUTINE inital
   CALL play_with_modes
 
   ! Load the COSOlver collision operator coefficients
-  IF(cosolver_coll) CALL load_COSOlver_mat
+  IF(cosolver_coll) &
+  CALL load_COSOlver_mat
 
   !! Preparing auxiliary arrays at initial state
   ! particle density, fluid velocity and temperature (used in diagnose)
@@ -306,9 +308,9 @@ SUBROUTINE init_phi
     !symmetry at kx = 0 to keep real inverse transform
     IF ( contains_kx0 ) THEN
       DO iky=2,Nky/2
-        phi(ikx_0,iky,:) = phi(ikx_0,Nky+2-iky,:)
+        phi(ikx_0,iky,izs:ize) = phi(ikx_0,Nky+2-iky,izs:ize)
       END DO
-      phi(ikx_0,Ny/2,:) = REAL(phi(ikx_0,Ny/2,:)) !origin must be real
+      phi(ikx_0,Ny/2,izs:ize) = REAL(phi(ikx_0,Ny/2,izs:ize)) !origin must be real
     ENDIF
 
     !**** ensure no previous moments initialization

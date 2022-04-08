@@ -46,7 +46,7 @@ MODULE grid
   REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: zarray_full
   ! local z weights for computing simpson rule
   INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC :: zweights_SR
-  REAL(dp), PUBLIC, PROTECTED  ::  deltax,  deltay, deltaz, inv_deltaz
+  REAL(dp), PUBLIC, PROTECTED  ::  deltax,  deltay, deltaz, inv_deltaz, diff_dz_coeff
   INTEGER,  PUBLIC, PROTECTED  ::  ixs,  ixe,  iys,  iye,  izs,  ize
   INTEGER,  PUBLIC, PROTECTED  ::  izgs, izge ! ghosts
   LOGICAL,  PUBLIC, PROTECTED  ::  SG = .true.! shifted grid flag
@@ -67,6 +67,8 @@ MODULE grid
   integer(C_INTPTR_T), PUBLIC :: local_nz_offset
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: counts_nz
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: displs_nz
+  ! "" for j (not parallelized)
+  INTEGER,             PUBLIC :: local_nj_e, local_nj_i
   ! Grids containing position in fourier space
   REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kxarray, kxarray_full
   REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kyarray, kyarray_full
@@ -257,6 +259,9 @@ CONTAINS
     ! Ghosts boundaries
     ijgs_e = ijs_e - 1; ijge_e = ije_e + 1;
     ijgs_i = ijs_i - 1; ijge_i = ije_i + 1;
+    ! Local number of J
+    local_nj_e = ijge_e - ijgs_e + 1
+    local_nj_i = ijge_i - ijgs_i + 1
     ALLOCATE(jarray_e(ijgs_e:ijge_e))
     ALLOCATE(jarray_i(ijgs_i:ijge_i))
     DO ij = ijgs_e,ijge_e; jarray_e(ij) = ij-1; END DO
@@ -290,7 +295,6 @@ CONTAINS
      kxarray_full(ikx) = REAL(ikx-1,dp) * deltakx
     END DO
     !! Parallel distribution
-    ! Start and END indices of grid
     ikxs = local_nkx_offset + 1
     ikxe = ikxs + local_nkx - 1
     ALLOCATE(kxarray(ikxs:ikxe))
@@ -337,6 +341,7 @@ CONTAINS
     ! Start and END indices of grid
     ikys = 1
     ikye = Nky
+    local_nky = ikye - ikys + 1
     ALLOCATE(kyarray(ikys:ikye))
     IF (Ny .EQ. 1) THEN ! "cancel" y dimension
       deltaky         = 1._dp
@@ -371,7 +376,7 @@ CONTAINS
       END DO
       ! Build the full grids on process 0 to diagnose it without comm
       ! ky
-      DO iky = 1,Nky
+      DO iky = ikys,ikye
         kyarray_full(iky) = deltaky*(MODULO(iky-1,Nky/2)-Nky/2*FLOOR(2.*real(iky-1)/real(Nky)))
         IF (iky .EQ. Ny/2+1) kyarray_full(iky) = -kyarray_full(iky)
       END DO
@@ -400,8 +405,9 @@ CONTAINS
     ! Length of the flux tube (in ballooning angle)
     Lz         = 2_dp*pi*Npol
     ! Z stepping (#interval = #points since periodic)
-    deltaz     = Lz/REAL(Nz,dp)
-    inv_deltaz = 1._dp/deltaz
+    deltaz        = Lz/REAL(Nz,dp)
+    inv_deltaz    = 1._dp/deltaz
+    diff_dz_coeff = (deltaz/2._dp)**2
     IF (SG) THEN
       grid_shift = deltaz/2._dp
     ELSE
@@ -409,6 +415,7 @@ CONTAINS
     ENDIF
     ! Build the full grids on process 0 to diagnose it without comm
     ALLOCATE(zarray_full(1:Nz))
+    IF (Nz .EQ. 1) Npol = 0
     DO iz = 1,total_nz
       zarray_full(iz) = REAL(iz-1,dp)*deltaz - PI*REAL(Npol,dp)
     END DO

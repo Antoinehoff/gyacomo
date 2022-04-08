@@ -132,7 +132,7 @@ SUBROUTINE ghosts_lower_truncation
   IF(ijs_i .EQ. 1) THEN
     ! applies only for the process that has lowest j index
     DO ip = ipgs_i,ipge_i
-      moments_i(ip,ije_i-1,ikxs:ikxe,ikys:ikye,izgs:izge,updatetlevel) = 0._dp
+      moments_i(ip,ijs_i-1,ikxs:ikxe,ikys:ikye,izgs:izge,updatetlevel) = 0._dp
     ENDDO
   ENDIF
   ! applies only for the process that has lowest p index

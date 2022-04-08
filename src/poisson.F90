@@ -6,7 +6,6 @@ SUBROUTINE poisson
   USE array
   USE fields
   USE grid
-  USE ghosts, ONLY: update_ghosts_z_phi
   USE calculus, ONLY : simpson_rule_z
   USE utility,  ONLY : manual_3D_bcast
   use model, ONLY : qe2_taue, qi2_taui, q_e, q_i, lambdaD, KIN_E
@@ -19,37 +18,42 @@ SUBROUTINE poisson
   COMPLEX(dp) :: fa_phi, intf_   ! current flux averaged phi
   INTEGER     :: count !! mpi integer to broadcast the electric potential at the end
   COMPLEX(dp) :: buffer(ikxs:ikxe,ikys:ikye)
-  COMPLEX(dp), DIMENSION(izgs:izge) :: rho_i, rho_e     ! charge density q_a n_a
+  COMPLEX(dp), DIMENSION(izs:ize) :: rho_i, rho_e     ! charge density q_a n_a
 
-  !! Poisson can be solved only for process containing ip=1
+  ! Execution time start
+  CALL cpu_time(t0_poisson)
+  !! Poisson can be solved only for process containing p=0
   IF ( (ips_e .EQ. ip0_e) .AND. (ips_i .EQ. ip0_i) ) THEN
-    ! Execution time start
-    CALL cpu_time(t0_poisson)
+
 
     kxloop: DO ikx = ikxs,ikxe
       kyloop: DO iky = ikys,ikye
         !!!! Compute ion gyro charge density
         rho_i = 0._dp
         DO ini=1,jmaxi+1
-          rho_i(izs:ize) = rho_i(izs:ize) &
-           +q_i*kernel_i(ini,ikx,iky,izs:ize,0)*moments_i(ip0_i,ini,ikx,iky,izs:ize,updatetlevel)
+          DO iz = izs,ize
+          rho_i(iz) = rho_i(iz) &
+           +q_i*kernel_i(ini,ikx,iky,iz,0)*moments_i(ip0_i,ini,ikx,iky,iz,updatetlevel)
+          ENDDO
         END DO
 
         !!!! Compute electron gyro charge density
         rho_e = 0._dp
         IF (KIN_E) THEN ! Kinetic electrons
           DO ine=1,jmaxe+1
-            rho_e(izs:ize) = rho_e(izs:ize) &
-             +q_e*kernel_e(ine,ikx,iky,izs:ize,0)*moments_e(ip0_e,ine, ikx,iky,izs:ize,updatetlevel)
+            DO iz = izs,ize
+            rho_e(iz) = rho_e(iz) &
+             +q_e*kernel_e(ine,ikx,iky,iz,0)*moments_e(ip0_e,ine,ikx,iky,iz,updatetlevel)
+            ENDDO
           END DO
         ELSE  ! Adiabatic electrons
           ! Adiabatic charge density (linked to flux averaged phi)
           fa_phi = 0._dp
           IF(kyarray(iky).EQ.0._dp) THEN ! take ky=0 mode (average)
             DO ini=1,jmaxi+1 ! some over FLR contributions
-                rho_e(izgs:izge) = Jacobian(izgs:izge,0)*moments_i(ip0_i,ini,ikx,iky,izgs:izge,updatetlevel)&
-                           *kernel_i(ini,ikx,iky,izgs:izge,0)*(inv_poisson_op(ikx,iky,izgs:izge)-1._dp)
-                call simpson_rule_z(rho_e,intf_) ! integrate over z
+                rho_e(izs:ize) = Jacobian(izs:ize,0)*moments_i(ip0_i,ini,ikx,iky,izs:ize,updatetlevel)&
+                           *kernel_i(ini,ikx,iky,izs:ize,0)*(inv_poisson_op(ikx,iky,izs:ize)-1._dp)
+                call simpson_rule_z(rho_e(izs:ize),intf_) ! integrate over z
                 fa_phi = fa_phi + intf_
             ENDDO
             rho_e(izs:ize) = fa_phi*iInt_Jacobian !Normalize by 1/int(Jxyz)dz
@@ -57,12 +61,14 @@ SUBROUTINE poisson
         ENDIF
 
         !!!!!!!!!!!!!!! Inverting the poisson equation !!!!!!!!!!!!!!!!!!!!!!!!!!
-        phi(ikx, iky, izs:ize) =  (rho_e(izs:ize) + rho_i(izs:ize))*inv_poisson_op(ikx,iky,izs:ize)
+        DO iz = izs,ize
+        phi(ikx, iky, iz) =  (rho_e(iz) + rho_i(iz))*inv_poisson_op(ikx,iky,iz)
+        ENDDO
       END DO kyloop
     END DO kxloop
 
     ! Cancel origin singularity
-    IF (contains_kx0 .AND. contains_ky0) phi(ikx_0,iky_0,izs:ize) = 0._dp
+    IF (contains_kx0 .AND. contains_ky0) phi(ikx_0,iky_0,:) = 0._dp
 
   ENDIF
 

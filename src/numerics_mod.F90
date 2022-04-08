@@ -90,7 +90,7 @@ END SUBROUTINE evaluate_kernels
 !******************************************************************************!
 
 !******************************************************************************!
-!!!!!!! Evaluate polarisation operator for Poisson equation
+!!!!!!! Evaluate inverse polarisation operator for Poisson equation
 !******************************************************************************!
 SUBROUTINE evaluate_poisson_op
   USE basic
@@ -101,20 +101,21 @@ SUBROUTINE evaluate_poisson_op
   REAL(dp)    :: pol_i, pol_e     ! (Z_a^2/tau_a (1-sum_n kernel_na^2))
   INTEGER     :: ini,ine
 
+  ! This term has no staggered grid dependence. It is evalued for the
+  ! even z grid since poisson uses p=0 moments and phi only.
   kxloop: DO ikx = ikxs,ikxe
   kyloop: DO iky = ikys,ikye
-  zloop:  DO iz  = izgs,izge
-  ! This term is evalued on the even z grid since poisson uses only p=0 and phi
+  zloop:  DO iz  = izs,ize
   IF( (kxarray(ikx).EQ.0._dp) .AND. (kyarray(iky).EQ.0._dp) ) THEN
       inv_poisson_op(ikx, iky, iz) =  0._dp
-    ELSE
+  ELSE
     !!!!!!!!!!!!!!!!! Ion contribution
     ! loop over n only if the max polynomial degree
     pol_i = 0._dp
     DO ini=1,jmaxi+1
       pol_i = pol_i  + qi2_taui*kernel_i(ini,ikx,iky,iz,0)**2 ! ... sum recursively ...
     END DO
-    !!!!!!!!!!!!! Electron contribution\
+    !!!!!!!!!!!!! Electron contribution
     pol_e = 0._dp
     ! Kinetic model
     IF (KIN_E) THEN
@@ -267,12 +268,12 @@ SUBROUTINE save_EM_ZF_modes
   IF(contains_kx0) THEN
     IF(KIN_E) &
     moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx_0,ikys:ikye,izs:ize,updatetlevel)
-    moments_i_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx_0,ikys:ikye,izs:ize,updatetlevel)
+    moments_i_EM(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx_0,ikys:ikye,izs:ize,updatetlevel)
     phi_EM(ikys:ikye,izs:ize) = phi(ikx_0,ikys:ikye,izs:ize)
   ELSE
     IF(KIN_E) &
     moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = 0._dp
-    moments_i_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = 0._dp
+    moments_i_EM(ips_e:ipe_e,ijs_i:ije_i,ikys:ikye,izs:ize) = 0._dp
     phi_EM(ikys:ikye,izs:ize) = 0._dp
   ENDIF
 END SUBROUTINE

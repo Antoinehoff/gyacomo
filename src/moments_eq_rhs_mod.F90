@@ -1,7 +1,14 @@
 MODULE moments_eq_rhs
   IMPLICIT NONE
-  PUBLIC :: moments_eq_rhs_e, moments_eq_rhs_i
+  PUBLIC :: compute_moments_eq_rhs
 CONTAINS
+
+SUBROUTINE compute_moments_eq_rhs
+  USE model, only: KIN_E
+  IMPLICIT NONE
+  IF(KIN_E) CALL moments_eq_rhs_e
+            CALL moments_eq_rhs_i
+END SUBROUTINE compute_moments_eq_rhs
 !_____________________________________________________________________________!
 !_____________________________________________________________________________!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -19,7 +26,7 @@ SUBROUTINE moments_eq_rhs_e
   USE prec_const
   USE collision
   use geometry
-  USE calculus, ONLY : interp_z, grad_z, grad_z4
+  USE calculus, ONLY : interp_z, grad_z, grad_z2
   IMPLICIT NONE
 
   INTEGER     :: p_int, j_int ! loops indices and polynom. degrees
@@ -31,7 +38,7 @@ SUBROUTINE moments_eq_rhs_e
   COMPLEX(dp) :: i_ky
   ! To store derivatives and odd-even z grid interpolations
   COMPLEX(dp), DIMENSION(izs:ize) :: ddznepp1j, ddznepm1j, &
-              nepp1j, nepp1jm1, nepm1j, nepm1jm1, nepm1jp1, ddz4Nepj
+              nepp1j, nepp1jm1, nepm1j, nepm1jm1, nepm1jp1, ddz2Nepj
 
    ! Measuring execution time
   CALL cpu_time(t0_rhs)
@@ -58,7 +65,7 @@ SUBROUTINE moments_eq_rhs_e
         CALL interp_z(eo,nadiab_moments_e(ip-1,ij+1,ikx,iky,izgs:izge),  nepm1jp1(izs:ize))
         CALL interp_z(eo,nadiab_moments_e(ip-1,ij-1,ikx,iky,izgs:izge),  nepm1jm1(izs:ize))
         ! Parallel hyperdiffusion
-        CALL  grad_z4(moments_e(ip,ij,ikx,iky,:,updatetlevel),   ddz4Nepj(:))
+        CALL  grad_z2(moments_e(ip,ij,ikx,iky,izgs:izge,updatetlevel),   ddz2Nepj(izs:ize))
 
         zloope : DO  iz = izs,ize
           ! kperp
@@ -77,32 +84,29 @@ SUBROUTINE moments_eq_rhs_e
           Tnepjp1 = xnepjp1(ij) * nadiab_moments_e(ip,ij+1,ikx,iky,iz)
           ! term propto n_e^{p,j-1}
           Tnepjm1 = xnepjm1(ij) * nadiab_moments_e(ip,ij-1,ikx,iky,iz)
-          ! Parallel dynamic
-          IF(Nz .GT. 1) THEN
-            ! ddz derivative for Landau damping term
-            Tpar = xnepp1j(ip) * ddznepp1j(iz) + xnepm1j(ip) * ddznepm1j(iz)
-            ! Mirror terms (trapping)
-            Tnepp1j   = ynepp1j  (ip,ij) * nepp1j  (iz)
-            Tnepp1jm1 = ynepp1jm1(ip,ij) * nepp1jm1(iz)
-            Tnepm1j   = ynepm1j  (ip,ij) * nepm1j  (iz)
-            Tnepm1jm1 = ynepm1jm1(ip,ij) * nepm1jm1(iz)
-            ! Trapping terms
-            Unepm1j   = znepm1j  (ip,ij) * nepm1j  (iz)
-            Unepm1jp1 = znepm1jp1(ip,ij) * nepm1jp1(iz)
-            Unepm1jm1 = znepm1jm1(ip,ij) * nepm1jm1(iz)
+          ! ddz derivative for Landau damping term
+          Tpar = xnepp1j(ip) * ddznepp1j(iz) + xnepm1j(ip) * ddznepm1j(iz)
+          ! Mirror terms (trapping)
+          Tnepp1j   = ynepp1j  (ip,ij) * nepp1j  (iz)
+          Tnepp1jm1 = ynepp1jm1(ip,ij) * nepp1jm1(iz)
+          Tnepm1j   = ynepm1j  (ip,ij) * nepm1j  (iz)
+          Tnepm1jm1 = ynepm1jm1(ip,ij) * nepm1jm1(iz)
+          ! Trapping terms
+          Unepm1j   = znepm1j  (ip,ij) * nepm1j  (iz)
+          Unepm1jp1 = znepm1jp1(ip,ij) * nepm1jp1(iz)
+          Unepm1jm1 = znepm1jm1(ip,ij) * nepm1jm1(iz)
 
-            Tmir = Tnepp1j + Tnepp1jm1 + Tnepm1j + Tnepm1jm1 + Unepm1j + Unepm1jp1 + Unepm1jm1
-          ENDIF
+          Tmir = Tnepp1j + Tnepp1jm1 + Tnepm1j + Tnepm1jm1 + Unepm1j + Unepm1jp1 + Unepm1jm1
           !! Electrical potential term
           IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
-          Tphi = phi(ikx,iky,iz) * (xphij(ip,ij)*kernel_e(ij,ikx,iky,iz,eo) &
-                   + xphijp1(ip,ij)*kernel_e(ij+1,ikx,iky,iz,eo) &
-                   + xphijm1(ip,ij)*kernel_e(ij-1,ikx,iky,iz,eo) )
+            Tphi = (xphij  (ip,ij)*kernel_e(ij  ,ikx,iky,iz,eo) &
+                  + xphijp1(ip,ij)*kernel_e(ij+1,ikx,iky,iz,eo) &
+                  + xphijm1(ip,ij)*kernel_e(ij-1,ikx,iky,iz,eo))*phi(ikx,iky,iz)
           ELSE
             Tphi = 0._dp
           ENDIF
 
-          !! Sum of all linear terms (the sign is inverted to match RHS)
+          !! Sum of all RHS terms
           moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) = &
               ! Perpendicular magnetic gradient/curvature effects
               - imagu*Ckxky(ikx,iky,iz,eo)*hatR(iz,eo)* (Tnepj + Tnepp2j + Tnepm2j + Tnepjp1 + Tnepjm1)&
@@ -112,18 +116,14 @@ SUBROUTINE moments_eq_rhs_e
               - gradzB(iz,eo)* Tmir  *gradz_coeff(iz,eo) &
               ! Drives (density + temperature gradients)
               - i_ky * Tphi &
-              ! Electrostatic background gradients
-              - i_ky * K_E * moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
               ! Numerical perpendicular hyperdiffusion (totally artificial, for stability purpose)
               - (mu_x*kx**4 + mu_y*ky**4)*moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
-              ! Numerical parallel hyperdiffusion "- (mu_z*kz**4)"
-              - mu_z * ddz4Nepj(iz) &
+              ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"
+              + mu_z * diff_dz_coeff * ddz2Nepj(iz) &
               ! Collision term
-              + TColl_e(ip,ij,ikx,iky,iz)
-
-          !! Adding non linearity
-            moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) = &
-              moments_rhs_e(ip,ij,ikx,iky,iz,updatetlevel) - Sepj(ip,ij,ikx,iky,iz)
+              + TColl_e(ip,ij,ikx,iky,iz) &
+              ! Nonlinear term
+              - Sepj(ip,ij,ikx,iky,iz)
 
          END DO zloope
         END DO kyloope
@@ -152,7 +152,7 @@ SUBROUTINE moments_eq_rhs_i
   USE model
   USE prec_const
   USE collision
-  USE calculus, ONLY : interp_z, grad_z, grad_z4
+  USE calculus, ONLY : interp_z, grad_z, grad_z2
   IMPLICIT NONE
 
   INTEGER     :: p_int, j_int ! loops indices and polynom. degrees
@@ -164,7 +164,7 @@ SUBROUTINE moments_eq_rhs_i
   COMPLEX(dp) :: i_ky
   ! To store derivatives and odd-even z grid interpolations
   COMPLEX(dp), DIMENSION(izs:ize) :: ddznipp1j, ddznipm1j, &
-              nipp1j, nipp1jm1, nipm1j, nipm1jm1, nipm1jp1, ddz4Nipj
+              nipp1j, nipp1jm1, nipm1j, nipm1jm1, nipm1jp1, ddz2Nipj
   ! Measuring execution time
   CALL cpu_time(t0_rhs)
 
@@ -190,7 +190,7 @@ SUBROUTINE moments_eq_rhs_i
         CALL interp_z(eo,nadiab_moments_i(ip-1,ij+1,ikx,iky,izgs:izge), nipm1jp1(izs:ize))
         CALL interp_z(eo,nadiab_moments_i(ip-1,ij-1,ikx,iky,izgs:izge), nipm1jm1(izs:ize))
         ! for hyperdiffusion
-        CALL  grad_z4(moments_i(ip,ij,ikx,iky,:,updatetlevel),  ddz4Nipj(:))
+        CALL  grad_z2(moments_i(ip,ij,ikx,iky,izgs:izge,updatetlevel),  ddz2Nipj(:))
 
         zloopi : DO  iz = izs,ize
           kperp2= kparray(ikx,iky,iz,eo)**2
@@ -211,52 +211,48 @@ SUBROUTINE moments_eq_rhs_i
           ! Tperp
           Tperp = Tnipj + Tnipp2j + Tnipm2j + Tnipjp1 + Tnipjm1
           ! Parallel dynamic
-          IF(Nz .GT. 1) THEN
-            ! ddz derivative for Landau damping term
-            Tpar = xnipp1j(ip) * ddznipp1j(iz) + xnipm1j(ip) * ddznipm1j(iz)
-            ! Mirror terms
-            Tnipp1j   = ynipp1j  (ip,ij) * nipp1j  (iz)
-            Tnipp1jm1 = ynipp1jm1(ip,ij) * nipp1jm1(iz)
-            Tnipm1j   = ynipm1j  (ip,ij) * nipm1j  (iz)
-            Tnipm1jm1 = ynipm1jm1(ip,ij) * nipm1jm1(iz)
-            ! Trapping terms
-            Unipm1j   = znipm1j  (ip,ij) * nipm1j  (iz)
-            Unipm1jp1 = znipm1jp1(ip,ij) * nipm1jp1(iz)
-            Unipm1jm1 = znipm1jm1(ip,ij) * nipm1jm1(iz)
+          ! ddz derivative for Landau damping term
+          Tpar = xnipp1j(ip) * ddznipp1j(iz) + xnipm1j(ip) * ddznipm1j(iz)
+          ! Mirror terms
+          Tnipp1j   = ynipp1j  (ip,ij) * nipp1j  (iz)
+          Tnipp1jm1 = ynipp1jm1(ip,ij) * nipp1jm1(iz)
+          Tnipm1j   = ynipm1j  (ip,ij) * nipm1j  (iz)
+          Tnipm1jm1 = ynipm1jm1(ip,ij) * nipm1jm1(iz)
+          ! Trapping terms
+          Unipm1j   = znipm1j  (ip,ij) * nipm1j  (iz)
+          Unipm1jp1 = znipm1jp1(ip,ij) * nipm1jp1(iz)
+          Unipm1jm1 = znipm1jm1(ip,ij) * nipm1jm1(iz)
 
-            Tmir = Tnipp1j + Tnipp1jm1 + Tnipm1j + Tnipm1jm1 + Unipm1j + Unipm1jp1 + Unipm1jm1
-          ENDIF
+          Tmir = Tnipp1j + Tnipp1jm1 + Tnipm1j + Tnipm1jm1 + Unipm1j + Unipm1jp1 + Unipm1jm1
+
           !! Electrical potential term
           IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
-            Tphi = phi(ikx,iky,iz) * (xphij(ip,ij)*kernel_i(ij,ikx,iky,iz,eo) &
-                     + xphijp1(ip,ij)*kernel_i(ij+1,ikx,iky,iz,eo) &
-                     + xphijm1(ip,ij)*kernel_i(ij-1,ikx,iky,iz,eo) )
+            Tphi = (xphij  (ip,ij)*kernel_i(ij  ,ikx,iky,iz,eo) &
+                  + xphijp1(ip,ij)*kernel_i(ij+1,ikx,iky,iz,eo) &
+                  + xphijm1(ip,ij)*kernel_i(ij-1,ikx,iky,iz,eo))*phi(ikx,iky,iz)
           ELSE
             Tphi = 0._dp
           ENDIF
 
-          !! Sum of all linear terms (the sign is inverted to match RHS)
+          !! Sum of all RHS terms
           moments_rhs_i(ip,ij,ikx,iky,iz,updatetlevel) = &
               ! Perpendicular magnetic gradient/curvature effects
               - imagu*Ckxky(ikx,iky,iz,eo)*hatR(iz,eo) * Tperp &
-              ! Parallel coupling (Landau Damping)
+              ! Parallel coupling (Landau damping)
               - gradz_coeff(iz,eo) * Tpar &
               ! Mirror term (parallel magnetic gradient)
               - gradzB(iz,eo) * gradz_coeff(iz,eo) * Tmir &
               ! Drives (density + temperature gradients)
               - i_ky * Tphi &
-              ! Electrostatic background gradients
-              - i_ky * K_E * moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
               ! Numerical hyperdiffusion (totally artificial, for stability purpose)
               - (mu_x*kx**4 + mu_y*ky**4)*moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
-              ! Numerical parallel hyperdiffusion "- (mu_z*kz**4)"
-              - mu_z * ddz4Nipj(iz) &
+              ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"
+              + mu_z * diff_dz_coeff * ddz2Nipj(iz) &
               ! Collision term
-              + TColl_i(ip,ij,ikx,iky,iz)
+              + TColl_i(ip,ij,ikx,iky,iz)&
+              ! Nonlinear term
+              - Sipj(ip,ij,ikx,iky,iz)
 
-          !! Adding non linearity
-           moments_rhs_i(ip,ij,ikx,iky,iz,updatetlevel) = &
-             moments_rhs_i(ip,ij,ikx,iky,iz,updatetlevel) - Sipj(ip,ij,ikx,iky,iz)
           END DO zloopi
         END DO kyloopi
       END DO kxloopi

@@ -20,7 +20,7 @@ contains
     ! evalute metrix, elementwo_third_kpmaxts, jacobian and gradient
     implicit none
     REAL(dp) :: kx,ky
-    COMPLEX(dp), DIMENSION(izgs:izge) :: integrant
+    COMPLEX(dp), DIMENSION(izs:ize) :: integrant
     INTEGER :: fid
     !
     IF( (Ny .EQ. 1) .AND. (Nz .EQ. 1)) THEN !1D perp linear run
@@ -47,19 +47,19 @@ contains
        ENDDO
     ENDDO
     ENDDO
+
     two_third_kpmax = 2._dp/3._dp * MAXVAL(kparray)
     !
     ! Compute the inverse z integrated Jacobian (useful for flux averaging)
-    integrant = Jacobian(izgs:izge,0) ! Convert into complex array
+    integrant = Jacobian(izs:ize,0) ! Convert into complex array
     CALL simpson_rule_z(integrant,iInt_Jacobian)
     iInt_Jacobian = 1._dp/iInt_Jacobian ! reverse it
-
   END SUBROUTINE eval_magnetic_geometry
   !
   !--------------------------------------------------------------------------------
   !
 
-  subroutine eval_salphaB_geometry
+  SUBROUTINE eval_salphaB_geometry
   ! evaluate s-alpha geometry model
   implicit none
   REAL(dp) :: z, kx, ky, alpha_MHD

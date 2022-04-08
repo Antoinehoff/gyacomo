@@ -9,7 +9,7 @@ SUBROUTINE ppexit
 
 
   CALL finalize_plans
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-  CALL mpi_finalize(ierr)
+  CALL MPI_BARRIER(MPI_COMM_WORLD, ierr)
+  CALL MPI_FINALIZE(ierr)
 
 END SUBROUTINE ppexit

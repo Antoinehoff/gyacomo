@@ -4,7 +4,7 @@ MODULE utility
 
   use prec_const
   IMPLICIT NONE
-  PUBLIC :: manual_2D_bcast, manual_3D_bcast
+  PUBLIC :: manual_0D_bcast, manual_2D_bcast, manual_3D_bcast
 
 CONTAINS
 
@@ -150,5 +150,37 @@ SUBROUTINE manual_3D_bcast(field_)
     ENDIF
   ENDIF
 END SUBROUTINE manual_3D_bcast
+
+!!!!! This is a manual way to do MPI_BCAST !!!!!!!!!!!
+SUBROUTINE manual_0D_bcast(v)
+USE grid
+IMPLICIT NONE
+COMPLEX(dp), INTENT(INOUT) :: v
+COMPLEX(dp) :: buffer
+INTEGER     :: i_, root, world_rank, world_size, count
+root = 0;
+count = 1;
+
+CALL MPI_COMM_RANK(comm_z,world_rank,ierr)
+CALL MPI_COMM_SIZE(comm_z,world_size,ierr)
+IF (world_size .GT. 1) THEN
+  !! Broadcast phi to the other processes on the same k range (communicator along p)
+  IF (world_rank .EQ. root) THEN
+    ! Fill the buffer
+    buffer = v
+    ! Send it to all the other processes
+    DO i_ = 0,num_procs_z-1
+      IF (i_ .NE. world_rank) &
+      CALL MPI_SEND(buffer, count, MPI_DOUBLE_COMPLEX, i_, 0, comm_z, ierr)
+    ENDDO
+  ELSE
+    ! Recieve buffer from root
+    CALL MPI_RECV(buffer, count, MPI_DOUBLE_COMPLEX, root, 0, comm_z, MPI_STATUS_IGNORE, ierr)
+    ! Write it in phi
+    v = buffer
+  ENDIF
+ENDIF
+END SUBROUTINE manual_0D_bcast
+
 
 END MODULE utility

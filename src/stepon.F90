@@ -23,7 +23,7 @@ SUBROUTINE stepon
    !----- BEFORE: All fields are updated for step = n
       ! Compute right hand side from current fields
       ! N_rhs(N_n, nadia_n, phi_n, S_n, Tcoll_n)
-      CALL compute_RHS
+      CALL assemble_RHS
 
       ! ---- step n -> n+1 transition
       ! Advance from updatetlevel to updatetlevel+1 (according to num. scheme)
@@ -57,10 +57,10 @@ SUBROUTINE stepon
 
    CONTAINS
      !!!! Basic structure to simplify stepon
-     SUBROUTINE compute_RHS
-       USE moments_eq_rhs, ONLY: moments_eq_rhs_e,moments_eq_rhs_i
-       USE collision, ONLY: compute_TColl
-       USE nonlinear, ONLY: compute_Sapj
+     SUBROUTINE assemble_RHS
+       USE moments_eq_rhs, ONLY: compute_moments_eq_rhs
+       USE collision,      ONLY: compute_TColl
+       USE nonlinear,      ONLY: compute_Sapj
        IMPLICIT NONE
          ! compute auxiliary non adiabatic moments arrays
          CALL compute_nadiab_moments
@@ -68,11 +68,9 @@ SUBROUTINE stepon
          CALL compute_Sapj
          ! compute collision term ("if coll, if nu >0" is included inside)
          CALL compute_TColl
-         ! compute the moments equation rhs for electrons and ions
-         IF (KIN_E) &
-         CALL moments_eq_rhs_e
-         CALL moments_eq_rhs_i
-     END SUBROUTINE compute_RHS
+         ! compute the moments equation rhs
+         CALL compute_moments_eq_rhs
+     END SUBROUTINE assemble_RHS
 
       SUBROUTINE checkfield_all ! Check all the fields for inf or nan
         ! Execution time start
@@ -85,14 +83,14 @@ SUBROUTINE stepon
         IF(.NOT.nlend) THEN
            mlend=mlend .or. checkfield(phi,' phi')
            IF(KIN_E) THEN
-           DO ip=ips_e,ipe_e
-             DO ij=ijs_e,ije_e
+           DO ip=ipgs_e,ipge_e
+             DO ij=ijgs_e,ijge_e
               mlend=mlend .or. checkfield(moments_e(ip,ij,:,:,:,updatetlevel),' moments_e')
              ENDDO
            ENDDO
            ENDIF
-           DO ip=ips_i,ipe_i
-             DO ij=ijs_i,ije_i
+           DO ip=ipgs_i,ipge_i
+             DO ij=ijgs_i,ijge_i
               mlend=mlend .or. checkfield(moments_i(ip,ij,:,:,:,updatetlevel),' moments_i')
              ENDDO
            ENDDO
@@ -106,11 +104,11 @@ SUBROUTINE stepon
 
       SUBROUTINE anti_aliasing
         IF(KIN_E)THEN
-        DO ip=ips_e,ipe_e
-          DO ij=ijs_e,ije_e
+        DO ip=ipgs_e,ipge_e
+          DO ij=ijgs_e,ijge_e
             DO ikx=ikxs,ikxe
               DO iky=ikys,ikye
-                DO iz=izs,ize
+                DO iz=izgs,izge
                   moments_e( ip,ij,ikx,iky,iz,:) = AA_x(ikx)* AA_y(iky) * moments_e( ip,ij,ikx,iky,iz,:)
                 END DO
               END DO
@@ -118,11 +116,11 @@ SUBROUTINE stepon
           END DO
         END DO
         ENDIF
-        DO ip=ips_i,ipe_i
+        DO ip=ipgs_i,ipge_i
           DO ij=ijs_i,ije_i
             DO ikx=ikxs,ikxe
               DO iky=ikys,ikye
-                DO iz=izs,ize
+                DO iz=izgs,izge
                   moments_i( ip,ij,ikx,iky,iz,:) = AA_x(ikx)* AA_y(iky) * moments_i( ip,ij,ikx,iky,iz,:)
                 END DO
               END DO
@@ -135,8 +133,8 @@ SUBROUTINE stepon
         IF ( contains_kx0 ) THEN
           ! Electron moments
           IF(KIN_E) THEN
-          DO ip=ips_e,ipe_e
-            DO ij=ijs_e,ije_e
+          DO ip=ipgs_e,ipge_e
+            DO ij=ijgs_e,ijge_e
               DO iz=izs,ize
                 DO iky=2,Nky/2 !symmetry at kx = 0
                   moments_e( ip,ij,ikx_0,iky,iz, :) = CONJG(moments_e( ip,ij,ikx_0,Nky+2-iky,iz, :))
@@ -148,8 +146,8 @@ SUBROUTINE stepon
           END DO
           ENDIF
           ! Ion moments
-          DO ip=ips_i,ipe_i
-            DO ij=ijs_i,ije_i
+          DO ip=ipgs_i,ipge_i
+            DO ij=ijgs_i,ijge_i
               DO iz=izs,ize
                 DO iky=2,Nky/2 !symmetry at kx = 0
                   moments_i( ip,ij,ikx_0,iky,iz, :) = CONJG(moments_i( ip,ij,ikx_0,Nky+2-iky,iz, :))
@@ -161,10 +159,10 @@ SUBROUTINE stepon
           END DO
           ! Phi
           DO iky=2,Nky/2 !symmetry at kx = 0
-            phi(ikx_0,iky,:) = phi(ikx_0,Nky+2-iky,:)
+            phi(ikx_0,iky,izs:ize) = phi(ikx_0,Nky+2-iky,izs:ize)
           END DO
           ! must be real at origin
-          phi(ikx_0,iky_0,:) = REAL(phi(ikx_0,iky_0,:))
+          phi(ikx_0,iky_0,izs:ize) = REAL(phi(ikx_0,iky_0,izs:ize))
         ENDIF
       END SUBROUTINE enforce_symmetry
 

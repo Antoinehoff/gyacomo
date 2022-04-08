@@ -55,18 +55,19 @@ SUBROUTINE ppinit
   CALL MPI_CART_COORDS(comm0,rank_0,ndims,coords,ierr)
 
   !
-  !  Partitions 2-dim cartesian topology of comm0 into 1-dim cartesian subgrids
+  !  Partitions 3-dim cartesian topology of comm0 into 1-dim cartesian subgrids
   !
-  CALL MPI_CART_SUB (comm0, (/.TRUE.,.FALSE.,.FALSE./), comm_p, ierr)
+  CALL MPI_CART_SUB (comm0, (/.TRUE.,.FALSE.,.FALSE./),  comm_p, ierr)
   CALL MPI_CART_SUB (comm0, (/.FALSE.,.TRUE.,.FALSE./), comm_kx, ierr)
   CALL MPI_CART_SUB (comm0, (/.FALSE.,.FALSE.,.TRUE./),  comm_z, ierr)
-  ! Find id inside the sub communicators
+  ! Find id inside the 1d-sub communicators
   CALL MPI_COMM_RANK(comm_p,  rank_p,  ierr)
   CALL MPI_COMM_RANK(comm_kx, rank_kx, ierr)
   CALL MPI_COMM_RANK(comm_z,  rank_z,  ierr)
+
   ! Find neighbours
-  CALL MPI_CART_SHIFT(comm0, 0, 1, nbr_L, nbr_R, ierr)
-  CALL MPI_CART_SHIFT(comm0, 1, 1, nbr_B, nbr_T, ierr)
-  CALL MPI_CART_SHIFT(comm0, 2, 1, nbr_D, nbr_U, ierr)
+  CALL MPI_CART_SHIFT(comm0, 0, 1, nbr_L, nbr_R, ierr) !left   right neighbours
+  CALL MPI_CART_SHIFT(comm0, 1, 1, nbr_B, nbr_T, ierr) !bottom top   neighbours
+  CALL MPI_CART_SHIFT(comm0, 2, 1, nbr_D, nbr_U, ierr) !down   up    neighbours
 
 END SUBROUTINE ppinit

@@ -12,7 +12,10 @@ MODULE basic
   real(dp) :: time   = 0           ! Current simulation time (Init from restart file)
 
   INTEGER :: comm0                 ! Default communicator with a topology
-  INTEGER :: comm_p, comm_kx, comm_z! Communicators for 1-dim cartesian subgrids of comm0
+  INTEGER :: rank_0                ! Ranks in comm0
+  ! Communicators for 1-dim cartesian subgrids of comm0
+  INTEGER :: comm_p, comm_kx, comm_z
+  INTEGER :: rank_p, rank_kx, rank_z! Ranks
   INTEGER :: commr_p0              ! Communicators along kx for only rank 0 on p
 
   INTEGER :: jobnum  = 0           ! Job number
@@ -27,8 +30,6 @@ MODULE basic
   INTEGER :: num_procs_p           ! Number of processes in p
   INTEGER :: num_procs_kx          ! Number of processes in r
   INTEGER :: num_procs_z           ! Number of processes in z
-  INTEGER :: rank_0                ! Ranks in comm0
-  INTEGER :: rank_p, rank_kx, rank_z! Ranks in comm_p, comm_kx, comm_z
   INTEGER :: nbr_L, nbr_R          ! Left and right neighbours (along p)
   INTEGER :: nbr_T, nbr_B          ! Top and bottom neighbours (along kx)
   INTEGER :: nbr_U, nbr_D          ! Upstream and downstream neighbours (along z)

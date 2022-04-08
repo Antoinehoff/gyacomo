@@ -73,21 +73,21 @@ SUBROUTINE diagnose(kstep)
 
      ! Metric info
      CALL   creatg(fidres, "/data/metric", "Metric data")
-     CALL putarrnd(fidres, "/data/metric/gxx",            gxx(izs:ize,0:1), (/1, 1/))
-     CALL putarrnd(fidres, "/data/metric/gxy",            gxy(izs:ize,0:1), (/1, 1/))
-     CALL putarrnd(fidres, "/data/metric/gyy",            gyy(izs:ize,0:1), (/1, 1/))
-     CALL putarrnd(fidres, "/data/metric/gyz",            gyz(izs:ize,0:1), (/1, 1/))
-     CALL putarrnd(fidres, "/data/metric/gzz",            gzz(izs:ize,0:1), (/1, 1/))
-     CALL putarrnd(fidres, "/data/metric/hatR",          hatR(izs:ize,0:1), (/1, 1/))
-     CALL putarrnd(fidres, "/data/metric/hatZ",          hatZ(izs:ize,0:1), (/1, 1/))
-     CALL putarrnd(fidres, "/data/metric/hatB",          hatB(izs:ize,0:1), (/1, 1/))
-     CALL putarrnd(fidres, "/data/metric/gradxB",      gradxB(izs:ize,0:1), (/1, 1/))
-     CALL putarrnd(fidres, "/data/metric/gradyB",      gradyB(izs:ize,0:1), (/1, 1/))
-     CALL putarrnd(fidres, "/data/metric/gradzB",      gradzB(izs:ize,0:1), (/1, 1/))
-     CALL putarrnd(fidres, "/data/metric/Jacobian",    Jacobian(izs:ize,0:1), (/1, 1/))
-     CALL putarrnd(fidres, "/data/metric/gradz_coeff", gradz_coeff(izs:ize,0:1), (/1, 1/))
-     CALL putarrnd(fidres, "/data/metric/Ckxky",       Ckxky(ikxs:ikxe,ikys:ikye,izs:ize,0:1), (/1, 3/))
-     CALL putarrnd(fidres, "/data/metric/kernel_i",    kernel_i(ijs_i:ije_i,ikxs:ikxe,ikys:ikye,izs:ize,0:1), (/1, 3/))
+     CALL putarrnd(fidres, "/data/metric/gxx",            gxx(izs:ize,0:1), (/1, 1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gxy",            gxy(izs:ize,0:1), (/1, 1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gyy",            gyy(izs:ize,0:1), (/1, 1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gyz",            gyz(izs:ize,0:1), (/1, 1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gzz",            gzz(izs:ize,0:1), (/1, 1, 1/))
+     CALL putarrnd(fidres, "/data/metric/hatR",          hatR(izs:ize,0:1), (/1, 1, 1/))
+     CALL putarrnd(fidres, "/data/metric/hatZ",          hatZ(izs:ize,0:1), (/1, 1, 1/))
+     CALL putarrnd(fidres, "/data/metric/hatB",          hatB(izs:ize,0:1), (/1, 1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gradxB",      gradxB(izs:ize,0:1), (/1, 1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gradyB",      gradyB(izs:ize,0:1), (/1, 1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gradzB",      gradzB(izs:ize,0:1), (/1, 1, 1/))
+     CALL putarrnd(fidres, "/data/metric/Jacobian",    Jacobian(izs:ize,0:1), (/1, 1, 1/))
+     CALL putarrnd(fidres, "/data/metric/gradz_coeff", gradz_coeff(izs:ize,0:1), (/1, 1, 1/))
+     CALL putarrnd(fidres, "/data/metric/Ckxky",       Ckxky(ikxs:ikxe,ikys:ikye,izs:ize,0:1), (/1, 1, 3/))
+     CALL putarrnd(fidres, "/data/metric/kernel_i",    kernel_i(ijs_i:ije_i,ikxs:ikxe,ikys:ikye,izs:ize,0:1), (/ 1, 2, 4/))
 
      !  var0d group (gyro transport)
      IF (nsave_0d .GT. 0) THEN
@@ -311,12 +311,14 @@ SUBROUTINE diagnose(kstep)
      ! make a checkpoint at last timestep if not crashed
      IF(.NOT. crashed) THEN
        IF(my_id .EQ. 0) write(*,*) 'Saving last state'
+       IF (nsave_5d .GT. 0) &
        CALL diagnose_5d
      ENDIF
      ! Display computational time cost
      IF (my_id .EQ. 0) CALL display_h_min_s(finish-start)
 
      !   Close all diagnostic files
+     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
      CALL closef(fidres)
 
   END IF
@@ -510,7 +512,7 @@ CONTAINS
     IF (num_procs .EQ. 1) THEN ! no data distribution
       CALL putarr(fidres, dset_name, field(ikxs:ikxe, ikys:ikye, izs:ize), ionode=0)
     ELSE
-      CALL putarrnd(fidres, dset_name, field(ikxs:ikxe, ikys:ikye, izs:ize),  (/1, 3/))
+      CALL putarrnd(fidres, dset_name, field(ikxs:ikxe, ikys:ikye, izs:ize),  (/1, 1, 3/))
     ENDIF
     CALL attach(fidres, dset_name, "time", time)
 
@@ -593,7 +595,7 @@ SUBROUTINE diagnose_5d
       IF (num_procs .EQ. 1) THEN
         CALL putarr(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,ikys:ikye,izs:ize), ionode=0)
       ELSE
-        CALL putarrnd(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,ikys:ikye,izs:ize),  (/1,3/))
+        CALL putarrnd(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,ikys:ikye,izs:ize),  (/1,3,5/))
       ENDIF
      CALL attach(fidres, dset_name, 'cstep', cstep)
      CALL attach(fidres, dset_name, 'time', time)

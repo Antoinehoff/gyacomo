@@ -51,7 +51,7 @@ options.PLAN      = 'yz';
 % options.PLAN      = 'sx';
 options.COMP      = 1;
 % options.TIME      = dat.Ts5D;
-options.TIME      = 0:0.5:400;
+options.TIME      = 0:0.5:100;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
