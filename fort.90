@@ -1,0 +1,80 @@
+&BASIC
+  nrun   = 100000000
+  dt     = 0.01
+  tmax   = 200
+  maxruntime = 356400
+/
+&GRID
+  pmaxe  = 4
+  jmaxe  = 2
+  pmaxi  = 4
+  jmaxi  = 2
+  Nx     = 128
+  Lx     = 100
+  Ny     = 128
+  Ly     = 120
+  Nz     = 16
+  q0     = 1.4
+  shear  = 0
+  eps    = 0.18
+  SG     = .t.
+/
+&OUTPUT_PAR
+  nsave_0d = 200
+  nsave_1d = -1
+  nsave_2d = 200
+  nsave_3d = 200
+  nsave_5d = 2000
+  write_doubleprecision = .f.
+  write_gamma = .t.
+  write_hf    = .t.
+  write_phi   = .t.
+  write_Na00  = .t.
+  write_Napj  = .t.
+  write_Sapj  = .f.
+  write_dens  = .t.
+  write_temp  = .t.
+  job2load    = -1
+/
+&MODEL_PAR
+  ! Collisionality
+  CLOS    = 0
+  NL_CLOS = 0
+  LINEARITY = 'nonlinear'
+  KIN_E   = .f.
+  mu_x    = 0.0
+  mu_y    = 0.0
+  mu_z    = 0.2
+  mu_p    = 0
+  mu_j    = 0
+  nu      = 0.01
+  tau_e   = 1
+  tau_i   = 1
+  sigma_e = 0.023338
+  sigma_i = 1
+  q_e     = -1
+  q_i     = 1
+  K_n     = 2.22
+  K_T     = 6.96
+  K_E     = 0
+  GradB     = 1
+  CurvB     = 1
+  lambdaD = 0
+/
+&COLLISION_PAR
+  collision_model = 'DG'
+  gyrokin_CO      = .true.
+  interspecies    = .true.
+!  mat_file        = '../../../iCa/gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
+  mat_file        = '../../../iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5'
+/
+&INITIAL_CON
+  INIT_OPT    = 'ppj'
+  ACT_ON_MODES       = 'donothing'
+  init_background  = 0
+  init_noiselvl = 0.00005
+  iseed         = 42
+/
+&TIME_INTEGRATION_PAR
+  numerical_scheme = 'RK4'
+/

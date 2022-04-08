@@ -46,7 +46,8 @@ MODULE array
   REAL(dp), DIMENSION(:),   ALLOCATABLE :: xnipp1j, xnipm1j, xnipp2j, xnipm2j, xnipjp1, xnipjm1
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: ynipp1j, ynipm1j,   ynipp1jm1, ynipm1jm1 ! mirror lin coeff for non adiab mom
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: zNipm1j, zNipm1jp1, zNipm1jm1            ! mirror lin coeff for adiab mom
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xphij, xphijp1, xphijm1
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xphij_e, xphijp1_e, xphijm1_e
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xphij_i, xphijp1_i, xphijm1_i
   ! Geometrical operators
   ! Curvature
   REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z, odd/even p

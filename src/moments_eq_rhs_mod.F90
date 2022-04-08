@@ -99,9 +99,9 @@ SUBROUTINE moments_eq_rhs_e
           Tmir = Tnepp1j + Tnepp1jm1 + Tnepm1j + Tnepm1jm1 + Unepm1j + Unepm1jp1 + Unepm1jm1
           !! Electrical potential term
           IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
-            Tphi = (xphij  (ip,ij)*kernel_e(ij  ,ikx,iky,iz,eo) &
-                  + xphijp1(ip,ij)*kernel_e(ij+1,ikx,iky,iz,eo) &
-                  + xphijm1(ip,ij)*kernel_e(ij-1,ikx,iky,iz,eo))*phi(ikx,iky,iz)
+            Tphi = (xphij_i  (ip,ij)*kernel_e(ij  ,ikx,iky,iz,eo) &
+                  + xphijp1_i(ip,ij)*kernel_e(ij+1,ikx,iky,iz,eo) &
+                  + xphijm1_i(ip,ij)*kernel_e(ij-1,ikx,iky,iz,eo))*phi(ikx,iky,iz)
           ELSE
             Tphi = 0._dp
           ENDIF
@@ -227,9 +227,9 @@ SUBROUTINE moments_eq_rhs_i
 
           !! Electrical potential term
           IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
-            Tphi = (xphij  (ip,ij)*kernel_i(ij  ,ikx,iky,iz,eo) &
-                  + xphijp1(ip,ij)*kernel_i(ij+1,ikx,iky,iz,eo) &
-                  + xphijm1(ip,ij)*kernel_i(ij-1,ikx,iky,iz,eo))*phi(ikx,iky,iz)
+            Tphi = (xphij_i  (ip,ij)*kernel_i(ij  ,ikx,iky,iz,eo) &
+                  + xphijp1_i(ip,ij)*kernel_i(ij+1,ikx,iky,iz,eo) &
+                  + xphijm1_i(ip,ij)*kernel_i(ij-1,ikx,iky,iz,eo))*phi(ikx,iky,iz)
           ELSE
             Tphi = 0._dp
           ENDIF

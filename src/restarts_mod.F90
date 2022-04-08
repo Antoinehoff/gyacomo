@@ -72,10 +72,10 @@ CONTAINS
           ! Read state of system from checkpoint file
           IF (KIN_E) THEN
           WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
-          CALL getarrnd(fidrst, dset_name, moments_e(ips_e:ipe_e, ijs_e:ije_e, ikxs:ikxe, ikys:ikye, izs:ize, 1),(/1,3/))
+          CALL getarrnd(fidrst, dset_name, moments_e(ips_e:ipe_e, ijs_e:ije_e, ikxs:ikxe, ikys:ikye, izs:ize, 1),(/1,3,5/))
           ENDIF
           WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_i", n_
-          CALL getarrnd(fidrst, dset_name, moments_i(ips_i:ipe_i, ijs_i:ije_i, ikxs:ikxe, ikys:ikye, izs:ize, 1),(/1,3/))
+          CALL getarrnd(fidrst, dset_name, moments_i(ips_i:ipe_i, ijs_i:ije_i, ikxs:ikxe, ikys:ikye, izs:ize, 1),(/1,3,5/))
 
           CALL closef(fidrst)
 

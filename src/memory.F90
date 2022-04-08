@@ -86,9 +86,14 @@ SUBROUTINE memory
   CALL allocate_array( dnjs, 1,maxj+1, 1,maxj+1, 1,maxj+1)
 
   ! elect. pot. linear terms
-  CALL allocate_array( xphij,   ips_i,ipe_i, ijs_i,ije_i)
-  CALL allocate_array( xphijp1, ips_i,ipe_i, ijs_i,ije_i)
-  CALL allocate_array( xphijm1, ips_i,ipe_i, ijs_i,ije_i)
+  IF (KIN_E) THEN
+    CALL allocate_array( xphij_e,   ips_e,ipe_e, ijs_e,ije_e)
+    CALL allocate_array( xphijp1_e, ips_e,ipe_e, ijs_e,ije_e)
+    CALL allocate_array( xphijm1_e, ips_e,ipe_e, ijs_e,ije_e)
+  ENDIF
+  CALL allocate_array( xphij_i,   ips_i,ipe_i, ijs_i,ije_i)
+  CALL allocate_array( xphijp1_i, ips_i,ipe_i, ijs_i,ije_i)
+  CALL allocate_array( xphijm1_i, ips_i,ipe_i, ijs_i,ije_i)
 
   ! Curvature and geometry
   CALL allocate_array( Ckxky,   ikxs,ikxe, ikys,ikye,izgs,izge,0,1)

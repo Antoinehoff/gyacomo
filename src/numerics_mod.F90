@@ -227,6 +227,27 @@ SUBROUTINE compute_lin_coeff
   ENDDO
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !! ES linear coefficients for moment RHS !!!!!!!!!!
+  IF (KIN_E) THEN
+    DO ip = ips_e, ipe_e
+      p_int= parray_e(ip)   ! Hermite degree
+      DO ij = ijs_e, ije_e
+        j_int= jarray_e(ij)   ! REALof Laguerre degree
+        j_dp = REAL(j_int,dp) ! REALof Laguerre degree
+        !! Electrostatic potential pj terms
+        IF (p_int .EQ. 0) THEN ! kronecker p0
+          xphij_e(ip,ij)    =+K_n + 2.*j_dp*K_T
+          xphijp1_e(ip,ij)  =-K_T*(j_dp+1._dp)
+          xphijm1_e(ip,ij)  =-K_T* j_dp
+        ELSE IF (p_int .EQ. 2) THEN ! kronecker p2
+          xphij_e(ip,ij)    =+K_T/SQRT2
+          xphijp1_e(ip,ij)  = 0._dp; xphijm1_e(ip,ij)  = 0._dp;
+        ELSE
+          xphij_e(ip,ij)    = 0._dp; xphijp1_e(ip,ij)  = 0._dp
+          xphijm1_e(ip,ij)  = 0._dp;
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDIF
   DO ip = ips_i, ipe_i
     p_int= parray_i(ip)   ! Hermite degree
     DO ij = ijs_i, ije_i
@@ -234,19 +255,18 @@ SUBROUTINE compute_lin_coeff
       j_dp = REAL(j_int,dp) ! REALof Laguerre degree
       !! Electrostatic potential pj terms
       IF (p_int .EQ. 0) THEN ! kronecker p0
-        xphij(ip,ij)    =+K_n + 2.*j_dp*K_T
-        xphijp1(ip,ij)  =-K_T*(j_dp+1._dp)
-        xphijm1(ip,ij)  =-K_T* j_dp
+        xphij_i(ip,ij)    =+K_n + 2.*j_dp*K_T
+        xphijp1_i(ip,ij)  =-K_T*(j_dp+1._dp)
+        xphijm1_i(ip,ij)  =-K_T* j_dp
       ELSE IF (p_int .EQ. 2) THEN ! kronecker p2
-        xphij(ip,ij)    =+K_T/SQRT2
-        xphijp1(ip,ij)  = 0._dp; xphijm1(ip,ij)  = 0._dp;
+        xphij_i(ip,ij)    =+K_T/SQRT2
+        xphijp1_i(ip,ij)  = 0._dp; xphijm1_i(ip,ij)  = 0._dp;
       ELSE
-        xphij(ip,ij)    = 0._dp; xphijp1(ip,ij)  = 0._dp
-        xphijm1(ip,ij)  = 0._dp;
+        xphij_i(ip,ij)    = 0._dp; xphijp1_i(ip,ij)  = 0._dp
+        xphijm1_i(ip,ij)  = 0._dp;
       ENDIF
     ENDDO
   ENDDO
-
 END SUBROUTINE compute_lin_coeff
 
 !******************************************************************************!

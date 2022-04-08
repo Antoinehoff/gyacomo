@@ -34,7 +34,7 @@ iCa/
 *.out
 src/srcinfo.h
 src/srcinfo/srcinfo.h
-fort*.90
+*/fort*.90
 local/
-*.sh
+*/*.sh
 Gallery/
