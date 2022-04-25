@@ -13,6 +13,7 @@ SUBROUTINE diagnose(kstep)
   USE utility
   USE prec_const
   USE collision, ONLY: coll_outputinputs
+  USE geometry
   IMPLICIT NONE
 
   INCLUDE 'srcinfo.h'
@@ -227,15 +228,11 @@ SUBROUTINE diagnose(kstep)
      CALL attach(fidres, TRIM(str),  "write_temp",  write_temp)
 
      CALL grid_outputinputs(fidres, str)
-
+     CALL geometry_outputinputs(fidres, str)
      CALL diag_par_outputinputs(fidres, str)
-
      CALL model_outputinputs(fidres, str)
-
      CALL coll_outputinputs(fidres, str)
-
      CALL initial_outputinputs(fidres, str)
-
      CALL time_integration_outputinputs(fidres, str)
 
 

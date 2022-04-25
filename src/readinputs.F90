@@ -7,6 +7,7 @@ SUBROUTINE readinputs
   USE model,            ONLY: model_readinputs
   USE initial_par,      ONLY: initial_readinputs
   USE time_integration, ONLY: time_integration_readinputs
+  USE geometry,         ONLY: geometry_readinputs
 
   USE prec_const
   IMPLICIT NONE
@@ -17,6 +18,9 @@ SUBROUTINE readinputs
 
   ! Load grid data from input file
   CALL grid_readinputs
+
+  ! Load geometry parameters
+  CALL geometry_readinputs
 
   ! Load diagnostic options from input file
   CALL diag_par_readinputs

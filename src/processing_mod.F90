@@ -5,6 +5,7 @@ MODULE processing
     USE grid
     USE geometry
     USE utility
+    USE calculus
     implicit none
 
     REAL(dp), PUBLIC, PROTECTED :: pflux_ri, gflux_ri
@@ -19,7 +20,8 @@ CONTAINS
 ! 1D diagnostic to compute the average radial particle transport <n_i v_ExB>_r
 SUBROUTINE compute_radial_ion_transport
     USE fields,           ONLY : moments_i, phi
-    USE array,            ONLY : kernel_i, Jacobian
+    USE array,            ONLY : kernel_i
+    USE geometry,         ONLY : Jacobian
     USE time_integration, ONLY : updatetlevel
     IMPLICIT NONE
     COMPLEX(dp) :: pflux_local, gflux_local, integral
@@ -92,7 +94,8 @@ END SUBROUTINE compute_radial_ion_transport
 ! 1D diagnostic to compute the average radial particle transport <n_i v_ExB>_r
 SUBROUTINE compute_radial_heatflux
     USE fields,           ONLY : moments_i, moments_e, phi
-    USE array,            ONLY : kernel_e, kernel_i, Jacobian
+    USE array,            ONLY : kernel_e, kernel_i
+    USE geometry,         ONLY : Jacobian
     USE time_integration, ONLY : updatetlevel
     USE model, ONLY : qe_taue, qi_taui, KIN_E
     IMPLICIT NONE
@@ -404,7 +407,7 @@ END SUBROUTINE compute_Tpar
 
 ! Compute the 2D particle fluid moments for electron and ions (sum over Laguerre)
 SUBROUTINE compute_fluid_moments
-  USE array, ONLY : dens_e, Tpar_e, Tper_e, dens_i, Tpar_i, Tper_i
+  USE array, ONLY : dens_e, Tpar_e, Tper_e, dens_i, Tpar_i, Tper_i, temp_e, temp_i
   USE model, ONLY : KIN_E
   IMPLICIT NONE
   CALL compute_density

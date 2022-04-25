@@ -21,9 +21,6 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED :: Nz    = 1      ! Number of total perpendicular planes
   REAL(dp), PUBLIC, PROTECTED :: Npol  = 1._dp  ! number of poloidal turns
   INTEGER,  PUBLIC, PROTECTED :: Odz   = 4      ! order of z interp and derivative schemes
-  REAL(dp), PUBLIC, PROTECTED :: q0    = 1._dp  ! safety factor
-  REAL(dp), PUBLIC, PROTECTED :: shear = 0._dp  ! magnetic field shear
-  REAL(dp), PUBLIC, PROTECTED :: eps   = 0._dp ! inverse aspect ratio
   INTEGER,  PUBLIC, PROTECTED :: Nkx   = 8      ! Number of total internal grid points in kx
   REAL(dp), PUBLIC, PROTECTED :: Lkx   = 1._dp  ! horizontal length of the fourier box
   INTEGER,  PUBLIC, PROTECTED :: Nky   = 16     ! Number of total internal grid points in ky
@@ -120,7 +117,7 @@ CONTAINS
     INTEGER :: lu_in   = 90              ! File duplicated from STDIN
 
     NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, &
-                    Nx,  Lx,  Ny,  Ly, Nz, Npol, q0, shear, eps, SG
+                    Nx,  Lx,  Ny,  Ly, Nz, Npol, SG
     READ(lu_in,grid)
 
     !! Compute the maximal degree of full GF moments set
@@ -136,6 +133,7 @@ CONTAINS
     IF(Nz .EQ. 1) THEN
       deltape = 2; deltapi = 2;
       pp2     = 1; ! index p+2 is ip+1
+      SG      = .FALSE.
     ELSE
       deltape = 1; deltapi = 1;
       pp2     = 2; ! index p+2 is ip+1
@@ -336,13 +334,13 @@ CONTAINS
     INTEGER :: i_, counter
 
     Nky = Ny;
-    ALLOCATE(kyarray_full(1:Nky))
     ! Local data
     ! Start and END indices of grid
     ikys = 1
     ikye = Nky
     local_nky = ikye - ikys + 1
     ALLOCATE(kyarray(ikys:ikye))
+    ALLOCATE(kyarray_full(1:Nky))
     IF (Ny .EQ. 1) THEN ! "cancel" y dimension
       deltaky         = 1._dp
       kyarray(1)      = 0._dp
@@ -360,7 +358,12 @@ CONTAINS
       ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
       local_kymax = 0._dp
       DO iky = ikys,ikye
-        kyarray(iky) = deltaky*(MODULO(iky-1,Nky/2)-Nky/2*FLOOR(2.*real(iky-1)/real(Nky)))
+        SELECT CASE (LINEARITY)
+          CASE ('linear') ! only positive freq for linear runs dk*(0 1 2 3 4 5)
+            kyarray(iky) = deltaky*REAL(iky-1,dp)
+          CASE DEFAULT !
+            kyarray(iky) = deltaky*(MODULO(iky-1,Nky/2)-Nky/2*FLOOR(2.*real(iky-1)/real(Nky)))
+        END SELECT
         if (iky .EQ. Ny/2+1)     kyarray(iky) = -kyarray(iky)
         ! Finding ky=0
         IF (kyarray(iky) .EQ. 0) THEN
@@ -376,9 +379,14 @@ CONTAINS
       END DO
       ! Build the full grids on process 0 to diagnose it without comm
       ! ky
-      DO iky = ikys,ikye
-        kyarray_full(iky) = deltaky*(MODULO(iky-1,Nky/2)-Nky/2*FLOOR(2.*real(iky-1)/real(Nky)))
-        IF (iky .EQ. Ny/2+1) kyarray_full(iky) = -kyarray_full(iky)
+      DO iky = 1,Nky
+        SELECT CASE (LINEARITY)
+          CASE ('linear') ! only positive freq for linear runs dk*(0 1 2 3 4 5)
+            kyarray_full(iky) = deltaky*REAL(iky-1,dp)
+          CASE DEFAULT !
+            kyarray_full(iky) = deltaky*(MODULO(iky-1,Nky/2)-Nky/2*FLOOR(2.*real(iky-1)/real(Nky)))
+            IF (iky .EQ. Ny/2+1) kyarray_full(iky) = -kyarray_full(iky)
+        END SELECT
       END DO
     ENDIF
     ! Orszag 2/3 filter
@@ -491,9 +499,6 @@ CONTAINS
     CALL attach(fidres, TRIM(str),   "Ny",   Ny)
     CALL attach(fidres, TRIM(str),   "Ly",   Ly)
     CALL attach(fidres, TRIM(str),   "Nz",   Nz)
-    CALL attach(fidres, TRIM(str),   "q0",   q0)
-    CALL attach(fidres, TRIM(str),"shear",shear)
-    CALL attach(fidres, TRIM(str),  "eps",  eps)
     CALL attach(fidres, TRIM(str),  "Nkx",  Nkx)
     CALL attach(fidres, TRIM(str),  "Lkx",  Lkx)
     CALL attach(fidres, TRIM(str),  "Nky",  Nky)

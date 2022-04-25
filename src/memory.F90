@@ -95,29 +95,6 @@ SUBROUTINE memory
   CALL allocate_array( xphijp1_i, ips_i,ipe_i, ijs_i,ije_i)
   CALL allocate_array( xphijm1_i, ips_i,ipe_i, ijs_i,ije_i)
 
-  ! Curvature and geometry
-  CALL allocate_array( Ckxky,   ikxs,ikxe, ikys,ikye,izgs,izge,0,1)
-  CALL allocate_array( kparray, ikxs,ikxe, ikys,ikye,izgs,izge,0,1)
-  CALL allocate_array(   Jacobian,izgs,izge, 0,1)
-  CALL allocate_array(        gxx,izgs,izge, 0,1)
-  CALL allocate_array(        gxy,izgs,izge, 0,1)
-  CALL allocate_array(        gxz,izgs,izge, 0,1)
-  CALL allocate_array(        gyy,izgs,izge, 0,1)
-  CALL allocate_array(        gyz,izgs,izge, 0,1)
-  CALL allocate_array(        gzz,izgs,izge, 0,1)
-  CALL allocate_array(     gradxB,izgs,izge, 0,1)
-  CALL allocate_array(     gradyB,izgs,izge, 0,1)
-  CALL allocate_array(     gradzB,izgs,izge, 0,1)
-  CALL allocate_array(       hatB,izgs,izge, 0,1)
-  CALL allocate_array(       hatR,izgs,izge, 0,1)
-  CALL allocate_array(       hatZ,izgs,izge, 0,1)
-  CALL allocate_array(         Rc,izgs,izge, 0,1)
-  CALL allocate_array(       phic,izgs,izge, 0,1)
-  CALL allocate_array(         Zc,izgs,izge, 0,1)
-  CALL allocate_array(       dxdR,izgs,izge, 0,1)
-  CALL allocate_array(       dxdZ,izgs,izge, 0,1)
-  call allocate_array(gradz_coeff,izgs,izge, 0,1)
-
   !___________________ 2x5D ARRAYS __________________________
   !! Collision matrices
   IF (gyrokin_CO) THEN !GK collision matrices (one for each kperp)

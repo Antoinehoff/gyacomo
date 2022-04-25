@@ -48,22 +48,7 @@ MODULE array
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: zNipm1j, zNipm1jp1, zNipm1jm1            ! mirror lin coeff for adiab mom
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xphij_e, xphijp1_e, xphijm1_e
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xphij_i, xphijp1_i, xphijm1_i
-  ! Geometrical operators
-  ! Curvature
-  REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z, odd/even p
-  ! Jacobian
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: Jacobian ! dimensions: z, odd/even p
-  ! Metric
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: gxx, gxy, gxz, gyy, gyz, gzz ! dimensions: z, odd/even p
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: dxdr, dxdZ, Rc, phic, Zc
-  ! derivatives of magnetic field strength
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: gradxB, gradyB, gradzB
-  ! Relative magnetic field strength
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: hatB
-  ! Relative strength of major radius
-  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: hatR, hatZ
-  ! Some geometrical coefficients
-  REAL(dp), DIMENSION(:,:) , ALLOCATABLE :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
+  
   ! Kernel function evaluation (ij,ikx,iky,iz,odd/even p)
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: kernel_e
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: kernel_i

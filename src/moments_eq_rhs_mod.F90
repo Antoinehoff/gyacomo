@@ -152,6 +152,7 @@ SUBROUTINE moments_eq_rhs_i
   USE model
   USE prec_const
   USE collision
+  USE geometry
   USE calculus, ONLY : interp_z, grad_z, grad_z2
   IMPLICIT NONE
 
