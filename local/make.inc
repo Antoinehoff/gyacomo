@@ -68,14 +68,24 @@ endif
 # Add Multiple-Precision Library
 LIBS += -lfm
 
-
+# Add FFTW3 local lib
 ifdef FFTW3DIR
       LIBS  += -lfftw3 -lfftw3_mpi
       LDIRS += -L$(FFTW3DIR)/lib
       IDIRS += -I$(FFTW3DIR)/include
 endif
 
+# Add lapack local lib
+ifdef LAPACKDIR
+      LIBS += -llapack -lblas
+      LDIRS += -L$(LAPACKDIR)/lib
+endif
 
+# FM library 
+ifdef FMDIR
+      LDIRS += -L$(FMDIR)/lib
+      IDIRS += -I$(FMDIR)/mod
+endif
 ################################################################
 #
 # Section V: Set up inclusion of modules and libraries during

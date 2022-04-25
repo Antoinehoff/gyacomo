@@ -5,13 +5,16 @@ EXEC = $(BINDIR)/helaz3
 EDBG = $(BINDIR)/helaz3_dbg
 
 F90 = mpiifort
-#F90 = ftn #for piz-daint cluster
-# Add Multiple-Precision Library
-EXTLIBS += -L$(FMDIR)/lib
-EXTINC += -I$(FMDIR)/mod
-
-EXTLIBS += -L$(FFTWDIR)/lib
-EXTINC += -I$(FFTWDIR)/include
+# #F90 = ftn #for piz-daint cluster
+# # Add Multiple-Precision Library
+# EXTLIBS += -L$(FMDIR)/lib
+# EXTINC += -I$(FMDIR)/mod
+# # Add local fftw dir
+# EXTLIBS += -L$(FFTWDIR)/lib
+# EXTINC += -I$(FFTWDIR)/include
+# # Add lapack
+# EXTLIBS += -L$(LAPACKDIR)/lib
+# EXTINC += -I$(LAPACKDIR)/mod
 
 all: dirs src/srcinfo.h
 all: F90FLAGS = -O3 -xHOST
