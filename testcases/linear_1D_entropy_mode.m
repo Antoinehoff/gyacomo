@@ -6,9 +6,9 @@ default_plots_options
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;   % Collision frequency
+NU      = 0.01;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-K_N     = 1.6;   % Density gradient drive
+K_N     = 2.0;   % Density gradient drive
 K_T     = 0.25*K_N;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
@@ -18,12 +18,14 @@ NY      = 1;     %     ''     y-gridpoints
 LX      = 120;     % Size of the squared frequency domain
 LY      = 1;     % Size of the squared frequency domain
 NZ      = 1;      % number of perpendicular planes (parallel grid)
+SG      = 1;         % Staggered z grids option
+%% GEOMETRY
+GEOMETRY= 'Z-pinch';
 Q0      = 1.0;    % safety factor
 SHEAR   = 0.0;    % magnetic shear
 EPS     = 0.0;    % inverse aspect ratio
-SG      = 1;         % Staggered z grids option
 %% TIME PARMETERS
-TMAX    = 200;  % Maximal time unit
+TMAX    = 100;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
@@ -37,7 +39,7 @@ LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 KIN_E   = 1;
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-CO      = 'LD';
+CO      = 'DG';
 GKCO    = 0; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
@@ -99,7 +101,7 @@ for i = 1:Nparam
     system(['rm fort*.90']);
     % Run linear simulation
     if RUN
-        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz3 1 6 0; cd ../../../wk'])
+        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ./../../../bin/helaz3 1 1 1 0; cd ../../../wk'])
 % disp([param_name,'=',num2str(K_N)]);
 % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz3 1 6 0 > out.txt; cd ../../../wk']);
 %         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ./../../../bin/helaz 1 2 0; cd ../../../wk'])

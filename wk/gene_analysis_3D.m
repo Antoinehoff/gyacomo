@@ -1,7 +1,9 @@
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_0.8/';
 % folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.0/';
-folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.8/';
+% folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.8/';
+folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
+% folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_0.8/';
 % folder = '/misc/gene_results/HP_fig_2b_mu_5e-2/';
 % folder = '/misc/gene_results/HP_fig_2c_mu_5e-2/';
 gene_data = load_gene_data(folder);
@@ -20,20 +22,20 @@ end
 if 0
 %% 2D snapshots
 % Options
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
 options.NAME      = '\phi';
-% options.NAME      = 'v_y';
+% options.NAME      = 'n_i';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'xz';
 % options.NAME      ='f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 9;
-options.TIME      = [100 200 400];
-data.a = data.EPS * 2000;
+options.COMP      = 'avg';
+options.TIME      = [100 300 900];
+gene_data.a = data.EPS * 2000;
 fig = photomaton(gene_data,options);
 save_figure(gene_data,fig)
 end

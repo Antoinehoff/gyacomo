@@ -10,10 +10,12 @@ GRID.Lx    = LX; % x length
 GRID.Ny    = NY; % y ''
 GRID.Ly    = LY; % y ''
 GRID.Nz    = NZ;    % z resolution
-GRID.q0    = Q0;    % q factor
-GRID.shear = SHEAR; % shear
-GRID.eps   = EPS;   % inverse aspect ratio
 if SG; GRID.SG = '.true.'; else; GRID.SG = '.false.';end;
+% Geometry
+GEOM.geom  = ['''',GEOMETRY,''''];
+GEOM.q0    = Q0;    % q factor
+GEOM.shear = SHEAR; % shear
+GEOM.eps   = EPS;   % inverse aspect ratio
 % Model parameters
 MODEL.CLOS    = CLOS;
 MODEL.NL_CLOS = NL_CLOS;
@@ -159,7 +161,7 @@ if ~exist(BASIC.MISCDIR, 'dir')
 mkdir(BASIC.MISCDIR)
 end
 %% Compile and WRITE input file
-INPUT = write_fort90(OUTPUTS,GRID,MODEL,COLL,INITIAL,TIME_INTEGRATION,BASIC);
+INPUT = write_fort90(OUTPUTS,GRID,GEOM,MODEL,COLL,INITIAL,TIME_INTEGRATION,BASIC);
 nproc = 1;
 MAKE  = 'cd ..; make; cd wk';
 % system(MAKE);

@@ -238,7 +238,7 @@ Nz = numel(z);
 KPERP2 = KY.^2+KX.^2;
 %% Add everything in output structure
 % scaling
-DATA.scale = -(1/Nx/Ny)^2;
+DATA.scale = (1/Nx/Ny)^2;
 % Fields
 DATA.GGAMMA_RI = GGAMMA_; DATA.PGAMMA_RI = PGAMMA_; DATA.HFLUX_X = HFLUX_;
 DATA.Nipj = Nipj_; DATA.Ni00 = Ni00_; DATA.DENS_I = DENS_I_; DATA.TEMP_I = TEMP_I_;

@@ -1,4 +1,4 @@
-function [INPUT] = write_fort90(OUTPUTS,GRID,MODEL,COLL,INITIAL,TIME_INTEGRATION,BASIC)
+function [INPUT] = write_fort90(OUTPUTS,GRID,GEOM,MODEL,COLL,INITIAL,TIME_INTEGRATION,BASIC)
 % Write the input script "fort.90" with desired parameters
 INPUT = ['fort_',sprintf('%2.2d',OUTPUTS.job2load+1),'.90'];
 fid = fopen(INPUT,'wt');
@@ -20,10 +20,14 @@ fprintf(fid,['  Lx     = ', num2str(GRID.Lx),'\n']);
 fprintf(fid,['  Ny     = ', num2str(GRID.Ny),'\n']);
 fprintf(fid,['  Ly     = ', num2str(GRID.Ly),'\n']);
 fprintf(fid,['  Nz     = ', num2str(GRID.Nz),'\n']);
-fprintf(fid,['  q0     = ', num2str(GRID.q0),'\n']);
-fprintf(fid,['  shear  = ', num2str(GRID.shear),'\n']);
-fprintf(fid,['  eps    = ', num2str(GRID.eps),'\n']);
 fprintf(fid,['  SG     = ',           GRID.SG,'\n']);
+fprintf(fid,'/\n');
+
+fprintf(fid,'&GEOMETRY\n');
+fprintf(fid,['  geom   = ', GEOM.geom,'\n']);
+fprintf(fid,['  q0     = ', num2str(GEOM.q0),'\n']);
+fprintf(fid,['  shear  = ', num2str(GEOM.shear),'\n']);
+fprintf(fid,['  eps    = ', num2str(GEOM.eps),'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&OUTPUT_PAR\n');

@@ -31,22 +31,27 @@ switch options.NAME
     yname = 'n_e';
 end
 
-switch options.COMPXY
+switch options.COMPX
     case 'avg'
         compx  = @(x) mean(x,1);
-        compy  = @(x) mean(x,2);
         ynamex = ['$\langle ',yname,'\rangle_x$'];
-        ynamey = ['$\langle ',yname,'\rangle_y$'];
     otherwise
         compx  = @(x) x(1,:);
+        ynamex = ['$',yname,'(y,x=0)$'];
+end
+    
+switch options.COMPY
+    case 'avg'
+        compy  = @(x) mean(x,2);
+        ynamey = ['$\langle ',yname,'\rangle_y$'];
+    otherwise
         compy  = @(x) x(:,1);
-        ynamex = ['$',yname,'(x=0)$'];
-        ynamey = ['$',yname,'(y=0)$'];
+        ynamey = ['$',yname,'(x,y=0)$'];
 end
     
 
-set(gcf, 'Position',  [20 50 5000 2000])
-subplot(1,2,1)
+set(gcf, 'Position',  [20 50 1000 500])
+subplot(1,3,1)
 
     X     = data.x;
     xname = '$x$';
@@ -76,7 +81,7 @@ subplot(1,2,1)
     xlabel(xname); ylabel(ynamey)
     xlim([min(X),max(X)]);
     
-subplot(1,2,2)
+subplot(1,3,2)
 
     X     = data.y;
     xname = '$y$';
@@ -107,6 +112,59 @@ subplot(1,2,2)
 %     title('HeLaZ $k_y$ transport spectrum'); 
     legend('show','Location','eastoutside');
     xlabel(xname); ylabel(ynamex)
+        xlim([min(X),max(X)]);
+        
+%% Z plot
+if data.Nz > 1
+    options.PLAN      = 'yz';
+    options.COMP      = options.COMPX;
+    options.POLARPLOT = 0;
+    options.INTERP    = 0;
+
+    toplot = process_field(data,options);
+    t = data.Ts3D; frames = toplot.FRAMES;
+end
+ 
+switch options.COMPZ
+    case 'avg'
+        compz  = @(x) mean(x,1);
+        ynamez = ['$\langle ',yname,'\rangle_y$'];
+    otherwise
+        compz  = @(x) x(1,:);
+        ynamez = ['$',yname,'(z,y=0)$'];
+end
+
+subplot(1,3,3)
+
+    X     = data.z;
+    xname = '$z$';
+    switch options.COMPT
+        case 'avg'
+            Y    = compz(mean(toplot.FIELD(:,:,:),3));
+            Y    = squeeze(Y);
+            if options.NORM
+                Y    = Y./max(abs(Y));
+            end    
+            plot(X,Y,'DisplayName',['$t\in[',num2str(t(frames(1))),',',num2str(t(frames(end))),']$'],...
+            'Color',colors(1,:)); hold on;
+            legend('show')
+        otherwise
+            for it = 1:numel(toplot.FRAMES)
+                Y    = compx(toplot.FIELD(:,:,toplot.FRAMES(it)));
+                Y    = squeeze(Y);
+                if options.NORM
+                    Y    = Y./max(abs(Y));
+                end
+                plot(X,Y,'DisplayName',['$t=',num2str(t(frames(it))),'$'],...
+                    'Color',colors(it,:)); hold on;
+            end
+            legend('show','Location','eastoutside')
+    end
+
+    grid on
+%     title('HeLaZ $k_y$ transport spectrum'); 
+    legend('show','Location','eastoutside');
+    xlabel(xname); ylabel(ynamez)
         xlim([min(X),max(X)]);
 
 end
