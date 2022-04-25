@@ -49,9 +49,11 @@ CONTAINS
         interspecies  = .false.
       CASE ('LD') ! Landau
         cosolver_coll = .true.
-      CASE DEFAULT
+      CASE ('none')
         cosolver_coll = .false.
         interspecies  = .false.
+      CASE DEFAULT
+        ERROR STOP 'Error stop: collision model not recognized!!'
     END SELECT
 
   END SUBROUTINE collision_readinputs
