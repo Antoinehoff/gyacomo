@@ -59,6 +59,7 @@ SUBROUTINE diagnose(kstep)
      CALL creatd(fidres, 0, dims, "/profiler/Tc_Sapj",       "cumulative Sapj computation time")
      CALL creatd(fidres, 0, dims, "/profiler/Tc_checkfield", "cumulative checkfield computation time")
      CALL creatd(fidres, 0, dims, "/profiler/Tc_diag",       "cumulative sym computation time")
+     CALL creatd(fidres, 0, dims, "/profiler/Tc_process",    "cumulative process computation time")
      CALL creatd(fidres, 0, dims, "/profiler/Tc_step",       "cumulative total step computation time")
      CALL creatd(fidres, 0, dims, "/profiler/time",          "current simulation time")
 
@@ -345,6 +346,7 @@ SUBROUTINE diagnose_0d
   CALL append(fidres, "/profiler/Tc_Sapj",            tc_Sapj,ionode=0)
   CALL append(fidres, "/profiler/Tc_checkfield",tc_checkfield,ionode=0)
   CALL append(fidres, "/profiler/Tc_diag",            tc_diag,ionode=0)
+  CALL append(fidres, "/profiler/Tc_process",      tc_process,ionode=0)
   CALL append(fidres, "/profiler/Tc_step",            tc_step,ionode=0)
   CALL append(fidres, "/profiler/time",                  time,ionode=0)
   ! Processing data

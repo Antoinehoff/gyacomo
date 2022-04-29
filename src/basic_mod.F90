@@ -47,11 +47,11 @@ MODULE basic
   ! To measure computation time
   real     :: start, finish
   real(dp) :: t0_rhs, t0_adv_field, t0_poisson, t0_Sapj, t0_diag, t0_checkfield,&
-              t0_step, t0_clos, t0_ghost, t0_coll
+              t0_step, t0_clos, t0_ghost, t0_coll, t0_process
   real(dp) :: t1_rhs, t1_adv_field, t1_poisson, t1_Sapj, t1_diag, t1_checkfield,&
-              t1_step, t1_clos, t1_ghost, t1_coll
+              t1_step, t1_clos, t1_ghost, t1_coll, t1_process
   real(dp) :: tc_rhs, tc_adv_field, tc_poisson, tc_Sapj, tc_diag, tc_checkfield,&
-              tc_step, tc_clos, tc_ghost, tc_coll
+              tc_step, tc_clos, tc_ghost, tc_coll, tc_process
   real(dp) :: maxruntime = 1e9 ! Maximum simulation CPU time
 
   INTERFACE allocate_array
