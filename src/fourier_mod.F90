@@ -84,9 +84,9 @@ MODULE fourier
     ! First term df/dx x dg/dy
     DO ikx = ikxs, ikxe
       DO iky = ikys, ikye
-        cmpx_data_f(ikx,iky-local_nky_offset) = &
+        cmpx_data_f(iky-local_nky_offset,ikx) = &
               imagu*kxarray(ikx)*F_(iky,ikx)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
-        cmpx_data_g(ikx,iky-local_nky_offset) = &
+        cmpx_data_g(iky-local_nky_offset,ikx) = &
               imagu*kyarray(iky)*G_(iky,ikx)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
       ENDDO
     ENDDO

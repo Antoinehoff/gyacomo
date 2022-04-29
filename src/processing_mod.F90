@@ -209,8 +209,8 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
 !------------- INTERP AND GRADIENTS ALONG Z ----------------------------------
 
   IF (KIN_E) THEN
-  DO iky = ikys,ikye
-    DO ikx = ikxs,ikxe
+  DO ikx = ikxs,ikxe
+    DO iky = ikys,ikye
       DO ij = ijgs_e,ijge_e
         DO ip = ipgs_e,ipge_e
           p_int = parray_e(ip)
@@ -227,8 +227,8 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
   ENDDO
   ENDIF
 
-  DO iky = ikys,ikye
-    DO ikx = ikxs,ikxe
+  DO ikx = ikxs,ikxe
+    DO iky = ikys,ikye
       DO ij = ijgs_i,ijge_i
         DO ip = ipgs_i,ipge_i
           p_int = parray_i(ip)

@@ -7,7 +7,7 @@ RUN = 1; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
 HELAZDIR = '/home/ahoffman/HeLaZ/';
-EXECNAME = 'helaz3.12';
+EXECNAME = 'helaz3';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
@@ -15,8 +15,8 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %% PHYSICAL PARAMETERS
 NU      = 0.1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-K_N     = 1.8;%1.9;%2.22;   % Density gradient drive
-K_T     = 0;%0.25*K_N;   % Temperature '''
+K_N     = 1.9;%2.22;   % Density gradient drive
+K_T     = 0.25*K_N;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 1;     % 1: kinetic electrons, 2: adiabatic electrons
@@ -49,10 +49,10 @@ SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
 %% OPTIONS
 SIMID   = 'quick_run';  % Name of the simulation
-LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
+LINEARITY = 'nonlinear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-CO      = 'DG';
+CO      = 'SG';
 GKCO    = 1; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
@@ -89,7 +89,7 @@ setup
 system(['rm fort*.90']);
 % Run linear simulation
 if RUN
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 1 ',HELAZDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ',HELAZDIR,'bin/',EXECNAME,' 2 1 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 3 2 0; cd ../../../wk'])
