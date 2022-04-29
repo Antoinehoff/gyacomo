@@ -14,7 +14,7 @@ SUBROUTINE inital
   USE ghosts
   USE restarts
   USE numerics,   ONLY: play_with_modes, save_EM_ZF_modes
-  USE processing, ONLY: compute_nadiab_moments, compute_fluid_moments
+  USE processing, ONLY: compute_fluid_moments
   USE model,      ONLY: KIN_E, LINEARITY
   USE nonlinear,  ONLY: compute_Sapj, nonlinear_init
   IMPLICIT NONE

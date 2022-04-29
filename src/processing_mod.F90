@@ -11,7 +11,7 @@ MODULE processing
     REAL(dp), PUBLIC, PROTECTED :: pflux_ri, gflux_ri
     REAL(dp), PUBLIC, PROTECTED :: hflux_x
 
-    PUBLIC :: compute_nadiab_moments
+    PUBLIC :: compute_nadiab_moments_z_gradients_and_interp
     PUBLIC :: compute_density, compute_upar, compute_uperp
     PUBLIC :: compute_Tpar, compute_Tperp, compute_fluid_moments
     PUBLIC :: compute_radial_ion_transport, compute_radial_heatflux
@@ -160,31 +160,34 @@ SUBROUTINE compute_radial_heatflux
     ENDIF
 END SUBROUTINE compute_radial_heatflux
 
-SUBROUTINE compute_nadiab_moments
+SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
   ! evaluate the non-adiabatique ion moments
   !
   ! n_{pi} = N^{pj} + kernel(j) /tau_i phi delta_p0
   !
   USE fields,           ONLY : moments_i, moments_e, phi
-  USE array,            ONLY : kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i
+  USE array,            ONLY : kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i, &
+                               ddz_nepj, ddz2_Nepj, interp_nepj,&
+                               ddz_nipj, ddz2_Nipj, interp_nipj
   USE time_integration, ONLY : updatetlevel
   USE model,            ONLY : qe_taue, qi_taui, KIN_E
-  implicit none
+  USE calculus,         ONLY : grad_z, grad_z2, interp_z
+  IMPLICIT NONE
+  INTEGER :: eo, p_int
+  CALL cpu_time(t0_process)
 
   ! Electron non adiab moments
-  xloop: DO ikx = ikxs,ikxe
-  yloop: DO iky = ikys,ikye
-  zloop: DO iz  = izgs,izge
+
     IF(KIN_E) THEN
       DO ip=ipgs_e,ipge_e
         IF(parray_e(ip) .EQ. 0) THEN
           DO ij=ijgs_e,ijge_e
-            nadiab_moments_e(ip,ij,ikx,iky,iz) = moments_e(ip,ij,ikx,iky,iz,updatetlevel) &
-                                      + qe_taue*kernel_e(ij,ikx,iky,iz,0)*phi(ikx,iky,iz)
+            nadiab_moments_e(ip,ij,:,:,:) = moments_e(ip,ij,:,:,:,updatetlevel) &
+                                      + qe_taue*kernel_e(ij,:,:,:,0)*phi(:,:,:)
           ENDDO
         ELSE
           DO ij=ijgs_e,ijge_e
-            nadiab_moments_e(ip,ij,ikx,iky,iz) = moments_e(ip,ij,ikx,iky,iz,updatetlevel)
+            nadiab_moments_e(ip,ij,:,:,:) = moments_e(ip,ij,:,:,:,updatetlevel)
           ENDDO
         ENDIF
       ENDDO
@@ -193,21 +196,61 @@ SUBROUTINE compute_nadiab_moments
     DO ip=ipgs_i,ipge_i
       IF(parray_i(ip) .EQ. 0) THEN
         DO ij=ijgs_i,ijge_i
-          nadiab_moments_i(ip,ij,ikx,iky,iz) = moments_i(ip,ij,ikx,iky,iz,updatetlevel) &
-                                    + qi_taui*kernel_i(ij,ikx,iky,iz,0)*phi(ikx,iky,iz)
+          nadiab_moments_i(ip,ij,:,:,:) = moments_i(ip,ij,:,:,:,updatetlevel) &
+                                    + qi_taui*kernel_i(ij,:,:,:,0)*phi(:,:,:)
         ENDDO
       ELSE
         DO ij=ijgs_i,ijge_i
-          nadiab_moments_i(ip,ij,ikx,iky,iz) = moments_i(ip,ij,ikx,iky,iz,updatetlevel)
+          nadiab_moments_i(ip,ij,:,:,:) = moments_i(ip,ij,:,:,:,updatetlevel)
         ENDDO
       ENDIF
     ENDDO
-  ENDDO zloop
-  ENDDO yloop
-  ENDDO xloop
-  !
-END SUBROUTINE compute_nadiab_moments
 
+!------------- INTERP AND GRADIENTS ALONG Z ----------------------------------
+
+  IF (KIN_E) THEN
+  DO iky = ikys,ikye
+    DO ikx = ikxs,ikxe
+      DO ij = ijgs_e,ijge_e
+        DO ip = ipgs_e,ipge_e
+          p_int = parray_e(ip)
+          eo    = MODULO(p_int,2) ! Indicates if we are on even or odd z grid
+          ! Compute z derivatives
+          CALL   grad_z(eo,nadiab_moments_e(ip,ij,ikx,iky,izgs:izge),    ddz_nepj(ip,ij,ikx,iky,izs:ize))
+          ! Parallel hyperdiffusion
+          CALL  grad_z2(moments_e(ip,ij,ikx,iky,izgs:izge,updatetlevel),ddz2_Nepj(ip,ij,ikx,iky,izs:ize))
+          ! Compute even odd grids interpolation
+          CALL interp_z(eo,nadiab_moments_e(ip,ij,ikx,iky,izgs:izge), interp_nepj(ip,ij,ikx,iky,izs:ize))
+        ENDDO
+      ENDDO
+    ENDDO
+  ENDDO
+  ENDIF
+
+  DO iky = ikys,ikye
+    DO ikx = ikxs,ikxe
+      DO ij = ijgs_i,ijge_i
+        DO ip = ipgs_i,ipge_i
+          p_int = parray_i(ip)
+          eo    = MODULO(p_int,2) ! Indicates if we are on even or odd z grid
+          ! Compute z first derivative
+          CALL   grad_z(eo,nadiab_moments_i(ip,ij,ikx,iky,izgs:izge),    ddz_nipj(ip,ij,ikx,iky,izs:ize))
+          ! Parallel hyperdiffusion
+          CALL  grad_z2(moments_i(ip,ij,ikx,iky,izgs:izge,updatetlevel),ddz2_Nipj(ip,ij,ikx,iky,izs:ize))
+          ! Compute even odd grids interpolation
+          CALL interp_z(eo,nadiab_moments_i(ip,ij,ikx,iky,izgs:izge), interp_nipj(ip,ij,ikx,iky,izs:ize))
+        ENDDO
+      ENDDO
+    ENDDO
+  ENDDO
+
+  ! Execution time end
+  CALL cpu_time(t1_process)
+  tc_process = tc_process + (t1_process - t0_process)
+END SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
+
+!_____________________________________________________________________________!
+!!!!! FLUID MOMENTS COMPUTATIONS !!!!!
 ! Compute the 2D particle density for electron and ions (sum over Laguerre)
 SUBROUTINE compute_density
   USE array, ONLY : dens_e, dens_i, kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i
@@ -217,9 +260,10 @@ SUBROUTINE compute_density
 
   IF ( CONTAINS_ip0_e .AND. CONTAINS_ip0_i ) THEN
       ! Loop to compute dens_i = sum_j kernel_j Ni0j at each k
-      DO iky = ikys,ikye
-        DO ikx = ikxs,ikxe
-          DO iz = izs,ize
+      DO iz = izs,ize
+        DO iky = ikys,ikye
+          DO ikx = ikxs,ikxe
+
             IF(KIN_E) THEN
             ! electron density
             dens = 0._dp
@@ -251,9 +295,10 @@ SUBROUTINE compute_uperp
   COMPLEX(dp) :: uperp
 
   IF ( CONTAINS_ip0_e .AND. CONTAINS_ip0_i ) THEN
-      DO iky = ikys,ikye
-        DO ikx = ikxs,ikxe
-          DO iz = izs,ize
+      DO iz = izs,ize
+        DO iky = ikys,ikye
+          DO ikx = ikxs,ikxe
+
             IF(KIN_E) THEN
             ! electron
             uperp = 0._dp
@@ -287,26 +332,26 @@ SUBROUTINE compute_upar
   COMPLEX(dp) :: upar
 
   IF ( CONTAINS_ip1_e .AND. CONTAINS_ip1_i ) THEN
+    DO iz = izs,ize
       DO iky = ikys,ikye
         DO ikx = ikxs,ikxe
-          DO iz = izs,ize
-            IF(KIN_E) THEN
-            ! electron
-            upar = 0._dp
-            DO ij = ijs_e, ije_e
-              upar = upar + kernel_e(ij,ikx,iky,iz,1)*nadiab_moments_e(ip1_e,ij,ikx,iky,iz)
-            ENDDO
-            upar_e(ikx,iky,iz) = upar
-            ENDIF
-            ! ion
-            upar = 0._dp
-            DO ij = ijs_i, ije_i
-              upar = upar + kernel_i(ij,ikx,iky,iz,1)*nadiab_moments_i(ip1_i,ij,ikx,iky,iz)
-             ENDDO
-            upar_i(ikx,iky,iz) = upar
+          IF(KIN_E) THEN
+          ! electron
+          upar = 0._dp
+          DO ij = ijs_e, ije_e
+            upar = upar + kernel_e(ij,ikx,iky,iz,1)*nadiab_moments_e(ip1_e,ij,ikx,iky,iz)
           ENDDO
+          upar_e(ikx,iky,iz) = upar
+          ENDIF
+          ! ion
+          upar = 0._dp
+          DO ij = ijs_i, ije_i
+            upar = upar + kernel_i(ij,ikx,iky,iz,1)*nadiab_moments_i(ip1_i,ij,ikx,iky,iz)
+           ENDDO
+          upar_i(ikx,iky,iz) = upar
         ENDDO
       ENDDO
+    ENDDO
   ELSE
     IF(KIN_E)&
     upar_e = 0
@@ -328,9 +373,9 @@ SUBROUTINE compute_tperp
   IF ( CONTAINS_ip0_e .AND. CONTAINS_ip0_i .AND. &
        CONTAINS_ip2_e .AND. CONTAINS_ip2_i ) THEN
       ! Loop to compute T = 1/3*(Tpar + 2Tperp)
-      DO iky = ikys,ikye
-        DO ikx = ikxs,ikxe
-          DO iz = izs,ize
+      DO iz = izs,ize
+        DO iky = ikys,ikye
+          DO ikx = ikxs,ikxe
             ! electron temperature
             IF(KIN_E) THEN
             Tperp  = 0._dp
@@ -373,9 +418,9 @@ SUBROUTINE compute_Tpar
   IF ( CONTAINS_ip0_e .AND. CONTAINS_ip0_i .AND. &
        CONTAINS_ip2_e .AND. CONTAINS_ip2_i ) THEN
       ! Loop to compute T = 1/3*(Tpar + 2Tperp)
-      DO iky = ikys,ikye
-        DO ikx = ikxs,ikxe
-          DO iz = izs,ize
+      DO iz = izs,ize
+        DO iky = ikys,ikye
+          DO ikx = ikxs,ikxe
             ! electron temperature
             IF(KIN_E) THEN
             Tpar  = 0._dp
@@ -419,54 +464,5 @@ SUBROUTINE compute_fluid_moments
   temp_e = (Tpar_e - 2._dp * Tper_e)/3._dp - dens_e
   temp_i = (Tpar_i - 2._dp * Tper_i)/3._dp - dens_i
 END SUBROUTINE compute_fluid_moments
-
-! Compute the 2D particle temperature for electron and ions (sum over Laguerre)
-! SUBROUTINE compute_temperature
-!   USE array, ONLY : temp_e, temp_i, kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i
-!   USE model, ONLY : KIN_E
-!   IMPLICIT NONE
-!   REAL(dp)    :: j_dp
-!   COMPLEX(dp) :: Tperp, Tpar, dens
-!
-!   IF ( CONTAINS_ip0_e .AND. CONTAINS_ip0_i .AND. &
-!        CONTAINS_ip2_e .AND. CONTAINS_ip2_i ) THEN
-!       ! Loop to compute T = 1/3*(Tpar + 2Tperp)
-!       DO iky = ikys,ikye
-!         DO ikx = ikxs,ikxe
-!           DO iz = izs,ize
-!             ! electron temperature
-!             IF(KIN_E) THEN
-!             dens  = 0._dp
-!             Tpar  = 0._dp
-!             Tperp = 0._dp
-!             DO ij = ijs_e, ije_e
-!               j_dp = REAL(ij-1,dp)
-!               temp_e(ikx,iky,iz) = temp_e(ikx,iky,iz) + &
-!                 2._dp/3._dp * (2._dp*j_dp*kernel_e(ij,ikx,iky,iz,0) - (j_dp+1)*kernel_e(ij+1,ikx,iky,iz,0) - j_dp*kernel_e(ij-1,ikx,iky,iz,0))&
-!                  * (moments_e(ip0_e,ij,ikx,iky,iz,updatetlevel)+q_e/tau_e*kernel_e(ij,ikx,iky,iz,0)*phi(ikx,iky,iz)) &
-!                 + SQRT2/3._dp * kernel_e(ij,ikx,iky,iz,0) * moments_e(ip2_e,ij,ikx,iky,iz,updatetlevel)
-!             ENDDO
-!             temp_e(ikx,iky,iz) = (Tpar - 2._dp * Tperp)/3._dp - dens
-!             ENDIF
-!             ! ion temperature
-!             dens  = 0._dp
-!             Tpar  = 0._dp
-!             Tperp = 0._dp
-!             DO ij = ijs_i, ije_i
-!               j_dp = REAL(ij-1,dp)
-!               temp_i(ikx,iky,iz) = temp_i(ikx,iky,iz) + &
-!                 2._dp/3._dp * (2._dp*j_dp*kernel_i(ij,ikx,iky,iz,0) - (j_dp+1)*kernel_i(ij+1,ikx,iky,iz,0) - j_dp*kernel_i(ij-1,ikx,iky,iz,0))&
-!                  * (moments_i(ip0_i,ij,ikx,iky,iz,updatetlevel)+q_i/tau_i*kernel_i(ij,ikx,iky,iz,0)*phi(ikx,iky,iz)) &
-!                 + SQRT2/3._dp * kernel_i(ij,ikx,iky,iz,0) * moments_i(ip2_i,ij,ikx,iky,iz,updatetlevel)
-!             ENDDO
-!             temp_i(ikx,iky,iz) = (Tpar - 2._dp * Tperp)/3._dp - dens
-!           ENDDO
-!         ENDDO
-!       ENDDO
-!   ENDIF
-!   IF(KIN_E) CALL manual_3D_bcast(temp_e(ikxs:ikxe,ikys:ikye,izs:ize))
-!   CALL manual_3D_bcast(temp_i(ikxs:ikxe,ikys:ikye,izs:ize))
-! END SUBROUTINE compute_temperature
-
 
 END MODULE processing
