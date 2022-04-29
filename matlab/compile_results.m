@@ -37,11 +37,12 @@ Ts5D_    = [];
 Sipj_    = []; Sepj_    = [];
 Pe_old   = 1e9; Pi_old = Pe_old; Je_old = Pe_old; Ji_old = Pe_old;
 Pi_max=0; Pe_max=0; Ji_max=0; Je_max=0;
+DATA.outfilenames = {};
+ii = 1;
 while(CONTINUE)
     filename = sprintf([DIRECTORY,'outputs_%.2d.h5'],JOBNUM);
     if (exist(filename, 'file') == 2 && JOBNUM <= JOBNUMMAX)
-        % Load results of simulation #JOBNUM
-%         load_results
+        DATA.outfilenames{ii} = filename;
         %% load results %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         disp(['Loading ',filename])
         % Loading from output file
@@ -194,7 +195,8 @@ while(CONTINUE)
         DATA.K_N_EVOL  = [DATA.K_N_EVOL DATA.K_N    DATA.K_N];
         DATA.L_EVOL    = [DATA.L_EVOL   DATA.L      DATA.L];
         DATA.DT_EVOL   = [DATA.DT_EVOL  DATA.DT_SIM DATA.DT_SIM];
-
+        
+        ii = ii + 1;
         JOBFOUND = JOBFOUND + 1;
         LASTJOB  = JOBNUM;
         Pe_old = Pe_new; Je_old = Je_new;

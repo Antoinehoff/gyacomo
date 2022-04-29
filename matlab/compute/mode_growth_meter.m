@@ -3,7 +3,7 @@ function [FIGURE] = mode_growth_meter(DATA,OPTIONS)
 NORMALIZED = OPTIONS.NORMALIZED;
 Nma   = OPTIONS.NMA; %Number moving average
 t  = OPTIONS.TIME;
-iz = 1;
+iz = OPTIONS.iz;
 [~,ikzf] = max(squeeze(mean(abs(squeeze(DATA.PHI(:,1,1,:))),2)));
 
 FRAMES = zeros(size(OPTIONS.TIME));

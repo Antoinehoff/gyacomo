@@ -8,8 +8,12 @@ else
     T = DATA.Ts5D;
 end
 %% Processing
-toplot = process_field(DATA,OPTIONS);
-
+switch OPTIONS.PLAN
+    case 'RZ'
+        toplot = poloidal_plot(DATA,OPTIONS);
+    otherwise
+        toplot = process_field(DATA,OPTIONS);
+end
 %%
 FILENAME  = [DATA.localdir,toplot.FILENAME,format];
 XNAME     = ['$',toplot.XNAME,'$'];
@@ -24,8 +28,8 @@ switch format
         open(vidfile);  
 end
 % Set colormap boundaries
-hmax = max(max(max(FIELD(:,:,FRAMES))));
-hmin = min(min(min(FIELD(:,:,FRAMES))));
+hmax = max(max(max(FIELD(:,:,:))));
+hmin = min(min(min(FIELD(:,:,:))));
 scale = -1;
 flag = 0;
 if hmax == hmin 
@@ -47,7 +51,7 @@ fig  = figure('Color','white','Position', toplot.DIMENSIONS.*[1 1 1.2 1]);
     end
     in      = 1;
     nbytes = fprintf(2,'frame %d/%d',in,numel(FIELD(1,1,:)));
-    for n = FRAMES % loop over selected frames
+    for n = 1:numel(FRAMES) % loop over selected frames
         scale = max(max(abs(FIELD(:,:,n)))); % Scaling to normalize
         if ~strcmp(OPTIONS.PLAN,'sx')
             if NORMALIZED
@@ -73,7 +77,7 @@ fig  = figure('Color','white','Position', toplot.DIMENSIONS.*[1 1 1.2 1]);
         else % show velocity distr.
            contour(toplot.X,toplot.Y,FIELD(:,:,n)/scale,128);
         end
-        title([FIELDNAME,', $t \approx$', sprintf('%.3d',ceil(T(n)))...
+        title([FIELDNAME,', $t \approx$', sprintf('%.3d',ceil(T(FRAMES(n))))...
               ,', scaling = ',sprintf('%.1e',scale)]);
 
         xlabel(XNAME); ylabel(YNAME); %colorbar;

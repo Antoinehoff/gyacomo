@@ -7,10 +7,11 @@ FRAMES = zeros(size(OPTIONS.TIME));
 for i = 1:numel(OPTIONS.TIME)
     [~,FRAMES(i)] =min(abs(OPTIONS.TIME(i)-DATA.Ts3D));
 end
+
 %% Setup the plot geometry
 [KY,~] = meshgrid(DATA.ky,DATA.kx);
 directions = {'x','y','z'};
-Nx = DATA.Nx; Ny = DATA.Ny; Nz = DATA.Nz; Nt = numel(OPTIONS.TIME);
+Nx = DATA.Nx; Ny = DATA.Ny; Nz = DATA.Nz; Nt = numel(FRAMES);
 POLARPLOT = OPTIONS.POLARPLOT;
 LTXNAME = OPTIONS.NAME;
 switch OPTIONS.PLAN
@@ -134,8 +135,8 @@ switch OPTIONS.NAME
     case '\phi'
         NAME = 'phi';
         if COMPDIM == 3
-            for it = FRAMES
-                tmp = squeeze(compr(DATA.PHI(:,:,:,it)));
+            for it = 1:numel(FRAMES)
+                tmp = squeeze(compr(DATA.PHI(:,:,:,FRAMES(it))));
                 FIELD(:,:,it) = squeeze(process(tmp));
             end
         else
@@ -144,9 +145,9 @@ switch OPTIONS.NAME
             else
                 tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
             end
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
-                    tmp(:,:,iz) = squeeze(process(DATA.PHI(:,:,iz,it)));
+                    tmp(:,:,iz) = squeeze(process(DATA.PHI(:,:,iz,FRAMES(it))));
                 end
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                
@@ -154,8 +155,8 @@ switch OPTIONS.NAME
     case 'N_i^{00}'
         NAME = 'Ni00';
         if COMPDIM == 3
-            for it = FRAMES
-                tmp = squeeze(compr(DATA.Ni00(:,:,:,it)));
+            for it = 1:numel(FRAMES)
+                tmp = squeeze(compr(DATA.Ni00(:,:,:,FRAMES(it))));
                 FIELD(:,:,it) = squeeze(process(tmp));
             end
         else
@@ -164,9 +165,9 @@ switch OPTIONS.NAME
             else
                 tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
             end
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
-                    tmp(:,:,iz) = squeeze(process(DATA.Ni00(:,:,iz,it)));
+                    tmp(:,:,iz) = squeeze(process(DATA.Ni00(:,:,iz,FRAMES(it))));
                 end
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                
@@ -174,8 +175,8 @@ switch OPTIONS.NAME
     case 'n_e'
         NAME = 'ne';
         if COMPDIM == 3
-            for it = FRAMES
-                tmp = squeeze(compr(DATA.DENS_E(:,:,:,it)));
+            for it = 1:numel(FRAMES)
+                tmp = squeeze(compr(DATA.DENS_E(:,:,:,FRAMES(it))));
                 FIELD(:,:,it) = squeeze(process(tmp));
             end
         else
@@ -184,9 +185,9 @@ switch OPTIONS.NAME
             else
                 tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
             end
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
-                    tmp(:,:,iz) = squeeze(process(DATA.DENS_E(:,:,iz,it)));
+                    tmp(:,:,iz) = squeeze(process(DATA.DENS_E(:,:,iz,FRAMES(it))));
                 end
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                
@@ -195,9 +196,9 @@ switch OPTIONS.NAME
         NAME = 'k2ne';
         [KY, KX] = meshgrid(DATA.ky, DATA.kx);
         if COMPDIM == 3
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 for iz = 1:DATA.Nz
-                tmp = squeeze(compr(-(KX.^2+KY.^2).*DATA.DENS_E(:,:,iz,it)));
+                tmp = squeeze(compr(-(KX.^2+KY.^2).*DATA.DENS_E(:,:,iz,FRAMES(it))));
                 end
                 FIELD(:,:,it) = squeeze(process(tmp));
             end
@@ -207,9 +208,9 @@ switch OPTIONS.NAME
             else
                 tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
             end
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
-                    tmp(:,:,iz) = squeeze(process(-(KX.^2+KY.^2).*DATA.DENS_E(:,:,iz,it)));
+                    tmp(:,:,iz) = squeeze(process(-(KX.^2+KY.^2).*DATA.DENS_E(:,:,iz,FRAMES(it))));
                 end
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                
@@ -217,8 +218,8 @@ switch OPTIONS.NAME
     case 'n_e^{NZ}'
         NAME = 'neNZ';
         if COMPDIM == 3
-            for it = FRAMES
-                tmp = squeeze(compr(DATA.DENS_E(:,:,:,it).*(KY~=0)));
+            for it = 1:numel(FRAMES)
+                tmp = squeeze(compr(DATA.DENS_E(:,:,:,FRAMES(it)).*(KY~=0)));
                 FIELD(:,:,it) = squeeze(process(tmp));
             end
         else
@@ -227,9 +228,9 @@ switch OPTIONS.NAME
             else
                 tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
             end
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
-                    tmp(:,:,iz) = squeeze(process(DATA.DENS_E(:,:,iz,it).*(KY~=0)));
+                    tmp(:,:,iz) = squeeze(process(DATA.DENS_E(:,:,iz,FRAMES(it)).*(KY~=0)));
                 end
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                
@@ -237,8 +238,8 @@ switch OPTIONS.NAME
     case 'n_i'
         NAME = 'ni';
         if COMPDIM == 3
-            for it = FRAMES
-                tmp = squeeze(compr(DATA.DENS_I(:,:,:,it)));
+            for it = 1:numel(FRAMES)
+                tmp = squeeze(compr(DATA.DENS_I(:,:,:,FRAMES(it))));
                 FIELD(:,:,it) = squeeze(process(tmp));
             end
         else
@@ -247,9 +248,9 @@ switch OPTIONS.NAME
             else
                 tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
             end
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
-                    tmp(:,:,iz) = squeeze(process(DATA.DENS_I(:,:,iz,it)));
+                    tmp(:,:,iz) = squeeze(process(DATA.DENS_I(:,:,iz,FRAMES(it))));
                 end
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                
@@ -257,8 +258,8 @@ switch OPTIONS.NAME
     case 'T_i'
         NAME = 'Ti';
         if COMPDIM == 3
-            for it = FRAMES
-                tmp = squeeze(compr(DATA.TEMP_I(:,:,:,it)));
+            for it = 1:numel(FRAMES)
+                tmp = squeeze(compr(DATA.TEMP_I(:,:,:,FRAMES(it))));
                 FIELD(:,:,it) = squeeze(process(tmp));
             end
         else
@@ -267,9 +268,9 @@ switch OPTIONS.NAME
             else
                 tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
             end
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
-                    tmp(:,:,iz) = squeeze(process(DATA.TEMP_I(:,:,iz,it)));
+                    tmp(:,:,iz) = squeeze(process(DATA.TEMP_I(:,:,iz,FRAMES(it))));
                 end
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                
@@ -277,8 +278,8 @@ switch OPTIONS.NAME
     case 'n_i^{NZ}'
         NAME = 'niNZ';
         if COMPDIM == 3
-            for it = FRAMES
-                tmp = squeeze(compr(DATA.DENS_I(:,:,:,it).*(KY~=0)));
+            for it = 1:numel(FRAMES)
+                tmp = squeeze(compr(DATA.DENS_I(:,:,:,FRAMES(it)).*(KY~=0)));
                 FIELD(:,:,it) = squeeze(process(tmp));
             end
         else
@@ -287,9 +288,9 @@ switch OPTIONS.NAME
             else
                 tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
             end
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
-                    tmp(:,:,iz) = squeeze(process(DATA.DENS_I(:,:,iz,it).*(KY~=0)));
+                    tmp(:,:,iz) = squeeze(process(DATA.DENS_I(:,:,iz,FRAMES(it)).*(KY~=0)));
                 end
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                
@@ -297,8 +298,8 @@ switch OPTIONS.NAME
     case '\phi^{NZ}'
         NAME = 'phiNZ';
         if COMPDIM == 3
-            for it = FRAMES
-                tmp = squeeze(compr(DATA.PHI(:,:,:,it).*(KY~=0)));
+            for it = 1:numel(FRAMES)
+                tmp = squeeze(compr(DATA.PHI(:,:,:,FRAMES(it)).*(KY~=0)));
                 FIELD(:,:,it) = squeeze(process(tmp));
             end
         else
@@ -307,9 +308,9 @@ switch OPTIONS.NAME
             else
                 tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
             end
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
-                    tmp(:,:,iz) = squeeze(process(DATA.PHI(:,:,iz,it).*(KY~=0)));
+                    tmp(:,:,iz) = squeeze(process(DATA.PHI(:,:,iz,FRAMES(it)).*(KY~=0)));
                 end
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                
@@ -318,21 +319,21 @@ switch OPTIONS.NAME
         NAME     = 'vy';
         [~, KX] = meshgrid(DATA.ky, DATA.kx);
         vE      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
-        for it = FRAMES % Compute the 3D real transport for each frame
+        for it = 1:numel(FRAMES)
             for iz = 1:DATA.Nz
-            vE(:,:,iz,it)  = real(ifft2(-1i*KX.*(DATA.PHI(:,:,iz,it)),DATA.Nx,DATA.Ny));
+            vE(:,:,iz,it)  = real(ifft2(-1i*KX.*(DATA.PHI(:,:,iz,FRAMES(it))),DATA.Nx,DATA.Ny));
             end
         end
         if REALP % plot in real space
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 FIELD(:,:,it) = squeeze(compr(vE(:,:,:,it)));
             end
         else % Plot spectrum
             process = @(x) abs(fftshift(x,2));
             tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
-                    tmp(:,:,iz) = squeeze(process(-1i*KX.*(DATA.PHI(:,:,iz,it))));
+                    tmp(:,:,iz) = squeeze(process(-1i*KX.*(DATA.PHI(:,:,iz,FRAMES(it)))));
                 end
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end   
@@ -341,21 +342,21 @@ switch OPTIONS.NAME
         NAME     = 'vx';
         [KY, ~] = meshgrid(DATA.ky, DATA.kx);
         vE      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
-        for it = FRAMES % Compute the 3D real transport for each frame
+        for it = 1:numel(FRAMES)
             for iz = 1:DATA.Nz
-            vE(:,:,iz,it)  = real(ifft2(-1i*KY.*(DATA.PHI(:,:,iz,it)),DATA.Nx,DATA.Ny));
+            vE(:,:,iz,it)  = real(ifft2(-1i*KY.*(DATA.PHI(:,:,iz,FRAMES(it))),DATA.Nx,DATA.Ny));
             end
         end
         if REALP % plot in real space
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 FIELD(:,:,it) = squeeze(compr(vE(:,:,:,it)));
             end
         else % Plot spectrum
             process = @(x) abs(fftshift(x,2));
             tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
-                    tmp(:,:,iz) = squeeze(process(-1i*KY.*(DATA.PHI(:,:,iz,it))));
+                    tmp(:,:,iz) = squeeze(process(-1i*KY.*(DATA.PHI(:,:,iz,FRAMES(it)))));
                 end
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end   
@@ -364,21 +365,21 @@ switch OPTIONS.NAME
         NAME     = 'sy';
         [~, KX] = meshgrid(DATA.ky, DATA.kx);
         vE      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
-        for it = FRAMES % Compute the 3D real transport for each frame
+        for it = 1:numel(FRAMES)
             for iz = 1:DATA.Nz
-            vE(:,:,iz,it)  = real(ifft2(KX.^2.*(DATA.PHI(:,:,iz,it)),DATA.Nx,DATA.Ny));
+            vE(:,:,iz,it)  = real(ifft2(KX.^2.*(DATA.PHI(:,:,iz,FRAMES(it))),DATA.Nx,DATA.Ny));
             end
         end
         if REALP % plot in real space
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 FIELD(:,:,it) = squeeze(compr(vE(:,:,:,it)));
             end
         else % Plot spectrum
             process = @(x) abs(fftshift(x,2));
             tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
-                    tmp(:,:,iz) = squeeze(process(KX.^2.*(DATA.PHI(:,:,iz,it))));
+                    tmp(:,:,iz) = squeeze(process(KX.^2.*(DATA.PHI(:,:,iz,FRAMES(it)))));
                 end
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end   
@@ -387,14 +388,14 @@ switch OPTIONS.NAME
         NAME     = 'Gx';
         [KY, ~] = meshgrid(DATA.ky, DATA.kx);
         Gx      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
-        for it = FRAMES % Compute the 3D real transport for each frame
+        for it = 1:numel(FRAMES)
             for iz = 1:DATA.Nz
-            Gx(:,:,iz,it)  = real((ifft2(-1i*KY.*(DATA.PHI(:,:,iz,it)),DATA.Nx,DATA.Ny)))...
-                .*real((ifft2(DATA.DENS_I(:,:,iz,it),DATA.Nx,DATA.Ny)));
+            Gx(:,:,iz,it)  = real((ifft2(-1i*KY.*(DATA.PHI(:,:,iz,FRAMES(it))),DATA.Nx,DATA.Ny)))...
+                .*real((ifft2(DATA.DENS_I(:,:,iz,FRAMES(it)),DATA.Nx,DATA.Ny)));
             end
         end
         if REALP % plot in real space
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 FIELD(:,:,it) = squeeze(compr(Gx(:,:,:,it)));
             end
         else % Plot spectrum
@@ -402,7 +403,7 @@ switch OPTIONS.NAME
             shift_x = @(x) fftshift(x,2);
             shift_y = @(x) fftshift(x,2);
             tmp = zeros(DATA.Nx,DATA.Ny,Nz);
-            for it = FRAMES
+            for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
                 tmp(:,:,iz) = process(squeeze(fft2(Gx(:,:,iz,it),DATA.Nx,DATA.Ny)));
                 end
@@ -417,8 +418,8 @@ switch OPTIONS.NAME
         dit_ = 1;%ceil((it1_-it0_+1)/10); 
         FRAMES = it0_:dit_:it1_;
         iz = 1;
-        for it = FRAMES
-            OPTIONS.T = DATA.Ts5D(it);
+        for it = 1:numel(FRAMES)
+            OPTIONS.T = DATA.Ts5D(FRAMES(it));
             [~,~,FIELD(:,:,it)] = compute_fa(DATA,OPTIONS);
         end  
     case 'f_e'
@@ -429,8 +430,8 @@ switch OPTIONS.NAME
         dit_ = 1;%ceil((it1_-it0_+1)/10); 
         FRAMES = it0_:dit_:it1_;
         iz = 1;
-        for it = FRAMES
-            OPTIONS.T = DATA.Ts5D(it);
+        for it = 1:numel(FRAMES)
+            OPTIONS.T = DATA.Ts5D(FRAMES(it));
             [~,~,FIELD(:,:,it)] = compute_fa(DATA,OPTIONS);
         end  
 end

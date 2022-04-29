@@ -1,4 +1,4 @@
-%% ________________________________________________________________________
+%% _______________________________________________________________________
 SIMDIR = ['../results/',SIMID,'/'];
 % Grid parameters
 GRID.pmaxe = PMAXE;  % Electron Hermite moments
@@ -10,6 +10,7 @@ GRID.Lx    = LX; % x length
 GRID.Ny    = NY; % y ''
 GRID.Ly    = LY; % y ''
 GRID.Nz    = NZ;    % z resolution
+GRID.Npol  = NPOL;    % z resolution
 if SG; GRID.SG = '.true.'; else; GRID.SG = '.false.';end;
 % Geometry
 GEOM.geom  = ['''',GEOMETRY,''''];

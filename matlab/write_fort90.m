@@ -20,6 +20,7 @@ fprintf(fid,['  Lx     = ', num2str(GRID.Lx),'\n']);
 fprintf(fid,['  Ny     = ', num2str(GRID.Ny),'\n']);
 fprintf(fid,['  Ly     = ', num2str(GRID.Ly),'\n']);
 fprintf(fid,['  Nz     = ', num2str(GRID.Nz),'\n']);
+fprintf(fid,['  Npol   = ', num2str(GRID.Npol),'\n']);
 fprintf(fid,['  SG     = ',           GRID.SG,'\n']);
 fprintf(fid,'/\n');
 

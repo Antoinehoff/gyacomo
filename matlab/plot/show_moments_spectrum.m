@@ -6,10 +6,12 @@ Ji = DATA.Ji;
 Nipj = sum(sum(sum(abs(DATA.Nipj),3),4),5);
 Nipj = squeeze(Nipj);
 
+if DATA.K_E
 Pe = DATA.Pe;
 Je = DATA.Je;
 Nepj = sum(sum(sum(abs(DATA.Nepj),3),4),5);
 Nepj = squeeze(Nepj);
+end
 
 FIGURE.fig = figure; FIGURE.FIGNAME = ['mom_spectrum_',DATA.PARAMS];
 set(gcf, 'Position',  [100 50 1000 400])
@@ -20,22 +22,27 @@ if ~OPTIONS.ST
     [~,it0] = min(abs(t0-DATA.Ts5D));
     [~,it1] = min(abs(t1-DATA.Ts5D));
     Nipj = mean(Nipj(:,:,it0:it1),3);
+    if DATA.K_E
     Nepj = mean(Nepj(:,:,it0:it1),3);
+    end
     if numel(OPTIONS.TIME) == 1
         TITLE=['$t=',num2str(OPTIONS.TIME),'$'];
     else
         TITLE=['$t\in[',num2str(t0),',',num2str(t1),']$'];
     end 
     Nipj = squeeze(Nipj);
-    Nepj = squeeze(Nepj);
 
     ymini = min(Nipj); ymaxi = max(Nipj);
+
+    if DATA.K_E
+    Nepj = squeeze(Nepj);
     ymine = min(Nepj); ymaxe = max(Nepj);
-    ymin  = min([ymini ymine]);
     ymax  = max([ymaxi ymaxe]);
-
-
+    ymin  = min([ymini ymine]);
+    end
+    if DATA.K_E
     subplot(121)
+    end
     if ~OPTIONS.P2J
         for ij = 1:numel(Ji)
             name = ['$j=',num2str(Ji(ij)),'$'];
@@ -52,7 +59,8 @@ if ~OPTIONS.ST
     ylabel(['$\sum_{kx,ky}|N_i^{pj}|$']);
     legend('show');
     title([TITLE,' He-La ion spectrum']);
-
+    
+    if DATA.K_E
     subplot(122)
     if ~OPTIONS.P2J
         for ij = 1:numel(Je)
@@ -70,6 +78,7 @@ if ~OPTIONS.ST
     ylabel(['$\sum_{kx,ky}|N_e^{pj}|$']);
     legend('show');
     title([TITLE,' He-La elec. spectrum']);
+    end
 else
     [JJ,PP] = meshgrid(Ji,Pi);
     P2Ji = PP + 2*JJ;
@@ -91,6 +100,7 @@ else
     for ip2j = 1:numel(p2ji)
         Ni_ST(ip2j,:) = Ni_ST(ip2j,:)/weights(ip2j);
     end
+    if DATA.K_E
     % same for electrons!!
     [JJ,PP] = meshgrid(Je,Pe);
     P2Je = PP + 2*JJ;
@@ -112,6 +122,7 @@ else
     for ip2j = 1:numel(p2ji)
         Ne_ST(ip2j,:) = Ne_ST(ip2j,:)/weights(ip2j);
     end 
+    end
     % plots
     % scaling
 %     plt = @(x,ip2j) x./max(max(x));
@@ -120,13 +131,16 @@ else
     else
     plt = @(x,ip2j) x;
     end
+    if DATA.K_E
     subplot(2,1,1)
+    end
         imagesc(DATA.Ts5D,p2ji,plt(Ni_ST,1:numel(p2ji))); 
         set(gca,'YDir','normal')        
 %         pclr = pcolor(XX,YY,plt(Ni_ST));
 %         set(pclr, 'edgecolor','none'); hold on;
     xlabel('$t$'); ylabel('$p+2j$')
     title('$\langle\sum_k |N_i^{pj}|\rangle_{p+2j=const}$')
+    if DATA.K_E
     subplot(2,1,2)
         imagesc(DATA.Ts5D,p2je,plt(Ne_ST,1:numel(p2ji))); 
         set(gca,'YDir','normal')
@@ -135,6 +149,7 @@ else
     xlabel('$t$'); ylabel('$p+2j$')
     title('$\langle\sum_k |N_e^{pj}|\rangle_{p+2j=const}$')
     suptitle(DATA.param_title);
+    end
 
 end
 

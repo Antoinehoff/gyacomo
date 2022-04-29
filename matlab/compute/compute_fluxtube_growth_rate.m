@@ -47,6 +47,7 @@ if PLOT >0
        xlim([min(linear_gr.ky) max(linear_gr.ky)]);
        xlabel('$k_y$');
        legend('show');
+       title(DATA.param_title);
        if PLOT > 1
            [YY,XX] = meshgrid(kys,t(its+1:ite));
            figure
