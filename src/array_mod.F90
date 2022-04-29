@@ -11,6 +11,14 @@ MODULE array
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: nadiab_moments_e
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: nadiab_moments_i
 
+  ! Derivatives and interpolated moments
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz_nepj
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: interp_nepj
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz2_Nepj
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz_nipj
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: interp_nipj
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz2_Nipj
+
   ! Arrays to store special initial modes (semi linear simulation)
   ! Zonal ones (ky=0)
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_e_ZF
@@ -48,7 +56,7 @@ MODULE array
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: zNipm1j, zNipm1jp1, zNipm1jm1            ! mirror lin coeff for adiab mom
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xphij_e, xphijp1_e, xphijm1_e
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xphij_i, xphijp1_i, xphijm1_i
-  
+
   ! Kernel function evaluation (ij,ikx,iky,iz,odd/even p)
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: kernel_e
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: kernel_i

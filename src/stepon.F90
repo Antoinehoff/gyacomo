@@ -1,18 +1,14 @@
 SUBROUTINE stepon
   !   Advance one time step, (num_step=4 for Runge Kutta 4 scheme)
   USE advance_field_routine, ONLY: advance_time_level, advance_field, advance_moments
-  USE array , ONLY: moments_rhs_e, moments_rhs_i, Sepj, Sipj
   USE basic
   USE closure
-  USE fields, ONLY: moments_e, moments_i, phi
-  USE initial_par, ONLY: ACT_ON_MODES
   USE ghosts
   USE grid
   USE model, ONLY : LINEARITY, KIN_E
   use prec_const
   USE time_integration
   USE numerics, ONLY: play_with_modes
-  USE processing, ONLY: compute_nadiab_moments, compute_fluid_moments
   USE utility, ONLY: checkfield
   IMPLICIT NONE
 
@@ -20,7 +16,7 @@ SUBROUTINE stepon
   LOGICAL :: mlend
 
    DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
-   !----- BEFORE: All fields are updated for step = n
+   !----- BEFORE: All fields+ghosts are updated for step = n
       ! Compute right hand side from current fields
       ! N_rhs(N_n, nadia_n, phi_n, S_n, Tcoll_n)
       CALL assemble_RHS
@@ -61,9 +57,10 @@ SUBROUTINE stepon
        USE moments_eq_rhs, ONLY: compute_moments_eq_rhs
        USE collision,      ONLY: compute_TColl
        USE nonlinear,      ONLY: compute_Sapj
+       USE processing,     ONLY: compute_nadiab_moments_z_gradients_and_interp
        IMPLICIT NONE
-         ! compute auxiliary non adiabatic moments arrays
-         CALL compute_nadiab_moments
+         ! compute auxiliary non adiabatic moments array, gradients and interp
+         CALL compute_nadiab_moments_z_gradients_and_interp
          ! compute nonlinear term ("if linear" is included inside)
          CALL compute_Sapj
          ! compute collision term ("if coll, if nu >0" is included inside)
@@ -83,14 +80,14 @@ SUBROUTINE stepon
         IF(.NOT.nlend) THEN
            mlend=mlend .or. checkfield(phi,' phi')
            IF(KIN_E) THEN
-           DO ip=ipgs_e,ipge_e
-             DO ij=ijgs_e,ijge_e
+           DO ij=ijgs_e,ijge_e
+             DO ip=ipgs_e,ipge_e
               mlend=mlend .or. checkfield(moments_e(ip,ij,:,:,:,updatetlevel),' moments_e')
              ENDDO
            ENDDO
            ENDIF
-           DO ip=ipgs_i,ipge_i
-             DO ij=ijgs_i,ijge_i
+           DO ij=ijgs_i,ijge_i
+             DO ip=ipgs_i,ipge_i
               mlend=mlend .or. checkfield(moments_i(ip,ij,:,:,:,updatetlevel),' moments_i')
              ENDDO
            ENDDO
@@ -104,11 +101,11 @@ SUBROUTINE stepon
 
       SUBROUTINE anti_aliasing
         IF(KIN_E)THEN
-        DO ip=ipgs_e,ipge_e
-          DO ij=ijgs_e,ijge_e
+        DO iz=izgs,izge
+          DO iky=ikys,ikye
             DO ikx=ikxs,ikxe
-              DO iky=ikys,ikye
-                DO iz=izgs,izge
+              DO ij=ijgs_e,ijge_e
+                DO ip=ipgs_e,ipge_e
                   moments_e( ip,ij,ikx,iky,iz,:) = AA_x(ikx)* AA_y(iky) * moments_e( ip,ij,ikx,iky,iz,:)
                 END DO
               END DO
@@ -116,11 +113,11 @@ SUBROUTINE stepon
           END DO
         END DO
         ENDIF
-        DO ip=ipgs_i,ipge_i
-          DO ij=ijs_i,ije_i
+        DO iz=izgs,izge
+          DO iky=ikys,ikye
             DO ikx=ikxs,ikxe
-              DO iky=ikys,ikye
-                DO iz=izgs,izge
+              DO ij=ijs_i,ije_i
+                DO ip=ipgs_i,ipge_i
                   moments_i( ip,ij,ikx,iky,iz,:) = AA_x(ikx)* AA_y(iky) * moments_i( ip,ij,ikx,iky,iz,:)
                 END DO
               END DO
@@ -133,12 +130,12 @@ SUBROUTINE stepon
         IF ( contains_kx0 ) THEN
           ! Electron moments
           IF(KIN_E) THEN
-          DO ip=ipgs_e,ipge_e
-            DO ij=ijgs_e,ijge_e
-              DO iz=izs,ize
-                DO iky=2,Nky/2 !symmetry at kx = 0
-                  moments_e( ip,ij,ikx_0,iky,iz, :) = CONJG(moments_e( ip,ij,ikx_0,Nky+2-iky,iz, :))
-                END DO
+            DO iz=izs,ize
+              DO ij=ijgs_e,ijge_e
+                DO ip=ipgs_e,ipge_e
+                  DO iky=2,Nky/2 !symmetry at kx = 0
+                    moments_e( ip,ij,ikx_0,iky,iz, :) = CONJG(moments_e( ip,ij,ikx_0,Nky+2-iky,iz, :))
+                  END DO
                 ! must be real at origin
                 moments_e(ip,ij, ikx_0,iky_0,iz, :) = REAL(moments_e(ip,ij, ikx_0,iky_0,iz, :))
               END DO
@@ -146,9 +143,9 @@ SUBROUTINE stepon
           END DO
           ENDIF
           ! Ion moments
-          DO ip=ipgs_i,ipge_i
+          DO iz=izs,ize
             DO ij=ijgs_i,ijge_i
-              DO iz=izs,ize
+              DO ip=ipgs_i,ipge_i
                 DO iky=2,Nky/2 !symmetry at kx = 0
                   moments_i( ip,ij,ikx_0,iky,iz, :) = CONJG(moments_i( ip,ij,ikx_0,Nky+2-iky,iz, :))
                 END DO

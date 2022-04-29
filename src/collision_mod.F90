@@ -478,32 +478,32 @@ CONTAINS
     COMPLEX(dp), DIMENSION(ips_i:ipe_i) :: TColl_distr_i
     COMPLEX(dp) :: TColl
     INTEGER :: ikxs_C, ikxe_C, ikys_C, ikye_C
-    DO ikx = ikxs,ikxe
+    DO iz = izs,ize
       DO iky = ikys,ikye
-        DO iz = izs,ize
+        DO ikx = ikxs,ikxe
           IF(KIN_E) THEN
-          ! Electrons
-          DO ij = 1,Jmaxe+1
-            ! Loop over all p to compute sub collision term
-            DO ip = 1,total_np_e
-              CALL apply_COSOlver_mat_e(ip,ij,ikx,iky,iz,TColl)
-              local_sum_e(ip) = TColl
+            DO ij = 1,Jmaxe+1
+              ! Electrons
+                ! Loop over all p to compute sub collision term
+                DO ip = 1,total_np_e
+                  CALL apply_COSOlver_mat_e(ip,ij,ikx,iky,iz,TColl)
+                  local_sum_e(ip) = TColl
+                ENDDO
+                IF (num_procs_p .GT. 1) THEN
+                  ! Sum up all the sub collision terms on root 0
+                  CALL MPI_REDUCE(local_sum_e, buffer_e, total_np_e, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
+                  ! distribute the sum over the process among p
+                  CALL MPI_SCATTERV(buffer_e, counts_np_e, displs_np_e, MPI_DOUBLE_COMPLEX,&
+                                    TColl_distr_e, local_np_e, MPI_DOUBLE_COMPLEX,&
+                                    0, comm_p, ierr)
+                ELSE
+                  TColl_distr_e = local_sum_e
+                ENDIF
+                ! Write in output variable
+                DO ip = ips_e,ipe_e
+                  TColl_e(ip,ij,ikx,iky,iz) = TColl_distr_e(ip)
+                ENDDO
             ENDDO
-            IF (num_procs_p .GT. 1) THEN
-              ! Sum up all the sub collision terms on root 0
-              CALL MPI_REDUCE(local_sum_e, buffer_e, total_np_e, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
-              ! distribute the sum over the process among p
-              CALL MPI_SCATTERV(buffer_e, counts_np_e, displs_np_e, MPI_DOUBLE_COMPLEX,&
-                                TColl_distr_e, local_np_e, MPI_DOUBLE_COMPLEX,&
-                                0, comm_p, ierr)
-            ELSE
-              TColl_distr_e = local_sum_e
-            ENDIF
-            ! Write in output variable
-            DO ip = ips_e,ipe_e
-              TColl_e(ip,ij,ikx,iky,iz) = TColl_distr_e(ip)
-            ENDDO
-          ENDDO
           ENDIF
           ! Ions
           DO ij = 1,Jmaxi+1
@@ -533,7 +533,7 @@ CONTAINS
   END SUBROUTINE compute_cosolver_coll
 
   !******************************************************************************!
-  !!!!!!! Compute ion collision term
+  !!!!!!! Compute electron collision term
   !******************************************************************************!
   SUBROUTINE apply_COSOlver_mat_e(ip_,ij_,ikx_,iky_,iz_,TColl_)
     IMPLICIT NONE

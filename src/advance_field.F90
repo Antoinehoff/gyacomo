@@ -66,27 +66,16 @@ CONTAINS
 
     SELECT CASE (updatetlevel)
     CASE(1)
-      DO iky=ikys,ikye
-          DO ikx=ikxs,ikxe
-            DO iz=izs,ize
-              DO istage=1,ntimelevel
-                f(ikx,iky,iz,1) = f(ikx,iky,iz,1) + dt*b_E(istage)*f_rhs(ikx,iky,iz,istage)
-              END DO
-            END DO
-          END DO
-      END DO
+        DO istage=1,ntimelevel
+          f(ikxs:ikxe,ikys:ikye,izs:ize,1) = f(ikxs:ikxe,ikys:ikye,izs:ize,1) &
+                   + dt*b_E(istage)*f_rhs(ikxs:ikxe,ikys:ikye,izs:ize,istage)
+        END DO
     CASE DEFAULT
-      DO iky=ikys,ikye
-          DO ikx=ikxs,ikxe
-            DO iz=izs,ize
-              f(ikx,iky,iz,updatetlevel) = f(ikx,iky,iz,1);
-              DO istage=1,updatetlevel-1
-                f(ikx,iky,iz,updatetlevel) = f(ikx,iky,iz,updatetlevel) + &
-                                      dt*A_E(updatetlevel,istage)*f_rhs(ikx,iky,iz,istage)
-              END DO
-            END DO
-          END DO
-      END DO
+        f(ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel) = f(ikxs:ikxe,ikys:ikye,izs:ize,1);
+        DO istage=1,updatetlevel-1
+          f(ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel) = f(ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel) + &
+                            dt*A_E(updatetlevel,istage)*f_rhs(ikxs:ikxe,ikys:ikye,izs:ize,istage)
+        END DO
     END SELECT
   END SUBROUTINE advance_field
 
