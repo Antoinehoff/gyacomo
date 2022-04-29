@@ -21,7 +21,7 @@ FMT = '.fig';
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-TAVG_0 = 300; TAVG_1 = 400; % Averaging times duration
+TAVG_0 = 600; TAVG_1 = 700; % Averaging times duration
 compz  = 'avg';
 % chose your field to plot in spacetime diag (uzf,szf,Gx)
 fig = plot_radial_transport_and_spacetime(data,TAVG_0,TAVG_1,'phi',1,compz);
@@ -45,12 +45,12 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'kxky';
+options.PLAN      = 'RZ';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 9;%'avg';
+options.COMP      = 'avg';
 % options.TIME      = dat.Ts5D;
-options.TIME      = 800:820;
+options.TIME      = 0:1:20;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -63,17 +63,17 @@ options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
 % options.NAME      = '\phi';
-% options.NAME      = 'n_i';
+options.NAME      = 'n_i';
 % options.NAME      = 'N_i^{00}';
-options.NAME      = 'T_i';
+% options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
 options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 'avg';
-options.TIME      = [300 350 400];
-data.a = data.EPS * 2000;
+options.COMP      = 8;
+options.TIME      = [500 700 900];
+data.a = data.EPS * 1000;
 fig = photomaton(data,options);
 save_figure(data,fig)
 end
@@ -82,7 +82,7 @@ if 0
 %% 3D plot on the geometry
 options.INTERP    = 1;
 options.NAME      = 'n_i';
-options.PLANES    = 1:3:30;
+options.PLANES    = 1:3:15;
 options.TIME      = [100];
 options.PLT_MTOPO = 1;
 data.rho_o_R      = 2e-3; % Sound larmor radius over Machine size ratio
@@ -107,8 +107,8 @@ end
 if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
-options.P2J  = 1;
-options.ST   = 1;
+options.P2J  = 0;
+options.ST   = 0;
 options.NORMALIZED = 0;
 fig = show_moments_spectrum(data,options);
 save_figure(data,fig)
@@ -151,10 +151,11 @@ end
 if 0
 %% Mode evolution
 options.NORMALIZED = 1;
-options.K2PLOT = 0.01:0.01:1.0;
-options.TIME   = 20:1:60;
+options.K2PLOT = 1;
+options.TIME   = 5:1:15;
 options.NMA    = 1;
-options.NMODES = 20;
+options.NMODES = 5;
+options.iz     = 8;
 fig = mode_growth_meter(data,options);
 save_figure(data,fig)
 end
@@ -181,7 +182,7 @@ end
 
 if 0
 %% linear growth rate for 3D Zpinch
-trange = [30 40];
+trange = [5 15];
 options.keq0 = 1; % chose to plot planes at k=0 or max
 options.kxky = 1;
 options.kzkx = 0;

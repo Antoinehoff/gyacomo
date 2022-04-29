@@ -3,14 +3,8 @@ helazdir = '/home/ahoffman/HeLaZ/';
 % Directory of the simulation
 % if 1% Local results
 outfile ='';
-% outfile ='3D_Zpinch/dbg';
-% outfile ='3D_Zpinch/entropy_mode';
-% outfile ='3D_Zpinch/ITG_Npol_gt_1';
-% outfile ='3D_Zpinch/Ivanov_ITG';
-% outfile ='3D_Zpinch/NL_ITG';
-% outfile ='debug/test_zpar/';
+outfile ='quick_run/32x32x16_5x3_L_300_q0_2.5_e_0.18_kN_20_kT_20_nu_1e-01_DGGK';
 % outfile ='shearless_cyclone/128x128x16x4x2_L_120_CTC_1.0/';
-% outfile ='shearless_cyclone/128x128x16x4x2_L_120_CTC_0.8/';
-outfile ='shearless_cyclone/marconi/';
-% outfile ='shearless_cyclone/180x180x20x4x2_L_120_CBC_0.8/';
-call analysis_3D
+% outfile ='shearless_cyclone/180x180x20x4x2_L_120_CBC_0.8_to_1.0/';
+% outfile ='pedestal/128x128x16x4x2_L_120_LnT_40_nuDG_0.1';
+run analysis_3D

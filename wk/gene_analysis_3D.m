@@ -1,8 +1,8 @@
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_0.8/';
-% folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.0/';
-% folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.8/';
-folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
+folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.0/';
+% folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.5/';
+% folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_0.8/';
 % folder = '/misc/gene_results/HP_fig_2b_mu_5e-2/';
 % folder = '/misc/gene_results/HP_fig_2c_mu_5e-2/';
@@ -43,18 +43,18 @@ end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-options.INTERP    = 1;
+options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.NAME      = '\phi';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+options.PLAN      = 'xz';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 9;
-options.TIME      = 0:700;
+options.COMP      = 'avg';
+options.TIME      = 400:700;
 gene_data.a = data.EPS * 2000;
 create_film(gene_data,options,'.gif')
 end
