@@ -10,13 +10,13 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, TAVG_0, TAVG_1,stf
     Qx_infty_std = std (DATA.HFLUX_X(its0D:ite0D))*SCALE;
     [~,ikzf] = max(squeeze(mean(abs(squeeze(DATA.PHI(:,1,1,:))),2)));
     Ns3D = numel(DATA.Ts3D);
-    [KY, KX] = meshgrid(DATA.ky, DATA.kx);
+    [KX, KY] = meshgrid(DATA.kx, DATA.ky);
     z = DATA.z;
     
     %% computations
 
     % Compute Gamma from ifft matlab
-    Gx = zeros(DATA.Nx,DATA.Ny,numel(DATA.Ts3D));
+    Gx = zeros(DATA.Ny,DATA.Nx,numel(DATA.Ts3D));
     for it = 1:numel(DATA.Ts3D)
         for iz = 1:DATA.Nz
             Gx(:,:,it)  = Gx(:,:,it) + ifourier_GENE(-1i*KY.*(DATA.PHI(:,:,iz,it)))...

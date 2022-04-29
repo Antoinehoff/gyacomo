@@ -52,10 +52,10 @@ subroutine auxval
       IF (my_id .EQ. 0) WRITE(*,*) ''
       IF (my_id .EQ. 0) WRITE(*,*) '--------- Parallel environement ----------'
       IF (my_id .EQ. 0) WRITE(*,'(A12,I3)') 'n_procs ', num_procs
-      IF (my_id .EQ. 0) WRITE(*,'(A12,I3,A14,I3,A14,I3)') 'num_procs_p   = ', num_procs_p, ', num_procs_kx   = ', num_procs_kx, ', num_procs_z   = ', num_procs_z
+      IF (my_id .EQ. 0) WRITE(*,'(A12,I3,A14,I3,A14,I3)') 'num_procs_p   = ', num_procs_p, ', num_procs_ky   = ', num_procs_ky, ', num_procs_z   = ', num_procs_z
       IF (my_id .EQ. 0) WRITE(*,*) ''
       WRITE(*,'(A9,I3,A10,I3,A10,I3,A9,I3)')&
-       'my_id  = ', my_id, ', rank_p  = ', rank_p, ', rank_kx  = ', rank_kx,', rank_z  = ', rank_z
+       'my_id  = ', my_id, ', rank_p  = ', rank_p, ', rank_ky  = ', rank_ky,', rank_z  = ', rank_z
        WRITE(*,'(A22,I3,A11,I3)')&
        '              ips_e = ', ips_e, ', ipe_e  = ', ipe_e
        WRITE(*,'(A22,I3,A11,I3)')&

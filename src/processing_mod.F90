@@ -38,7 +38,7 @@ SUBROUTINE compute_radial_ion_transport
           ky_ = kyarray(iky)
           DO ikx = ikxs,ikxe
             DO iz = izgs,izge
-              integrant(iz) = Jacobian(iz,0)*imagu * ky_ * moments_i(ip0_i,1,ikx,iky,iz,updatetlevel) * CONJG(phi(ikx,iky,iz))
+              integrant(iz) = Jacobian(iz,0)*imagu * ky_ * moments_i(ip0_i,1,iky,ikx,iz,updatetlevel) * CONJG(phi(iky,ikx,iz))
             ENDDO
             ! Integrate over z
             call simpson_rule_z(integrant,integral)
@@ -54,8 +54,8 @@ SUBROUTINE compute_radial_ion_transport
               DO ij = ijs_i, ije_i
                 DO iz = izgs,izge
                   integrant(iz) = integrant(iz) + &
-                      Jacobian(iz,0)*imagu * ky_ * kernel_i(ij,ikx,iky,iz,0) &
-                      *moments_i(ip0_i,ij,ikx,iky,iz,updatetlevel) * CONJG(phi(ikx,iky,iz))
+                      Jacobian(iz,0)*imagu * ky_ * kernel_i(ij,iky,ikx,iz,0) &
+                      *moments_i(ip0_i,ij,iky,ikx,iz,updatetlevel) * CONJG(phi(iky,ikx,iz))
                 ENDDO
               ENDDO
               ! Integrate over z
@@ -71,15 +71,15 @@ SUBROUTINE compute_radial_ion_transport
     !Gather manually among the rank_p=0 processes and perform the sum
     gflux_ri = 0
     pflux_ri = 0
-    IF (num_procs_kx .GT. 1) THEN
+    IF (num_procs_ky .GT. 1) THEN
         !! Everyone sends its local_sum to root = 0
-        IF (rank_kx .NE. root) THEN
-            CALL MPI_SEND(buffer, 2 , MPI_DOUBLE_PRECISION, root, 1234, comm_kx, ierr)
+        IF (rank_ky .NE. root) THEN
+            CALL MPI_SEND(buffer, 2 , MPI_DOUBLE_PRECISION, root, 1234, comm_ky, ierr)
         ELSE
             ! Recieve from all the other processes
-            DO i_ = 0,num_procs_kx-1
-                IF (i_ .NE. rank_kx) &
-                    CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_kx, MPI_STATUS_IGNORE, ierr)
+            DO i_ = 0,num_procs_ky-1
+                IF (i_ .NE. rank_ky) &
+                    CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
                     gflux_ri = gflux_ri + buffer(1)
                     pflux_ri = pflux_ri + buffer(2)
             ENDDO
@@ -113,23 +113,23 @@ SUBROUTINE compute_radial_heatflux
             integrant = 0._dp
             DO ij = ijs_i, ije_i
               DO iz = izgs,izge
-              integrant(iz) = integrant(iz) + Jacobian(iz,0)*imagu*ky_*CONJG(phi(ikx,iky,iz))&
-               *(twothird * (   2._dp*j_dp  * kernel_i(ij  ,ikx,iky,iz,0) &
-                                - (j_dp+1)  * kernel_i(ij+1,ikx,iky,iz,0) &
-                                -    j_dp   * kernel_i(ij-1,ikx,iky,iz,0))&
-               * (moments_i(ip0_i,ij,ikx,iky,iz,updatetlevel)+qi_taui*kernel_i(ij,ikx,iky,iz,0)*phi(ikx,iky,iz)) &
-              + SQRT2*onethird * kernel_i(ij,ikx,iky,iz,0) * moments_i(ip2_i,ij,ikx,iky,iz,updatetlevel))
+              integrant(iz) = integrant(iz) + Jacobian(iz,0)*imagu*ky_*CONJG(phi(iky,ikx,iz))&
+               *(twothird * (   2._dp*j_dp  * kernel_i(ij  ,iky,ikx,iz,0) &
+                                - (j_dp+1)  * kernel_i(ij+1,iky,ikx,iz,0) &
+                                -    j_dp   * kernel_i(ij-1,iky,ikx,iz,0))&
+               * (moments_i(ip0_i,ij,iky,ikx,iz,updatetlevel)+qi_taui*kernel_i(ij,iky,ikx,iz,0)*phi(iky,ikx,iz)) &
+              + SQRT2*onethird * kernel_i(ij,iky,ikx,iz,0) * moments_i(ip2_i,ij,iky,ikx,iz,updatetlevel))
               ENDDO
             ENDDO
             IF(KIN_E) THEN
             DO ij = ijs_e, ije_e
               DO iz = izgs,izge
-              integrant(iz) = integrant(iz) + Jacobian(iz,0)*imagu*ky_*CONJG(phi(ikx,iky,iz))&
-               *(twothird * (   2._dp*j_dp  * kernel_e(ij  ,ikx,iky,iz,0) &
-                                - (j_dp+1)  * kernel_e(ij+1,ikx,iky,iz,0) &
-                                -    j_dp   * kernel_e(ij-1,ikx,iky,iz,0))&
-               * (moments_e(ip0_e,ij,ikx,iky,iz,updatetlevel)+qe_taue*kernel_e(ij,ikx,iky,iz,0)*phi(ikx,iky,iz)) &
-              + SQRT2*onethird * kernel_e(ij,ikx,iky,iz,0) * moments_e(ip2_e,ij,ikx,iky,iz,updatetlevel))
+              integrant(iz) = integrant(iz) + Jacobian(iz,0)*imagu*ky_*CONJG(phi(iky,ikx,iz))&
+               *(twothird * (   2._dp*j_dp  * kernel_e(ij  ,iky,ikx,iz,0) &
+                                - (j_dp+1)  * kernel_e(ij+1,iky,ikx,iz,0) &
+                                -    j_dp   * kernel_e(ij-1,iky,ikx,iz,0))&
+               * (moments_e(ip0_e,ij,iky,ikx,iz,updatetlevel)+qe_taue*kernel_e(ij,iky,ikx,iz,0)*phi(iky,ikx,iz)) &
+              + SQRT2*onethird * kernel_e(ij,iky,ikx,iz,0) * moments_e(ip2_e,ij,iky,ikx,iz,updatetlevel))
               ENDDO
             ENDDO
             ENDIF
@@ -142,15 +142,15 @@ SUBROUTINE compute_radial_heatflux
         root = 0
         !Gather manually among the rank_p=0 processes and perform the sum
         hflux_x = 0
-        IF (num_procs_kx .GT. 1) THEN
+        IF (num_procs_ky .GT. 1) THEN
             !! Everyone sends its local_sum to root = 0
-            IF (rank_kx .NE. root) THEN
-                CALL MPI_SEND(buffer, 2 , MPI_DOUBLE_PRECISION, root, 1234, comm_kx, ierr)
+            IF (rank_ky .NE. root) THEN
+                CALL MPI_SEND(buffer, 2 , MPI_DOUBLE_PRECISION, root, 1234, comm_ky, ierr)
             ELSE
                 ! Recieve from all the other processes
-                DO i_ = 0,num_procs_kx-1
-                    IF (i_ .NE. rank_kx) &
-                        CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_kx, MPI_STATUS_IGNORE, ierr)
+                DO i_ = 0,num_procs_ky-1
+                    IF (i_ .NE. rank_ky) &
+                        CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
                         hflux_x = hflux_x + buffer(2)
                 ENDDO
             ENDIF
@@ -216,11 +216,11 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
           p_int = parray_e(ip)
           eo    = MODULO(p_int,2) ! Indicates if we are on even or odd z grid
           ! Compute z derivatives
-          CALL   grad_z(eo,nadiab_moments_e(ip,ij,ikx,iky,izgs:izge),    ddz_nepj(ip,ij,ikx,iky,izs:ize))
+          CALL   grad_z(eo,nadiab_moments_e(ip,ij,iky,ikx,izgs:izge),    ddz_nepj(ip,ij,iky,ikx,izs:ize))
           ! Parallel hyperdiffusion
-          CALL  grad_z2(moments_e(ip,ij,ikx,iky,izgs:izge,updatetlevel),ddz2_Nepj(ip,ij,ikx,iky,izs:ize))
+          CALL  grad_z2(moments_e(ip,ij,iky,ikx,izgs:izge,updatetlevel),ddz2_Nepj(ip,ij,iky,ikx,izs:ize))
           ! Compute even odd grids interpolation
-          CALL interp_z(eo,nadiab_moments_e(ip,ij,ikx,iky,izgs:izge), interp_nepj(ip,ij,ikx,iky,izs:ize))
+          CALL interp_z(eo,nadiab_moments_e(ip,ij,iky,ikx,izgs:izge), interp_nepj(ip,ij,iky,ikx,izs:ize))
         ENDDO
       ENDDO
     ENDDO
@@ -234,11 +234,11 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
           p_int = parray_i(ip)
           eo    = MODULO(p_int,2) ! Indicates if we are on even or odd z grid
           ! Compute z first derivative
-          CALL   grad_z(eo,nadiab_moments_i(ip,ij,ikx,iky,izgs:izge),    ddz_nipj(ip,ij,ikx,iky,izs:ize))
+          CALL   grad_z(eo,nadiab_moments_i(ip,ij,iky,ikx,izgs:izge),    ddz_nipj(ip,ij,iky,ikx,izs:ize))
           ! Parallel hyperdiffusion
-          CALL  grad_z2(moments_i(ip,ij,ikx,iky,izgs:izge,updatetlevel),ddz2_Nipj(ip,ij,ikx,iky,izs:ize))
+          CALL  grad_z2(moments_i(ip,ij,iky,ikx,izgs:izge,updatetlevel),ddz2_Nipj(ip,ij,iky,ikx,izs:ize))
           ! Compute even odd grids interpolation
-          CALL interp_z(eo,nadiab_moments_i(ip,ij,ikx,iky,izgs:izge), interp_nipj(ip,ij,ikx,iky,izs:ize))
+          CALL interp_z(eo,nadiab_moments_i(ip,ij,iky,ikx,izgs:izge), interp_nipj(ip,ij,iky,ikx,izs:ize))
         ENDDO
       ENDDO
     ENDDO
@@ -268,16 +268,16 @@ SUBROUTINE compute_density
             ! electron density
             dens = 0._dp
             DO ij = ijs_e, ije_e
-                dens = dens + kernel_e(ij,ikx,iky,iz,0) * nadiab_moments_e(ip0_e,ij,ikx,iky,iz)
+                dens = dens + kernel_e(ij,iky,ikx,iz,0) * nadiab_moments_e(ip0_e,ij,iky,ikx,iz)
             ENDDO
-            dens_e(ikx,iky,iz) = dens
+            dens_e(iky,ikx,iz) = dens
             ENDIF
             ! ion density
             dens = 0._dp
             DO ij = ijs_i, ije_i
-                dens = dens + kernel_i(ij,ikx,iky,iz,0) * nadiab_moments_i(ip0_e,ij,ikx,iky,iz)
+                dens = dens + kernel_i(ij,iky,ikx,iz,0) * nadiab_moments_i(ip0_e,ij,iky,ikx,iz)
             ENDDO
-            dens_i(ikx,iky,iz) = dens
+            dens_i(iky,ikx,iz) = dens
           ENDDO
         ENDDO
       ENDDO
@@ -303,18 +303,18 @@ SUBROUTINE compute_uperp
             ! electron
             uperp = 0._dp
             DO ij = ijs_e, ije_e
-                uperp = uperp + kernel_e(ij,ikx,iky,iz,0) *&
-                 0.5_dp*(nadiab_moments_e(ip0_e,ij,ikx,iky,iz) - nadiab_moments_e(ip0_e,ij-1,ikx,iky,iz))
+                uperp = uperp + kernel_e(ij,iky,ikx,iz,0) *&
+                 0.5_dp*(nadiab_moments_e(ip0_e,ij,iky,ikx,iz) - nadiab_moments_e(ip0_e,ij-1,iky,ikx,iz))
             ENDDO
-            uper_e(ikx,iky,iz) = uperp
+            uper_e(iky,ikx,iz) = uperp
             ENDIF
             ! ion
             uperp = 0._dp
             DO ij = ijs_i, ije_i
-              uperp = uperp + kernel_i(ij,ikx,iky,iz,0) *&
-               0.5_dp*(nadiab_moments_i(ip0_i,ij,ikx,iky,iz) - nadiab_moments_i(ip0_i,ij-1,ikx,iky,iz))
+              uperp = uperp + kernel_i(ij,iky,ikx,iz,0) *&
+               0.5_dp*(nadiab_moments_i(ip0_i,ij,iky,ikx,iz) - nadiab_moments_i(ip0_i,ij-1,iky,ikx,iz))
              ENDDO
-            uper_i(ikx,iky,iz) = uperp
+            uper_i(iky,ikx,iz) = uperp
           ENDDO
         ENDDO
       ENDDO
@@ -339,16 +339,16 @@ SUBROUTINE compute_upar
           ! electron
           upar = 0._dp
           DO ij = ijs_e, ije_e
-            upar = upar + kernel_e(ij,ikx,iky,iz,1)*nadiab_moments_e(ip1_e,ij,ikx,iky,iz)
+            upar = upar + kernel_e(ij,iky,ikx,iz,1)*nadiab_moments_e(ip1_e,ij,iky,ikx,iz)
           ENDDO
-          upar_e(ikx,iky,iz) = upar
+          upar_e(iky,ikx,iz) = upar
           ENDIF
           ! ion
           upar = 0._dp
           DO ij = ijs_i, ije_i
-            upar = upar + kernel_i(ij,ikx,iky,iz,1)*nadiab_moments_i(ip1_i,ij,ikx,iky,iz)
+            upar = upar + kernel_i(ij,iky,ikx,iz,1)*nadiab_moments_i(ip1_i,ij,iky,ikx,iz)
            ENDDO
-          upar_i(ikx,iky,iz) = upar
+          upar_i(iky,ikx,iz) = upar
         ENDDO
       ENDDO
     ENDDO
@@ -381,23 +381,23 @@ SUBROUTINE compute_tperp
             Tperp  = 0._dp
             DO ij = ijs_e, ije_e
               j_dp = REAL(ij-1,dp)
-              Tperp = Tperp + kernel_e(ij,ikx,iky,iz,0)*&
-                  ((2_dp*j_dp+1)*nadiab_moments_e(ip0_e,ij  ,ikx,iky,iz)&
-                  -j_dp         *nadiab_moments_e(ip0_e,ij-1,ikx,iky,iz)&
-                  -j_dp+1       *nadiab_moments_e(ip0_e,ij+1,ikx,iky,iz))
+              Tperp = Tperp + kernel_e(ij,iky,ikx,iz,0)*&
+                  ((2_dp*j_dp+1)*nadiab_moments_e(ip0_e,ij  ,iky,ikx,iz)&
+                  -j_dp         *nadiab_moments_e(ip0_e,ij-1,iky,ikx,iz)&
+                  -j_dp+1       *nadiab_moments_e(ip0_e,ij+1,iky,ikx,iz))
             ENDDO
-            Tper_e(ikx,iky,iz) = Tperp
+            Tper_e(iky,ikx,iz) = Tperp
             ENDIF
             ! ion temperature
             Tperp = 0._dp
             DO ij = ijs_i, ije_i
               j_dp = REAL(ij-1,dp)
-              Tperp = Tperp + kernel_i(ij,ikx,iky,iz,0)*&
-                  ((2_dp*j_dp+1)*nadiab_moments_i(ip0_i,ij  ,ikx,iky,iz)&
-                  -j_dp         *nadiab_moments_i(ip0_i,ij-1,ikx,iky,iz)&
-                  -j_dp+1       *nadiab_moments_i(ip0_i,ij+1,ikx,iky,iz))
+              Tperp = Tperp + kernel_i(ij,iky,ikx,iz,0)*&
+                  ((2_dp*j_dp+1)*nadiab_moments_i(ip0_i,ij  ,iky,ikx,iz)&
+                  -j_dp         *nadiab_moments_i(ip0_i,ij-1,iky,ikx,iz)&
+                  -j_dp+1       *nadiab_moments_i(ip0_i,ij+1,iky,ikx,iz))
             ENDDO
-            Tper_i(ikx,iky,iz) = Tperp
+            Tper_i(iky,ikx,iz) = Tperp
           ENDDO
         ENDDO
       ENDDO
@@ -426,21 +426,21 @@ SUBROUTINE compute_Tpar
             Tpar  = 0._dp
             DO ij = ijs_e, ije_e
               j_dp = REAL(ij-1,dp)
-              Tpar  = Tpar + kernel_e(ij,ikx,iky,iz,0)*&
-               (SQRT2 * nadiab_moments_e(ip2_e,ij,ikx,iky,iz) &
-                      + nadiab_moments_e(ip0_e,ij,ikx,iky,iz))
+              Tpar  = Tpar + kernel_e(ij,iky,ikx,iz,0)*&
+               (SQRT2 * nadiab_moments_e(ip2_e,ij,iky,ikx,iz) &
+                      + nadiab_moments_e(ip0_e,ij,iky,ikx,iz))
             ENDDO
-            Tpar_e(ikx,iky,iz) = Tpar
+            Tpar_e(iky,ikx,iz) = Tpar
             ENDIF
             ! ion temperature
             Tpar  = 0._dp
             DO ij = ijs_i, ije_i
               j_dp = REAL(ij-1,dp)
-              Tpar  = Tpar + kernel_i(ij,ikx,iky,iz,0)*&
-               (SQRT2 * nadiab_moments_i(ip2_i,ij,ikx,iky,iz) &
-                      + nadiab_moments_i(ip0_i,ij,ikx,iky,iz))
+              Tpar  = Tpar + kernel_i(ij,iky,ikx,iz,0)*&
+               (SQRT2 * nadiab_moments_i(ip2_i,ij,iky,ikx,iz) &
+                      + nadiab_moments_i(ip0_i,ij,iky,ikx,iz))
             ENDDO
-            Tpar_i(ikx,iky,iz) = Tpar
+            Tpar_i(iky,ikx,iz) = Tpar
           ENDDO
         ENDDO
       ENDDO

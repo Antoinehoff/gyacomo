@@ -28,21 +28,21 @@ SUBROUTINE apply_closure_model
     ! all Napj s.t. p+2j <= 3
     ! -> (p,j) allowed are (0,0),(1,0),(0,1),(2,0),(1,1),(3,0)
     ! =>> Dmax is Pmax, condition is p+2j<=Pmax
+  DO iz = izs,ize
     DO ikx = ikxs,ikxe
-      DO iky = ikys,ikye
-        DO iz = izs,ize
+        DO iky = ikys,ikye
           IF(KIN_E) THEN
           DO ip = ipgs_e,ipge_e
             DO ij = ijgs_e,ijge_e
               IF ( parray_e(ip)+2*jarray_e(ip) .GT. dmaxe) &
-              moments_e(ip,ij,ikx,iky,iz,updatetlevel) = 0._dp
+              moments_e(ip,ij,iky,ikx,iz,updatetlevel) = 0._dp
             ENDDO
           ENDDO
           ENDIF
           DO ip = ipgs_i,ipge_i
             DO ij = ijgs_i,ijge_i
               IF ( parray_i(ip)+2*jarray_i(ip) .GT. dmaxi) &
-              moments_i(ip,ij,ikx,iky,iz,updatetlevel) = 0._dp
+              moments_i(ip,ij,iky,ikx,iz,updatetlevel) = 0._dp
             ENDDO
           ENDDO
         ENDDO
@@ -71,15 +71,15 @@ SUBROUTINE ghosts_upper_truncation
     ! applies only for the process that has largest j index
     IF(ije_e .EQ. Jmaxe+1) THEN
       DO ip = ipgs_e,ipge_e
-        moments_e(ip,ije_e+1,ikxs:ikxe,ikys:ikye,izgs:izge,updatetlevel) = 0._dp
+        moments_e(ip,ije_e+1,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
       ENDDO
     ENDIF
     ! applies only for the process that has largest p index
     IF(ipe_e .EQ. Pmaxe+1) THEN
       DO ij = ijgs_e,ijge_e
-        moments_e(ipe_e+1,ij,ikxs:ikxe,ikys:ikye,izgs:izge,updatetlevel) = 0._dp
+        moments_e(ipe_e+1,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
         IF(deltape .EQ. 1) THEN ! Must truncate the second stencil
-        moments_e(ipe_e+2,ij,ikxs:ikxe,ikys:ikye,izgs:izge,updatetlevel) = 0._dp
+        moments_e(ipe_e+2,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
         ENDIF
       ENDDO
     ENDIF
@@ -89,15 +89,15 @@ SUBROUTINE ghosts_upper_truncation
   ! applies only for the process that has largest j index
   IF(ije_i .EQ. Jmaxi+1) THEN
     DO ip = ipgs_i,ipge_i
-      moments_i(ip,ije_i+1,ikxs:ikxe,ikys:ikye,izgs:izge,updatetlevel) = 0._dp
+      moments_i(ip,ije_i+1,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
     ENDDO
   ENDIF
   ! applies only for the process that has largest p index
   IF(ipe_i .EQ. Pmaxi+1) THEN
     DO ij = ijgs_i,ijge_i
-      moments_i(ipe_i+1,ij,ikxs:ikxe,ikys:ikye,izgs:izge,updatetlevel) = 0._dp
+      moments_i(ipe_i+1,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
       IF(deltape .EQ. 1) THEN ! Must truncate the second stencil
-      moments_i(ipe_i+2,ij,ikxs:ikxe,ikys:ikye,izgs:izge,updatetlevel) = 0._dp
+      moments_i(ipe_i+2,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
       ENDIF
     ENDDO
   ENDIF
@@ -114,15 +114,15 @@ SUBROUTINE ghosts_lower_truncation
     ! applies only for the process that has lowest j index
     IF(ijs_e .EQ. 1) THEN
       DO ip = ipgs_e,ipge_e
-        moments_e(ip,ijs_e-1,ikxs:ikxe,ikys:ikye,izgs:izge,updatetlevel) = 0._dp
+        moments_e(ip,ijs_e-1,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
       ENDDO
     ENDIF
     ! applies only for the process that has lowest p index
     IF(ips_e .EQ. 1) THEN
       DO ij = ijgs_e,ijge_e
-        moments_e(ips_e-1,ij,ikxs:ikxe,ikys:ikye,izgs:izge,updatetlevel) = 0._dp
+        moments_e(ips_e-1,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
         IF(deltape .EQ. 1) THEN ! Must truncate the second stencil
-        moments_e(ips_e-2,ij,ikxs:ikxe,ikys:ikye,izgs:izge,updatetlevel) = 0._dp
+        moments_e(ips_e-2,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
         ENDIF
       ENDDO
     ENDIF
@@ -132,15 +132,15 @@ SUBROUTINE ghosts_lower_truncation
   IF(ijs_i .EQ. 1) THEN
     ! applies only for the process that has lowest j index
     DO ip = ipgs_i,ipge_i
-      moments_i(ip,ijs_i-1,ikxs:ikxe,ikys:ikye,izgs:izge,updatetlevel) = 0._dp
+      moments_i(ip,ijs_i-1,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
     ENDDO
   ENDIF
   ! applies only for the process that has lowest p index
   IF(ips_i .EQ. 1) THEN
     DO ij = ijgs_i,ijge_i
-      moments_i(ips_i-1,ij,ikxs:ikxe,ikys:ikye,izgs:izge,updatetlevel) = 0._dp
+      moments_i(ips_i-1,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
       IF(deltape .EQ. 1) THEN ! Must truncate the second stencil
-      moments_i(ips_i-2,ij,ikxs:ikxe,ikys:ikye,izgs:izge,updatetlevel) = 0._dp
+      moments_i(ips_i-2,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
       ENDIF
     ENDDO
   ENDIF

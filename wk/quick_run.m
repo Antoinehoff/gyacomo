@@ -7,7 +7,7 @@ RUN = 1; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
 HELAZDIR = '/home/ahoffman/HeLaZ/';
-EXECNAME = 'helaz3';
+EXECNAME = 'helaz3.12';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
@@ -15,32 +15,32 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %% PHYSICAL PARAMETERS
 NU      = 0.1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-K_N     = 20;%1.9;%2.22;   % Density gradient drive
-K_T     = 20;%0.25*K_N;   % Temperature '''
+K_N     = 1.8;%1.9;%2.22;   % Density gradient drive
+K_T     = 0;%0.25*K_N;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
-SIGMA_E = 0.05;%0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 1;     % 1: kinetic electrons, 2: adiabatic electrons
 %% GRID PARAMETERS
-PMAXE   = 2;     % Hermite basis size of electrons
-JMAXE   = 1;     % Laguerre "
-PMAXI   = 2;     % " ions
-JMAXI   = 1;     % "
+PMAXE   = 4;     % Hermite basis size of electrons
+JMAXE   = 2;     % Laguerre "
+PMAXI   = 4;     % " ions
+JMAXI   = 2;     % "
 NX      = 32;    % real space x-gridpoints
 NY      = 32;     %     ''     y-gridpoints
-LX      = 300;   % Size of the squared frequency domain
-LY      = 300;     % Size of the squared frequency domain
-NZ      = 16;     % number of perpendicular planes (parallel grid)
+LX      = 120;   % Size of the squared frequency domain
+LY      = 120;     % Size of the squared frequency domain
+NZ      = 1;     % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 %% GEOMETRY
-% GEOMETRY= 'Z-pinch'; % Z-pinch overwrites q0, shear and eps
-GEOMETRY= 's-alpha';
+GEOMETRY= 'Z-pinch'; % Z-pinch overwrites q0, shear and eps
+% GEOMETRY= 's-alpha';
 Q0      = 2.5;    % safety factor
 SHEAR   = 0.0;    % magnetic shear (Not implemented yet)
 EPS     = 0.18;    % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 50;  % Maximal time unit
-DT      = 1e-3;   % Time step
+TMAX    = 25;  % Maximal time unit
+DT      = 2e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
@@ -89,10 +89,10 @@ setup
 system(['rm fort*.90']);
 % Run linear simulation
 if RUN
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 1 ',HELAZDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 1 ',HELAZDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ',HELAZDIR,'bin/',EXECNAME,' 2 1 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 3 2 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 3 2 0; cd ../../../wk'])
 end
 
 %% Load results

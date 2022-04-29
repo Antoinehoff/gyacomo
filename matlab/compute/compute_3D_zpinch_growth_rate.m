@@ -7,20 +7,20 @@ t   = DATA.Ts3D;
 nkx = DATA.Nkx; nky = DATA.Nky; nkz = DATA.Nz;
 % Remove AA part
 if DATA.Nx > 1
-    ikxnz = abs(DATA.PHI(:,1,1,1)) > 0;
+    ikxnz = abs(DATA.PHI(1,:,1,1)) > 0;
 else
-    ikxnz = abs(DATA.PHI(:,1,1,1)) > -1;
+    ikxnz = abs(DATA.PHI(1,:,1,1)) > -1;
 end
-ikynz = abs(DATA.PHI(1,:,1,1)) > 0;
+ikynz = abs(DATA.PHI(:,1,1,1)) > 0;
 
-phi = fft(DATA.PHI(ikxnz,ikynz,:,:),[],3);
+phi = fft(DATA.PHI(ikynz,ikxnz,:,:),[],3);
 
-omega = zeros(nkx,nky,nkz);
+omega = zeros(nky,nkx,nkz);
 
 for iz = 1:nkz
     for iy = 1:nky
         for ix = 1:nkx
-            omega(ix,iy,iz) = LinearFit_s(t(its:ite),squeeze(abs(phi(ix,iy,iz,its:ite))));
+            omega(iy,ix,iz) = LinearFit_s(t(its:ite),squeeze(abs(phi(iy,ix,iz,its:ite))));
         end
     end
 end
@@ -34,14 +34,14 @@ poskz = kz>=0;
 kxeq0 = kx==0;
 kzeq0 = kz==0;
 
-omega = omega(poskx,posky,poskz);
+omega = omega(posky,poskx,poskz);
 
 FIGURE.fig = figure;
 nplots = OPTIONS.kxky + OPTIONS.kzkx + OPTIONS.kzky; 
 iplot = 1;
 
 if OPTIONS.kxky
-[Y_XY,X_XY] = meshgrid(ky(posky),kx(poskx));
+[X_XY,Y_XY] = meshgrid(ky(posky),kx(poskx));
 subplot(1,nplots,iplot)
     if ~OPTIONS.keq0
         toplot = squeeze(max(real(omega(:,:,:)),[],3));

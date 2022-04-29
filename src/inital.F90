@@ -124,13 +124,13 @@ SUBROUTINE init_moments
           DO iky=ikys,ikye
             DO iz=izs,ize
               CALL RANDOM_NUMBER(noise)
-              moments_e(ip,ij,ikx,iky,iz,:) = (init_background + init_noiselvl*(noise-0.5_dp))
+              moments_e(ip,ij,iky,ikx,iz,:) = (init_background + init_noiselvl*(noise-0.5_dp))
             END DO
           END DO
         END DO
-        IF ( contains_kx0 ) THEN
-          DO iky=2,Nky/2 !symmetry at kx = 0 for all z
-            moments_e(ip,ij,ikx_0,iky,:,:) = moments_e( ip,ij,ikx_0,Nky+2-iky,:, :)
+        IF ( contains_ky0 ) THEN
+          DO iky=2,Nky/2 !symmetry at ky = 0 for all z
+            moments_e(ip,ij,iky_0,ikx,:,:) = moments_e( ip,ij,iky_0,Nkx+2-ikx,:, :)
           END DO
         ENDIF
       END DO
@@ -144,14 +144,14 @@ SUBROUTINE init_moments
           DO iky=ikys,ikye
             DO iz=izs,ize
               CALL RANDOM_NUMBER(noise)
-              moments_i(ip,ij,ikx,iky,iz,:) = (init_background + init_noiselvl*(noise-0.5_dp))
+              moments_i(ip,ij,iky,ikx,iz,:) = (init_background + init_noiselvl*(noise-0.5_dp))
             END DO
           END DO
         END DO
 
-        IF ( contains_kx0 ) THEN
-          DO iky=2,Nky/2 !symmetry at kx = 0 for all z
-            moments_i( ip,ij,ikx_0,iky,:,:) = moments_i( ip,ij,ikx_0,Nky+2-iky,:,:)
+        IF ( contains_ky0 ) THEN
+          DO ikx=2,Nkx/2 !symmetry at ky = 0 for all z
+            moments_i( ip,ij,iky_0,ikx,:,:) = moments_i( ip,ij,iky_0,Nkx+2-ikx,:,:)
           END DO
         ENDIF
 
@@ -166,13 +166,13 @@ SUBROUTINE init_moments
         IF(KIN_E) THEN
         DO ip=ips_e,ipe_e
         DO ij=ijs_e,ije_e
-          moments_e( ip,ij,ikx,iky,iz, :) = moments_e( ip,ij,ikx,iky,iz, :)*AA_x(ikx)*AA_y(iky)
+          moments_e( ip,ij,iky,ikx,iz, :) = moments_e( ip,ij,iky,ikx,iz, :)*AA_x(ikx)*AA_y(iky)
         ENDDO
         ENDDO
         ENDIF
         DO ip=ips_i,ipe_i
         DO ij=ijs_i,ije_i
-          moments_i( ip,ij,ikx,iky,iz, :) = moments_i( ip,ij,ikx,iky,iz, :)*AA_x(ikx)*AA_y(iky)
+          moments_i( ip,ij,iky,ikx,iz, :) = moments_i( ip,ij,iky,ikx,iz, :)*AA_x(ikx)*AA_y(iky)
         ENDDO
         ENDDO
       ENDDO
@@ -212,16 +212,16 @@ SUBROUTINE init_gyrodens
             DO iz=izs,ize
               CALL RANDOM_NUMBER(noise)
               IF ( (ip .EQ. 1) .AND. (ij .EQ. 1) ) THEN
-                moments_e(ip,ij,ikx,iky,iz,:) = (init_background + init_noiselvl*(noise-0.5_dp))
+                moments_e(ip,ij,iky,ikx,iz,:) = (init_background + init_noiselvl*(noise-0.5_dp))
               ELSE
-                moments_e(ip,ij,ikx,iky,iz,:) = 0._dp
+                moments_e(ip,ij,iky,ikx,iz,:) = 0._dp
               ENDIF
             END DO
           END DO
         END DO
-        IF ( contains_kx0 ) THEN
-          DO iky=2,Nky/2 !symmetry at kx = 0 for all z
-            moments_e(ip,ij,ikx_0,iky,:,:) = moments_e( ip,ij,ikx_0,Nky+2-iky,:, :)
+        IF ( contains_ky0 ) THEN
+          DO ikx=2,Nkx/2 !symmetry at ky = 0 for all z
+            moments_e(ip,ij,iky_0,ikx,:,:) = moments_e( ip,ij,iky_0,Nkx+2-ikx,:, :)
           END DO
         ENDIF
       END DO
@@ -235,16 +235,16 @@ SUBROUTINE init_gyrodens
             DO iz=izs,ize
               CALL RANDOM_NUMBER(noise)
               IF ( (ip .EQ. 1) .AND. (ij .EQ. 1) ) THEN
-                moments_i(ip,ij,ikx,iky,iz,:) = (init_background + init_noiselvl*(noise-0.5_dp))
+                moments_i(ip,ij,iky,ikx,iz,:) = (init_background + init_noiselvl*(noise-0.5_dp))
               ELSE
-                moments_i(ip,ij,ikx,iky,iz,:) = 0._dp
+                moments_i(ip,ij,iky,ikx,iz,:) = 0._dp
               ENDIF
             END DO
           END DO
         END DO
-        IF ( contains_kx0 ) THEN
-          DO iky=2,Nky/2 !symmetry at kx = 0 for all z
-            moments_i( ip,ij,ikx_0,iky,:,:) = moments_i( ip,ij,ikx_0,Nky+2-iky,:,:)
+        IF ( contains_ky0 ) THEN
+          DO iky=2,Nky/2 !symmetry at ky = 0 for all z
+            moments_i( ip,ij,iky_0,ikx,:,:) = moments_i( ip,ij,iky_0,Nkx+2-ikx,:,:)
           END DO
         ENDIF
       END DO
@@ -258,13 +258,13 @@ SUBROUTINE init_gyrodens
         IF(KIN_E) THEN
         DO ip=ips_e,ipe_e
         DO ij=ijs_e,ije_e
-          moments_e( ip,ij,ikx,iky,iz, :) = moments_e( ip,ij,ikx,iky,iz, :)*AA_x(ikx)*AA_y(iky)
+          moments_e( ip,ij,iky,ikx,iz, :) = moments_e( ip,ij,iky,ikx,iz, :)*AA_x(ikx)*AA_y(iky)
         ENDDO
         ENDDO
         ENDIF
         DO ip=ips_i,ipe_i
         DO ij=ijs_i,ije_i
-          moments_i( ip,ij,ikx,iky,iz, :) = moments_i( ip,ij,ikx,iky,iz, :)*AA_x(ikx)*AA_y(iky)
+          moments_i( ip,ij,iky,ikx,iz, :) = moments_i( ip,ij,iky,ikx,iz, :)*AA_x(ikx)*AA_y(iky)
         ENDDO
         ENDDO
       ENDDO
@@ -300,17 +300,17 @@ SUBROUTINE init_phi
       DO iky=ikys,ikye
         DO iz=izs,ize
           CALL RANDOM_NUMBER(noise)
-          phi(ikx,iky,iz) = (init_background + init_noiselvl*(noise-0.5_dp))!*AA_x(ikx)*AA_y(iky)
+          phi(iky,ikx,iz) = (init_background + init_noiselvl*(noise-0.5_dp))!*AA_x(ikx)*AA_y(iky)
         ENDDO
       END DO
     END DO
 
-    !symmetry at kx = 0 to keep real inverse transform
-    IF ( contains_kx0 ) THEN
-      DO iky=2,Nky/2
-        phi(ikx_0,iky,izs:ize) = phi(ikx_0,Nky+2-iky,izs:ize)
+    !symmetry at ky = 0 to keep real inverse transform
+    IF ( contains_ky0 ) THEN
+      DO ikx=2,Nkx/2
+        phi(iky_0,ikx,izs:ize) = phi(iky_0,Nkx+2-ikx,izs:ize)
       END DO
-      phi(ikx_0,Ny/2,izs:ize) = REAL(phi(ikx_0,Ny/2,izs:ize)) !origin must be real
+      phi(iky_0,ikx_0,izs:ize) = REAL(phi(iky_0,ikx_0,izs:ize)) !origin must be real
     ENDIF
 
     !**** ensure no previous moments initialization
@@ -323,9 +323,9 @@ SUBROUTINE init_phi
       IF (my_id .EQ. 0) WRITE(*,*) 'Init ZF phi'
       IF( (INIT_ZF+1 .GT. ikxs) .AND. (INIT_ZF+1 .LT. ikxe) ) THEN
         DO iz = izs,ize
-          phi(INIT_ZF+1,iky_0,iz) = ZF_AMP*(2._dp*PI)**2/deltakx/deltaky/2._dp * COS((iz-1)/Nz*2._dp*PI)
-          moments_i(1,1,INIT_ZF+1,iky_0,iz,:) = kxarray(INIT_ZF+1)**2*phi(INIT_ZF+1,iky_0,iz)* COS((iz-1)/Nz*2._dp*PI)
-          IF(KIN_E) moments_e(1,1,INIT_ZF+1,iky_0,iz,:) = 0._dp
+          phi(iky_0,INIT_ZF+1,iz) = ZF_AMP*(2._dp*PI)**2/deltakx/deltaky/2._dp * COS((iz-1)/Nz*2._dp*PI)
+          moments_i(1,1,iky_0,INIT_ZF+1,iz,:) = kxarray(INIT_ZF+1)**2*phi(iky_0,INIT_ZF+1,iz)* COS((iz-1)/Nz*2._dp*PI)
+          IF(KIN_E) moments_e(1,1,iky_0,INIT_ZF+1,iz,:) = 0._dp
         ENDDO
       ENDIF
     ENDIF
@@ -354,7 +354,7 @@ SUBROUTINE initialize_blob
     DO ip=ips_i,ipe_i
     DO ij=ijs_i,ije_i
       IF( (iky .NE. iky_0) .AND. (ip .EQ. 1) .AND. (ij .EQ. 1)) THEN
-        moments_i( ip,ij,ikx,iky,iz, :) = moments_i( ip,ij,ikx,iky,iz, :) &
+        moments_i( ip,ij,iky,ikx,iz, :) = moments_i( ip,ij,iky,ikx,iz, :) &
         + gain*sigma/SQRT2 * exp(-(kx**2+ky**2)*sigma**2/4._dp) &
           * AA_x(ikx)*AA_y(iky)!&
           ! * exp(sigmai2_taui_o2*(kx**2+ky**2))
@@ -365,7 +365,7 @@ SUBROUTINE initialize_blob
     DO ip=ips_e,ipe_e
     DO ij=ijs_e,ije_e
       IF( (iky .NE. iky_0) .AND. (ip .EQ. 1) .AND. (ij .EQ. 1)) THEN
-        moments_e( ip,ij,ikx,iky,iz, :) = moments_e( ip,ij,ikx,iky,iz, :) &
+        moments_e( ip,ij,iky,ikx,iz, :) = moments_e( ip,ij,iky,ikx,iz, :) &
         + gain*sigma/SQRT2 * exp(-(kx**2+ky**2)*sigma**2/4._dp) &
           * AA_x(ikx)*AA_y(iky)!&
           ! * exp(sigmai2_taui_o2*(kx**2+ky**2))
@@ -416,28 +416,28 @@ SUBROUTINE init_ppj
                 z = zarray(iz,0)
                 IF (kx .EQ. 0) THEN
                   IF(ky .EQ. 0) THEN
-                    moments_e(ip,ij,ikx,iky,iz,:) = 0._dp
+                    moments_e(ip,ij,iky,ikx,iz,:) = 0._dp
                   ELSE
-                    moments_e(ip,ij,ikx,iky,iz,:) = 0.5_dp * ky_min/(ABS(ky)+ky_min)
+                    moments_e(ip,ij,iky,ikx,iz,:) = 0.5_dp * ky_min/(ABS(ky)+ky_min)
                   ENDIF
                 ELSE
                   IF(ky .GT. 0) THEN
-                    moments_e(ip,ij,ikx,iky,iz,:) = (kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
+                    moments_e(ip,ij,iky,ikx,iz,:) = (kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
                   ELSE
-                    moments_e(ip,ij,ikx,iky,iz,:) = 0.5_dp*(kx_min/(ABS(kx)+kx_min))
+                    moments_e(ip,ij,iky,ikx,iz,:) = 0.5_dp*(kx_min/(ABS(kx)+kx_min))
                   ENDIF
                 ENDIF
                 ! z-dep
-                moments_e(ip,ij,ikx,iky,iz,:) = moments_e(ip,ij,ikx,iky,iz,:) * &
+                moments_e(ip,ij,iky,ikx,iz,:) = moments_e(ip,ij,iky,ikx,iz,:) * &
                 ! (1 + exp(-(z/sigma_z)**2/2.0)*sqrt(2.0*sqrt(pi)/sigma_z))
                 (Jacobian(iz,0)*iInt_Jacobian)**2
               END DO
             END DO
           END DO
 
-          IF ( contains_kx0 ) THEN
-            DO iky=2,Nky/2 !symmetry at kx = 0 for all z
-              moments_e(ip,ij,ikx_0,iky,:,:) = moments_e( ip,ij,ikx_0,Nky+2-iky,:, :)
+          IF ( contains_ky0 ) THEN
+            DO ikx=2,Nkx/2 !symmetry at kx = 0 for all z
+              moments_e(ip,ij,iky_0,ikx,:,:) = moments_e( ip,ij,iky_0,Nkx+2-ikx,:, :)
             END DO
           ENDIF
         ELSE
@@ -459,28 +459,28 @@ SUBROUTINE init_ppj
                 z = zarray(iz,0)
                 IF (kx .EQ. 0) THEN
                   IF(ky .EQ. 0) THEN
-                    moments_i(ip,ij,ikx,iky,iz,:) = 0._dp
+                    moments_i(ip,ij,iky,ikx,iz,:) = 0._dp
                   ELSE
-                    moments_i(ip,ij,ikx,iky,iz,:) = 0.5_dp * ky_min/(ABS(ky)+ky_min)
+                    moments_i(ip,ij,iky,ikx,iz,:) = 0.5_dp * ky_min/(ABS(ky)+ky_min)
                   ENDIF
                 ELSE
                   IF(ky .GT. 0) THEN
-                    moments_i(ip,ij,ikx,iky,iz,:) = (kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
+                    moments_i(ip,ij,iky,ikx,iz,:) = (kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
                   ELSE
-                    moments_i(ip,ij,ikx,iky,iz,:) = 0.5_dp*(kx_min/(ABS(kx)+kx_min))
+                    moments_i(ip,ij,iky,ikx,iz,:) = 0.5_dp*(kx_min/(ABS(kx)+kx_min))
                   ENDIF
                 ENDIF
                 ! z-dep
-                moments_i(ip,ij,ikx,iky,iz,:) = moments_i(ip,ij,ikx,iky,iz,:) * &
+                moments_i(ip,ij,iky,ikx,iz,:) = moments_i(ip,ij,iky,ikx,iz,:) * &
                 ! (1 + exp(-(z/sigma_z)**2/2.0)*sqrt(2.0*sqrt(pi)/sigma_z))
                 (Jacobian(iz,0)*iInt_Jacobian)**2
               END DO
             END DO
           END DO
 
-          IF ( contains_kx0 ) THEN
-            DO iky=2,Nky/2 !symmetry at kx = 0 for all z
-              moments_i( ip,ij,ikx_0,iky,:,:) = moments_i( ip,ij,ikx_0,Nky+2-iky,:,:)
+          IF ( contains_ky0 ) THEN
+            DO ikx=2,Nkx/2 !symmetry at kx = 0 for all z
+              moments_i(ip,ij,iky_0,ikx,:,:) = moments_i( ip,ij,iky_0,Nkx+2-ikx,:, :)
             END DO
           ENDIF
         ELSE
@@ -496,12 +496,12 @@ SUBROUTINE init_ppj
       DO iz=izs,ize
         DO ip=ips_e,ipe_e
         DO ij=ijs_e,ije_e
-          moments_e( ip,ij,ikx,iky,iz, :) = moments_e( ip,ij,ikx,iky,iz, :)*AA_x(ikx)*AA_y(iky)
+          moments_e( ip,ij,iky,ikx,iz, :) = moments_e( ip,ij,iky,ikx,iz, :)*AA_x(ikx)*AA_y(iky)
         ENDDO
         ENDDO
         DO ip=ips_i,ipe_i
         DO ij=ijs_i,ije_i
-          moments_i( ip,ij,ikx,iky,iz, :) = moments_i( ip,ij,ikx,iky,iz, :)*AA_x(ikx)*AA_y(iky)
+          moments_i( ip,ij,iky,ikx,iz, :) = moments_i( ip,ij,iky,ikx,iz, :)*AA_x(ikx)*AA_y(iky)
         ENDDO
         ENDDO
       ENDDO

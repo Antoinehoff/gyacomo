@@ -32,7 +32,7 @@ CONTAINS
         p_int = parray_e(ip)
         DO ij=ijs_e,ije_e
           IF((CLOS .NE. 1) .OR. (ip-1+2*(ij-1)+1 .LE. dmaxe))&
-          CALL advance_field(moments_e(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize,:), moments_rhs_e(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize,:))
+          CALL advance_field(moments_e(ip,ij,ikys:ikye,ikxs:ikxe,izs:ize,:), moments_rhs_e(ip,ij,ikys:ikye,ikxs:ikxe,izs:ize,:))
         ENDDO
       ENDDO
     ENDIF
@@ -41,7 +41,7 @@ CONTAINS
       DO ij=ijs_i,ije_i
         j_int = jarray_i(ij)
         IF((CLOS .NE. 1) .OR. (ip-1+2*(ij-1)+1 .LE. dmaxi))&
-        CALL advance_field(moments_i(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize,:), moments_rhs_i(ip,ij,ikxs:ikxe,ikys:ikye,izs:ize,:))
+        CALL advance_field(moments_i(ip,ij,ikys:ikye,ikxs:ikxe,izs:ize,:), moments_rhs_i(ip,ij,ikys:ikye,ikxs:ikxe,izs:ize,:))
       ENDDO
     ENDDO
     ! Execution time end
@@ -60,21 +60,21 @@ CONTAINS
     use initial_par, ONLY: ACT_ON_MODES
     IMPLICIT NONE
 
-    COMPLEX(dp), DIMENSION ( ikxs:ikxe, ikys:ikye, izs:ize, ntimelevel ) :: f
-    COMPLEX(dp), DIMENSION ( ikxs:ikxe, ikys:ikye, izs:ize, ntimelevel ) :: f_rhs
+    COMPLEX(dp), DIMENSION ( ikys:ikye, ikxs:ikxe, izs:ize, ntimelevel ) :: f
+    COMPLEX(dp), DIMENSION ( ikys:ikye, ikxs:ikxe, izs:ize, ntimelevel ) :: f_rhs
     INTEGER :: istage
 
     SELECT CASE (updatetlevel)
     CASE(1)
         DO istage=1,ntimelevel
-          f(ikxs:ikxe,ikys:ikye,izs:ize,1) = f(ikxs:ikxe,ikys:ikye,izs:ize,1) &
-                   + dt*b_E(istage)*f_rhs(ikxs:ikxe,ikys:ikye,izs:ize,istage)
+          f(ikys:ikye,ikxs:ikxe,izs:ize,1) = f(ikys:ikye,ikxs:ikxe,izs:ize,1) &
+                   + dt*b_E(istage)*f_rhs(ikys:ikye,ikxs:ikxe,izs:ize,istage)
         END DO
     CASE DEFAULT
-        f(ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel) = f(ikxs:ikxe,ikys:ikye,izs:ize,1);
+        f(ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel) = f(ikys:ikye,ikxs:ikxe,izs:ize,1);
         DO istage=1,updatetlevel-1
-          f(ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel) = f(ikxs:ikxe,ikys:ikye,izs:ize,updatetlevel) + &
-                            dt*A_E(updatetlevel,istage)*f_rhs(ikxs:ikxe,ikys:ikye,izs:ize,istage)
+          f(ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel) = f(ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel) + &
+                            dt*A_E(updatetlevel,istage)*f_rhs(ikys:ikye,ikxs:ikxe,izs:ize,istage)
         END DO
     END SELECT
   END SUBROUTINE advance_field

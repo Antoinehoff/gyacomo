@@ -45,7 +45,7 @@ SUBROUTINE update_ghosts_p_e
 
     IMPLICIT NONE
 
-    count = (ijge_e-ijgs_e+1)*(ikxe-ikxs+1)*(ikye-ikys+1)*(izge-izgs+1)
+    count = (ijge_e-ijgs_e+1)*(ikye-ikys+1)*(ikxe-ikxs+1)*(izge-izgs+1)
 
     !!!!!!!!!!! Send ghost to right neighbour !!!!!!!!!!!!!!!!!!!!!!
     ! Send the last local moment to fill the -1 neighbour ghost
@@ -73,7 +73,7 @@ SUBROUTINE update_ghosts_p_i
 
     IMPLICIT NONE
 
-    count = (ijge_i-ijgs_i+1)*(ikxe-ikxs+1)*(ikye-ikys+1)*(izge-izgs+1) ! Number of elements sent
+    count = (ijge_i-ijgs_i+1)*(ikye-ikys+1)*(ikxe-ikxs+1)*(izge-izgs+1) ! Number of elements sent
 
     !!!!!!!!!!! Send ghost to right neighbour !!!!!!!!!!!!!!!!!!!!!!
     CALL mpi_sendrecv(moments_i(ipe_i  ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 14, &
@@ -126,7 +126,7 @@ SUBROUTINE update_ghosts_z_e
   CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
   IF (num_procs_z .GT. 1) THEN
 
-    count = (ipge_e-ipgs_e+1)*(ijge_e-ijgs_e+1)*(ikxe-ikxs+1)*(ikye-ikys+1)
+    count = (ipge_e-ipgs_e+1)*(ijge_e-ijgs_e+1)*(ikye-ikys+1)*(ikxe-ikxs+1)
 
     !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
     ! Send the last local moment to fill the -1 neighbour ghost
@@ -163,7 +163,7 @@ SUBROUTINE update_ghosts_z_i
   CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
   IF (num_procs_z .GT. 1) THEN
 
-    count = (ipge_i-ipgs_i+1)*(ijge_i-ijgs_i+1)*(ikxe-ikxs+1)*(ikye-ikys+1)
+    count = (ipge_i-ipgs_i+1)*(ijge_i-ijgs_i+1)*(ikye-ikys+1)*(ikxe-ikxs+1)
 
     !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
     ! Send the last local moment to fill the -1 neighbour ghost
@@ -199,7 +199,7 @@ SUBROUTINE update_ghosts_z_phi
   IF(Nz .GT. 1) THEN
     CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
     IF (num_procs_z .GT. 1) THEN
-      count = (ikxe-ikxs+1) * (ikye-ikys+1)
+      count = (ikye-ikys+1) * (ikxe-ikxs+1)
 
       !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
       ! Send the last local moment to fill the -1 neighbour ghost

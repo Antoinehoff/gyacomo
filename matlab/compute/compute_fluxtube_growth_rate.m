@@ -2,13 +2,13 @@ function [ linear_gr ] = compute_fluxtube_growth_rate(DATA, TRANGE, PLOT)
 
 % Remove AA part
 if DATA.Nx > 1
-    ikxnz = abs(DATA.PHI(:,1,1,1)) > 0;
+    ikxnz = abs(DATA.PHI(1,:,1,1)) > 0;
 else
-    ikxnz = abs(DATA.PHI(:,1,1,1)) > -1;
+    ikxnz = abs(DATA.PHI(1,:,1,1)) > -1;
 end
-ikynz = abs(DATA.PHI(1,:,1,1)) > 0;
+ikynz = abs(DATA.PHI(:,1,1,1)) > 0;
 
-phi = DATA.PHI(ikxnz,ikynz,:,:);
+phi = DATA.PHI(ikynz,ikxnz,:,:);
 t   = DATA.Ts3D;
 
 [~,its] = min(abs(t-TRANGE(1)));
@@ -22,13 +22,13 @@ for it = its+1:ite
     phi_n   = phi(:,:,:,it); 
     phi_nm1 = phi(:,:,:,it-1);
     dt      = t(it)-t(it-1);
-    ZS      = sum(sum(phi_nm1,1),3);
+    ZS      = sum(sum(phi_nm1,2),3);
    
     wl         = log(phi_n./phi_nm1)/dt;
-    w_ky(:,is) = sum(sum(wl.*phi_nm1,1),3)./ZS;
+    w_ky(:,is) = squeeze(sum(sum(wl.*phi_nm1,2),3)./ZS);
     
     for iky = 1:numel(w_ky(:,is))
-        ce(iky,is)   = abs(sum(sum(abs(w_ky(iky,is)-wl(:,iky,:)).^2.*phi_nm1(:,iky,:),1),3)./ZS(:,iky,:));
+        ce(iky,is)   = abs(sum(sum(abs(w_ky(iky,is)-wl(iky,:,:)).^2.*phi_nm1(iky,:,:),2),3)./ZS(iky,:,:));
     end
     is = is + 1;
 end

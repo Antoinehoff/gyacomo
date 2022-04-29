@@ -45,12 +45,12 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'RZ';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = dat.Ts5D;
-options.TIME      = 0:1:20;
+options.TIME      = 0:0.1:10;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -72,7 +72,7 @@ options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 8;
-options.TIME      = [500 700 900];
+options.TIME      = [1 4 10];
 data.a = data.EPS * 1000;
 fig = photomaton(data,options);
 save_figure(data,fig)
@@ -155,7 +155,7 @@ options.K2PLOT = 1;
 options.TIME   = 5:1:15;
 options.NMA    = 1;
 options.NMODES = 5;
-options.iz     = 8;
+options.iz     = 1;
 fig = mode_growth_meter(data,options);
 save_figure(data,fig)
 end
