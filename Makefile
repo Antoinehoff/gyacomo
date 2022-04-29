@@ -2,6 +2,7 @@ include local/dirs.inc
 include local/make.inc
 
 EXEC = $(BINDIR)/helaz3
+EFST = $(BINDIR)/helaz3_fst
 EDBG = $(BINDIR)/helaz3_dbg
 
 F90 = mpiifort
@@ -19,6 +20,10 @@ F90 = mpiifort
 all: dirs src/srcinfo.h
 all: F90FLAGS = -O3 -xHOST
 all: $(EXEC)
+
+fast: dirs src/srcinfo.h
+fast: F90FLAGS = -fast
+fast: $(EFST)
 
 dbg: dirs src/srcinfo.h
 dbg: F90FLAGS = -g -traceback -CB
@@ -68,6 +73,9 @@ $(OBJDIR)/restarts_mod.o $(OBJDIR)/stepon.o $(OBJDIR)/tesend.o $(OBJDIR)/time_in
 $(OBJDIR)/utility_mod.o
 
  $(EXEC): $(FOBJ)
+	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
+
+ $(EFST): $(FOBJ)
 	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
 
  $(EDBG): $(FOBJ)

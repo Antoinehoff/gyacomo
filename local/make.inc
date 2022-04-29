@@ -81,7 +81,7 @@ ifdef LAPACKDIR
       LDIRS += -L$(LAPACKDIR)/lib
 endif
 
-# FM library 
+# FM library
 ifdef FMDIR
       LDIRS += -L$(FMDIR)/lib
       IDIRS += -I$(FMDIR)/mod
