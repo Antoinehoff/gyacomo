@@ -42,6 +42,7 @@ MODULE fourier
     !! Complex arrays F, G
     ! Compute the room to allocate
     alloc_local_1 = fftw_mpi_local_size_2d(NY_halved, NX_, communicator, local_nky, local_nky_offset)
+
     ! Initalize pointers to this room
     cdatac_f = fftw_alloc_complex(alloc_local_1)
     cdatac_g = fftw_alloc_complex(alloc_local_1)
@@ -53,7 +54,7 @@ MODULE fourier
 
     !! Real arrays iFFT(F), iFFT(G)
     ! Compute the room to allocate
-    alloc_local_2 = fftw_mpi_local_size_2d(NX_, NY_halved, communicator, local_nky, local_nky_offset)
+    alloc_local_2 = fftw_mpi_local_size_2d(NY_halved, NX_, communicator, local_nky, local_nky_offset)
     ! Initalize pointers to this room
     cdatar_f = fftw_alloc_real(2*alloc_local_2)
     cdatar_g = fftw_alloc_real(2*alloc_local_2)
@@ -84,9 +85,9 @@ MODULE fourier
     ! First term df/dx x dg/dy
     DO ikx = ikxs, ikxe
       DO iky = ikys, ikye
-        cmpx_data_f(iky-local_nky_offset,ikx) = &
+        cmpx_data_f(ikx,iky-local_nky_offset) = &
               imagu*kxarray(ikx)*F_(iky,ikx)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
-        cmpx_data_g(iky-local_nky_offset,ikx) = &
+        cmpx_data_g(ikx,iky-local_nky_offset) = &
               imagu*kyarray(iky)*G_(iky,ikx)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
       ENDDO
     ENDDO

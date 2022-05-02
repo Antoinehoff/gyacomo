@@ -15,9 +15,11 @@ subroutine auxval
   IF (my_id .EQ. 0) WRITE(*,*) '=== Set auxiliary values ==='
 
   IF (LINEARITY .NE. 'linear') THEN
+    write(*,*) 'FFTW3 y-grid distribution'
     CALL init_grid_distr_and_plans(Nx,Ny)
   ELSE
     CALL init_1Dgrid_distr
+    write(*,*) 'Manual y-grid distribution'
   ENDIF
   ! Init the grids
   CALL set_pgrid ! parallel kin (MPI distributed)
