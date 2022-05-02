@@ -26,7 +26,7 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, TAVG_0, TAVG_1,stf
     end
     Gx_t_mtlb = squeeze(mean(mean(Gx,1),2)); 
     % Compute Heat flux from ifft matlab
-    Qx = zeros(DATA.Nx,DATA.Ny,numel(DATA.Ts3D));
+    Qx = zeros(DATA.Ny,DATA.Nx,numel(DATA.Ts3D));
     for it = 1:numel(DATA.Ts3D)
         for iz = 1:DATA.Nz
             Qx(:,:,it)  = Qx(:,:,it) + ifourier_GENE(-1i*KY.*(DATA.PHI(:,:,iz,it)))...
@@ -71,7 +71,7 @@ mvm = @(x) movmean(x,Nmvm);
         % computation
     Ns3D = numel(DATA.Ts3D);
     [KY, KX] = meshgrid(DATA.ky, DATA.kx);
-    plt = @(x) mean(x(:,:,1,:),2);
+    plt = @(x) mean(x(:,:,1,:),1);
     kycut = max(DATA.ky);
     kxcut = max(DATA.kx);
     LP = (abs(KY)<kycut).*(abs(KX)<kxcut); %Low pass filter
@@ -87,7 +87,7 @@ mvm = @(x) movmean(x,Nmvm);
     end
     switch stfname
         case 'phi'
-                phi            = zeros(DATA.Nx,DATA.Ny,1,Ns3D);
+                phi            = zeros(DATA.Ny,DATA.Nx,1,Ns3D);
                 for it = 1:numel(DATA.Ts3D)
                     phi(:,:,1,it)  = ifourier_GENE(compz(DATA.PHI(:,:,:,it)));
                 end
