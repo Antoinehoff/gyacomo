@@ -42,26 +42,25 @@ MODULE fourier
     !! Complex arrays F, G
     ! Compute the room to allocate
     alloc_local_1 = fftw_mpi_local_size_2d(NY_halved, NX_, communicator, local_nky, local_nky_offset)
-
     ! Initalize pointers to this room
     cdatac_f = fftw_alloc_complex(alloc_local_1)
     cdatac_g = fftw_alloc_complex(alloc_local_1)
     cdatac_c = fftw_alloc_complex(alloc_local_1)
     ! Initalize the arrays with the rooms pointed
-    call c_f_pointer(cdatac_f, cmpx_data_f, [NX_ ,local_nky])
-    call c_f_pointer(cdatac_g, cmpx_data_g, [NX_ ,local_nky])
+    call c_f_pointer(cdatac_f,   cmpx_data_f, [NX_ ,local_nky])
+    call c_f_pointer(cdatac_g,   cmpx_data_g, [NX_ ,local_nky])
     call c_f_pointer(cdatac_c, bracket_sum_c, [NX_ ,local_nky])
 
     !! Real arrays iFFT(F), iFFT(G)
     ! Compute the room to allocate
-    alloc_local_2 = fftw_mpi_local_size_2d(NY_halved, NX_, communicator, local_nky, local_nky_offset)
+    alloc_local_2 = fftw_mpi_local_size_2d(NX_, NY_halved, communicator, local_nkx, local_nkx_offset)
     ! Initalize pointers to this room
     cdatar_f = fftw_alloc_real(2*alloc_local_2)
     cdatar_g = fftw_alloc_real(2*alloc_local_2)
     cdatar_c = fftw_alloc_real(2*alloc_local_2)
     ! Initalize the arrays with the rooms pointed
-    call c_f_pointer(cdatar_f, real_data_f,   [2*(NY_/2  + 1),local_nkx])
-    call c_f_pointer(cdatar_g, real_data_g,   [2*(NY_/2  + 1),local_nkx])
+    call c_f_pointer(cdatar_f,   real_data_f, [2*(NY_/2  + 1),local_nkx])
+    call c_f_pointer(cdatar_g,   real_data_g, [2*(NY_/2  + 1),local_nkx])
     call c_f_pointer(cdatar_c, bracket_sum_r, [2*(NY_/2  + 1),local_nkx])
 
     ! Plan Creation (out-of-place forward and backward FFT)
