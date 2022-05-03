@@ -21,7 +21,7 @@ FMT = '.fig';
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-TAVG_0 = 600; TAVG_1 = 700; % Averaging times duration
+TAVG_0 = 0.8*data.Ts3D(end); TAVG_1 = data.Ts3D(end); % Averaging times duration
 compz  = 'avg';
 % chose your field to plot in spacetime diag (uzf,szf,Gx)
 fig = plot_radial_transport_and_spacetime(data,TAVG_0,TAVG_1,'phi',1,compz);
@@ -45,12 +45,12 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'RZ';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = dat.Ts5D;
-options.TIME      = 0:1:20;
+options.TIME      = 0:1:80;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
