@@ -21,10 +21,12 @@ FMT = '.fig';
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-TAVG_0 = 0.8*data.Ts3D(end); TAVG_1 = data.Ts3D(end); % Averaging times duration
-compz  = 'avg';
-% chose your field to plot in spacetime diag (uzf,szf,Gx)
-fig = plot_radial_transport_and_spacetime(data,TAVG_0,TAVG_1,'phi',1,compz);
+options.TAVG_0   = 0.8*data.Ts3D(end); 
+options.TAVG_1   = data.Ts3D(end); % Averaging times duration
+options.NMVA     = 1;              % Moving average for time traces
+options.ST_FIELD = '\Gamma_x';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
+options.INTERP   = 1;
+fig = plot_radial_transport_and_spacetime(data,options);
 save_figure(data,fig)
 end
 
@@ -39,18 +41,18 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = 'N_i^{00}';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
-% options.NAME      = '\Gamma_x';
+options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = dat.Ts5D;
-options.TIME      = 100:1:200;
+options.TIME      = 00:1:200;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -68,11 +70,11 @@ options.NAME      = '\phi';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 1;
-options.TIME      = [1];
+options.TIME      = [150];
 data.a = data.EPS * 1000;
 fig = photomaton(data,options);
 save_figure(data,fig)
@@ -82,8 +84,8 @@ if 0
 %% 3D plot on the geometry
 options.INTERP    = 1;
 options.NAME      = 'n_i';
-options.PLANES    = 1:3:15;
-options.TIME      = [100];
+options.PLANES    = 1;
+options.TIME      = [100 200];
 options.PLT_MTOPO = 1;
 data.rho_o_R      = 2e-3; % Sound larmor radius over Machine size ratio
 fig = show_geometry(data,options);
@@ -133,16 +135,16 @@ end
 
 if 0
 %% 1D real plot
-options.TIME   = 20;
+options.TIME   = [50 100 200];
 options.NORM   = 0;
 options.NAME   = '\phi';
 % options.NAME      = 'n_i';
 % options.NAME      ='\Gamma_x';
 % options.NAME      ='s_y';
-options.COMPX  = 1;
-options.COMPY  = 1;
+options.COMPX  = 'avg';
+options.COMPY  = 'avg';
 options.COMPZ  = 1;
-options.COMPT  = 'avg';
+options.COMPT  = 1;
 options.MOVMT  = 1;
 fig = real_plot_1D(data,options);
 % save_figure(data,fig)

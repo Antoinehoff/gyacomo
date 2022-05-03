@@ -74,11 +74,11 @@ MODULE grid
   REAL(dp), PUBLIC, PROTECTED ::  deltakx, deltaky, kx_max, ky_max, kx_min, ky_min!, kp_max
   REAL(dp), PUBLIC, PROTECTED ::  local_kxmax, local_kymax
   INTEGER,  PUBLIC, PROTECTED ::  ikxs, ikxe, ikys, ikye!, ikps, ikpe
-  INTEGER,  PUBLIC, PROTECTED :: ikx_0, iky_0, ikx_max, iky_max ! Indices of k-grid origin and max
-  INTEGER,  PUBLIC            :: ikx, iky, ip, ij, ikp, pp2, eo ! counters
-  LOGICAL,  PUBLIC, PROTECTED :: contains_kx0   = .false. ! flag if the proc contains kx=0 index
-  LOGICAL,  PUBLIC, PROTECTED :: contains_ky0   = .false. ! flag if the proc contains ky=0 index
-  LOGICAL,  PUBLIC, PROTECTED :: contains_kymax = .false. ! flag if the proc contains kx=kxmax index
+  INTEGER,  PUBLIC, PROTECTED ::  ikx_0, iky_0, ikx_max, iky_max ! Indices of k-grid origin and max
+  INTEGER,  PUBLIC            ::  ikx, iky, ip, ij, ikp, pp2, eo ! counters
+  LOGICAL,  PUBLIC, PROTECTED ::  contains_kx0   = .false. ! flag if the proc contains kx=0 index
+  LOGICAL,  PUBLIC, PROTECTED ::  contains_ky0   = .false. ! flag if the proc contains ky=0 index
+  LOGICAL,  PUBLIC, PROTECTED ::  contains_kymax = .false. ! flag if the proc contains kx=kxmax index
 
   ! Grid containing the polynomials degrees
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_e, parray_e_full

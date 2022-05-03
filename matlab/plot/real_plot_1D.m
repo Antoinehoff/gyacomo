@@ -1,4 +1,9 @@
 function [ FIGURE ] = real_plot_1D( data, options )
+nplots = 0;
+if data.Nx > 1; nplots = nplots + 1; end;
+if data.Ny > 1; nplots = nplots + 1; end;
+if data.Nz > 1; nplots = nplots + 1; end;
+
 
 options.PLAN      = 'xy';
 options.COMP      = options.COMPZ;
@@ -33,25 +38,25 @@ end
 
 switch options.COMPX
     case 'avg'
-        compx  = @(x) mean(x,1);
+        compx  = @(x) mean(x,2);
         ynamex = ['$\langle ',yname,'\rangle_x$'];
     otherwise
-        compx  = @(x) x(1,:);
+        compx  = @(x) x(:,1);
         ynamex = ['$',yname,'(y,x=0)$'];
 end
     
 switch options.COMPY
     case 'avg'
-        compy  = @(x) mean(x,2);
+        compy  = @(x) mean(x,1);
         ynamey = ['$\langle ',yname,'\rangle_y$'];
     otherwise
-        compy  = @(x) x(:,1);
+        compy  = @(x) x(1,:);
         ynamey = ['$',yname,'(x,y=0)$'];
 end
     
 
 set(gcf, 'Position',  [20 50 1000 500])
-subplot(1,3,1)
+subplot(1,nplots,1)
 
     X     = data.x;
     xname = '$x$';
@@ -67,7 +72,7 @@ subplot(1,3,1)
             legend('show')
         otherwise
             for it = 1:numel(toplot.FRAMES)
-                Y    = compy(toplot.FIELD(:,:,toplot.FRAMES(it)));
+                Y    = compy(toplot.FIELD(:,:,it));
                 Y    = squeeze(Y);
                 if options.NORM
                     Y    = Y./max(abs(Y));
@@ -81,7 +86,7 @@ subplot(1,3,1)
     xlabel(xname); ylabel(ynamey)
     xlim([min(X),max(X)]);
     
-subplot(1,3,2)
+subplot(1,nplots,2)
 
     X     = data.y;
     xname = '$y$';
@@ -97,7 +102,7 @@ subplot(1,3,2)
             legend('show')
         otherwise
             for it = 1:numel(toplot.FRAMES)
-                Y    = compx(toplot.FIELD(:,:,toplot.FRAMES(it)));
+                Y    = compx(toplot.FIELD(:,:,it));
                 Y    = squeeze(Y);
                 if options.NORM
                     Y    = Y./max(abs(Y));
@@ -123,7 +128,6 @@ if data.Nz > 1
 
     toplot = process_field(data,options);
     t = data.Ts3D; frames = toplot.FRAMES;
-end
  
 switch options.COMPZ
     case 'avg'
@@ -134,7 +138,7 @@ switch options.COMPZ
         ynamez = ['$',yname,'(z,y=0)$'];
 end
 
-subplot(1,3,3)
+subplot(1,nplots,3)
 
     X     = data.z;
     xname = '$z$';
@@ -168,4 +172,4 @@ subplot(1,3,3)
         xlim([min(X),max(X)]);
 
 end
-
+end

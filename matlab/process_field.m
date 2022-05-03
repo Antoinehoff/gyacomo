@@ -7,9 +7,9 @@ FRAMES = zeros(size(OPTIONS.TIME));
 for i = 1:numel(OPTIONS.TIME)
     [~,FRAMES(i)] =min(abs(OPTIONS.TIME(i)-DATA.Ts3D));
 end
-
+FRAMES = unique(FRAMES);
 %% Setup the plot geometry
-[KY,~] = meshgrid(DATA.ky,DATA.kx);
+[~,KY] = meshgrid(DATA.kx,DATA.ky);
 directions = {'x','y','z'};
 Nx = DATA.Nx; Ny = DATA.Ny; Nz = DATA.Nz; Nt = numel(FRAMES);
 POLARPLOT = OPTIONS.POLARPLOT;
@@ -110,7 +110,7 @@ end
 switch REALP
     case 1 % Real space plot
         INTERP = OPTIONS.INTERP;
-        process = @(x) real(fftshift(ifft2(x,Ny,Nx)));
+        process = @(x) real(fftshift(ifourier_GENE(x)));
         shift_x = @(x) x;
         shift_y = @(x) x;
     case 0 % Frequencies plot
@@ -141,9 +141,9 @@ switch OPTIONS.NAME
             end
         else
             if REALP
-                tmp = zeros(Nx,Ny,Nz);
+                tmp = zeros(Ny,Nx,Nz);
             else
-                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+                tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
             end
             for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
@@ -161,9 +161,9 @@ switch OPTIONS.NAME
             end
         else
             if REALP
-                tmp = zeros(Nx,Ny,Nz);
+                tmp = zeros(Ny,Nx,Nz);
             else
-                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+                tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
             end
             for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
@@ -181,9 +181,9 @@ switch OPTIONS.NAME
             end
         else
             if REALP
-                tmp = zeros(Nx,Ny,Nz);
+                tmp = zeros(Ny,Nx,Nz);
             else
-                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+                tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
             end
             for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
@@ -194,7 +194,7 @@ switch OPTIONS.NAME
         end
     case 'k^2n_e'
         NAME = 'k2ne';
-        [KY, KX] = meshgrid(DATA.ky, DATA.kx);
+        [KX, KY] = meshgrid(DATA.kx, DATA.ky);
         if COMPDIM == 3
             for it = 1:numel(FRAMES)
                 for iz = 1:DATA.Nz
@@ -204,9 +204,9 @@ switch OPTIONS.NAME
             end
         else
             if REALP
-                tmp = zeros(Nx,Ny,Nz);
+                tmp = zeros(Ny,Nx,Nz);
             else
-                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+                tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
             end
             for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
@@ -224,9 +224,9 @@ switch OPTIONS.NAME
             end
         else
             if REALP
-                tmp = zeros(Nx,Ny,Nz);
+                tmp = zeros(Ny,Nx,Nz);
             else
-                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+                tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
             end
             for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
@@ -244,9 +244,9 @@ switch OPTIONS.NAME
             end
         else
             if REALP
-                tmp = zeros(Nx,Ny,Nz);
+                tmp = zeros(Ny,Nx,Nz);
             else
-                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+                tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
             end
             for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
@@ -264,9 +264,9 @@ switch OPTIONS.NAME
             end
         else
             if REALP
-                tmp = zeros(Nx,Ny,Nz);
+                tmp = zeros(Ny,Nx,Nz);
             else
-                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+                tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
             end
             for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
@@ -284,9 +284,9 @@ switch OPTIONS.NAME
             end
         else
             if REALP
-                tmp = zeros(Nx,Ny,Nz);
+                tmp = zeros(Ny,Nx,Nz);
             else
-                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+                tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
             end
             for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
@@ -304,9 +304,9 @@ switch OPTIONS.NAME
             end
         else
             if REALP
-                tmp = zeros(Nx,Ny,Nz);
+                tmp = zeros(Ny,Nx,Nz);
             else
-                tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+                tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
             end
             for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
@@ -317,11 +317,11 @@ switch OPTIONS.NAME
         end
    case 'v_y'
         NAME     = 'vy';
-        [~, KX] = meshgrid(DATA.ky, DATA.kx);
-        vE      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
+        [KX, ~] = meshgrid(DATA.kx, DATA.ky);
+        vE      = zeros(DATA.Ny,DATA.Nx,DATA.Nz,numel(FRAMES));
         for it = 1:numel(FRAMES)
             for iz = 1:DATA.Nz
-            vE(:,:,iz,it)  = real(ifft2(-1i*KX.*(DATA.PHI(:,:,iz,FRAMES(it))),DATA.Nx,DATA.Ny));
+            vE(:,:,iz,it)  = real(ifft2(-1i*KX.*(DATA.PHI(:,:,iz,FRAMES(it))),DATA.Ny,DATA.Nx));
             end
         end
         if REALP % plot in real space
@@ -330,7 +330,7 @@ switch OPTIONS.NAME
             end
         else % Plot spectrum
             process = @(x) abs(fftshift(x,2));
-            tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+            tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
             for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
                     tmp(:,:,iz) = squeeze(process(-1i*KX.*(DATA.PHI(:,:,iz,FRAMES(it)))));
@@ -340,11 +340,11 @@ switch OPTIONS.NAME
         end 
    case 'v_x'
         NAME     = 'vx';
-        [KY, ~] = meshgrid(DATA.ky, DATA.kx);
-        vE      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
+        [~, KY] = meshgrid(DATA.kx, DATA.ky);
+        vE      = zeros(DATA.Ny,DATA.Nx,DATA.Nz,numel(FRAMES));
         for it = 1:numel(FRAMES)
             for iz = 1:DATA.Nz
-            vE(:,:,iz,it)  = real(ifft2(-1i*KY.*(DATA.PHI(:,:,iz,FRAMES(it))),DATA.Nx,DATA.Ny));
+            vE(:,:,iz,it)  = real(ifourier_GENE(-1i*KY.*(DATA.PHI(:,:,iz,FRAMES(it)))));
             end
         end
         if REALP % plot in real space
@@ -353,7 +353,7 @@ switch OPTIONS.NAME
             end
         else % Plot spectrum
             process = @(x) abs(fftshift(x,2));
-            tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
+            tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
             for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
                     tmp(:,:,iz) = squeeze(process(-1i*KY.*(DATA.PHI(:,:,iz,FRAMES(it)))));
@@ -367,7 +367,7 @@ switch OPTIONS.NAME
         vE      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
         for it = 1:numel(FRAMES)
             for iz = 1:DATA.Nz
-            vE(:,:,iz,it)  = real(ifft2(KX.^2.*(DATA.PHI(:,:,iz,FRAMES(it))),DATA.Nx,DATA.Ny));
+            vE(:,:,iz,it)  = real(ifourier_GENE(KX.^2.*(DATA.PHI(:,:,iz,FRAMES(it)))));
             end
         end
         if REALP % plot in real space
@@ -376,8 +376,8 @@ switch OPTIONS.NAME
             end
         else % Plot spectrum
             process = @(x) abs(fftshift(x,2));
-            tmp = zeros(DATA.Nkx,DATA.Nky,Nz);
-            for it = 1:numel(FRAMES)
+            tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
+            for it = 1:FRAMES
                 for iz = 1:numel(DATA.z)
                     tmp(:,:,iz) = squeeze(process(KX.^2.*(DATA.PHI(:,:,iz,FRAMES(it)))));
                 end
@@ -386,12 +386,12 @@ switch OPTIONS.NAME
         end 
     case '\Gamma_x'
         NAME     = 'Gx';
-        [KY, ~] = meshgrid(DATA.ky, DATA.kx);
-        Gx      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
+        [~, KY] = meshgrid(DATA.kx, DATA.ky);
+        Gx      = zeros(DATA.Ny,DATA.Nx,DATA.Nz,numel(FRAMES));
         for it = 1:numel(FRAMES)
             for iz = 1:DATA.Nz
-            Gx(:,:,iz,it)  = real((ifft2(-1i*KY.*(DATA.PHI(:,:,iz,FRAMES(it))),DATA.Nx,DATA.Ny)))...
-                .*real((ifft2(DATA.DENS_I(:,:,iz,FRAMES(it)),DATA.Nx,DATA.Ny)));
+            Gx(:,:,iz,it)  = real((ifourier_GENE(-1i*KY.*(DATA.PHI(:,:,iz,FRAMES(it))))))...
+                .*real((ifourier_GENE(DATA.DENS_I(:,:,iz,FRAMES(it)))));
             end
         end
         if REALP % plot in real space
@@ -402,12 +402,39 @@ switch OPTIONS.NAME
             process = @(x) abs(fftshift(x,2));
             shift_x = @(x) fftshift(x,2);
             shift_y = @(x) fftshift(x,2);
-            tmp = zeros(DATA.Nx,DATA.Ny,Nz);
+            tmp = zeros(DATA.Ny,DATA.Nx,Nz);
             for it = 1:numel(FRAMES)
                 for iz = 1:numel(DATA.z)
-                tmp(:,:,iz) = process(squeeze(fft2(Gx(:,:,iz,it),DATA.Nx,DATA.Ny)));
+                tmp(:,:,iz) = process(squeeze(fft2(Gx(:,:,iz,it),DATA.Ny,DATA.Nx)));
                 end
-            FIELD(:,:,it) = squeeze(compr(tmp(1:DATA.Nkx,1:DATA.Nky,:)));
+            FIELD(:,:,it) = squeeze(compr(tmp(1:DATA.Nky,1:DATA.Nkx,:)));
+            end  
+        end    
+    case 'Q_x'
+        NAME     = 'Qx';
+        [~, KY] = meshgrid(DATA.kx, DATA.ky);
+        Qx      = zeros(DATA.Ny,DATA.Nx,DATA.Nz,numel(FRAMES));
+        for it = 1:numel(FRAMES)
+            for iz = 1:DATA.Nz
+            Qx(:,:,iz,it)  = real(ifourier_GENE(-1i*KY.*(DATA.PHI(:,:,iz,FRAMES(it)))))...
+                .*real(ifourier_GENE(DATA.DENS_I(:,:,iz,FRAMES(it))))...
+                .*real(ifourier_GENE(DATA.TEMP_I(:,:,iz,FRAMES(it))));
+            end
+        end
+        if REALP % plot in real space
+            for it = 1:numel(FRAMES)
+                FIELD(:,:,it) = squeeze(compr(Qx(:,:,:,it)));
+            end
+        else % Plot spectrum
+            process = @(x) abs(fftshift(x,2));
+            shift_x = @(x) fftshift(x,2);
+            shift_y = @(x) fftshift(x,2);
+            tmp = zeros(DATA.Ny,DATA.Nx,Nz);
+            for it = 1:numel(FRAMES)
+                for iz = 1:numel(DATA.z)
+                tmp(:,:,iz) = process(squeeze(fft2(Qx(:,:,iz,it),DATA.Ny,DATA.Nx)));
+                end
+            FIELD(:,:,it) = squeeze(compr(tmp(1:DATA.Nky,1:DATA.Nkx,:)));
             end  
         end    
     case 'f_i'

@@ -1,21 +1,22 @@
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_0.8/';
-folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.0/';
+folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.2/';
 % folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.5/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_0.8/';
 % folder = '/misc/gene_results/HP_fig_2b_mu_5e-2/';
 % folder = '/misc/gene_results/HP_fig_2c_mu_5e-2/';
 gene_data = load_gene_data(folder);
-gene_data = rotate_c_plane_nxnky_to_nkxny(gene_data);
+% gene_data = rotate_c_plane_nxnky_to_nkxny(gene_data);
+gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-TAVG_0 = 500; TAVG_1 = 700; % Averaging times duration
-% chose your field to plot in spacetime diag (uzf,szf,Gx)
-field = 'phi';
-compz = 'avg';
-nmvm  = 1;
-fig = plot_radial_transport_and_spacetime(gene_data,TAVG_0,TAVG_1,field,nmvm,compz);
+options.TAVG_0   = 0.8*gene_data.Ts3D(end); 
+options.TAVG_1   = gene_data.Ts3D(end); % Averaging times duration
+options.NMVA     = 1;              % Moving average for time traces
+options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x, Q_x)
+options.INTERP   = 1;
+fig = plot_radial_transport_and_spacetime(gene_data,options);
 % save_figure(data,fig)
 end
 
@@ -50,11 +51,11 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xz';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = 400:700;
+options.TIME      = 000:200;
 gene_data.a = data.EPS * 2000;
 create_film(gene_data,options,'.gif')
 end

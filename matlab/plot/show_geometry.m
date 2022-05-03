@@ -56,9 +56,9 @@ scale = 0.10;
 OPTIONS.POLARPLOT = 0;
 OPTIONS.PLAN      = 'xy';
 r_o_R             = DATA.rho_o_R;
-[Y,X]             = meshgrid(r_o_R*DATA.y,r_o_R*DATA.x);
+[X,Y]             = meshgrid(r_o_R*DATA.x,r_o_R*DATA.y);
 max_              = 0;
-FIELDS            = zeros(DATA.Nx,DATA.Ny,DATA.Nz);
+FIELDS            = zeros(DATA.Ny,DATA.Nx,DATA.Nz);
 
 FIGURE.fig = figure; FIGURE.FIGNAME = ['geometry','_',DATA.PARAMS]; set(gcf, 'Position',  DIMENSIONS)
 for it_ = 1:numel(OPTIONS.TIME)
@@ -79,11 +79,10 @@ subplot(1,numel(OPTIONS.TIME),it_)
     quiver3(Xfl(theta),Yfl(theta),Zfl(theta),scale*bX(theta),scale*bY(theta),scale*bZ(theta),0,'b');
     xlabel('X');ylabel('Y');zlabel('Z');
     %Plot time dependent data
-    [~,it] = min(abs(OPTIONS.TIME(it_)-DATA.Ts3D));
     for iz = OPTIONS.PLANES
         OPTIONS.COMP   = iz;
         toplot         = process_field(DATA,OPTIONS);
-        FIELDS(:,:,iz) = toplot.FIELD(:,:,it); 
+        FIELDS(:,:,iz) = toplot.FIELD(:,:,it_); 
         tmp            = max(max(abs(FIELDS(:,:,iz))));
         if (tmp > max_) max_ = tmp;
     end
