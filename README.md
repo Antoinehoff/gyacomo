@@ -14,6 +14,8 @@ How to run it
 # Changelog
 
 3. HeLaZ 3D
+	3.7 The frequency plane has been transposed from positive kx to positive ky for easier implementation of shear
+
 	3.6 HeLaZ is now parallelized in p, kx and z and benchmarked for each parallel options with gbms (new molix) for linear fluxtube shearless.
 
 	3.5 Staggered grid for parallel odd/even coupling
