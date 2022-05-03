@@ -86,7 +86,7 @@ CONTAINS
         DO ikx = ikxs, ikxe
           kx = kxarray(ikx)
           DO iz = izgs,izge
-             kparray(ikx, iky, iz, eo) = &
+             kparray(iky, ikx, iz, eo) = &
               SQRT( gxx(iz,eo)*kx**2 + 2._dp*gxy(iz,eo)*kx*ky + gyy(iz,eo)*ky**2)/hatB(iz,eo)
               ! there is a factor 1/B from the normalization; important to match GENE
           ENDDO
@@ -209,7 +209,7 @@ CONTAINS
           ky = kyarray(iky)
            DO ikx= ikxs, ikxe
              kx = kxarray(ikx)
-             Ckxky(ikx, iky, iz,eo) = - ky * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
+             Ckxky(iky, ikx, iz,eo) = - ky * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
            ENDDO
         ENDDO
       ! coefficient in the front of parallel derivative
@@ -266,7 +266,7 @@ CONTAINS
    SUBROUTINE geometry_allocate_mem
 
        ! Curvature and geometry
-       CALL allocate_array( Ckxky,   ikxs,ikxe, ikys,ikye,izgs,izge,0,1)
+       CALL allocate_array( Ckxky,   ikys,ikye, ikxs,ikxe,izgs,izge,0,1)
        CALL allocate_array(   Jacobian,izgs,izge, 0,1)
        CALL allocate_array(        gxx,izgs,izge, 0,1)
        CALL allocate_array(        gxy,izgs,izge, 0,1)
@@ -286,7 +286,7 @@ CONTAINS
        CALL allocate_array(       dxdR,izgs,izge, 0,1)
        CALL allocate_array(       dxdZ,izgs,izge, 0,1)
        call allocate_array(gradz_coeff,izgs,izge, 0,1)
-       CALL allocate_array( kparray, ikxs,ikxe, ikys,ikye,izgs,izge,0,1)
+       CALL allocate_array( kparray, ikys,ikye, ikxs,ikxe,izgs,izge,0,1)
 
    END SUBROUTINE geometry_allocate_mem
 

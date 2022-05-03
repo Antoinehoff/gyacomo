@@ -210,34 +210,34 @@ end
 
 %% Build grids
 
-Nkx = numel(kx); 
-if Nkx > 1
-    dkx = kx(2); 
-    Lx = 2*pi/dkx;   
-else
-    dkx = 0;
-    Lx  = 0;   
-end
-[~,ikx0] = min(abs(kx)); 
-Nx = 2*Nkx-1;  
-x  = linspace(-Lx/2,Lx/2,Nx+1); x = x(1:end-1);
-
-Nky = numel(ky);
+Nky = numel(ky); 
 if Nky > 1
-    dky = ky(2);
-    Ly = 2*pi/dky;
+    dky = ky(2); 
+    Ly = 2*pi/dky;   
 else
     dky = 0;
-    Ly  = 0;
-end    
-[~,iky0] = min(abs(ky));
-Ny = Nky;      
+    Ly  = 0;   
+end
+[~,iky0] = min(abs(ky)); 
+Ny = 2*Nky-1;  
 y  = linspace(-Ly/2,Ly/2,Ny+1); y = y(1:end-1);
+
+Nkx = numel(kx);
+if Nkx > 1
+    dkx = kx(2);
+    Lx = 2*pi/dkx;
+else
+    dkx = 0;
+    Lx  = 0;
+end    
+[~,ikx0] = min(abs(kx));
+Nx = Nkx;      
+x  = linspace(-Lx/2,Lx/2,Nx+1); x = x(1:end-1);
 
 Nz = numel(z);
 
-[KY,KX] = meshgrid(ky,kx);
-KPERP2 = KY.^2+KX.^2;
+[KX,KY] = meshgrid(kx,ky);
+KPERP2 = KX.^2+KY.^2;
 %% Add everything in output structure
 % scaling
 DATA.scale = (1/Nx/Ny)^2;

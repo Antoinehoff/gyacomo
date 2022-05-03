@@ -4,7 +4,7 @@ NORMALIZED = OPTIONS.NORMALIZED;
 Nma   = OPTIONS.NMA; %Number moving average
 t  = OPTIONS.TIME;
 iz = OPTIONS.iz;
-[~,ikzf] = max(squeeze(mean(abs(squeeze(DATA.PHI(:,1,1,:))),2)));
+[~,ikzf] = max(squeeze(mean(abs(squeeze(DATA.PHI(1,:,1,:))),2)));
 
 FRAMES = zeros(size(OPTIONS.TIME));
 
@@ -19,18 +19,18 @@ MODES_SELECTOR = i; %(1:Zonal, 2: NZonal, 3: ky=kx)
 
 if MODES_SELECTOR == 1
     if NORMALIZED
-        plt = @(x,ik) movmean(abs(squeeze(x(ik,1,iz,FRAMES)))./max(abs(squeeze(x(ik,1,iz,FRAMES)))),Nma);
+        plt = @(x,ik) movmean(abs(squeeze(x(1,ik,iz,FRAMES)))./max(abs(squeeze(x(1,ik,iz,FRAMES)))),Nma);
     else
-        plt = @(x,ik) movmean(abs(squeeze(x(ik,1,iz,FRAMES))),Nma);
+        plt = @(x,ik) movmean(abs(squeeze(x(1,ik,iz,FRAMES))),Nma);
     end
     kstr = 'k_x';
     k = DATA.kx;
     MODESTR = 'Zonal modes';
 elseif MODES_SELECTOR == 2
     if NORMALIZED
-        plt = @(x,ik) movmean(abs(squeeze(x(1,ik,iz,FRAMES)))./max(abs(squeeze(x(1,ik,iz,FRAMES)))),Nma);
+        plt = @(x,ik) movmean(abs(squeeze(x(ik,1,iz,FRAMES)))./max(abs(squeeze(x(ik,1,iz,FRAMES)))),Nma);
     else
-        plt = @(x,ik) movmean(abs(squeeze(x(1,ik,iz,FRAMES))),Nma);
+        plt = @(x,ik) movmean(abs(squeeze(x(ik,1,iz,FRAMES))),Nma);
     end
     kstr = 'k_y';
     k = DATA.ky;

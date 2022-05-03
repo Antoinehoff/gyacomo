@@ -17,28 +17,28 @@ LTXNAME = OPTIONS.NAME;
 switch OPTIONS.PLAN
     case 'xy'
         XNAME = '$x$'; YNAME = '$y$';
-        [Y,X] = meshgrid(DATA.y,DATA.x);
+        [X,Y] = meshgrid(DATA.x,DATA.y);
         REALP = 1; COMPDIM = 3; POLARPLOT = 0; SCALE = 1;
     case 'xz'
         XNAME = '$x$'; YNAME = '$z$';
         [Y,X] = meshgrid(DATA.z,DATA.x);
-        REALP = 1; COMPDIM = 2; SCALE = 0;
+        REALP = 1; COMPDIM = 1; SCALE = 0;
     case 'yz'
         XNAME = '$y$'; YNAME = '$z$'; 
         [Y,X] = meshgrid(DATA.z,DATA.y);
-        REALP = 1; COMPDIM = 1; SCALE = 0;
+        REALP = 1; COMPDIM = 2; SCALE = 0;
     case 'kxky'
         XNAME = '$k_x$'; YNAME = '$k_y$';
-        [Y,X] = meshgrid(DATA.ky,DATA.kx);
+        [X,Y] = meshgrid(DATA.kx,DATA.ky);
         REALP = 0; COMPDIM = 3; POLARPLOT = 0; SCALE = 1;
     case 'kxz'
         XNAME = '$k_x$'; YNAME = '$z$';
         [Y,X] = meshgrid(DATA.z,DATA.kx);
-        REALP = 0; COMPDIM = 2; POLARPLOT = 0; SCALE = 0;
+        REALP = 0; COMPDIM = 1; POLARPLOT = 0; SCALE = 0;
     case 'kyz'
         XNAME = '$k_y$'; YNAME = '$z$';
         [Y,X] = meshgrid(DATA.z,DATA.ky);
-        REALP = 0; COMPDIM = 1; POLARPLOT = 0; SCALE = 0;
+        REALP = 0; COMPDIM = 2; POLARPLOT = 0; SCALE = 0;
     case 'sx'
         XNAME = '$v_\parallel$'; YNAME = '$\mu$';
         [Y,X] = meshgrid(OPTIONS.XPERP,OPTIONS.SPAR);
@@ -110,7 +110,7 @@ end
 switch REALP
     case 1 % Real space plot
         INTERP = OPTIONS.INTERP;
-        process = @(x) real(fftshift(ifft2(x,Nx,Ny)));
+        process = @(x) real(fftshift(ifft2(x,Ny,Nx)));
         shift_x = @(x) x;
         shift_y = @(x) x;
     case 0 % Frequencies plot

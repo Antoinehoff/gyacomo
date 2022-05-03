@@ -55,7 +55,7 @@ SUBROUTINE evaluate_kernels
                     lambdaD, CLOS, sigmae2_taue_o2, sigmai2_taui_o2, KIN_E
   IMPLICIT NONE
   INTEGER    :: j_int
-  REAL(dp)   :: j_dp, y_, kp2_, kx_, ky_
+  REAL(dp)   :: j_dp, y_
 
 DO eo  = 0,1
 DO ikx = ikxs,ikxe
@@ -66,21 +66,21 @@ DO iz  = izgs,izge
   DO ij = ijgs_e, ijge_e
     j_int = jarray_e(ij)
     j_dp  = REAL(j_int,dp)
-    y_    =  sigmae2_taue_o2 * kparray(ikx,iky,iz,eo)**2
-    kernel_e(ij,ikx,iky,iz,eo) = y_**j_int*EXP(-y_)/GAMMA(j_dp+1._dp)!factj
+    y_    =  sigmae2_taue_o2 * kparray(iky,ikx,iz,eo)**2
+    kernel_e(ij,iky,ikx,iz,eo) = y_**j_int*EXP(-y_)/GAMMA(j_dp+1._dp)!factj
   ENDDO
   IF (ijs_e .EQ. 1) &
-  kernel_e(ijgs_e,ikx,iky,iz,eo) = 0._dp
+  kernel_e(ijgs_e,iky,ikx,iz,eo) = 0._dp
   ENDIF
   !!!!! Ion kernels !!!!!
   DO ij = ijgs_i, ijge_i
     j_int = jarray_i(ij)
     j_dp  = REAL(j_int,dp)
-    y_    =  sigmai2_taui_o2 * kparray(ikx,iky,iz,eo)**2
-    kernel_i(ij,ikx,iky,iz,eo) = y_**j_int*EXP(-y_)/GAMMA(j_dp+1._dp)!factj
+    y_    =  sigmai2_taui_o2 * kparray(iky,ikx,iz,eo)**2
+    kernel_i(ij,iky,ikx,iz,eo) = y_**j_int*EXP(-y_)/GAMMA(j_dp+1._dp)!factj
   ENDDO
   IF (ijs_i .EQ. 1) &
-  kernel_i(ijgs_i,ikx,iky,iz,eo) = 0._dp
+  kernel_i(ijgs_i,iky,ikx,iz,eo) = 0._dp
 ENDDO
 ENDDO
 ENDDO
@@ -107,13 +107,13 @@ SUBROUTINE evaluate_poisson_op
   kyloop: DO iky = ikys,ikye
   zloop:  DO iz  = izs,ize
   IF( (kxarray(ikx).EQ.0._dp) .AND. (kyarray(iky).EQ.0._dp) ) THEN
-      inv_poisson_op(ikx, iky, iz) =  0._dp
+      inv_poisson_op(iky, ikx, iz) =  0._dp
   ELSE
     !!!!!!!!!!!!!!!!! Ion contribution
     ! loop over n only if the max polynomial degree
     pol_i = 0._dp
     DO ini=1,jmaxi+1
-      pol_i = pol_i  + qi2_taui*kernel_i(ini,ikx,iky,iz,0)**2 ! ... sum recursively ...
+      pol_i = pol_i  + qi2_taui*kernel_i(ini,iky,ikx,iz,0)**2 ! ... sum recursively ...
     END DO
     !!!!!!!!!!!!! Electron contribution
     pol_e = 0._dp
@@ -121,13 +121,13 @@ SUBROUTINE evaluate_poisson_op
     IF (KIN_E) THEN
       ! loop over n only if the max polynomial degree
       DO ine=1,jmaxe+1 ! ine = n+1
-        pol_e = pol_e  + qe2_taue*kernel_e(ine,ikx,iky,iz,0)**2 ! ... sum recursively ...
+        pol_e = pol_e  + qe2_taue*kernel_e(ine,iky,ikx,iz,0)**2 ! ... sum recursively ...
       END DO
     ! Adiabatic model
     ELSE
       pol_e = 1._dp - qe2_taue
     ENDIF
-    inv_poisson_op(ikx, iky, iz) =  1._dp/(qe2_taue + qi2_taui - pol_i - pol_e)
+    inv_poisson_op(iky, ikx, iz) =  1._dp/(qe2_taue + qi2_taui - pol_i - pol_e)
   ENDIF
   END DO zloop
   END DO kyloop
@@ -281,15 +281,22 @@ SUBROUTINE save_EM_ZF_modes
   USE model, ONLY: KIN_E
   IMPLICIT NONE
   ! Store Zonal and entropy modes
+  IF(contains_ky0) THEN
   IF(KIN_E) &
-  moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,iky_0,izs:ize,updatetlevel)
-  moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,iky_0,izs:ize,updatetlevel)
-  phi_ZF(ikxs:ikxe,izs:ize) = phi(ikxs:ikxe,iky_0,izs:ize)
+    moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,iky_0,ikxs:ikxe,izs:ize,updatetlevel)
+    moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,iky_0,ikxs:ikxe,izs:ize,updatetlevel)
+    phi_ZF(ikxs:ikxe,izs:ize) = phi(iky_0,ikxs:ikxe,izs:ize)
+  ELSE
+    IF(KIN_E) &
+    moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize) = 0._dp
+    moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize) = 0._dp
+    phi_ZF(ikxs:ikxe,izs:ize) = 0._dp
+  ENDIF
   IF(contains_kx0) THEN
     IF(KIN_E) &
-    moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx_0,ikys:ikye,izs:ize,updatetlevel)
-    moments_i_EM(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx_0,ikys:ikye,izs:ize,updatetlevel)
-    phi_EM(ikys:ikye,izs:ize) = phi(ikx_0,ikys:ikye,izs:ize)
+    moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikx_0,izs:ize,updatetlevel)
+    moments_i_EM(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,ikx_0,izs:ize,updatetlevel)
+    phi_EM(ikys:ikye,izs:ize) = phi(ikys:ikye,ikx_0,izs:ize)
   ELSE
     IF(KIN_E) &
     moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = 0._dp
@@ -311,22 +318,22 @@ SUBROUTINE play_with_modes
   SELECT CASE(ACT_ON_MODES)
   CASE('wipe_zonal') ! Errase the zonal flow
     IF(KIN_E) &
-    moments_e(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = 0._dp
-    moments_i(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = 0._dp
-    phi(ikxs:ikxe,iky_0,izs:ize) = 0._dp
+    moments_e(ips_e:ipe_e,ijs_e:ije_e,iky_0,ikxs:ikxe,izs:ize,updatetlevel) = 0._dp
+    moments_i(ips_i:ipe_i,ijs_i:ije_i,iky_0,ikxs:ikxe,izs:ize,updatetlevel) = 0._dp
+    phi(iky_0,ikxs:ikxe,izs:ize) = 0._dp
   CASE('wipe_entropymode')
     IF(KIN_E) &
-    moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx_0,ikys:ikye,izs:ize,updatetlevel) = 0._dp
-    moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx_0,ikys:ikye,izs:ize,updatetlevel) = 0._dp
-    phi(ikx_0,ikys:ikye,izs:ize) = 0._dp
+    moments_e(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikx_0,izs:ize,updatetlevel) = 0._dp
+    moments_i(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,ikx_0,izs:ize,updatetlevel) = 0._dp
+    phi(ikys:ikye,ikx_0,izs:ize) = 0._dp
   CASE('wipe_turbulence')
     DO ikx = ikxs,ikxe
       DO iky = ikys, ikye
         IF ( (ikx .NE. ikx_0) .AND. (iky .NE. iky_0) ) THEN
           IF(KIN_E) &
-          moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx,iky,izs:ize,updatetlevel) = 0._dp
-          moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx,iky,izs:ize,updatetlevel) = 0._dp
-          phi(ikx,iky,izs:ize) = 0._dp
+          moments_e(ips_e:ipe_e,ijs_e:ije_e,iky,ikx,izs:ize,updatetlevel) = 0._dp
+          moments_i(ips_i:ipe_i,ijs_i:ije_i,iky,ikx,izs:ize,updatetlevel) = 0._dp
+          phi(iky,ikx,izs:ize) = 0._dp
         ENDIF
       ENDDO
     ENDDO
@@ -335,29 +342,29 @@ SUBROUTINE play_with_modes
       DO iky = ikys, ikye
         IF ( (ikx .NE. ikx_0) ) THEN
           IF(KIN_E) &
-          moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx,iky,izs:ize,updatetlevel) = 0._dp
-          moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx,iky,izs:ize,updatetlevel) = 0._dp
-          phi(ikx,iky,izs:ize) = 0._dp
+          moments_e(ips_e:ipe_e,ijs_e:ije_e,iky,ikx,izs:ize,updatetlevel) = 0._dp
+          moments_i(ips_i:ipe_i,ijs_i:ije_i,iky,ikx,izs:ize,updatetlevel) = 0._dp
+          phi(iky,ikx,izs:ize) = 0._dp
         ENDIF
       ENDDO
     ENDDO
   CASE('freeze_zonal')
     IF(KIN_E) &
-    moments_e(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize)
-    moments_i(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize)
-    phi(ikxs:ikxe,iky_0,izs:ize) = phi_ZF(ikxs:ikxe,izs:ize)
+    moments_e(ips_e:ipe_e,ijs_e:ije_e,iky_0,ikxs:ikxe,izs:ize,updatetlevel) = moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize)
+    moments_i(ips_i:ipe_i,ijs_i:ije_i,iky_0,ikxs:ikxe,izs:ize,updatetlevel) = moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize)
+    phi(iky_0,ikxs:ikxe,izs:ize) = phi_ZF(ikxs:ikxe,izs:ize)
   CASE('freeze_entropymode')
     IF(contains_kx0) THEN
       IF(KIN_E) &
-      moments_e(ips_e:ipe_e,ijs_e:ije_e,ikx_0,ikys:ikye,izs:ize,updatetlevel) = moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize)
-      moments_i(ips_i:ipe_i,ijs_i:ije_i,ikx_0,ikys:ikye,izs:ize,updatetlevel) = moments_i_EM(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,izs:ize)
-      phi(ikx_0,ikys:ikye,izs:ize) = phi_EM(ikys:ikye,izs:ize)
+      moments_e(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikx_0,izs:ize,updatetlevel) = moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize)
+      moments_i(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,ikx_0,izs:ize,updatetlevel) = moments_i_EM(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,izs:ize)
+      phi(ikys:ikye,ikx_0,izs:ize) = phi_EM(ikys:ikye,izs:ize)
     ENDIF
   CASE('amplify_zonal')
     IF(KIN_E) &
-    moments_e(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = AMP*moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize)
-    moments_i(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,iky_0,izs:ize,updatetlevel) = AMP*moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize)
-    phi(ikxs:ikxe,iky_0,izs:ize) = AMP*phi_ZF(ikxs:ikxe,izs:ize)
+    moments_e(ips_e:ipe_e,ijs_e:ije_e,iky_0,ikxs:ikxe,izs:ize,updatetlevel) = AMP*moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize)
+    moments_i(ips_i:ipe_i,ijs_i:ije_i,iky_0,ikxs:ikxe,izs:ize,updatetlevel) = AMP*moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize)
+    phi(iky_0,ikxs:ikxe,izs:ize) = AMP*phi_ZF(ikxs:ikxe,izs:ize)
   END SELECT
 END SUBROUTINE
 

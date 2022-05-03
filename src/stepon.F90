@@ -102,11 +102,11 @@ SUBROUTINE stepon
       SUBROUTINE anti_aliasing
         IF(KIN_E)THEN
         DO iz=izgs,izge
-          DO iky=ikys,ikye
-            DO ikx=ikxs,ikxe
+          DO ikx=ikxs,ikxe
+            DO iky=ikys,ikye
               DO ij=ijgs_e,ijge_e
                 DO ip=ipgs_e,ipge_e
-                  moments_e( ip,ij,ikx,iky,iz,:) = AA_x(ikx)* AA_y(iky) * moments_e( ip,ij,ikx,iky,iz,:)
+                  moments_e( ip,ij,iky,ikx,iz,:) = AA_x(ikx)* AA_y(iky) * moments_e( ip,ij,iky,ikx,iz,:)
                 END DO
               END DO
             END DO
@@ -114,11 +114,11 @@ SUBROUTINE stepon
         END DO
         ENDIF
         DO iz=izgs,izge
-          DO iky=ikys,ikye
-            DO ikx=ikxs,ikxe
+          DO ikx=ikxs,ikxe
+            DO iky=ikys,ikye
               DO ij=ijs_i,ije_i
                 DO ip=ipgs_i,ipge_i
-                  moments_i( ip,ij,ikx,iky,iz,:) = AA_x(ikx)* AA_y(iky) * moments_i( ip,ij,ikx,iky,iz,:)
+                  moments_i( ip,ij,iky,ikx,iz,:) = AA_x(ikx)* AA_y(iky) * moments_i( ip,ij,iky,ikx,iz,:)
                 END DO
               END DO
             END DO
@@ -127,17 +127,17 @@ SUBROUTINE stepon
       END SUBROUTINE anti_aliasing
 
       SUBROUTINE enforce_symmetry ! Force X(k) = X(N-k)* complex conjugate symmetry
-        IF ( contains_kx0 ) THEN
+        IF ( contains_ky0 ) THEN
           ! Electron moments
           IF(KIN_E) THEN
             DO iz=izs,ize
               DO ij=ijgs_e,ijge_e
                 DO ip=ipgs_e,ipge_e
-                  DO iky=2,Nky/2 !symmetry at kx = 0
-                    moments_e( ip,ij,ikx_0,iky,iz, :) = CONJG(moments_e( ip,ij,ikx_0,Nky+2-iky,iz, :))
+                  DO ikx=2,Nkx/2 !symmetry at ky = 0
+                    moments_e( ip,ij,iky_0,ikx,iz, :) = CONJG(moments_e( ip,ij,iky_0,Nkx+2-iky,iz, :))
                   END DO
                 ! must be real at origin
-                moments_e(ip,ij, ikx_0,iky_0,iz, :) = REAL(moments_e(ip,ij, ikx_0,iky_0,iz, :))
+                moments_e(ip,ij, iky_0,ikx_0,iz, :) = REAL(moments_e(ip,ij, iky_0,ikx_0,iz, :))
               END DO
             END DO
           END DO
@@ -146,20 +146,20 @@ SUBROUTINE stepon
           DO iz=izs,ize
             DO ij=ijgs_i,ijge_i
               DO ip=ipgs_i,ipge_i
-                DO iky=2,Nky/2 !symmetry at kx = 0
-                  moments_i( ip,ij,ikx_0,iky,iz, :) = CONJG(moments_i( ip,ij,ikx_0,Nky+2-iky,iz, :))
+                DO ikx=2,Nkx/2 !symmetry at ky = 0
+                  moments_i( ip,ij,iky_0,ikx,iz, :) = CONJG(moments_i( ip,ij,iky_0,Nkx+2-ikx,iz, :))
                 END DO
                 ! must be real at origin and top right
-                moments_i(ip,ij, ikx_0,iky_0,iz, :) = REAL(moments_i(ip,ij, ikx_0,iky_0,iz, :))
+                moments_i(ip,ij, iky_0,ikx_0,iz, :) = REAL(moments_i(ip,ij, iky_0,ikx_0,iz, :))
               END DO
             END DO
           END DO
           ! Phi
-          DO iky=2,Nky/2 !symmetry at kx = 0
-            phi(ikx_0,iky,izs:ize) = phi(ikx_0,Nky+2-iky,izs:ize)
+          DO ikx=2,Nkx/2 !symmetry at ky = 0
+            phi(iky_0,ikx,izs:ize) = phi(iky_0,Nkx+2-ikx,izs:ize)
           END DO
           ! must be real at origin
-          phi(ikx_0,iky_0,izs:ize) = REAL(phi(ikx_0,iky_0,izs:ize))
+          phi(iky_0,ikx_0,izs:ize) = REAL(phi(iky_0,ikx_0,izs:ize))
         ENDIF
       END SUBROUTINE enforce_symmetry
 

@@ -24,15 +24,15 @@ MODULE nonlinear
 CONTAINS
 
 SUBROUTINE nonlinear_init
-  ALLOCATE( F_cmpx(ikxs:ikxe,ikys:ikye))
-  ALLOCATE( G_cmpx(ikxs:ikxe,ikys:ikye))
+  ALLOCATE( F_cmpx(ikys:ikye,ikxs:ikxe))
+  ALLOCATE( G_cmpx(ikys:ikye,ikxs:ikxe))
 
-  ALLOCATE(Fx_cmpx(ikxs:ikxe,ikys:ikye))
-  ALLOCATE(Gy_cmpx(ikxs:ikxe,ikys:ikye))
-  ALLOCATE(Fy_cmpx(ikxs:ikxe,ikys:ikye))
-  ALLOCATE(Gx_cmpx(ikxs:ikxe,ikys:ikye))
+  ALLOCATE(Fx_cmpx(ikys:ikye,ikxs:ikxe))
+  ALLOCATE(Gy_cmpx(ikys:ikye,ikxs:ikxe))
+  ALLOCATE(Fy_cmpx(ikys:ikye,ikxs:ikxe))
+  ALLOCATE(Gx_cmpx(ikys:ikye,ikxs:ikxe))
 
-  ALLOCATE(F_conv_G(ikxs:ikxe,ikys:ikye))
+  ALLOCATE(F_conv_G(ikys:ikye,ikxs:ikxe))
 END SUBROUTINE nonlinear_init
 
 SUBROUTINE compute_Sapj
@@ -101,7 +101,7 @@ SUBROUTINE compute_nonlinear
       ! Retrieve convolution in input format
       DO ikx = ikxs, ikxe
         DO iky = ikys, ikye
-          Sepj(ip,ij,ikx,iky,iz) = bracket_sum_c(iky,ikx-local_nkx_offset)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+          Sepj(ip,ij,iky,ikx,iz) = bracket_sum_c(ikx,iky-local_nky_offset)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
         ENDDO
       ENDDO
     ENDDO jloope
@@ -143,7 +143,7 @@ zloopi: DO iz = izs,ize
       ! Retrieve convolution in input format
       DO ikx = ikxs, ikxe
         DO iky = ikys, ikye
-          Sipj(ip,ij,ikx,iky,iz) = bracket_sum_c(iky,ikx-local_nkx_offset)*AA_x(ikx)*AA_y(iky)
+          Sipj(ip,ij,iky,ikx,iz) = bracket_sum_c(ikx,iky-local_nky_offset)*AA_x(ikx)*AA_y(iky)
         ENDDO
       ENDDO
     ENDDO jloopi
@@ -184,26 +184,26 @@ SUBROUTINE compute_semi_linear_ZF
             ky      = kyarray(iky)
             kerneln = kernel_e(in, ikx, iky, iz, eo)
             ! Zonal terms (=0 for all ky not 0)
-            Fx_cmpx(ikx,iky) = 0._dp
-            Gx_cmpx(ikx,iky) = 0._dp
+            Fx_cmpx(iky,ikx) = 0._dp
+            Gx_cmpx(iky,ikx) = 0._dp
             IF(iky .EQ. iky_0) THEN
-              Fx_cmpx(ikx,iky) = imagu*kx* phi(ikx,iky,iz) * kerneln
+              Fx_cmpx(iky,ikx) = imagu*kx* phi(iky,ikx,iz) * kerneln
               smax = MIN( (in-1)+(ij-1), jmaxe );
               DO is = 1, smax+1 ! sum truncation on number of moments
-                Gx_cmpx(ikx,iky) = Gx_cmpx(ikx,iky) + &
-                  dnjs(in,ij,is) * moments_e(ip,is,ikx,iky,iz,updatetlevel)
+                Gx_cmpx(iky,ikx) = Gx_cmpx(iky,ikx) + &
+                  dnjs(in,ij,is) * moments_e(ip,is,iky,ikx,iz,updatetlevel)
               ENDDO
-              Gx_cmpx(ikx,iky) = imagu*kx*Gx_cmpx(ikx,iky)
+              Gx_cmpx(iky,ikx) = imagu*kx*Gx_cmpx(iky,ikx)
             ENDIF
             ! NZ terms
-            Fy_cmpx(ikx,iky) = imagu*ky* phi(ikx,iky,iz) * kerneln
-            Gy_cmpx(ikx,iky) = 0._dp ! initialization of the sum
+            Fy_cmpx(iky,ikx) = imagu*ky* phi(iky,ikx,iz) * kerneln
+            Gy_cmpx(iky,ikx) = 0._dp ! initialization of the sum
             smax = MIN( (in-1)+(ij-1), jmaxe );
             DO is = 1, smax+1 ! sum truncation on number of moments
-              Gy_cmpx(ikx,iky) = Gy_cmpx(ikx,iky) + &
-                dnjs(in,ij,is) * moments_e(ip,is,ikx,iky,iz,updatetlevel)
+              Gy_cmpx(iky,ikx) = Gy_cmpx(iky,ikx) + &
+                dnjs(in,ij,is) * moments_e(ip,is,iky,ikx,iz,updatetlevel)
             ENDDO
-            Gy_cmpx(ikx,iky) = imagu*ky*Gy_cmpx(ikx,iky)
+            Gy_cmpx(iky,ikx) = imagu*ky*Gy_cmpx(iky,ikx)
           ENDDO kyloope
         ENDDO kxloope
         ! First term df/dx x dg/dy
@@ -216,7 +216,7 @@ SUBROUTINE compute_semi_linear_ZF
       ! Retrieve convolution in input format
       DO ikx = ikxs, ikxe
         DO iky = ikys, ikye
-          Sepj(ip,ij,ikx,iky,iz) = bracket_sum_c(iky,ikx-local_nkx_offset)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+          Sepj(ip,ij,iky,ikx,iz) = bracket_sum_c(ikx,iky-local_nky_offset)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
         ENDDO
       ENDDO
     ENDDO jloope
@@ -244,27 +244,27 @@ zloopi: DO iz = izs,ize
         kxloopi: DO ikx = ikxs,ikxe ! Loop over kx
           kyloopi: DO iky = ikys,ikye ! Loop over ky
             ! Zonal terms (=0 for all ky not 0)
-            Fx_cmpx(ikx,iky) = 0._dp
-            Gx_cmpx(ikx,iky) = 0._dp
+            Fx_cmpx(iky,ikx) = 0._dp
+            Gx_cmpx(iky,ikx) = 0._dp
             IF(iky .EQ. iky_0) THEN
-              Fx_cmpx(ikx,iky) = imagu*kx* phi(ikx,iky,iz) * kerneln
+              Fx_cmpx(iky,ikx) = imagu*kx* phi(iky,ikx,iz) * kerneln
               smax = MIN( (in-1)+(ij-1), jmaxi );
               DO is = 1, smax+1 ! sum truncation on number of moments
-                Gx_cmpx(ikx,iky) = Gx_cmpx(ikx,iky) + &
-                  dnjs(in,ij,is) * moments_i(ip,is,ikx,iky,iz,updatetlevel)
+                Gx_cmpx(iky,ikx) = Gx_cmpx(iky,ikx) + &
+                  dnjs(in,ij,is) * moments_i(ip,is,iky,ikx,iz,updatetlevel)
               ENDDO
-              Gx_cmpx(ikx,iky) = imagu*kx*Gx_cmpx(ikx,iky)
+              Gx_cmpx(iky,ikx) = imagu*kx*Gx_cmpx(iky,ikx)
             ENDIF
 
             ! NZ terms
-            Fy_cmpx(ikx,iky) = imagu*ky* phi(ikx,iky,iz) * kerneln
-            Gy_cmpx(ikx,iky) = 0._dp ! initialization of the sum
+            Fy_cmpx(iky,ikx) = imagu*ky* phi(iky,ikx,iz) * kerneln
+            Gy_cmpx(iky,ikx) = 0._dp ! initialization of the sum
             smax = MIN( (in-1)+(ij-1), jmaxi );
             DO is = 1, smax+1 ! sum truncation on number of moments
-              Gy_cmpx(ikx,iky) = Gy_cmpx(ikx,iky) + &
-                dnjs(in,ij,is) * moments_i(ip,is,ikx,iky,iz,updatetlevel)
+              Gy_cmpx(iky,ikx) = Gy_cmpx(iky,ikx) + &
+                dnjs(in,ij,is) * moments_i(ip,is,iky,ikx,iz,updatetlevel)
             ENDDO
-            Gy_cmpx(ikx,iky) = imagu*ky*Gy_cmpx(ikx,iky)
+            Gy_cmpx(iky,ikx) = imagu*ky*Gy_cmpx(iky,ikx)
           ENDDO kyloopi
         ENDDO kxloopi
         ! First term drphi x dzf
@@ -277,7 +277,7 @@ zloopi: DO iz = izs,ize
       ! Retrieve convolution in input format
       DO ikx = ikxs, ikxe
         DO iky = ikys, ikye
-          Sipj(ip,ij,ikx,iky,iz) = bracket_sum_c(iky,ikx-local_nkx_offset)*AA_x(ikx)*AA_y(iky)
+          Sipj(ip,ij,iky,ikx,iz) = bracket_sum_c(ikx,iky-local_nky_offset)*AA_x(ikx)*AA_y(iky)
         ENDDO
       ENDDO
     ENDDO jloopi
@@ -316,25 +316,25 @@ SUBROUTINE compute_semi_linear_NZ
             ky      = kyarray(iky)
             kerneln = kernel_e(in, ikx, iky, iz, eo)
             ! All terms
-            Fx_cmpx(ikx,iky) = imagu*kx* phi(ikx,iky,iz) * kerneln
+            Fx_cmpx(iky,ikx) = imagu*kx* phi(iky,ikx,iz) * kerneln
             smax = MIN( (in-1)+(ij-1), jmaxe );
             DO is = 1, smax+1 ! sum truncation on number of moments
-              Gx_cmpx(ikx,iky) = Gx_cmpx(ikx,iky) + &
-                dnjs(in,ij,is) * moments_e(ip,is,ikx,iky,iz,updatetlevel)
+              Gx_cmpx(iky,ikx) = Gx_cmpx(iky,ikx) + &
+                dnjs(in,ij,is) * moments_e(ip,is,iky,ikx,iz,updatetlevel)
             ENDDO
-            Gx_cmpx(ikx,iky) = imagu*kx*Gx_cmpx(ikx,iky)
+            Gx_cmpx(iky,ikx) = imagu*kx*Gx_cmpx(iky,ikx)
             ! Kx = 0 terms
-            Fy_cmpx(ikx,iky) = 0._dp
-            Gy_cmpx(ikx,iky) = 0._dp
+            Fy_cmpx(iky,ikx) = 0._dp
+            Gy_cmpx(iky,ikx) = 0._dp
             IF (ikx .EQ. ikx_0) THEN
-              Fy_cmpx(ikx,iky) = imagu*ky* phi(ikx,iky,iz) * kerneln
-              Gy_cmpx(ikx,iky) = 0._dp ! initialization of the sum
+              Fy_cmpx(iky,ikx) = imagu*ky* phi(iky,ikx,iz) * kerneln
+              Gy_cmpx(iky,ikx) = 0._dp ! initialization of the sum
               smax = MIN( (in-1)+(ij-1), jmaxe );
               DO is = 1, smax+1 ! sum truncation on number of moments
-                Gy_cmpx(ikx,iky) = Gy_cmpx(ikx,iky) + &
-                  dnjs(in,ij,is) * moments_e(ip,is,ikx,iky,iz,updatetlevel)
+                Gy_cmpx(iky,ikx) = Gy_cmpx(iky,ikx) + &
+                  dnjs(in,ij,is) * moments_e(ip,is,iky,ikx,iz,updatetlevel)
               ENDDO
-              Gy_cmpx(ikx,iky) = imagu*ky*Gy_cmpx(ikx,iky)
+              Gy_cmpx(iky,ikx) = imagu*ky*Gy_cmpx(iky,ikx)
             ENDIF
           ENDDO kyloope
         ENDDO kxloope
@@ -348,7 +348,7 @@ SUBROUTINE compute_semi_linear_NZ
       ! Retrieve convolution in input format
       DO ikx = ikxs, ikxe
         DO iky = ikys, ikye
-          Sepj(ip,ij,ikx,iky,iz) = bracket_sum_c(iky,ikx-local_nkx_offset)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+          Sepj(ip,ij,iky,ikx,iz) = bracket_sum_c(ikx,iky-local_nky_offset)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
         ENDDO
       ENDDO
     ENDDO jloope
@@ -376,26 +376,26 @@ zloopi: DO iz = izs,ize
         kxloopi: DO ikx = ikxs,ikxe ! Loop over kx
           kyloopi: DO iky = ikys,ikye ! Loop over ky
             ! Zonal terms (=0 for all ky not 0)
-            Fx_cmpx(ikx,iky) = imagu*kx* phi(ikx,iky,iz) * kerneln
+            Fx_cmpx(iky,ikx) = imagu*kx* phi(iky,ikx,iz) * kerneln
             smax = MIN( (in-1)+(ij-1), jmaxi );
             DO is = 1, smax+1 ! sum truncation on number of moments
-              Gx_cmpx(ikx,iky) = Gx_cmpx(ikx,iky) + &
-                dnjs(in,ij,is) * moments_i(ip,is,ikx,iky,iz,updatetlevel)
+              Gx_cmpx(iky,ikx) = Gx_cmpx(iky,ikx) + &
+                dnjs(in,ij,is) * moments_i(ip,is,iky,ikx,iz,updatetlevel)
             ENDDO
-            Gx_cmpx(ikx,iky) = imagu*kx*Gx_cmpx(ikx,iky)
+            Gx_cmpx(iky,ikx) = imagu*kx*Gx_cmpx(iky,ikx)
 
             ! Kx = 0 terms
-            Fy_cmpx(ikx,iky) = 0._dp
-            Gy_cmpx(ikx,iky) = 0._dp
+            Fy_cmpx(iky,ikx) = 0._dp
+            Gy_cmpx(iky,ikx) = 0._dp
             IF (ikx .EQ. ikx_0) THEN
-              Fy_cmpx(ikx,iky) = imagu*ky* phi(ikx,iky,iz) * kerneln
-              Gy_cmpx(ikx,iky) = 0._dp ! initialization of the sum
+              Fy_cmpx(iky,ikx) = imagu*ky* phi(iky,ikx,iz) * kerneln
+              Gy_cmpx(iky,ikx) = 0._dp ! initialization of the sum
               smax = MIN( (in-1)+(ij-1), jmaxi );
               DO is = 1, smax+1 ! sum truncation on number of moments
-                Gy_cmpx(ikx,iky) = Gy_cmpx(ikx,iky) + &
-                  dnjs(in,ij,is) * moments_i(ip,is,ikx,iky,iz,updatetlevel)
+                Gy_cmpx(iky,ikx) = Gy_cmpx(iky,ikx) + &
+                  dnjs(in,ij,is) * moments_i(ip,is,iky,ikx,iz,updatetlevel)
               ENDDO
-              Gy_cmpx(ikx,iky) = imagu*ky*Gy_cmpx(ikx,iky)
+              Gy_cmpx(iky,ikx) = imagu*ky*Gy_cmpx(iky,ikx)
             ENDIF
           ENDDO kyloopi
         ENDDO kxloopi
@@ -409,7 +409,7 @@ zloopi: DO iz = izs,ize
       ! Retrieve convolution in input format
       DO ikx = ikxs, ikxe
         DO iky = ikys, ikye
-          Sipj(ip,ij,ikx,iky,iz) = bracket_sum_c(iky,ikx-local_nkx_offset)*AA_x(ikx)*AA_y(iky)
+          Sipj(ip,ij,iky,ikx,iz) = bracket_sum_c(ikx,iky-local_nky_offset)*AA_x(ikx)*AA_y(iky)
         ENDDO
       ENDDO
     ENDDO jloopi

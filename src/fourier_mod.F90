@@ -20,7 +20,7 @@ MODULE fourier
   type(C_PTR) , PUBLIC                   :: planf, planb
   integer(C_INTPTR_T)                    :: i, ix, iy
   integer(C_INTPTR_T), PUBLIC            :: alloc_local_1, alloc_local_2
-  integer(C_INTPTR_T)                    :: NX_, NY_, NX_halved
+  integer(C_INTPTR_T)                    :: NX_, NY_, NY_halved
   integer                                :: communicator
   ! many plan data variables
   integer(C_INTPTR_T) :: howmany=9 ! numer of eleemnt of the tensor
@@ -34,38 +34,38 @@ MODULE fourier
 
     INTEGER, INTENT(IN) :: Nx,Ny
     NX_ = Nx; NY_ = Ny
-    NX_halved = NX_/2 + 1
+    NY_halved = NY_/2 + 1
 
     ! communicator = MPI_COMM_WORLD
-    communicator = comm_kx
+    communicator = comm_ky
 
     !! Complex arrays F, G
     ! Compute the room to allocate
-    alloc_local_1 = fftw_mpi_local_size_2d(NX_halved, NY_, communicator, local_nkx, local_nkx_offset)
+    alloc_local_1 = fftw_mpi_local_size_2d(NY_halved, NX_, communicator, local_nky, local_nky_offset)
     ! Initalize pointers to this room
     cdatac_f = fftw_alloc_complex(alloc_local_1)
     cdatac_g = fftw_alloc_complex(alloc_local_1)
     cdatac_c = fftw_alloc_complex(alloc_local_1)
     ! Initalize the arrays with the rooms pointed
-    call c_f_pointer(cdatac_f, cmpx_data_f, [NY_ ,local_nkx])
-    call c_f_pointer(cdatac_g, cmpx_data_g, [NY_ ,local_nkx])
-    call c_f_pointer(cdatac_c, bracket_sum_c, [NY_ ,local_nkx])
+    call c_f_pointer(cdatac_f,   cmpx_data_f, [NX_ ,local_nky])
+    call c_f_pointer(cdatac_g,   cmpx_data_g, [NX_ ,local_nky])
+    call c_f_pointer(cdatac_c, bracket_sum_c, [NX_ ,local_nky])
 
     !! Real arrays iFFT(F), iFFT(G)
     ! Compute the room to allocate
-    alloc_local_2 = fftw_mpi_local_size_2d(NY_, NX_halved, communicator, local_nky, local_nky_offset)
+    alloc_local_2 = fftw_mpi_local_size_2d(NX_, NY_halved, communicator, local_nkx, local_nkx_offset)
     ! Initalize pointers to this room
     cdatar_f = fftw_alloc_real(2*alloc_local_2)
     cdatar_g = fftw_alloc_real(2*alloc_local_2)
     cdatar_c = fftw_alloc_real(2*alloc_local_2)
     ! Initalize the arrays with the rooms pointed
-    call c_f_pointer(cdatar_f, real_data_f, [2*(NX_/2  + 1),local_nky])
-    call c_f_pointer(cdatar_g, real_data_g, [2*(NX_/2  + 1),local_nky])
-    call c_f_pointer(cdatar_c, bracket_sum_r, [2*(NX_/2  + 1),local_nky])
+    call c_f_pointer(cdatar_f,   real_data_f, [2*(NY_/2  + 1),local_nkx])
+    call c_f_pointer(cdatar_g,   real_data_g, [2*(NY_/2  + 1),local_nkx])
+    call c_f_pointer(cdatar_c, bracket_sum_r, [2*(NY_/2  + 1),local_nkx])
 
     ! Plan Creation (out-of-place forward and backward FFT)
-    planf = fftw_mpi_plan_dft_r2c_2D(NY_, NX_, real_data_f, cmpx_data_f, communicator,  ior(FFTW_MEASURE, FFTW_MPI_TRANSPOSED_OUT))
-    planb = fftw_mpi_plan_dft_c2r_2D(NY_, NX_, cmpx_data_f, real_data_f, communicator,  ior(FFTW_MEASURE, FFTW_MPI_TRANSPOSED_IN))
+    planf = fftw_mpi_plan_dft_r2c_2D(NX_, NY_, real_data_f, cmpx_data_f, communicator,  ior(FFTW_MEASURE, FFTW_MPI_TRANSPOSED_OUT))
+    planb = fftw_mpi_plan_dft_c2r_2D(NX_, NY_, cmpx_data_f, real_data_f, communicator,  ior(FFTW_MEASURE, FFTW_MPI_TRANSPOSED_IN))
 
    if ((.not. c_associated(planf)) .OR. (.not. c_associated(planb))) then
       write(*,*) "plan creation error!!"
@@ -79,15 +79,15 @@ MODULE fourier
   !   - Compute the convolution using the convolution theorem
   SUBROUTINE poisson_bracket_and_sum( F_, G_)
     IMPLICIT NONE
-    COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(ikxs:ikxe,ikys:ikye),&
+    COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(ikys:ikye,ikxs:ikxe),&
                     INTENT(IN)  :: F_, G_ ! input fields
     ! First term df/dx x dg/dy
     DO ikx = ikxs, ikxe
       DO iky = ikys, ikye
-        cmpx_data_f(iky,ikx-local_nkx_offset) = &
-              imagu*kxarray(ikx)*F_(ikx,iky)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
-        cmpx_data_g(iky,ikx-local_nkx_offset) = &
-              imagu*kyarray(iky)*G_(ikx,iky)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+        cmpx_data_f(ikx,iky-local_nky_offset) = &
+              imagu*kxarray(ikx)*F_(iky,ikx)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+        cmpx_data_g(ikx,iky-local_nky_offset) = &
+              imagu*kyarray(iky)*G_(iky,ikx)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
       ENDDO
     ENDDO
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
@@ -96,10 +96,10 @@ MODULE fourier
     ! Second term -df/dy x dg/dx
     DO ikx = ikxs, ikxe
       DO iky = ikys, ikye
-        cmpx_data_f(iky,ikx-local_nkx_offset) = &
-              imagu*kyarray(iky)*F_(ikx,iky)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
-        cmpx_data_g(iky,ikx-local_nkx_offset) = &
-              imagu*kxarray(ikx)*G_(ikx,iky)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+        cmpx_data_f(ikx,iky-local_nky_offset) = &
+              imagu*kyarray(iky)*F_(iky,ikx)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+        cmpx_data_g(ikx,iky-local_nky_offset) = &
+              imagu*kxarray(ikx)*G_(iky,ikx)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
       ENDDO
     ENDDO
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
@@ -111,13 +111,13 @@ END SUBROUTINE poisson_bracket_and_sum
 !   - Compute the convolution using the convolution theorem
 SUBROUTINE convolve_and_add( F_, G_)
   IMPLICIT NONE
-  COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(ikxs:ikxe,ikys:ikye),&
+  COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(ikys:ikye,ikxs:ikxe),&
                   INTENT(IN)  :: F_, G_ ! input fields
   ! First term df/dx x dg/dy
   DO ikx = ikxs, ikxe
     DO iky = ikys, ikye
-      cmpx_data_f(iky,ikx-local_nkx_offset) = F_(ikx,iky)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
-      cmpx_data_g(iky,ikx-local_nkx_offset) = G_(ikx,iky)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+      cmpx_data_f(ikx,iky-local_nky_offset) = F_(iky,ikx)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+      cmpx_data_g(ikx,iky-local_nky_offset) = G_(iky,ikx)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
     ENDDO
   ENDDO
   call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)

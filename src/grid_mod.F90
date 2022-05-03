@@ -78,7 +78,7 @@ MODULE grid
   INTEGER,  PUBLIC            :: ikx, iky, ip, ij, ikp, pp2, eo ! counters
   LOGICAL,  PUBLIC, PROTECTED :: contains_kx0   = .false. ! flag if the proc contains kx=0 index
   LOGICAL,  PUBLIC, PROTECTED :: contains_ky0   = .false. ! flag if the proc contains ky=0 index
-  LOGICAL,  PUBLIC, PROTECTED :: contains_kxmax = .false. ! flag if the proc contains kx=kxmax index
+  LOGICAL,  PUBLIC, PROTECTED :: contains_kymax = .false. ! flag if the proc contains kx=kxmax index
 
   ! Grid containing the polynomials degrees
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_e, parray_e_full
@@ -147,10 +147,10 @@ CONTAINS
 
   SUBROUTINE init_1Dgrid_distr
     ! write(*,*) Nx
-    local_nkx        = (Nx/2+1)/num_procs_kx
+    local_nky        = (Ny/2+1)/num_procs_ky
     ! write(*,*) local_nkx
-    local_nkx_offset = rank_kx*local_nkx
-    if (rank_kx .EQ. num_procs_kx-1) local_nkx = (Nx/2+1)-local_nkx_offset
+    local_nky_offset = rank_ky*local_nky
+    if (rank_ky .EQ. num_procs_ky-1) local_nky = (Ny/2+1)-local_nky_offset
   END SUBROUTINE init_1Dgrid_distr
 
   SUBROUTINE set_pgrid
@@ -271,136 +271,126 @@ CONTAINS
   END SUBROUTINE set_jgrid
 
 
-  SUBROUTINE set_kxgrid
-    USE prec_const
-    USE model, ONLY: LINEARITY
-    IMPLICIT NONE
-    INTEGER :: i_
-    Nkx = Nx/2+1 ! Defined only on positive kx since fields are real
-    ! Grid spacings
-    IF (Nx .EQ. 1) THEN
-      deltakx = 0._dp
-      kx_max  = 0._dp
-      kx_min  = 0._dp
-    ELSE
-      deltakx = 2._dp*PI/Lx
-      kx_max  = Nkx*deltakx
-      kx_min  = deltakx
-    ENDIF
-    ! Build the full grids on process 0 to diagnose it without comm
-    ALLOCATE(kxarray_full(1:Nkx))
-    DO ikx = 1,Nkx
-     kxarray_full(ikx) = REAL(ikx-1,dp) * deltakx
-    END DO
-    !! Parallel distribution
-    ikxs = local_nkx_offset + 1
-    ikxe = ikxs + local_nkx - 1
-    ALLOCATE(kxarray(ikxs:ikxe))
-    local_kxmax = 0._dp
-    ! Creating a grid ordered as dk*(0 1 2 3)
-    DO ikx = ikxs,ikxe
-      kxarray(ikx) = REAL(ikx-1,dp) * deltakx
-      ! Finding kx=0
-      IF (kxarray(ikx) .EQ. 0) THEN
-        ikx_0 = ikx
-        contains_kx0 = .true.
-      ENDIF
-      ! Finding local kxmax value
-      IF (ABS(kxarray(ikx)) .GT. local_kxmax) THEN
-        local_kxmax = ABS(kxarray(ikx))
-      ENDIF
-      ! Finding kxmax idx
-      IF (kxarray(ikx) .EQ. kx_max) THEN
-        ikx_max = ikx
-        contains_kxmax = .true.
-      ENDIF
-    END DO
-    ! Orszag 2/3 filter
-    two_third_kxmax = 2._dp/3._dp*deltakx*(Nkx-1)
-    ALLOCATE(AA_x(ikxs:ikxe))
-    DO ikx = ikxs,ikxe
-      IF ( (kxarray(ikx) .LT. two_third_kxmax) .OR. (LINEARITY .EQ. 'linear')) THEN
-        AA_x(ikx) = 1._dp;
-      ELSE
-        AA_x(ikx) = 0._dp;
-      ENDIF
-    END DO
-  END SUBROUTINE set_kxgrid
-
   SUBROUTINE set_kygrid
     USE prec_const
     USE model, ONLY: LINEARITY
     IMPLICIT NONE
-    INTEGER :: i_, counter
-
-    Nky = Ny;
-    ! Local data
-    ! Start and END indices of grid
-    ikys = 1
-    ikye = Nky
-    local_nky = ikye - ikys + 1
-    ALLOCATE(kyarray(ikys:ikye))
-    ALLOCATE(kyarray_full(1:Nky))
-    IF (Ny .EQ. 1) THEN ! "cancel" y dimension
-      deltaky         = 1._dp
-      kyarray(1)      = 0._dp
-      iky_0           = 1
-      contains_ky0    = .true.
-      ky_max          = 0._dp
-      iky_max         = 1
-      ky_min          = 0._dp
-      kyarray_full(1) = 0._dp
-      local_kymax     = 0._dp
-    ELSE ! Build apprpopriate grid
-      deltaky     = 2._dp*PI/Ly
-      ky_max      = (Ny/2)*deltakx
-      ky_min      = deltaky
-      ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
-      local_kymax = 0._dp
-      DO iky = ikys,ikye
-        SELECT CASE (LINEARITY)
-          CASE ('linear') ! only positive freq for linear runs dk*(0 1 2 3 4 5)
-            kyarray(iky) = deltaky*REAL(iky-1,dp)
-          CASE DEFAULT !
-            kyarray(iky) = deltaky*(MODULO(iky-1,Nky/2)-Nky/2*FLOOR(2.*real(iky-1)/real(Nky)))
-        END SELECT
-        if (iky .EQ. Ny/2+1)     kyarray(iky) = -kyarray(iky)
-        ! Finding ky=0
-        IF (kyarray(iky) .EQ. 0) THEN
-          iky_0 = iky
-          contains_ky0 = .true.
-        ENDIF
-        ! Finding local kymax
-        IF (ABS(kyarray(iky)) .GT. local_kymax) THEN
-          local_kymax = ABS(kyarray(iky))
-        ENDIF
-        ! Finding kymax
-        IF (kyarray(iky) .EQ. ky_max) ikx_max = ikx
-      END DO
-      ! Build the full grids on process 0 to diagnose it without comm
-      ! ky
-      DO iky = 1,Nky
-        SELECT CASE (LINEARITY)
-          CASE ('linear') ! only positive freq for linear runs dk*(0 1 2 3 4 5)
-            kyarray_full(iky) = deltaky*REAL(iky-1,dp)
-          CASE DEFAULT !
-            kyarray_full(iky) = deltaky*(MODULO(iky-1,Nky/2)-Nky/2*FLOOR(2.*real(iky-1)/real(Nky)))
-            IF (iky .EQ. Ny/2+1) kyarray_full(iky) = -kyarray_full(iky)
-        END SELECT
-      END DO
+    INTEGER :: i_
+    Nky = Ny/2+1 ! Defined only on positive kx since fields are real
+    ! Grid spacings
+    IF (Ny .EQ. 1) THEN
+      deltaky = 0._dp
+      ky_max  = 0._dp
+      ky_min  = 0._dp
+    ELSE
+      deltaky = 2._dp*PI/Ly
+      ky_max  = Nky*deltaky
+      ky_min  = deltaky
     ENDIF
+    ! Build the full grids on process 0 to diagnose it without comm
+    ALLOCATE(kyarray_full(1:Nky))
+    DO iky = 1,Nky
+     kyarray_full(iky) = REAL(iky-1,dp) * deltaky
+    END DO
+    !! Parallel distribution
+    ikys = local_nky_offset + 1
+    ikye = ikys + local_nky - 1
+    ALLOCATE(kyarray(ikys:ikye))
+    local_kymax = 0._dp
+    ! Creating a grid ordered as dk*(0 1 2 3)
+    DO iky = ikys,ikye
+      kyarray(iky) = REAL(iky-1,dp) * deltaky
+      ! Finding kx=0
+      IF (kyarray(iky) .EQ. 0) THEN
+        iky_0 = iky
+        contains_ky0 = .true.
+      ENDIF
+      ! Finding local kxmax value
+      IF (ABS(kyarray(iky)) .GT. local_kymax) THEN
+        local_kymax = ABS(kyarray(iky))
+      ENDIF
+      ! Finding kxmax idx
+      IF (kyarray(iky) .EQ. ky_max) THEN
+        iky_max = iky
+        contains_kymax = .true.
+      ENDIF
+    END DO
     ! Orszag 2/3 filter
-    two_third_kymax = 2._dp/3._dp*deltaky*(Nky/2-1);
+    two_third_kymax = 2._dp/3._dp*deltaky*(Nky-1)
     ALLOCATE(AA_y(ikys:ikye))
     DO iky = ikys,ikye
-      IF ( ((kyarray(iky) .GT. -two_third_kymax) .AND. &
-           (kyarray(iky) .LT. two_third_kymax))   .OR. (LINEARITY .EQ. 'linear')) THEN
+      IF ( (kyarray(iky) .LT. two_third_kymax) .OR. (LINEARITY .EQ. 'linear')) THEN
         AA_y(iky) = 1._dp;
       ELSE
         AA_y(iky) = 0._dp;
       ENDIF
     END DO
   END SUBROUTINE set_kygrid
+
+  SUBROUTINE set_kxgrid
+    USE prec_const
+    USE model, ONLY: LINEARITY
+    IMPLICIT NONE
+    INTEGER :: i_, counter
+
+    Nkx = Nx;
+    ! Local data
+    ! Start and END indices of grid
+    ikxs = 1
+    ikxe = Nkx
+    local_nkx = ikxe - ikxs + 1
+    ALLOCATE(kxarray(ikxs:ikxe))
+    ALLOCATE(kxarray_full(1:Nkx))
+    IF (Nx .EQ. 1) THEN ! "cancel" y dimension
+      deltakx         = 1._dp
+      kxarray(1)      = 0._dp
+      ikx_0           = 1
+      contains_kx0    = .true.
+      kx_max          = 0._dp
+      ikx_max         = 1
+      kx_min          = 0._dp
+      kxarray_full(1) = 0._dp
+      local_kxmax     = 0._dp
+    ELSE ! Build apprpopriate grid
+      deltakx     = 2._dp*PI/Lx
+      kx_max      = (Ny/2)*deltakx
+      kx_min      = deltakx
+      ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
+      local_kxmax = 0._dp
+      DO ikx = ikxs,ikxe
+        kxarray(ikx) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*real(ikx-1)/real(Nkx)))
+        if (ikx .EQ. Nx/2+1)     kxarray(ikx) = -kxarray(ikx)
+        ! Finding kx=0
+        IF (kxarray(ikx) .EQ. 0) THEN
+          ikx_0 = ikx
+          contains_kx0 = .true.
+        ENDIF
+        ! Finding local kxmax
+        IF (ABS(kxarray(ikx)) .GT. local_kxmax) THEN
+          local_kxmax = ABS(kxarray(ikx))
+        ENDIF
+        ! Finding kxmax
+        IF (kxarray(ikx) .EQ. kx_max) ikx_max = ikx
+      END DO
+      ! Build the full grids on process 0 to diagnose it without comm
+      ! kx
+      DO ikx = 1,Nkx
+          kxarray_full(ikx) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*real(ikx-1)/real(Nkx)))
+          IF (ikx .EQ. Nx/2+1) kxarray_full(ikx) = -kxarray_full(ikx)
+      END DO
+    ENDIF
+    ! Orszag 2/3 filter
+    two_third_kxmax = 2._dp/3._dp*deltakx*(Nkx/2-1);
+    ALLOCATE(AA_x(ikxs:ikxe))
+    DO ikx = ikxs,ikxe
+      IF ( ((kxarray(ikx) .GT. -two_third_kxmax) .AND. &
+           (kxarray(ikx) .LT. two_third_kxmax))   .OR. (LINEARITY .EQ. 'linear')) THEN
+        AA_x(ikx) = 1._dp;
+      ELSE
+        AA_x(ikx) = 0._dp;
+      ENDIF
+    END DO
+  END SUBROUTINE set_kxgrid
 
 
   SUBROUTINE set_zgrid

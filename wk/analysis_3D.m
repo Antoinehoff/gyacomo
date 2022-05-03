@@ -10,7 +10,7 @@ system(['mkdir -p ',MISCDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 system(CMD);
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 10; 
+JOBNUMMIN = 00; JOBNUMMAX = 10;
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 
 
@@ -50,7 +50,7 @@ options.PLAN      = 'xy';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = dat.Ts5D;
-options.TIME      = 0:1:80;
+options.TIME      = 100:1:200;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -62,17 +62,17 @@ if 0
 options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
-% options.NAME      = '\phi';
-options.NAME      = 'n_i';
+options.NAME      = '\phi';
+% options.NAME      = 'n_i';
 % options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 8;
-options.TIME      = [500 700 900];
+options.COMP      = 1;
+options.TIME      = [1];
 data.a = data.EPS * 1000;
 fig = photomaton(data,options);
 save_figure(data,fig)
@@ -155,7 +155,7 @@ options.K2PLOT = 1;
 options.TIME   = 5:1:15;
 options.NMA    = 1;
 options.NMODES = 5;
-options.iz     = 8;
+options.iz     = 1;
 fig = mode_growth_meter(data,options);
 save_figure(data,fig)
 end

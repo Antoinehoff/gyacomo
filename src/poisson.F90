@@ -17,7 +17,6 @@ SUBROUTINE poisson
   INTEGER     :: ini,ine, i_, root_bcast
   COMPLEX(dp) :: fa_phi, intf_   ! current flux averaged phi
   INTEGER     :: count !! mpi integer to broadcast the electric potential at the end
-  COMPLEX(dp) :: buffer(ikxs:ikxe,ikys:ikye)
   COMPLEX(dp), DIMENSION(izs:ize) :: rho_i, rho_e     ! charge density q_a n_a
 
   ! Execution time start
@@ -33,7 +32,7 @@ SUBROUTINE poisson
         DO ini=1,jmaxi+1
           DO iz = izs,ize
           rho_i(iz) = rho_i(iz) &
-           +q_i*kernel_i(ini,ikx,iky,iz,0)*moments_i(ip0_i,ini,ikx,iky,iz,updatetlevel)
+           +q_i*kernel_i(ini,iky,ikx,iz,0)*moments_i(ip0_i,ini,iky,ikx,iz,updatetlevel)
           ENDDO
         END DO
 
@@ -43,7 +42,7 @@ SUBROUTINE poisson
           DO ine=1,jmaxe+1
             DO iz = izs,ize
             rho_e(iz) = rho_e(iz) &
-             +q_e*kernel_e(ine,ikx,iky,iz,0)*moments_e(ip0_e,ine,ikx,iky,iz,updatetlevel)
+             +q_e*kernel_e(ine,iky,ikx,iz,0)*moments_e(ip0_e,ine,iky,ikx,iz,updatetlevel)
             ENDDO
           END DO
         ELSE  ! Adiabatic electrons
@@ -51,8 +50,8 @@ SUBROUTINE poisson
           fa_phi = 0._dp
           IF(kyarray(iky).EQ.0._dp) THEN ! take ky=0 mode (average)
             DO ini=1,jmaxi+1 ! some over FLR contributions
-                rho_e(izs:ize) = Jacobian(izs:ize,0)*moments_i(ip0_i,ini,ikx,iky,izs:ize,updatetlevel)&
-                           *kernel_i(ini,ikx,iky,izs:ize,0)*(inv_poisson_op(ikx,iky,izs:ize)-1._dp)
+                rho_e(izs:ize) = Jacobian(izs:ize,0)*moments_i(ip0_i,ini,iky,ikx,izs:ize,updatetlevel)&
+                           *kernel_i(ini,iky,ikx,izs:ize,0)*(inv_poisson_op(iky,ikx,izs:ize)-1._dp)
                 call simpson_rule_z(rho_e(izs:ize),intf_) ! integrate over z
                 fa_phi = fa_phi + intf_
             ENDDO
@@ -62,18 +61,18 @@ SUBROUTINE poisson
 
         !!!!!!!!!!!!!!! Inverting the poisson equation !!!!!!!!!!!!!!!!!!!!!!!!!!
         DO iz = izs,ize
-        phi(ikx, iky, iz) =  (rho_e(iz) + rho_i(iz))*inv_poisson_op(ikx,iky,iz)
+        phi(iky, ikx, iz) =  (rho_e(iz) + rho_i(iz))*inv_poisson_op(iky,ikx,iz)
         ENDDO
       END DO kyloop
     END DO kxloop
 
     ! Cancel origin singularity
-    IF (contains_kx0 .AND. contains_ky0) phi(ikx_0,iky_0,:) = 0._dp
+    IF (contains_kx0 .AND. contains_ky0) phi(iky_0,ikx_0,:) = 0._dp
 
   ENDIF
 
   ! Transfer phi to all the others process along p
-  CALL manual_3D_bcast(phi(ikxs:ikxe,ikys:ikye,izs:ize))
+  CALL manual_3D_bcast(phi(ikys:ikye,ikxs:ikxe,izs:ize))
 
   ! Execution time end
   CALL cpu_time(t1_poisson)

@@ -14,8 +14,8 @@ MODULE basic
   INTEGER :: comm0                 ! Default communicator with a topology
   INTEGER :: rank_0                ! Ranks in comm0
   ! Communicators for 1-dim cartesian subgrids of comm0
-  INTEGER :: comm_p, comm_kx, comm_z
-  INTEGER :: rank_p, rank_kx, rank_z! Ranks
+  INTEGER :: comm_p, comm_ky, comm_z
+  INTEGER :: rank_p, rank_ky, rank_z! Ranks
   INTEGER :: commr_p0              ! Communicators along kx for only rank 0 on p
 
   INTEGER :: jobnum  = 0           ! Job number
@@ -28,7 +28,7 @@ MODULE basic
   INTEGER :: my_id                 ! Rank in COMM_WORLD
   INTEGER :: num_procs             ! number of MPI processes
   INTEGER :: num_procs_p           ! Number of processes in p
-  INTEGER :: num_procs_kx          ! Number of processes in r
+  INTEGER :: num_procs_ky          ! Number of processes in r
   INTEGER :: num_procs_z           ! Number of processes in z
   INTEGER :: nbr_L, nbr_R          ! Left and right neighbours (along p)
   INTEGER :: nbr_T, nbr_B          ! Top and bottom neighbours (along kx)

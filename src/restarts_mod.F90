@@ -72,10 +72,10 @@ CONTAINS
           ! Read state of system from checkpoint file
           IF (KIN_E) THEN
           WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
-          CALL getarrnd(fidrst, dset_name, moments_e(ips_e:ipe_e, ijs_e:ije_e, ikxs:ikxe, ikys:ikye, izs:ize, 1),(/1,3,5/))
+          CALL getarrnd(fidrst, dset_name, moments_e(ips_e:ipe_e, ijs_e:ije_e, ikys:ikye, ikxs:ikxe, izs:ize, 1),(/1,3,5/))
           ENDIF
           WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_i", n_
-          CALL getarrnd(fidrst, dset_name, moments_i(ips_i:ipe_i, ijs_i:ije_i, ikxs:ikxe, ikys:ikye, izs:ize, 1),(/1,3,5/))
+          CALL getarrnd(fidrst, dset_name, moments_i(ips_i:ipe_i, ijs_i:ije_i, ikys:ikye, ikxs:ikxe, izs:ize, 1),(/1,3,5/))
 
           CALL closef(fidrst)
 
@@ -113,7 +113,7 @@ CONTAINS
         CALL getatt(fidrst,"/data/input/" , "start_iframe5d", n0)
         ! Allocate the required size to load checkpoints moments
         ! CALL allocate_array(moments_e_cp, 1,pmaxe_cp+1, 1,jmaxe_cp+1, ikxs,ikxe, ikys,ikye, izs,ize)
-        CALL allocate_array(moments_e_cp, 1,pmaxe_cp+1, 1,jmaxe_cp+1, 1,Nkx_cp, 1,Nky_cp, 1,Nz_cp)
+        CALL allocate_array(moments_e_cp, 1,pmaxe_cp+1, 1,jmaxe_cp+1, 1,Nky_cp, 1,Nkx_cp, 1,Nz_cp)
         ! Find the last results of the checkpoint file by iteration
         n_ = n0+1
         WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_ ! start with moments_e/000001
@@ -124,8 +124,8 @@ CONTAINS
         n_ = n_ - 1 ! n_ is not a file so take the previous one n_-1
         ! Read state of system from checkpoint file and load every moment to change the distribution
         WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
-        ! CALL getarrnd(fidrst, dset_name, moments_e_cp(1:pmaxe_cp+1, 1:jmaxe_cp+1, ikxs:ikxe, ikys:ikye, izs:ize),(/1,3/))
-        CALL getarr(fidrst, dset_name, moments_e_cp(1:pmaxe_cp+1, 1:jmaxe_cp+1, 1:Nkx_cp, 1:Nky_cp, 1:Nz_cp))
+        ! CALL getarrnd(fidrst, dset_name, moments_e_cp(1:pmaxe_cp+1, 1:jmaxe_cp+1, ikys:ikye, ikxs:ikxe, izs:ize),(/1,3/))
+        CALL getarr(fidrst, dset_name, moments_e_cp(1:pmaxe_cp+1, 1:jmaxe_cp+1, 1:Nky_cp, 1:Nkx_cp, 1:Nz_cp))
         ! Initialize simulation moments array with checkpoints ones
         ! (they may have a larger number of polynomials, set to 0 at the begining)
         moments_e = 0._dp;
@@ -138,7 +138,7 @@ CONTAINS
                 DO ikx=ikxs,ikxe
                 DO iky=ikys,ikye
                 DO iz = izs,ize
-                    moments_e(ip,ij,ikx,iky,iz,:) = moments_e_cp(ip,ij,ikx,iky,iz)
+                    moments_e(ip,ij,iky,ikx,iz,:) = moments_e_cp(ip,ij,iky,ikx,iz)
                 ENDDO
                 ENDDO
                 ENDDO
@@ -158,7 +158,7 @@ CONTAINS
         CALL getatt(fidrst,"/data/input/" , "start_iframe5d", n0)
         ! Allocate the required size to load checkpoints moments
         ! CALL allocate_array(moments_i_cp, 1,pmaxi_cp+1, 1,jmaxi_cp+1, ikxs,ikxe, ikys,ikye, izs,ize)
-        CALL allocate_array(moments_i_cp, 1,pmaxi_cp+1, 1,jmaxi_cp+1, 1,Nkx_cp, 1,Nky_cp, 1,Nz_cp)
+        CALL allocate_array(moments_i_cp, 1,pmaxi_cp+1, 1,jmaxi_cp+1, 1,Nky_cp, 1,Nkx_cp, 1,Nz_cp)
         ! Find the last results of the checkpoint file by iteration
         n_ = n0+1
         WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_i", n_ ! start with moments_e/000001
@@ -170,8 +170,8 @@ CONTAINS
 
         ! Read state of system from checkpoint file and load every moment to change the distribution
         WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_i", n_
-        ! CALL getarrnd(fidrst, dset_name, moments_i_cp(1:pmaxi_cp+1, 1:jmaxi_cp+1, ikxs:ikxe, ikys:ikye, izs:ize),(/1,3/))
-        CALL getarr(fidrst, dset_name, moments_i_cp(1:pmaxi_cp+1, 1:jmaxi_cp+1, 1:Nkx_cp, 1:Nky_cp, 1:Nz_cp))
+        ! CALL getarrnd(fidrst, dset_name, moments_i_cp(1:pmaxi_cp+1, 1:jmaxi_cp+1, ikys:ikye, ikxs:ikxe, izs:ize),(/1,3/))
+        CALL getarr(fidrst, dset_name, moments_i_cp(1:pmaxi_cp+1, 1:jmaxi_cp+1, 1:Nky_cp, 1:Nkx_cp, 1:Nz_cp))
 
         ! Initialize simulation moments array with checkpoints ones
         ! (they may have a larger number of polynomials, set to 0 at the begining)
@@ -185,7 +185,7 @@ CONTAINS
                 DO ikx=ikxs,ikxe
                 DO iky=ikys,ikye
                 DO iz = izs,ize
-                    moments_i(ip,ij,ikx,iky,iz,:) = moments_i_cp(ip,ij,ikx,iky,iz)
+                    moments_i(ip,ij,iky,ikx,iz,:) = moments_i_cp(ip,ij,iky,ikx,iz)
                 ENDDO
                 ENDDO
                 ENDDO
