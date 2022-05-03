@@ -43,7 +43,7 @@ SUBROUTINE ppinit
   !
   !periodicity in p
   periods(1)=.FALSE.
-  !periodicity in kx
+  !periodicity in ky
   periods(2)=.FALSE.
   !periodicity in z
   periods(3)=.TRUE.

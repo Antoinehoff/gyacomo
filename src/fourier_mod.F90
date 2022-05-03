@@ -60,8 +60,8 @@ MODULE fourier
     cdatar_g = fftw_alloc_real(2*alloc_local_2)
     cdatar_c = fftw_alloc_real(2*alloc_local_2)
     ! Initalize the arrays with the rooms pointed
-    call c_f_pointer(cdatar_f, real_data_f, [2*(NY_/2  + 1),local_nkx])
-    call c_f_pointer(cdatar_g, real_data_g, [2*(NY_/2  + 1),local_nkx])
+    call c_f_pointer(cdatar_f, real_data_f,   [2*(NY_/2  + 1),local_nkx])
+    call c_f_pointer(cdatar_g, real_data_g,   [2*(NY_/2  + 1),local_nkx])
     call c_f_pointer(cdatar_c, bracket_sum_r, [2*(NY_/2  + 1),local_nkx])
 
     ! Plan Creation (out-of-place forward and backward FFT)

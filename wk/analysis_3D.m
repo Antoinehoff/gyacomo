@@ -21,7 +21,7 @@ FMT = '.fig';
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-TAVG_0 = 600; TAVG_1 = 700; % Averaging times duration
+TAVG_0 = 0.8*data.Ts3D(end); TAVG_1 = data.Ts3D(end); % Averaging times duration
 compz  = 'avg';
 % chose your field to plot in spacetime diag (uzf,szf,Gx)
 fig = plot_radial_transport_and_spacetime(data,TAVG_0,TAVG_1,'phi',1,compz);
@@ -62,17 +62,17 @@ if 0
 options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
-% options.NAME      = '\phi';
-options.NAME      = 'n_i';
+options.NAME      = '\phi';
+% options.NAME      = 'n_i';
 % options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 8;
-options.TIME      = [1 4 10];
+options.COMP      = 1;
+options.TIME      = [1];
 data.a = data.EPS * 1000;
 fig = photomaton(data,options);
 save_figure(data,fig)

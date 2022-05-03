@@ -281,10 +281,17 @@ SUBROUTINE save_EM_ZF_modes
   USE model, ONLY: KIN_E
   IMPLICIT NONE
   ! Store Zonal and entropy modes
+  IF(contains_ky0) THEN
   IF(KIN_E) &
-  moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,iky_0,ikxs:ikxe,izs:ize,updatetlevel)
-  moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,iky_0,ikxs:ikxe,izs:ize,updatetlevel)
-  phi_ZF(ikxs:ikxe,izs:ize) = phi(iky_0,ikxs:ikxe,izs:ize)
+    moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,iky_0,ikxs:ikxe,izs:ize,updatetlevel)
+    moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,iky_0,ikxs:ikxe,izs:ize,updatetlevel)
+    phi_ZF(ikxs:ikxe,izs:ize) = phi(iky_0,ikxs:ikxe,izs:ize)
+  ELSE
+    IF(KIN_E) &
+    moments_e_ZF(ips_e:ipe_e,ijs_e:ije_e,ikxs:ikxe,izs:ize) = 0._dp
+    moments_i_ZF(ips_i:ipe_i,ijs_i:ije_i,ikxs:ikxe,izs:ize) = 0._dp
+    phi_ZF(ikxs:ikxe,izs:ize) = 0._dp
+  ENDIF
   IF(contains_kx0) THEN
     IF(KIN_E) &
     moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikx_0,izs:ize,updatetlevel)
