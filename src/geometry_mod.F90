@@ -150,7 +150,7 @@ CONTAINS
         ky = kyarray(iky)
          DO ikx= ikxs, ikxe
            kx = kxarray(ikx)
-           Ckxky(ikx, iky, iz,eo) = (-SIN(z)*kx - (COS(z) + (shear*z - alpha_MHD*SIN(z))* SIN(z))*ky) * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
+           Ckxky(iky, ikx, iz,eo) = (-SIN(z)*kx - (COS(z) + (shear*z - alpha_MHD*SIN(z))* SIN(z))*ky) * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
          ENDDO
       ENDDO
     ! coefficient in the front of parallel derivative
