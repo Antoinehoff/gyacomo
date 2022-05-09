@@ -206,6 +206,28 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
       ENDIF
     ENDDO
 
+    !! Ensure to kill the moments too high if closue option is set to 1
+    IF(CLOS .EQ. 1) THEN
+      IF(KIN_E) THEN
+        DO ip=ipgs_e,ipge_e
+          p_int = parray_e(ip)
+            DO ij=ijgs_e,ijge_e
+              j_int = jarray_e(ij)
+              IF(p_int+2*j_int .GT. dmaxe) &
+              nadiab_moments_e(ip,ij,:,:,:) = 0._dp
+            ENDDO
+        ENDDO
+      ENDIF
+      DO ip=ipgs_i,ipge_i
+        p_int = parray_i(ip)
+          DO ij=ijgs_i,ijge_i
+            j_int = jarray_i(ij)
+            IF(p_int+2*j_int .GT. dmaxi) &
+            nadiab_moments_i(ip,ij,:,:,:) = 0._dp
+          ENDDO
+      ENDDO
+    ENDIF
+
 !------------- INTERP AND GRADIENTS ALONG Z ----------------------------------
 
   IF (KIN_E) THEN
