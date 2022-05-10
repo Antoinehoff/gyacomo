@@ -13,6 +13,10 @@ x = options.XPERP;
 smin = min(abs(s));
 xmin = min(abs(x));
 
+[~, ikx0] = min(abs(data.kx));
+[~, iky0] = min(abs(data.ky));
+kx_ = data.kx; ky_ = data.ky;
+
 switch options.SPECIE
     case 'e'
         Napj_     = data.Nepj;
@@ -23,13 +27,16 @@ switch options.SPECIE
         parray    = double(data.Pi);
         jarray    = double(data.Ji);
 end
+Np = numel(parray); Nj = numel(jarray);
 
 switch options.Z
     case 'avg'
         Napj_     = mean(Napj_,5);
+        phi_      = mean(data.PHI,3);
     otherwise
         [~,iz]    = min(abs(options.Z-data.z)); 
         Napj_     = Napj_(:,:,:,:,iz,:);
+        phi_      = data.PHI(:,:,iz);
 end
 Napj_ = squeeze(Napj_);
 
@@ -42,49 +49,89 @@ Napj_     = mean(Napj_(:,:,:,:,frames),5);
 
 Napj_ = squeeze(Napj_);
 
+if options.non_adiab
+    for ij_ = 1:Nj
+        for ikx = 1:data.Nkx
+            for iky = 1:data.Nky    
+                kp_ = sqrt(kx_(ikx)^2 + ky_(iky)^2);
+                Napj_(1,ij_,ikx,iky) = Napj_(1,ij_,ikx,iky) + kernel(ij_,kp_)*phi_(ikx,iky);
+            end
+        end
+    end
+end
 
-Np = numel(parray); Nj = numel(jarray);
 
 % x = 0
-Fs = zeros(data.Nkx,data.Nky,numel(s));
-FAM = FaM(s,xmin);
-for ip_ = 1:Np
-    p_ = parray(ip_);
-    HH = Hp(p_,s);
-    for ij_ = 1:Nj
-        j_ = jarray(ij_);
-        LL = Lj(j_,xmin);
-        HLF = HH.*LL.*FAM;
-        for ikx = 1:data.Nkx
-            for iky = 1:data.Nky
-                Fs(ikx,iky,:) = squeeze(Fs(ikx,iky,:))' + Napj_(ip_,ij_,ikx,iky)*HLF;
+if options.RMS
+    Fs = zeros(data.Nkx,data.Nky,numel(s));
+    FAM = FaM(s,xmin);
+    for ip_ = 1:Np
+        p_ = parray(ip_);
+        HH = Hp(p_,s);
+        for ij_ = 1:Nj
+            j_ = jarray(ij_);
+            LL = Lj(j_,xmin);
+            HLF = HH.*LL.*FAM;
+            for ikx = 1:data.Nkx
+                for iky = 1:data.Nky
+                    Fs(ikx,iky,:) = squeeze(Fs(ikx,iky,:))' + Napj_(ip_,ij_,ikx,iky)*HLF;
+                end
             end
+       end
+    end
+else
+    Fs = s*0;
+    FAM = FaM(s,xmin);
+    for ip_ = 1:Np
+        p_ = parray(ip_);
+        HH = Hp(p_,s);
+        for ij_ = 1:Nj
+            j_ = jarray(ij_);
+            LL = Lj(j_,xmin);
+            Fs = Fs + squeeze(Napj_(ip_,ij_,ikx0,iky0))*HH.*LL.*FAM;
         end
     end
 end
 
 % s = 0
-Fx = zeros(data.Nkx,data.Nky,numel(x));
-FAM = FaM(smin,x);
-for ip_ = 1:Np
-    p_ = parray(ip_);
-    HH = Hp(p_,smin);
-    for ij_ = 1:Nj
-        j_ = jarray(ij_);
-        LL = Lj(j_,x);
-        HLF = HH.*LL.*FAM;
-        for ikx = 1:data.Nkx
-            for iky = 1:data.Nky
-                Fx(ikx,iky,:) = squeeze(Fx(ikx,iky,:))' + Napj_(ip_,ij_,ikx,iky)*HLF;
+if options.RMS
+    Fx = zeros(data.Nkx,data.Nky,numel(x));
+    FAM = FaM(x,smin);
+    for ip_ = 1:Np
+        p_ = parray(ip_);
+        HH = Hp(p_,smin);
+        for ij_ = 1:Nj
+            j_ = jarray(ij_);
+            LL = Lj(j_,x);
+            HLF = HH.*LL.*FAM;
+            for ikx = 1:data.Nkx
+                for iky = 1:data.Nky
+                    Fx(ikx,iky,:) = squeeze(Fx(ikx,iky,:))' + Napj_(ip_,ij_,ikx,iky)*HLF;
+                end
             end
+       end
+    end
+else
+    Fx = x*0;
+    FAM = FaM(smin,x);
+    for ip_ = 1:Np
+        p_ = parray(ip_);
+        HH = Hp(p_,smin);
+        for ij_ = 1:Nj
+            j_ = jarray(ij_);
+            LL = Lj(j_,x);
+            Fx = Fx + squeeze(Napj_(ip_,ij_,ikx0,iky0))*HH.*LL.*FAM;
         end
     end
 end
 
+
 Fs = real(Fs.*conj(Fs)); %|f_a|^2
-Fs = sqrt(squeeze(sum(sum(Fs,1),2))); %sqrt(<|f_a|>kx,ky)
-Fs = Fs./max(max(Fs));
 Fx = real(Fx.*conj(Fx)); %|f_a|^2
-Fx = sqrt(squeeze(sum(sum(Fx,1),2))); %sqrt(<|f_a|>kx,ky)
+if options.RMS
+Fs = squeeze(sqrt(mean(mean(Fs,1),2))); %sqrt(<|f_a|^2>kx,ky)
+Fx = squeeze(sqrt(mean(mean(Fx,1),2))); %sqrt(<|f_a|^2>kx,ky)
+end
+Fs = Fs./max(max(Fs));
 Fx = Fx./max(max(Fx));
 end
