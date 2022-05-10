@@ -23,29 +23,25 @@ SUBROUTINE apply_closure_model
 
 
   ELSEIF (CLOS .EQ. 1) THEN
-    ! Truncation at highest fully represented kinetic moment
+    ! zero truncation, An+1=0 for n+1>nmax only
+    CALL ghosts_upper_truncation
+    ! Additional truncation at highest fully represented kinetic moment
     ! e.g. Dmax = 3 means
-    ! all Napj s.t. p+2j <= 3
+    ! only Napj s.t. p+2j <= 3 are evolved
     ! -> (p,j) allowed are (0,0),(1,0),(0,1),(2,0),(1,1),(3,0)
-    ! =>> Dmax is Pmax, condition is p+2j<=Pmax
-  DO iz = izs,ize
-    DO ikx = ikxs,ikxe
-        DO iky = ikys,ikye
-          IF(KIN_E) THEN
-          DO ip = ipgs_e,ipge_e
-            DO ij = ijgs_e,ijge_e
-              IF ( parray_e(ip)+2*jarray_e(ip) .GT. dmaxe) &
-              moments_e(ip,ij,iky,ikx,iz,updatetlevel) = 0._dp
-            ENDDO
-          ENDDO
-          ENDIF
-          DO ip = ipgs_i,ipge_i
-            DO ij = ijgs_i,ijge_i
-              IF ( parray_i(ip)+2*jarray_i(ip) .GT. dmaxi) &
-              moments_i(ip,ij,iky,ikx,iz,updatetlevel) = 0._dp
-            ENDDO
-          ENDDO
-        ENDDO
+    ! =>> Dmax = min(Pmax,Jmax+1)
+    IF(KIN_E) THEN
+    DO ip = ipgs_e,ipge_e
+      DO ij = ijgs_e,ijge_e
+        IF ( parray_e(ip)+2*jarray_e(ip) .GT. dmaxe) &
+        moments_e(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
+      ENDDO
+    ENDDO
+    ENDIF
+    DO ip = ipgs_i,ipge_i
+      DO ij = ijgs_i,ijge_i
+        IF ( parray_i(ip)+2*jarray_i(ip) .GT. dmaxi) &
+        moments_i(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
       ENDDO
     ENDDO
     ! + ghosts truncation

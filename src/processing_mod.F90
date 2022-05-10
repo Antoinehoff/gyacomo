@@ -170,10 +170,10 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
                                ddz_nepj, ddz2_Nepj, interp_nepj,&
                                ddz_nipj, ddz2_Nipj, interp_nipj
   USE time_integration, ONLY : updatetlevel
-  USE model,            ONLY : qe_taue, qi_taui, KIN_E
+  USE model,            ONLY : qe_taue, qi_taui, KIN_E, CLOS
   USE calculus,         ONLY : grad_z, grad_z2, interp_z
   IMPLICIT NONE
-  INTEGER :: eo, p_int
+  INTEGER :: eo, p_int, j_int
   CALL cpu_time(t0_process)
 
   ! Electron non adiab moments

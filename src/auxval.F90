@@ -78,4 +78,16 @@ subroutine auxval
   ENDDO
   CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
+  IF((my_id.EQ.0) .AND. (CLOS .EQ. 1)) THEN
+  IF(KIN_E) &
+  write(*,*) 'Closure = 1 -> Maximal Nepj degree is min(Pmaxe,2*Jmaxe+1): De = ', dmaxi
+  write(*,*) 'Closure = 1 -> Maximal Nipj degree is min(Pmaxi,2*Jmaxi+1): Di = ', dmaxi
+  ENDIF
+  DO ip = ips_i,ipe_i
+    DO ij = ijs_i,ije_i
+      IF((parray_i(ip)+2*jarray_i(ij) .LE. dmaxi) .AND. (rank_ky + rank_z .EQ. 0))&
+      print*, '(',parray_i(ip),',',jarray_i(ij),')'
+    ENDDO
+  ENDDO
+
 END SUBROUTINE auxval

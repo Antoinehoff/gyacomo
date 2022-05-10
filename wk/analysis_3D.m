@@ -24,7 +24,8 @@ if 1
 options.TAVG_0   = 0.8*data.Ts3D(end); 
 options.TAVG_1   = data.Ts3D(end); % Averaging times duration
 options.NMVA     = 1;              % Moving average for time traces
-options.ST_FIELD = '\Gamma_x';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
+% options.ST_FIELD = '\Gamma_x';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
+options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 options.INTERP   = 1;
 fig = plot_radial_transport_and_spacetime(data,options);
 save_figure(data,fig)
@@ -41,18 +42,18 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-% options.NAME      = '\phi';
+options.NAME      = '\phi';
 % options.NAME      = 'N_i^{00}';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
-options.NAME      = '\Gamma_x';
+% options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = dat.Ts5D;
-options.TIME      = 00:1:200;
+options.TIME      = 00:1:250;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -99,7 +100,7 @@ options.XPERP     = linspace( 0,6,64);
 % options.SPAR      = vp';
 % options.XPERP     = mu';
 options.Z         = 1;
-options.T         = 5500;
+options.T         = 200;
 options.CTR       = 1;
 options.ONED      = 0;
 fig = plot_fa(data,options);
@@ -109,7 +110,7 @@ end
 if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
-options.P2J  = 0;
+options.P2J  = 1;
 options.ST   = 0;
 options.NORMALIZED = 0;
 fig = show_moments_spectrum(data,options);
