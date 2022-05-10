@@ -95,14 +95,17 @@ end
 
 if 0
 %% Kinetic distribution function sqrt(<f_a^2>xy) (GENE vsp)
-options.SPAR      = linspace(-3,3,64)+(6/127/2);
-options.XPERP     = linspace( 0,6,64);
-% options.SPAR      = vp';
-% options.XPERP     = mu';
-options.Z         = 1;
+% options.SPAR      = linspace(-3,3,64)+(6/127/2);
+% options.XPERP     = linspace( 0,6,64);
+options.SPAR      = gene_data.vp';
+options.XPERP     = gene_data.mu';
+options.Z         = 'avg';
 options.T         = 200;
-options.CTR       = 1;
+options.PLT_FCT   = 'pcolor';
 options.ONED      = 0;
+options.non_adiab = 1;
+options.SPECIE    = 'i';
+options.RMS       = 1; % Root mean square i.e. sqrt(sum_k|f_k|^2) as in Gene
 fig = plot_fa(data,options);
 save_figure(data,fig)
 end
