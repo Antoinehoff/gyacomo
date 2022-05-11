@@ -31,7 +31,8 @@ CONTAINS
       DO ip=ips_e,ipe_e
         p_int = parray_e(ip)
         DO ij=ijs_e,ije_e
-          IF((CLOS .NE. 1) .OR. (ip-1+2*(ij-1)+1 .LE. dmaxe))&
+          j_int = jarray_e(ij)
+          IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmaxe))&
           CALL advance_field(moments_e(ip,ij,ikys:ikye,ikxs:ikxe,izs:ize,:), moments_rhs_e(ip,ij,ikys:ikye,ikxs:ikxe,izs:ize,:))
         ENDDO
       ENDDO
@@ -40,7 +41,7 @@ CONTAINS
       p_int = parray_i(ip)
       DO ij=ijs_i,ije_i
         j_int = jarray_i(ij)
-        IF((CLOS .NE. 1) .OR. (ip-1+2*(ij-1)+1 .LE. dmaxi))&
+        IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmaxi))&
         CALL advance_field(moments_i(ip,ij,ikys:ikye,ikxs:ikxe,izs:ize,:), moments_rhs_i(ip,ij,ikys:ikye,ikxs:ikxe,izs:ize,:))
       ENDDO
     ENDDO

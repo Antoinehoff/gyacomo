@@ -134,6 +134,9 @@ SUBROUTINE diagnose(kstep)
        IF(KIN_E)&
        CALL creatg(fidres, "/data/var3d/Ne00", "Ne00")
        CALL creatg(fidres, "/data/var3d/Ni00", "Ni00")
+       IF(KIN_E)&
+       CALL creatg(fidres, "/data/var3d/Nepjz", "Nepjz")
+       CALL creatg(fidres, "/data/var3d/Nipjz", "Nipjz")
       ENDIF
 
       IF (write_dens) THEN
@@ -426,7 +429,7 @@ END SUBROUTINE diagnose_2d
 SUBROUTINE diagnose_3d
 
   USE basic
-  USE futils, ONLY: append, getatt, attach, putarrnd
+  USE futils, ONLY: append, getatt, attach, putarrnd, putarr
   USE fields
   USE array
   USE grid, ONLY: ikxs,ikxe, ikys,ikye, Nkx, Nky, local_nkx, ikx, iky, ips_e, ips_i
@@ -446,21 +449,24 @@ SUBROUTINE diagnose_3d
   iframe3d=iframe3d+1
   CALL attach(fidres,"/data/var3d/" , "frames", iframe3d)
 
-  IF (write_phi) CALL write_field3d(phi (ikys:ikye,ikxs:ikxe,izs:ize), 'phi')
+  IF (write_phi) CALL write_field3d_kykxz(phi (ikys:ikye,ikxs:ikxe,izs:ize), 'phi')
 
   IF (write_Na00) THEN
     IF(KIN_E)THEN
     IF (ips_e .EQ. 1) THEN
       Ne00(ikys:ikye,ikxs:ikxe,izs:ize) = moments_e(ips_e,1,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel)
     ENDIF
-    ! CALL manual_3D_bcast(Ne00(ikys:ikye,ikxs:ikxe,izs:ize))
-    CALL write_field3d(Ne00(ikys:ikye,ikxs:ikxe,izs:ize), 'Ne00')
+    CALL write_field3d_kykxz(Ne00(ikys:ikye,ikxs:ikxe,izs:ize), 'Ne00')
     ENDIF
     IF (ips_i .EQ. 1) THEN
       Ni00(ikys:ikye,ikxs:ikxe,izs:ize) = moments_i(ips_e,1,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel)
     ENDIF
-    ! CALL manual_3D_bcast(Ni00(ikys:ikye,ikxs:ikxe,izs:ize))
-    CALL write_field3d(Ni00(ikys:ikye,ikxs:ikxe,izs:ize), 'Ni00')
+    CALL write_field3d_kykxz(Ni00(ikys:ikye,ikxs:ikxe,izs:ize), 'Ni00')
+
+    CALL compute_Napjz_spectrum
+    IF(KIN_E) &
+    CALL write_field3d_pjz_e(Nepjz(ips_e:ipe_e,ijs_e:ije_e,izs:ize), 'Nepjz')
+    CALL write_field3d_pjz_i(Nipjz(ips_i:ipe_i,ijs_i:ije_i,izs:ize), 'Nipjz')
   ENDIF
 
   !! Fuid moments
@@ -469,44 +475,38 @@ SUBROUTINE diagnose_3d
 
   IF (write_dens) THEN
     IF(KIN_E)&
-    CALL write_field3d(dens_e(ikys:ikye,ikxs:ikxe,izs:ize), 'dens_e')
-    CALL write_field3d(dens_i(ikys:ikye,ikxs:ikxe,izs:ize), 'dens_i')
+    CALL write_field3d_kykxz(dens_e(ikys:ikye,ikxs:ikxe,izs:ize), 'dens_e')
+    CALL write_field3d_kykxz(dens_i(ikys:ikye,ikxs:ikxe,izs:ize), 'dens_i')
   ENDIF
 
   IF (write_fvel) THEN
     IF(KIN_E)&
-    CALL write_field3d(upar_e(ikys:ikye,ikxs:ikxe,izs:ize), 'upar_e')
-    CALL write_field3d(upar_i(ikys:ikye,ikxs:ikxe,izs:ize), 'upar_i')
+    CALL write_field3d_kykxz(upar_e(ikys:ikye,ikxs:ikxe,izs:ize), 'upar_e')
+    CALL write_field3d_kykxz(upar_i(ikys:ikye,ikxs:ikxe,izs:ize), 'upar_i')
     IF(KIN_E)&
-    CALL write_field3d(uper_e(ikys:ikye,ikxs:ikxe,izs:ize), 'uper_e')
-    CALL write_field3d(uper_i(ikys:ikye,ikxs:ikxe,izs:ize), 'uper_i')
+    CALL write_field3d_kykxz(uper_e(ikys:ikye,ikxs:ikxe,izs:ize), 'uper_e')
+    CALL write_field3d_kykxz(uper_i(ikys:ikye,ikxs:ikxe,izs:ize), 'uper_i')
   ENDIF
 
   IF (write_temp) THEN
     IF(KIN_E)&
-    CALL write_field3d(Tpar_e(ikys:ikye,ikxs:ikxe,izs:ize), 'Tpar_e')
-    CALL write_field3d(Tpar_i(ikys:ikye,ikxs:ikxe,izs:ize), 'Tpar_i')
+    CALL write_field3d_kykxz(Tpar_e(ikys:ikye,ikxs:ikxe,izs:ize), 'Tpar_e')
+    CALL write_field3d_kykxz(Tpar_i(ikys:ikye,ikxs:ikxe,izs:ize), 'Tpar_i')
     IF(KIN_E)&
-    CALL write_field3d(Tper_e(ikys:ikye,ikxs:ikxe,izs:ize), 'Tper_e')
-    CALL write_field3d(Tper_i(ikys:ikye,ikxs:ikxe,izs:ize), 'Tper_i')
+    CALL write_field3d_kykxz(Tper_e(ikys:ikye,ikxs:ikxe,izs:ize), 'Tper_e')
+    CALL write_field3d_kykxz(Tper_i(ikys:ikye,ikxs:ikxe,izs:ize), 'Tper_i')
     IF(KIN_E)&
-    CALL write_field3d(temp_e(ikys:ikye,ikxs:ikxe,izs:ize), 'temp_e')
-    CALL write_field3d(temp_i(ikys:ikye,ikxs:ikxe,izs:ize), 'temp_i')
+    CALL write_field3d_kykxz(temp_e(ikys:ikye,ikxs:ikxe,izs:ize), 'temp_e')
+    CALL write_field3d_kykxz(temp_i(ikys:ikye,ikxs:ikxe,izs:ize), 'temp_i')
   ENDIF
 
 CONTAINS
 
-  SUBROUTINE write_field3d(field, text)
-    USE futils, ONLY: attach, putarr
-    USE grid, ONLY: ikxs,ikxe, ikys,ikye, Nkx, Nky, local_nkx
-    USE prec_const
-    USE basic, ONLY : comm_ky, num_procs_p, rank_p
+  SUBROUTINE write_field3d_kykxz(field, text)
     IMPLICIT NONE
-
     COMPLEX(dp), DIMENSION(ikys:ikye,ikxs:ikxe, izs:ize), INTENT(IN) :: field
     CHARACTER(*), INTENT(IN) :: text
     CHARACTER(LEN=50) :: dset_name
-
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
     IF (num_procs .EQ. 1) THEN ! no data distribution
       CALL putarr(fidres, dset_name, field(ikys:ikye,ikxs:ikxe, izs:ize), ionode=0)
@@ -514,8 +514,35 @@ CONTAINS
       CALL putarrnd(fidres, dset_name, field(ikys:ikye,ikxs:ikxe, izs:ize),  (/1, 1, 3/))
     ENDIF
     CALL attach(fidres, dset_name, "time", time)
+  END SUBROUTINE write_field3d_kykxz
 
-  END SUBROUTINE write_field3d
+  SUBROUTINE write_field3d_pjz_i(field, text)
+    IMPLICIT NONE
+    REAL(dp), DIMENSION(ips_i:ipe_i,ijs_i:ije_i,izs:ize), INTENT(IN) :: field
+    CHARACTER(*), INTENT(IN) :: text
+    CHARACTER(LEN=50) :: dset_name
+    WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
+    IF (num_procs .EQ. 1) THEN ! no data distribution
+      CALL putarr(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,izs:ize), ionode=0)
+    ELSE
+      CALL putarrnd(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,izs:ize),  (/1, 0, 3/))
+    ENDIF
+    CALL attach(fidres, dset_name, "time", time)
+  END SUBROUTINE write_field3d_pjz_i
+
+  SUBROUTINE write_field3d_pjz_e(field, text)
+    IMPLICIT NONE
+    REAL(dp), DIMENSION(ips_e:ipe_e,ijs_e:ije_e,izs:ize), INTENT(IN) :: field
+    CHARACTER(*), INTENT(IN) :: text
+    CHARACTER(LEN=50) :: dset_name
+    WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
+    IF (num_procs .EQ. 1) THEN ! no data distribution
+      CALL putarr(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,izs:ize), ionode=0)
+    ELSE
+      CALL putarrnd(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,izs:ize),  (/1, 0, 3/))
+    ENDIF
+    CALL attach(fidres, dset_name, "time", time)
+  END SUBROUTINE write_field3d_pjz_e
 
 END SUBROUTINE diagnose_3d
 

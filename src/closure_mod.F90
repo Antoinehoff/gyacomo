@@ -33,14 +33,14 @@ SUBROUTINE apply_closure_model
     IF(KIN_E) THEN
     DO ip = ipgs_e,ipge_e
       DO ij = ijgs_e,ijge_e
-        IF ( parray_e(ip)+2*jarray_e(ip) .GT. dmaxe) &
+        IF ( parray_e(ip)+2*jarray_e(ij) .GT. dmaxe) &
         moments_e(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
       ENDDO
     ENDDO
     ENDIF
     DO ip = ipgs_i,ipge_i
       DO ij = ijgs_i,ijge_i
-        IF ( parray_i(ip)+2*jarray_i(ip) .GT. dmaxi) &
+        IF ( parray_i(ip)+2*jarray_i(ij) .GT. dmaxi) &
         moments_i(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) = 0._dp
       ENDDO
     ENDDO

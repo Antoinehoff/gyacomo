@@ -71,39 +71,42 @@ SUBROUTINE compute_nonlinear
   zloope: DO iz = izs,ize
   ploope: DO ip = ips_e,ipe_e ! Loop over Hermite moments
     eo = MODULO(parray_e(ip),2)
+    p_int = parray_e(ip)
     jloope: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
       j_int=jarray_e(ij)
-      ! Set non linear sum truncation
-      IF (NL_CLOS .EQ. -2) THEN
-        nmax = Jmaxe
-      ELSEIF (NL_CLOS .EQ. -1) THEN
-        nmax = Jmaxe-(ij-1)
-      ELSE
-        nmax = NL_CLOS
-      ENDIF
-      bracket_sum_r = 0._dp ! initialize sum over real nonlinear term
-      nloope: DO in = 1,nmax+1 ! Loop over laguerre for the sum
-        ! First convolution terms
-        F_cmpx(:,:) = phi(:,:,iz) * kernel_e(in, :, :, iz, eo)
-        ! Second convolution terms
-        G_cmpx(:,:) = 0._dp ! initialization of the sum
-        smax = MIN( (in-1)+(ij-1), jmaxe );
-        DO is = 1, smax+1 ! sum truncation on number of moments
-          G_cmpx(:,:)  = G_cmpx(:,:) + &
-            dnjs(in,ij,is) * moments_e(ip,is,:,:,iz,updatetlevel)
-        ENDDO
-        !/!\ this function add its result to bracket_sum_r (hard to read sorry) /!\
-        CALL poisson_bracket_and_sum(F_cmpx,G_cmpx)
-      ENDDO nloope
+      IF((CLOS .EQ. 1) .AND. (p_int+2*j_int .LE. dmaxe)) THEN !compute
+        ! Set non linear sum truncation
+        IF (NL_CLOS .EQ. -2) THEN
+          nmax = Jmaxe
+        ELSEIF (NL_CLOS .EQ. -1) THEN
+          nmax = Jmaxe-j_int
+        ELSE
+          nmax = NL_CLOS
+        ENDIF
+        bracket_sum_r = 0._dp ! initialize sum over real nonlinear term
+        nloope: DO in = 1,nmax+1 ! Loop over laguerre for the sum
+          ! First convolution terms
+          F_cmpx(ikxs:ikxe,ikxs:ikxe) = phi(ikxs:ikxe,ikxs:ikxe,iz) * kernel_e(in, ikxs:ikxe,ikxs:ikxe, iz, eo)
+          ! Second convolution terms
+          G_cmpx(ikxs:ikxe,ikxs:ikxe) = 0._dp ! initialization of the sum
+          smax = MIN( (in-1)+(ij-1), jmaxe );
+          DO is = 1, smax+1 ! sum truncation on number of moments
+            G_cmpx(ikxs:ikxe,ikxs:ikxe)  = G_cmpx(ikxs:ikxe,ikxs:ikxe) + &
+              dnjs(in,ij,is) * moments_e(ip,is,ikxs:ikxe,ikxs:ikxe,iz,updatetlevel)
+          ENDDO
+          !/!\ this function add its result to bracket_sum_r (hard to read sorry) /!\
+          CALL poisson_bracket_and_sum(F_cmpx,G_cmpx)
+        ENDDO nloope
 
-      ! Put the real nonlinear product into k-space
-      call fftw_mpi_execute_dft_r2c(planf, bracket_sum_r, bracket_sum_c)
-      ! Retrieve convolution in input format
-      DO ikx = ikxs, ikxe
+        ! Put the real nonlinear product into k-space
+        call fftw_mpi_execute_dft_r2c(planf, bracket_sum_r, bracket_sum_c)
+        ! Retrieve convolution in input format
         DO iky = ikys, ikye
-          Sepj(ip,ij,iky,ikx,iz) = bracket_sum_c(ikx,iky-local_nky_offset)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+          Sepj(ip,ij,iky,ikxs:ikxe,iz) = bracket_sum_c(ikxs:ikxe,iky-local_nky_offset)*AA_x(ikxs:ikxe)*AA_y(iky) !Anti aliasing filter
         ENDDO
-      ENDDO
+      ELSE
+        Sepj(ip,ij,:,:,iz) = 0._dp
+      ENDIF
     ENDDO jloope
   ENDDO ploope
 ENDDO zloope
@@ -113,39 +116,42 @@ ENDIF
   !!!!!!!!!!!!!!!!!!!! ION non linear term computation (Sipj)!!!!!!!!!!
 zloopi: DO iz = izs,ize
   ploopi: DO ip = ips_i,ipe_i ! Loop over Hermite moments
+    p_int = parray_i(ip)
     eo = MODULO(parray_i(ip),2)
     jloopi: DO ij = ijs_i, ije_i ! Loop over Laguerre moments
       j_int=jarray_i(ij)
-      ! Set non linear sum truncation
-      IF (NL_CLOS .EQ. -2) THEN
-        nmax = Jmaxi
-      ELSEIF (NL_CLOS .EQ. -1) THEN
-        nmax = Jmaxi-(ij-1)
-      ELSE
-        nmax = NL_CLOS
-      ENDIF
-      bracket_sum_r = 0._dp ! initialize sum over real nonlinear term
-      nloopi: DO in = 1,nmax+1 ! Loop over laguerre for the sum
-        ! First convolution terms
-        F_cmpx(:,:) = phi(:,:,iz) * kernel_i(in, :, :, iz, eo)
-        ! Second convolution terms
-        G_cmpx(:,:) = 0._dp ! initialization of the sum
-        smax = MIN( (in-1)+(ij-1), jmaxi );
-        DO is = 1, smax+1 ! sum truncation on number of moments
-          G_cmpx(:,:) = G_cmpx(:,:) + &
-            dnjs(in,ij,is) * moments_i(ip,is,:,:,iz,updatetlevel)
-        ENDDO
-        !/!\ this function add its result to bracket_sum_r (hard to read sorry) /!\
-        CALL poisson_bracket_and_sum(F_cmpx,G_cmpx)
-      ENDDO nloopi
-      ! Put the real nonlinear product into k-space
-      call fftw_mpi_execute_dft_r2c(planf, bracket_sum_r, bracket_sum_c)
-      ! Retrieve convolution in input format
-      DO ikx = ikxs, ikxe
+      IF((CLOS .EQ. 1) .AND. (p_int+2*j_int .LE. dmaxi)) THEN !compute
+        ! Set non linear sum truncation
+        IF (NL_CLOS .EQ. -2) THEN
+          nmax = Jmaxi
+        ELSEIF (NL_CLOS .EQ. -1) THEN
+          nmax = Jmaxi-j_int
+        ELSE
+          nmax = NL_CLOS
+        ENDIF
+        bracket_sum_r = 0._dp ! initialize sum over real nonlinear term
+        nloopi: DO in = 1,nmax+1 ! Loop over laguerre for the sum
+          ! First convolution terms
+          F_cmpx(ikys:ikye,ikxs:ikxe) = phi(ikys:ikye,ikxs:ikxe,iz) * kernel_i(in, ikys:ikye,ikxs:ikxe, iz, eo)
+          ! Second convolution terms
+          G_cmpx(ikys:ikye,ikxs:ikxe) = 0._dp ! initialization of the sum
+          smax = MIN( (in-1)+(ij-1), jmaxi );
+          DO is = 1, smax+1 ! sum truncation on number of moments
+            G_cmpx(ikys:ikye,ikxs:ikxe) = G_cmpx(ikys:ikye,ikxs:ikxe) + &
+              dnjs(in,ij,is) * moments_i(ip,is,ikys:ikye,ikxs:ikxe,iz,updatetlevel)
+          ENDDO
+          !/!\ this function add its result to bracket_sum_r (hard to read sorry) /!\
+          CALL poisson_bracket_and_sum(F_cmpx,G_cmpx)
+        ENDDO nloopi
+        ! Put the real nonlinear product into k-space
+        call fftw_mpi_execute_dft_r2c(planf, bracket_sum_r, bracket_sum_c)
+        ! Retrieve convolution in input format
         DO iky = ikys, ikye
-          Sipj(ip,ij,iky,ikx,iz) = bracket_sum_c(ikx,iky-local_nky_offset)*AA_x(ikx)*AA_y(iky)
+          Sipj(ip,ij,iky,ikxs:ikxe,iz) = bracket_sum_c(ikxs:ikxe,iky-local_nky_offset)*AA_x(ikxs:ikxe)*AA_y(iky)
         ENDDO
-      ENDDO
+      ELSE
+        Sipj(ip,ij,:,:,iz) = 0._dp
+      ENDIF
     ENDDO jloopi
   ENDDO ploopi
 ENDDO zloopi

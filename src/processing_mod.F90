@@ -1,11 +1,7 @@
 MODULE processing
-    ! contains the Hermite-Laguerre collision operators. Solved using COSOlver.
     USE basic
     USE prec_const
     USE grid
-    USE geometry
-    USE utility
-    USE calculus
     implicit none
 
     REAL(dp), PUBLIC, PROTECTED :: pflux_ri, gflux_ri
@@ -15,14 +11,16 @@ MODULE processing
     PUBLIC :: compute_density, compute_upar, compute_uperp
     PUBLIC :: compute_Tpar, compute_Tperp, compute_fluid_moments
     PUBLIC :: compute_radial_ion_transport, compute_radial_heatflux
+    PUBLIC :: compute_Napjz_spectrum
 CONTAINS
 
-! 1D diagnostic to compute the average radial particle transport <n_i v_ExB>_r
+! 1D diagnostic to compute the average radial particle transport <n_i v_ExB_x>_xyz
 SUBROUTINE compute_radial_ion_transport
     USE fields,           ONLY : moments_i, phi
     USE array,            ONLY : kernel_i
-    USE geometry,         ONLY : Jacobian
+    USE geometry,         ONLY : Jacobian, iInt_Jacobian
     USE time_integration, ONLY : updatetlevel
+    USE calculus,         ONLY : simpson_rule_z
     IMPLICIT NONE
     COMPLEX(dp) :: pflux_local, gflux_local, integral
     REAL(dp)    :: ky_, buffer(1:2)
@@ -91,13 +89,14 @@ SUBROUTINE compute_radial_ion_transport
     ! if(my_id .eq. 0) write(*,*) 'pflux_ri = ',pflux_ri
 END SUBROUTINE compute_radial_ion_transport
 
-! 1D diagnostic to compute the average radial particle transport <n_i v_ExB>_r
+! 1D diagnostic to compute the average radial particle transport <T_i v_ExB_x>_xyz
 SUBROUTINE compute_radial_heatflux
     USE fields,           ONLY : moments_i, moments_e, phi
     USE array,            ONLY : kernel_e, kernel_i
-    USE geometry,         ONLY : Jacobian
+    USE geometry,         ONLY : Jacobian, iInt_Jacobian
     USE time_integration, ONLY : updatetlevel
-    USE model, ONLY : qe_taue, qi_taui, KIN_E
+    USE model,            ONLY : qe_taue, qi_taui, KIN_E
+    USE calculus,         ONLY : simpson_rule_z
     IMPLICIT NONE
     COMPLEX(dp) :: hflux_local, integral
     REAL(dp)    :: ky_, buffer(1:2), j_dp
@@ -228,7 +227,7 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
       ENDDO
     ENDIF
 
-!------------- INTERP AND GRADIENTS ALONG Z ----------------------------------
+ !------------- INTERP AND GRADIENTS ALONG Z ----------------------------------
 
   IF (KIN_E) THEN
   DO ikx = ikxs,ikxe
@@ -270,6 +269,78 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
   CALL cpu_time(t1_process)
   tc_process = tc_process + (t1_process - t0_process)
 END SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
+
+SUBROUTINE compute_Napjz_spectrum
+  USE fields, ONLY : moments_e, moments_i
+  USE model,  ONLY : KIN_E
+  USE array,  ONLY : Nipjz, Nepjz
+  USE time_integration, ONLY : updatetlevel
+  IMPLICIT NONE
+  REAL(dp), DIMENSION(ips_e:ipe_e,ijs_e:ije_e,izs:ize) :: local_sum_e,global_sum_e, buffer_e
+  REAL(dp), DIMENSION(ips_i:ipe_i,ijs_i:ije_i,izs:ize) :: local_sum_i,global_sum_i, buffer_i
+  INTEGER  :: i_, world_rank, world_size, root, count
+  root = 0
+  ! Electron moments spectrum
+  IF (KIN_E) THEN
+    ! build local sum
+    local_sum_e = 0._dp
+    DO ikx = ikxs,ikxe
+      DO iky = ikys,ikye
+        local_sum_e(:,:,:)  = local_sum_e(:,:,:)  + &
+        moments_e(:,:,iky,ikx,:,updatetlevel) * CONJG(moments_e(:,:,iky,ikx,:,updatetlevel))
+      ENDDO
+    ENDDO
+    ! sum reduction
+    buffer_e     = local_sum_e
+    global_sum_e = 0._dp
+    count = (ipe_e-ips_e+1)*(ije_e-ijs_e+1)*(ize-izs+1)
+    IF (num_procs_ky .GT. 1) THEN
+        !! Everyone sends its local_sum to root = 0
+        IF (rank_ky .NE. root) THEN
+            CALL MPI_SEND(buffer_e, count , MPI_DOUBLE_PRECISION, root, 1234, comm_ky, ierr)
+        ELSE
+            ! Recieve from all the other processes
+            DO i_ = 0,num_procs_ky-1
+                IF (i_ .NE. rank_ky) &
+                    CALL MPI_RECV(buffer_e, count , MPI_DOUBLE_PRECISION, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
+                    global_sum_e = global_sum_e + buffer_e
+            ENDDO
+        ENDIF
+    ELSE
+      global_sum_e = local_sum_e
+    ENDIF
+    Nepjz = global_sum_e
+  ENDIF
+  ! Ion moment spectrum
+  ! build local sum
+  local_sum_i = 0._dp
+  DO ikx = ikxs,ikxe
+    DO iky = ikys,ikye
+      local_sum_i(:,:,:)  = local_sum_i(:,:,:)  + &
+      moments_i(:,:,iky,ikx,:,updatetlevel) * CONJG(moments_i(:,:,iky,ikx,:,updatetlevel))
+    ENDDO
+  ENDDO
+  ! sum reduction
+  buffer_i     = local_sum_i
+  global_sum_i = 0._dp
+  count = (ipe_i-ips_i+1)*(ije_i-ijs_i+1)*(ize-izs+1)
+  IF (num_procs_ky .GT. 1) THEN
+      !! Everyone sends its local_sum to root = 0
+      IF (rank_ky .NE. root) THEN
+          CALL MPI_SEND(buffer_i, count , MPI_DOUBLE_PRECISION, root, 1234, comm_ky, ierr)
+      ELSE
+          ! Recieve from all the other processes
+          DO i_ = 0,num_procs_ky-1
+              IF (i_ .NE. rank_ky) &
+                  CALL MPI_RECV(buffer_i, count , MPI_DOUBLE_PRECISION, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
+                  global_sum_i = global_sum_i + buffer_i
+          ENDDO
+      ENDIF
+  ELSE
+    global_sum_i = local_sum_i
+  ENDIF
+  Nipjz = global_sum_i
+END SUBROUTINE compute_Napjz_spectrum
 
 !_____________________________________________________________________________!
 !!!!! FLUID MOMENTS COMPUTATIONS !!!!!
