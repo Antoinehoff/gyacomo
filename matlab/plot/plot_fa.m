@@ -26,13 +26,15 @@ if OPTIONS.ONED
         end
 
 else
-    [SS,XX,FFa] = compute_fa_2D(DATA, OPTIONS); 
+    [SS,XX,FFa] = compute_fa_2D(DATA, OPTIONS);  sz = size(SS);
     [~,it] = min(abs(OPTIONS.T-DATA.Ts5D)); 
         switch OPTIONS.PLT_FCT
             case 'contour'
-            contour(SS,XX,FFa',128);
+            contour(SS,XX,FFa',sum(sz)/2);
             case 'pcolor'
             pclr = pcolor(SS,XX,FFa'); set(pclr, 'edgecolor','none'); shading interp
+            case 'contourf'
+            contourf(SS,XX,FFa',sum(sz)/2);                
         end
         xlabel('$v_\parallel$'); ylabel('$\mu$');
         legend(['$\langle |f_',OPTIONS.SPECIE,'|^2\rangle_{xy}^{1/2}$',zcomp])

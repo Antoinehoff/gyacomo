@@ -5,8 +5,8 @@ specie = OPTIONS.specie;
 PLT_FCT= OPTIONS.PLT_FCT;
 
 file = 'coord.dat.h5';
-vp = h5read([folder,file],'/coord/vp');
-mu = h5read([folder,file],'/coord/mu');
+vp = h5read([folder,file],'/coord/vp'); nvp = numel(vp);
+mu = h5read([folder,file],'/coord/mu'); nmu = numel(mu);
 z  = h5read([folder,file],'/coord/z');
 [XX,SS] = meshgrid(mu,vp);
 
@@ -68,9 +68,9 @@ switch specie
     FFa    = abs(FFa)./max(max(abs(FFa)));
     switch PLT_FCT
         case 'contour'
-            contour(SS,XX,FFa,128);
+            contour(SS,XX,FFa);
         case 'contourf'
-            pclr = contourf(SS,XX,FFa,128); set(pclr, 'edgecolor','none')
+            pclr = contourf(SS,XX,FFa);
         case 'pcolor'
             pclr = pcolor(SS,XX,FFa); set(pclr, 'edgecolor','none'); shading interp
     end
@@ -80,9 +80,9 @@ switch specie
     FFa    = abs(FFa)./max(max(abs(FFa)));
     switch PLT_FCT
         case 'contour'
-            contour(SS,XX,FFa,128);
+            contour(SS,XX,FFa,(nvp+nmu)/2);
         case 'contourf'
-            pclr = contourf(SS,XX,FFa,128); set(pclr, 'edgecolor','none')
+            pclr = contourf(SS,XX,FFa,(nvp+nmu)/2);
         case 'pcolor'
             pclr = pcolor(SS,XX,FFa); set(pclr, 'edgecolor','none'); shading interp
     end

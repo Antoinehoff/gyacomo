@@ -54,7 +54,7 @@ if options.non_adiab
         for ikx = 1:data.Nkx
             for iky = 1:data.Nky    
                 kp_ = sqrt(kx_(ikx)^2 + ky_(iky)^2);
-                Napj_(1,ij_,ikx,iky) = Napj_(1,ij_,ikx,iky) + kernel(ij_,kp_)*phi_(ikx,iky);
+                Napj_(1,ij_,iky,ikx) = Napj_(1,ij_,iky,ikx) + kernel(ij_,kp_)*phi_(iky,ikx);
             end
         end
     end
@@ -63,7 +63,7 @@ end
 
 % x = 0
 if options.RMS
-    Fs = zeros(data.Nkx,data.Nky,numel(s));
+    Fs = zeros(data.Nky,data.Nkx,numel(s));
     FAM = FaM(s,xmin);
     for ip_ = 1:Np
         p_ = parray(ip_);
@@ -74,7 +74,7 @@ if options.RMS
             HLF = HH.*LL.*FAM;
             for ikx = 1:data.Nkx
                 for iky = 1:data.Nky
-                    Fs(ikx,iky,:) = squeeze(Fs(ikx,iky,:))' + Napj_(ip_,ij_,ikx,iky)*HLF;
+                    Fs(iky,ikx,:) = squeeze(Fs(iky,ikx,:))' + Napj_(ip_,ij_,iky,ikx)*HLF;
                 end
             end
        end
@@ -95,7 +95,7 @@ end
 
 % s = 0
 if options.RMS
-    Fx = zeros(data.Nkx,data.Nky,numel(x));
+    Fx = zeros(data.Nky,data.Nkx,numel(x));
     FAM = FaM(x,smin);
     for ip_ = 1:Np
         p_ = parray(ip_);
@@ -106,7 +106,7 @@ if options.RMS
             HLF = HH.*LL.*FAM;
             for ikx = 1:data.Nkx
                 for iky = 1:data.Nky
-                    Fx(ikx,iky,:) = squeeze(Fx(ikx,iky,:))' + Napj_(ip_,ij_,ikx,iky)*HLF;
+                    Fx(iky,ikx,:) = squeeze(Fx(iky,ikx,:))' + Napj_(ip_,ij_,iky,ikx)*HLF;
                 end
             end
        end

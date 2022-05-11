@@ -40,20 +40,20 @@ end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-options.INTERP    = 1;
+options.INTERP    = 0;
 options.POLARPLOT = 0;
-options.NAME      = '\phi';
-% options.NAME      = 'N_i^{00}';
+% options.NAME      = '\phi';
+options.NAME      = 'N_i^{00}';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 'avg';
+options.COMP      = 9;
 % options.TIME      = dat.Ts5D;
-options.TIME      = 00:1:250;
+options.TIME      = 200:1:600;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -62,7 +62,7 @@ end
 if 0
 %% 2D snapshots
 % Options
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
 options.NAME      = '\phi';
@@ -71,12 +71,12 @@ options.NAME      = '\phi';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'xz';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 1;
-options.TIME      = [150];
-data.a = data.EPS * 1000;
+options.COMP      = 'avg';
+options.TIME      = [260:265];
+data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 save_figure(data,fig)
 end
@@ -85,8 +85,8 @@ if 0
 %% 3D plot on the geometry
 options.INTERP    = 1;
 options.NAME      = 'n_i';
-options.PLANES    = 1;
-options.TIME      = [100 200];
+options.PLANES    = [1:2:12];
+options.TIME      = [60];
 options.PLT_MTOPO = 1;
 data.rho_o_R      = 2e-3; % Sound larmor radius over Machine size ratio
 fig = show_geometry(data,options);
@@ -100,8 +100,8 @@ if 0
 options.SPAR      = gene_data.vp';
 options.XPERP     = gene_data.mu';
 options.Z         = 'avg';
-options.T         = 200;
-options.PLT_FCT   = 'pcolor';
+options.T         = 340;
+options.PLT_FCT   = 'contour';
 options.ONED      = 0;
 options.non_adiab = 1;
 options.SPECIE    = 'i';
@@ -113,10 +113,16 @@ end
 if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
-options.P2J  = 1;
-options.ST   = 0;
+options.P2J        = 1;
+options.ST         = 0;
+options.PLOT_TYPE  = 'space-time';
 options.NORMALIZED = 0;
-fig = show_moments_spectrum(data,options);
+options.JOBNUM     = 03;
+options.TIME       = [200 500];
+options.specie     = 'i';
+options.compz      = 'avg';
+% fig = show_moments_spectrum(data,options);
+fig = show_napjz(data,options);
 save_figure(data,fig)
 end
 
