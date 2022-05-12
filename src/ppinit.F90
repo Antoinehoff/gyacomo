@@ -65,6 +65,10 @@ SUBROUTINE ppinit
   CALL MPI_COMM_RANK(comm_ky, rank_ky, ierr)
   CALL MPI_COMM_RANK(comm_z,  rank_z,  ierr)
 
+  ! 2D communicator
+  CALL MPI_CART_SUB (comm0, (/.TRUE.,.FALSE.,.TRUE./),  comm_pz,  ierr)
+  CALL MPI_CART_SUB (comm0, (/.FALSE.,.TRUE.,.TRUE./),  comm_kyz, ierr)
+
   ! Find neighbours
   CALL MPI_CART_SHIFT(comm0, 0, 1, nbr_L, nbr_R, ierr) !left   right neighbours
   CALL MPI_CART_SHIFT(comm0, 1, 1, nbr_B, nbr_T, ierr) !bottom top   neighbours

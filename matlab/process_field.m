@@ -43,6 +43,10 @@ switch OPTIONS.PLAN
         XNAME = '$v_\parallel$'; YNAME = '$\mu$';
         [Y,X] = meshgrid(OPTIONS.XPERP,OPTIONS.SPAR);
         REALP = 1; COMPDIM = 3; POLARPLOT = 0; SCALE = 0;
+        for i = 1:numel(OPTIONS.TIME)
+            [~,FRAMES(i)] =min(abs(OPTIONS.TIME(i)-DATA.Ts5D));
+        end
+        FRAMES = unique(FRAMES);
 end
 Xmax_ = max(max(abs(X))); Ymax_ = max(max(abs(Y)));
 Lmin_ = min([Xmax_,Ymax_]);
@@ -440,13 +444,9 @@ switch OPTIONS.NAME
     case 'f_i'
         shift_x = @(x) x; shift_y = @(y) y;
         NAME = 'fi'; OPTIONS.SPECIE = 'i';
-        [~,it0_] =min(abs(OPTIONS.TIME(1)-DATA.Ts5D));
-        [~,it1_]=min(abs(OPTIONS.TIME(end)-DATA.Ts5D));
-        dit_ = 1;%ceil((it1_-it0_+1)/10); 
-        FRAMES = it0_:dit_:it1_;
-        iz = 1;
-        for it = 1:numel(FRAMES)
-            OPTIONS.T = DATA.Ts5D(FRAMES(it));
+        for it = 1:numel(OPTIONS.TIME)
+            [~,it0_] =min(abs(OPTIONS.TIME(it)-DATA.Ts5D));
+            OPTIONS.T = DATA.Ts5D(it0_);
             [~,~,FIELD(:,:,it)] = compute_fa(DATA,OPTIONS);
         end  
     case 'f_e'

@@ -14,12 +14,19 @@ MODULE diagnostics_par
   INTEGER, PUBLIC, PROTECTED :: nsave_0d, nsave_1d, nsave_2d, nsave_3d, nsave_5d
 
   !  HDF5 file
-  CHARACTER(len=256), PUBLIC :: resfile0 = "outputs"   ! Head of main result file name
-  CHARACTER(len=256), PUBLIC :: resfile                ! Main result file
-  CHARACTER(len=256), PUBLIC :: rstfile                ! restart result file
-  INTEGER, PUBLIC            :: job2load               ! jobnum of the checkpoint to load
-  INTEGER, PUBLIC            :: fidres                 ! FID for resfile
-  INTEGER, PUBLIC            :: fidrst                 ! FID for restart file
+  CHARACTER(len=256), PUBLIC :: resfile,resfile0 = "outputs"            ! Head of main result file name
+  CHARACTER(len=256), PUBLIC :: momfile,momfile0 = "moments"   ! Head of the moment spectrum file (N_a(p,j,z))
+  CHARACTER(len=256), PUBLIC :: mspfile,mspfile0 = "moments_spectrum"   ! Head of the moment spectrum file (N_a(p,j,z))
+  CHARACTER(len=256), PUBLIC :: fldfile,fldfile0 = "fields"             ! Head of field (phi,A)
+  CHARACTER(len=256), PUBLIC :: ttrfile,ttrfile0 = "time_traces"        ! Head of time traces (gamma_x,Q_x)
+  CHARACTER(len=256), PUBLIC :: ggmfile,ggmfile0 = "grid_geometry"        ! Head of time traces (gamma_x,Q_x)
+  CHARACTER(len=256), PUBLIC :: prffile,prffile0 = "profiler"        ! Head of time traces (gamma_x,Q_x)
+  CHARACTER(len=256), PUBLIC :: input_fname
+  CHARACTER(len=256), PUBLIC :: rstfile                     ! restart result file
+  INTEGER, PUBLIC            :: job2load                    ! jobnum of the checkpoint to load
+  INTEGER, PUBLIC            :: fidres,fidmsp,fidfld,fidttr ! FID for output
+  INTEGER, PUBLIC            :: fidmom,fidggm, fidprf
+  INTEGER, PUBLIC            :: fidrst                      ! FID for restart file
 
   PUBLIC :: diag_par_readinputs, diag_par_outputinputs
 
@@ -44,21 +51,31 @@ CONTAINS
   END SUBROUTINE diag_par_readinputs
 
 
-  SUBROUTINE diag_par_outputinputs(fidres, str)
+  SUBROUTINE diag_par_outputinputs(fid, str)
     !
     !    Write the input parameters to the results_xx.h5 file
     !
     USE prec_const
     USE futils, ONLY: attach
     IMPLICIT NONE
-    INTEGER, INTENT(in) :: fidres
+    INTEGER, INTENT(in) :: fid
     CHARACTER(len=256), INTENT(in) :: str
 
-    CALL attach(fidres, TRIM(str), "write_doubleprecision", write_doubleprecision)
-    CALL attach(fidres, TRIM(str), "nsave_0d", nsave_0d)
-    CALL attach(fidres, TRIM(str), "nsave_1d", nsave_1d)
-    CALL attach(fidres, TRIM(str), "nsave_2d", nsave_2d)
-    CALL attach(fidres, TRIM(str), "nsave_5d", nsave_5d)
+    CALL attach(fid, TRIM(str), "write_doubleprecision", write_doubleprecision)
+    CALL attach(fid, TRIM(str), "nsave_0d", nsave_0d)
+    CALL attach(fid, TRIM(str), "nsave_1d", nsave_1d)
+    CALL attach(fid, TRIM(str), "nsave_2d", nsave_2d)
+    CALL attach(fid, TRIM(str), "nsave_3d", nsave_3d)
+    CALL attach(fid, TRIM(str), "nsave_5d", nsave_5d)
+    CALL attach(fid, TRIM(str), "write_gamma", write_gamma)
+    CALL attach(fid, TRIM(str),    "write_hf",    write_hf)
+    CALL attach(fid, TRIM(str),   "write_phi",   write_phi)
+    CALL attach(fid, TRIM(str),  "write_Na00",  write_Na00)
+    CALL attach(fid, TRIM(str),  "write_Napj",  write_Napj)
+    CALL attach(fid, TRIM(str),  "write_Sapj",  write_Sapj)
+    CALL attach(fid, TRIM(str),  "write_dens",  write_dens)
+    CALL attach(fid, TRIM(str),  "write_fvel",  write_fvel)
+    CALL attach(fid, TRIM(str),  "write_temp",  write_temp)
 
   END SUBROUTINE diag_par_outputinputs
 

@@ -16,7 +16,8 @@ MODULE basic
   ! Communicators for 1-dim cartesian subgrids of comm0
   INTEGER :: comm_p, comm_ky, comm_z
   INTEGER :: rank_p, rank_ky, rank_z! Ranks
-  INTEGER :: commr_p0              ! Communicators along kx for only rank 0 on p
+  INTEGER :: comm_pz,  rank_pz      ! 2D comm for N_a(p,j,z) output (mspfile)
+  INTEGER :: comm_kyz, rank_kyz     ! 2D comm for N_a(p,j,z) output (mspfile)
 
   INTEGER :: jobnum  = 0           ! Job number
   INTEGER :: step    = 0           ! Calculation step of this run
@@ -80,6 +81,32 @@ CONTAINS
     tc_Sapj      = 0.; tc_diag     = 0.; tc_checkfield = 0.
 
   END SUBROUTINE basic_data
+
+
+  SUBROUTINE basic_outputinputs(fid, str)
+    !
+    !    Write the input parameters to the results_xx.h5 file
+    !
+    USE prec_const
+    USE futils, ONLY: attach
+    IMPLICIT NONE
+    INTEGER, INTENT(in) :: fid
+    CHARACTER(len=256), INTENT(in) :: str
+    CALL attach(fid, TRIM(str), "start_iframe0d", iframe0d)
+    CALL attach(fid, TRIM(str), "start_iframe2d", iframe2d)
+    CALL attach(fid, TRIM(str), "start_iframe3d", iframe3d)
+    CALL attach(fid, TRIM(str), "start_iframe5d", iframe5d)
+    CALL attach(fid, TRIM(str),  "start_time",     time)
+    CALL attach(fid, TRIM(str), "start_cstep",    cstep-1)
+    CALL attach(fid, TRIM(str),          "dt",       dt)
+    CALL attach(fid, TRIM(str),        "tmax",     tmax)
+    CALL attach(fid, TRIM(str),        "nrun",     nrun)
+    CALL attach(fid, TRIM(str),    "cpu_time",       -1)
+    CALL attach(fid, TRIM(str),       "Nproc",   num_procs)
+    CALL attach(fid, TRIM(str),       "Np_p" , num_procs_p)
+    CALL attach(fid, TRIM(str),       "Np_kx",num_procs_ky)
+    CALL attach(fid, TRIM(str),        "Np_z", num_procs_z)
+  END SUBROUTINE basic_outputinputs
   !================================================================================
   SUBROUTINE find_input_file
     IMPLICIT NONE

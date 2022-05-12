@@ -71,18 +71,18 @@ while(CONTINUE)
             if W_NAPJ
                 tmp = Nipj_; sz = size(tmp);
                 Nipj_ = zeros(cat(1,[Pi_new,Ji_new]',sz(3:end)')');
-                Nipj_(1:Pi_old,1:Ji_old,:,:,:) = tmp;
+                Nipj_(1:Pi_old,1:Ji_old,:,:,:,:) = tmp;
                 tmp = Nepj_; sz = size(tmp);
-                Nepj_ = zeros(cat(1,[Pe_new,Je_new]',sz(3:end)')');
-                Nepj_(1:Pe_old,1:Je_old,:,:,:) = tmp;
+%                 Nepj_ = zeros(cat(1,[Pe_new,Je_new]',sz(3:end)')');
+%                 Nepj_(1:Pe_old,1:Je_old,:,:,:,:) = tmp;
             end
             if W_SAPJ
                 tmp = Sipj_; sz = size(tmp);
                 Sipj_ = zeros(cat(1,[Pi_new,Ji_new]',sz(3:end)')');
-                Sipj_(1:Pi_old,1:Ji_old,:,:,:) = tmp;
+                Sipj_(1:Pi_old,1:Ji_old,:,:,:,:) = tmp;
                 tmp = Sepj_; sz = size(tmp);
-                Sepj_ = zeros(cat(1,[Pe_new,Je_new]',sz(3:end)')');
-                Sepj_(1:Pe_old,1:Je_old,:,:,:) = tmp;
+%                 Sepj_ = zeros(cat(1,[Pe_new,Je_new]',sz(3:end)')');
+%                 Sepj_(1:Pe_old,1:Je_old,:,:,:,:) = tmp;
             end
         % If a degree is smaller than previous job, put zero to add. deg.
         elseif (sum([Pe_new, Je_new, Pi_new, Ji_new]<[Pe_old, Je_old, Pi_old, Ji_old]) >= 1 && Pe_old ~= 1e9)
@@ -258,7 +258,7 @@ DATA.ikx0 = ikx0; DATA.iky0 = iky0;
 DATA.Nx = Nx; DATA.Ny = Ny; DATA.Nz = Nz; DATA.Nkx = Nkx; DATA.Nky = Nky; 
 DATA.Pmaxe = numel(Pe); DATA.Pmaxi = numel(Pi); DATA.Jmaxe = numel(Je); DATA.Jmaxi = numel(Ji);
 DATA.dir      = DIRECTORY;
-DATA.localdir = ['..',DIRECTORY(20:end)];
+DATA.localdir = DIRECTORY;
 DATA.param_title=['$\nu_{',DATA.CONAME,'}=$', num2str(DATA.NU), ...
     ', $\kappa_N=$',num2str(DATA.K_N),', $L=',num2str(DATA.L),'$, $N=',...
     num2str(DATA.Nx),'$, $(P,J)=(',num2str(DATA.PMAXI),',',...

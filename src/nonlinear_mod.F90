@@ -74,14 +74,14 @@ SUBROUTINE compute_nonlinear
     p_int = parray_e(ip)
     jloope: DO ij = ijs_e, ije_e ! Loop over Laguerre moments
       j_int=jarray_e(ij)
-      IF((CLOS .EQ. 1) .AND. (p_int+2*j_int .LE. dmaxe)) THEN !compute
+      IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmaxe)) THEN !compute
         ! Set non linear sum truncation
         IF (NL_CLOS .EQ. -2) THEN
           nmax = Jmaxe
         ELSEIF (NL_CLOS .EQ. -1) THEN
           nmax = Jmaxe-j_int
         ELSE
-          nmax = NL_CLOS
+          nmax = min(NL_CLOS,Jmaxe-j_int)
         ENDIF
         bracket_sum_r = 0._dp ! initialize sum over real nonlinear term
         nloope: DO in = 1,nmax+1 ! Loop over laguerre for the sum
@@ -89,7 +89,7 @@ SUBROUTINE compute_nonlinear
           F_cmpx(ikxs:ikxe,ikxs:ikxe) = phi(ikxs:ikxe,ikxs:ikxe,iz) * kernel_e(in, ikxs:ikxe,ikxs:ikxe, iz, eo)
           ! Second convolution terms
           G_cmpx(ikxs:ikxe,ikxs:ikxe) = 0._dp ! initialization of the sum
-          smax = MIN( (in-1)+(ij-1), jmaxe );
+          smax = MIN( (in-1)+(ij-1), Jmaxe );
           DO is = 1, smax+1 ! sum truncation on number of moments
             G_cmpx(ikxs:ikxe,ikxs:ikxe)  = G_cmpx(ikxs:ikxe,ikxs:ikxe) + &
               dnjs(in,ij,is) * moments_e(ip,is,ikxs:ikxe,ikxs:ikxe,iz,updatetlevel)
@@ -120,14 +120,14 @@ zloopi: DO iz = izs,ize
     eo = MODULO(parray_i(ip),2)
     jloopi: DO ij = ijs_i, ije_i ! Loop over Laguerre moments
       j_int=jarray_i(ij)
-      IF((CLOS .EQ. 1) .AND. (p_int+2*j_int .LE. dmaxi)) THEN !compute
+      IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmaxi)) THEN !compute
         ! Set non linear sum truncation
         IF (NL_CLOS .EQ. -2) THEN
           nmax = Jmaxi
         ELSEIF (NL_CLOS .EQ. -1) THEN
           nmax = Jmaxi-j_int
         ELSE
-          nmax = NL_CLOS
+          nmax = min(NL_CLOS,Jmaxi-j_int)
         ENDIF
         bracket_sum_r = 0._dp ! initialize sum over real nonlinear term
         nloopi: DO in = 1,nmax+1 ! Loop over laguerre for the sum

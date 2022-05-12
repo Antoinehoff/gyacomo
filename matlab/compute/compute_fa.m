@@ -46,7 +46,7 @@ Napj_ = squeeze(Napj_);
 
 Np = numel(parray); Nj = numel(jarray);
 
-FF = zeros(data.Nkx,data.Nky,numel(options.XPERP),numel(options.SPAR));
+FF = zeros(data.Nky,data.Nkx,numel(options.XPERP),numel(options.SPAR));
 % FF = zeros(numel(options.XPERP),numel(options.SPAR));
 
 FAM = FaM(SS,XX);
@@ -60,14 +60,14 @@ for ip_ = 1:Np
         HLF = HH.*LL.*FAM;
         for ikx = 1:data.Nkx
             for iky = 1:data.Nky
-                FF(ikx,iky,:,:) = squeeze(FF(ikx,iky,:,:)) + Napj_(ip_,ij_,ikx,iky)*HLF;
+                FF(iky,ikx,:,:) = squeeze(FF(iky,ikx,:,:)) + Napj_(ip_,ij_,iky,ikx)*HLF;
             end
         end
     end
 end
-% FF = (FF.*conj(FF)); %|f_a|^2
-FF = abs(FF); %|f_a|
-FF = sqrt(squeeze(mean(mean(FF,1),2))); %sqrt(<|f_a|>kx,ky)
+FF = (FF.*conj(FF)); %|f_a|^2
+% FF = abs(FF); %|f_a|
+FF = sqrt(squeeze(mean(mean(FF,1),2))); %sqrt(<|f_a|^2>kx,ky)
 FF = FF./max(max(FF));
 FF = FF';
 % FF = FF.*conj(FF);

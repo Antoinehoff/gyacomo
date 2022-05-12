@@ -26,7 +26,7 @@ options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
 % options.NAME      = 'Q_x';
-options.NAME      = 'n_i';
+options.NAME      = '\phi';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
@@ -34,7 +34,7 @@ options.PLAN      = 'xy';
 % options.NAME      ='f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [200];
+options.TIME      = [500];
 gene_data.a = data.EPS * 2000;
 fig = photomaton(gene_data,options);
 save_figure(gene_data,fig)

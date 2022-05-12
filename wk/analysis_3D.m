@@ -42,18 +42,18 @@ if 0
 % Options
 options.INTERP    = 0;
 options.POLARPLOT = 0;
-% options.NAME      = '\phi';
-options.NAME      = 'N_i^{00}';
+options.NAME      = '\phi';
+% options.NAME      = 'N_i^{00}';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 9;
 % options.TIME      = dat.Ts5D;
-options.TIME      = 200:1:600;
+options.TIME      = 300:1:4500;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -62,7 +62,7 @@ end
 if 0
 %% 2D snapshots
 % Options
-options.INTERP    = 1;
+options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
 options.NAME      = '\phi';
@@ -71,11 +71,11 @@ options.NAME      = '\phi';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xz';
-% options.NAME      = 'f_e';
+options.PLAN      = 'kxky';
+% options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [260:265];
+options.TIME      = [300 350 400];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 save_figure(data,fig)
@@ -100,7 +100,7 @@ if 0
 options.SPAR      = gene_data.vp';
 options.XPERP     = gene_data.mu';
 options.Z         = 'avg';
-options.T         = 340;
+options.T         = 900;
 options.PLT_FCT   = 'contour';
 options.ONED      = 0;
 options.non_adiab = 1;
@@ -113,16 +113,16 @@ end
 if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
-options.P2J        = 1;
+options.P2J        = 0;
 options.ST         = 0;
 options.PLOT_TYPE  = 'space-time';
 options.NORMALIZED = 0;
-options.JOBNUM     = 03;
-options.TIME       = [200 500];
+options.JOBNUM     = 0;
+options.TIME       = [300 500];
 options.specie     = 'i';
 options.compz      = 'avg';
-% fig = show_moments_spectrum(data,options);
-fig = show_napjz(data,options);
+fig = show_moments_spectrum(data,options);
+% fig = show_napjz(data,options);
 save_figure(data,fig)
 end
 

@@ -56,15 +56,7 @@ switch OPTIONS.PLOT_TYPE
     imagesc(DATA.Ts5D,p2ja,plt(Na_ST,1:numel(p2ja))); 
     set(gca,'YDir','normal')        
     xlabel('$t$'); ylabel('$p+2j$')
-    title('$\langle\sum_k |',name,'|\rangle_{p+2j=const}$')
-    if DATA.K_E
-    subplot(2,1,2)
-        imagesc(DATA.Ts5D,p2je,plt(Ne_ST,1:numel(p2ja))); 
-        set(gca,'YDir','normal')
-    xlabel('$t$'); ylabel('$p+2j$')
-    title('$\langle\sum_k |N_e^{pj}|\rangle_{p+2j=const}$')
-    suptitle(DATA.param_title);
-    end
+    title(['$\langle\sum_k |',name,'|^2\rangle_{p+2j=const}$'])
     
     case 'Tavg-1D'
     t0 = OPTIONS.TIME(1);
