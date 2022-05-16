@@ -28,14 +28,14 @@ end
 PLOT2D = 0;
 switch options.COMPXY
     case 'avg'
-        compx = @(x) mean(x,1);
-        compy = @(x) mean(x,2);
+        compx = @(x) mean(x,2);
+        compy = @(x) mean(x,1);
     case 'sum'
-        compx = @(x) sum(x,1);
-        compy = @(x) sum(x,2);
+        compx = @(x) sum(x,2);
+        compy = @(x) sum(x,1);
     case 'max'
-        compx = @(x) max(x,1);
-        compy = @(x) max(x,2);
+        compx = @(x) max(x,2);
+        compy = @(x) max(x,1);
     otherwise
         compx =  @(x) x(:,:);
         compy =  @(x) x(:,:);
@@ -43,11 +43,11 @@ switch options.COMPXY
 end
 
 if ~PLOT2D
-    set(gcf, 'Position',  [20 50 5000 2000])
+    set(gcf, 'Position',  [20 50 1200 500])
     subplot(1,2,1)
 
-    k     = data.kx;
-    xname = '$k_x$';
+    k     = data.ky;
+    xname = '$k_y$';
 
     nmax  = ceil(data.Nkx*2/3);
     shiftx = @(x) x;%(1:nmax);
@@ -55,7 +55,7 @@ if ~PLOT2D
     switch options.COMPT
     case 'avg'
         it0 = toplot.FRAMES(1); it1 = toplot.FRAMES(end);
-        Gk    = compy(abs(mean(toplot.FIELD(:,:,it0:it1),3)));
+        Gk    = compx(abs(mean(toplot.FIELD(:,:,:),3)));
         Gk    = squeeze(Gk);
         if options.NORM
             Gk    = Gk./max(max(abs(Gk)));
@@ -90,13 +90,13 @@ if ~PLOT2D
 
     subplot(1,2,2)
 
-    k     = data.ky;
-    xname = '$k_y$';
+    k     = data.kx;
+    xname = '$k_x$';
     nmax  = floor(data.Nky/2*2/3);
     switch options.COMPT
     case 'avg'
-        it0 = toplot.FRAMES(1); it1 = toplot.FRAMES(end);
-        Gk    = compx(abs(mean(toplot.FIELD(:,:,it0:it1),3)))';
+%         it0 = toplot.FRAMES(1); it1 = toplot.FRAMES(end);
+        Gk    = compy(abs(mean(toplot.FIELD(:,:,:),3)))';
         Gk    = squeeze(Gk);
         if options.NORM
             Gk    = Gk./max(max(abs(Gk)));
@@ -109,7 +109,7 @@ if ~PLOT2D
         plot(X,Y,'DisplayName','t-averaged')  
     otherwise
     for it = 1:numel(toplot.FRAMES)
-        Gk    = compx(abs(toplot.FIELD(:,:,toplot.FRAMES(it))));
+        Gk    = compx(abs(toplot.FIELD(:,:,it)));
         Gk    = squeeze(Gk);
         if options.NORM
             Gk    = Gk./max(max(abs(Gk)));
@@ -128,8 +128,8 @@ if ~PLOT2D
     legend('show','Location','eastoutside');
     xlabel(xname); ylabel(yname)
 else
-    it0 = toplot.FRAMES(1); it1 = toplot.FRAMES(end);
-    Gk    = mean(abs(toplot.FIELD(:,:,it0:it1)),3);
+%     it0 = toplot.FRAMES(1); it1 = toplot.FRAMES(end);
+    Gk    = mean(abs(toplot.FIELD(:,:,:)),3);
     Gk    = squeeze(Gk);
     if options.NORM
         Gk    = Gk./max(max(abs(Gk)));

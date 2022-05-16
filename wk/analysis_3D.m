@@ -53,7 +53,7 @@ options.PLAN      = 'xy';
 % options.PLAN      = 'sx';
 options.COMP      = 9;
 % options.TIME      = dat.Ts5D;
-options.TIME      = 300:1:4500;
+options.TIME      = 900:1:990;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -62,20 +62,20 @@ end
 if 0
 %% 2D snapshots
 % Options
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = 'n_i';
-% options.NAME      = 'N_i^{00}';
+options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [300 350 400];
+options.TIME      = [900 923 927 990];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 save_figure(data,fig)
@@ -114,11 +114,11 @@ if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
 options.P2J        = 0;
-options.ST         = 0;
+options.ST         = 1;
 options.PLOT_TYPE  = 'space-time';
-options.NORMALIZED = 0;
+options.NORMALIZED = 1;
 options.JOBNUM     = 0;
-options.TIME       = [300 500];
+options.TIME       = [900 950];
 options.specie     = 'i';
 options.compz      = 'avg';
 fig = show_moments_spectrum(data,options);
@@ -128,15 +128,15 @@ end
 
 if 0
 %% Time averaged spectrum
-options.TIME   = 1000:5000;
-options.NORM   = 0;
+options.TIME   = 1000:1200;
+options.NORM   =1;
 options.NAME   = '\phi';
-options.NAME      = 'n_i';
-options.NAME      ='\Gamma_x';
+% options.NAME      = 'n_i';
+% options.NAME      ='\Gamma_x';
 options.PLAN   = 'kxky';
 options.COMPZ  = 'avg';
 options.OK     = 0;
-options.COMPXY = 0;
+options.COMPXY = 'avg';
 options.COMPT  = 'avg';
 options.PLOT   = 'semilogy';
 fig = spectrum_1D(data,options);

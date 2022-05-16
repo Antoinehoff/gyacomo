@@ -25,13 +25,13 @@ SUBROUTINE diagnose(kstep)
      IF (my_id .EQ. 0) CALL display_h_min_s(finish-start)
   END IF
   !! Specific diagnostic calls
-  ! CALL diagnose_full(kstep)
-  IF(nsave_5d .GT. 0) CALL diagnose_moments(kstep)
-  IF(nsave_3d .GT. 0) CALL diagnose_momspectrum(kstep)
-  IF(nsave_3d .GT. 0) CALL diagnose_fields(kstep)
-  IF(nsave_0d .GT. 0) CALL diagnose_profiler(kstep)
-  IF(nsave_0d .GT. 0) CALL diagnose_gridgeom(kstep)
-  IF(nsave_0d .GT. 0) CALL diagnose_timetraces(kstep)
+  CALL diagnose_full(kstep)
+  ! IF(nsave_5d .GT. 0) CALL diagnose_moments(kstep)
+  ! IF(nsave_3d .GT. 0) CALL diagnose_momspectrum(kstep)
+  ! IF(nsave_3d .GT. 0) CALL diagnose_fields(kstep)
+  ! IF(nsave_0d .GT. 0) CALL diagnose_profiler(kstep)
+  ! IF(nsave_0d .GT. 0) CALL diagnose_gridgeom(kstep)
+  ! IF(nsave_0d .GT. 0) CALL diagnose_timetraces(kstep)
 
   CALL cpu_time(t1_diag); tc_diag = tc_diag + (t1_diag - t0_diag)
 
@@ -107,10 +107,10 @@ SUBROUTINE init_outfile(comm,file0,file,fid)
 END SUBROUTINE init_outfile
 
 !! Auxiliary routines hidden in headers
-! INCLUDE 'diag_headers/diagnose_full.h'
-INCLUDE 'diag_headers/diagnose_moments.h'
-INCLUDE 'diag_headers/diagnose_momspectrum.h'
-INCLUDE 'diag_headers/diagnose_fields.h'
-INCLUDE 'diag_headers/diagnose_profiler.h'
-INCLUDE 'diag_headers/diagnose_gridgeom.h'
-INCLUDE 'diag_headers/diagnose_timetraces.h'
+INCLUDE 'diag_headers/diagnose_full.h'
+! INCLUDE 'diag_headers/diagnose_moments.h'
+! INCLUDE 'diag_headers/diagnose_momspectrum.h'
+! INCLUDE 'diag_headers/diagnose_fields.h'
+! INCLUDE 'diag_headers/diagnose_profiler.h'
+! INCLUDE 'diag_headers/diagnose_gridgeom.h'
+! INCLUDE 'diag_headers/diagnose_timetraces.h'
