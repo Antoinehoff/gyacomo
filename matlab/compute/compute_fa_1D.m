@@ -29,12 +29,12 @@ switch options.SPECIE
 end
 Np = numel(parray); Nj = numel(jarray);
 
-switch options.Z
+switch options.iz
     case 'avg'
         Napj_     = mean(Napj_,5);
         phi_      = mean(data.PHI,3);
     otherwise
-        [~,iz]    = min(abs(options.Z-data.z)); 
+        iz        = options.iz; 
         Napj_     = Napj_(:,:,:,:,iz,:);
         phi_      = data.PHI(:,:,iz);
 end

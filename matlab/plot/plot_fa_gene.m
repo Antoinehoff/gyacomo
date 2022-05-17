@@ -10,13 +10,13 @@ mu = h5read([folder,file],'/coord/mu'); nmu = numel(mu);
 z  = h5read([folder,file],'/coord/z');
 [XX,SS] = meshgrid(mu,vp);
 
-switch OPTIONS.Z
+switch OPTIONS.iz
     case 'avg'
         zcomp_name = ' z-avg';
         zcomp = @(x) squeeze(mean(x,1));
     otherwise
-        zcomp_name = [' z=',sprintf('%2.2f',z(OPTIONS.Z))];
-        zcomp = @(x) squeeze(x(OPTIONS.Z,:,:));
+        zcomp_name = [' z=',sprintf('%2.2f',z(OPTIONS.iz))];
+        zcomp = @(x) squeeze(x(OPTIONS.iz,:,:));
 end
 
 [~,iv0] = min(abs(vp));
@@ -40,14 +40,14 @@ Gdata = Gdata ./ numel(TIMES);
 if OPTIONS.ONED
     switch specie
         case 'e'
-        FFa    = squeeze(Gdata(1,:,:,2));
+        FFa    = zcomp(Gdata(:,:,:,2));
         FFa    = abs(FFa)./max(max(abs(FFa)));
     subplot(1,2,1)
         plot(vp,FFa(:,im0)); hold on;
     subplot(1,2,2)
         plot(mu,FFa(iv0,:)); hold on;
         case 'i'
-        FFa   = squeeze(Gdata(1,:,:,1));    
+        FFa   = zcomp(Gdata(:,:,:,1));    
         FFa    = abs(FFa)./max(max(abs(FFa)));
     end
 
@@ -64,7 +64,7 @@ else
 switch specie
     case 'e'
     name  = '$f_e(v_\parallel,\mu_p)$';
-    FFa    = zcomp(squeeze(Gdata));
+    FFa    = zcomp(squeeze(Gdata(:,:,:,2)));
     FFa    = abs(FFa)./max(max(abs(FFa)));
     switch PLT_FCT
         case 'contour'
@@ -76,7 +76,7 @@ switch specie
     end
     case 'i'
     name  = '$f_i(v_\parallel,\mu_p)$';
-    FFa    = zcomp(squeeze(Gdata));
+    FFa    = zcomp(squeeze(Gdata(:,:,:,1)));
     FFa    = abs(FFa)./max(max(abs(FFa)));
     switch PLT_FCT
         case 'contour'

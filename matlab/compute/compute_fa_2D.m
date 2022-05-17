@@ -26,12 +26,12 @@ switch options.SPECIE
         jarray    = double(data.Ji);
 end
 
-switch options.Z
+switch options.iz
     case 'avg'
         Napj_     = mean(Napj_,5);
         phi_      = mean(data.PHI,3);
     otherwise
-        iz        = options.Z; 
+        iz        = options.iz; 
         Napj_     = Napj_(:,:,:,:,iz,:);
         phi_      = data.PHI(:,:,iz);
 end

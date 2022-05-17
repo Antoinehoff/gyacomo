@@ -10,7 +10,7 @@ system(['mkdir -p ',MISCDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 system(CMD);
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 10;
+JOBNUMMIN = 00; JOBNUMMAX = 08;
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 
 
@@ -53,7 +53,7 @@ options.PLAN      = 'xy';
 % options.PLAN      = 'sx';
 options.COMP      = 9;
 % options.TIME      = dat.Ts5D;
-options.TIME      = 900:1:990;
+options.TIME      = 920:1:1250;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -99,9 +99,9 @@ if 0
 % options.XPERP     = linspace( 0,6,64);
 options.SPAR      = gene_data.vp';
 options.XPERP     = gene_data.mu';
-options.Z         = 'avg';
-options.T         = 900;
-options.PLT_FCT   = 'contour';
+options.iz        = 13;
+options.T         = 20;
+options.PLT_FCT   = 'pcolor';
 options.ONED      = 0;
 options.non_adiab = 1;
 options.SPECIE    = 'i';
@@ -164,10 +164,10 @@ if 0
 %% Mode evolution
 options.NORMALIZED = 1;
 options.K2PLOT = 1;
-options.TIME   = 5:1:15;
+options.TIME   = 2:20;
 options.NMA    = 1;
-options.NMODES = 5;
-options.iz     = 1;
+options.NMODES = 15;
+options.iz     = 9;
 fig = mode_growth_meter(data,options);
 save_figure(data,fig)
 end

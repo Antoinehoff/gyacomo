@@ -1,6 +1,7 @@
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_0.8/';
-folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.0/';
+% folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.0/';
+folder = '/misc/gene_results/shearless_cyclone/linear_s_alpha_CBC_100/';
 % folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.5/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_0.8/';
@@ -30,11 +31,11 @@ options.NAME      = '\phi';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 % options.NAME      ='f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [500];
+options.TIME      = [0 500];
 gene_data.a = data.EPS * 2000;
 fig = photomaton(gene_data,options);
 save_figure(gene_data,fig)
@@ -50,7 +51,7 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -91,9 +92,21 @@ options.times   = 200:600;
 options.specie  = 'i';
 options.PLT_FCT = 'pcolor';
 options.folder  = folder;
-options.Z       = 'avg';
+options.iz      = 1;
 options.FIELD   = '<f_>';
-options.ONED    = 1;
+options.ONED    = 0;
 % options.FIELD   = 'Q_es';
 plot_fa_gene(options);
+end
+
+if 0
+%% Mode evolution
+options.NORMALIZED = 1;
+options.K2PLOT = 1;
+options.TIME   = 50:150;
+options.NMA    = 1;
+options.NMODES = 5;
+options.iz     = 9;
+fig = mode_growth_meter(gene_data,options);
+save_figure(data,fig)
 end

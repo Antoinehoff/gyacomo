@@ -208,63 +208,68 @@ while(CONTINUE)
     JOBNUM   = JOBNUM + 1;
 end
 
-%% Build grids
-
-Nky = numel(ky); 
-if Nky > 1
-    dky = ky(2); 
-    Ly = 2*pi/dky;   
+if(JOBFOUND == 0)
+    disp('no results found, please verify the paths');
+    return;
 else
-    dky = 0;
-    Ly  = 0;   
+    %% Build grids
+
+    Nky = numel(ky); 
+    if Nky > 1
+        dky = ky(2); 
+        Ly = 2*pi/dky;   
+    else
+        dky = 0;
+        Ly  = 0;   
+    end
+    [~,iky0] = min(abs(ky)); 
+    Ny = 2*Nky-1;  
+    y  = linspace(-Ly/2,Ly/2,Ny+1); y = y(1:end-1);
+
+    Nkx = numel(kx);
+    if Nkx > 1
+        dkx = kx(2);
+        Lx = 2*pi/dkx;
+    else
+        dkx = 0;
+        Lx  = 0;
+    end    
+    [~,ikx0] = min(abs(kx));
+    Nx = Nkx;      
+    x  = linspace(-Lx/2,Lx/2,Nx+1); x = x(1:end-1);
+
+    Nz = numel(z);
+
+    [KX,KY] = meshgrid(kx,ky);
+    KPERP2 = KX.^2+KY.^2;
+    %% Add everything in output structure
+    % scaling
+    DATA.scale = (1/Nx/Ny)^2;
+    % Fields
+    DATA.GGAMMA_RI = GGAMMA_; DATA.PGAMMA_RI = PGAMMA_; DATA.HFLUX_X = HFLUX_;
+    DATA.Nipj = Nipj_; DATA.Ni00 = Ni00_; DATA.DENS_I = DENS_I_; DATA.TEMP_I = TEMP_I_;
+    if(KIN_E)
+    DATA.Nepj = Nepj_; DATA.Ne00 = Ne00_; DATA.DENS_E = DENS_E_; DATA.TEMP_E = TEMP_E_;
+    end
+    DATA.Ts5D = Ts5D_; DATA.Ts3D = Ts3D_; DATA.Ts0D = Ts0D_;
+    DATA.PHI  = PHI_; 
+    % grids
+    DATA.Pe = Pe; DATA.Pi = Pi; 
+    DATA.Je = Je; DATA.Ji = Ji; 
+    DATA.kx = kx; DATA.ky = ky; DATA.z = z;
+    DATA.x  = x;  DATA.y  = y;
+    DATA.ikx0 = ikx0; DATA.iky0 = iky0;
+    DATA.Nx = Nx; DATA.Ny = Ny; DATA.Nz = Nz; DATA.Nkx = Nkx; DATA.Nky = Nky; 
+    DATA.Pmaxe = numel(Pe); DATA.Pmaxi = numel(Pi); DATA.Jmaxe = numel(Je); DATA.Jmaxi = numel(Ji);
+    DATA.dir      = DIRECTORY;
+    DATA.localdir = DIRECTORY;
+    DATA.param_title=['$\nu_{',DATA.CONAME,'}=$', num2str(DATA.NU), ...
+        ', $\kappa_N=$',num2str(DATA.K_N),', $L=',num2str(DATA.L),'$, $N=',...
+        num2str(DATA.Nx),'$, $(P,J)=(',num2str(DATA.PMAXI),',',...
+        num2str(DATA.JMAXI),')$,',' $\mu_{hd}=$(',num2str(DATA.MUx),...
+        ',',num2str(DATA.MUy),')'];
+    JOBNUM = LASTJOB;
+
+    filename = sprintf([DIRECTORY,'outputs_%.2d.h5'],JOBNUM);
 end
-[~,iky0] = min(abs(ky)); 
-Ny = 2*Nky-1;  
-y  = linspace(-Ly/2,Ly/2,Ny+1); y = y(1:end-1);
-
-Nkx = numel(kx);
-if Nkx > 1
-    dkx = kx(2);
-    Lx = 2*pi/dkx;
-else
-    dkx = 0;
-    Lx  = 0;
-end    
-[~,ikx0] = min(abs(kx));
-Nx = Nkx;      
-x  = linspace(-Lx/2,Lx/2,Nx+1); x = x(1:end-1);
-
-Nz = numel(z);
-
-[KX,KY] = meshgrid(kx,ky);
-KPERP2 = KX.^2+KY.^2;
-%% Add everything in output structure
-% scaling
-DATA.scale = (1/Nx/Ny)^2;
-% Fields
-DATA.GGAMMA_RI = GGAMMA_; DATA.PGAMMA_RI = PGAMMA_; DATA.HFLUX_X = HFLUX_;
-DATA.Nipj = Nipj_; DATA.Ni00 = Ni00_; DATA.DENS_I = DENS_I_; DATA.TEMP_I = TEMP_I_;
-if(KIN_E)
-DATA.Nepj = Nepj_; DATA.Ne00 = Ne00_; DATA.DENS_E = DENS_E_; DATA.TEMP_E = TEMP_E_;
-end
-DATA.Ts5D = Ts5D_; DATA.Ts3D = Ts3D_; DATA.Ts0D = Ts0D_;
-DATA.PHI  = PHI_; 
-% grids
-DATA.Pe = Pe; DATA.Pi = Pi; 
-DATA.Je = Je; DATA.Ji = Ji; 
-DATA.kx = kx; DATA.ky = ky; DATA.z = z;
-DATA.x  = x;  DATA.y  = y;
-DATA.ikx0 = ikx0; DATA.iky0 = iky0;
-DATA.Nx = Nx; DATA.Ny = Ny; DATA.Nz = Nz; DATA.Nkx = Nkx; DATA.Nky = Nky; 
-DATA.Pmaxe = numel(Pe); DATA.Pmaxi = numel(Pi); DATA.Jmaxe = numel(Je); DATA.Jmaxi = numel(Ji);
-DATA.dir      = DIRECTORY;
-DATA.localdir = DIRECTORY;
-DATA.param_title=['$\nu_{',DATA.CONAME,'}=$', num2str(DATA.NU), ...
-    ', $\kappa_N=$',num2str(DATA.K_N),', $L=',num2str(DATA.L),'$, $N=',...
-    num2str(DATA.Nx),'$, $(P,J)=(',num2str(DATA.PMAXI),',',...
-    num2str(DATA.JMAXI),')$,',' $\mu_{hd}=$(',num2str(DATA.MUx),...
-    ',',num2str(DATA.MUy),')'];
-JOBNUM = LASTJOB;
-
-filename = sprintf([DIRECTORY,'outputs_%.2d.h5'],JOBNUM);
 end

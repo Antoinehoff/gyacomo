@@ -1,11 +1,11 @@
 function [ FIGURE ] = plot_fa( DATA, OPTIONS )
 
 FIGURE.fig = figure; FIGURE.FIGNAME = ['f_a_',DATA.PARAMS];
-switch OPTIONS.Z
+switch OPTIONS.iz
     case 'avg'
         zcomp = ' z-avg';
     otherwise
-        zcomp = [' z=',sprintf('%2.2f',DATA.z(OPTIONS.Z))];
+        zcomp = [' z=',sprintf('%2.2f',DATA.z(OPTIONS.iz))];
 end
 if OPTIONS.ONED
     [s,x,fsa,fxa] = compute_fa_1D(DATA, OPTIONS); 
@@ -13,12 +13,12 @@ if OPTIONS.ONED
     subplot(1,2,1)
         plot(s,fsa); hold on
         legend(OPTIONS.SPECIE)
-        xlabel('$v_\parallel, (\mu=0)$'); ylabel('$\langle |f_a|^2\rangle_{xy}^{1/2}$'); 
+        xlabel('$v_\parallel, (\mu=0)$'); ylabel(['$\langle |f_a|^2\rangle_{xy}^{1/2}$, ',zcomp]); 
         title(DATA.param_title); 
     subplot(1,2,2)
         plot(x,fxa); hold on;
         legend(OPTIONS.SPECIE)
-        xlabel('$\mu, (v_\parallel=0)$'); ylabel('$\langle |f_a|^2\rangle_{xy}^{1/2}$'); 
+        xlabel('$\mu, (v_\parallel=0)$'); ylabel(['$\langle |f_a|^2\rangle_{xy}^{1/2}$, ',zcomp]);
         if numel(it) == 1
             title(['t=',num2str(DATA.Ts5D(it))]);
         else
