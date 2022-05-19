@@ -99,9 +99,9 @@ if 0
 % options.XPERP     = linspace( 0,6,64);
 options.SPAR      = gene_data.vp';
 options.XPERP     = gene_data.mu';
-options.iz        = 13;
-options.T         = 20;
-options.PLT_FCT   = 'pcolor';
+options.iz        = 9;
+options.T         = 30;
+options.PLT_FCT   = 'contour';
 options.ONED      = 0;
 options.non_adiab = 1;
 options.SPECIE    = 'i';
@@ -164,7 +164,7 @@ if 0
 %% Mode evolution
 options.NORMALIZED = 1;
 options.K2PLOT = 1;
-options.TIME   = 2:20;
+options.TIME   = 5:30;
 options.NMA    = 1;
 options.NMODES = 15;
 options.iz     = 9;

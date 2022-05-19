@@ -48,10 +48,12 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED  ::  izgs, izge ! ghosts
   LOGICAL,  PUBLIC, PROTECTED  ::  SG = .true.! shifted grid flag
   INTEGER,  PUBLIC :: ir,iz ! counters
-  ! Data about parallel distribution for kx
+  ! Data about parallel distribution for ky.kx
   integer(C_INTPTR_T), PUBLIC :: local_nkx, local_nky
   integer(C_INTPTR_T), PUBLIC :: local_nkx_offset, local_nky_offset
   INTEGER,             PUBLIC :: local_nkp
+  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: counts_nkx, counts_nky
+  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: displs_nkx, displs_nky
   ! "" for p
   INTEGER,             PUBLIC :: local_np_e, local_np_i
   INTEGER,             PUBLIC :: total_np_e, total_np_i
@@ -275,7 +277,7 @@ CONTAINS
     USE prec_const
     USE model, ONLY: LINEARITY
     IMPLICIT NONE
-    INTEGER :: i_
+    INTEGER :: i_, in, istart, iend
     Nky = Ny/2+1 ! Defined only on positive kx since fields are real
     ! Grid spacings
     IF (Ny .EQ. 1) THEN
@@ -297,6 +299,14 @@ CONTAINS
     ikye = ikys + local_nky - 1
     ALLOCATE(kyarray(ikys:ikye))
     local_kymax = 0._dp
+    ! List of shift and local numbers between the different processes (used in scatterv and gatherv)
+    ALLOCATE(counts_nky (1:num_procs_ky))
+    ALLOCATE(displs_nky (1:num_procs_ky))
+    DO in = 0,num_procs_ky-1
+      CALL decomp1D(Nky, num_procs_ky, in, istart, iend)
+      counts_nky(in+1) = iend-istart+1
+      displs_nky(in+1) = istart-1
+    ENDDO
     ! Creating a grid ordered as dk*(0 1 2 3)
     DO iky = ikys,ikye
       kyarray(iky) = REAL(iky-1,dp) * deltaky

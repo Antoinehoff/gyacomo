@@ -63,7 +63,14 @@ MODULE array
   ! Poisson operator (ikx,iky,iz)
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_poisson_op
 
-  !! Diagnostics
+  !! Diagnostics (full arrays to gather on process 0 for output)
+  ! moments
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: moments_e_full
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: moments_i_full
+  
+  ! ES potential
+  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: phi_full
+
   ! Gyrocenter density for electron and ions (ikx,iky,iz)
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ne00
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ni00

@@ -12,12 +12,17 @@ MODULE basic
   real(dp) :: time   = 0           ! Current simulation time (Init from restart file)
 
   INTEGER :: comm0                 ! Default communicator with a topology
+  INTEGER :: group0                ! Default group with a topology
   INTEGER :: rank_0                ! Ranks in comm0
   ! Communicators for 1-dim cartesian subgrids of comm0
   INTEGER :: comm_p, comm_ky, comm_z
   INTEGER :: rank_p, rank_ky, rank_z! Ranks
   INTEGER :: comm_pz,  rank_pz      ! 2D comm for N_a(p,j,z) output (mspfile)
   INTEGER :: comm_kyz, rank_kyz     ! 2D comm for N_a(p,j,z) output (mspfile)
+  INTEGER :: comm_ky0, rank_ky0     ! comm along ky with p=0
+  INTEGER :: comm_z0,  rank_z0      ! comm along z  with p=0
+
+  INTEGER :: group_ky0, group_z0
 
   INTEGER :: jobnum  = 0           ! Job number
   INTEGER :: step    = 0           ! Calculation step of this run
@@ -31,6 +36,8 @@ MODULE basic
   INTEGER :: num_procs_p           ! Number of processes in p
   INTEGER :: num_procs_ky          ! Number of processes in r
   INTEGER :: num_procs_z           ! Number of processes in z
+  INTEGER :: num_procs_pz          ! Number of processes in pz comm
+  INTEGER :: num_procs_kyz         ! Number of processes in kyz comm
   INTEGER :: nbr_L, nbr_R          ! Left and right neighbours (along p)
   INTEGER :: nbr_T, nbr_B          ! Top and bottom neighbours (along kx)
   INTEGER :: nbr_U, nbr_D          ! Upstream and downstream neighbours (along z)

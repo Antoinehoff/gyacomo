@@ -108,9 +108,3 @@ END SUBROUTINE init_outfile
 
 !! Auxiliary routines hidden in headers
 INCLUDE 'diag_headers/diagnose_full.h'
-! INCLUDE 'diag_headers/diagnose_moments.h'
-! INCLUDE 'diag_headers/diagnose_momspectrum.h'
-! INCLUDE 'diag_headers/diagnose_fields.h'
-! INCLUDE 'diag_headers/diagnose_profiler.h'
-! INCLUDE 'diag_headers/diagnose_gridgeom.h'
-! INCLUDE 'diag_headers/diagnose_timetraces.h'

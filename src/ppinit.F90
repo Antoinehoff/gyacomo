@@ -11,7 +11,8 @@ SUBROUTINE ppinit
   INTEGER, DIMENSION(ndims) :: dims=0, coords=0, coords_L=0, coords_R=0
   LOGICAL :: periods(ndims) = .FALSE., reorder=.FALSE.
   CHARACTER(len=32) :: str
-  INTEGER :: nargs, i, l
+  INTEGER :: nargs, i, l, r_
+  INTEGER, DIMENSION(:), ALLOCATABLE :: rank2exclude
 
   CALL MPI_INIT(ierr)
 
@@ -49,9 +50,8 @@ SUBROUTINE ppinit
   periods(3)=.TRUE.
 
   CALL MPI_CART_CREATE(MPI_COMM_WORLD, ndims, dims, periods, reorder, comm0, ierr)
-
+  CALL MPI_COMM_GROUP(comm0,group0)
   CALL MPI_COMM_RANK(comm0, rank_0,  ierr)
-
   CALL MPI_CART_COORDS(comm0,rank_0,ndims,coords,ierr)
 
   !
@@ -68,10 +68,25 @@ SUBROUTINE ppinit
   ! 2D communicator
   CALL MPI_CART_SUB (comm0, (/.TRUE.,.FALSE.,.TRUE./),  comm_pz,  ierr)
   CALL MPI_CART_SUB (comm0, (/.FALSE.,.TRUE.,.TRUE./),  comm_kyz, ierr)
+  ! Count the number of processes in 2D comms
+  CALL MPI_COMM_SIZE(comm_pz, num_procs_pz, ierr)
+  CALL MPI_COMM_SIZE(comm_kyz,num_procs_kyz,ierr)
+  ! Find id inside the 1d-sub communicators
+  CALL MPI_COMM_RANK(comm_pz,  rank_pz,   ierr)
+  CALL MPI_COMM_RANK(comm_kyz, rank_kyz,  ierr)
 
   ! Find neighbours
   CALL MPI_CART_SHIFT(comm0, 0, 1, nbr_L, nbr_R, ierr) !left   right neighbours
   CALL MPI_CART_SHIFT(comm0, 1, 1, nbr_B, nbr_T, ierr) !bottom top   neighbours
   CALL MPI_CART_SHIFT(comm0, 2, 1, nbr_D, nbr_U, ierr) !down   up    neighbours
+
+  ! Create the communicator for groups used in gatherv
+  CALL MPI_COMM_GROUP(comm0,group_ky0)
+  ALLOCATE(rank2include(0:num_procs_ky))
+  DO r_ = 0,rank_0
+    IF(rank_y .EQ. 0) &
+      rank2exclude
+  ENDDO
+  CALL MPI_COMM_CREATE_GROUPE(comm0, group_p0, comm_ky0)
 
 END SUBROUTINE ppinit

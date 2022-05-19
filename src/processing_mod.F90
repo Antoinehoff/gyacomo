@@ -375,9 +375,6 @@ SUBROUTINE compute_density
         ENDDO
       ENDDO
   ENDIF
-  ! IF(KIN_E)&
-  ! CALL manual_3D_bcast(dens_e(ikxs:ikxe,ikys:ikye,izs:ize))
-  ! CALL manual_3D_bcast(dens_i(ikxs:ikxe,ikys:ikye,izs:ize))
 END SUBROUTINE compute_density
 
 ! Compute the 2D particle fluid perp velocity for electron and ions (sum over Laguerre)
@@ -412,9 +409,6 @@ SUBROUTINE compute_uperp
         ENDDO
       ENDDO
   ENDIF
-  ! IF(KIN_E)&
-  ! CALL manual_3D_bcast(uper_e(ikxs:ikxe,ikys:ikye,izs:ize))
-  ! CALL manual_3D_bcast(uper_i(ikxs:ikxe,ikys:ikye,izs:ize))
 END SUBROUTINE compute_uperp
 
 ! Compute the 2D particle fluid par velocity for electron and ions (sum over Laguerre)
@@ -450,9 +444,6 @@ SUBROUTINE compute_upar
     upar_e = 0
     upar_i = 0
   ENDIF
-  ! IF(KIN_E)&
-  ! CALL manual_3D_bcast(upar_e(ikxs:ikxe,ikys:ikye,izs:ize))
-  ! CALL manual_3D_bcast(upar_i(ikxs:ikxe,ikys:ikye,izs:ize))
 END SUBROUTINE compute_upar
 
 ! Compute the 2D particle temperature for electron and ions (sum over Laguerre)
@@ -495,9 +486,6 @@ SUBROUTINE compute_tperp
         ENDDO
       ENDDO
   ENDIF
-  ! IF(KIN_E)&
-  ! CALL manual_3D_bcast(Tper_e(ikxs:ikxe,ikys:ikye,izs:ize))
-  ! CALL manual_3D_bcast(Tper_i(ikxs:ikxe,ikys:ikye,izs:ize))
 END SUBROUTINE compute_Tperp
 
 ! Compute the 2D particle temperature for electron and ions (sum over Laguerre)
@@ -538,9 +526,6 @@ SUBROUTINE compute_Tpar
         ENDDO
       ENDDO
   ENDIF
-  ! IF(KIN_E)&
-  ! CALL manual_3D_bcast(Tpar_e(ikxs:ikxe,ikys:ikye,izs:ize))
-  ! CALL manual_3D_bcast(Tpar_i(ikxs:ikxe,ikys:ikye,izs:ize))
 END SUBROUTINE compute_Tpar
 
 ! Compute the 2D particle fluid moments for electron and ions (sum over Laguerre)

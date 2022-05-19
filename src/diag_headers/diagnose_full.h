@@ -8,11 +8,12 @@ USE model
 USE initial_par
 USE fields
 USE time_integration
-USE utility
+USE parallel
 USE prec_const
 USE collision, ONLY: coll_outputinputs
 USE geometry
 IMPLICIT NONE
+
 INTEGER, INTENT(in) :: kstep
 INTEGER, parameter  :: BUFSIZE = 2
 INTEGER :: rank = 0
@@ -106,6 +107,9 @@ IF ((kstep .EQ. 0)) THEN
    CALL creatd(fidres, rank, dims, "/data/var3d/cstep", "iteration number")
 
    IF (write_phi) CALL creatg(fidres, "/data/var3d/phi", "phi")
+   IF (write_phi) THEN
+    CALL creatg(fidres, "/data/var3d/phi_gatherv", "phi_gatherv")
+   ENDIF
 
    IF (write_Na00) THEN
     IF(KIN_E)&
@@ -280,12 +284,13 @@ SUBROUTINE diagnose_3d
   USE diagnostics_par
   USE prec_const
   USE processing
+  USE parallel, ONLY : gather_xyz
   USE model, ONLY: KIN_E
 
   IMPLICIT NONE
 
-  INTEGER     :: i_, root, world_rank, world_size
-
+  INTEGER        :: i_, root, world_rank, world_size
+  CHARACTER(256) :: dset_name
   CALL append(fidres,  "/data/var3d/time",           time,ionode=0)
   CALL append(fidres, "/data/var3d/cstep", real(cstep,dp),ionode=0)
   CALL getatt(fidres,      "/data/var3d/",       "frames",iframe3d)
@@ -293,6 +298,12 @@ SUBROUTINE diagnose_3d
   CALL attach(fidres,"/data/var3d/" , "frames", iframe3d)
 
   IF (write_phi) CALL write_field3d_kykxz(phi (ikys:ikye,ikxs:ikxe,izs:ize), 'phi')
+  IF (write_phi) THEN
+    CALL gather_xyz(phi(ikys:ikye,1:Nkx,izs:ize),phi_full(1:Nky,1:Nkx,1:Nz))
+    WRITE(dset_name, "(A, '/', i6.6)") "/data/var3d/phi_gatherv", iframe3d
+    CALL putarr(fidres, dset_name, phi_full(1:Nky,1:Nkx,1:Nz), ionode=0)
+    CALL attach(fidres, dset_name, "time", time)
+  ENDIF
 
   IF (write_Na00) THEN
     IF(KIN_E)THEN
@@ -349,7 +360,7 @@ SUBROUTINE diagnose_3d
     IMPLICIT NONE
     COMPLEX(dp), DIMENSION(ikys:ikye,ikxs:ikxe, izs:ize), INTENT(IN) :: field
     CHARACTER(*), INTENT(IN) :: text
-    CHARACTER(LEN=50) :: dset_name
+    CHARACTER(256) :: dset_name
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
     IF (num_procs .EQ. 1) THEN ! no data distribution
       CALL putarr(fidres, dset_name, field(ikys:ikye,ikxs:ikxe, izs:ize), ionode=0)

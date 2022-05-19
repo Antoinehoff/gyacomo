@@ -9,6 +9,7 @@ subroutine auxval
   use prec_const
   USE numerics
   USE geometry
+  USE parallel, ONLY: init_parallel_var
   IMPLICIT NONE
 
   INTEGER :: irows,irowe, irow, icol, i_
@@ -34,6 +35,8 @@ subroutine auxval
   IF ((my_id .EQ. 0) .AND. SG) WRITE(*,*) '--2 staggered z grids--'
 
   CALL memory ! Allocate memory for global arrays
+
+  CALL init_parallel_var
 
   CALL eval_magnetic_geometry ! precompute coeff for lin equation
 

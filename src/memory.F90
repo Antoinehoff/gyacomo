@@ -14,6 +14,7 @@ SUBROUTINE memory
 
   ! Electrostatic potential
   CALL allocate_array(           phi, ikys,ikye, ikxs,ikxe, izgs,izge)
+  CALL allocate_array(      phi_full,     1,Nky,     1,Nkx,      1,Nz)
   CALL allocate_array(        phi_ZF, ikxs,ikxe, izs,ize)
   CALL allocate_array(        phi_EM, ikys,ikye, izs,ize)
   CALL allocate_array(inv_poisson_op, ikys,ikye, ikxs,ikxe, izs,ize)

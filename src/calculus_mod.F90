@@ -3,7 +3,7 @@ MODULE calculus
   USE basic
   USE prec_const
   USE grid
-  USE utility
+  USE parallel, ONLY: manual_0D_bcast
   IMPLICIT NONE
   REAL(dp), dimension(-2:2) :: dz_usu = &
    (/  onetwelfth, -twothird, &
