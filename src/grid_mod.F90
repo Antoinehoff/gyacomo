@@ -405,7 +405,9 @@ CONTAINS
     ! Z stepping (#interval = #points since periodic)
     deltaz        = Lz/REAL(Nz,dp)
     inv_deltaz    = 1._dp/deltaz
-    diff_dz_coeff = (deltaz/2._dp)**2
+    diff_dz_coeff = -(deltaz/2._dp)**4 ! adaptive fourth derivative
+    ! non adaptive
+    ! diff_dz_coeff = -1._dp
     IF (SG) THEN
       grid_shift = deltaz/2._dp
     ELSE

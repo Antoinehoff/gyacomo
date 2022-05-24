@@ -154,7 +154,6 @@ SUBROUTINE update_ghosts_z_e
     ! last+2 gets first+1
     moments_e(:,:,:,:,ize+2,updatetlevel) = moments_e(:,:,:,:,izs+1,updatetlevel)
   ENDIF
-
 END SUBROUTINE update_ghosts_z_e
 
 SUBROUTINE update_ghosts_z_i

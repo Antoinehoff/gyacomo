@@ -16,7 +16,7 @@ MODULE calculus
    REAL(dp), dimension(-2:2) :: dz2_usu = &
    (/-1.0_dp/12.0_dp, 4.0_dp/3.0_dp, -5.0_dp/2.0_dp, 4.0_dp/3.0_dp, -1.0_dp/12.0_dp /)! 2th derivative, 4th order (for parallel hypdiff)
    REAL(dp), dimension(-2:2) :: dz4_usu = &
-   (/  1._dp, -4._dp, 6._dp, -4._dp, 1._dp /)* 0.0625 ! 4th derivative, 2nd order (for parallel hypdiff)
+   (/ 1._dp, -4._dp, 6._dp, -4._dp, 1._dp /) ! 4th derivative, 2nd order (for parallel hypdiff)
   PUBLIC :: simpson_rule_z, interp_z, grad_z, grad_z4
 
 CONTAINS
@@ -99,6 +99,7 @@ SUBROUTINE grad_z4(f,ddz4f)
   IF(Nz .GT. 3) THEN ! Cannot apply four points stencil on less than four points grid
       DO iz = izs,ize
        ddz4f(iz) = dz4_usu(-2)*f(iz-2) + dz4_usu(-1)*f(iz-1) &
+                  +dz4_usu( 0)*f(iz  )&
                   +dz4_usu( 1)*f(iz+1) + dz4_usu( 2)*f(iz+2)
       ENDDO
   ELSE

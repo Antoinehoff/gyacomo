@@ -166,11 +166,11 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
   !
   USE fields,           ONLY : moments_i, moments_e, phi
   USE array,            ONLY : kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i, &
-                               ddz_nepj, ddz2_Nepj, interp_nepj,&
-                               ddz_nipj, ddz2_Nipj, interp_nipj
+                               ddz_nepj, ddz4_Nepj, interp_nepj,&
+                               ddz_nipj, ddz4_Nipj, interp_nipj
   USE time_integration, ONLY : updatetlevel
   USE model,            ONLY : qe_taue, qi_taui, KIN_E, CLOS
-  USE calculus,         ONLY : grad_z, grad_z2, interp_z
+  USE calculus,         ONLY : grad_z, grad_z4, interp_z
   IMPLICIT NONE
   INTEGER :: eo, p_int, j_int
   CALL cpu_time(t0_process)
@@ -239,7 +239,7 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
           ! Compute z derivatives
           CALL   grad_z(eo,nadiab_moments_e(ip,ij,iky,ikx,izgs:izge),    ddz_nepj(ip,ij,iky,ikx,izs:ize))
           ! Parallel hyperdiffusion
-          CALL  grad_z2(moments_e(ip,ij,iky,ikx,izgs:izge,updatetlevel),ddz2_Nepj(ip,ij,iky,ikx,izs:ize))
+          CALL  grad_z4(moments_e(ip,ij,iky,ikx,izgs:izge,updatetlevel),ddz4_Nepj(ip,ij,iky,ikx,izs:ize))
           ! Compute even odd grids interpolation
           CALL interp_z(eo,nadiab_moments_e(ip,ij,iky,ikx,izgs:izge), interp_nepj(ip,ij,iky,ikx,izs:ize))
         ENDDO
@@ -257,7 +257,7 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
           ! Compute z first derivative
           CALL   grad_z(eo,nadiab_moments_i(ip,ij,iky,ikx,izgs:izge),    ddz_nipj(ip,ij,iky,ikx,izs:ize))
           ! Parallel hyperdiffusion
-          CALL  grad_z2(moments_i(ip,ij,iky,ikx,izgs:izge,updatetlevel),ddz2_Nipj(ip,ij,iky,ikx,izs:ize))
+          CALL  grad_z4(moments_i(ip,ij,iky,ikx,izgs:izge,updatetlevel),ddz4_Nipj(ip,ij,iky,ikx,izs:ize))
           ! Compute even odd grids interpolation
           CALL interp_z(eo,nadiab_moments_i(ip,ij,iky,ikx,izgs:izge), interp_nipj(ip,ij,iky,ikx,izs:ize))
         ENDDO

@@ -59,7 +59,7 @@ SUBROUTINE moments_eq_rhs_e
             eo    = MODULO(p_int,2) ! Indicates if we are on odd or even z grid
             kperp2= kparray(iky,ikx,iz,eo)**2
 
-          IF((CLOS .EQ. 1) .AND. (p_int+2*j_int .LE. dmaxe)) THEN
+          IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmaxe)) THEN
             !! Compute moments mixing terms
             Tperp = 0._dp; Tpar = 0._dp; Tmir = 0._dp
             ! Perpendicular dynamic
@@ -110,7 +110,7 @@ SUBROUTINE moments_eq_rhs_e
                 ! Numerical perpendicular hyperdiffusion (totally artificial, for stability purpose)
                 - (mu_x*kx**4 + mu_y*ky**4)*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
                 ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"
-                + mu_z * diff_dz_coeff * ddz2_Nepj(ip,ij,iky,ikx,iz) &
+                + mu_z * diff_dz_coeff * ddz4_Nepj(ip,ij,iky,ikx,iz) &
                 ! Collision term
                 + TColl_e(ip,ij,iky,ikx,iz) &
                 ! Nonlinear term
@@ -179,7 +179,7 @@ SUBROUTINE moments_eq_rhs_i
             p_int = parray_i(ip)    ! Hermite degree
             eo    = MODULO(p_int,2) ! Indicates if we are on odd or even z grid
             kperp2= kparray(iky,ikx,iz,eo)**2
-            IF((CLOS .EQ. 1) .AND. (p_int+2*j_int .LE. dmaxi)) THEN
+            IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmaxi)) THEN
               !! Compute moments mixing terms
               Tperp = 0._dp; Tpar = 0._dp; Tmir = 0._dp
               ! Perpendicular dynamic
@@ -233,7 +233,7 @@ SUBROUTINE moments_eq_rhs_i
                   ! Numerical hyperdiffusion (totally artificial, for stability purpose)
                   - (mu_x*kx**4 + mu_y*ky**4)*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
                   ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"
-                  + mu_z * diff_dz_coeff * ddz2_Nipj(ip,ij,iky,ikx,iz) &
+                  + mu_z * diff_dz_coeff * ddz4_Nipj(ip,ij,iky,ikx,iz) &
                   ! Collision term
                   + TColl_i(ip,ij,iky,ikx,iz)&
                   ! Nonlinear term
