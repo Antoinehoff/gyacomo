@@ -15,7 +15,7 @@
 % title('gyroLES results for H&P fig. 2c')
 
 %% Plot linear results
-path = '/home/ahoffman/gene/linear_zpinch_results/';
+% path = '/home/ahoffman/gene/linear_zpinch_results/';
 % fname ='tmp.txt';
 % fname ='GENE_LIN_Kn_1.8_KT_0.45_nuSG_0.047_32x16.txt';
 % fname ='GENE_LIN_Kn_1.5_KT_0.325_nuSG_0.047_32x16.txt';
@@ -29,7 +29,7 @@ path = '/home/ahoffman/gene/linear_zpinch_results/';
 % fname ='GENE_LIN_Kn_1.8_KT_0.4_nuLDDK_0.0047_64x32.txt';
 % fname ='GENE_LIN_Kn_1.8_KT_0.45_nu_0_32x16.txt';
 % fname ='GENE_LIN_Kn_1.8_KT_0.45_nuSG_0.0235_64x32.txt';
-fname ='GENE_LIN_Kn_1.9_KT_0.475_nuSG_0.047_64x32.txt';
+% fname ='GENE_LIN_Kn_1.9_KT_0.475_nuSG_0.047_64x32.txt';
 % fname ='GENE_LIN_Kn_1.9_KT_0.475_nuSG_0.235_64x32.txt';
 % fname ='GENE_LIN_Kn_1.7_KT_0.425_nuSG_0.235_64x32.txt';
 % fname ='GENE_LIN_Kn_1.8_KT_0.45_nuSGDK_0.047_32x16.txt';
@@ -40,6 +40,8 @@ fname ='GENE_LIN_Kn_1.9_KT_0.475_nuSG_0.047_64x32.txt';
 % fname ='GENE_LIN_Kn_2.0_KT_0.5_nuSGDK_0.0235_32x16.txt';
 % fname ='GENE_LIN_Kn_1.6_KT_0.4_nu_0_32x16.txt';
 % fname ='GENE_LIN_Kn_2.5_KT_0.625_nu_0_32x16.txt';
+path = '/home/ahoffman/gene/linear_CBC_results/';
+fname = 'CBC_100_ky_1e-1_to_1e1.txt';
 data_ = load([path,fname]);
 
 figure

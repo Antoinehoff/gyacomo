@@ -1,7 +1,8 @@
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_0.8/';
-% folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.0/';
-folder = '/misc/gene_results/shearless_cyclone/linear_s_alpha_CBC_100/';
+folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.2/';
+% folder = '/misc/gene_results/shearless_cyclone/linear_s_alpha_CBC_100/';
+% folder = '/misc/gene_results/shearless_cyclone/allmodes_CBC_100/';
 % folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.5/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_0.8/';
@@ -16,8 +17,9 @@ options.TAVG_1   = gene_data.Ts3D(end); % Averaging times duration
 options.NMVA     = 1;              % Moving average for time traces
 options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x, Q_x)
 options.INTERP   = 1;
+gene_data.FIGDIR = folder;;
 fig = plot_radial_transport_and_spacetime(gene_data,options);
-% save_figure(data,fig)
+save_figure(gene_data,fig)
 end
 
 if 0
@@ -34,8 +36,8 @@ options.NAME      = '\phi';
 options.PLAN      = 'kxky';
 % options.NAME      ='f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 'avg';
-options.TIME      = [0 500];
+options.COMP      = 9;
+options.TIME      = [0 50 100 200 300];
 gene_data.a = data.EPS * 2000;
 fig = photomaton(gene_data,options);
 save_figure(gene_data,fig)
@@ -55,7 +57,7 @@ options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = 000:700;
+options.TIME      = 000:300;
 gene_data.a = data.EPS * 2000;
 create_film(gene_data,options,'.gif')
 end
@@ -88,11 +90,11 @@ end
 
 if 0
 %% Show f_i(vpar,mu)
-options.times   = 200:600;
+options.times   = 200:300;
 options.specie  = 'i';
-options.PLT_FCT = 'pcolor';
+options.PLT_FCT = 'contour';
 options.folder  = folder;
-options.iz      = 1;
+options.iz      = 9;
 options.FIELD   = '<f_>';
 options.ONED    = 0;
 % options.FIELD   = 'Q_es';
@@ -101,12 +103,12 @@ end
 
 if 0
 %% Mode evolution
-options.NORMALIZED = 1;
+options.NORMALIZED = 0;
 options.K2PLOT = 1;
-options.TIME   = 50:150;
+options.TIME   = 100:200;
 options.NMA    = 1;
-options.NMODES = 5;
+options.NMODES = 15;
 options.iz     = 9;
 fig = mode_growth_meter(gene_data,options);
-save_figure(data,fig)
+save_figure(gene_data,fig)
 end

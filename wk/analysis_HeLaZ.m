@@ -10,16 +10,16 @@ system(['mkdir -p ',MISCDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 system(CMD);
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 08;
+JOBNUMMIN = 00; JOBNUMMAX = 20;
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
-
+data.FIGDIR = LOCALDIR;
 
 %% PLOTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 default_plots_options
 disp('Plots')
 FMT = '.fig';
 
-if 1
+if 0
 %% Space time diagramm (fig 11 Ivanov 2020)
 options.TAVG_0   = 0.8*data.Ts3D(end); 
 options.TAVG_1   = data.Ts3D(end); % Averaging times duration
@@ -40,7 +40,7 @@ end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.NAME      = '\phi';
 % options.NAME      = 'N_i^{00}';
@@ -48,12 +48,12 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+options.PLAN      = 'yz';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 9;
+options.COMP      = 'avg';
 % options.TIME      = dat.Ts5D;
-options.TIME      = 920:1:1250;
+options.TIME      = 700:1:960;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -62,35 +62,33 @@ end
 if 0
 %% 2D snapshots
 % Options
-options.INTERP    = 1;
+options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
-% options.NAME      = '\phi';
+options.NAME      = '\phi';
 % options.NAME      = 'n_i';
-options.NAME      = 'N_i^{00}';
+% options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'yz';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
-options.COMP      = 'avg';
-options.TIME      = [900 923 927 990];
+options.COMP      = 1;
+options.TIME      =[800 900 950];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 save_figure(data,fig)
 end
 
-if 0
-%% 3D plot on the geometry
-options.INTERP    = 1;
-options.NAME      = 'n_i';
-options.PLANES    = [1:2:12];
-options.TIME      = [60];
-options.PLT_MTOPO = 1;
-data.rho_o_R      = 2e-3; % Sound larmor radius over Machine size ratio
-fig = show_geometry(data,options);
-save_figure(data,fig)
+if 1
+%% Ballooning plot
+options.time_2_plot = [800 900];
+options.kymodes     = [0.5];
+options.normalized  = 1;
+options.sheared     = 0;
+options.field       = 'phi';
+fig = plot_ballooning(data,options);
 end
 
 if 0
@@ -99,9 +97,9 @@ if 0
 % options.XPERP     = linspace( 0,6,64);
 options.SPAR      = gene_data.vp';
 options.XPERP     = gene_data.mu';
-options.iz        = 13;
-options.T         = 20;
-options.PLT_FCT   = 'pcolor';
+options.iz        = 'avg';
+options.T         = 1000;
+options.PLT_FCT   = 'contour';
 options.ONED      = 0;
 options.non_adiab = 1;
 options.SPECIE    = 'i';
@@ -164,12 +162,12 @@ if 0
 %% Mode evolution
 options.NORMALIZED = 1;
 options.K2PLOT = 1;
-options.TIME   = 2:20;
+options.TIME   = [0.5 1]*data.Ts3D(end);
 options.NMA    = 1;
 options.NMODES = 15;
 options.iz     = 9;
 fig = mode_growth_meter(data,options);
-save_figure(data,fig)
+save_figure(gbms_dat,fig)
 end
 
 if 0
@@ -200,5 +198,17 @@ options.kxky = 1;
 options.kzkx = 0;
 options.kzky = 1;
 [lg, fig] = compute_3D_zpinch_growth_rate(data,trange,options);
+save_figure(data,fig)
+end
+
+if 0
+%% 3D plot on the geometry
+options.INTERP    = 1;
+options.NAME      = 'n_i';
+options.PLANES    = [1:2:12];
+options.TIME      = [60];
+options.PLT_MTOPO = 1;
+data.rho_o_R      = 2e-3; % Sound larmor radius over Machine size ratio
+fig = show_geometry(data,options);
 save_figure(data,fig)
 end

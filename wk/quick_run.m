@@ -13,7 +13,7 @@ EXECNAME = 'helaz3';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.0;   % Collision frequency
+NU      = 0.2;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
 K_N     = 2.22;   % Density gradient drive
 K_T     = 6.96;   % Temperature '''
@@ -21,15 +21,15 @@ K_E     = 0.0;   % Electrostat '''
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 0;     % 1: kinetic electrons, 2: adiabatic electrons
 %% GRID PARAMETERS
-PMAXE   = 4;     % Hermite basis size of electrons
-JMAXE   = 2;     % Laguerre "
-PMAXI   = 4;     % " ions
-JMAXI   = 2;     % "
+PMAXE   = 8;     % Hermite basis size of electrons
+JMAXE   = 4;     % Laguerre "
+PMAXI   = 8;     % " ions
+JMAXI   = 4;     % "
 NX      = 1;    % real space x-gridpoints
-NY      = 24;     %     ''     y-gridpoints
+NY      = 64;     %     ''     y-gridpoints
 LX      = 100;   % Size of the squared frequency domain
-LY      = 100;     % Size of the squared frequency domain
-NZ      = 32;     % number of perpendicular planes (parallel grid)
+LY      = 60;     % Size of the squared frequency domain
+NZ      = 16;     % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 %% GEOMETRY
@@ -39,8 +39,8 @@ Q0      = 1.4;    % safety factor
 SHEAR   = 0.0;    % magnetic shear (Not implemented yet)
 EPS     = 0.18;    % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 10;  % Maximal time unit
-DT      = 2e-2;   % Time step
+TMAX    = 30;  % Maximal time unit
+DT      = 2*5e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
@@ -48,12 +48,12 @@ SPS5D   = 1;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
 %% OPTIONS
-SIMID   = 'quick_run';  % Name of the simulation
+SIMID   = 'dbg';  % Name of the simulation
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
 CO      = 'DG';
-GKCO    = 1; % gyrokinetic operator
+GKCO    = 0; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 1;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))s
@@ -89,10 +89,10 @@ setup
 system(['rm fort*.90']);
 % Run linear simulation
 if RUN
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',HELAZDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 3 2 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
 end
 
 %% Load results
@@ -111,16 +111,17 @@ nplots = 1;
 lg = compute_fluxtube_growth_rate(data,trange,nplots);
 end
 
-if 0
+if 1
 %% Ballooning plot
 options.time_2_plot = data.Ts3D(end);
-options.kymodes     = [0.4 0.5 0.6];
+options.kymodes     = [0.5];
 options.normalized  = 1;
+options.sheared     = 0;
 options.field       = 'phi';
 fig = plot_ballooning(data,options);
 end
 
-if 1
+if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
 options.P2J        = 1;
@@ -133,8 +134,8 @@ options.JOBNUM     = 0;
 options.TIME       = [0 50];
 options.specie     = 'i';
 options.compz      = 'avg';
-% fig = show_moments_spectrum(data,options);
-fig = show_napjz(data,options);
+fig = show_moments_spectrum(data,options);
+% fig = show_napjz(data,options);
 save_figure(data,fig)
 end
 
@@ -147,4 +148,16 @@ options.kzkx = 0;
 options.kzky = 0;
 [lg, fig] = compute_3D_zpinch_growth_rate(data,trange,options);
 save_figure(data,fig)
+end
+
+if 1
+%% Mode evolution
+options.NORMALIZED = 1;
+options.K2PLOT = 1;
+options.TIME   = [0.8 1]*data.Ts3D(end);
+options.NMA    = 1;
+options.NMODES = 5;
+options.iz     = 9;
+fig = mode_growth_meter(data,options);
+save_figure(gbms_dat,fig)
 end

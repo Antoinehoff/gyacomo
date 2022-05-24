@@ -168,4 +168,4 @@ outfile ='';
 % MISCDIR = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'/'];
 % end
 
-analysis_3D
+analysis_HeLaZ

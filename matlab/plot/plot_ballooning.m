@@ -1,17 +1,27 @@
 function [FIG] = plot_ballooning(data,options)
     FIG.fig = figure; iplot = 1;
-    [~,it] = min(abs(data.Ts3D - options.time_2_plot));
+    [~,it0] = min(abs(data.Ts3D - options.time_2_plot(1)));
+    [~,it1] = min(abs(data.Ts3D - options.time_2_plot(end)));
     [~,ikyarray] = min(abs(data.ky - options.kymodes));
-    phi_real=(real(data.PHI(:,:,:,it)));
-    phi_imag=(imag(data.PHI(:,:,:,it)));
+    phi_real=mean(real(data.PHI(:,:,:,it0:it1)),4);
+    phi_imag=mean(imag(data.PHI(:,:,:,it0:it1)),4);
     % Apply baollooning tranform
     for iky=ikyarray
         dims = size(phi_real);
-        phib_real = zeros(  dims(2)*dims(3)  ,1);
+
+        if options.sheared
+            idx = -Nkx:1:Nkx;
+            ikxlim = dims(2);
+        else
+            idx = 0;
+            ikxlim = 1;
+        end
+        
+        phib_real = zeros(  ikxlim*dims(3)  ,1);
         phib_imag= phib_real;
         b_angle = phib_real;
-
-        for ikx =1: dims(2)
+        
+        for ikx =1:ikxlim
             start_ =  (ikx -1)*dims(3) +1;
             end_ =  ikx*dims(3);
             phib_real(start_:end_)  = phi_real(iky,ikx,:);
@@ -20,8 +30,7 @@ function [FIG] = plot_ballooning(data,options)
 
         % Define ballooning angle
         Nkx = numel(data.kx)-1; coordz = data.z;
-        idx = -Nkx:1:Nkx;
-        for ikx =1: dims(2)
+        for ikx =1: ikxlim
             for iz=1:dims(3)
                 ii = dims(3)*(ikx -1) + iz;
                 b_angle(ii) =coordz(iz) + 2*pi*idx(ikx);
@@ -47,8 +56,8 @@ function [FIG] = plot_ballooning(data,options)
         legend('real','imag','norm')
         xlabel('$\chi / \pi$')
         ylabel('$\phi_B (\chi)$');
-        title(['ky=',sprintf('%1.1f',data.ky(iky)),...
-               ',t=',sprintf('%1.1f',data.Ts3D(it))]);
+        title(['$k_y=',sprintf('%1.1f',data.ky(iky)),...
+               ',t_{avg}\in [',sprintf('%1.1f',data.Ts3D(it0)),',',sprintf('%1.1f',data.Ts3D(it1)),']$']);
         iplot = iplot + 1;
     end
 end

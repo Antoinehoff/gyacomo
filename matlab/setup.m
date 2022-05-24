@@ -25,7 +25,7 @@ MODEL.KIN_E   = KIN_E;
 if KIN_E; MODEL.KIN_E = '.true.'; else; MODEL.KIN_E = '.false.';end;
 MODEL.mu_x    = MU_X;
 MODEL.mu_y    = MU_Y;
-MODEL.mu_z    = 0;
+MODEL.mu_z    = MU_Z;
 MODEL.mu_p    = MU_P;
 MODEL.mu_j    = MU_J;
 MODEL.nu      = NU; % hyper diffusive coefficient nu for HW
