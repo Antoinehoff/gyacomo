@@ -110,7 +110,7 @@ SUBROUTINE moments_eq_rhs_e
                 ! Numerical perpendicular hyperdiffusion (totally artificial, for stability purpose)
                 - (mu_x*kx**4 + mu_y*ky**4)*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
                 ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"
-                + mu_z * diff_dz_coeff * ddz2_Nepj(ip,ij,iky,ikx,iz) &
+                + mu_z * diff_dz_coeff * ddz4_Nepj(ip,ij,iky,ikx,iz) &
                 ! Collision term
                 + TColl_e(ip,ij,iky,ikx,iz) &
                 ! Nonlinear term
@@ -233,7 +233,7 @@ SUBROUTINE moments_eq_rhs_i
                   ! Numerical hyperdiffusion (totally artificial, for stability purpose)
                   - (mu_x*kx**4 + mu_y*ky**4)*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
                   ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"
-                  + mu_z * diff_dz_coeff * ddz2_Nipj(ip,ij,iky,ikx,iz) &
+                  + mu_z * diff_dz_coeff * ddz4_Nipj(ip,ij,iky,ikx,iz) &
                   ! Collision term
                   + TColl_i(ip,ij,iky,ikx,iz)&
                   ! Nonlinear term

@@ -415,7 +415,12 @@ CONTAINS
     ! Z stepping (#interval = #points since periodic)
     deltaz        = Lz/REAL(Nz,dp)
     inv_deltaz    = 1._dp/deltaz
-    diff_dz_coeff = (deltaz/2._dp)**2
+    ! Parallel hyperdiffusion coefficient
+    IF(mu_z .GT. 0) THEN
+      diff_dz_coeff = -(deltaz/2._dp)**4 ! adaptive fourth derivative (~GENE)
+    ELSE
+      diff_dz_coeff = 1._dp    ! non adaptive (positive sign to compensate mu_z neg)
+    ENDIF
     IF (SG) THEN
       grid_shift = deltaz/2._dp
     ELSE

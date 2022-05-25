@@ -14,10 +14,10 @@ MODULE array
   ! Derivatives and interpolated moments
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz_nepj
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: interp_nepj
-  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz2_Nepj
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz4_Nepj
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz_nipj
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: interp_nipj
-  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz2_Nipj
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz4_Nipj
 
   ! Arrays to store special initial modes (semi linear simulation)
   ! Zonal ones (ky=0)
