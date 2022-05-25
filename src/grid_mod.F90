@@ -405,6 +405,7 @@ CONTAINS
 
   SUBROUTINE set_zgrid
     USE prec_const
+    USE model, ONLY: mu_z
     IMPLICIT NONE
     INTEGER :: i_, fid
     REAL    :: grid_shift, Lz
