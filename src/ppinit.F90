@@ -50,7 +50,7 @@ SUBROUTINE ppinit
   periods(3)=.TRUE.
 
   CALL MPI_CART_CREATE(MPI_COMM_WORLD, ndims, dims, periods, reorder, comm0, ierr)
-  CALL MPI_COMM_GROUP(comm0,group0)
+  CALL MPI_COMM_GROUP(comm0,group0, ierr)
   CALL MPI_COMM_RANK(comm0, rank_0,  ierr)
   CALL MPI_CART_COORDS(comm0,rank_0,ndims,coords,ierr)
 
@@ -81,12 +81,12 @@ SUBROUTINE ppinit
   CALL MPI_CART_SHIFT(comm0, 2, 1, nbr_D, nbr_U, ierr) !down   up    neighbours
 
   ! Create the communicator for groups used in gatherv
-  CALL MPI_COMM_GROUP(comm0,group_ky0)
-  ALLOCATE(rank2include(0:num_procs_ky))
-  DO r_ = 0,rank_0
-    IF(rank_y .EQ. 0) &
-      rank2exclude
-  ENDDO
-  CALL MPI_COMM_CREATE_GROUPE(comm0, group_p0, comm_ky0)
+  ! CALL MPI_COMM_GROUP(comm0,group_ky0)
+  ! ALLOCATE(rank2include(0:num_procs_ky))
+  ! DO r_ = 0,rank_0
+  !   IF(rank_y .EQ. 0) &
+  !     rank2exclude
+  ! ENDDO
+  ! CALL MPI_COMM_CREATE_GROUPE(comm0, group_p0, comm_ky0)
 
 END SUBROUTINE ppinit

@@ -58,8 +58,8 @@ MODULE grid
   INTEGER,             PUBLIC :: local_np_e, local_np_i
   INTEGER,             PUBLIC :: total_np_e, total_np_i
   integer(C_INTPTR_T), PUBLIC :: local_np_e_offset, local_np_i_offset
-  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: counts_np_e, counts_np_i
-  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: displs_np_e, displs_np_i
+  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: rcv_p_e, rcv_p_i
+  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: dsp_p_e, dsp_p_i
   ! "" for z
   INTEGER,             PUBLIC :: local_nz
   INTEGER,             PUBLIC :: total_nz
@@ -179,17 +179,17 @@ CONTAINS
     ipgs_e = ips_e - 2/deltape; ipge_e = ipe_e + 2/deltape;
     ipgs_i = ips_i - 2/deltapi; ipge_i = ipe_i + 2/deltapi;
     ! List of shift and local numbers between the different processes (used in scatterv and gatherv)
-    ALLOCATE(counts_np_e (1:num_procs_p))
-    ALLOCATE(counts_np_i (1:num_procs_p))
-    ALLOCATE(displs_np_e (1:num_procs_p))
-    ALLOCATE(displs_np_i (1:num_procs_p))
+    ALLOCATE(rcv_p_e (1:num_procs_p))
+    ALLOCATE(rcv_p_i (1:num_procs_p))
+    ALLOCATE(dsp_p_e (1:num_procs_p))
+    ALLOCATE(dsp_p_i (1:num_procs_p))
     DO in = 0,num_procs_p-1
       CALL decomp1D(total_np_e, num_procs_p, in, istart, iend)
-      counts_np_e(in+1) = iend-istart+1
-      displs_np_e(in+1) = istart-1
+      rcv_p_e(in+1) = iend-istart+1
+      dsp_p_e(in+1) = istart-1
       CALL decomp1D(total_np_i, num_procs_p, in, istart, iend)
-      counts_np_i(in+1) = iend-istart+1
-      displs_np_i(in+1) = istart-1
+      rcv_p_i(in+1) = iend-istart+1
+      dsp_p_i(in+1) = istart-1
     ENDDO
 
     ! local grid computation

@@ -58,6 +58,7 @@ SUBROUTINE memory
 
   !Ions arrays
   CALL allocate_array(             Ni00, ikys,ikye, ikxs,ikxe, izs,ize)
+  CALL allocate_array(        Ni00_full,     1,Nky,     1,Nkx,    1,Nz)
   CALL allocate_array(           dens_i, ikys,ikye, ikxs,ikxe, izs,ize)
   CALL allocate_array(           upar_i, ikys,ikye, ikxs,ikxe, izs,ize)
   CALL allocate_array(           uper_i, ikys,ikye, ikxs,ikxe, izs,ize)
@@ -125,4 +126,7 @@ SUBROUTINE memory
       ENDIF
       CALL allocate_array(  Ciipj, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1), 1,1, 1,1, 1,1)
  ENDIF
+
+ !____________DIAGNOSTIC PURPOSE ONLY ARRAYS_______________
+
 END SUBROUTINE memory

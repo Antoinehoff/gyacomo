@@ -115,9 +115,11 @@ IF ((kstep .EQ. 0)) THEN
     IF(KIN_E)&
     CALL creatg(fidres, "/data/var3d/Ne00", "Ne00")
     CALL creatg(fidres, "/data/var3d/Ni00", "Ni00")
+    CALL creatg(fidres, "/data/var3d/Ni00_gatherv", "Ni00_gatherv")
     IF(KIN_E)&
     CALL creatg(fidres, "/data/var3d/Nepjz", "Nepjz")
     CALL creatg(fidres, "/data/var3d/Nipjz", "Nipjz")
+    CALL creatg(fidres, "/data/var3d/Nipjz_full", "Nipjz")
    ENDIF
 
    IF (write_dens) THEN
@@ -316,6 +318,11 @@ SUBROUTINE diagnose_3d
       Ni00(ikys:ikye,ikxs:ikxe,izs:ize) = moments_i(ips_e,1,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel)
     ENDIF
     CALL write_field3d_kykxz(Ni00(ikys:ikye,ikxs:ikxe,izs:ize), 'Ni00')
+
+    WRITE(dset_name, "(A, '/', i6.6)") "/data/var3d/Ni00_gatherv", iframe3d
+    CALL gather_xyz(Ni00(ikys:ikye,1:Nkx,izs:ize),Ni00_full(1:Nky,1:Nkx,1:Nz))
+    CALL putarr(fidres, dset_name, Ni00_full(1:Nky,1:Nkx,1:Nz), ionode=0)
+    CALL attach(fidres, dset_name, "time", time)
 
     CALL compute_Napjz_spectrum
     IF(KIN_E) &

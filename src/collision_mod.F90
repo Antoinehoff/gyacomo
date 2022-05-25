@@ -499,7 +499,7 @@ CONTAINS
                   ! Sum up all the sub collision terms on root 0
                   CALL MPI_REDUCE(local_sum_e, buffer_e, total_np_e, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
                   ! distribute the sum over the process among p
-                  CALL MPI_SCATTERV(buffer_e, counts_np_e, displs_np_e, MPI_DOUBLE_COMPLEX,&
+                  CALL MPI_SCATTERV(buffer_e, rcv_p_e, dsp_p_e, MPI_DOUBLE_COMPLEX,&
                                     TColl_distr_e, local_np_e, MPI_DOUBLE_COMPLEX,&
                                     0, comm_p, ierr)
                 ELSE
@@ -522,7 +522,7 @@ CONTAINS
               CALL MPI_REDUCE(local_sum_i, buffer_i, total_np_i, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
               ! buffer contains the entire collision term along p, we scatter it between
               ! the other processes (use of scatterv since Pmax/Np is not an integer)
-              CALL MPI_SCATTERV(buffer_i, counts_np_i, displs_np_i, MPI_DOUBLE_COMPLEX,&
+              CALL MPI_SCATTERV(buffer_i, rcv_p_i, dsp_p_i, MPI_DOUBLE_COMPLEX,&
                                 TColl_distr_i, local_np_i, MPI_DOUBLE_COMPLEX, &
                                 0, comm_p, ierr)
             ELSE

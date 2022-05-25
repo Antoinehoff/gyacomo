@@ -67,13 +67,14 @@ MODULE array
   ! moments
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: moments_e_full
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: moments_i_full
-  
+
   ! ES potential
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: phi_full
 
   ! Gyrocenter density for electron and ions (ikx,iky,iz)
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ne00
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ni00
+  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ni00_full
 
   ! Kinetic spectrum sum_kx,ky(|Napj(z)|^2), (ip,ij,iz)
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: Nepjz

@@ -53,7 +53,7 @@ options.PLAN      = 'xy';
 % options.PLAN      = 'sx';
 options.COMP      = 9;
 % options.TIME      = dat.Ts5D;
-options.TIME      = 920:1:1250;
+options.TIME      = 920:1:1100;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -71,11 +71,11 @@ options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'xz';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
-options.COMP      = 'avg';
-options.TIME      = [900 923 927 990];
+options.COMP      = 9;
+options.TIME      = [900 1000 1100];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 save_figure(data,fig)
