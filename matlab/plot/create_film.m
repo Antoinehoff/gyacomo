@@ -1,6 +1,6 @@
 function create_film(DATA,OPTIONS,format)
 %% Plot options
-FPS = 30; DELAY = 1/FPS;
+FPS = 16; DELAY = 1/FPS;
 BWR = 1; NORMALIZED = 1;
 if ~strcmp(OPTIONS.PLAN,'sx')
     T = DATA.Ts3D;
