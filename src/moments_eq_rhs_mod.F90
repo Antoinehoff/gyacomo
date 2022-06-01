@@ -59,7 +59,7 @@ SUBROUTINE moments_eq_rhs_e
             eo    = MODULO(p_int,2) ! Indicates if we are on odd or even z grid
             kperp2= kparray(iky,ikx,iz,eo)**2
 
-          IF((CLOS .EQ. 1) .AND. (p_int+2*j_int .LE. dmaxe)) THEN
+          IF((CLOS .EQ. 1) .OR. (p_int+2*j_int .LE. dmaxe)) THEN
             !! Compute moments mixing terms
             Tperp = 0._dp; Tpar = 0._dp; Tmir = 0._dp
             ! Perpendicular dynamic
@@ -179,7 +179,7 @@ SUBROUTINE moments_eq_rhs_i
             p_int = parray_i(ip)    ! Hermite degree
             eo    = MODULO(p_int,2) ! Indicates if we are on odd or even z grid
             kperp2= kparray(iky,ikx,iz,eo)**2
-            IF((CLOS .EQ. 1) .AND. (p_int+2*j_int .LE. dmaxi)) THEN
+            IF((CLOS .EQ. 1) .OR. (p_int+2*j_int .LE. dmaxi)) THEN
               !! Compute moments mixing terms
               Tperp = 0._dp; Tpar = 0._dp; Tmir = 0._dp
               ! Perpendicular dynamic
