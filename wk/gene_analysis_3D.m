@@ -1,7 +1,7 @@
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_0.8/';
-% folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.0/';
-folder = '/misc/gene_results/shearless_cyclone/linear_s_alpha_CBC_100/';
+folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.0/';
+% folder = '/misc/gene_results/shearless_cyclone/linear_s_alpha_CBC_100/';
 % folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.5/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_0.8/';
@@ -44,14 +44,14 @@ end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.NAME      = '\phi';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+options.PLAN      = 'xz';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';

@@ -51,9 +51,9 @@ options.NAME      = '\phi';
 options.PLAN      = 'xz';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 9;
+options.COMP      = 'avg';
 % options.TIME      = dat.Ts5D;
-options.TIME      = 920:0.1:1170;
+options.TIME      = 1100:0.1:1170;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')

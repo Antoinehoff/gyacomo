@@ -114,7 +114,7 @@ end
 if 0
 %% Ballooning plot
 options.time_2_plot = data.Ts3D(end);
-options.kymodes     = [0.4 0.5 0.6];
+options.kymodes     = [0.5];
 options.normalized  = 1;
 options.field       = 'phi';
 fig = plot_ballooning(data,options);
