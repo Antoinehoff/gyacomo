@@ -10,9 +10,9 @@ system(['mkdir -p ',MISCDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 system(CMD);
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 07; JOBNUMMAX = 20;
+JOBNUMMIN = 10; JOBNUMMAX = 11;
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
-
+data.localdir = LOCALDIR;
 
 %% PLOTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 default_plots_options
@@ -40,7 +40,7 @@ end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-options.INTERP    = 1;
+options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.NAME      = '\phi';
 % options.NAME      = 'N_i^{00}';
@@ -48,12 +48,12 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xz';
+options.PLAN      = 'yz';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = dat.Ts5D;
-options.TIME      = 1100:0.1:1170;
+options.TIME      = 1250:0.1:1370;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -65,17 +65,17 @@ if 0
 options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = 'n_i';
-% options.NAME      = 'N_i^{00}';
+options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xz';
+options.PLAN      = 'yz';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
-options.COMP      = 9;
-options.TIME      = [1100 1150];
+options.COMP      = 'avg';
+options.TIME      = [1300 1350];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 save_figure(data,fig)
