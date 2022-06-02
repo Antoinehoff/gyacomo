@@ -62,6 +62,8 @@ MODULE basic
               tc_step, tc_clos, tc_ghost, tc_coll, tc_process
   real(dp) :: maxruntime = 1e9 ! Maximum simulation CPU time
 
+  LOGICAL :: GATHERV_OUTPUT = .true.
+
   INTERFACE allocate_array
     MODULE PROCEDURE allocate_array_dp1,allocate_array_dp2,allocate_array_dp3,allocate_array_dp4, allocate_array_dp5, allocate_array_dp6
     MODULE PROCEDURE allocate_array_dc1,allocate_array_dc2,allocate_array_dc3,allocate_array_dc4, allocate_array_dc5, allocate_array_dc6

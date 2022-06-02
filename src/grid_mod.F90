@@ -56,7 +56,7 @@ MODULE grid
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: displs_nkx, displs_nky
   ! "" for p
   INTEGER,             PUBLIC :: local_np_e, local_np_i
-  INTEGER,             PUBLIC :: total_np_e, total_np_i
+  INTEGER,             PUBLIC :: total_np_e, total_np_i, Np_e, Np_i
   integer(C_INTPTR_T), PUBLIC :: local_np_e_offset, local_np_i_offset
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: rcv_p_e, rcv_p_i
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: dsp_p_e, dsp_p_i
@@ -67,7 +67,7 @@ MODULE grid
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: counts_nz
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: displs_nz
   ! "" for j (not parallelized)
-  INTEGER,             PUBLIC :: local_nj_e, local_nj_i
+  INTEGER,             PUBLIC :: local_nj_e, local_nj_i, Nj_e, Nj_i
   ! Grids containing position in fourier space
   REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kxarray, kxarray_full
   REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kyarray, kyarray_full
@@ -163,6 +163,8 @@ CONTAINS
     ! Total number of Hermite polynomials we will evolve
     total_np_e = (Pmaxe/deltape) + 1
     total_np_i = (Pmaxi/deltapi) + 1
+    Np_e = total_np_e ! Reduced names (redundant)
+    Np_i = total_np_i
     ! Build the full grids on process 0 to diagnose it without comm
     ALLOCATE(parray_e_full(1:total_np_e))
     ALLOCATE(parray_i_full(1:total_np_i))
@@ -246,7 +248,9 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER :: ij
-
+    ! Total number of J degrees
+    Nj_e = jmaxe+1
+    Nj_i = jmaxi+1
     ! Build the full grids on process 0 to diagnose it without comm
     ALLOCATE(jarray_e_full(1:jmaxe+1))
     ALLOCATE(jarray_i_full(1:jmaxi+1))
