@@ -186,6 +186,45 @@ CONTAINS
   END SUBROUTINE gather_pjz_i
 
   !!!!! Gather a field in kinetic + spatial coordinates on rank 0 !!!!!
+  !!!!! Gather a field in spatial coordinates on rank 0 !!!!!
+  SUBROUTINE gather_pjxyz_e(field_sub,field_full)
+    COMPLEX(dp), DIMENSION( ips_e:ipe_e, ijs_e:ije_e, ikys:ikye, 1:Nkx, izs:ize), INTENT(IN)    :: field_sub
+    COMPLEX(dp), DIMENSION(1:total_np_e, ijs_e:ije_e,   1:Nky,  1:Nkx,   1:Nz),  INTENT(INOUT) :: field_full
+    COMPLEX(dp), DIMENSION(ips_e:ipe_e)         :: buffer_lp_cy_cz              !local p, constant y, constant z
+    COMPLEX(dp), DIMENSION(1:total_np_e)        :: buffer_fp_cy_cz              ! full p, constant y, constant z
+    COMPLEX(dp), DIMENSION(1:total_np_e, ikys:ikye) :: buffer_fp_ly_cz          ! full p,    local y, constant z
+    COMPLEX(dp), DIMENSION(1:total_np_e,    1:Nky ) :: buffer_fp_fy_cz          ! full p,     full y, constant z
+    COMPLEX(dp), DIMENSION(1:total_np_e,    1:Nky, izs:ize ) :: buffer_fp_fy_lz ! full p,     full y, local    z
+    COMPLEX(dp), DIMENSION(1:total_np_e,    1:Nky,   1:Nz  ) :: buffer_fp_fy_fz ! full p,     full y, full     z
+    INTEGER :: snd_y, snd_z, root_p, root_z, root_ky, ix, iz
+
+    snd_y  = local_nky    ! Number of points to send along y (per z)
+    snd_z  = Nky*local_nz ! Number of points to send along z (full y)
+
+    root_p = 0; root_z = 0; root_ky = 0
+    IF(rank_p .EQ. root_p) THEN
+      DO ix = 1,Nkx
+        DO iz = izs,ize
+          ! fill a buffer to contain a slice of data at constant kx and z
+          buffer_ly_cz(ikys:ikye) = field_sub(ikys:ikye,ix,iz)
+          CALL MPI_GATHERV(buffer_ly_cz, snd_y,        MPI_DOUBLE_COMPLEX, &
+                           buffer_fy_cz, rcv_y, dsp_y, MPI_DOUBLE_COMPLEX, &
+                           root_ky, comm_ky, ierr)
+          buffer_fy_lz(1:Nky,iz) = buffer_fy_cz(1:Nky)
+        ENDDO
+
+        ! send the full line on y contained by root_kyas
+        IF(rank_ky .EQ. 0) THEN
+          CALL MPI_GATHERV(buffer_fy_lz, snd_z,        MPI_DOUBLE_COMPLEX, &
+                           buffer_fy_fz, rcv_zy, dsp_zy, MPI_DOUBLE_COMPLEX, &
+                           root_z, comm_z, ierr)
+        ENDIF
+        ! ID 0 (the one who output) rebuild the whole array
+        IF(my_id .EQ. 0) &
+          field_full(1:Nky,ix,1:Nz) = buffer_fy_fz(1:Nky,1:Nz)
+      ENDDO
+    ENDIF
+  END SUBROUTINE gather_pjxyz
 
   !!!!! This is a manual way to do MPI_BCAST !!!!!!!!!!!
   SUBROUTINE manual_3D_bcast(field_)
