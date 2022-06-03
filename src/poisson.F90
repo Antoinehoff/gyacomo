@@ -7,7 +7,7 @@ SUBROUTINE poisson
   USE fields
   USE grid
   USE calculus, ONLY : simpson_rule_z
-  USE utility,  ONLY : manual_3D_bcast
+  USE parallel,  ONLY : manual_3D_bcast
   use model, ONLY : qe2_taue, qi2_taui, q_e, q_i, lambdaD, KIN_E
   USE processing, ONLY : compute_density
   USE prec_const

@@ -48,16 +48,18 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED  ::  izgs, izge ! ghosts
   LOGICAL,  PUBLIC, PROTECTED  ::  SG = .true.! shifted grid flag
   INTEGER,  PUBLIC :: ir,iz ! counters
-  ! Data about parallel distribution for kx
+  ! Data about parallel distribution for ky.kx
   integer(C_INTPTR_T), PUBLIC :: local_nkx, local_nky
   integer(C_INTPTR_T), PUBLIC :: local_nkx_offset, local_nky_offset
   INTEGER,             PUBLIC :: local_nkp
+  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: counts_nkx, counts_nky
+  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: displs_nkx, displs_nky
   ! "" for p
   INTEGER,             PUBLIC :: local_np_e, local_np_i
-  INTEGER,             PUBLIC :: total_np_e, total_np_i
+  INTEGER,             PUBLIC :: total_np_e, total_np_i, Np_e, Np_i
   integer(C_INTPTR_T), PUBLIC :: local_np_e_offset, local_np_i_offset
-  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: counts_np_e, counts_np_i
-  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: displs_np_e, displs_np_i
+  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: rcv_p_e, rcv_p_i
+  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: dsp_p_e, dsp_p_i
   ! "" for z
   INTEGER,             PUBLIC :: local_nz
   INTEGER,             PUBLIC :: total_nz
@@ -65,7 +67,7 @@ MODULE grid
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: counts_nz
   INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC :: displs_nz
   ! "" for j (not parallelized)
-  INTEGER,             PUBLIC :: local_nj_e, local_nj_i
+  INTEGER,             PUBLIC :: local_nj_e, local_nj_i, Nj_e, Nj_i
   ! Grids containing position in fourier space
   REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kxarray, kxarray_full
   REAL(dp), DIMENSION(:),     ALLOCATABLE, PUBLIC :: kyarray, kyarray_full
@@ -161,6 +163,8 @@ CONTAINS
     ! Total number of Hermite polynomials we will evolve
     total_np_e = (Pmaxe/deltape) + 1
     total_np_i = (Pmaxi/deltapi) + 1
+    Np_e = total_np_e ! Reduced names (redundant)
+    Np_i = total_np_i
     ! Build the full grids on process 0 to diagnose it without comm
     ALLOCATE(parray_e_full(1:total_np_e))
     ALLOCATE(parray_i_full(1:total_np_i))
@@ -177,17 +181,17 @@ CONTAINS
     ipgs_e = ips_e - 2/deltape; ipge_e = ipe_e + 2/deltape;
     ipgs_i = ips_i - 2/deltapi; ipge_i = ipe_i + 2/deltapi;
     ! List of shift and local numbers between the different processes (used in scatterv and gatherv)
-    ALLOCATE(counts_np_e (1:num_procs_p))
-    ALLOCATE(counts_np_i (1:num_procs_p))
-    ALLOCATE(displs_np_e (1:num_procs_p))
-    ALLOCATE(displs_np_i (1:num_procs_p))
+    ALLOCATE(rcv_p_e (1:num_procs_p))
+    ALLOCATE(rcv_p_i (1:num_procs_p))
+    ALLOCATE(dsp_p_e (1:num_procs_p))
+    ALLOCATE(dsp_p_i (1:num_procs_p))
     DO in = 0,num_procs_p-1
       CALL decomp1D(total_np_e, num_procs_p, in, istart, iend)
-      counts_np_e(in+1) = iend-istart+1
-      displs_np_e(in+1) = istart-1
+      rcv_p_e(in+1) = iend-istart+1
+      dsp_p_e(in+1) = istart-1
       CALL decomp1D(total_np_i, num_procs_p, in, istart, iend)
-      counts_np_i(in+1) = iend-istart+1
-      displs_np_i(in+1) = istart-1
+      rcv_p_i(in+1) = iend-istart+1
+      dsp_p_i(in+1) = istart-1
     ENDDO
 
     ! local grid computation
@@ -244,7 +248,9 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER :: ij
-
+    ! Total number of J degrees
+    Nj_e = jmaxe+1
+    Nj_i = jmaxi+1
     ! Build the full grids on process 0 to diagnose it without comm
     ALLOCATE(jarray_e_full(1:jmaxe+1))
     ALLOCATE(jarray_i_full(1:jmaxi+1))
@@ -275,7 +281,7 @@ CONTAINS
     USE prec_const
     USE model, ONLY: LINEARITY
     IMPLICIT NONE
-    INTEGER :: i_
+    INTEGER :: i_, in, istart, iend
     Nky = Ny/2+1 ! Defined only on positive kx since fields are real
     ! Grid spacings
     IF (Ny .EQ. 1) THEN
@@ -297,6 +303,14 @@ CONTAINS
     ikye = ikys + local_nky - 1
     ALLOCATE(kyarray(ikys:ikye))
     local_kymax = 0._dp
+    ! List of shift and local numbers between the different processes (used in scatterv and gatherv)
+    ALLOCATE(counts_nky (1:num_procs_ky))
+    ALLOCATE(displs_nky (1:num_procs_ky))
+    DO in = 0,num_procs_ky-1
+      CALL decomp1D(Nky, num_procs_ky, in, istart, iend)
+      counts_nky(in+1) = iend-istart+1
+      displs_nky(in+1) = istart-1
+    ENDDO
     ! Creating a grid ordered as dk*(0 1 2 3)
     DO iky = ikys,ikye
       kyarray(iky) = REAL(iky-1,dp) * deltaky
@@ -395,6 +409,7 @@ CONTAINS
 
   SUBROUTINE set_zgrid
     USE prec_const
+    USE model, ONLY: mu_z
     IMPLICIT NONE
     INTEGER :: i_, fid
     REAL    :: grid_shift, Lz
@@ -405,9 +420,12 @@ CONTAINS
     ! Z stepping (#interval = #points since periodic)
     deltaz        = Lz/REAL(Nz,dp)
     inv_deltaz    = 1._dp/deltaz
-    diff_dz_coeff = -(deltaz/2._dp)**4 ! adaptive fourth derivative
-    ! non adaptive
-    ! diff_dz_coeff = -1._dp
+    ! Parallel hyperdiffusion coefficient
+    IF(mu_z .GT. 0) THEN
+      diff_dz_coeff = -(deltaz/2._dp)**4 ! adaptive fourth derivative (~GENE)
+    ELSE
+      diff_dz_coeff = 1._dp    ! non adaptive (positive sign to compensate mu_z neg)
+    ENDIF
     IF (SG) THEN
       grid_shift = deltaz/2._dp
     ELSE

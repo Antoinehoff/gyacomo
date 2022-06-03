@@ -39,13 +39,11 @@ CONTAINS
         ENDIF
         CALL getatt(fidrst,"/data/input/" , "pmaxi", pmaxi_cp)
         CALL getatt(fidrst,"/data/input/" , "jmaxi", jmaxi_cp)
-        IF (my_id .EQ. 0) WRITE(*,*) "Pi_cp = ", pmaxi_cp
-        IF (my_id .EQ. 0) WRITE(*,*) "Ji_cp = ", jmaxi_cp
         CALL getatt(fidrst,"/data/input/" , "start_iframe5d", n0)
 
         IF ((KIN_E .AND. ((pmaxe_cp .NE. pmaxe) .OR. (jmaxe_cp .NE. jmaxe))) .OR.&
          (pmaxi_cp .NE. pmaxi) .OR. (jmaxi_cp .NE. jmaxi)) THEN
-         IF(my_id.EQ.0)WRITE(*,*) '! Extending the polynomials basis !'
+         IF(my_id.EQ.0) WRITE(*,*) '! Extending the polynomials basis !'
          CALL load_output_adapt_pj
         ELSE
 

@@ -83,9 +83,9 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
     toplot = process_field(DATA,OPTIONS);
     f2plot = toplot.FIELD;
     
-    clim = max(max(max(abs(plt(f2plot(:,:,its3D:ite3D))))));
+    clim = max(max(max(abs(plt(f2plot(:,:,:))))));
     subplot(313)
-        [TY,TX] = meshgrid(DATA.x,DATA.Ts3D);
+        [TY,TX] = meshgrid(DATA.x,DATA.Ts3D(toplot.FRAMES));
         pclr = pcolor(TX,TY,squeeze(plt(f2plot))'); 
         set(pclr, 'edgecolor','none'); 
         legend(['$\langle ',OPTIONS.ST_FIELD,' \rangle_{y,z}$']) %colorbar;
@@ -103,14 +103,14 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
 %% Zonal vs NZonal energies    
     subplot(312)
     it0 = 1; itend = Ns3D;
-    trange = it0:itend;
+    trange = toplot.FRAMES;
     plt1 = @(x) x;%-x(1);
-    plt2 = @(x) x./max((x(its3D:ite3D)));
+    plt2 = @(x) x./max((x(:)));
     toplot = sum(squeeze(plt(f2plot)).^2,1); %ST from before
 %     plty = @(x) x(500:end)./max(squeeze(x(500:end)));
         yyaxis left
 %         plot(plt1(DATA.Ts3D(trange)),plt2(E_Zmode_SK(trange)),'DisplayName','$k_{zf}^2|\phi_{kzf}|^2$');
-        plot(plt1(DATA.Ts3D(trange)),plt2(toplot(trange)),'DisplayName','Sum $A^2$');
+        plot(plt1(DATA.Ts3D(trange)),plt2(toplot(:)),'DisplayName','Sum $A^2$');
         ylim([-0.1, 1.5]); ylabel('$E_{Z}$')
         yyaxis right
         plot(plt1(DATA.Ts3D(trange)),plt2(E_NZmode_SK(trange)),'DisplayName','$(1+k^2)|\phi^k|^2$');

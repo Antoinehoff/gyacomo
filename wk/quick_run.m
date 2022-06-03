@@ -113,7 +113,7 @@ end
 
 if 1
 %% Ballooning plot
-options.time_2_plot = data.Ts3D(end);
+options.time_2_plot = [0.9 1]*data.Ts3D(end);
 options.kymodes     = [0.5];
 options.normalized  = 1;
 options.sheared     = 0;

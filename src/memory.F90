@@ -124,4 +124,5 @@ SUBROUTINE memory
       ENDIF
       CALL allocate_array(  Ciipj, 1,(pmaxi+1)*(jmaxi+1), 1,(pmaxi+1)*(jmaxi+1), 1,1, 1,1, 1,1)
  ENDIF
+
 END SUBROUTINE memory

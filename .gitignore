@@ -38,3 +38,4 @@ src/srcinfo/srcinfo.h
 local/
 */*.sh
 Gallery/
+.vscode/settings.json

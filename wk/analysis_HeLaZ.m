@@ -10,9 +10,9 @@ system(['mkdir -p ',MISCDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 system(CMD);
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 20;
+JOBNUMMIN = 10; JOBNUMMAX = 20;
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
-data.FIGDIR = LOCALDIR;
+data.localdir = LOCALDIR;
 
 %% PLOTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 default_plots_options
@@ -21,7 +21,7 @@ FMT = '.fig';
 
 if 0
 %% Space time diagramm (fig 11 Ivanov 2020)
-options.TAVG_0   = 0.8*data.Ts3D(end); 
+options.TAVG_0   = 0.98*data.Ts3D(end);
 options.TAVG_1   = data.Ts3D(end); % Averaging times duration
 options.NMVA     = 1;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
@@ -48,12 +48,12 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'yz';
+options.PLAN      = 'xz';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = dat.Ts5D;
-options.TIME      = 700:1:960;
+options.TIME      = 1250:1:1500;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -71,11 +71,11 @@ options.NAME      = '\phi';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'yz';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
-options.COMP      = 1;
-options.TIME      =[800 900 950];
+options.COMP      = 'avg';
+options.TIME      = [1200 1300 1400 1500];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 save_figure(data,fig)
@@ -97,8 +97,8 @@ if 0
 % options.XPERP     = linspace( 0,6,64);
 options.SPAR      = gene_data.vp';
 options.XPERP     = gene_data.mu';
-options.iz        = 'avg';
-options.T         = 1000;
+options.iz        = 9;
+options.T         = 30;
 options.PLT_FCT   = 'contour';
 options.ONED      = 0;
 options.non_adiab = 1;
@@ -111,12 +111,12 @@ end
 if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
-options.P2J        = 0;
-options.ST         = 1;
+options.P2J        = 1;
+options.ST         = 0;
 options.PLOT_TYPE  = 'space-time';
 options.NORMALIZED = 1;
 options.JOBNUM     = 0;
-options.TIME       = [900 950];
+options.TIME       = [1300 1500];
 options.specie     = 'i';
 options.compz      = 'avg';
 fig = show_moments_spectrum(data,options);
@@ -162,7 +162,7 @@ if 0
 %% Mode evolution
 options.NORMALIZED = 1;
 options.K2PLOT = 1;
-options.TIME   = [0.5 1]*data.Ts3D(end);
+options.TIME   = 5:30;
 options.NMA    = 1;
 options.NMODES = 15;
 options.iz     = 9;

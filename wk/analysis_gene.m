@@ -1,8 +1,7 @@
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_0.8/';
-folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.2/';
+folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/linear_s_alpha_CBC_100/';
-% folder = '/misc/gene_results/shearless_cyclone/allmodes_CBC_100/';
 % folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.5/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_0.8/';
@@ -12,7 +11,7 @@ gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-options.TAVG_0   = 0.8*gene_data.Ts3D(end); 
+options.TAVG_0   = 0.8*gene_data.Ts3D(end);
 options.TAVG_1   = gene_data.Ts3D(end); % Averaging times duration
 options.NMVA     = 1;              % Moving average for time traces
 options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x, Q_x)
@@ -46,14 +45,14 @@ end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.NAME      = '\phi';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+options.PLAN      = 'xz';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -73,7 +72,7 @@ subplot(311)
     plot(gene_data.z, gene_data.geo_arrays(:,i),'DisplayName',names{i}); hold on;
     end
     xlim([min(gene_data.z),max(gene_data.z)]); legend('show'); title('GENE geometry');
-    
+
 subplot(312)
     for i = 7:10
     plot(gene_data.z, gene_data.geo_arrays(:,i),'DisplayName',names{i}); hold on;

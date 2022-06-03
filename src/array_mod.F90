@@ -63,7 +63,6 @@ MODULE array
   ! Poisson operator (ikx,iky,iz)
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_poisson_op
 
-  !! Diagnostics
   ! Gyrocenter density for electron and ions (ikx,iky,iz)
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ne00
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ni00

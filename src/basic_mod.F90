@@ -12,12 +12,17 @@ MODULE basic
   real(dp) :: time   = 0           ! Current simulation time (Init from restart file)
 
   INTEGER :: comm0                 ! Default communicator with a topology
+  INTEGER :: group0                ! Default group with a topology
   INTEGER :: rank_0                ! Ranks in comm0
   ! Communicators for 1-dim cartesian subgrids of comm0
   INTEGER :: comm_p, comm_ky, comm_z
   INTEGER :: rank_p, rank_ky, rank_z! Ranks
   INTEGER :: comm_pz,  rank_pz      ! 2D comm for N_a(p,j,z) output (mspfile)
   INTEGER :: comm_kyz, rank_kyz     ! 2D comm for N_a(p,j,z) output (mspfile)
+  INTEGER :: comm_ky0, rank_ky0     ! comm along ky with p=0
+  INTEGER :: comm_z0,  rank_z0      ! comm along z  with p=0
+
+  INTEGER :: group_ky0, group_z0
 
   INTEGER :: jobnum  = 0           ! Job number
   INTEGER :: step    = 0           ! Calculation step of this run
@@ -31,6 +36,8 @@ MODULE basic
   INTEGER :: num_procs_p           ! Number of processes in p
   INTEGER :: num_procs_ky          ! Number of processes in r
   INTEGER :: num_procs_z           ! Number of processes in z
+  INTEGER :: num_procs_pz          ! Number of processes in pz comm
+  INTEGER :: num_procs_kyz         ! Number of processes in kyz comm
   INTEGER :: nbr_L, nbr_R          ! Left and right neighbours (along p)
   INTEGER :: nbr_T, nbr_B          ! Top and bottom neighbours (along kx)
   INTEGER :: nbr_U, nbr_D          ! Upstream and downstream neighbours (along z)
@@ -54,6 +61,8 @@ MODULE basic
   real(dp) :: tc_rhs, tc_adv_field, tc_poisson, tc_Sapj, tc_diag, tc_checkfield,&
               tc_step, tc_clos, tc_ghost, tc_coll, tc_process
   real(dp) :: maxruntime = 1e9 ! Maximum simulation CPU time
+
+  LOGICAL :: GATHERV_OUTPUT = .true.
 
   INTERFACE allocate_array
     MODULE PROCEDURE allocate_array_dp1,allocate_array_dp2,allocate_array_dp3,allocate_array_dp4, allocate_array_dp5, allocate_array_dp6
@@ -159,22 +168,22 @@ CONTAINS
       hours = (time/3600./24. - days) * 24
       mins  = (time/3600. - days*24. - hours) * 60
       secs  = (time/60. - days*24.*60 - hours*60 - mins) * 60
-      WRITE(*,*) 'CPU Time = ', days, '[day]', hours, '[h]', mins, '[min]', secs, '[s]'
-      WRITE(*,*) '(',time,'[s])'
+      IF (my_id .EQ. 0) WRITE(*,*) 'CPU Time = ', days, '[day]', hours, '[h]', mins, '[min]', secs, '[s]'
+      IF (my_id .EQ. 0) WRITE(*,*) '(',time,'[s])'
 
     ELSEIF ( hours .GT. 0 ) THEN !display h min s
       mins  = (time/3600. - hours) * 60
       secs  = (time/60. - hours*60 - mins) * 60
-      WRITE(*,*) 'CPU Time = ', hours, '[h]', mins, '[min]', secs, '[s]'
-      WRITE(*,*) '(',time,'[s])'
+      IF (my_id .EQ. 0) WRITE(*,*) 'CPU Time = ', hours, '[h]', mins, '[min]', secs, '[s]'
+      IF (my_id .EQ. 0) WRITE(*,*) '(',time,'[s])'
 
     ELSEIF ( mins .GT. 0 ) THEN !display min s
       secs  = (time/60. - mins) * 60
-      WRITE(*,*) 'CPU Time = ', mins, '[min]', secs, '[s]'
-      WRITE(*,*) '(',time,'[s])'
+      IF (my_id .EQ. 0) WRITE(*,*) 'CPU Time = ', mins, '[min]', secs, '[s]'
+      IF (my_id .EQ. 0) WRITE(*,*) '(',time,'[s])'
 
     ELSE ! display s
-      WRITE(*,*) 'CPU Time = ', FLOOR(time), '[s]'
+      IF (my_id .EQ. 0) WRITE(*,*) 'CPU Time = ', FLOOR(time), '[s]'
 
     ENDIF
   END SUBROUTINE display_h_min_s
