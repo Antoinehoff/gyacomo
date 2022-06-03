@@ -16,11 +16,11 @@ subroutine auxval
   IF (my_id .EQ. 0) WRITE(*,*) '=== Set auxiliary values ==='
 
   IF (LINEARITY .NE. 'linear') THEN
-    write(*,*) 'FFTW3 y-grid distribution'
+    IF (my_id .EQ. 0) write(*,*) 'FFTW3 y-grid distribution'
     CALL init_grid_distr_and_plans(Nx,Ny)
   ELSE
     CALL init_1Dgrid_distr
-    write(*,*) 'Manual y-grid distribution'
+    IF (my_id .EQ. 0) write(*,*) 'Manual y-grid distribution'
   ENDIF
   ! Init the grids
   CALL set_pgrid ! parallel kin (MPI distributed)
@@ -86,11 +86,5 @@ subroutine auxval
   write(*,*) 'Closure = 1 -> Maximal Nepj degree is min(Pmaxe,2*Jmaxe+1): De = ', dmaxi
   write(*,*) 'Closure = 1 -> Maximal Nipj degree is min(Pmaxi,2*Jmaxi+1): Di = ', dmaxi
   ENDIF
-  DO ip = ips_i,ipe_i
-    DO ij = ijs_i,ije_i
-      IF((parray_i(ip)+2*jarray_i(ij) .LE. dmaxi) .AND. (rank_ky + rank_z .EQ. 0))&
-      print*, '(',parray_i(ip),',',jarray_i(ij),')'
-    ENDDO
-  ENDDO
 
 END SUBROUTINE auxval

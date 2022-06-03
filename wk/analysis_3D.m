@@ -10,7 +10,7 @@ system(['mkdir -p ',MISCDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 system(CMD);
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 10; JOBNUMMAX = 11;
+JOBNUMMIN = 10; JOBNUMMAX = 20;
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 data.localdir = LOCALDIR;
 
@@ -40,7 +40,7 @@ end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.NAME      = '\phi';
 % options.NAME      = 'N_i^{00}';
@@ -48,12 +48,12 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'yz';
+options.PLAN      = 'xz';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = dat.Ts5D;
-options.TIME      = 1250:0.1:1370;
+options.TIME      = 1250:1:1500;
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -65,17 +65,17 @@ if 0
 options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
-% options.NAME      = '\phi';
+options.NAME      = '\phi';
 % options.NAME      = 'n_i';
-options.NAME      = 'N_i^{00}';
+% options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'yz';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [1300 1350];
+options.TIME      = [1200 1300 1400 1500];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 save_figure(data,fig)
@@ -114,11 +114,11 @@ if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
 options.P2J        = 1;
-options.ST         = 1;
+options.ST         = 0;
 options.PLOT_TYPE  = 'space-time';
 options.NORMALIZED = 1;
 options.JOBNUM     = 0;
-options.TIME       = [1100 1150];
+options.TIME       = [1300 1500];
 options.specie     = 'i';
 options.compz      = 'avg';
 fig = show_moments_spectrum(data,options);

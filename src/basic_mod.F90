@@ -168,22 +168,22 @@ CONTAINS
       hours = (time/3600./24. - days) * 24
       mins  = (time/3600. - days*24. - hours) * 60
       secs  = (time/60. - days*24.*60 - hours*60 - mins) * 60
-      WRITE(*,*) 'CPU Time = ', days, '[day]', hours, '[h]', mins, '[min]', secs, '[s]'
-      WRITE(*,*) '(',time,'[s])'
+      IF (my_id .EQ. 0) WRITE(*,*) 'CPU Time = ', days, '[day]', hours, '[h]', mins, '[min]', secs, '[s]'
+      IF (my_id .EQ. 0) WRITE(*,*) '(',time,'[s])'
 
     ELSEIF ( hours .GT. 0 ) THEN !display h min s
       mins  = (time/3600. - hours) * 60
       secs  = (time/60. - hours*60 - mins) * 60
-      WRITE(*,*) 'CPU Time = ', hours, '[h]', mins, '[min]', secs, '[s]'
-      WRITE(*,*) '(',time,'[s])'
+      IF (my_id .EQ. 0) WRITE(*,*) 'CPU Time = ', hours, '[h]', mins, '[min]', secs, '[s]'
+      IF (my_id .EQ. 0) WRITE(*,*) '(',time,'[s])'
 
     ELSEIF ( mins .GT. 0 ) THEN !display min s
       secs  = (time/60. - mins) * 60
-      WRITE(*,*) 'CPU Time = ', mins, '[min]', secs, '[s]'
-      WRITE(*,*) '(',time,'[s])'
+      IF (my_id .EQ. 0) WRITE(*,*) 'CPU Time = ', mins, '[min]', secs, '[s]'
+      IF (my_id .EQ. 0) WRITE(*,*) '(',time,'[s])'
 
     ELSE ! display s
-      WRITE(*,*) 'CPU Time = ', FLOOR(time), '[s]'
+      IF (my_id .EQ. 0) WRITE(*,*) 'CPU Time = ', FLOOR(time), '[s]'
 
     ENDIF
   END SUBROUTINE display_h_min_s

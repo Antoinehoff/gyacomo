@@ -45,7 +45,6 @@ CONTAINS
     DO i_=1,num_procs_z-1
        dsp_zy(i_) =dsp_zy(i_-1) + rcv_zy(i_-1)
     END DO
-    print*, rcv_zy, dsp_zy
 
     !!!!! PJZ gather variables
     ! IONS
