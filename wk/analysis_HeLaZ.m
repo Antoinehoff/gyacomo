@@ -13,15 +13,16 @@ system(CMD);
 JOBNUMMIN = 10; JOBNUMMAX = 20;
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 data.localdir = LOCALDIR;
+data.FIGDIR   = LOCALDIR;
 
 %% PLOTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 default_plots_options
 disp('Plots')
 FMT = '.fig';
 
-if 0
+if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-options.TAVG_0   = 0.98*data.Ts3D(end);
+options.TAVG_0   = 0.98*data.Ts3D(end); 
 options.TAVG_1   = data.Ts3D(end); % Averaging times duration
 options.NMVA     = 1;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
@@ -81,14 +82,16 @@ fig = photomaton(data,options);
 save_figure(data,fig)
 end
 
-if 1
-%% Ballooning plot
-options.time_2_plot = [800 900];
-options.kymodes     = [0.5];
-options.normalized  = 1;
-options.sheared     = 0;
-options.field       = 'phi';
-fig = plot_ballooning(data,options);
+if 0
+%% 3D plot on the geometry
+options.INTERP    = 1;
+options.NAME      = 'n_i';
+options.PLANES    = [1:2:12];
+options.TIME      = [60];
+options.PLT_MTOPO = 1;
+data.rho_o_R      = 2e-3; % Sound larmor radius over Machine size ratio
+fig = show_geometry(data,options);
+save_figure(data,fig)
 end
 
 if 0
@@ -116,7 +119,7 @@ options.ST         = 0;
 options.PLOT_TYPE  = 'space-time';
 options.NORMALIZED = 1;
 options.JOBNUM     = 0;
-options.TIME       = [1300 1500];
+options.TIME       = [1300 1400];
 options.specie     = 'i';
 options.compz      = 'avg';
 fig = show_moments_spectrum(data,options);
@@ -160,19 +163,19 @@ end
 
 if 0
 %% Mode evolution
-options.NORMALIZED = 1;
+options.NORMALIZED = 0;
 options.K2PLOT = 1;
-options.TIME   = 5:30;
+options.TIME   = 1200:1300;
 options.NMA    = 1;
 options.NMODES = 15;
 options.iz     = 9;
 fig = mode_growth_meter(data,options);
-save_figure(gbms_dat,fig)
+save_figure(data,fig)
 end
 
 if 0
 %% ZF caracteristics (space time diagrams)
-TAVG_0 = 200; TAVG_1 = 3000; % Averaging times duration
+TAVG_0 = 1200; TAVG_1 = 1500; % Averaging times duration
 % chose your field to plot in spacetime diag (uzf,szf,Gx)
 fig = ZF_spacetime(data,TAVG_0,TAVG_1);
 save_figure(data,fig)
@@ -198,17 +201,5 @@ options.kxky = 1;
 options.kzkx = 0;
 options.kzky = 1;
 [lg, fig] = compute_3D_zpinch_growth_rate(data,trange,options);
-save_figure(data,fig)
-end
-
-if 0
-%% 3D plot on the geometry
-options.INTERP    = 1;
-options.NAME      = 'n_i';
-options.PLANES    = [1:2:12];
-options.TIME      = [60];
-options.PLT_MTOPO = 1;
-data.rho_o_R      = 2e-3; % Sound larmor radius over Machine size ratio
-fig = show_geometry(data,options);
 save_figure(data,fig)
 end
