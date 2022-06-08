@@ -17,6 +17,7 @@ SUBROUTINE memory
   CALL allocate_array(        phi_ZF, ikxs,ikxe, izs,ize)
   CALL allocate_array(        phi_EM, ikys,ikye, izs,ize)
   CALL allocate_array(inv_poisson_op, ikys,ikye, ikxs,ikxe, izs,ize)
+  CALL allocate_array(   inv_pol_ion, ikys,ikye, ikxs,ikxe, izs,ize)
 
   !Electrons arrays
   IF(KIN_E) THEN

@@ -94,7 +94,7 @@ END SUBROUTINE evaluate_kernels
 !******************************************************************************!
 SUBROUTINE evaluate_poisson_op
   USE basic
-  USE array, Only : kernel_e, kernel_i, inv_poisson_op
+  USE array, Only : kernel_e, kernel_i, inv_poisson_op, inv_pol_ion
   USE grid
   USE model, ONLY : tau_e, tau_i, q_e, q_i, KIN_E
   IMPLICIT NONE
@@ -125,9 +125,10 @@ SUBROUTINE evaluate_poisson_op
       END DO
     ! Adiabatic model
     ELSE
-      pol_e = 1._dp - qe2_taue
+      pol_e = qe2_taue - 1._dp
     ENDIF
     inv_poisson_op(iky, ikx, iz) =  1._dp/(qe2_taue + qi2_taui - pol_i - pol_e)
+    inv_pol_ion   (iky, ikx, iz) =  1._dp/(qi2_taui - pol_i)
   ENDIF
   END DO zloop
   END DO kyloop
