@@ -10,7 +10,7 @@ system(['mkdir -p ',MISCDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 system(CMD);
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 10; JOBNUMMAX = 20;
+JOBNUMMIN = 15; JOBNUMMAX = 16;
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 data.localdir = LOCALDIR;
 data.FIGDIR   = LOCALDIR;
@@ -49,12 +49,12 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xz';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 'avg';
+options.COMP      = 9;
 % options.TIME      = dat.Ts5D;
-options.TIME      = 1250:1:1500;
+options.TIME      = [1800:1:2000];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -63,7 +63,7 @@ end
 if 0
 %% 2D snapshots
 % Options
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
 options.NAME      = '\phi';
@@ -72,11 +72,11 @@ options.NAME      = '\phi';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [1200 1300 1400 1500];
+options.TIME      = [1600 1800 2000];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 save_figure(data,fig)
@@ -165,10 +165,10 @@ if 0
 %% Mode evolution
 options.NORMALIZED = 0;
 options.K2PLOT = 1;
-options.TIME   = 1200:1300;
+options.TIME   = 1800:2000;
 options.NMA    = 1;
 options.NMODES = 15;
-options.iz     = 9;
+options.iz     = 'avg';
 fig = mode_growth_meter(data,options);
 save_figure(data,fig)
 end

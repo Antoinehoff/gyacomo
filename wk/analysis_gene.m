@@ -16,7 +16,7 @@ options.TAVG_1   = gene_data.Ts3D(end); % Averaging times duration
 options.NMVA     = 1;              % Moving average for time traces
 options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x, Q_x)
 options.INTERP   = 1;
-gene_data.FIGDIR = folder;;
+gene_data.FIGDIR = folder;
 fig = plot_radial_transport_and_spacetime(gene_data,options);
 save_figure(gene_data,fig)
 end
@@ -32,11 +32,11 @@ options.NAME      = '\phi';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      ='f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 9;
-options.TIME      = [0 50 100 200 300];
+options.COMP      = 'avg';
+options.TIME      = [500];
 gene_data.a = data.EPS * 2000;
 fig = photomaton(gene_data,options);
 save_figure(gene_data,fig)
@@ -52,11 +52,11 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xz';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = 000:300;
+options.TIME      = gene_data.Ts3D;
 gene_data.a = data.EPS * 2000;
 create_film(gene_data,options,'.gif')
 end
@@ -104,10 +104,10 @@ if 0
 %% Mode evolution
 options.NORMALIZED = 0;
 options.K2PLOT = 1;
-options.TIME   = 100:200;
+options.TIME   = 100:700;
 options.NMA    = 1;
 options.NMODES = 15;
-options.iz     = 9;
+options.iz     = 'avg';
 fig = mode_growth_meter(gene_data,options);
 save_figure(gene_data,fig)
 end

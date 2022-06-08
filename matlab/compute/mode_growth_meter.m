@@ -3,8 +3,12 @@ function [FIGURE] = mode_growth_meter(DATA,OPTIONS)
 NORMALIZED = OPTIONS.NORMALIZED;
 Nma   = OPTIONS.NMA; %Number moving average
 
-iz = OPTIONS.iz;
-[~,ikzf] = max(squeeze(mean(abs(squeeze(DATA.PHI(1,:,iz,:))),2)));
+switch OPTIONS.iz
+    case 'avg'
+        field = squeeze(mean(DATA.PHI,3));
+    otherwise
+        field = squeeze(DATA.PHI(:,:,OPTIONS.iz,:));
+end
 
 FRAMES = zeros(size(OPTIONS.TIME));
 for i = 1:numel(OPTIONS.TIME)
@@ -13,6 +17,8 @@ end
 FRAMES = unique(FRAMES);
 t  = DATA.Ts3D(FRAMES);
 
+[~,ikzf] = max(mean(squeeze(abs(field(1,:,FRAMES))),2));
+
 FIGURE.fig = figure; set(gcf, 'Position',  [100 100 1200 700])
 FIGURE.FIGNAME = 'mode_growth_meter';
 for i = 1:2
@@ -20,27 +26,27 @@ for i = 1:2
 
     if MODES_SELECTOR == 2
         if NORMALIZED
-            plt = @(x,ik) movmean(abs(squeeze(x(1,ik,iz,FRAMES)))./max(abs(squeeze(x(1,ik,iz,FRAMES)))),Nma);
+            plt = @(x,ik) movmean(abs(squeeze(x(1,ik,FRAMES)))./max(abs(squeeze(x(1,ik,FRAMES)))),Nma);
         else
-            plt = @(x,ik) movmean(abs(squeeze(x(1,ik,iz,FRAMES))),Nma);
+            plt = @(x,ik) movmean(abs(squeeze(x(1,ik,FRAMES))),Nma);
         end
         kstr = 'k_x';
         k = DATA.kx;
         MODESTR = 'Zonal modes';
     elseif MODES_SELECTOR == 1
         if NORMALIZED
-            plt = @(x,ik) movmean(abs(squeeze(x(ik,1,iz,FRAMES)))./max(abs(squeeze(x(ik,1,iz,FRAMES)))),Nma);
+            plt = @(x,ik) movmean(abs(squeeze(x(ik,1,FRAMES)))./max(abs(squeeze(x(ik,1,FRAMES)))),Nma);
         else
-            plt = @(x,ik) movmean(abs(squeeze(x(ik,1,iz,FRAMES))),Nma);
+            plt = @(x,ik) movmean(abs(squeeze(x(ik,1,FRAMES))),Nma);
         end
         kstr = 'k_y';
         k = DATA.ky;
         MODESTR = 'NZ modes';
     elseif MODES_SELECTOR == 3
         if NORMALIZED
-            plt = @(x,ik) movmean(abs(squeeze(x(ik,ik,iz,FRAMES)))./max(abs(squeeze(x(ik,ik,iz,FRAMES)))),Nma);
+            plt = @(x,ik) movmean(abs(squeeze(x(ik,ik,FRAMES)))./max(abs(squeeze(x(ik,ik,FRAMES)))),Nma);
         else
-            plt = @(x,ik) movmean(abs(squeeze(x(ik,ik,iz,FRAMES))),Nma);
+            plt = @(x,ik) movmean(abs(squeeze(x(ik,ik,FRAMES))),Nma);
         end
         kstr = 'k_y=k_x';
         k = DATA.ky;
@@ -60,7 +66,7 @@ for i = 1:2
     amp   = MODES;
     i_=1;
     for ik = MODES
-        gr = polyfit(t,log(plt(DATA.PHI,ik)),1);
+        gr = polyfit(t,log(plt(field,ik)),1);
         gamma(i_) = gr(1);
         amp(i_)   = gr(2);
         i_=i_+1;
@@ -69,7 +75,7 @@ for i = 1:2
     %plot
     subplot(2,3,1+3*(i-1))
         [YY,XX] = meshgrid(t,fftshift(k));
-        pclr = pcolor(XX,YY,abs(plt(fftshift(DATA.PHI,MODES_SELECTOR),1:numel(k))));set(pclr, 'edgecolor','none');  hold on;
+        pclr = pcolor(XX,YY,abs(plt(fftshift(field,MODES_SELECTOR),1:numel(k))));set(pclr, 'edgecolor','none');  hold on;
         set(gca,'YDir','normal')
     %     xlim([t(1) t(end)]); %ylim([1e-5 1])
         xlabel(['$',kstr,'\rho_s$']); ylabel('$t c_s /\rho_s$');
@@ -78,11 +84,11 @@ for i = 1:2
     subplot(2,3,2+3*(i-1))
         mod2plot = [2:OPTIONS.NMODES+1];
         for i_ = mod2plot
-            semilogy(t,plt(DATA.PHI,MODES(i_))); hold on;
+            semilogy(t,plt(field,MODES(i_))); hold on;
     %         semilogy(t,exp(gamma(i_).*t+amp(i_)),'--k')
         end
         if MODES_SELECTOR == 2
-            semilogy(t,plt(DATA.PHI,ikzf),'--k');
+            semilogy(t,plt(field,ikzf),'--k');
         end
         xlim([t(1) t(end)]); %ylim([1e-5 1])
         xlabel('$t c_s /\rho_s$'); ylabel(['$|\phi_{',kstr,'}|$']);

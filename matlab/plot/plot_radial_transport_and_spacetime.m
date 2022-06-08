@@ -3,12 +3,15 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, OPTIONS)
     tend = OPTIONS.TAVG_1; tstart = OPTIONS.TAVG_0;
     [~,its0D] = min(abs(DATA.Ts0D-tstart));
     [~,ite0D]   = min(abs(DATA.Ts0D-tend));
+    [~,its3D] = min(abs(DATA.Ts3D-tstart));
+    [~,ite3D]   = min(abs(DATA.Ts3D-tend));
     SCALE = DATA.scale;%(1/DATA.Nx/DATA.Ny)^2;
     Gx_infty_avg = mean(DATA.PGAMMA_RI(its0D:ite0D))*SCALE;
     Gx_infty_std = std (DATA.PGAMMA_RI(its0D:ite0D))*SCALE;
     Qx_infty_avg = mean(DATA.HFLUX_X(its0D:ite0D))*SCALE;
     Qx_infty_std = std (DATA.HFLUX_X(its0D:ite0D))*SCALE;
-    [~,ikzf] = max(squeeze(mean(abs(squeeze(DATA.PHI(:,1,1,:))),2)));
+    f_avg_z      = squeeze(mean(DATA.PHI(:,:,:,:),3));
+    [~,ikzf] = max(squeeze(mean(abs(f_avg_z(1,:,its3D:ite3D)),3)));
     Ns3D = numel(DATA.Ts3D);
     [KX, KY] = meshgrid(DATA.kx, DATA.ky);
     
@@ -16,34 +19,33 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, OPTIONS)
 
     % Compute Gamma from ifft matlab
     Gx = zeros(DATA.Ny,DATA.Nx,numel(DATA.Ts3D));
-    for it = 1:numel(DATA.Ts3D)
-        for iz = 1:DATA.Nz
-            Gx(:,:,it)  = Gx(:,:,it) + ifourier_GENE(-1i*KY.*(DATA.PHI(:,:,iz,it)))...
-                          .*ifourier_GENE(DATA.DENS_I(:,:,iz,it));
-        end
-        Gx(:,:,it)  = Gx(:,:,it)/DATA.Nz;
-    end
+%     for it = 1:numel(DATA.Ts3D)
+%         for iz = 1:DATA.Nz
+%             Gx(:,:,it)  = Gx(:,:,it) + ifourier_GENE(-1i*KY.*(DATA.PHI(:,:,iz,it)))...
+%                           .*ifourier_GENE(DATA.DENS_I(:,:,iz,it));
+%         end
+%         Gx(:,:,it)  = Gx(:,:,it)/DATA.Nz;
+%     end
     Gx_t_mtlb = squeeze(mean(mean(Gx,1),2)); 
     % Compute Heat flux from ifft matlab
     Qx = zeros(DATA.Ny,DATA.Nx,numel(DATA.Ts3D));
-    for it = 1:numel(DATA.Ts3D)
-        for iz = 1:DATA.Nz
-            Qx(:,:,it)  = Qx(:,:,it) + ifourier_GENE(-1i*KY.*(DATA.PHI(:,:,iz,it)))...
-                          .*ifourier_GENE(DATA.TEMP_I(:,:,iz,it));
-        end
-        Qx(:,:,it)  = Qx(:,:,it)/DATA.Nz;
-    end
+%     for it = 1:numel(DATA.Ts3D)
+%         for iz = 1:DATA.Nz
+%             Qx(:,:,it)  = Qx(:,:,it) + ifourier_GENE(-1i*KY.*(DATA.PHI(:,:,iz,it)))...
+%                           .*ifourier_GENE(DATA.TEMP_I(:,:,iz,it));
+%         end
+%         Qx(:,:,it)  = Qx(:,:,it)/DATA.Nz;
+%     end
     Qx_t_mtlb = squeeze(mean(mean(Qx,1),2)); 
     % zonal vs nonzonal energies for phi(t)
 
     E_Zmode_SK       = zeros(1,Ns3D);
     E_NZmode_SK      = zeros(1,Ns3D);
     for it = 1:numel(DATA.Ts3D)
-        E_Zmode_SK(it)   = squeeze(DATA.ky(ikzf).^2.*abs(DATA.PHI(ikzf,1,1,it))^2);
-        E_NZmode_SK(it)  = squeeze(sum(sum(((1+KX.^2+KY.^2).*abs(DATA.PHI(:,:,1,it)).^2.*(KY~=0)))));
+        E_Zmode_SK(it)   = squeeze(DATA.ky(ikzf).^2.*abs(squeeze(f_avg_z(ikzf,1,it))).^2);
+        E_NZmode_SK(it)  = squeeze(sum(sum(((1+KX.^2+KY.^2).*abs(squeeze(f_avg_z(:,:,it))).^2.*(KY~=0)))));
     end
-    [~,its3D] = min(abs(DATA.Ts3D-tstart));
-    [~,ite3D]   = min(abs(DATA.Ts3D-tend));
+
 
 %% Figure    
 mvm = @(x) movmean(x,OPTIONS.NMVA);
@@ -83,7 +85,7 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
     toplot = process_field(DATA,OPTIONS);
     f2plot = toplot.FIELD;
     
-    clim = max(max(max(abs(plt(f2plot(:,:,:))))));
+    clim = max(max(max(abs(plt(f2plot(:,:,its3D:ite3D))))));
     subplot(313)
         [TY,TX] = meshgrid(DATA.x,DATA.Ts3D(toplot.FRAMES));
         pclr = pcolor(TX,TY,squeeze(plt(f2plot))'); 
