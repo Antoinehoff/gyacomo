@@ -3,20 +3,18 @@
 !******************************************************************************!
 SUBROUTINE inital
 
-  USE basic
-  USE initial_par
-  USE prec_const
-  USE time_integration
-  USE array, ONLY : moments_e_ZF, moments_i_ZF, phi_ZF
-  USE fields
-  USE collision
-  USE closure
-  USE ghosts
-  USE restarts
-  USE numerics,   ONLY: play_with_modes, save_EM_ZF_modes
-  USE processing, ONLY: compute_fluid_moments
-  USE model,      ONLY: KIN_E, LINEARITY
-  USE nonlinear,  ONLY: compute_Sapj, nonlinear_init
+  USE basic,            ONLY: my_id
+  USE initial_par,      ONLY: INIT_OPT
+  USE time_integration, ONLY: set_updatetlevel
+  USE collision,        ONLY: load_COSOlver_mat, cosolver_coll
+  USE closure,          ONLY: apply_closure_model
+  USE ghosts,           ONLY: update_ghosts_z_moments, update_ghosts_p_moments, &
+                              update_ghosts_z_phi
+  USE restarts,         ONLY: load_moments, job2load
+  USE numerics,         ONLY: play_with_modes, save_EM_ZF_modes
+  USE processing,       ONLY: compute_fluid_moments
+  USE model,            ONLY: KIN_E, LINEARITY
+  USE nonlinear,        ONLY: compute_Sapj, nonlinear_init
   IMPLICIT NONE
 
   CALL set_updatetlevel(1)
@@ -100,15 +98,14 @@ END SUBROUTINE inital
 SUBROUTINE init_moments
   USE basic
   USE grid
-  USE fields
-  USE prec_const
-  USE utility, ONLY: checkfield
-  USE initial_par
-  USE model, ONLY : LINEARITY, KIN_E
+  USE initial_par,ONLY: iseed, init_noiselvl, init_background
+  USE fields,     ONLY: moments_e, moments_i
+  USE prec_const, ONLY: dp
+  USE utility,    ONLY: checkfield
+  USE model,      ONLY : LINEARITY, KIN_E
   IMPLICIT NONE
 
   REAL(dp) :: noise
-  REAL(dp) :: kx, ky, sigma, gain, ky_shift
   INTEGER, DIMENSION(12) :: iseedarr
 
   ! Seed random number generator
@@ -418,7 +415,7 @@ SUBROUTINE init_ppj
                   IF(ky .EQ. 0) THEN
                     moments_e(ip,ij,iky,ikx,iz,:) = 0._dp
                   ELSE
-                    moments_e(ip,ij,iky,ikx,iz,:) = 0.5_dp * ky_min/(ABS(ky)+ky_min)
+                    moments_e(ip,ij,iky,ikx,iz,:) = 0._dp!0.5_dp * ky_min/(ABS(ky)+ky_min)
                   ENDIF
                 ELSE
                   IF(ky .GT. 0) THEN
@@ -461,7 +458,7 @@ SUBROUTINE init_ppj
                   IF(ky .EQ. 0) THEN
                     moments_i(ip,ij,iky,ikx,iz,:) = 0._dp
                   ELSE
-                    moments_i(ip,ij,iky,ikx,iz,:) = 0.5_dp * ky_min/(ABS(ky)+ky_min)
+                    moments_i(ip,ij,iky,ikx,iz,:) = 0._dp!0.5_dp * ky_min/(ABS(ky)+ky_min)
                   ENDIF
                 ELSE
                   IF(ky .GT. 0) THEN
@@ -508,5 +505,10 @@ SUBROUTINE init_ppj
       ENDDO
       ENDDO
     ENDIF
+
+    ! Adjust the scaling to trigger faster NL saturation
+    IF(KIN_E) &
+    moments_e = 1e3*moments_e
+    moments_i = 1e3*moments_i
 END SUBROUTINE init_ppj
 !******************************************************************************!
