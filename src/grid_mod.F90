@@ -480,12 +480,10 @@ CONTAINS
     ! Weitghs for Simpson rule
     ALLOCATE(zweights_SR(izs:ize))
     DO iz = izs,ize
-      IF((iz .EQ. 1) .OR. (iz .EQ. Nz)) THEN
-        zweights_SR(iz) = 1._dp
-      ELSEIF(MODULO(iz-1,2)) THEN
-        zweights_SR(iz) = 4._dp
-      ELSE
+      IF(MODULO(iz,2) .EQ. 1) THEN ! odd iz
         zweights_SR(iz) = 2._dp
+      ELSE ! even iz
+        zweights_SR(iz) = 4._dp
       ENDIF
     ENDDO
   END SUBROUTINE set_zgrid
