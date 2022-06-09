@@ -27,6 +27,7 @@ SUBROUTINE poisson
 
     kxloop: DO ikx = ikxs,ikxe
       kyloop: DO iky = ikys,ikye
+        phi(iky,ikx,izs:ize)  = 0._dp
         !!!! Compute ion particle charge density q_i n_i
         rho_i = 0._dp
         DO ini=1,jmaxi+1
@@ -43,25 +44,22 @@ SUBROUTINE poisson
           END DO
         ELSE  ! Adiabatic electrons
           ! Adiabatic charge density (linked to flux surface averaged phi)
-          fsa_phi = 0._dp
           ! We compute the flux surface average solving a flux surface averaged
           ! Poisson equation, i.e.
-          !
           ! [qi^2(1-sum_j K_j^2)/tau_i] <phi>_psi = <q_i n_i >_psi
           !       inv_pol_ion^-1         fsa_phi  = simpson(Jacobian rho_i ) * iInt_Jacobian
+          fsa_phi = 0._dp
           IF(kyarray(iky).EQ.0._dp) THEN ! take ky=0 mode (y-average)
             ! Prepare integrant for z-average
             integrant(izs:ize) = Jacobian(izs:ize,0)*rho_i(izs:ize)*inv_pol_ion(iky,ikx,izs:ize)
             call simpson_rule_z(integrant(izs:ize),intf_) ! get the flux averaged phi
-            fsa_phi = intf_
+            fsa_phi = intf_ * iInt_Jacobian !Normalize by 1/int(Jxyz)dz
           ENDIF
-          rho_e(izs:ize) = fsa_phi * iInt_Jacobian !Normalize by 1/int(Jxyz)dz
+          rho_e(izs:ize) = fsa_phi
         ENDIF
-
         !!!!!!!!!!!!!!! Inverting the poisson equation !!!!!!!!!!!!!!!!!!!!!!!!!!
-        DO iz = izs,ize
-        phi(iky, ikx, iz) =  (rho_e(iz) + rho_i(iz))*inv_poisson_op(iky,ikx,iz)
-        ENDDO
+        phi(iky,ikx,izs:ize) = (rho_e(izs:ize) + rho_i(izs:ize))*inv_poisson_op(iky,ikx,izs:ize)
+
       END DO kyloop
     END DO kxloop
 
