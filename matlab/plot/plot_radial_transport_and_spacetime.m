@@ -84,8 +84,8 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
     OPTIONS.POLARPLOT = 0;
     toplot = process_field(DATA,OPTIONS);
     f2plot = toplot.FIELD;
-    
-    clim = max(max(max(abs(plt(f2plot(:,:,its3D:ite3D))))));
+    dframe = ite3D - its3D;
+    clim = max(max(max(abs(plt(f2plot(:,:,:))))));
     subplot(313)
         [TY,TX] = meshgrid(DATA.x,DATA.Ts3D(toplot.FRAMES));
         pclr = pcolor(TX,TY,squeeze(plt(f2plot))'); 

@@ -13,23 +13,23 @@ EXECNAME = 'helaz3';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.2;   % Collision frequency
+NU      = 0.1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-K_N     = 2.22;   % Density gradient drive
-K_T     = 6.96;   % Temperature '''
+K_N     = 0;%2.22;   % Density gradient drive
+K_T     = 0;%6.96;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
-SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+SIGMA_E = 0.05196152422706632;%0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 0;     % 1: kinetic electrons, 2: adiabatic electrons
 %% GRID PARAMETERS
-PMAXE   = 8;     % Hermite basis size of electrons
-JMAXE   = 4;     % Laguerre "
-PMAXI   = 8;     % " ions
-JMAXI   = 4;     % "
-NX      = 1;    % real space x-gridpoints
-NY      = 64;     %     ''     y-gridpoints
+PMAXE   = 6;     % Hermite basis size of electrons
+JMAXE   = 3;     % Laguerre "
+PMAXI   = 6;     % " ions
+JMAXI   = 3;     % "
+NX      = 2;    % real space x-gridpoints
+NY      = 1;     %     ''     y-gridpoints
 LX      = 100;   % Size of the squared frequency domain
 LY      = 60;     % Size of the squared frequency domain
-NZ      = 16;     % number of perpendicular planes (parallel grid)
+NZ      = 32;     % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 %% GEOMETRY
@@ -40,15 +40,15 @@ SHEAR   = 0.0;    % magnetic shear (Not implemented yet)
 EPS     = 0.18;    % inverse aspect ratio
 %% TIME PARMETERS
 TMAX    = 30;  % Maximal time unit
-DT      = 2*5e-3;   % Time step
-SPS0D   = 1;      % Sampling per time unit for 2D arrays
+DT      = 1e-2;   % Time step
+SPS0D   = 20;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
-SPS3D   = 1;      % Sampling per time unit for 2D arrays
+SPS3D   = 20;      % Sampling per time unit for 2D arrays
 SPS5D   = 1;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
 %% OPTIONS
-SIMID   = 'dbg';  % Name of the simulation
+SIMID   = 'Ros_Hin_test';  % Name of the simulation
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
@@ -56,10 +56,10 @@ CO      = 'DG';
 GKCO    = 0; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
-CLOS    = 1;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))s
+CLOS    = 0;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))s
 NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)
-INIT_OPT= 'phi';   % Start simulation with a noisy mom00/phi/allmom
+INIT_OPT= 'mom00';   % Start simulation with a noisy mom00/phi/allmom
 %% OUTPUTS
 W_DOUBLE = 1;
 W_GAMMA  = 1; W_HF     = 1;
@@ -75,12 +75,12 @@ MU      = 0.0; % Hyperdiffusivity coefficient
 INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_X    = MU;     %
 MU_Y    = MU;     %
-MU_Z    = 0.2;     %
+MU_Z    = 0.0;     %
 MU_P    = 0.0;     %
 MU_J    = 0.0;     %
 LAMBDAD = 0.0;
-NOISE0  = 1.0e-5; % Init noise amplitude
-BCKGD0  = 0.0;    % Init background
+NOISE0  = 0.0e-5; % Init noise amplitude
+BCKGD0  = 1.0;    % Init background
 GRADB   = 1.0;
 CURVB   = 1.0;
 %%-------------------------------------------------------------------------
@@ -91,8 +91,8 @@ system(['rm fort*.90']);
 if RUN
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',HELAZDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
 end
 
 %% Load results
@@ -111,7 +111,7 @@ nplots = 1;
 lg = compute_fluxtube_growth_rate(data,trange,nplots);
 end
 
-if 1
+if 0
 %% Ballooning plot
 options.time_2_plot = [0.9 1]*data.Ts3D(end);
 options.kymodes     = [0.5];
@@ -150,14 +150,25 @@ options.kzky = 0;
 save_figure(data,fig)
 end
 
-if 1
+if 0
 %% Mode evolution
 options.NORMALIZED = 1;
 options.K2PLOT = 1;
 options.TIME   = [0.8 1]*data.Ts3D(end);
 options.NMA    = 1;
-options.NMODES = 5;
+options.NMODES = 2;
 options.iz     = 9;
 fig = mode_growth_meter(data,options);
 save_figure(gbms_dat,fig)
+end
+
+
+if 1
+%% RH TEST
+ikx = 2;
+plt = @(x) squeeze(mean(real(x(1,ikx,:,:)),3))./squeeze(mean(real(x(1,ikx,:,1)),3));
+figure
+plot(data.Ts3D, plt(data.PHI));
+xlabel('$t$'); ylabel('$\phi_z(t)/\phi_z(0)$')
+title(sprintf('$k_x=$%2.2f, $k_y=0.00$',data.kx(ikx)))
 end
