@@ -8,6 +8,8 @@ SUBROUTINE compute_moments_eq_rhs
   IMPLICIT NONE
   IF(KIN_E) CALL moments_eq_rhs_e
             CALL moments_eq_rhs_i
+  !! BETA TESTING !!
+  IF(.false.) CALL add_Maxwellian_background_terms
 END SUBROUTINE compute_moments_eq_rhs
 !_____________________________________________________________________________!
 !_____________________________________________________________________________!
@@ -109,12 +111,19 @@ SUBROUTINE moments_eq_rhs_e
                 - i_ky * Tphi &
                 ! Numerical perpendicular hyperdiffusion (totally artificial, for stability purpose)
                 - (mu_x*kx**4 + mu_y*ky**4)*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
-                ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"
+                ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"  see Pueschel 2010 (eq 25)
                 + mu_z * diff_dz_coeff * ddz4_Nepj(ip,ij,iky,ikx,iz) &
                 ! Collision term
                 + TColl_e(ip,ij,iky,ikx,iz) &
                 ! Nonlinear term
                 - Sepj(ip,ij,iky,ikx,iz)
+
+            IF(ip-4 .GT. 0) &
+              ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
+              moments_rhs_e(ip,ij,iky,ikx,iz,updatetlevel) = &
+                moments_rhs_e(ip,ij,iky,ikx,iz,updatetlevel) &
+                  + mu_p * moments_e(ip-4,ij,iky,ikx,iz,updatetlevel)
+
           ELSE
             moments_rhs_e(ip,ij,iky,ikx,iz,updatetlevel) = 0._dp
           ENDIF
@@ -238,6 +247,12 @@ SUBROUTINE moments_eq_rhs_i
                   + TColl_i(ip,ij,iky,ikx,iz)&
                   ! Nonlinear term
                   - Sipj(ip,ij,iky,ikx,iz)
+
+                  IF(ip-4 .GT. 0) &
+                    ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
+                    moments_rhs_i(ip,ij,iky,ikx,iz,updatetlevel) = &
+                      moments_rhs_i(ip,ij,iky,ikx,iz,updatetlevel) &
+                        + mu_p * moments_i(ip-4,ij,iky,ikx,iz,updatetlevel)
           ELSE
             moments_rhs_i(ip,ij,iky,ikx,iz,updatetlevel) = 0._dp
           ENDIF
@@ -252,5 +267,99 @@ SUBROUTINE moments_eq_rhs_i
   tc_rhs = tc_rhs + (t1_rhs-t0_rhs)
 
 END SUBROUTINE moments_eq_rhs_i
+
+SUBROUTINE add_Maxwellian_background_terms
+  ! This routine is meant to add the terms rising from the magnetic operator,
+  ! i.e. (B x GradB) Grad, applied on the background Maxwellian distribution
+  ! (x_a + spar^2)(b x GradB) GradFaM
+  ! It gives birth to kx=ky=0 sources terms (averages) that hit moments 00, 20,
+  ! 40, 01,02, 21 with background gradient dependences.
+  USE prec_const
+  USE time_integration, ONLY : updatetlevel
+  USE model,      ONLY: taue_qe, taui_qi, K_N, K_T, KIN_E
+  USE array,      ONLY: moments_rhs_e, moments_rhs_i
+  USE grid,       ONLY: contains_kx0, contains_ky0, ikx_0, iky_0,&
+                        ips_e,ipe_e,ijs_e,ije_e,ips_i,ipe_i,ijs_i,ije_i,&
+                        jarray_e,parray_e,jarray_i,parray_i, zarray, izs,ize,&
+                        ip,ij
+  IMPLICIT NONE
+  real(dp), DIMENSION(izs:ize) :: sinz
+
+  sinz(izs:ize) = SIN(zarray(izs:ize,0))
+
+  IF(contains_kx0 .AND. contains_ky0) THEN
+    IF(KIN_E) THEN
+      DO ip = ips_e,ipe_e
+        DO ij = ijs_e,ije_e
+          SELECT CASE(ij-1)
+          CASE(0) ! j = 0
+            SELECT CASE (ip-1)
+            CASE(0) ! Na00 term
+                moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
+                  +taue_qe * sinz(izs:ize) * (1.5_dp*K_N - 1.125_dp*K_T)
+            CASE(2) ! Na20 term
+                moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
+                  +taue_qe * sinz(izs:ize) * (SQRT2*0.5_dp*K_N - 2.75_dp*K_T)
+            CASE(4) ! Na40 term
+                moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
+                  +taue_qe * sinz(izs:ize) * SQRT6*0.75_dp*K_T
+            END SELECT
+          CASE(1) ! j = 1
+            SELECT CASE (ip-1)
+            CASE(0) ! Na01 term
+                moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
+                  -taue_qe * sinz(izs:ize) * (K_N + 3.5_dp*K_T)
+            CASE(2) ! Na21 term
+                moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
+                  -taue_qe * sinz(izs:ize) * SQRT2*K_T
+            END SELECT
+          CASE(2) ! j = 2
+            SELECT CASE (ip-1)
+            CASE(0) ! Na02 term
+                moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
+                  +taue_qe * sinz(izs:ize) * 2._dp*K_T
+            END SELECT
+          END SELECT
+        ENDDO
+      ENDDO
+    ENDIF
+
+    DO ip = ips_i,ipe_i
+      DO ij = ijs_i,ije_i
+        SELECT CASE(ij-1)
+        CASE(0) ! j = 0
+          SELECT CASE (ip-1)
+          CASE(0) ! Na00 term
+              moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
+                +taui_qi * sinz(izs:ize) * (1.5_dp*K_N - 1.125_dp*K_T)
+          CASE(2) ! Na20 term
+              moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
+                +taui_qi * sinz(izs:ize) * (SQRT2*0.5_dp*K_N - 2.75_dp*K_T)
+          CASE(4) ! Na40 term
+              moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
+                +taui_qi * sinz(izs:ize) * SQRT6*0.75_dp*K_T
+          END SELECT
+        CASE(1) ! j = 1
+          SELECT CASE (ip-1)
+          CASE(0) ! Na01 term
+              moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
+                -taui_qi * sinz(izs:ize) * (K_N + 3.5_dp*K_T)
+          CASE(2) ! Na21 term
+              moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
+                -taui_qi * sinz(izs:ize) * SQRT2*K_T
+          END SELECT
+        CASE(2) ! j = 2
+          SELECT CASE (ip-1)
+          CASE(0) ! Na02 term
+              moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
+                +taui_qi * sinz(izs:ize) * 2._dp*K_T
+          END SELECT
+        END SELECT
+      ENDDO
+    ENDDO
+
+  ENDIF
+
+END SUBROUTINE
 
 END MODULE moments_eq_rhs
