@@ -60,9 +60,11 @@ MODULE array
   ! Kernel function evaluation (ij,ikx,iky,iz,odd/even p)
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: kernel_e
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: kernel_i
+
   ! Poisson operator (ikx,iky,iz)
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_poisson_op
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_pol_ion
+  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: HF_phi_correction_operator
 
   ! Gyrocenter density for electron and ions (ikx,iky,iz)
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ne00

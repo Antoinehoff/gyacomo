@@ -49,7 +49,7 @@ END SUBROUTINE build_dnjs_table
 !******************************************************************************!
 SUBROUTINE evaluate_kernels
   USE basic
-  USE array, Only : kernel_e, kernel_i
+  USE array, Only : kernel_e, kernel_i, HF_phi_correction_operator
   USE grid
   USE model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, &
                     lambdaD, CLOS, sigmae2_taue_o2, sigmai2_taui_o2, KIN_E
@@ -84,6 +84,20 @@ DO iz  = izgs,izge
 ENDDO
 ENDDO
 ENDDO
+ENDDO
+!! Correction term for the evaluation of the heat flux
+HF_phi_correction_operator(ikys:ikye,ikxs:ikxe,izs:ize) = &
+       2._dp * Kernel_i(1,ikys:ikye,ikxs:ikxe,izs:ize,0) &
+      -1._dp * Kernel_i(2,ikys:ikye,ikxs:ikxe,izs:ize,0)
+
+DO ij = ijgs_i, ijge_i
+  j_int = jarray_i(ij)
+  j_dp  = REAL(j_int,dp)
+  HF_phi_correction_operator(ikys:ikye,ikxs:ikxe,izs:ize) = HF_phi_correction_operator(ikys:ikye,ikxs:ikxe,izs:ize) &
+  - Kernel_i(ij,ikys:ikye,ikxs:ikxe,izs:ize,0) * (&
+      2._dp*(j_dp+1.5_dp) * Kernel_i(ij  ,ikys:ikye,ikxs:ikxe,izs:ize,0) &
+      -     (j_dp+1.0_dp) * Kernel_i(ij+1,ikys:ikye,ikxs:ikxe,izs:ize,0) &
+      -              j_dp * Kernel_i(ij-1,ikys:ikye,ikxs:ikxe,izs:ize,0))
 ENDDO
 
 END SUBROUTINE evaluate_kernels

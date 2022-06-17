@@ -92,52 +92,44 @@ END SUBROUTINE compute_radial_ion_transport
 ! 1D diagnostic to compute the average radial particle transport <T_i v_ExB_x>_xyz
 SUBROUTINE compute_radial_heatflux
     USE fields,           ONLY : moments_i, moments_e, phi
-    USE array,            ONLY : kernel_e, kernel_i
+    USE array,            ONLY : kernel_e, kernel_i, HF_phi_correction_operator
     USE geometry,         ONLY : Jacobian, iInt_Jacobian
     USE time_integration, ONLY : updatetlevel
-    USE model,            ONLY : qe_taue, qi_taui, KIN_E
+    USE model,            ONLY : qe_taue, qi_taui, KIN_E, tau_i, tau_e
     USE calculus,         ONLY : simpson_rule_z
     IMPLICIT NONE
     COMPLEX(dp) :: hflux_local, integral
-    REAL(dp)    :: ky_, buffer(1:2), j_dp
-    INTEGER     :: i_, world_rank, world_size, root
+    REAL(dp)    :: ky_, buffer(1:2), n_dp
+    INTEGER     :: i_, world_rank, world_size, root, in
     COMPLEX(dp), DIMENSION(izgs:izge) :: integrant        ! charge density q_a n_a
 
-    hflux_local = 0._dp ! particle flux
+    hflux_local = 0._dp ! heat flux
     IF(ips_i .EQ. 1 .AND. ips_e .EQ. 1) THEN
         ! Loop to compute gamma_kx = sum_ky sum_j -i k_z Kernel_j Ni00 * phi
         DO iky = ikys,ikye
           ky_ = kyarray(iky)
           DO ikx = ikxs,ikxe
             integrant = 0._dp
-            DO ij = ijs_i, ije_i
-              DO iz = izgs,izge
-              integrant(iz) = integrant(iz) + Jacobian(iz,0)*imagu*ky_*CONJG(phi(iky,ikx,iz))&
-               *(twothird * (   2._dp*j_dp  * kernel_i(ij  ,iky,ikx,iz,0) &
-                                - (j_dp+1)  * kernel_i(ij+1,iky,ikx,iz,0) &
-                                -    j_dp   * kernel_i(ij-1,iky,ikx,iz,0))&
-               * (moments_i(ip0_i,ij,iky,ikx,iz,updatetlevel)+qi_taui*kernel_i(ij,iky,ikx,iz,0)*phi(iky,ikx,iz)) &
-              + SQRT2*onethird * kernel_i(ij,iky,ikx,iz,0) * moments_i(ip2_i,ij,iky,ikx,iz,updatetlevel))
-              ENDDO
+            DO in = ijs_i, ije_i
+              n_dp = jarray_i(in)
+
+              integrant(izs:ize) = integrant(izs:ize) + Jacobian(izs:ize,0)*tau_i*imagu*ky_*CONJG(phi(iky,ikx,izs:ize))&
+               *kernel_i(in,iky,ikx,iz,0)*(&
+                             0.5_dp*SQRT2*moments_i(ip2_i,in  ,iky,ikx,izs:ize,updatetlevel)&
+                   +(2._dp*n_dp + 1.5_dp)*moments_i(ip0_i,in  ,iky,ikx,izs:ize,updatetlevel)&
+                            -(n_dp+1._dp)*moments_i(ip0_i,in+1,iky,ikx,izs:ize,updatetlevel)&
+                                    -n_dp*moments_i(ip0_i,in-1,iky,ikx,izs:ize,updatetlevel))
             ENDDO
-            IF(KIN_E) THEN
-            DO ij = ijs_e, ije_e
-              DO iz = izgs,izge
-              integrant(iz) = integrant(iz) + Jacobian(iz,0)*imagu*ky_*CONJG(phi(iky,ikx,iz))&
-               *(twothird * (   2._dp*j_dp  * kernel_e(ij  ,iky,ikx,iz,0) &
-                                - (j_dp+1)  * kernel_e(ij+1,iky,ikx,iz,0) &
-                                -    j_dp   * kernel_e(ij-1,iky,ikx,iz,0))&
-               * (moments_e(ip0_e,ij,iky,ikx,iz,updatetlevel)+qe_taue*kernel_e(ij,iky,ikx,iz,0)*phi(iky,ikx,iz)) &
-              + SQRT2*onethird * kernel_e(ij,iky,ikx,iz,0) * moments_e(ip2_e,ij,iky,ikx,iz,updatetlevel))
-              ENDDO
-            ENDDO
-            ENDIF
+            ! Add polarisation contribution
+            integrant(izs:ize) = integrant(izs:ize) + Jacobian(izs:ize,0)*tau_i*imagu*ky_&
+            *CONJG(phi(iky,ikx,izs:ize))*phi(iky,ikx,izs:ize) * HF_phi_correction_operator(iky,ikx,izs:ize)
             ! Integrate over z
             call simpson_rule_z(integrant,integral)
             hflux_local = hflux_local + integral*iInt_Jacobian
           ENDDO
         ENDDO
-        buffer(2) = REAL(hflux_local)
+        ! Double it for taking into account the other half plane
+        buffer(2) = 2._dp*REAL(hflux_local)
         root = 0
         !Gather manually among the rank_p=0 processes and perform the sum
         hflux_x = 0
