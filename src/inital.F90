@@ -393,11 +393,11 @@ SUBROUTINE init_ppj
   IMPLICIT NONE
 
   REAL(dp) :: noise
-  REAL(dp) :: kx, ky, sigma_z, amplitude, ky_shift, z
+  REAL(dp) :: kx, ky, sigma_z, amp, ky_shift, z
   INTEGER, DIMENSION(12) :: iseedarr
 
   sigma_z = pi/4.0
-  amplitude = 0.1
+  amp = 1e4
 
     !**** Broad noise initialization *******************************************
     ! Electrons
@@ -419,15 +419,15 @@ SUBROUTINE init_ppj
                   ENDIF
                 ELSE
                   IF(ky .GT. 0) THEN
-                    moments_e(ip,ij,iky,ikx,iz,:) = (kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
+                    moments_e(ip,ij,iky,ikx,iz,:) = 0._dp!(kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
                   ELSE
-                    moments_e(ip,ij,iky,ikx,iz,:) = 0.5_dp*(kx_min/(ABS(kx)+kx_min))
+                    moments_e(ip,ij,iky,ikx,iz,:) = 0.5_dp*amp*(kx_min/(ABS(kx)+kx_min))
                   ENDIF
                 ENDIF
-                ! z-dep
+                CALL RANDOM_NUMBER(noise)
+                ! z-dep and noise
                 moments_e(ip,ij,iky,ikx,iz,:) = moments_e(ip,ij,iky,ikx,iz,:) * &
-                ! (1 + exp(-(z/sigma_z)**2/2.0)*sqrt(2.0*sqrt(pi)/sigma_z))
-                (Jacobian(iz,0)*iInt_Jacobian)**2
+                (Jacobian(iz,0)*iInt_Jacobian)**2 !+ (init_background + init_noiselvl*(noise-0.5_dp))
               END DO
             END DO
           END DO
@@ -462,15 +462,15 @@ SUBROUTINE init_ppj
                   ENDIF
                 ELSE
                   IF(ky .GT. 0) THEN
-                    moments_i(ip,ij,iky,ikx,iz,:) = (kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
+                    moments_i(ip,ij,iky,ikx,iz,:) = 0._dp!(kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
                   ELSE
-                    moments_i(ip,ij,iky,ikx,iz,:) = 0.5_dp*(kx_min/(ABS(kx)+kx_min))
+                    moments_i(ip,ij,iky,ikx,iz,:) = 0.5_dp*amp*(kx_min/(ABS(kx)+kx_min))
                   ENDIF
                 ENDIF
-                ! z-dep
+                CALL RANDOM_NUMBER(noise)
+                ! z-dep and noise
                 moments_i(ip,ij,iky,ikx,iz,:) = moments_i(ip,ij,iky,ikx,iz,:) * &
-                ! (1 + exp(-(z/sigma_z)**2/2.0)*sqrt(2.0*sqrt(pi)/sigma_z))
-                (Jacobian(iz,0)*iInt_Jacobian)**2
+                (Jacobian(iz,0)*iInt_Jacobian)**2 !+ (init_background + init_noiselvl*(noise-0.5_dp))
               END DO
             END DO
           END DO
