@@ -1,17 +1,19 @@
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_0.8/';
-folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.0/';
+% folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.8/';
+folder = '/misc/gene_results/shearless_cyclone/rm_corrections_HF/';
 % folder = '/misc/gene_results/shearless_cyclone/linear_s_alpha_CBC_100/';
 % folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.5/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_0.8/';
 % folder = '/misc/gene_results/HP_fig_2b_mu_5e-2/';
 % folder = '/misc/gene_results/HP_fig_2c_mu_5e-2/';
+% folder = '/misc/gene_results/LD_zpinch_1.6/';
 gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-options.TAVG_0   = 0.8*gene_data.Ts3D(end);
+options.TAVG_0   = 0.2*gene_data.Ts3D(end);
 options.TAVG_1   = gene_data.Ts3D(end); % Averaging times duration
 options.NMVA     = 1;              % Moving average for time traces
 options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x, Q_x)
@@ -19,6 +21,12 @@ options.INTERP   = 1;
 gene_data.FIGDIR = folder;
 fig = plot_radial_transport_and_spacetime(gene_data,options);
 save_figure(gene_data,fig)
+end
+
+if 0
+%% statistical transport averaging
+options.T = [100 500];
+fig = statistical_transport_averaging(gene_data,options);
 end
 
 if 0
@@ -32,11 +40,11 @@ options.NAME      = '\phi';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'xz';
 % options.NAME      ='f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [500];
+options.TIME      = [0];
 gene_data.a = data.EPS * 2000;
 fig = photomaton(gene_data,options);
 save_figure(gene_data,fig)
@@ -52,7 +60,7 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+options.PLAN      = 'xz';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -95,9 +103,26 @@ options.PLT_FCT = 'contour';
 options.folder  = folder;
 options.iz      = 9;
 options.FIELD   = '<f_>';
-options.ONED    = 0;
+options.ONED    = 1;
 % options.FIELD   = 'Q_es';
 plot_fa_gene(options);
+end
+
+if 0
+%% Time averaged spectrum
+options.TIME   = 300:600;
+options.NORM   =1;
+options.NAME   = '\phi';
+% options.NAME      = 'n_i';
+% options.NAME      ='\Gamma_x';
+options.PLAN   = 'kxky';
+options.COMPZ  = 'avg';
+options.OK     = 0;
+options.COMPXY = 'avg';
+options.COMPT  = 'avg';
+options.PLOT   = 'semilogy';
+fig = spectrum_1D(data,options);
+% save_figure(data,fig)
 end
 
 if 0

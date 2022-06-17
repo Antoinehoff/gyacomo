@@ -1,9 +1,11 @@
+
 function [ fig ] = statistical_transport_averaging( data, options )
-scale = (1/data.Nx/data.Ny)^2;
+scale = data.scale;
 Trange  = options.T;
 [~,it0] = min(abs(Trange(1)-data.Ts0D)); 
 [~,it1] = min(abs(Trange(end)-data.Ts0D)); 
 gamma   = data.PGAMMA_RI(it0:it1)*scale;
+Qx      = data.HFLUX_X(it0:it1)*scale;
 dt_const = numel(unique(round(diff(data.Ts0D(it0:it1))*100)))==1;
 % if ~dt_const
 %     disp('DT not const on given interval');
@@ -22,13 +24,22 @@ dt_const = numel(unique(round(diff(data.Ts0D(it0:it1))*100)))==1;
     time_seg = (data.Ts0D(it0:it1)-data.Ts0D(it0)); 
 
     fig = figure;
-%     subplot(211)
+    subplot(211)
     plot(time_seg,transp_seg_avg,'-'); hold on;
-    xlabel('Averaging time'); ylabel('transport value');
+    xlabel('Averaging time'); ylabel('$\langle\Gamma_x\rangle_{\tau}$');
+    legend(['$\Gamma_x^\infty=$',sprintf('%2.2e',transp_seg_avg(end))])
+    title(sprintf('Transport averaging from t=%2.2f',data.Ts0D(it0)));
+   
+    for Np = 1:Ntot % Loop on the number of segments
+        transp_seg_avg(Np) = mean(Qx(1:Np));
+    end
+
     
-%     subplot(212)
-%     errorbar(N_seg,transp_seg_avg,transp_seg_std);
-%     xlabel('Averaging #points'); ylabel('transport value');
-% end
+    subplot(212)
+
+    plot(time_seg,transp_seg_avg,'-'); hold on;
+    xlabel('Averaging time'); ylabel('$\langle Q_x\rangle_{\tau}$');
+    legend(['$Q_x^\infty=$',sprintf('%2.2e',transp_seg_avg(end))])
+    
 end
 

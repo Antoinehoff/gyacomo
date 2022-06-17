@@ -32,7 +32,7 @@ switch options.Z
         [~,iz]    = min(abs(options.Z-data.z)); 
         Napj_     = Napj_(:,:,:,:,iz,:);
 end
-Napj_ = squeeze(Napj_);
+% Napj_ = squeeze(Napj_);
 
 frames = options.T;
 for it = 1:numel(options.T)
@@ -41,7 +41,7 @@ end
 
 Napj_     = mean(Napj_(:,:,:,:,frames),5);
 
-Napj_ = squeeze(Napj_);
+% Napj_ = squeeze(Napj_);
 
 
 Np = numel(parray); Nj = numel(jarray);

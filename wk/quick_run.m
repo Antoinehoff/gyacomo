@@ -13,7 +13,7 @@ EXECNAME = 'helaz3';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;   % Collision frequency
+NU      = 0.0;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
 K_N     = 0;%2.22;   % Density gradient drive
 K_T     = 0;%6.96;   % Temperature '''
@@ -21,10 +21,10 @@ K_E     = 0.0;   % Electrostat '''
 SIGMA_E = 0.05196152422706632;%0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 0;     % 1: kinetic electrons, 2: adiabatic electrons
 %% GRID PARAMETERS
-PMAXE   = 6;     % Hermite basis size of electrons
-JMAXE   = 3;     % Laguerre "
-PMAXI   = 6;     % " ions
-JMAXI   = 3;     % "
+PMAXE   = 8;     % Hermite basis size of electrons
+JMAXE   = 4;     % Laguerre "
+PMAXI   = 8;     % " ions
+JMAXI   = 4;     % "
 NX      = 2;    % real space x-gridpoints
 NY      = 1;     %     ''     y-gridpoints
 LX      = 100;   % Size of the squared frequency domain
@@ -39,8 +39,8 @@ Q0      = 1.4;    % safety factor
 SHEAR   = 0.0;    % magnetic shear (Not implemented yet)
 EPS     = 0.18;    % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 30;  % Maximal time unit
-DT      = 1e-2;   % Time step
+TMAX    = 50;  % Maximal time unit
+DT      = 2e-2;   % Time step
 SPS0D   = 20;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 20;      % Sampling per time unit for 2D arrays
@@ -165,10 +165,11 @@ end
 
 if 1
 %% RH TEST
-ikx = 2;
-plt = @(x) squeeze(mean(real(x(1,ikx,:,:)),3))./squeeze(mean(real(x(1,ikx,:,1)),3));
+ikx = 2; t0 = 0; t1 = data.Ts3D(end);
+[~, it0] = min(abs(t0-data.Ts3D));[~, it1] = min(abs(t1-data.Ts3D));
+plt = @(x) squeeze(mean(real(x(1,ikx,:,it0:it1)),3))./squeeze(mean(real(x(1,ikx,:,it0)),3));
 figure
-plot(data.Ts3D, plt(data.PHI));
+plot(data.Ts3D(it0:it1), plt(data.PHI));
 xlabel('$t$'); ylabel('$\phi_z(t)/\phi_z(0)$')
 title(sprintf('$k_x=$%2.2f, $k_y=0.00$',data.kx(ikx)))
 end

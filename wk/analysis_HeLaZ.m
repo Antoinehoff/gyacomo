@@ -22,7 +22,7 @@ FMT = '.fig';
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-options.TAVG_0   = 0.98*data.Ts3D(end); 
+options.TAVG_0   = 0.5*data.Ts3D(end); data.scale = (1/data.Nx/data.Ny)^2;
 options.TAVG_1   = data.Ts3D(end); % Averaging times duration
 options.NMVA     = 1;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
@@ -34,14 +34,14 @@ end
 
 if 0
 %% statistical transport averaging
-options.T = [16000 17000];
+options.T = [200 500];
 fig = statistical_transport_averaging(data,options);
 end
 
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-options.INTERP    = 1;
+options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.NAME      = '\phi';
 % options.NAME      = 'N_i^{00}';
@@ -50,11 +50,12 @@ options.NAME      = '\phi';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
 options.PLAN      = 'xz';
-% options.NAME      = 'f_e';
+% options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
-options.COMP      = 9;
-% options.TIME      = dat.Ts5D;
-options.TIME      = [0:1:2000];
+options.COMP      = 'avg';
+% options.TIME      = data.Ts5D(end-30:end);
+options.TIME      = data.Ts3D;
+% options.TIME      = [700:1100];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -72,14 +73,14 @@ options.NAME      = '\phi';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
-% options.NAME      = 'f_i';
-% options.PLAN      = 'sx';
+% options.PLAN      = 'kxky';
+options.NAME      = 'f_i';
+options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [1600 1800 2000];
+options.TIME      = [200 400 700];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
-save_figure(data,fig)
+% save_figure(data,fig)
 end
 
 if 0
@@ -100,26 +101,26 @@ if 0
 % options.XPERP     = linspace( 0,6,64);
 options.SPAR      = gene_data.vp';
 options.XPERP     = gene_data.mu';
-options.iz        = 9;
-options.T         = 30;
+options.iz        = 'avg';
+options.T         = [500];
 options.PLT_FCT   = 'contour';
 options.ONED      = 0;
-options.non_adiab = 1;
+options.non_adiab = 0;
 options.SPECIE    = 'i';
 options.RMS       = 1; % Root mean square i.e. sqrt(sum_k|f_k|^2) as in Gene
 fig = plot_fa(data,options);
-save_figure(data,fig)
+% save_figure(data,fig)
 end
 
 if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
-options.P2J        = 1;
-options.ST         = 0;
+options.P2J        = 0;
+options.ST         = 1;
 options.PLOT_TYPE  = 'space-time';
-options.NORMALIZED = 1;
+options.NORMALIZED = 0;
 options.JOBNUM     = 0;
-options.TIME       = [50];
+options.TIME       = [300:500];
 options.specie     = 'i';
 options.compz      = 'avg';
 fig = show_moments_spectrum(data,options);
@@ -129,7 +130,7 @@ end
 
 if 0
 %% Time averaged spectrum
-options.TIME   = 1000:1200;
+options.TIME   = 650:800;
 options.NORM   =1;
 options.NAME   = '\phi';
 % options.NAME      = 'n_i';

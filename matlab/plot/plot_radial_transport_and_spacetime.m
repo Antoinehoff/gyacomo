@@ -10,8 +10,11 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, OPTIONS)
     Gx_infty_std = std (DATA.PGAMMA_RI(its0D:ite0D))*SCALE;
     Qx_infty_avg = mean(DATA.HFLUX_X(its0D:ite0D))*SCALE;
     Qx_infty_std = std (DATA.HFLUX_X(its0D:ite0D))*SCALE;
+    disp(['G_x=',sprintf('%2.2f',Gx_infty_avg),'+-',sprintf('%2.2f',Gx_infty_std)]);
+    disp(['Q_x=',sprintf('%2.2f',Qx_infty_avg),'+-',sprintf('%2.2f',Qx_infty_std)]);
     f_avg_z      = squeeze(mean(DATA.PHI(:,:,:,:),3));
     [~,ikzf] = max(squeeze(mean(abs(f_avg_z(1,:,its3D:ite3D)),3)));
+    ikzf = min([ikzf,DATA.Nky]);
     Ns3D = numel(DATA.Ts3D);
     [KX, KY] = meshgrid(DATA.kx, DATA.ky);
     
@@ -51,20 +54,22 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, OPTIONS)
 mvm = @(x) movmean(x,OPTIONS.NMVA);
     FIGURE.fig = figure; FIGURE.FIGNAME = ['ZF_transport_drphi','_',DATA.PARAMS]; set(gcf, 'Position',  [100, 100, 1000, 600])
     subplot(311)
-    yyaxis left
-        plot(mvm(DATA.Ts0D),mvm(DATA.PGAMMA_RI*SCALE),'DisplayName','$\langle n_i \partial_y\phi \rangle_y$'); hold on;
-        plot(mvm(DATA.Ts3D),mvm(Gx_t_mtlb),'DisplayName','matlab comp.'); hold on;
-        plot(DATA.Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*Gx_infty_avg, '-k',...
-            'DisplayName',['$\Gamma^{\infty} = $',num2str(Gx_infty_avg),'$\pm$',num2str(Gx_infty_std)]);
-        ylabel('$\Gamma_x$')
-        ylim([0,5*abs(Gx_infty_avg)]); xlim([DATA.Ts0D(1),DATA.Ts0D(end)]);
-    yyaxis right
+%     yyaxis left
+%         plot(mvm(DATA.Ts0D),mvm(DATA.PGAMMA_RI*SCALE),'DisplayName','$\langle n_i \partial_y\phi \rangle_y$'); hold on;
+%         plot(mvm(DATA.Ts3D),mvm(Gx_t_mtlb),'DisplayName','matlab comp.'); hold on;
+%         plot(DATA.Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*Gx_infty_avg, '-k',...
+%             'DisplayName',['$\Gamma^{\infty} = $',num2str(Gx_infty_avg),'$\pm$',num2str(Gx_infty_std)]);
+%         ylabel('$\Gamma_x$')
+%         ylim([0,5*abs(Gx_infty_avg)]); 
+%         xlim([DATA.Ts0D(1),DATA.Ts0D(end)]);
+%     yyaxis right
         plot(mvm(DATA.Ts0D),mvm(DATA.HFLUX_X*SCALE),'DisplayName','$\langle n_i \partial_y\phi \rangle_y$'); hold on;
-        plot(mvm(DATA.Ts3D),mvm(Qx_t_mtlb),'DisplayName','matlab comp.'); hold on;
+%         plot(mvm(DATA.Ts3D),mvm(Qx_t_mtlb),'DisplayName','matlab comp.'); hold on;
         plot(DATA.Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*Qx_infty_avg, '-k',...
             'DisplayName',['$Q_x^{\infty} = $',num2str(Qx_infty_avg),'$\pm$',num2str(Qx_infty_std)]);
         ylabel('$Q_x$')  
-        ylim([0,5*abs(Qx_infty_avg)]); xlim([DATA.Ts0D(1),DATA.Ts0D(end)]);
+        ylim([0,2*abs(Qx_infty_avg)]); 
+        xlim([DATA.Ts0D(1),DATA.Ts0D(end)]);
     grid on; set(gca,'xticklabel',[]); 
     title({DATA.param_title,...
         ['$\Gamma^{\infty} = $',num2str(Gx_infty_avg),'$, Q^{\infty} = $',num2str(Qx_infty_avg)]});

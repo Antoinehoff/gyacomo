@@ -447,6 +447,7 @@ switch OPTIONS.NAME
         for it = 1:numel(OPTIONS.TIME)
             [~,it0_] =min(abs(OPTIONS.TIME(it)-DATA.Ts5D));
             OPTIONS.T = DATA.Ts5D(it0_);
+            OPTIONS.Z = OPTIONS.COMP;
             [~,~,FIELD(:,:,it)] = compute_fa(DATA,OPTIONS);
         end  
     case 'f_e'

@@ -35,7 +35,7 @@ switch options.iz
         Napj_     = Napj_(:,:,:,:,iz,:);
         phi_      = data.PHI(:,:,iz);
 end
-Napj_ = squeeze(Napj_);
+% Napj_ = squeeze(Napj_);
 
 frames = options.T;
 for it = 1:numel(options.T)
@@ -45,7 +45,7 @@ frames = unique(frames);
 
 Napj_     = mean(Napj_(:,:,:,:,frames),5);
 
-Napj_ = squeeze(Napj_);
+% Napj_ = squeeze(Napj_);
 
 
 Np = numel(parray); Nj = numel(jarray);

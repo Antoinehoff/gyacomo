@@ -38,7 +38,7 @@ switch options.iz
         Napj_     = Napj_(:,:,:,:,iz,:);
         phi_      = data.PHI(:,:,iz);
 end
-Napj_ = squeeze(Napj_);
+% Napj_ = squeeze(Napj_);
 
 frames = options.T;
 for it = 1:numel(options.T)
@@ -47,7 +47,7 @@ end
 
 Napj_     = mean(Napj_(:,:,:,:,frames),5);
 
-Napj_ = squeeze(Napj_);
+% Napj_ = squeeze(Napj_);
 
 if options.non_adiab
     for ij_ = 1:Nj
@@ -129,8 +129,8 @@ end
 Fs = real(Fs.*conj(Fs)); %|f_a|^2
 Fx = real(Fx.*conj(Fx)); %|f_a|^2
 if options.RMS
-Fs = squeeze(sqrt(mean(mean(Fs,1),2))); %sqrt(<|f_a|^2>kx,ky)
-Fx = squeeze(sqrt(mean(mean(Fx,1),2))); %sqrt(<|f_a|^2>kx,ky)
+Fs = squeeze(sqrt(sum(sum(Fs,1),2))); %sqrt(<|f_a|^2>kx,ky)
+Fx = squeeze(sqrt(sum(sum(Fx,1),2))); %sqrt(<|f_a|^2>kx,ky)
 end
 Fs = Fs./max(max(Fs));
 Fx = Fx./max(max(Fx));

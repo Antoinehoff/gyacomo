@@ -17,11 +17,7 @@ TNAME = [];
 FIGURE.fig = figure; set(gcf, 'Position',  toplot.DIMENSIONS.*[1 1 Ncols Nrows])
     for i_ = 1:numel(FRAMES)
     subplot(Nrows,Ncols,i_); TNAME = [TNAME,'_',sprintf('%.0f',DATA.Ts3D(FRAMES(i_)))];
-        if ~strcmp(OPTIONS.PLAN,'kxky')
-            scale = max(max(abs(toplot.FIELD(:,:,i_)))); % Scaling to normalize
-        else
-            scale = 1;
-        end
+        scale = max(max(abs(toplot.FIELD(:,:,i_)))); % Scaling to normalize
         if ~strcmp(OPTIONS.PLAN,'sx')
             tshot = DATA.Ts3D(FRAMES(i_));
             pclr = pcolor(toplot.X,toplot.Y,toplot.FIELD(:,:,i_)./scale); set(pclr, 'edgecolor','none');
