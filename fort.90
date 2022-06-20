@@ -1,7 +1,7 @@
 &BASIC
   nrun   = 100000000
-  dt     = 0.01
-  tmax   = 200
+  dt     = 0.015
+  tmax   = 400
   maxruntime = 356400
 /
 &GRID
@@ -9,22 +9,25 @@
   jmaxe  = 2
   pmaxi  = 4
   jmaxi  = 2
-  Nx     = 128
+  Nx     = 64
   Lx     = 100
-  Ny     = 128
+  Ny     = 32
   Ly     = 120
   Nz     = 16
+  SG     = .f.
+/
+&GEOMETRY
+  geom   = 's-alpha'
   q0     = 1.4
   shear  = 0
   eps    = 0.18
-  SG     = .t.
 /
 &OUTPUT_PAR
-  nsave_0d = 200
+  nsave_0d = 10
   nsave_1d = -1
-  nsave_2d = 200
-  nsave_3d = 200
-  nsave_5d = 2000
+  nsave_2d = -1
+  nsave_3d = 20
+  nsave_5d = 1000
   write_doubleprecision = .f.
   write_gamma = .t.
   write_hf    = .t.
@@ -39,7 +42,7 @@
 &MODEL_PAR
   ! Collisionality
   CLOS    = 0
-  NL_CLOS = 0
+  NL_CLOS = -1
   LINEARITY = 'nonlinear'
   KIN_E   = .f.
   mu_x    = 0.0
@@ -47,7 +50,7 @@
   mu_z    = 0.2
   mu_p    = 0
   mu_j    = 0
-  nu      = 0.01
+  nu      = 0.1
   tau_e   = 1
   tau_i   = 1
   sigma_e = 0.023338
@@ -57,16 +60,16 @@
   K_n     = 2.22
   K_T     = 6.96
   K_E     = 0
-  GradB     = 1
-  CurvB     = 1
+  GradB   = 1
+  CurvB   = 1
   lambdaD = 0
 /
 &COLLISION_PAR
-  collision_model = 'DG'
-  gyrokin_CO      = .true.
+  collision_model = 'SG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
+  gyrokin_CO      = .false.
   interspecies    = .true.
-!  mat_file        = '../../../iCa/gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
-  mat_file        = '../../../iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5'
+  mat_file        = 'iCa/gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
+!  mat_file        = 'iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5'
 /
 &INITIAL_CON
   INIT_OPT    = 'ppj'
