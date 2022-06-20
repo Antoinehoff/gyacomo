@@ -90,7 +90,7 @@ HF_phi_correction_operator(ikys:ikye,ikxs:ikxe,izs:ize) = &
        2._dp * Kernel_i(1,ikys:ikye,ikxs:ikxe,izs:ize,0) &
       -1._dp * Kernel_i(2,ikys:ikye,ikxs:ikxe,izs:ize,0)
 
-DO ij = ijgs_i, ijge_i
+DO ij = ijs_i, ije_i
   j_int = jarray_i(ij)
   j_dp  = REAL(j_int,dp)
   HF_phi_correction_operator(ikys:ikye,ikxs:ikxe,izs:ize) = HF_phi_correction_operator(ikys:ikye,ikxs:ikxe,izs:ize) &
