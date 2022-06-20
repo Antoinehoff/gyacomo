@@ -34,7 +34,7 @@ end
 
 if 0
 %% statistical transport averaging
-options.T = [200 500];
+options.T = [200 400];
 fig = statistical_transport_averaging(data,options);
 end
 
@@ -166,7 +166,7 @@ if 0
 %% Mode evolution
 options.NORMALIZED = 0;
 options.K2PLOT = 1;
-options.TIME   = 0:90;
+options.TIME   = 0:8000;
 options.NMA    = 1;
 options.NMODES = 15;
 options.iz     = 'avg';

@@ -4,7 +4,7 @@ helazdir = '/home/ahoffman/HeLaZ/';
 % if 1% Local results
 outfile ='';
 outfile ='';
-% outfile ='shearless_cyclone/64x32x16x5x3_CBC_080';
+outfile ='shearless_cyclone/64x32x16x5x3_CBC_080';
 % outfile ='shearless_cyclone/64x32x16x5x3_CBC_100';
 % outfile ='shearless_cyclone/64x32x16x5x3_CBC_120';
 

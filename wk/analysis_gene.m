@@ -1,7 +1,7 @@
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_0.8/';
-% folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.8/';
-folder = '/misc/gene_results/shearless_cyclone/rm_corrections_HF/';
+folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.2/';
+% folder = '/misc/gene_results/shearless_cyclone/rm_corrections_HF/';
 % folder = '/misc/gene_results/shearless_cyclone/linear_s_alpha_CBC_100/';
 % folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.5/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
