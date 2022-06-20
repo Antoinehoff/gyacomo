@@ -3,17 +3,23 @@ To compile it check INSTALLATION.txt
 
 How to run it
 
-1. Be sure to have correct paths in local/dirs.inc for the different libraries
-2. Compile from HeLaZ/ using make
-3. To run the code, use HeLaZ/wk/local_run.m and run it to set up the parameters and the results folder
-4. Then go to the results folder and launch HeLaZ using mpirun -np num_procs ./../../../bin/helaz num_p num_kr
-5. You can obtain various plots and gifs using HeLaZ/wk/analysis_2D.m once the simulation is done. To select the correct output file, run parameters*.m with the corresponding simulation parameters and then run analysis_2D.m (everything with matlab from wk/)
-6. The current simulation can be stopped at any moment by writing a file named "stop" in the simulation directory
+1. Be sure to have correct library paths in local/dirs.inc for the different libraries
+2. Compile from /HeLaZ using make, the binary will be located in /HeLaZ/bin
+4. You can run a typical CBC to test the compilation using the basic fort.90 parameter file,
+   just type ./bin/helaz3
+5. It is possible to run it in parallel (MPI) as mpirun -np N ./bin/helaz3 Np Ny Nz
+   where N=Np x Ny x Nz is the number of processes and Np Ny Nz are the parallel dimensions in
+	 Hermite polynomials, binormal direction and parallel direction, respectively
+6. You can stop your simulation without breaking output file by creating a blank file call "mystop"
+   in the directory where the simulation is running. (the file will be removed once read)
+7. You can obtain various plots and gifs using HeLaZ/wk/header_3D_results.m once the simulation is done.
 // Comment : For some collision operators (Sugama and Full Coulomb) you have to run COSOlver from B.J.Frei first in order to generate the required matrices in HeLaZ/iCa folder.
 
 # Changelog
 
 3. HeLaZ 3D
+	3.8 HeLaZ has been benchmarked in shearless CBC with GENE for various gradients values
+
 	3.7 The frequency plane has been transposed from positive kx to positive ky for easier implementation of shear. Also added 3D zpinch geometry
 
 	3.6 HeLaZ is now parallelized in p, kx and z and benchmarked for each parallel options with gbms (new molix) for linear fluxtube shearless.
