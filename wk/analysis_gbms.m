@@ -4,7 +4,7 @@
 % figure; plot(res.paramscan,res.growth_rate)
 
 %%
-resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/shearless_linear_cyclone/';
+% resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/shearless_linear_cyclone/';
 resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/RH_test/';
 % resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/linear_cyclone/';
 % resdir = '/home/ahoffman/molix/';

@@ -1,3 +1,4 @@
+%% CBC BENCHMARK
 cbc      = [0080 0100 0120];
 gm42     = [15.4 32.2 43.2];
 gm42_err = [2.22 05.2 08.1];
@@ -16,3 +17,25 @@ errorbar(cbc,gne,gne_err,'x-k','LineWidth',1.5);
 
 legend('GM (4,2)','GM (8,4)','Gene')
 xlabel('CBC drive [\%]'); ylabel('Radial Heat Flux $Q_x^\infty$');
+
+
+%% DIMITS
+
+KN       = 2.22;
+KT       = [1.00 0.90 0.80 0.70 0.60 0.50]*6.96;
+gm42     = [32.2 16.8 0.00 0.00 1.74 0.00];
+gm42_err = [05.2 02.8 0.00 0.00 0.53 0.00];
+gm84     = [0.00 0.00 0.00 0.00 0.00 0.00];
+gm84_err = [0.00 0.00 0.00 0.00 0.00 0.00];
+gne      = [0.00 0.00 0.00 0.00 0.00 0.00];
+gne_err  = [0.00 0.00 0.00 0.00 0.00 0.00];
+
+figure
+errorbar(KT./KN,gm42,gm42_err,'o-', 'LineWidth',1.5); hold on;
+errorbar(KT./KN,gm84,gm84_err,'o-', 'LineWidth',1.5);
+errorbar(KT./KN, gne, gne_err,'x-k','LineWidth',1.5);
+
+% set(gca, 'YScale', 'log')
+
+legend('GM (4,2)','GM (8,4)','Gene')
+xlabel('$\eta=\kappa_T/\kappa_N$'); ylabel('Radial Heat Flux $Q_x^\infty$');

@@ -15,6 +15,9 @@ shift = X_(n0);
 % plot(X_(n0:end),Y_(n0:end));
 plot(mvm(X_(n0:end)-shift),mvm(Y_(n0:end))); hold on;
 
+t0 = ceil(numel(X_)*0.5); t1 = numel(X_);
+avg= mean(Y_(t0:t1)); dev = std(Y_(t0:t1));
+  disp(['AVG =',sprintf('%2.2f',avg),'+-',sprintf('%2.2f',dev)]);
 % 
 % n1 = n0+1; n2 = min(n1 + 50000,numel(Y_));
 % avg_ = mean(Y_(n1:n2));
@@ -23,7 +26,7 @@ plot(mvm(X_(n0:end)-shift),mvm(Y_(n0:end))); hold on;
 % plot([X_(n1),X_(n2)],[1 1]*avg_,'--k')
 
 % ylim([0,avg_*3]);
-sum(Y_(2:end)./X_(2:end).^(3/2))
+% sum(Y_(2:end)./X_(2:end).^(3/2))
 %%
 
 if 0
