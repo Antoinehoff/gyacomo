@@ -86,13 +86,13 @@ SUBROUTINE compute_nonlinear
         bracket_sum_r = 0._dp ! initialize sum over real nonlinear term
         nloope: DO in = 1,nmax+1 ! Loop over laguerre for the sum
           ! First convolution terms
-          F_cmpx(ikxs:ikxe,ikxs:ikxe) = phi(ikxs:ikxe,ikxs:ikxe,iz) * kernel_e(in, ikxs:ikxe,ikxs:ikxe, iz, eo)
+          F_cmpx(ikys:ikye,ikxs:ikxe) = phi(ikys:ikye,ikxs:ikxe,iz) * kernel_e(in, ikys:ikye,ikxs:ikxe, iz, eo)
           ! Second convolution terms
-          G_cmpx(ikxs:ikxe,ikxs:ikxe) = 0._dp ! initialization of the sum
+          G_cmpx(ikys:ikye,ikxs:ikxe) = 0._dp ! initialization of the sum
           smax = MIN( (in-1)+(ij-1), Jmaxe );
           DO is = 1, smax+1 ! sum truncation on number of moments
-            G_cmpx(ikxs:ikxe,ikxs:ikxe)  = G_cmpx(ikxs:ikxe,ikxs:ikxe) + &
-              dnjs(in,ij,is) * moments_e(ip,is,ikxs:ikxe,ikxs:ikxe,iz,updatetlevel)
+            G_cmpx(ikys:ikye,ikxs:ikxe)  = G_cmpx(ikys:ikye,ikxs:ikxe) + &
+              dnjs(in,ij,is) * moments_e(ip,is,ikys:ikye,ikxs:ikxe,iz,updatetlevel)
           ENDDO
           !/!\ this function add its result to bracket_sum_r (hard to read sorry) /!\
           CALL poisson_bracket_and_sum(F_cmpx,G_cmpx)
