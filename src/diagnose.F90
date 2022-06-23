@@ -173,9 +173,18 @@ SUBROUTINE diagnose_full(kstep)
      IF (write_gamma) THEN
        CALL creatd(fidres, rank, dims, "/data/var0d/gflux_ri", "Radial gyro ion transport")
        CALL creatd(fidres, rank, dims, "/data/var0d/pflux_ri", "Radial part ion transport")
+       IF(KIN_E) THEN
+       CALL creatd(fidres, rank, dims, "/data/var0d/gflux_re", "Radial gyro electron transport")
+       CALL creatd(fidres, rank, dims, "/data/var0d/pflux_re", "Radial part electron transport")
+       ENDIF
      ENDIF
      IF (write_hf) THEN
-       CALL creatd(fidres, rank, dims, "/data/var0d/hflux_x", "Radial part ion heat flux")
+       CALL creatd(fidres, rank, dims, "/data/var0d/hflux_xi", "Radial part ion heat flux")
+       CALL creatd(fidres, rank, dims, "/data/var0d/hflux_xi", "Radial part ion heat flux")
+       IF(KIN_E) THEN
+       CALL creatd(fidres, rank, dims, "/data/var0d/hflux_xe", "Radial part electron heat flux")
+       CALL creatd(fidres, rank, dims, "/data/var0d/hflux_xe", "Radial part electron heat flux")
+       ENDIF
      ENDIF
      IF (cstep==0) THEN
        iframe0d=0
@@ -358,10 +367,19 @@ SUBROUTINE diagnose_0d
     CALL compute_radial_ion_transport
     CALL append(fidres, "/data/var0d/gflux_ri",gflux_ri,ionode=0)
     CALL append(fidres, "/data/var0d/pflux_ri",pflux_ri,ionode=0)
+    IF(KIN_E) THEN
+    CALL compute_radial_electron_transport
+    CALL append(fidres, "/data/var0d/gflux_re",gflux_re,ionode=0)
+    CALL append(fidres, "/data/var0d/pflux_re",pflux_re,ionode=0)
+    ENDIF
   ENDIF
   IF (write_hf) THEN
-    CALL compute_radial_heatflux
-    CALL append(fidres, "/data/var0d/hflux_x",hflux_x,ionode=0)
+    CALL compute_radial_ion_heatflux
+    CALL append(fidres, "/data/var0d/hflux_xi",hflux_xi,ionode=0)
+    IF(KIN_E) THEN
+    CALL compute_radial_electron_heatflux
+    CALL append(fidres, "/data/var0d/hflux_xe",hflux_xe,ionode=0)
+    ENDIF
   ENDIF
 END SUBROUTINE diagnose_0d
 

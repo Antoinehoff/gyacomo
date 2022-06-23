@@ -4,13 +4,14 @@ MODULE processing
     USE grid
     implicit none
 
-    REAL(dp), PUBLIC, PROTECTED :: pflux_ri, gflux_ri
-    REAL(dp), PUBLIC, PROTECTED :: hflux_x
+    REAL(dp), PUBLIC, PROTECTED :: pflux_ri, gflux_ri, pflux_re, gflux_re
+    REAL(dp), PUBLIC, PROTECTED :: hflux_xi, hflux_xe
 
     PUBLIC :: compute_nadiab_moments_z_gradients_and_interp
     PUBLIC :: compute_density, compute_upar, compute_uperp
     PUBLIC :: compute_Tpar, compute_Tperp, compute_fluid_moments
-    PUBLIC :: compute_radial_ion_transport, compute_radial_heatflux
+    PUBLIC :: compute_radial_ion_transport, compute_radial_electron_transport
+    PUBLIC :: compute_radial_ion_heatflux, compute_radial_electron_heatflux
     PUBLIC :: compute_Napjz_spectrum
 CONTAINS
 
@@ -89,8 +90,82 @@ SUBROUTINE compute_radial_ion_transport
     ! if(my_id .eq. 0) write(*,*) 'pflux_ri = ',pflux_ri
 END SUBROUTINE compute_radial_ion_transport
 
+! 1D diagnostic to compute the average radial particle transport <n_e v_ExB_x>_xyz
+SUBROUTINE compute_radial_electron_transport
+    USE fields,           ONLY : moments_e, phi
+    USE array,            ONLY : kernel_e
+    USE geometry,         ONLY : Jacobian, iInt_Jacobian
+    USE time_integration, ONLY : updatetlevel
+    USE calculus,         ONLY : simpson_rule_z
+    IMPLICIT NONE
+    COMPLEX(dp) :: pflux_local, gflux_local, integral
+    REAL(dp)    :: ky_, buffer(1:2)
+    INTEGER     :: i_, world_rank, world_size, root
+    COMPLEX(dp), DIMENSION(izgs:izge) :: integrant
+
+    pflux_local = 0._dp ! particle flux
+    gflux_local = 0._dp ! gyrocenter flux
+    integrant   = 0._dp ! auxiliary variable for z integration
+    IF(ips_e .EQ. 1) THEN
+      !! Gyro center flux (drift kinetic)
+      DO iky = ikys,ikye
+          ky_ = kyarray(iky)
+          DO ikx = ikxs,ikxe
+            DO iz = izgs,izge
+              integrant(iz) = Jacobian(iz,0)*imagu * ky_ * moments_e(ip0_e,1,iky,ikx,iz,updatetlevel) * CONJG(phi(iky,ikx,iz))
+            ENDDO
+            ! Integrate over z
+            call simpson_rule_z(integrant,integral)
+            ! add contribution
+            gflux_local = gflux_local + integral*iInt_Jacobian
+        ENDDO
+      ENDDO
+      !! Particle flux
+      DO iky = ikys,ikye
+          ky_ = kyarray(iky)
+          DO ikx = ikxs,ikxe
+            integrant   = 0._dp ! auxiliary variable for z integration
+              DO ij = ijs_e, ije_e
+                DO iz = izgs,izge
+                  integrant(iz) = integrant(iz) + &
+                      Jacobian(iz,0)*imagu * ky_ * kernel_e(ij,iky,ikx,iz,0) &
+                      *moments_e(ip0_e,ij,iky,ikx,iz,updatetlevel) * CONJG(phi(iky,ikx,iz))
+                ENDDO
+              ENDDO
+              ! Integrate over z
+              call simpson_rule_z(integrant,integral)
+              ! add contribution
+              pflux_local = pflux_local + integral*iInt_Jacobian
+        ENDDO
+      ENDDO
+    ENDIF
+    buffer(1) = REAL(gflux_local)
+    buffer(2) = REAL(pflux_local)
+    root = 0
+    !Gather manually among the rank_p=0 processes and perform the sum
+    gflux_re = 0
+    pflux_re = 0
+    IF (num_procs_ky .GT. 1) THEN
+        !! Everyone sends its local_sum to root = 0
+        IF (rank_ky .NE. root) THEN
+            CALL MPI_SEND(buffer, 2 , MPI_DOUBLE_PRECISION, root, 1234, comm_ky, ierr)
+        ELSE
+            ! Recieve from all the other processes
+            DO i_ = 0,num_procs_ky-1
+                IF (i_ .NE. rank_ky) &
+                    CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
+                    gflux_re = gflux_re + buffer(1)
+                    pflux_re = pflux_re + buffer(2)
+            ENDDO
+        ENDIF
+    ELSE
+      gflux_re = gflux_local
+      pflux_re = pflux_local
+    ENDIF
+END SUBROUTINE compute_radial_electron_transport
+
 ! 1D diagnostic to compute the average radial particle transport <T_i v_ExB_x>_xyz
-SUBROUTINE compute_radial_heatflux
+SUBROUTINE compute_radial_ion_heatflux
     USE fields,           ONLY : moments_i, moments_e, phi
     USE array,            ONLY : kernel_e, kernel_i, HF_phi_correction_operator
     USE geometry,         ONLY : Jacobian, iInt_Jacobian
@@ -132,7 +207,7 @@ SUBROUTINE compute_radial_heatflux
         buffer(2) = 2._dp*REAL(hflux_local)
         root = 0
         !Gather manually among the rank_p=0 processes and perform the sum
-        hflux_x = 0
+        hflux_xi = 0
         IF (num_procs_ky .GT. 1) THEN
             !! Everyone sends its local_sum to root = 0
             IF (rank_ky .NE. root) THEN
@@ -142,14 +217,78 @@ SUBROUTINE compute_radial_heatflux
                 DO i_ = 0,num_procs_ky-1
                     IF (i_ .NE. rank_ky) &
                         CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
-                        hflux_x = hflux_x + buffer(2)
+                        hflux_xi = hflux_xi + buffer(2)
                 ENDDO
             ENDIF
         ELSE
-          hflux_x = hflux_local
+          hflux_xi = hflux_local
         ENDIF
     ENDIF
-END SUBROUTINE compute_radial_heatflux
+END SUBROUTINE compute_radial_ion_heatflux
+
+
+! 1D diagnostic to compute the average radial particle transport <T_e v_ExB_x>_xyz
+SUBROUTINE compute_radial_electron_heatflux
+    USE fields,           ONLY : moments_e, moments_e, phi
+    USE array,            ONLY : kernel_e, kernel_e, HF_phi_correction_operator
+    USE geometry,         ONLY : Jacobian, iInt_Jacobian
+    USE time_integration, ONLY : updatetlevel
+    USE model,            ONLY : qe_taue, qi_taui, KIN_E, tau_e, tau_e
+    USE calculus,         ONLY : simpson_rule_z
+    IMPLICIT NONE
+    COMPLEX(dp) :: hflux_local, integral
+    REAL(dp)    :: ky_, buffer(1:2), n_dp
+    INTEGER     :: i_, world_rank, world_size, root, in
+    COMPLEX(dp), DIMENSION(izgs:izge) :: integrant        ! charge density q_a n_a
+
+    hflux_local = 0._dp ! heat flux
+    IF(ips_e .EQ. 1 .AND. ips_e .EQ. 1) THEN
+        ! Loop to compute gamma_kx = sum_ky sum_j -i k_z Kernel_j Ni00 * phi
+        DO iky = ikys,ikye
+          ky_ = kyarray(iky)
+          DO ikx = ikxs,ikxe
+            integrant = 0._dp
+            DO in = ijs_e, ije_e
+              n_dp = jarray_e(in)
+
+              integrant(izs:ize) = integrant(izs:ize) + Jacobian(izs:ize,0)*tau_e*imagu*ky_*CONJG(phi(iky,ikx,izs:ize))&
+               *kernel_e(in,iky,ikx,iz,0)*(&
+                             0.5_dp*SQRT2*moments_e(ip2_e,in  ,iky,ikx,izs:ize,updatetlevel)&
+                   +(2._dp*n_dp + 1.5_dp)*moments_e(ip0_e,in  ,iky,ikx,izs:ize,updatetlevel)&
+                            -(n_dp+1._dp)*moments_e(ip0_e,in+1,iky,ikx,izs:ize,updatetlevel)&
+                                    -n_dp*moments_e(ip0_e,in-1,iky,ikx,izs:ize,updatetlevel))
+            ENDDO
+            ! Add polarisation contribution
+            integrant(izs:ize) = integrant(izs:ize) + Jacobian(izs:ize,0)*tau_e*imagu*ky_&
+            *CONJG(phi(iky,ikx,izs:ize))*phi(iky,ikx,izs:ize) * HF_phi_correction_operator(iky,ikx,izs:ize)
+            ! Integrate over z
+            call simpson_rule_z(integrant,integral)
+            hflux_local = hflux_local + integral*iInt_Jacobian
+          ENDDO
+        ENDDO
+        ! Double it for taking into account the other half plane
+        buffer(2) = 2._dp*REAL(hflux_local)
+        root = 0
+        !Gather manually among the rank_p=0 processes and perform the sum
+        hflux_xe = 0
+        IF (num_procs_ky .GT. 1) THEN
+            !! Everyone sends its local_sum to root = 0
+            IF (rank_ky .NE. root) THEN
+                CALL MPI_SEND(buffer, 2 , MPI_DOUBLE_PRECISION, root, 1234, comm_ky, ierr)
+            ELSE
+                ! Recieve from all the other processes
+                DO i_ = 0,num_procs_ky-1
+                    IF (i_ .NE. rank_ky) &
+                        CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
+                        hflux_xe = hflux_xe + buffer(2)
+                ENDDO
+            ENDIF
+        ELSE
+          hflux_xe = hflux_local
+        ENDIF
+    ENDIF
+END SUBROUTINE compute_radial_electron_heatflux
+
 
 SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
   ! evaluate the non-adiabatique ion moments
