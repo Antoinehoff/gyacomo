@@ -41,9 +41,9 @@ linear_gr.ce     = abs(ce);
 linear_gr.ky     = kys;
 if PLOT >0
        figure
-       plot(linear_gr.ky,linear_gr.g_ky(:,end),'DisplayName','$Re(\omega_{k_y})$'); hold on;
-       plot(linear_gr.ky,linear_gr.w_ky(:,end),'DisplayName','$Im(\omega_{k_y})$'); hold on;
-       plot(linear_gr.ky,linear_gr.ce  (:,end),'DisplayName','$\epsilon$'); hold on;
+       plot(linear_gr.ky,linear_gr.g_ky(:,end),'-o','DisplayName','$Re(\omega_{k_y})$'); hold on;
+       plot(linear_gr.ky,linear_gr.w_ky(:,end),'-o','DisplayName','$Im(\omega_{k_y})$'); hold on;
+       plot(linear_gr.ky,linear_gr.ce  (:,end),'-o','DisplayName','$\epsilon$'); hold on;
        xlim([min(linear_gr.ky) max(linear_gr.ky)]);
        xlabel('$k_y$');
        legend('show');

@@ -1,7 +1,8 @@
 % Hflux_x = 0;
 % Hflux_x = 0 * data.Ts5D;
-filename = '/home/ahoffman/HeLaZ/results/shearless_cyclone/64x32x16x5x3_CBC_100/outputs_00.h5';
-kernel_i = h5read(filename,'/data/metric/kernel_i');
+% filename = '/home/ahoffman/HeLaZ/results/shearless_cyclone/64x32x16x5x3_CBC_100/outputs_00.h5';
+filename = '/misc/HeLaZ_outputs/results/shearless_cyclone/64x32x160x5x3_CBC_Npol_10_kine/outputs_00.h5';
+kernel_i = h5read(filename,'/data/metric/kernel_i'); sigma = 0.0738;
 Jacobian = h5read(filename,'/data/metric/Jacobian');
 STEPS = 1:numel(data.Ts5D);
 Hflux_x = 1:numel(STEPS);
@@ -35,9 +36,9 @@ for it = STEPS
     correct_op = zeros(Nky,Nkx,Nz);
     for in = 1:Nj
         n = in-1;
-        Kn    = squeeze(kernel_i(in,:,:,:,1));
-        N2n   = squeeze(data.Nipj(3,in  ,:,:,:,it5d));
-        N0n   = squeeze(data.Nipj(1,in  ,:,:,:,it5d));
+        Kn    = squeeze(kernel_i(in,:,:,:,1))*sigma^(2*n);
+        N2n   = squeeze(data.Nepj(3,in  ,:,:,:,it5d));
+        N0n   = squeeze(data.Nepj(1,in  ,:,:,:,it5d));
         sumkernmom = sumkernmom + ...
             Kn.* (c2n(n) .* N2n + c0n(n) .* N0n);
         

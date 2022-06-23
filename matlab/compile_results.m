@@ -72,9 +72,11 @@ while(CONTINUE)
                 tmp = Nipj_; sz = size(tmp);
                 Nipj_ = zeros(cat(1,[Pi_new,Ji_new]',sz(3:end)')');
                 Nipj_(1:Pi_old,1:Ji_old,:,:,:,:) = tmp;
+                if(KIN_E) 
                 tmp = Nepj_; sz = size(tmp);
-%                 Nepj_ = zeros(cat(1,[Pe_new,Je_new]',sz(3:end)')');
-%                 Nepj_(1:Pe_old,1:Je_old,:,:,:,:) = tmp;
+                Nepj_ = zeros(cat(1,[Pe_new,Je_new]',sz(3:end)')');
+                Nepj_(1:Pe_old,1:Je_old,:,:,:,:) = tmp;
+                end
             end
             if W_SAPJ
                 tmp = Sipj_; sz = size(tmp);

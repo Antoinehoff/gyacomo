@@ -13,22 +13,22 @@ EXECNAME = 'helaz3';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.05;   % Collision frequency
+NU      = 0.1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-K_N     = 0;%2.22;   % Density gradient drive
-K_T     = 0;%6.96;   % Temperature '''
+K_N     = 2.22;   % Density gradient drive
+K_T     = 6.96;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
 SIGMA_E = 0.05196152422706632;%0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 0;     % 1: kinetic electrons, 2: adiabatic electrons
 %% GRID PARAMETERS
-PMAXE   = 8;     % Hermite basis size of electrons
-JMAXE   = 4;     % Laguerre "
-PMAXI   = 8;     % " ions
-JMAXI   = 4;     % "
-NX      = 2;    % real space x-gridpoints
-NY      = 1;     %     ''     y-gridpoints
+PMAXE   = 4;     % Hermite basis size of electrons
+JMAXE   = 2;     % Laguerre "
+PMAXI   = 4;     % " ions
+JMAXI   = 2;     % "
+NX      = 20;    % real space x-gridpoints
+NY      = 2;     %     ''     y-gridpoints
 LX      = 100;   % Size of the squared frequency domain
-LY      = 60;     % Size of the squared frequency domain
+LY      = 20;     % Size of the squared frequency domain
 NZ      = 32;     % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
@@ -36,11 +36,11 @@ SG      = 0;     % Staggered z grids option
 % GEOMETRY= 'Z-pinch'; % Z-pinch overwrites q0, shear and eps
 GEOMETRY= 's-alpha';
 Q0      = 1.4;    % safety factor
-SHEAR   = 0.0;    % magnetic shear (Not implemented yet)
+SHEAR   = 0.8;    % magnetic shear (Not implemented yet)
 EPS     = 0.18;    % inverse aspect ratio
 %% TIME PARMETERS
 TMAX    = 50;  % Maximal time unit
-DT      = 2e-2;   % Time step
+DT      = 1e-2;   % Time step
 SPS0D   = 20;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 20;      % Sampling per time unit for 2D arrays
@@ -48,7 +48,7 @@ SPS5D   = 1;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
 %% OPTIONS
-SIMID   = 'Ros_Hin_test';  % Name of the simulation
+SIMID   = 'linear_CBC';  % Name of the simulation
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
@@ -59,7 +59,7 @@ INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))s
 NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)
-INIT_OPT= 'mom00';   % Start simulation with a noisy mom00/phi/allmom
+INIT_OPT= 'phi';   % Start simulation with a noisy mom00/phi/allmom
 %% OUTPUTS
 W_DOUBLE = 1;
 W_GAMMA  = 1; W_HF     = 1;
@@ -90,8 +90,8 @@ system(['rm fort*.90']);
 % Run linear simulation
 if RUN
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',HELAZDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 1 4 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',HELAZDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 1 4 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
 end
 
@@ -104,7 +104,7 @@ JOBNUMMIN = 00; JOBNUMMAX = 00;
 data = compile_results(LOCALDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 
 %% Short analysis
-if 0
+if 1
 %% linear growth rate (adapted for 2D zpinch and fluxtube)
 trange = [0.5 1]*data.Ts3D(end);
 nplots = 1;
