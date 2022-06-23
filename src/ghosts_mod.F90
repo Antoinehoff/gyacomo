@@ -4,6 +4,7 @@ USE fields, ONLY : moments_e, moments_i, phi
 USE grid
 USE time_integration
 USE model, ONLY : KIN_E
+USE geometry, ONLY : SHEARED, ikx_zBC_map
 
 IMPLICIT NONE
 
@@ -122,7 +123,7 @@ END SUBROUTINE update_ghosts_z_moments
 SUBROUTINE update_ghosts_z_e
 
   IMPLICIT NONE
-
+  INTEGER :: ikxBC
   CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
   IF (num_procs_z .GT. 1) THEN
 
@@ -145,20 +146,44 @@ SUBROUTINE update_ghosts_z_e
                       moments_e(:,:,:,:,ize+2,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 23, & ! Recieve from Up the last+2
                       comm0, status, ierr)
   ELSE ! still need to perform periodic boundary conditions
-    ! first-1 gets last
-    moments_e(:,:,:,:,izs-1,updatetlevel) = moments_e(:,:,:,:,ize  ,updatetlevel)
-    ! first-2 gets last-1
-    moments_e(:,:,:,:,izs-2,updatetlevel) = moments_e(:,:,:,:,ize-1,updatetlevel)
-    ! last+1 gets first
-    moments_e(:,:,:,:,ize+1,updatetlevel) = moments_e(:,:,:,:,izs  ,updatetlevel)
-    ! last+2 gets first+1
-    moments_e(:,:,:,:,ize+2,updatetlevel) = moments_e(:,:,:,:,izs+1,updatetlevel)
+    IF(SHEARED) THEN
+    DO iky = ikys,ikye
+      DO ikx = ikxs,ikxe
+        ikxBC = ikx_zBC_map(ikx,iky);
+        IF (ikxBC .NE. -1) THEN ! Exchanging the modes that have a periodic pair (a)
+          ! first-1 gets last
+          moments_e(iky,ikx,:,:,izs-1,updatetlevel) = moments_e(iky,ikxBC,:,:,ize  ,updatetlevel)
+          ! first-2 gets last-1
+          moments_e(iky,ikx,:,:,izs-2,updatetlevel) = moments_e(iky,ikxBC,:,:,ize-1,updatetlevel)
+          ! last+1 gets first
+          moments_e(iky,ikx,:,:,ize+1,updatetlevel) = moments_e(iky,ikxBC,:,:,izs  ,updatetlevel)
+          ! last+2 gets first+1
+          moments_e(iky,ikx,:,:,ize+2,updatetlevel) = moments_e(iky,ikxBC,:,:,izs+1,updatetlevel)
+        ELSE
+          moments_e(iky,ikx,:,:,izs-1,updatetlevel) = 0._dp
+          moments_e(iky,ikx,:,:,izs-2,updatetlevel) = 0._dp
+          moments_e(iky,ikx,:,:,ize+1,updatetlevel) = 0._dp
+          moments_e(iky,ikx,:,:,ize+2,updatetlevel) = 0._dp
+        ENDIF
+      ENDDO
+    ENDDO
+    ELSE ! No shear so simple periodic BC
+      ! first-1 gets last
+      moments_e(:,:,:,:,izs-1,updatetlevel) = moments_e(:,:,:,:,ize  ,updatetlevel)
+      ! first-2 gets last-1
+      moments_e(:,:,:,:,izs-2,updatetlevel) = moments_e(:,:,:,:,ize-1,updatetlevel)
+      ! last+1 gets first
+      moments_e(:,:,:,:,ize+1,updatetlevel) = moments_e(:,:,:,:,izs  ,updatetlevel)
+      ! last+2 gets first+1
+      moments_e(:,:,:,:,ize+2,updatetlevel) = moments_e(:,:,:,:,izs+1,updatetlevel)
+    ENDIF
   ENDIF
 END SUBROUTINE update_ghosts_z_e
 
 SUBROUTINE update_ghosts_z_i
 
   IMPLICIT NONE
+  INTEGER :: ikxBC
   CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
   IF (num_procs_z .GT. 1) THEN
 
@@ -180,20 +205,45 @@ SUBROUTINE update_ghosts_z_i
     CALL mpi_sendrecv(moments_i(:,:,:,:,izs+1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 33, & ! Send to Down the first+1
                       moments_i(:,:,:,:,ize+2,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 33, & ! Recieve from Down the last+2
                       comm0, status, ierr)
-  ELSE ! still need to perform periodic boundary conditions
-    moments_i(:,:,:,:,izs-1,updatetlevel) = moments_i(:,:,:,:,ize  ,updatetlevel)
-
-    moments_i(:,:,:,:,izs-2,updatetlevel) = moments_i(:,:,:,:,ize-1,updatetlevel)
-
-    moments_i(:,:,:,:,ize+1,updatetlevel) = moments_i(:,:,:,:,izs  ,updatetlevel)
-
-    moments_i(:,:,:,:,ize+2,updatetlevel) = moments_i(:,:,:,:,izs+1,updatetlevel)
-  ENDIF
+    ELSE ! still need to perform periodic boundary conditions
+      IF(SHEARED) THEN
+      DO iky = ikys,ikye
+        DO ikx = ikxs,ikxe
+          ikxBC = ikx_zBC_map(iky,ikx);
+          IF (ikxBC .NE. -1) THEN ! Exchanging the modes that have a periodic pair (a)
+            ! first-1 gets last
+            moments_i(:,:,iky,ikx,izs-1,updatetlevel) = moments_i(:,:,iky,ikxBC,ize  ,updatetlevel)
+            ! first-2 gets last-1
+            moments_i(:,:,iky,ikx,izs-2,updatetlevel) = moments_i(:,:,iky,ikxBC,ize-1,updatetlevel)
+            ! last+1 gets first
+            moments_i(:,:,iky,ikx,ize+1,updatetlevel) = moments_i(:,:,iky,ikxBC,izs  ,updatetlevel)
+            ! last+2 gets first+1
+            moments_i(:,:,iky,ikx,ize+2,updatetlevel) = moments_i(:,:,iky,ikxBC,izs+1,updatetlevel)
+          ELSE
+            moments_i(:,:,iky,ikx,izs-1,updatetlevel) = 0._dp
+            moments_i(:,:,iky,ikx,izs-2,updatetlevel) = 0._dp
+            moments_i(:,:,iky,ikx,ize+1,updatetlevel) = 0._dp
+            moments_i(:,:,iky,ikx,ize+2,updatetlevel) = 0._dp
+          ENDIF
+        ENDDO
+      ENDDO
+      ELSE ! No shear so simple periodic BC
+      ! first-1 gets last
+      moments_i(:,:,:,:,izs-1,updatetlevel) = moments_i(:,:,:,:,ize  ,updatetlevel)
+      ! first-2 gets last-1
+      moments_i(:,:,:,:,izs-2,updatetlevel) = moments_i(:,:,:,:,ize-1,updatetlevel)
+      ! last+1 gets first
+      moments_i(:,:,:,:,ize+1,updatetlevel) = moments_i(:,:,:,:,izs  ,updatetlevel)
+      ! last+2 gets first+1
+      moments_i(:,:,:,:,ize+2,updatetlevel) = moments_i(:,:,:,:,izs+1,updatetlevel)
+      ENDIF
+    ENDIF
 END SUBROUTINE update_ghosts_z_i
 
 SUBROUTINE update_ghosts_z_phi
 
   IMPLICIT NONE
+  INTEGER :: ikxBC
   CALL cpu_time(t1_ghost)
   IF(Nz .GT. 1) THEN
     CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
@@ -221,6 +271,38 @@ SUBROUTINE update_ghosts_z_phi
       phi(:,:,izs-2) = phi(:,:,ize-1)
       phi(:,:,ize+1) = phi(:,:,izs)
       phi(:,:,ize+2) = phi(:,:,izs+1)
+
+      IF(SHEARED) THEN
+      DO iky = ikys,ikye
+        DO ikx = ikxs,ikxe
+          ikxBC = ikx_zBC_map(iky,ikx);
+          IF (ikxBC .NE. -1) THEN ! Exchanging the modes that have a periodic pair (a)
+            ! first-1 gets last
+            phi(iky,ikx,izs-1) = phi(iky,ikxBC,ize  )
+            ! first-2 gets last-1
+            phi(iky,ikx,izs-2) = phi(iky,ikxBC,ize-1)
+            ! last+1 gets first
+            phi(iky,ikx,ize+1) = phi(iky,ikxBC,izs  )
+            ! last+2 gets first+1
+            phi(iky,ikx,ize+2) = phi(iky,ikxBC,izs+1)
+          ELSE
+            phi(iky,ikx,izs-1) = 0._dp
+            phi(iky,ikx,izs-2) = 0._dp
+            phi(iky,ikx,ize+1) = 0._dp
+            phi(iky,ikx,ize+2) = 0._dp
+          ENDIF
+        ENDDO
+      ENDDO
+      ELSE ! No shear so simple periodic BC
+      ! first-1 gets last
+      phi(:,:,izs-1) = phi(:,:,ize  )
+      ! first-2 gets last-1
+      phi(:,:,izs-2) = phi(:,:,ize-1)
+      ! last+1 gets first
+      phi(:,:,ize+1) = phi(:,:,izs  )
+      ! last+2 gets first+1
+      phi(:,:,ize+2) = phi(:,:,izs+1)
+      ENDIF
     ENDIF
   ENDIF
   CALL cpu_time(t1_ghost)

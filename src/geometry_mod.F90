@@ -18,7 +18,7 @@ implicit none
   REAL(dp),    PUBLIC, PROTECTED :: q0       = 1.4_dp  ! safety factor
   REAL(dp),    PUBLIC, PROTECTED :: shear    = 0._dp   ! magnetic field shear
   REAL(dp),    PUBLIC, PROTECTED :: eps      = 0.18_dp ! inverse aspect ratio
-
+  LOGICAL,     PUBLIC, PROTECTED :: SHEARED  = .false.     ! flag for shear magn. geom or not
   ! Geometrical operators
   ! Curvature
   REAL(dp),    PUBLIC, DIMENSION(:,:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z, odd/even p
@@ -36,10 +36,11 @@ implicit none
   REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatR, hatZ
   ! Some geometrical coefficients
   REAL(dp),    PUBLIC, DIMENSION(:,:) , ALLOCATABLE :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
-
+  ! Array to map the index of mode (kx,ky,-pi) to (kx+2pi*s*ky,ky,pi) for sheared periodic boundary condition
+  INTEGER,     PUBLIC, DIMENSION(:,:), ALLOCATABLE :: ikx_zBC_map
   ! Functions
-  PUBLIC :: geometry_readinputs, geometry_outputinputs, eval_magnetic_geometry
-
+  PUBLIC :: geometry_readinputs, geometry_outputinputs,&
+            eval_magnetic_geometry, set_ikx_zBC_map
 CONTAINS
 
 
@@ -48,6 +49,7 @@ CONTAINS
     IMPLICIT NONE
     NAMELIST /GEOMETRY/ geom, q0, shear, eps
     READ(lu_in,geometry)
+    IF(shear .NE. 0._dp) SHEARED = .true.
 
   END SUBROUTINE geometry_readinputs
 
@@ -93,6 +95,8 @@ CONTAINS
        ENDDO
     ENDDO
     ENDDO
+    ! set the mapping for parallel boundary conditions
+    CALL set_ikx_zBC_map
 
     two_third_kpmax = 2._dp/3._dp * MAXVAL(kparray)
     !
@@ -259,9 +263,61 @@ CONTAINS
   ENDDO parity
 
    END SUBROUTINE eval_1D_geometry
+
    !
    !--------------------------------------------------------------------------------
    !
+
+ SUBROUTINE set_ikx_zBC_map
+ IMPLICIT NONE
+ INTEGER,  DIMENSION(:), ALLOCATABLE   :: ikx_array
+ INTEGER :: shift
+ ALLOCATE(ikx_array(ikxs:ikxe))
+ DO ikx = ikxs,ikxe
+     ikx_array(ikx) = MODULO(ikx - Nx/2,Nx) + 1
+ ENDDO
+ IF(SHEARED) THEN
+   !! We allocate a mapping to tell where the current mode will point for the
+   !  parallel periodic sheared BC for the kx index:
+   ! map for 0 Dirichlet BC
+   !3            | 1    2    3    4    5   -1   -1   -1|
+   !2   ky       | 8    1    2    3    4    5   -1   -1|
+   !1   A        | 7    8    1    2    3    4    5   -1|
+   !0   | -> kx  | 6____7____8____1____2____3____4____5|
+   ! map for periodic BC
+   !3            | 1    2    3    4    5   -1   -1   -1|
+   !2   ky       | 8    1    2    3    4    5   -1   -1|
+   !1   A        | 7    8    1    2    3    4    5   -1|
+   !0   | -> kx  | 6____7____8____1____2____3____4____5|
+   ALLOCATE(ikx_zBC_map(ikys:ikye,ikxs:ikxe))
+   ikx_zBC_map(ikys:ikye,ikxs:ikxe) = -1
+   DO iky = ikys,ikye
+       DO ikx = ikxs,ikxe - iky + 1
+       shift = ikx_array(MODULO(ikx+iky-1,Nx+1))
+       ikx_zBC_map(iky,ikx) = shift
+       ENDDO
+   ENDDO
+ ELSE
+   !! No shear case (simple id mapping)
+   !3            | 6    7    8    1    2    3    4    5|
+   !2   ky       | 6    7    8    1    2    3    4    5|
+   !1   A        | 6    7    8    1    2    3    4    5|
+   !0   | -> kx  | 6____7____8____1____2____3____4____5|
+   DO iky = ikys,ikye
+     ikx_zBC_map(iky,:) = ikx_array(:)
+   ENDDO
+ENDIF
+! IF (my_id .EQ. 0) THEN
+!   write(*,*) 'ikx map for parallel BC'
+!  DO, iky = ikys,ikye
+!      write(*,*) ( ikx_zBC_map(iky,ikx), ikx=ikxs,ikxe )
+!  enddo
+! ENDIF
+END SUBROUTINE set_ikx_zBC_map
+
+!
+!--------------------------------------------------------------------------------
+!
 
    SUBROUTINE geometry_allocate_mem
 
