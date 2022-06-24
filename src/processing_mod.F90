@@ -166,11 +166,11 @@ END SUBROUTINE compute_radial_electron_transport
 
 ! 1D diagnostic to compute the average radial particle transport <T_i v_ExB_x>_xyz
 SUBROUTINE compute_radial_ion_heatflux
-    USE fields,           ONLY : moments_i, moments_e, phi
-    USE array,            ONLY : kernel_e, kernel_i, HF_phi_correction_operator
+    USE fields,           ONLY : moments_i, phi
+    USE array,            ONLY : kernel_i, HF_phi_correction_operator
     USE geometry,         ONLY : Jacobian, iInt_Jacobian
     USE time_integration, ONLY : updatetlevel
-    USE model,            ONLY : qe_taue, qi_taui, KIN_E, tau_i, tau_e
+    USE model,            ONLY : qi_taui, KIN_E, tau_i
     USE calculus,         ONLY : simpson_rule_z
     IMPLICIT NONE
     COMPLEX(dp) :: hflux_local, integral
@@ -229,11 +229,11 @@ END SUBROUTINE compute_radial_ion_heatflux
 
 ! 1D diagnostic to compute the average radial particle transport <T_e v_ExB_x>_xyz
 SUBROUTINE compute_radial_electron_heatflux
-    USE fields,           ONLY : moments_e, moments_e, phi
-    USE array,            ONLY : kernel_e, kernel_e, HF_phi_correction_operator
+    USE fields,           ONLY : moments_e, phi
+    USE array,            ONLY : kernel_e, HF_phi_correction_operator
     USE geometry,         ONLY : Jacobian, iInt_Jacobian
     USE time_integration, ONLY : updatetlevel
-    USE model,            ONLY : qe_taue, qi_taui, KIN_E, tau_e, tau_e
+    USE model,            ONLY : qe_taue, KIN_E, tau_e
     USE calculus,         ONLY : simpson_rule_z
     IMPLICIT NONE
     COMPLEX(dp) :: hflux_local, integral
@@ -258,9 +258,9 @@ SUBROUTINE compute_radial_electron_heatflux
                             -(n_dp+1._dp)*moments_e(ip0_e,in+1,iky,ikx,izs:ize,updatetlevel)&
                                     -n_dp*moments_e(ip0_e,in-1,iky,ikx,izs:ize,updatetlevel))
             ENDDO
-            ! Add polarisation contribution
-            integrant(izs:ize) = integrant(izs:ize) + Jacobian(izs:ize,0)*tau_e*imagu*ky_&
-            *CONJG(phi(iky,ikx,izs:ize))*phi(iky,ikx,izs:ize) * HF_phi_correction_operator(iky,ikx,izs:ize)
+            ! ! Add polarisation contribution
+            ! integrant(izs:ize) = integrant(izs:ize) + Jacobian(izs:ize,0)*tau_e*imagu*ky_&
+            ! *CONJG(phi(iky,ikx,izs:ize))*phi(iky,ikx,izs:ize) * HF_phi_correction_operator(iky,ikx,izs:ize)
             ! Integrate over z
             call simpson_rule_z(integrant,integral)
             hflux_local = hflux_local + integral*iInt_Jacobian
