@@ -1,8 +1,8 @@
 function [ FIGURE ] = show_geometry(DATA,OPTIONS)
 % filtering Z pinch and torus
 if DATA.Nz > 1 % Torus flux tube geometry
-    Nptor  = DATA.Nz*2; Tgeom = 1;
-    Nturns = 1;
+    Nturns = floor(abs(DATA.z(1)/pi));
+    Nptor  = ceil(DATA.Nz*2/Nturns); Tgeom = 1;
     a      = DATA.EPS; % Torus minor radius
     R      = 1.; % Torus major radius
     q      = (DATA.Nz>1)*DATA.Q0; % Flux tube safety factor

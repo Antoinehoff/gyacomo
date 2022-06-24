@@ -11,7 +11,7 @@ system(['mkdir -p ',LOCALDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 system(CMD);
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 20;
+JOBNUMMIN = 00; JOBNUMMAX = 01;
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 data.localdir = LOCALDIR;
 data.FIGDIR   = LOCALDIR;
@@ -53,7 +53,7 @@ options.NAME      = '\phi';
 options.PLAN      = 'xz';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
-options.COMP      = 'avg';
+options.COMP      = 1;
 % options.TIME      = data.Ts5D(end-30:end);
 options.TIME      = data.Ts3D;
 % options.TIME      = [350:600];
@@ -75,10 +75,10 @@ options.NAME      = '\phi';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
 options.PLAN      = 'kxky';
-% options.NAME      = 'f_i';
+% options.NAME      'f_i';
 % options.PLAN      = 'sx';
-options.COMP      = 'avg';
-options.TIME      = [100];
+options.COMP      = 33;
+options.TIME      = [40 80 100 200];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 % save_figure(data,fig)
@@ -88,9 +88,9 @@ if 0
 %% 3D plot on the geometry
 options.INTERP    = 1;
 options.NAME      = 'n_i';
-options.PLANES    = [1:1:16];
+options.PLANES    = [1:10:80];
 options.TIME      = [200];
-options.PLT_MTOPO = 1;
+options.PLT_MTOPO = 0;
 data.rho_o_R      = 2e-3; % Sound larmor radius over Machine size ratio
 fig = show_geometry(data,options);
 save_figure(data,fig,'.png')
@@ -98,10 +98,10 @@ end
 
 if 0
 %% Kinetic distribution function sqrt(<f_a^2>xy) (GENE vsp)
-% options.SPAR      = linspace(-3,3,64)+(6/127/2);
-% options.XPERP     = linspace( 0,6,64);
-options.SPAR      = gene_data.vp';
-options.XPERP     = gene_data.mu';
+options.SPAR      = linspace(-3,3,32)+(6/127/2);
+options.XPERP     = linspace( 0,6,32);
+% options.SPAR      = gene_data.vp';
+% options.XPERP     = gene_data.mu';
 options.iz        = 'avg';
 options.T         = [600];
 options.PLT_FCT   = 'contour';

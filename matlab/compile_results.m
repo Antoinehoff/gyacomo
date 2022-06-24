@@ -13,9 +13,12 @@ DATA.DT_EVOL  = []; %
 % FIELDS
 Nipj_    = []; Nepj_    = [];
 Ni00_    = []; Ne00_    = [];
-HFLUX_   = [];
-GGAMMA_  = [];
-PGAMMA_  = [];
+HFLUXI_   = [];
+HFLUXE_   = [];
+GGAMMAI_ = [];
+PGAMMAI_ = [];
+GGAMMAE_ = [];
+PGAMMAE_ = [];
 PHI_     = [];
 DENS_E_  = [];
 DENS_I_  = [];
@@ -110,13 +113,17 @@ while(CONTINUE)
         if W_GAMMA
             [ GGAMMA_RI, Ts0D, ~] = load_0D_data(filename, 'gflux_ri');
             PGAMMA_RI            = load_0D_data(filename, 'pflux_ri');
-            GGAMMA_ = cat(1,GGAMMA_,GGAMMA_RI); clear GGAMMA_RI
-            PGAMMA_ = cat(1,PGAMMA_,PGAMMA_RI); clear PGAMMA_RI
+            GGAMMAI_ = cat(1,GGAMMAI_,GGAMMA_RI); clear GGAMMA_RI
+            PGAMMAI_ = cat(1,PGAMMAI_,PGAMMA_RI); clear PGAMMA_RI
         end
 
         if W_HF
-            [ HFLUX_X, Ts0D, ~] = load_0D_data(filename, 'hflux_x');
-            HFLUX_ = cat(1,HFLUX_,HFLUX_X); clear HFLUX_X
+            [ HFLUX_XI, Ts0D, ~] = load_0D_data(filename, 'hflux_xi');
+            HFLUXI_ = cat(1,HFLUXI_,HFLUX_XI); clear HFLUX_XI
+%             if(KIN_E)
+%             [ HFLUX_XE, Ts0D, ~] = load_0D_data(filename, 'hflux_xe');
+%             HFLUXE_ = cat(1,HFLUXE_,HFLUX_XE); clear HFLUX_XE 
+%             end
         end
 
         if W_PHI
@@ -248,13 +255,15 @@ else
     % scaling
     DATA.scale = (1/Nx/Ny)^2;
     % Fields
-    DATA.GGAMMA_RI = GGAMMA_; DATA.PGAMMA_RI = PGAMMA_; DATA.HFLUX_X = HFLUX_;
+    DATA.GGAMMA_RI = GGAMMAI_; DATA.PGAMMA_RI = PGAMMAI_; DATA.HFLUX_X = HFLUXI_;
     DATA.Nipj = Nipj_; DATA.Ni00 = Ni00_; DATA.DENS_I = DENS_I_; DATA.TEMP_I = TEMP_I_;
     if(KIN_E)
     DATA.Nepj = Nepj_; DATA.Ne00 = Ne00_; DATA.DENS_E = DENS_E_; DATA.TEMP_E = TEMP_E_;
+    DATA.HFLUX_XE = HFLUXE_;
     end
     DATA.Ts5D = Ts5D_; DATA.Ts3D = Ts3D_; DATA.Ts0D = Ts0D_;
     DATA.PHI  = PHI_; 
+    DATA.KIN_E=KIN_E;
     % grids
     DATA.Pe = Pe; DATA.Pi = Pi; 
     DATA.Je = Je; DATA.Ji = Ji; 
