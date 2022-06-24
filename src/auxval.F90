@@ -27,7 +27,7 @@ subroutine auxval
 
   CALL set_jgrid ! perp kin
 
-  CALL set_kxgrid ! radial modes (MPI distributed by FFTW)
+  CALL set_kxgrid(shear) ! radial modes (MPI distributed by FFTW)
 
   CALL set_kygrid ! azymuthal modes
 

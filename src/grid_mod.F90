@@ -341,12 +341,16 @@ CONTAINS
     END DO
   END SUBROUTINE set_kygrid
 
-  SUBROUTINE set_kxgrid
+  SUBROUTINE set_kxgrid(shear)
     USE prec_const
     USE model, ONLY: LINEARITY
     IMPLICIT NONE
+    REAL(dp), INTENT(IN) :: shear
     INTEGER :: i_, counter
-
+    IF(shear .GT. 0._dp) THEN
+      IF(my_id.EQ.0) write(*,*) 'Magnetic shear detected: set up sheared kx grid..'
+      Lx = Ly/(2._dp*pi*shear)
+    ENDIF
     Nkx = Nx;
     ! Local data
     ! Start and END indices of grid
