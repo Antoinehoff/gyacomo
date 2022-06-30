@@ -284,11 +284,6 @@ CONTAINS
    !2   ky       | 8    1    2    3    4    5   -1   -1|
    !1   A        | 7    8    1    2    3    4    5   -1|
    !0   | -> kx  | 6____7____8____1____2____3____4____5|
-   ! map for periodic BC
-   !3            | 1    2    3    4    5   -1   -1   -1|
-   !2   ky       | 8    1    2    3    4    5   -1   -1|
-   !1   A        | 7    8    1    2    3    4    5   -1|
-   !0   | -> kx  | 6____7____8____1____2____3____4____5|
    ALLOCATE(ikx_zBC_map(ikys:ikye,ikxs:ikxe))
    ikx_zBC_map(ikys:ikye,ikxs:ikxe) = -1
    DO iky = ikys,ikye

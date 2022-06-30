@@ -180,9 +180,7 @@ SUBROUTINE diagnose_full(kstep)
      ENDIF
      IF (write_hf) THEN
        CALL creatd(fidres, rank, dims, "/data/var0d/hflux_xi", "Radial part ion heat flux")
-       CALL creatd(fidres, rank, dims, "/data/var0d/hflux_xi", "Radial part ion heat flux")
        IF(KIN_E) THEN
-       CALL creatd(fidres, rank, dims, "/data/var0d/hflux_xe", "Radial part electron heat flux")
        CALL creatd(fidres, rank, dims, "/data/var0d/hflux_xe", "Radial part electron heat flux")
        ENDIF
      ENDIF

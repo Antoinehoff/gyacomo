@@ -28,7 +28,7 @@ JMAXI   = 2;     % "
 NX      = 20;    % real space x-gridpoints
 NY      = 2;     %     ''     y-gridpoints
 LX      = 100;   % Size of the squared frequency domain
-LY      = 20;     % Size of the squared frequency domain
+LY      = 62.8319;     % Size of the squared frequency domain
 NZ      = 32;     % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
@@ -113,10 +113,9 @@ end
 
 if 0
 %% Ballooning plot
-options.time_2_plot = [0.9 1]*data.Ts3D(end);
+options.time_2_plot = [0.5 0.5]*data.Ts3D(end);
 options.kymodes     = [0.5];
 options.normalized  = 1;
-options.sheared     = 0;
 options.field       = 'phi';
 fig = plot_ballooning(data,options);
 end

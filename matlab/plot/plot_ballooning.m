@@ -5,12 +5,13 @@ function [FIG] = plot_ballooning(data,options)
     [~,ikyarray] = min(abs(data.ky - options.kymodes));
     phi_real=mean(real(data.PHI(:,:,:,it0:it1)),4);
     phi_imag=mean(imag(data.PHI(:,:,:,it0:it1)),4);
+    
     % Apply baollooning tranform
     for iky=ikyarray
         dims = size(phi_real);
 
-        if options.sheared
-            idx = -Nkx:1:Nkx;
+        if data.SHEAR > 0
+            idx=[0:data.Nkx/2 -(data.Nkx/2-1):-1];
             ikxlim = dims(2);
         else
             idx = 0;

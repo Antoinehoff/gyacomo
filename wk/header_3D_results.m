@@ -14,7 +14,7 @@ helazdir = '/home/ahoffman/HeLaZ/';
 % outfile = 'volcokas/64x32x16x5x3_kin_e_npol_1';
 % outfile = 'shearless_cyclone/64x32x80x5x3_CBC_Npol_5_kine';
 % outfile = 'shearless_cyclone/96x32x160x5x3_CBC_Npol_10_kine';
-outfile = 'shearless_cyclone/64x32x160x5x3_CBC_Npol_10_kine';
+% outfile = 'shearless_cyclone/64x32x160x5x3_CBC_Npol_10_kine';
 %% CBC
 % outfile ='shearless_cyclone/64x32x16x5x3_CBC_080';
 % outfile ='shearless_cyclone/64x32x16x5x3_CBC_scan/64x32x16x5x3_CBC_100';
@@ -25,5 +25,7 @@ outfile = 'shearless_cyclone/64x32x160x5x3_CBC_Npol_10_kine';
 % outfile ='shearless_cyclone/64x32x16x9x5_CBC_120';
 
 % outfile = 'shearless_cyclone/64x32x16x5x3_CBC_CO/64x32x16x5x3_CBC_LRGK';
+%% ZPINCH
+outfile ='Zpinch_rerun/Kn_2.0_200x48x5x3';
 
 run analysis_HeLaZ
