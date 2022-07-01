@@ -43,7 +43,8 @@ MODULE grid
   REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: zarray_full
   ! local z weights for computing simpson rule
   INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC :: zweights_SR
-  REAL(dp), PUBLIC, PROTECTED  ::  deltax,  deltay, deltaz, inv_deltaz, diff_dz_coeff
+  REAL(dp), PUBLIC, PROTECTED  ::  deltax,  deltay, deltaz, inv_deltaz
+  REAL(dp), PUBLIC, PROTECTED  ::  diff_kx_coeff, diff_ky_coeff, diff_dz_coeff
   INTEGER,  PUBLIC, PROTECTED  ::  ixs,  ixe,  iys,  iye,  izs,  ize
   INTEGER,  PUBLIC, PROTECTED  ::  izgs, izge ! ghosts
   LOGICAL,  PUBLIC, PROTECTED  ::  SG = .true.! shifted grid flag
@@ -292,6 +293,7 @@ CONTAINS
       deltaky = 2._dp*PI/Ly
       ky_max  = Nky*deltaky
       ky_min  = deltaky
+      diff_ky_coeff= (1._dp/ky_max)**4
     ENDIF
     ! Build the full grids on process 0 to diagnose it without comm
     ALLOCATE(kyarray_full(1:Nky))
@@ -370,9 +372,10 @@ CONTAINS
       kxarray_full(1) = 0._dp
       local_kxmax     = 0._dp
     ELSE ! Build apprpopriate grid
-      deltakx     = 2._dp*PI/Lx
-      kx_max      = (Ny/2)*deltakx
-      kx_min      = deltakx
+      deltakx      = 2._dp*PI/Lx
+      kx_max       = (Nkx/2)*deltakx
+      kx_min       = deltakx
+      diff_kx_coeff= (1._dp/kx_max)**4
       ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
       local_kxmax = 0._dp
       DO ikx = ikxs,ikxe

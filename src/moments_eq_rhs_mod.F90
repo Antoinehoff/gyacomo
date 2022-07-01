@@ -110,8 +110,9 @@ SUBROUTINE moments_eq_rhs_e
                 ! Drives (density + temperature gradients)
                 - i_ky * Tphi &
                 ! Numerical perpendicular hyperdiffusion (totally artificial, for stability purpose)
-                ! - (mu_x*kx**4 + mu_y*ky**4)*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
-                - (mu_x*kx**2 + mu_y*ky**2)*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
+                - mu_x*diff_kx_coeff*kx**4*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
+                - mu_y*diff_ky_coeff*ky**4*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
+                ! - (mu_x*kx**2 + mu_y*ky**2)*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
                 ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"  see Pueschel 2010 (eq 25)
                 + mu_z * diff_dz_coeff * ddz4_Nepj(ip,ij,iky,ikx,iz) &
                 ! Collision term
@@ -241,8 +242,8 @@ SUBROUTINE moments_eq_rhs_i
                   ! Drives (density + temperature gradients)
                   - i_ky * Tphi &
                   ! Numerical hyperdiffusion (totally artificial, for stability purpose)
-                  ! - (mu_x*kx**4 + mu_y*ky**4)*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
-                  - (mu_x*kx**2 + mu_y*ky**2)*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
+                  - (mu_x*kx**4 + mu_y*ky**4)*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
+                  ! - (mu_x*kx**2 + mu_y*ky**2)*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
                   ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"
                   + mu_z * diff_dz_coeff * ddz4_Nipj(ip,ij,iky,ikx,iz) &
                   ! Collision term
