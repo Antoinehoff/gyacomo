@@ -8,8 +8,7 @@ SUBROUTINE inital
   USE time_integration, ONLY: set_updatetlevel
   USE collision,        ONLY: load_COSOlver_mat, cosolver_coll
   USE closure,          ONLY: apply_closure_model
-  USE ghosts,           ONLY: update_ghosts_z_moments, update_ghosts_p_moments, &
-                              update_ghosts_z_phi
+  USE ghosts,           ONLY: update_ghosts
   USE restarts,         ONLY: load_moments, job2load
   USE numerics,         ONLY: play_with_modes, save_EM_ZF_modes
   USE processing,       ONLY: compute_fluid_moments
@@ -24,8 +23,8 @@ SUBROUTINE inital
   IF ( job2load .GE. 0 ) THEN
     IF (my_id .EQ. 0) WRITE(*,*) 'Load moments'
     CALL load_moments ! get N_0
-    CALL update_ghosts_z_moments
     CALL poisson ! compute phi_0=phi(N_0)
+    CALL update_ghosts
   ! through initialization
   ELSE
     SELECT CASE (INIT_OPT)
@@ -33,30 +32,30 @@ SUBROUTINE inital
     CASE ('phi')
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy phi'
       CALL init_phi
-      CALL update_ghosts_z_phi
+      CALL update_ghosts
     ! set moments_00 (GC density) with noise and compute phi afterwards
     CASE('mom00')
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy gyrocenter density'
       CALL init_gyrodens ! init only gyrocenter density
-      CALL update_ghosts_z_moments
+      CALL update_ghosts
       CALL poisson
     ! init all moments randomly (unadvised)
     CASE('allmom')
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy moments'
       CALL init_moments ! init all moments
-      CALL update_ghosts_z_moments
+      CALL update_ghosts
       CALL poisson
     ! init a gaussian blob in gyrodens
     CASE('blob')
       IF (my_id .EQ. 0) WRITE(*,*) '--init a blob'
       CALL initialize_blob
-      CALL update_ghosts_z_moments
+      CALL update_ghosts
       CALL poisson
     ! init moments 00 with a power law similarly to GENE
     CASE('ppj')
       IF (my_id .EQ. 0) WRITE(*,*) 'ppj init ~ GENE'
       call init_ppj
-      CALL update_ghosts_z_moments
+      CALL update_ghosts
       CALL poisson
     END SELECT
   ENDIF
@@ -65,9 +64,7 @@ SUBROUTINE inital
   CALL apply_closure_model
   ! ghosts for p parallelization
   IF (my_id .EQ. 0) WRITE(*,*) 'Ghosts communication'
-  CALL update_ghosts_p_moments
-  CALL update_ghosts_z_moments
-  CALL update_ghosts_z_phi
+  CALL update_ghosts
   !! End of phi and moments initialization
 
   ! Save (kx,0) and (0,ky) modes for num exp

@@ -74,6 +74,7 @@ CONTAINS
         CASE('Z-pinch')
           IF( my_id .eq. 0 ) WRITE(*,*) 'Z-pinch geometry'
           call eval_zpinch_geometry
+          SHEARED = .FALSE.
         CASE DEFAULT
           ERROR STOP 'Error stop: geometry not recognized!!'
         END SELECT
@@ -213,7 +214,7 @@ CONTAINS
           ky = kyarray(iky)
            DO ikx= ikxs, ikxe
              kx = kxarray(ikx)
-             Ckxky(iky, ikx, iz,eo) = - ky * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
+             Ckxky(iky, ikx, iz,eo) = -ky * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
            ENDDO
         ENDDO
       ! coefficient in the front of parallel derivative

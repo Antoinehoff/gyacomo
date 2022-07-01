@@ -10,24 +10,28 @@ IMPLICIT NONE
 
 INTEGER :: status(MPI_STATUS_SIZE), source, dest, count, ipg
 
-PUBLIC :: update_ghosts_p_moments, update_ghosts_z_phi, update_ghosts_z_moments
+PUBLIC :: update_ghosts
 
 CONTAINS
 
-SUBROUTINE update_ghosts_p_moments
-    CALL cpu_time(t0_ghost)
+SUBROUTINE update_ghosts
+  CALL cpu_time(t0_ghost)
 
-    IF (num_procs_p .GT. 1) THEN ! Do it only if we share the p
-        CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        IF(KIN_E) CALL update_ghosts_p_e
+  IF (num_procs_p .GT. 1) THEN ! Do it only if we share the p
+      IF(KIN_E)&
+      CALL update_ghosts_p_e
+      CALL update_ghosts_p_i
+  ENDIF
 
-        CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        CALL update_ghosts_p_i
-    ENDIF
+  IF(Nz .GT. 1) THEN
+    IF(KIN_E) &
+    CALL update_ghosts_z_e
+    CALL update_ghosts_z_i
+    CALL update_ghosts_z_phi
+  ENDIF
 
-    CALL cpu_time(t1_ghost)
-    tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
-END SUBROUTINE update_ghosts_p_moments
+  tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
+END SUBROUTINE update_ghosts
 
 
 !Communicate p+1, p+2 moments to left neighboor and p-1, p-2 moments to right one
@@ -95,18 +99,6 @@ SUBROUTINE update_ghosts_p_i
                       comm0, status, ierr)
 
 END SUBROUTINE update_ghosts_p_i
-
-SUBROUTINE update_ghosts_z_moments
-  IMPLICIT NONE
-  CALL cpu_time(t0_ghost)
-    IF(Nz .GT. 1) THEN
-    IF(KIN_E) &
-    CALL update_ghosts_z_e
-    CALL update_ghosts_z_i
-    ENDIF
-    CALL cpu_time(t1_ghost)
-    tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
-END SUBROUTINE update_ghosts_z_moments
 
 !Communicate z+1, z+2 moments to left neighboor and z-1, z-2 moments to right one
 ! [a b|C D|e f] : proc n has moments a to f where a,b,e,f are ghosts

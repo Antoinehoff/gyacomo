@@ -3,7 +3,7 @@ SUBROUTINE stepon
   USE advance_field_routine, ONLY: advance_time_level, advance_field, advance_moments
   USE basic
   USE closure
-  USE ghosts
+  USE ghosts, ONLY: update_ghosts
   USE grid
   USE model, ONLY : LINEARITY, KIN_E
   use prec_const
@@ -32,8 +32,7 @@ SUBROUTINE stepon
       ! Closure enforcement of moments
       CALL apply_closure_model
       ! Exchanges the ghosts values of N_n+1
-      CALL update_ghosts_p_moments
-      CALL update_ghosts_z_moments
+      CALL update_ghosts
 
       ! Update electrostatic potential phi_n = phi(N_n+1)
       CALL poisson
@@ -41,7 +40,7 @@ SUBROUTINE stepon
 
       ! Numerical experiments
       ! Store or cancel/maintain zonal modes artificially
-      CALL play_with_modes
+      ! CALL play_with_modes
 
       !-  Check before next step
       CALL checkfield_all()
