@@ -13,31 +13,32 @@ EXECNAME = 'helaz3';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;   % Collision frequency
+NU      = 0.0;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-K_N     = 2.22;   % Density gradient drive
-K_T     = 6.96;   % Temperature '''
+K_N     = 2.0;   % Density gradient drive
+K_T     = 0.5;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
-SIGMA_E = 0.05196152422706632;%0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
-KIN_E   = 0;     % 1: kinetic electrons, 2: adiabatic electrons
+% SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+KIN_E   = 1;     % 1: kinetic electrons, 2: adiabatic electrons
 %% GRID PARAMETERS
 PMAXE   = 4;     % Hermite basis size of electrons
 JMAXE   = 2;     % Laguerre "
 PMAXI   = 4;     % " ions
 JMAXI   = 2;     % "
-NX      = 20;    % real space x-gridpoints
-NY      = 2;     %     ''     y-gridpoints
+NX      = 1;    % real space x-gridpoints
+NY      = 32;     %     ''     y-gridpoints
 LX      = 100;   % Size of the squared frequency domain
-LY      = 62.8319;     % Size of the squared frequency domain
-NZ      = 32;     % number of perpendicular planes (parallel grid)
+LY      = 60;     % Size of the squared frequency domain
+NZ      = 1;     % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 %% GEOMETRY
 % GEOMETRY= 'Z-pinch'; % Z-pinch overwrites q0, shear and eps
 GEOMETRY= 's-alpha';
-Q0      = 1.4;    % safety factor
-SHEAR   = 0.8;    % magnetic shear (Not implemented yet)
-EPS     = 0.18;    % inverse aspect ratio
+Q0      = 1.0;    % safety factor
+SHEAR   = 0.0;    % magnetic shear (Not implemented yet)
+EPS     = 0.0;    % inverse aspect ratio
 %% TIME PARMETERS
 TMAX    = 50;  % Maximal time unit
 DT      = 1e-2;   % Time step
@@ -48,7 +49,7 @@ SPS5D   = 1;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
 %% OPTIONS
-SIMID   = 'linear_CBC';  % Name of the simulation
+SIMID   = 'dbg';  % Name of the simulation
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
@@ -162,7 +163,7 @@ save_figure(gbms_dat,fig)
 end
 
 
-if 1
+if 0
 %% RH TEST
 ikx = 2; t0 = 0; t1 = data.Ts3D(end);
 [~, it0] = min(abs(t0-data.Ts3D));[~, it1] = min(abs(t1-data.Ts3D));

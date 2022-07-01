@@ -55,7 +55,7 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
     FIGURE.fig = figure; FIGURE.FIGNAME = ['ZF_transport_drphi','_',DATA.PARAMS]; set(gcf, 'Position',  [100, 100, 1000, 600])
     subplot(311)
 %     yyaxis left
-%         plot(mvm(DATA.Ts0D),mvm(DATA.PGAMMA_RI*SCALE),'DisplayName','$\langle n_i \partial_y\phi \rangle_y$'); hold on;
+        plot(mvm(DATA.Ts0D),mvm(DATA.PGAMMA_RI*SCALE),'DisplayName','$\langle n_i \partial_y\phi \rangle_y$'); hold on;
 %         plot(mvm(DATA.Ts3D),mvm(Gx_t_mtlb),'DisplayName','matlab comp.'); hold on;
 %         plot(DATA.Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*Gx_infty_avg, '-k',...
 %             'DisplayName',['$\Gamma^{\infty} = $',num2str(Gx_infty_avg),'$\pm$',num2str(Gx_infty_std)]);
