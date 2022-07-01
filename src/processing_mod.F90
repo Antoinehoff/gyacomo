@@ -189,7 +189,7 @@ SUBROUTINE compute_radial_ion_heatflux
               n_dp = jarray_i(in)
 
               integrant(izs:ize) = integrant(izs:ize) + Jacobian(izs:ize,0)*tau_i*imagu*ky_*CONJG(phi(iky,ikx,izs:ize))&
-               *kernel_i(in,iky,ikx,iz,0)*(&
+               *kernel_i(in,iky,ikx,izs:ize,0)*(&
                              0.5_dp*SQRT2*moments_i(ip2_i,in  ,iky,ikx,izs:ize,updatetlevel)&
                    +(2._dp*n_dp + 1.5_dp)*moments_i(ip0_i,in  ,iky,ikx,izs:ize,updatetlevel)&
                             -(n_dp+1._dp)*moments_i(ip0_i,in+1,iky,ikx,izs:ize,updatetlevel)&
@@ -252,7 +252,7 @@ SUBROUTINE compute_radial_electron_heatflux
               n_dp = jarray_e(in)
 
               integrant(izs:ize) = integrant(izs:ize) + Jacobian(izs:ize,0)*tau_e*imagu*ky_*CONJG(phi(iky,ikx,izs:ize))&
-               *kernel_e(in,iky,ikx,iz,0)*(&
+               *kernel_e(in,iky,ikx,izs:ize,0)*(&
                              0.5_dp*SQRT2*moments_e(ip2_e,in  ,iky,ikx,izs:ize,updatetlevel)&
                    +(2._dp*n_dp + 1.5_dp)*moments_e(ip0_e,in  ,iky,ikx,izs:ize,updatetlevel)&
                             -(n_dp+1._dp)*moments_e(ip0_e,in+1,iky,ikx,izs:ize,updatetlevel)&
