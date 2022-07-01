@@ -3,7 +3,7 @@ SUBROUTINE stepon
   USE advance_field_routine, ONLY: advance_time_level, advance_field, advance_moments
   USE basic
   USE closure
-  USE ghosts, ONLY: update_ghosts
+  USE ghosts, ONLY: update_ghosts_moments, update_ghosts_phi
   USE grid
   USE model, ONLY : LINEARITY, KIN_E
   use prec_const
@@ -32,11 +32,11 @@ SUBROUTINE stepon
       ! Closure enforcement of moments
       CALL apply_closure_model
       ! Exchanges the ghosts values of N_n+1
-      CALL update_ghosts
+      CALL update_ghosts_moments
 
       ! Update electrostatic potential phi_n = phi(N_n+1)
       CALL poisson
-      CALL update_ghosts_z_phi
+      CALL update_ghosts_phi
 
       ! Numerical experiments
       ! Store or cancel/maintain zonal modes artificially
@@ -69,6 +69,8 @@ SUBROUTINE stepon
      END SUBROUTINE assemble_RHS
 
       SUBROUTINE checkfield_all ! Check all the fields for inf or nan
+        USE fields, ONLY: phi, moments_e, moments_i
+        IMPLICIT NONE
         ! Execution time start
         CALL cpu_time(t0_checkfield)
 
@@ -99,6 +101,8 @@ SUBROUTINE stepon
       END SUBROUTINE checkfield_all
 
       SUBROUTINE anti_aliasing
+        USE fields, ONLY: moments_e, moments_i
+        IMPLICIT NONE
         IF(KIN_E)THEN
         DO iz=izgs,izge
           DO ikx=ikxs,ikxe
@@ -126,6 +130,8 @@ SUBROUTINE stepon
       END SUBROUTINE anti_aliasing
 
       SUBROUTINE enforce_symmetry ! Force X(k) = X(N-k)* complex conjugate symmetry
+        USE fields, ONLY: phi, moments_e, moments_i
+        IMPLICIT NONE
         IF ( contains_ky0 ) THEN
           ! Electron moments
           IF(KIN_E) THEN

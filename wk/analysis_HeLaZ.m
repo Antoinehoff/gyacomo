@@ -11,7 +11,7 @@ system(['mkdir -p ',LOCALDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 system(CMD);
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 03; JOBNUMMAX = 20;
+JOBNUMMIN = 00; JOBNUMMAX = 20;
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 data.localdir = LOCALDIR;
 data.FIGDIR   = LOCALDIR;
@@ -55,7 +55,7 @@ options.PLAN      = 'xy';
 % options.PLAN      = 'sx';
 options.COMP      = 1;
 % options.TIME      = data.Ts5D(end-30:end);
-options.TIME      =  data.Ts3D(1:end);
+options.TIME      =  data.Ts3D(1:2:end);
 % options.TIME      = [350:600];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
@@ -78,7 +78,7 @@ options.PLAN      = 'kxky';
 % options.NAME      'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 1;
-options.TIME      = [20 100 200 600 1900];
+options.TIME      = [20 30 40 60 70];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 % save_figure(data,fig)

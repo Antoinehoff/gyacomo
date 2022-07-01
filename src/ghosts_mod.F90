@@ -10,11 +10,11 @@ IMPLICIT NONE
 
 INTEGER :: status(MPI_STATUS_SIZE), source, dest, count, ipg
 
-PUBLIC :: update_ghosts
+PUBLIC :: update_ghosts_moments, update_ghosts_phi
 
 CONTAINS
 
-SUBROUTINE update_ghosts
+SUBROUTINE update_ghosts_moments
   CALL cpu_time(t0_ghost)
 
   IF (num_procs_p .GT. 1) THEN ! Do it only if we share the p
@@ -27,12 +27,20 @@ SUBROUTINE update_ghosts
     IF(KIN_E) &
     CALL update_ghosts_z_e
     CALL update_ghosts_z_i
+  ENDIF
+
+  tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
+END SUBROUTINE update_ghosts_moments
+
+SUBROUTINE update_ghosts_phi
+  CALL cpu_time(t0_ghost)
+
+  IF(Nz .GT. 1) THEN
     CALL update_ghosts_z_phi
   ENDIF
 
   tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
-END SUBROUTINE update_ghosts
-
+END SUBROUTINE update_ghosts_phi
 
 !Communicate p+1, p+2 moments to left neighboor and p-1, p-2 moments to right one
 ! [a b|C D|e f] : proc n has moments a to f where a,b,e,f are ghosts
