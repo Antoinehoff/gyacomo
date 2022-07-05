@@ -242,8 +242,8 @@ SUBROUTINE moments_eq_rhs_i
                   ! Drives (density + temperature gradients)
                   - i_ky * Tphi &
                   ! Numerical hyperdiffusion (totally artificial, for stability purpose)
-                  + mu_x*diff_kx_coeff*i_kx**N_HD*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
-                  + mu_y*diff_ky_coeff*i_ky**N_HD*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
+                  - mu_x*diff_kx_coeff*kx**N_HD*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
+                  - mu_y*diff_ky_coeff*ky**N_HD*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
                   ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"
                   + mu_z * diff_dz_coeff * ddz4_Nipj(ip,ij,iky,ikx,iz) &
                   ! Collision term
