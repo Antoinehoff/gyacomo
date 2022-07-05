@@ -16,10 +16,11 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED ::    mu_z =  0._dp     ! spatial    z-Hyperdiffusivity coefficient (for num. stability)
   REAL(dp), PUBLIC, PROTECTED ::    mu_p =  0._dp     ! kinetic para hyperdiffusivity coefficient (for num. stability)
   REAL(dp), PUBLIC, PROTECTED ::    mu_j =  0._dp     ! kinetic perp hyperdiffusivity coefficient (for num. stability)
-  REAL(dp), PUBLIC, PROTECTED ::      nu =  1._dp     ! Collision frequency
+  INTEGER,  PUBLIC, PROTECTED ::    N_HD =  4         ! order of numerical spatial diffusion
+  REAL(dp), PUBLIC, PROTECTED ::      nu =  0._dp     ! Collision frequency
   REAL(dp), PUBLIC, PROTECTED ::   tau_e =  1._dp     ! Temperature
   REAL(dp), PUBLIC, PROTECTED ::   tau_i =  1._dp     !
-  REAL(dp), PUBLIC, PROTECTED :: sigma_e =  1._dp     ! Mass
+  REAL(dp), PUBLIC, PROTECTED :: sigma_e =  0.023338_dp! sqrt of electron ion mass ratio
   REAL(dp), PUBLIC, PROTECTED :: sigma_i =  1._dp     !
   REAL(dp), PUBLIC, PROTECTED ::     q_e = -1._dp     ! Charge
   REAL(dp), PUBLIC, PROTECTED ::     q_i =  1._dp     !
@@ -57,7 +58,7 @@ CONTAINS
     IMPLICIT NONE
 
     NAMELIST /MODEL_PAR/ CLOS, NL_CLOS, KERN, LINEARITY, KIN_E, &
-                         mu_x, mu_y, mu_z, mu_p, mu_j, nu,&
+                         mu_x, mu_y, N_HD, mu_z, mu_p, mu_j, nu,&
                          tau_e, tau_i, sigma_e, sigma_i, q_e, q_i,&
                          K_n, K_T, K_E, GradB, CurvB, lambdaD
 
@@ -109,9 +110,11 @@ CONTAINS
     CALL attach(fidres, TRIM(str),     "KIN_E",   KIN_E)
     CALL attach(fidres, TRIM(str),        "nu",      nu)
     CALL attach(fidres, TRIM(str),        "mu",       0)
-    CALL attach(fidres, TRIM(str),        "mu_x",  mu_x)
-    CALL attach(fidres, TRIM(str),        "mu_y",  mu_y)
-    CALL attach(fidres, TRIM(str),        "mu_z",  mu_z)
+    CALL attach(fidres, TRIM(str),      "mu_x",    mu_x)
+    CALL attach(fidres, TRIM(str),      "mu_y",    mu_y)
+    CALL attach(fidres, TRIM(str),      "mu_z",    mu_z)
+    CALL attach(fidres, TRIM(str),      "mu_p",    mu_p)
+    CALL attach(fidres, TRIM(str),      "mu_j",    mu_j)
     CALL attach(fidres, TRIM(str),     "tau_e",   tau_e)
     CALL attach(fidres, TRIM(str),     "tau_i",   tau_i)
     CALL attach(fidres, TRIM(str),   "sigma_e", sigma_e)

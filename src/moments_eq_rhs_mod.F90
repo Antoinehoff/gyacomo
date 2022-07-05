@@ -37,7 +37,7 @@ SUBROUTINE moments_eq_rhs_e
   COMPLEX(dp) :: Tnepp1j, Tnepm1j, Tnepp1jm1, Tnepm1jm1 ! Terms from mirror force with non adiab moments
   COMPLEX(dp) :: Tperp, Tpar, Tmir, Tphi
   COMPLEX(dp) :: Unepm1j, Unepm1jp1, Unepm1jm1 ! Terms from mirror force with adiab moments
-  COMPLEX(dp) :: i_ky,phikykxz
+  COMPLEX(dp) :: i_kx,i_ky,phikykxz
 
    ! Measuring execution time
   CALL cpu_time(t0_rhs)
@@ -46,6 +46,7 @@ SUBROUTINE moments_eq_rhs_e
   zloope : DO  iz = izs,ize
     kxloope : DO ikx = ikxs,ikxe
       kx       = kxarray(ikx)   ! radial wavevector
+      i_kx     = imagu * kx     ! toroidal derivative
 
       kyloope : DO iky = ikys,ikye
         ky     = kyarray(iky)   ! toroidal wavevector
@@ -110,11 +111,10 @@ SUBROUTINE moments_eq_rhs_e
                 ! Drives (density + temperature gradients)
                 - i_ky * Tphi &
                 ! Numerical perpendicular hyperdiffusion (totally artificial, for stability purpose)
-                - mu_x*diff_kx_coeff*kx**4*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
-                - mu_y*diff_ky_coeff*ky**4*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
-                ! - (mu_x*kx**2 + mu_y*ky**2)*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
+                - mu_x*diff_kx_coeff*kx**N_HD*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
+                - mu_y*diff_ky_coeff*ky**N_HD*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
                 ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"  see Pueschel 2010 (eq 25)
-                + mu_z * diff_dz_coeff * ddz4_Nepj(ip,ij,iky,ikx,iz) &
+                - mu_z * diff_dz_coeff * ddz4_Nepj(ip,ij,iky,ikx,iz) &
                 ! Collision term
                 + TColl_e(ip,ij,iky,ikx,iz) &
                 ! Nonlinear term
@@ -166,7 +166,7 @@ SUBROUTINE moments_eq_rhs_i
   COMPLEX(dp) :: Tnipp1j, Tnipm1j, Tnipp1jm1, Tnipm1jm1 ! Terms from mirror force with non adiab moments
   COMPLEX(dp) :: Unipm1j, Unipm1jp1, Unipm1jm1 ! Terms from mirror force with adiab moments
   COMPLEX(dp) :: Tperp, Tpar, Tmir, Tphi
-  COMPLEX(dp) :: i_ky, phikykxz
+  COMPLEX(dp) :: i_kx, i_ky, phikykxz
 
   ! Measuring execution time
   CALL cpu_time(t0_rhs)
@@ -176,7 +176,7 @@ SUBROUTINE moments_eq_rhs_i
   zloopi : DO  iz = izs,ize
     kxloopi : DO ikx = ikxs,ikxe
       kx       = kxarray(ikx)   ! radial wavevector
-
+      i_kx     = imagu * kx     ! toroidal derivative
         kyloopi : DO iky = ikys,ikye
           ky     = kyarray(iky)   ! toroidal wavevector
           i_ky   = imagu * ky     ! toroidal derivative
@@ -242,8 +242,8 @@ SUBROUTINE moments_eq_rhs_i
                   ! Drives (density + temperature gradients)
                   - i_ky * Tphi &
                   ! Numerical hyperdiffusion (totally artificial, for stability purpose)
-                  - (mu_x*kx**4 + mu_y*ky**4)*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
-                  ! - (mu_x*kx**2 + mu_y*ky**2)*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
+                  + mu_x*diff_kx_coeff*i_kx**N_HD*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
+                  + mu_y*diff_ky_coeff*i_ky**N_HD*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
                   ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"
                   + mu_z * diff_dz_coeff * ddz4_Nipj(ip,ij,iky,ikx,iz) &
                   ! Collision term

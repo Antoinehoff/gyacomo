@@ -280,7 +280,7 @@ CONTAINS
 
   SUBROUTINE set_kygrid
     USE prec_const
-    USE model, ONLY: LINEARITY
+    USE model, ONLY: LINEARITY, N_HD
     IMPLICIT NONE
     INTEGER :: i_, in, istart, iend
     Nky = Ny/2+1 ! Defined only on positive kx since fields are real
@@ -293,7 +293,7 @@ CONTAINS
       deltaky = 2._dp*PI/Ly
       ky_max  = Nky*deltaky
       ky_min  = deltaky
-      diff_ky_coeff= (1._dp/ky_max)**4
+      diff_ky_coeff= (1._dp/ky_max)**N_HD
     ENDIF
     ! Build the full grids on process 0 to diagnose it without comm
     ALLOCATE(kyarray_full(1:Nky))
@@ -345,7 +345,7 @@ CONTAINS
 
   SUBROUTINE set_kxgrid(shear)
     USE prec_const
-    USE model, ONLY: LINEARITY
+    USE model, ONLY: LINEARITY, N_HD
     IMPLICIT NONE
     REAL(dp), INTENT(IN) :: shear
     INTEGER :: i_, counter
@@ -375,7 +375,7 @@ CONTAINS
       deltakx      = 2._dp*PI/Lx
       kx_max       = (Nkx/2)*deltakx
       kx_min       = deltakx
-      diff_kx_coeff= (1._dp/kx_max)**4
+      diff_kx_coeff= (1._dp/kx_max)**N_HD
       ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
       local_kxmax = 0._dp
       DO ikx = ikxs,ikxe
