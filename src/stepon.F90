@@ -139,7 +139,7 @@ SUBROUTINE stepon
               DO ij=ijgs_e,ijge_e
                 DO ip=ipgs_e,ipge_e
                   DO ikx=2,Nkx/2 !symmetry at ky = 0
-                    moments_e( ip,ij,iky_0,ikx,iz, :) = CONJG(moments_e( ip,ij,iky_0,Nkx+2-iky,iz, :))
+                    moments_e( ip,ij,iky_0,ikx,iz, :) = CONJG(moments_e( ip,ij,iky_0,Nkx+2-ikx,iz, :))
                   END DO
                 ! must be real at origin
                 moments_e(ip,ij, iky_0,ikx_0,iz, :) = REAL(moments_e(ip,ij, iky_0,ikx_0,iz, :))
