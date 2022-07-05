@@ -27,9 +27,9 @@ FIGURE.fig = figure; set(gcf, 'Position',  toplot.DIMENSIONS.*[1 1 Ncols Nrows])
             if ~strcmp(OPTIONS.PLAN,'kxky')
                 caxis([-1,1]);
                 colormap(bluewhitered);
-            end
-            if OPTIONS.INTERP
-                shading interp; 
+                if OPTIONS.INTERP
+                    shading interp; 
+                end
             end
         else
             contour(toplot.X,toplot.Y,toplot.FIELD(:,:,i_)./scale,128);

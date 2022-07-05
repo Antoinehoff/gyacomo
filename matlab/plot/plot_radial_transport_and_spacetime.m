@@ -68,7 +68,7 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
         plot(DATA.Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*Qx_infty_avg, '-k',...
             'DisplayName',['$Q_x^{\infty} = $',num2str(Qx_infty_avg),'$\pm$',num2str(Qx_infty_std)]);
         ylabel('$Q_x$')  
-        ylim([0,2*abs(Qx_infty_avg)]); 
+%         ylim([0,2*abs(Qx_infty_avg)]); 
         xlim([DATA.Ts0D(1),DATA.Ts0D(end)]);
     grid on; set(gca,'xticklabel',[]); 
     title({DATA.param_title,...

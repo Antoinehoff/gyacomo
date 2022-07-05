@@ -6,10 +6,12 @@
 % folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.5/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_0.8/';
+% folder = '/misc/gene_results/HP_fig_2a_mu_1e-2/';
 % folder = '/misc/gene_results/HP_fig_2b_mu_5e-2/';
 % folder = '/misc/gene_results/HP_fig_2c_mu_5e-2/';
 % folder = '/misc/gene_results/LD_zpinch_1.6/';
-folder = '/misc/gene_results/ZP_16x8_kn_1.6_00/';
+% folder = '/misc/gene_results/ZP_16x8_kn_1.6/';
+folder = '/misc/gene_results/ZP_HP_kn_2.5/';
 gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
@@ -102,9 +104,9 @@ options.times   = 200:300;
 options.specie  = 'i';
 options.PLT_FCT = 'contour';
 options.folder  = folder;
-options.iz      = 9;
+options.iz      = 1;
 options.FIELD   = '<f_>';
-options.ONED    = 1;
+options.ONED    = 0;
 % options.FIELD   = 'Q_es';
 plot_fa_gene(options);
 end

@@ -68,8 +68,8 @@ if ~PLOT2D
         end
         plot(X,Y,'DisplayName','t-averaged')  
     otherwise
-    for it = 1:numel(toplot.FRAMES)
-        Gk    = compy(abs(toplot.FIELD(:,:,toplot.FRAMES(it))));
+    for it = 1:numel(frames)
+        Gk    = compx(abs(toplot.FIELD(:,:,it)));
         Gk    = squeeze(Gk);
         if options.NORM
             Gk    = Gk./max(max(abs(Gk)));
@@ -109,7 +109,7 @@ if ~PLOT2D
         plot(X,Y,'DisplayName','t-averaged')  
     otherwise
     for it = 1:numel(toplot.FRAMES)
-        Gk    = compx(abs(toplot.FIELD(:,:,it)));
+        Gk    = compy(abs(toplot.FIELD(:,:,it)));
         Gk    = squeeze(Gk);
         if options.NORM
             Gk    = Gk./max(max(abs(Gk)));

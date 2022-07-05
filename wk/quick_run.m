@@ -15,8 +15,8 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %% PHYSICAL PARAMETERS
 NU      = 0.0;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-K_N     = 2.0;   % Density gradient drive
-K_T     = 0.5;   % Temperature '''
+K_N     = 2.5;   % Density gradient drive
+K_T     = 0.25*K_N;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
 % SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
@@ -40,12 +40,12 @@ Q0      = 1.0;    % safety factor
 SHEAR   = 0.0;    % magnetic shear (Not implemented yet)
 EPS     = 0.0;    % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 50;  % Maximal time unit
-DT      = 1e-2;   % Time step
-SPS0D   = 20;      % Sampling per time unit for 2D arrays
+TMAX    = 500;  % Maximal time unit
+DT      = 2e-2;   % Time step
+SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
-SPS3D   = 20;      % Sampling per time unit for 2D arrays
-SPS5D   = 1;    % Sampling per time unit for 5D arrays
+SPS3D   = 1;      % Sampling per time unit for 2D arrays
+SPS5D   = 1/2;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
 %% OPTIONS
@@ -53,8 +53,8 @@ SIMID   = 'dbg';  % Name of the simulation
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-CO      = 'DG';
-GKCO    = 0; % gyrokinetic operator
+CO      = 'SG';
+GKCO    = 1; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))s
@@ -110,6 +110,10 @@ if 1
 trange = [0.5 1]*data.Ts3D(end);
 nplots = 1;
 lg = compute_fluxtube_growth_rate(data,trange,nplots);
+[gmax,     kmax] = max(lg.g_ky(:,end));
+[gmaxok, kmaxok] = max(lg.g_ky(:,end)./lg.ky);
+msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,lg.ky(kmax)); disp(msg);
+msg = sprintf('gmax/k = %2.2f, kmax/k = %2.2f',gmaxok,lg.ky(kmaxok)); disp(msg);
 end
 
 if 0
