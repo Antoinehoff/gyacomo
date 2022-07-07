@@ -1,6 +1,6 @@
 &BASIC
   nrun   = 100000000
-  dt     = 0.015
+  dt     = 0.01
   tmax   = 400
   maxruntime = 356400
 /
@@ -9,15 +9,15 @@
   jmaxe  = 2
   pmaxi  = 4
   jmaxi  = 2
-  Nx     = 64
-  Lx     = 100
-  Ny     = 32
-  Ly     = 120
-  Nz     = 16
+  Nx     = 128
+  Lx     = 120
+  Ny     = 40
+  Ly     = 60
+  Nz     = 1
   SG     = .f.
 /
 &GEOMETRY
-  geom   = 's-alpha'
+  geom   = 'Z-pinch'
   q0     = 1.4
   shear  = 0
   eps    = 0.18
@@ -42,12 +42,13 @@
 &MODEL_PAR
   ! Collisionality
   CLOS    = 0
-  NL_CLOS = -1
+  NL_CLOS = 0
   LINEARITY = 'nonlinear'
   KIN_E   = .f.
-  mu_x    = 0.0
-  mu_y    = 0.0
-  mu_z    = 0.2
+  mu_x    = 1.0
+  mu_y    = 1.0
+  N_HD    = 4
+  mu_z    = 0.0
   mu_p    = 0
   mu_j    = 0
   nu      = 0.1
