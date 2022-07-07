@@ -151,9 +151,9 @@ CONTAINS
 
     !** Assembling collison operator **
     ! -nuee (p + 2j) Nepj
-    TColl_ = -nu_ee * (p_dp + 2._dp*j_dp)*nadiab_moments_e(ip_,ij_,iky_,ikx_,iz_)
+    TColl_ = -nu_ee * (p_dp + 2._dp*j_dp)*moments_e(ip_,ij_,iky_,ikx_,iz_,updatetlevel)
     IF(gyrokin_CO) THEN
-      TColl_ = TColl_ - nu_ee *2._dp*be_2*nadiab_moments_e(ip_,ij_,iky_,ikx_,iz_)
+      TColl_ = TColl_ - nu_ee *2._dp*be_2*moments_e(ip_,ij_,iky_,ikx_,iz_,updatetlevel)
     ENDIF
   END SUBROUTINE LenardBernstein_e
 
@@ -182,9 +182,9 @@ CONTAINS
 
       !** Assembling collison operator **
       ! -nuii (p + 2j) Nipj
-      TColl_ = -nu_i * (p_dp + 2._dp*j_dp)*nadiab_moments_i(ip_,ij_,iky_,ikx_,iz_)
+      TColl_ = -nu_i * (p_dp + 2._dp*j_dp)*moments_i(ip_,ij_,iky_,ikx_,iz_,updatetlevel)
       IF(gyrokin_CO) THEN
-        TColl_ = TColl_ - nu_i *2._dp*bi_2*nadiab_moments_i(ip_,ij_,iky_,ikx_,iz_)
+        TColl_ = TColl_ - nu_i *2._dp*bi_2*moments_i(ip_,ij_,iky_,ikx_,iz_,updatetlevel)
       ENDIF
     END SUBROUTINE LenardBernstein_i
 
@@ -236,15 +236,15 @@ CONTAINS
     p_dp      = REAL(parray_e(ip_),dp)
     j_dp      = REAL(jarray_e(ij_),dp)
     !** Assembling collison operator **
-    TColl_ = -(p_dp + 2._dp*j_dp)*nadiab_moments_e(ip_,ij_,iky_,ikx_,iz_)
+    TColl_ = -(p_dp + 2._dp*j_dp)*moments_e(ip_,ij_,iky_,ikx_,iz_,updatetlevel)
     IF( (p_dp .EQ. 1._dp) .AND. (j_dp .EQ. 0._dp)) THEN !Ce10
-      TColl_ = TColl_ + nadiab_moments_e(ip1_e,1,iky_,ikx_,iz_)
+      TColl_ = TColl_ + moments_e(ip1_e,1,iky_,ikx_,iz_,updatetlevel)
     ELSEIF( (p_dp .EQ. 2._dp) .AND. (j_dp .EQ. 0._dp)) THEN ! Ce20
-      TColl_ = TColl_ + twothird*nadiab_moments_e(ip2_e,1,iky_,ikx_,iz_) &
-                - SQRT2*twothird*nadiab_moments_e(ip0_e,2,iky_,ikx_,iz_)
+      TColl_ = TColl_ + twothird*moments_e(ip2_e,1,iky_,ikx_,iz_,updatetlevel) &
+                - SQRT2*twothird*moments_e(ip0_e,2,iky_,ikx_,iz_,updatetlevel)
     ELSEIF( (p_dp .EQ. 0._dp) .AND. (j_dp .EQ. 1._dp)) THEN ! Ce01
-      TColl_ = TColl_ + 2._dp*twothird*nadiab_moments_e(ip0_e,2,iky_,ikx_,iz_) &
-                 - SQRT2*twothird*nadiab_moments_e(ip2_e,1,iky_,ikx_,iz_)
+      TColl_ = TColl_ + 2._dp*twothird*moments_e(ip0_e,2,iky_,ikx_,iz_,updatetlevel) &
+                 - SQRT2*twothird*moments_e(ip2_e,1,iky_,ikx_,iz_,updatetlevel)
     ENDIF
     TColl_ = nu_ee * TColl_
   END SUBROUTINE DoughertyDK_ee
@@ -261,15 +261,15 @@ CONTAINS
     p_dp      = REAL(parray_i(ip_),dp)
     j_dp      = REAL(jarray_i(ij_),dp)
     !** Assembling collison operator **
-    TColl_ = -(p_dp + 2._dp*j_dp)*nadiab_moments_i(ip_,ij_,iky_,ikx_,iz_)
+    TColl_ = -(p_dp + 2._dp*j_dp)*moments_i(ip_,ij_,iky_,ikx_,iz_,updatetlevel)
     IF( (p_dp .EQ. 1._dp) .AND. (j_dp .EQ. 0._dp)) THEN ! kronecker p1j0
-      TColl_ = TColl_ + nadiab_moments_i(ip1_i,1,iky_,ikx_,iz_)
+      TColl_ = TColl_ + moments_i(ip1_i,1,iky_,ikx_,iz_,updatetlevel)
     ELSEIF( (p_dp .EQ. 2._dp) .AND. (j_dp .EQ. 0._dp)) THEN ! kronecker p2j0
-      TColl_ = TColl_ + twothird*nadiab_moments_i(ip2_i,1,iky_,ikx_,iz_) &
-              - SQRT2*twothird*nadiab_moments_i(ip0_i,2,iky_,ikx_,iz_)
+      TColl_ = TColl_ + twothird*moments_i(ip2_i,1,iky_,ikx_,iz_,updatetlevel) &
+              - SQRT2*twothird*moments_i(ip0_i,2,iky_,ikx_,iz_,updatetlevel)
     ELSEIF( (p_dp .EQ. 0._dp) .AND. (j_dp .EQ. 1._dp)) THEN ! kronecker p0j1
-      TColl_ = TColl_ + 2._dp*twothird*nadiab_moments_i(ip0_i,2,iky_,ikx_,iz_) &
-                 - SQRT2*twothird*nadiab_moments_i(ip2_i,1,iky_,ikx_,iz_)
+      TColl_ = TColl_ + 2._dp*twothird*moments_i(ip0_i,2,iky_,ikx_,iz_,updatetlevel) &
+                 - SQRT2*twothird*moments_i(ip2_i,1,iky_,ikx_,iz_,updatetlevel)
     ENDIF
     TColl_ = nu_i * TColl_
   END SUBROUTINE DoughertyDK_ii
@@ -858,7 +858,7 @@ CONTAINS
                 ! write(*,*) kp_grid_mat(ikp_prev), '<', kperp_sim, '<', kp_grid_mat(ikp_next)
               ENDIF
               ! 0->1 variable for linear interp, i.e. zero2one = (k-k0)/(k1-k0)
-              zerotoone = (kperp_sim - kp_grid_mat(ikp_prev))/(kp_grid_mat(ikp_next) - kp_grid_mat(ikp_prev))
+              zerotoone = MIN(1._dp,(kperp_sim - kp_grid_mat(ikp_prev))/(kp_grid_mat(ikp_next) - kp_grid_mat(ikp_prev)))
               ! Linear interpolation between previous and next kperp matrix values
               Ceepj (:,:,iky,ikx,iz) = (Ceepj__kp(:,:,ikp_next) - Ceepj__kp(:,:,ikp_prev))*zerotoone + Ceepj__kp(:,:,ikp_prev)
               Ciipj (:,:,iky,ikx,iz) = (Ciipj__kp(:,:,ikp_next) - Ciipj__kp(:,:,ikp_prev))*zerotoone + Ciipj__kp(:,:,ikp_prev)
