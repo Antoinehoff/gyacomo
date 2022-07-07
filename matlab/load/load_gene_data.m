@@ -3,22 +3,22 @@ function [ DATA ] = load_gene_data( folder )
 namelist      = read_namelist([folder,'parameters.dat']);
 DATA.namelist = namelist;
 %% Grid
-file = 'coord.dat.h5';
-DATA.vp  = h5read([folder,file],'/coord/vp');
+coofile = 'coord.dat.h5';
+DATA.vp  = h5read([folder,coofile],'/coord/vp');
 DATA.Nvp = numel(DATA.vp);
 
-DATA.mu  = h5read([folder,file],'/coord/mu');
+DATA.mu  = h5read([folder,coofile],'/coord/mu');
 DATA.Nmu = numel(DATA.mu);
 
-DATA.kx  = h5read([folder,file],'/coord/kx');
+DATA.kx  = h5read([folder,coofile],'/coord/kx');
 DATA.Nkx = numel(DATA.kx);
 DATA.Nx  = DATA.Nkx;
 
-DATA.ky  = h5read([folder,file],'/coord/ky');
+DATA.ky  = h5read([folder,coofile],'/coord/ky');
 DATA.Nky = numel(DATA.ky);
 DATA.Ny  = DATA.Nky*2-1;
 
-DATA.z   = h5read([folder,file],'/coord/z');
+DATA.z   = h5read([folder,coofile],'/coord/z');
 DATA.Nz  = numel(DATA.z);
 
 dkx = DATA.kx(2); dky = DATA.ky(2);
@@ -27,33 +27,37 @@ x = linspace(-Lx/2,Lx/2,DATA.Nx+1); x = x(1:end-1);
 y = linspace(-Ly/2,Ly/2,DATA.Ny+1); y = y(1:end-1);
 DATA.x = x; DATA.y = y; DATA.Lx = Lx; DATA.Ly = Ly;
 %% Transport
-file           = 'nrg.dat.h5';
-DATA.Ts0D      = h5read([folder,file],'/nrgions/time');
-DATA.PGAMMA_RI = h5read([folder,file],'/nrgions/Gamma_es');
-DATA.HFLUX_X   = h5read([folder,file],'/nrgions/Q_es');
+nrgfile           = 'nrg.dat.h5';
+% nrgfile           = 'nrg_1.h5';
+DATA.Ts0D      = h5read([folder,nrgfile],'/nrgions/time');
+DATA.PGAMMA_RI = h5read([folder,nrgfile],'/nrgions/Gamma_es');
+DATA.HFLUX_X   = h5read([folder,nrgfile],'/nrgions/Q_es');
 
 %% fields and moments
-file = 'mom_ions.dat.h5';
-DATA.Ts3D = h5read([folder,file],'/mom_ions/time');
+phifile   = 'field.dat.h5';
+% phifile   = 'field_1.h5';
+DATA.Ts3D = h5read([folder,phifile],'/field/time');
 DATA.DENS_I = zeros(DATA.Nkx,DATA.Nky,DATA.Nz,numel(DATA.Ts3D));
 DATA.TPER_I = zeros(DATA.Nkx,DATA.Nky,DATA.Nz,numel(DATA.Ts3D));
 DATA.TPAR_I = zeros(DATA.Nkx,DATA.Nky,DATA.Nz,numel(DATA.Ts3D));
 DATA.PHI    = zeros(DATA.Nkx,DATA.Nky,DATA.Nz,numel(DATA.Ts3D));
 
+momfile = 'mom_ions.dat.h5';
+% momfile = 'mom_ions_1.h5';
 for jt = 1:numel(DATA.Ts3D)
     t = DATA.Ts3D(jt);
     [~, it] = min(abs(DATA.Ts3D-t));
 
-    tmp = h5read([folder,file],['/mom_ions/dens/',sprintf('%10.10d',it-1)]);
+    tmp = h5read([folder,momfile],['/mom_ions/dens/',sprintf('%10.10d',it-1)]);
     DATA.DENS_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
 
-    tmp = h5read([folder,file],['/mom_ions/T_par/',sprintf('%10.10d',it-1)]);
+    tmp = h5read([folder,momfile],['/mom_ions/T_par/',sprintf('%10.10d',it-1)]);
     DATA.TPAR_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
  
-    tmp = h5read([folder,file],['/mom_ions/T_perp/',sprintf('%10.10d',it-1)]);
+    tmp = h5read([folder,momfile],['/mom_ions/T_perp/',sprintf('%10.10d',it-1)]);
     DATA.TPER_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
     
-    tmp = h5read([folder,'field.dat.h5'],['/field/phi/',sprintf('%10.10d',it-1)]);
+    tmp = h5read([folder,phifile],['/field/phi/',sprintf('%10.10d',it-1)]);
     DATA.PHI(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
 
 end

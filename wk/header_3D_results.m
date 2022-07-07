@@ -28,5 +28,8 @@ helazdir = '/home/ahoffman/HeLaZ/';
 % outfile = 'shearless_cyclone/64x32x16x5x3_CBC_CO/64x32x16x5x3_CBC_LRGK';
 %% ZPINCH
 % outfile ='Zpinch_rerun/Kn_2.5_200x48x5x3';
-outfile ='Zpinch_rerun/Kn_1.6_200x48x11x6';
+outfile ='Zpinch_rerun/Kn_2.0_200x48x9x5_large_box';
+% outfile ='Zpinch_rerun/Kn_1.6_256x128x7x4';
+% outfile ='Zpinch_rerun/Kn_1.6_200x48x11x6';
+% outfile ='Zpinch_rerun/Kn_1.6_200x48x21x11';
 run analysis_HeLaZ

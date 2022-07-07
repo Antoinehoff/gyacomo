@@ -10,13 +10,13 @@
 % folder = '/misc/gene_results/HP_fig_2b_mu_5e-2/';
 % folder = '/misc/gene_results/HP_fig_2c_mu_5e-2/';
 % folder = '/misc/gene_results/LD_zpinch_1.6/';
-% folder = '/misc/gene_results/ZP_16x8_kn_1.6/';
-folder = '/misc/gene_results/ZP_HP_kn_2.5/';
+folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
+% folder = '/misc/gene_results/ZP_HP_kn_2.5/';
 gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-options.TAVG_0   = 0.2*gene_data.Ts3D(end);
+options.TAVG_0   = 0.6*gene_data.Ts3D(end);
 options.TAVG_1   = gene_data.Ts3D(end); % Averaging times duration
 options.NMVA     = 1;              % Moving average for time traces
 options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x, Q_x)
@@ -35,22 +35,22 @@ end
 if 0
 %% 2D snapshots
 % Options
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
 % options.NAME      = 'Q_x';
 options.NAME      = '\phi';
-% options.NAME      = 'T_i';
+% options.NAME      = 'n_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
 options.PLAN      = 'xy';
 % options.NAME      ='f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [0];
+options.TIME      = [600];
 gene_data.a = data.EPS * 2000;
 fig = photomaton(gene_data,options);
-save_figure(gene_data,fig)
+save_figure(gene_data,fig,'.png')
 end
 
 if 0

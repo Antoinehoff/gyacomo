@@ -1,9 +1,9 @@
 % Options
 SHOW_FILM = 0;
-U_TIME   =2400; % >0 for frozen velocity at a given time, -1 for evolving field
+U_TIME   = 50; % >0 for frozen velocity at a given time, -1 for evolving field
 Evolve_U = 1; % 0 for frozen velocity at a given time, 1 for evolving field
-Tfin   = 1000;
-dt_    = 0.2;
+Tfin   = 50;
+dt_    = 0.05;
 Nstep  = ceil(Tfin/dt_);
 % Init tracers
 Np      = 100; %number of tracers
@@ -48,7 +48,7 @@ end
 
 % position grid and velocity field
 [YY_, XX_ ,ZZ_] = meshgrid(data.y,data.x,data.z);
-[KY,KX] = meshgrid(data.ky,data.kx);
+[KX,KY] = meshgrid(data.kx,data.ky);
 Ux = zeros(size(XX_));
 Uy = zeros(size(XX_));
 Uz = zeros(size(XX_));
@@ -57,9 +57,12 @@ ni = zeros(size(XX_));
 [~,itu_] = min(abs(U_TIME-data.Ts3D));
 % computing the frozen velocity field
 for iz = 1:data.Nz
-    Ux(:,:,iz) = real(ifft2( 1i*KY.*(data.PHI(:,:,iz,itu_)),data.Nx,data.Ny));
-    Uy(:,:,iz) = real(ifft2(-1i*KX.*(data.PHI(:,:,iz,itu_)),data.Nx,data.Ny));
-    ni(:,:,iz) = real(ifft2(data.DENS_I(:,:,iz,itu_),data.Nx,data.Ny));
+%     Ux(:,:,iz) = real(ifft2( 1i*KY.*(data.PHI(:,:,iz,itu_)),data.Nx,data.Ny));
+%     Uy(:,:,iz) = real(ifft2(-1i*KX.*(data.PHI(:,:,iz,itu_)),data.Nx,data.Ny));
+%     ni(:,:,iz) = real(ifft2(data.DENS_I(:,:,iz,itu_),data.Nx,data.Ny));
+    Ux(:,:,iz) = ifourier_GENE( 1i*KY.*(data.PHI(:,:,iz,itu_)))'*sqrt(data.scale);
+    Uy(:,:,iz) = ifourier_GENE(-1i*KX.*(data.PHI(:,:,iz,itu_)))'*sqrt(data.scale);
+    ni(:,:,iz) = ifourier_GENE(data.DENS_I(:,:,iz,itu_))'*sqrt(data.scale);
 end
 
 %% FILM options
@@ -89,9 +92,9 @@ while(t_<Tfin && it <= Nstep)
     if Evolve_U && (itu_old ~= itu_)
         % updating the velocity field and density field
         for iz = 1:data.Nz
-            Ux(:,:,iz) = real(ifft2( 1i*KY.*(data.PHI(:,:,iz,itu_)),data.Nx,data.Ny));
-            Uy(:,:,iz) = real(ifft2(-1i*KX.*(data.PHI(:,:,iz,itu_)),data.Nx,data.Ny));
-            ni(:,:,iz) = real(ifft2(data.DENS_I(:,:,iz,itu_),data.Nx,data.Ny));
+            Ux(:,:,iz) = ifourier_GENE( 1i*KY.*(data.PHI(:,:,iz,itu_)))'*sqrt(data.scale);
+            Uy(:,:,iz) = ifourier_GENE(-1i*KX.*(data.PHI(:,:,iz,itu_)))'*sqrt(data.scale);
+            ni(:,:,iz) = ifourier_GENE(data.DENS_I(:,:,iz,itu_))'*sqrt(data.scale);
         end
     end
     % evolve each tracer
@@ -207,7 +210,7 @@ while(t_<Tfin && it <= Nstep)
     if SHOW_FILM && (~Evolve_U || (itu_old ~= itu_))
     % updating the velocity field
         clf(fig);
-        F2P = real(ifft2(data.PHI(:,:,iz,itu_),data.Nx,data.Ny));
+        F2P = ifourier_GENE(data.PHI(:,:,iz,itu_))';
         scale = max(max(abs(F2P))); % Scaling to normalize
         pclr = pcolor(XX_,YY_,F2P/scale); 
         colormap(bluewhitered);

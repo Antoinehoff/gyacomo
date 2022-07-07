@@ -15,21 +15,21 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %% PHYSICAL PARAMETERS
 NU      = 0.0;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-K_N     = 2.5;   % Density gradient drive
-K_T     = 0.25*K_N;   % Temperature '''
+K_N     = 1.0;%2.0;   % Density gradient drive
+K_T     = 0;%0.25*K_N;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
 % SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 1;     % 1: kinetic electrons, 2: adiabatic electrons
 %% GRID PARAMETERS
-PMAXE   = 4;     % Hermite basis size of electrons
-JMAXE   = 2;     % Laguerre "
-PMAXI   = 4;     % " ions
-JMAXI   = 2;     % "
+PMAXE   = 30;     % Hermite basis size of electrons
+JMAXE   = 15;     % Laguerre "
+PMAXI   = 30;     % " ions
+JMAXI   = 15;     % "
 NX      = 1;    % real space x-gridpoints
 NY      = 32;     %     ''     y-gridpoints
 LX      = 100;   % Size of the squared frequency domain
-LY      = 60;     % Size of the squared frequency domain
+LY      = 30;     % Size of the squared frequency domain
 NZ      = 1;     % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
@@ -41,7 +41,7 @@ SHEAR   = 0.0;    % magnetic shear (Not implemented yet)
 EPS     = 0.0;    % inverse aspect ratio
 %% TIME PARMETERS
 TMAX    = 500;  % Maximal time unit
-DT      = 2e-2;   % Time step
+DT      = 5e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
@@ -53,7 +53,7 @@ SIMID   = 'dbg';  % Name of the simulation
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-CO      = 'SG';
+CO      = 'DG';
 GKCO    = 1; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
@@ -76,12 +76,13 @@ MU      = 0.0; % Hyperdiffusivity coefficient
 INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_X    = MU;     %
 MU_Y    = MU;     %
+N_HD    = 4;
 MU_Z    = 0.0;     %
 MU_P    = 0.0;     %
 MU_J    = 0.0;     %
 LAMBDAD = 0.0;
-NOISE0  = 0.0e-5; % Init noise amplitude
-BCKGD0  = 1.0;    % Init background
+NOISE0  = 1.0e-5; % Init noise amplitude
+BCKGD0  = 0.0;    % Init background
 GRADB   = 1.0;
 CURVB   = 1.0;
 %%-------------------------------------------------------------------------

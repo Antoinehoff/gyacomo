@@ -29,7 +29,7 @@ figure;
 % plot(K_N,G_LR); hold on;
 % plot(K_N,G_LD); hold on;
 % plot(K_N,G_CL,'--k'); hold on;
-k = 0.3;
+k = 0.35;
 plot(K_N,g_SG.^2/k.^3); hold on;
 plot(K_N,g_DG.^2/k.^3); hold on;
 plot(K_N,g_LR.^2/k.^3); hold on;

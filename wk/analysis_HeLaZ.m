@@ -11,7 +11,7 @@ system(['mkdir -p ',LOCALDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 system(CMD);
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 02;
+JOBNUMMIN = 00; JOBNUMMAX = 00;
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 data.localdir = LOCALDIR;
 data.FIGDIR   = LOCALDIR;
@@ -38,24 +38,24 @@ if 0
 options.T = [200 400];
 fig = statistical_transport_averaging(data,options);
 end
-
+    
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
 % options.NAME      = '\phi';
-% options.NAME      = 'N_i^{00}';
+options.NAME      = 'N_i^{00}';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
-options.NAME      = '\Gamma_x';
-% options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+% options.NAME      = '\Gamma_x';
+% options.NAME      = 'n_e';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 1;
 % options.TIME      = data.Ts5D(end-30:end);
-options.TIME      =  data.Ts3D(450:end);
+options.TIME      =  data.Ts3D(50:2:end);
 % options.TIME      = [350:600];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
@@ -69,16 +69,16 @@ options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
 % options.NAME      = '\phi';
-% options.NAME      = 'n_i';
-% options.NAME      = 'N_e^{00}';
+options.NAME      = 'n_e';
+% options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
-options.NAME      = '\Gamma_x';
+% options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [100 200 300 900 1300];
+options.TIME      = [600];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 % save_figure(data,fig)

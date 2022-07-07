@@ -57,6 +57,7 @@ fprintf(fid,['  LINEARITY = ', MODEL.LINEARITY,'\n']);
 fprintf(fid,['  KIN_E   = ', MODEL.KIN_E,'\n']);
 fprintf(fid,['  mu_x    = ', num2str(MODEL.mu_x),'\n']);
 fprintf(fid,['  mu_y    = ', num2str(MODEL.mu_y),'\n']);
+fprintf(fid,['  N_HD    = ', num2str(MODEL.N_HD),'\n']);
 fprintf(fid,['  mu_z    = ', num2str(MODEL.mu_z),'\n']);
 fprintf(fid,['  mu_p    = ', num2str(MODEL.mu_p),'\n']);
 fprintf(fid,['  mu_j    = ', num2str(MODEL.mu_j),'\n']);
