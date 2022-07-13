@@ -11,7 +11,7 @@ system(['mkdir -p ',LOCALDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 system(CMD);
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 00;
+JOBNUMMIN = 00; JOBNUMMAX = 20;
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 data.localdir = LOCALDIR;
 data.FIGDIR   = LOCALDIR;
@@ -23,7 +23,7 @@ FMT = '.fig';
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-options.TAVG_0   = 0.7*data.Ts3D(end); data.scale = (1/data.Nx/data.Ny)^2;
+options.TAVG_0   = 0.7*data.Ts3D(end); data.scale = 1;%(1/data.Nx/data.Ny)^2;
 options.TAVG_1   = data.Ts3D(end); % Averaging times duration
 options.NMVA     = 1;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';   % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
@@ -45,18 +45,18 @@ if 0
 options.INTERP    = 1;
 options.POLARPLOT = 0;
 % options.NAME      = '\phi';
-options.NAME      = 'N_i^{00}';
-% options.NAME      = 'v_y';
+% options.NAME      = 'N_i^{00}';
+% options.NAME      = 'v_x';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
-% options.NAME      = 'n_e';
-options.PLAN      = 'kxky';
+options.NAME      = 'n_i';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 1;
 % options.TIME      = data.Ts5D(end-30:end);
-options.TIME      =  data.Ts3D(50:2:end);
-% options.TIME      = [350:600];
+% options.TIME      =  data.Ts3D(20:2:end);
+options.TIME      = [700:1:750];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -69,7 +69,7 @@ options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
 % options.NAME      = '\phi';
-options.NAME      = 'n_e';
+% options.NAME      = 'n_e';
 % options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
@@ -78,7 +78,7 @@ options.PLAN      = 'xy';
 % options.NAME      'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [600];
+options.TIME      = [200 800 1500];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 % save_figure(data,fig)
@@ -131,16 +131,16 @@ end
 
 if 0
 %% Time averaged spectrum
-options.TIME   = 1100:10:1400;
+options.TIME   = [500 700];
 options.NORM   =1;
 % options.NAME   = '\phi';
 % options.NAME      = 'N_i^{00}';
-options.NAME      ='\Gamma_x';
+options.NAME   ='\Gamma_x';
 options.PLAN   = 'kxky';
 options.COMPZ  = 'avg';
 options.OK     = 0;
-options.COMPXY = 'avg';
-options.COMPT  = 0;
+options.COMPXY = 'avg'; % avg/sum/max/zero/ 2D plot otherwise
+options.COMPT  = 'avg';
 options.PLOT   = 'semilogy';
 fig = spectrum_1D(data,options);
 % save_figure(data,fig,'.png')

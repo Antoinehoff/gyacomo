@@ -10,8 +10,8 @@
 % folder = '/misc/gene_results/HP_fig_2b_mu_5e-2/';
 % folder = '/misc/gene_results/HP_fig_2c_mu_5e-2/';
 % folder = '/misc/gene_results/LD_zpinch_1.6/';
-folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
-% folder = '/misc/gene_results/ZP_HP_kn_2.5/';
+% folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
+folder = '/misc/gene_results/ZP_kn_2.5_large_box/';
 gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
@@ -39,15 +39,15 @@ options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
 % options.NAME      = 'Q_x';
-options.NAME      = '\phi';
-% options.NAME      = 'n_i';
+% options.NAME      = '\phi';
+options.NAME      = 'n_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
 options.PLAN      = 'xy';
 % options.NAME      ='f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [600];
+options.TIME      = [1:10];
 gene_data.a = data.EPS * 2000;
 fig = photomaton(gene_data,options);
 save_figure(gene_data,fig,'.png')
@@ -58,12 +58,12 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
-% options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+options.NAME      = 'n_i';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -115,16 +115,16 @@ if 0
 %% Time averaged spectrum
 options.TIME   = 300:600;
 options.NORM   =1;
-options.NAME   = '\phi';
+% options.NAME   = '\phi';
 % options.NAME      = 'n_i';
-% options.NAME      ='\Gamma_x';
+options.NAME      ='\Gamma_x';
 options.PLAN   = 'kxky';
 options.COMPZ  = 'avg';
 options.OK     = 0;
-options.COMPXY = 'avg';
+options.COMPXY = 'zero';
 options.COMPT  = 'avg';
 options.PLOT   = 'semilogy';
-fig = spectrum_1D(data,options);
+fig = spectrum_1D(gene_data,options);
 % save_figure(data,fig)
 end
 

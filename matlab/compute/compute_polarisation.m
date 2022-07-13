@@ -14,7 +14,7 @@ KP  = sqrt(KX.^2+KY.^2);
 
 GAMMA2_ = 0.*KN_;
    
-for in = 1:Ji+1
+for in = 1:1
     for iz = 1:data.Nz
         GAMMA2_(:,:,iz) = GAMMA2_(:,:,iz) + kernel(in-1,KP*sqrt(2)).^2;
     end

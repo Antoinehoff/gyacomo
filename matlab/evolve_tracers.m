@@ -1,17 +1,18 @@
 % Options
 SHOW_FILM = 0;
-U_TIME   = 50; % >0 for frozen velocity at a given time, -1 for evolving field
-Evolve_U = 1; % 0 for frozen velocity at a given time, 1 for evolving field
-Tfin   = 50;
-dt_    = 0.05;
-Nstep  = ceil(Tfin/dt_);
+INIT     = 'lin';   % lin (for a line)/ round (for a small round)/ gauss for random
+U_TIME   = 700;     % >0 for frozen velocity at a given time, -1 for evolving field
+Evolve_U = 1;       % 0 for frozen velocity at a given time, 1 for evolving field
+Tfin     = 10;
+dt_      = 0.0005;
+Nstep    = ceil(Tfin/dt_);
 % Init tracers
-Np      = 100; %number of tracers
+Np      = 200; %number of tracers
 % color = tcolors;
 color = jet(Np);
 tcolors = distinguishable_colors(Np); %Their colors
 
-Na = 10000; %length of trace
+Na = 1000000; %length of trace
 
 Traj_x = zeros(Np,Nstep);
 Traj_y = zeros(Np,Nstep);
@@ -21,7 +22,6 @@ Disp_y = zeros(Np,Nstep);
 xmax = max(data.x); xmin = min(data.x);
 ymax = max(data.y); ymin = min(data.y);
 
-INIT = 'round';
 switch INIT
     case 'lin'
         % Evenly distributed initial positions
