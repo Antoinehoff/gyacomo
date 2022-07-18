@@ -3,38 +3,53 @@ function [FIG] = plot_ballooning(data,options)
     [~,it0] = min(abs(data.Ts3D - options.time_2_plot(1)));
     [~,it1] = min(abs(data.Ts3D - options.time_2_plot(end)));
     [~,ikyarray] = min(abs(data.ky - options.kymodes));
-    phi_real=mean(real(data.PHI(:,:,:,it0:it1)),4);
-    phi_imag=mean(imag(data.PHI(:,:,:,it0:it1)),4);
-    
+%     phi_real=mean(real(data.PHI(:,:,:,it0:it1)),4);
+%     phi_imag=mean(imag(data.PHI(:,:,:,it0:it1)),4);
+    phi_real=real(data.PHI(:,:,:,it1));
+    phi_imag=imag(data.PHI(:,:,:,it1));
     % Apply baollooning tranform
     for iky=ikyarray
         dims = size(phi_real);
-
-        if data.SHEAR > 0
-            idx=[0:data.Nkx/2 -(data.Nkx/2-1):-1];
-            ikxlim = dims(2);
+        Nkx  = dims(2);
+        is   = max(1,iky-1);
+        Npi  = (Nkx-1)-2*(is-1);
+        if(Npi <= 0)
+            break
+        elseif(Npi == 1)
+            ordered_ikx = 1;
         else
-            idx = 0;
-            ikxlim = 1;
+            tmp_ = (Nkx-is+1):-is:(Nkx/2+2);
+            ordered_ikx = [tmp_(end:-1:1), 1:is:(Nkx/2)];
         end
+
+        idx=data.kx./data.kx(2);
+        idx= idx(ordered_ikx);
+        Nkx = numel(idx);
+
+        phib_real = zeros(  Nkx*dims(3)  ,1);
+        phib_imag = phib_real;
+        b_angle   = phib_real;
         
-        phib_real = zeros(  ikxlim*dims(3)  ,1);
-        phib_imag= phib_real;
-        b_angle = phib_real;
-        
-        for ikx =1:ikxlim
-            start_ =  (ikx -1)*dims(3) +1;
-            end_ =  ikx*dims(3);
+        kk_=[];
+        ss_=[];
+        ee_=[];
+        for i_ =1:Nkx
+            start_ =  (i_ -1)*dims(3) +1;
+            end_ =  i_*dims(3);
+            ikx  = ordered_ikx(i_);
             phib_real(start_:end_)  = phi_real(iky,ikx,:);
             phib_imag(start_:end_)  = phi_imag(iky,ikx,:);
+            kk_ = [kk_ data.kx(ikx)];
+            ss_ = [ss_ start_];
+            ee_ = [ee_ end_];
         end
 
         % Define ballooning angle
-        Nkx = numel(data.kx)-1; coordz = data.z;
-        for ikx =1: ikxlim
+        coordz = data.z;
+        for i_ =1: Nkx
             for iz=1:dims(3)
-                ii = dims(3)*(ikx -1) + iz;
-                b_angle(ii) =coordz(iz) + 2*pi*idx(ikx);
+                ii = dims(3)*(i_ -1) + iz;
+                b_angle(ii) =coordz(iz) + 2*pi*idx(i_)./is;
             end
         end
         

@@ -31,6 +31,9 @@ switch options.NAME
     case 'n_e'
     FIGURE.fig = figure; FIGURE.FIGNAME = ['ne_spectrum_',data.PARAMS]; 
     fieldname = 'elec. dens.';
+    case 'N_i^{00}'
+    FIGURE.fig = figure; FIGURE.FIGNAME = ['Ni00_spectrum_',data.PARAMS]; 
+    fieldname = 'ion gdens.';
 end
 
 PLOT2D = 0;

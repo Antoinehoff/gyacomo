@@ -46,17 +46,17 @@ options.INTERP    = 1;
 options.POLARPLOT = 0;
 % options.NAME      = '\phi';
 % options.NAME      = 'N_i^{00}';
-% options.NAME      = 'v_x';
+options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
-options.NAME      = 'n_i';
+% options.NAME      = 'n_i';
 options.PLAN      = 'xy';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 1;
 % options.TIME      = data.Ts5D(end-30:end);
-% options.TIME      =  data.Ts3D(20:2:end);
-options.TIME      = [700:1:750];
+options.TIME      =  data.Ts3D(1:20:end);
+% options.TIME      = [750:1:1000];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -70,7 +70,7 @@ options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
 % options.NAME      = '\phi';
 % options.NAME      = 'n_e';
-% options.NAME      = 'N_i^{00}';
+options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
@@ -78,7 +78,7 @@ options.PLAN      = 'xy';
 % options.NAME      'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [200 800 1500];
+options.TIME      = [500 800 1000];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 % save_figure(data,fig)
@@ -131,7 +131,7 @@ end
 
 if 0
 %% Time averaged spectrum
-options.TIME   = [500 700];
+options.TIME   = [300 600];
 options.NORM   =1;
 % options.NAME   = '\phi';
 % options.NAME      = 'N_i^{00}';
@@ -139,7 +139,7 @@ options.NAME   ='\Gamma_x';
 options.PLAN   = 'kxky';
 options.COMPZ  = 'avg';
 options.OK     = 0;
-options.COMPXY = 'avg'; % avg/sum/max/zero/ 2D plot otherwise
+options.COMPXY = '2D'; % avg/sum/max/zero/ 2D plot otherwise
 options.COMPT  = 'avg';
 options.PLOT   = 'semilogy';
 fig = spectrum_1D(data,options);

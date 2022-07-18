@@ -1,18 +1,19 @@
 % Options
 SHOW_FILM = 0;
+field2plot  ='Ni00';
 INIT     = 'lin';   % lin (for a line)/ round (for a small round)/ gauss for random
-U_TIME   = 700;     % >0 for frozen velocity at a given time, -1 for evolving field
+U_TIME   = 200;     % >0 for frozen velocity at a given time, -1 for evolving field
 Evolve_U = 1;       % 0 for frozen velocity at a given time, 1 for evolving field
-Tfin     = 10;
-dt_      = 0.0005;
+Tfin     = 200;
+dt_      = 0.1;
 Nstep    = ceil(Tfin/dt_);
 % Init tracers
-Np      = 200; %number of tracers
+Np      = 20; %number of tracers
 % color = tcolors;
 color = jet(Np);
 tcolors = distinguishable_colors(Np); %Their colors
 
-Na = 1000000; %length of trace
+Na = 1/dt_; %length of trace
 
 Traj_x = zeros(Np,Nstep);
 Traj_y = zeros(Np,Nstep);
@@ -60,9 +61,9 @@ for iz = 1:data.Nz
 %     Ux(:,:,iz) = real(ifft2( 1i*KY.*(data.PHI(:,:,iz,itu_)),data.Nx,data.Ny));
 %     Uy(:,:,iz) = real(ifft2(-1i*KX.*(data.PHI(:,:,iz,itu_)),data.Nx,data.Ny));
 %     ni(:,:,iz) = real(ifft2(data.DENS_I(:,:,iz,itu_),data.Nx,data.Ny));
-    Ux(:,:,iz) = ifourier_GENE( 1i*KY.*(data.PHI(:,:,iz,itu_)))'*sqrt(data.scale);
-    Uy(:,:,iz) = ifourier_GENE(-1i*KX.*(data.PHI(:,:,iz,itu_)))'*sqrt(data.scale);
-    ni(:,:,iz) = ifourier_GENE(data.DENS_I(:,:,iz,itu_))'*sqrt(data.scale);
+    Ux(:,:,iz) = ifourier_GENE( 1i*KY.*(data.PHI(:,:,iz,itu_)))';
+    Uy(:,:,iz) = ifourier_GENE(-1i*KX.*(data.PHI(:,:,iz,itu_)))';
+    ni(:,:,iz) = ifourier_GENE(data.DENS_I(:,:,iz,itu_))';
 end
 
 %% FILM options
@@ -92,9 +93,10 @@ while(t_<Tfin && it <= Nstep)
     if Evolve_U && (itu_old ~= itu_)
         % updating the velocity field and density field
         for iz = 1:data.Nz
-            Ux(:,:,iz) = ifourier_GENE( 1i*KY.*(data.PHI(:,:,iz,itu_)))'*sqrt(data.scale);
-            Uy(:,:,iz) = ifourier_GENE(-1i*KX.*(data.PHI(:,:,iz,itu_)))'*sqrt(data.scale);
-            ni(:,:,iz) = ifourier_GENE(data.DENS_I(:,:,iz,itu_))'*sqrt(data.scale);
+            Ux(:,:,iz) = ifourier_GENE( 1i*KY.*(data.PHI(:,:,iz,itu_)))';
+            Uy(:,:,iz) = ifourier_GENE(-1i*KX.*(data.PHI(:,:,iz,itu_)))';
+%             ni(:,:,iz) = ifourier_GENE(data.DENS_I(:,:,iz,itu_))';
+            ni(:,:,iz) = ifourier_GENE(data.Ni00(:,:,iz,itu_))';
         end
     end
     % evolve each tracer
@@ -210,10 +212,19 @@ while(t_<Tfin && it <= Nstep)
     if SHOW_FILM && (~Evolve_U || (itu_old ~= itu_))
     % updating the velocity field
         clf(fig);
-        F2P = ifourier_GENE(data.PHI(:,:,iz,itu_))';
+        switch field2plot
+            case 'phi'
+                F2P = ifourier_GENE(data.PHI(:,:,iz,itu_))';
+            case 'ni'
+                 F2P = ifourier_GENE(data.DENS_I(:,:,iz,itu_))';
+            case 'Ni00'
+                 F2P = ifourier_GENE(data.Ni00(:,:,iz,itu_))';
+            case 'none'
+                 F2P = 0*XX_;
+        end
         scale = max(max(abs(F2P))); % Scaling to normalize
         pclr = pcolor(XX_,YY_,F2P/scale); 
-        colormap(bluewhitered);
+        colormap(bluewhitered); caxis([-1 1]);
         set(pclr, 'edgecolor','none'); hold on; caxis([-2,2]); shading interp
         for ip = 1:Np
             ia0 = max(1,it-Na);

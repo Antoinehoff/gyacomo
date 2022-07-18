@@ -11,7 +11,8 @@
 % folder = '/misc/gene_results/HP_fig_2c_mu_5e-2/';
 % folder = '/misc/gene_results/LD_zpinch_1.6/';
 % folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
-folder = '/misc/gene_results/ZP_kn_2.5_large_box/';
+% folder = '/misc/gene_results/ZP_kn_2.5_large_box/';
+folder = '/misc/gene_results/CBC/128x64x16x24x12/';
 gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
@@ -23,7 +24,7 @@ options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag
 options.INTERP   = 1;
 gene_data.FIGDIR = folder;
 fig = plot_radial_transport_and_spacetime(gene_data,options);
-save_figure(gene_data,fig)
+save_figure(gene_data,fig,'.png')
 end
 
 if 0
@@ -39,8 +40,8 @@ options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
 % options.NAME      = 'Q_x';
-% options.NAME      = '\phi';
-options.NAME      = 'n_i';
+options.NAME      = '\phi';
+% options.NAME      = 'n_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
 options.PLAN      = 'xy';
@@ -56,13 +57,13 @@ end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-options.INTERP    = 1;
+options.INTERP    = 1;                  
 options.POLARPLOT = 0;
-% options.NAME      = '\phi';
+options.NAME      = '\phi';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
-options.NAME      = 'n_i';
+% options.NAME      = 'n_i';
 options.PLAN      = 'kxky';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';

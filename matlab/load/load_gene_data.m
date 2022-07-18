@@ -47,15 +47,15 @@ momfile = 'mom_ions.dat.h5';
 for jt = 1:numel(DATA.Ts3D)
     t = DATA.Ts3D(jt);
     [~, it] = min(abs(DATA.Ts3D-t));
-
-    tmp = h5read([folder,momfile],['/mom_ions/dens/',sprintf('%10.10d',it-1)]);
-    DATA.DENS_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
-
-    tmp = h5read([folder,momfile],['/mom_ions/T_par/',sprintf('%10.10d',it-1)]);
-    DATA.TPAR_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
- 
-    tmp = h5read([folder,momfile],['/mom_ions/T_perp/',sprintf('%10.10d',it-1)]);
-    DATA.TPER_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
+% 
+%     tmp = h5read([folder,momfile],['/mom_ions/dens/',sprintf('%10.10d',it-1)]);
+%     DATA.DENS_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
+% 
+%     tmp = h5read([folder,momfile],['/mom_ions/T_par/',sprintf('%10.10d',it-1)]);
+%     DATA.TPAR_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
+%  
+%     tmp = h5read([folder,momfile],['/mom_ions/T_perp/',sprintf('%10.10d',it-1)]);
+%     DATA.TPER_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
     
     tmp = h5read([folder,phifile],['/field/phi/',sprintf('%10.10d',it-1)]);
     DATA.PHI(:,:,:,it) = tmp.real + 1i*tmp.imaginary;

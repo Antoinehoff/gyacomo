@@ -41,7 +41,7 @@
 % fname ='GENE_LIN_Kn_1.6_KT_0.4_nu_0_32x16.txt';
 % fname ='GENE_LIN_Kn_2.5_KT_0.625_nu_0_32x16.txt';
 path = '/home/ahoffman/gene/linear_CBC_results/';
-fname = 'CBC_100_ky_1e-1_to_1e1.txt';
+fname = 'CBC_linear.txt';
 data_ = load([path,fname]);
 
 figure
