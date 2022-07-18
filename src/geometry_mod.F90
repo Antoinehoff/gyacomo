@@ -37,7 +37,7 @@ implicit none
   ! Some geometrical coefficients
   REAL(dp),    PUBLIC, DIMENSION(:,:) , ALLOCATABLE :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
   ! Array to map the index of mode (kx,ky,-pi) to (kx+2pi*s*ky,ky,pi) for sheared periodic boundary condition
-  INTEGER,     PUBLIC, DIMENSION(:,:), ALLOCATABLE :: ikx_zBC_map
+  INTEGER,     PUBLIC, DIMENSION(:,:), ALLOCATABLE :: ikx_zBC_L, ikx_zBC_R
   ! Functions
   PUBLIC :: geometry_readinputs, geometry_outputinputs,&
             eval_magnetic_geometry, set_ikx_zBC_map
@@ -271,44 +271,71 @@ CONTAINS
 
  SUBROUTINE set_ikx_zBC_map
  IMPLICIT NONE
- INTEGER,  DIMENSION(:), ALLOCATABLE   :: ikx_array
- INTEGER :: shift
- ALLOCATE(ikx_array(ikxs:ikxe))
- DO ikx = ikxs,ikxe
-     ikx_array(ikx) = MODULO(ikx - Nx/2,Nx) + 1
+ REAL :: shift, kx_shift, kxmax_, kxmin_
+ ALLOCATE(ikx_zBC_R(ikys:ikye,ikxs:ikxe))
+ ALLOCATE(ikx_zBC_L(ikys:ikye,ikxs:ikxe))
+ !! No shear case (simple id mapping)
+ !3            | 1    2    3    4    5    6 |  ky = 3 dky
+ !2   ky       | 1    2    3    4    5    6 |  ky = 2 dky
+ !1   A        | 1    2    3    4    5    6 |  ky = 1 dky
+ !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
+ !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=free)
+ DO iky = ikys,ikye
+   DO ikx = ikxs,ikxe
+     ikx_zBC_L(iky,ikx) = ikx
+     ikx_zBC_R(iky,ikx) = ikx
+   ENDDO
  ENDDO
+ ! Modify connection map only at border of z
  IF(SHEARED) THEN
-   !! We allocate a mapping to tell where the current mode will point for the
-   !  parallel periodic sheared BC for the kx index:
-   ! map for 0 Dirichlet BC
-   !3            | 1    2    3    4    5   -1   -1   -1|
-   !2   ky       | 8    1    2    3    4    5   -1   -1|
-   !1   A        | 7    8    1    2    3    4    5   -1|
-   !0   | -> kx  | 6____7____8____1____2____3____4____5|
-   ALLOCATE(ikx_zBC_map(ikys:ikye,ikxs:ikxe))
-   ikx_zBC_map(ikys:ikye,ikxs:ikxe) = -1
-   DO iky = ikys,ikye
-       DO ikx = ikxs,ikxe - iky + 1
-       shift = ikx_array(MODULO(ikx+iky-1,Nx+1))
-       ikx_zBC_map(iky,ikx) = shift
-       ENDDO
-   ENDDO
+   ! connection map BC of the RIGHT boundary (z=pi*Npol-dz)
+   !3            | 4    x    x    x    2    3 |  ky = 3 dky
+   !2   ky       | 3    4    x    x    1    2 |  ky = 2 dky
+   !1   A        | 2    3    4    x    6    1 |  ky = 1 dky
+   !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
+   !kx =           0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
+   kxmax_ =  kx_max
+   IF(contains_zmax) THEN ! Check if the process is at the end of the FT
+     DO iky = ikys,ikye
+       shift = 2._dp*shear*PI*kyarray(iky)*Npol
+         DO ikx = ikxs,ikxe
+           kx_shift = kxarray(ikx) + shift
+           IF(kx_shift .GT. kxmax_) THEN ! outside of the frequ domain
+             ikx_zBC_R(iky,ikx) = -99
+           ELSE
+             ikx_zBC_R(iky,ikx) = (ikx+iky)-1
+             IF(SINGLE_KY) ikx_zBC_R(iky,ikx) = (ikx+(iky+1))-1
+             IF( ikx_zBC_R(iky,ikx) .GT. Nkx ) &
+             ikx_zBC_R(iky,ikx) = ikx_zBC_R(iky,ikx) - Nkx
+           ENDIF
+         ENDDO
+     ENDDO
+   ENDIF
+   ! connection map BC of the LEFT boundary (z=-pi*Npol)
+   !3            | x    5    6    1    x    x |  ky = 3 dky
+   !2   ky       | 5    6    1    2    x    x |  ky = 2 dky
+   !1   A        | 6    1    2    3    x    5 |  ky = 1 dky
+   !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
+   !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
+   kxmin_ = -kx_max+deltakx
+   IF(contains_zmin) THEN ! Check if the process is at the start of the FT
+     DO iky = ikys,ikye
+       shift = 2._dp*shear*PI*kyarray(iky)*Npol
+         DO ikx = ikxs,ikxe
+           kx_shift = kxarray(ikx) - shift
+           IF( kx_shift .LT. kxmin_ ) THEN ! outside of the frequ domain
+             ikx_zBC_L(iky,ikx) = -99
+           ELSE
+             ikx_zBC_L(iky,ikx) = (ikx-iky)+1
+             IF(SINGLE_KY) ikx_zBC_L(iky,ikx) = (ikx-(iky+1))+1
+             IF( ikx_zBC_L(iky,ikx) .LE. 0 ) &
+             ikx_zBC_L(iky,ikx) = ikx_zBC_L(iky,ikx) + Nkx
+           ENDIF
+         ENDDO
+     ENDDO
+   ENDIF
  ELSE
-   !! No shear case (simple id mapping)
-   !3            | 6    7    8    1    2    3    4    5|
-   !2   ky       | 6    7    8    1    2    3    4    5|
-   !1   A        | 6    7    8    1    2    3    4    5|
-   !0   | -> kx  | 6____7____8____1____2____3____4____5|
-   DO iky = ikys,ikye
-     ikx_zBC_map(iky,:) = ikx_array(:)
-   ENDDO
 ENDIF
-! IF (my_id .EQ. 0) THEN
-!   write(*,*) 'ikx map for parallel BC'
-!  DO, iky = ikys,ikye
-!      write(*,*) ( ikx_zBC_map(iky,ikx), ikx=ikxs,ikxe )
-!  enddo
-! ENDIF
 END SUBROUTINE set_ikx_zBC_map
 
 !

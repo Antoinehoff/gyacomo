@@ -4,8 +4,7 @@ USE fields, ONLY : moments_e, moments_i, phi
 USE grid
 USE time_integration
 USE model, ONLY : KIN_E
-USE geometry, ONLY : SHEARED, ikx_zBC_map
-
+USE geometry, ONLY : SHEARED, ikx_zBC_L, ikx_zBC_R
 IMPLICIT NONE
 
 INTEGER :: status(MPI_STATUS_SIZE), source, dest, count, ipg
@@ -121,192 +120,179 @@ END SUBROUTINE update_ghosts_p_i
 !                                                   ^  ^
 !Periodic:                                          0  1
 SUBROUTINE update_ghosts_z_e
-
+  USE parallel, ONLY : buff_pjxy_zBC_e
   IMPLICIT NONE
-  INTEGER :: ikxBC
-  CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
-  IF (num_procs_z .GT. 1) THEN
+  INTEGER :: ikxBC_L, ikxBC_R
+  IF(Nz .GT. 1) THEN
+    IF (num_procs_z .GT. 1) THEN
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      count = (ipge_e-ipgs_e+1)*(ijge_e-ijgs_e+1)*(ikye-ikys+1)*(ikxe-ikxs+1)
 
-    count = (ipge_e-ipgs_e+1)*(ijge_e-ijgs_e+1)*(ikye-ikys+1)*(ikxe-ikxs+1)
-
-    !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
-    ! Send the last local moment to fill the -1 neighbour ghost
-    CALL mpi_sendrecv(moments_e(:,:,:,:,ize  ,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 20, & ! Send to Up the last
-                      moments_e(:,:,:,:,izs-1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 20, & ! Recieve from Down the first-1
-                      comm0, status, ierr)
-    CALL mpi_sendrecv(moments_e(:,:,:,:,ize-1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 21, & ! Send to Up the last-1
-                      moments_e(:,:,:,:,izs-2,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 21, & ! Recieve from Down the first-2
-                      comm0, status, ierr)
-
-    !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
-    CALL mpi_sendrecv(moments_e(:,:,:,:,izs  ,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 22, & ! Send to Down the first
-                      moments_e(:,:,:,:,ize+1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 22, & ! Recieve from Up the last+1
-                      comm0, status, ierr)
-    CALL mpi_sendrecv(moments_e(:,:,:,:,izs+1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 23, & ! Send to Down the first+1
-                      moments_e(:,:,:,:,ize+2,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 23, & ! Recieve from Up the last+2
-                      comm0, status, ierr)
-  ELSE ! still need to perform periodic boundary conditions
-    IF(SHEARED) THEN
+      !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
+      ! Send the last local moment to fill the -1 neighbour ghost
+      CALL mpi_sendrecv(moments_e(:,:,:,:,ize  ,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 20, & ! Send to Up the last
+                                  buff_pjxy_zBC_e(:,:,:,:,-1), count, MPI_DOUBLE_COMPLEX, nbr_D, 20, & ! Recieve from Down the first-1
+                        comm0, status, ierr)
+      CALL mpi_sendrecv(moments_e(:,:,:,:,ize-1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 21, & ! Send to Up the last
+                                  buff_pjxy_zBC_e(:,:,:,:,-2), count, MPI_DOUBLE_COMPLEX, nbr_D, 21, & ! Recieve from Down the first-1
+                        comm0, status, ierr)
+      !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
+      CALL mpi_sendrecv(moments_e(:,:,:,:,izs  ,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 22, & ! Send to Up the last
+                                  buff_pjxy_zBC_e(:,:,:,:,+1), count, MPI_DOUBLE_COMPLEX, nbr_U, 22, & ! Recieve from Down the first-1
+                        comm0, status, ierr)
+      CALL mpi_sendrecv(moments_e(:,:,:,:,izs+1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 23, & ! Send to Up the last
+                                  buff_pjxy_zBC_e(:,:,:,:,+2), count, MPI_DOUBLE_COMPLEX, nbr_U, 23, & ! Recieve from Down the first-1
+                        comm0, status, ierr)
+    ELSE !No parallel (copy)
+      buff_pjxy_zBC_e(:,:,:,:,-1) = moments_e(:,:,:,:,ize  ,updatetlevel)
+      buff_pjxy_zBC_e(:,:,:,:,-2) = moments_e(:,:,:,:,ize-1,updatetlevel)
+      buff_pjxy_zBC_e(:,:,:,:,+1) = moments_e(:,:,:,:,izs  ,updatetlevel)
+      buff_pjxy_zBC_e(:,:,:,:,+2) = moments_e(:,:,:,:,izs+1,updatetlevel)
+    ENDIF
     DO iky = ikys,ikye
       DO ikx = ikxs,ikxe
-        ikxBC = ikx_zBC_map(ikx,iky);
-        IF (ikxBC .NE. -1) THEN ! Exchanging the modes that have a periodic pair (a)
+        ikxBC_L = ikx_zBC_L(iky,ikx);
+        IF (ikxBC_L .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
           ! first-1 gets last
-          moments_e(iky,ikx,:,:,izs-1,updatetlevel) = moments_e(iky,ikxBC,:,:,ize  ,updatetlevel)
+          moments_e(:,:,iky,ikx,izs-1,updatetlevel) = buff_pjxy_zBC_e(:,:,iky,ikxBC_L,-1)
           ! first-2 gets last-1
-          moments_e(iky,ikx,:,:,izs-2,updatetlevel) = moments_e(iky,ikxBC,:,:,ize-1,updatetlevel)
-          ! last+1 gets first
-          moments_e(iky,ikx,:,:,ize+1,updatetlevel) = moments_e(iky,ikxBC,:,:,izs  ,updatetlevel)
-          ! last+2 gets first+1
-          moments_e(iky,ikx,:,:,ize+2,updatetlevel) = moments_e(iky,ikxBC,:,:,izs+1,updatetlevel)
+          moments_e(:,:,iky,ikx,izs-2,updatetlevel) = buff_pjxy_zBC_e(:,:,iky,ikxBC_L,-2)
         ELSE
-          moments_e(iky,ikx,:,:,izs-1,updatetlevel) = 0._dp
-          moments_e(iky,ikx,:,:,izs-2,updatetlevel) = 0._dp
-          moments_e(iky,ikx,:,:,ize+1,updatetlevel) = 0._dp
-          moments_e(iky,ikx,:,:,ize+2,updatetlevel) = 0._dp
+          moments_e(:,:,iky,ikx,izs-1,updatetlevel) = 0._dp
+          moments_e(:,:,iky,ikx,izs-2,updatetlevel) = 0._dp
+        ENDIF
+        ikxBC_R = ikx_zBC_R(iky,ikx);
+        IF (ikxBC_R .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
+          ! last+1 gets first
+          moments_e(:,:,iky,ikx,ize+1,updatetlevel) = buff_pjxy_zBC_e(:,:,iky,ikxBC_R,+1)
+          ! last+2 gets first+1
+          moments_e(:,:,iky,ikx,ize+2,updatetlevel) = buff_pjxy_zBC_e(:,:,iky,ikxBC_R,+2)
+        ELSE
+          moments_e(:,:,iky,ikx,ize+1,updatetlevel) = 0._dp
+          moments_e(:,:,iky,ikx,ize+2,updatetlevel) = 0._dp
         ENDIF
       ENDDO
     ENDDO
-    ELSE ! No shear so simple periodic BC
-      ! first-1 gets last
-      moments_e(:,:,:,:,izs-1,updatetlevel) = moments_e(:,:,:,:,ize  ,updatetlevel)
-      ! first-2 gets last-1
-      moments_e(:,:,:,:,izs-2,updatetlevel) = moments_e(:,:,:,:,ize-1,updatetlevel)
-      ! last+1 gets first
-      moments_e(:,:,:,:,ize+1,updatetlevel) = moments_e(:,:,:,:,izs  ,updatetlevel)
-      ! last+2 gets first+1
-      moments_e(:,:,:,:,ize+2,updatetlevel) = moments_e(:,:,:,:,izs+1,updatetlevel)
-    ENDIF
   ENDIF
 END SUBROUTINE update_ghosts_z_e
 
 SUBROUTINE update_ghosts_z_i
-
+  USE parallel, ONLY : buff_pjxy_zBC_i
   IMPLICIT NONE
-  INTEGER :: ikxBC
-  CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
-  IF (num_procs_z .GT. 1) THEN
-
-    count = (ipge_i-ipgs_i+1)*(ijge_i-ijgs_i+1)*(ikye-ikys+1)*(ikxe-ikxs+1)
-
-    !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
-    ! Send the last local moment to fill the -1 neighbour ghost
-    CALL mpi_sendrecv(moments_i(:,:,:,:,ize  ,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 30, & ! Send to Up the last
-                      moments_i(:,:,:,:,izs-1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 30, & ! Recieve from Down the first-1
-                      comm0, status, ierr)
-    CALL mpi_sendrecv(moments_i(:,:,:,:,ize-1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 31, & ! Send to Up the last-1
-                      moments_i(:,:,:,:,izs-2,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 31, & ! Recieve from Down the first-2
-                      comm0, status, ierr)
-
-    !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
-    CALL mpi_sendrecv(moments_i(:,:,:,:,izs  ,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 32, & ! Send to Down the first
-                      moments_i(:,:,:,:,ize+1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 32, & ! Recieve from Down the last+1
-                      comm0, status, ierr)
-    CALL mpi_sendrecv(moments_i(:,:,:,:,izs+1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 33, & ! Send to Down the first+1
-                      moments_i(:,:,:,:,ize+2,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 33, & ! Recieve from Down the last+2
-                      comm0, status, ierr)
-    ELSE ! still need to perform periodic boundary conditions
-      IF(SHEARED) THEN
-      DO iky = ikys,ikye
-        DO ikx = ikxs,ikxe
-          ikxBC = ikx_zBC_map(iky,ikx);
-          IF (ikxBC .NE. -1) THEN ! Exchanging the modes that have a periodic pair (a)
-            ! first-1 gets last
-            moments_i(:,:,iky,ikx,izs-1,updatetlevel) = moments_i(:,:,iky,ikxBC,ize  ,updatetlevel)
-            ! first-2 gets last-1
-            moments_i(:,:,iky,ikx,izs-2,updatetlevel) = moments_i(:,:,iky,ikxBC,ize-1,updatetlevel)
-            ! last+1 gets first
-            moments_i(:,:,iky,ikx,ize+1,updatetlevel) = moments_i(:,:,iky,ikxBC,izs  ,updatetlevel)
-            ! last+2 gets first+1
-            moments_i(:,:,iky,ikx,ize+2,updatetlevel) = moments_i(:,:,iky,ikxBC,izs+1,updatetlevel)
-          ELSE
-            moments_i(:,:,iky,ikx,izs-1,updatetlevel) = 0._dp
-            moments_i(:,:,iky,ikx,izs-2,updatetlevel) = 0._dp
-            moments_i(:,:,iky,ikx,ize+1,updatetlevel) = 0._dp
-            moments_i(:,:,iky,ikx,ize+2,updatetlevel) = 0._dp
-          ENDIF
-        ENDDO
-      ENDDO
-      ELSE ! No shear so simple periodic BC
-      ! first-1 gets last
-      moments_i(:,:,:,:,izs-1,updatetlevel) = moments_i(:,:,:,:,ize  ,updatetlevel)
-      ! first-2 gets last-1
-      moments_i(:,:,:,:,izs-2,updatetlevel) = moments_i(:,:,:,:,ize-1,updatetlevel)
-      ! last+1 gets first
-      moments_i(:,:,:,:,ize+1,updatetlevel) = moments_i(:,:,:,:,izs  ,updatetlevel)
-      ! last+2 gets first+1
-      moments_i(:,:,:,:,ize+2,updatetlevel) = moments_i(:,:,:,:,izs+1,updatetlevel)
-      ENDIF
-    ENDIF
-END SUBROUTINE update_ghosts_z_i
-
-SUBROUTINE update_ghosts_z_phi
-
-  IMPLICIT NONE
-  INTEGER :: ikxBC
-  CALL cpu_time(t1_ghost)
+  INTEGER :: ikxBC_L, ikxBC_R
   IF(Nz .GT. 1) THEN
-    CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
     IF (num_procs_z .GT. 1) THEN
-      count = (ikye-ikys+1) * (ikxe-ikxs+1)
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      count = (ipge_i-ipgs_i+1)*(ijge_i-ijgs_i+1)*(ikye-ikys+1)*(ikxe-ikxs+1)
 
       !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
       ! Send the last local moment to fill the -1 neighbour ghost
-      CALL mpi_sendrecv(phi(:,:,ize  ), count, MPI_DOUBLE_COMPLEX, nbr_U, 40, & ! Send to Up the last
-                        phi(:,:,izs-1), count, MPI_DOUBLE_COMPLEX, nbr_D, 40, & ! Receive from Down the first-1
+      CALL mpi_sendrecv(moments_i(:,:,:,:,ize  ,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 24, & ! Send to Up the last
+                                  buff_pjxy_zBC_i(:,:,:,:,-1), count, MPI_DOUBLE_COMPLEX, nbr_D, 24, & ! Recieve from Down the first-1
                         comm0, status, ierr)
-      CALL mpi_sendrecv(phi(:,:,ize-1), count, MPI_DOUBLE_COMPLEX, nbr_U, 41, & ! Send to Up the last-1
-                        phi(:,:,izs-2), count, MPI_DOUBLE_COMPLEX, nbr_D, 41, & ! Receive from Down the first-2
+      CALL mpi_sendrecv(moments_i(:,:,:,:,ize-1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 25, & ! Send to Up the last
+                                  buff_pjxy_zBC_i(:,:,:,:,-2), count, MPI_DOUBLE_COMPLEX, nbr_D, 25, & ! Recieve from Down the first-1
                         comm0, status, ierr)
       !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
-      CALL mpi_sendrecv(phi(:,:,izs  ), count, MPI_DOUBLE_COMPLEX, nbr_D, 42, & ! Send to Down the first
-                        phi(:,:,ize+1), count, MPI_DOUBLE_COMPLEX, nbr_U, 42, & ! Recieve from Up the last+1
+      CALL mpi_sendrecv(moments_i(:,:,:,:,izs  ,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 26, & ! Send to Up the last
+                                  buff_pjxy_zBC_i(:,:,:,:,+1), count, MPI_DOUBLE_COMPLEX, nbr_U, 26, & ! Recieve from Down the first-1
                         comm0, status, ierr)
-      CALL mpi_sendrecv(phi(:,:,izs+1), count, MPI_DOUBLE_COMPLEX, nbr_D, 43, & ! Send to Down the first+1
-                        phi(:,:,ize+2), count, MPI_DOUBLE_COMPLEX, nbr_U, 43, & ! Recieve from Up the last+2
+      CALL mpi_sendrecv(moments_i(:,:,:,:,izs+1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 27, & ! Send to Up the last
+                                  buff_pjxy_zBC_i(:,:,:,:,+2), count, MPI_DOUBLE_COMPLEX, nbr_U, 27, & ! Recieve from Down the first-1
                         comm0, status, ierr)
-
-    ELSE ! still need to perform periodic boundary conditions
-      phi(:,:,izs-1) = phi(:,:,ize)
-      phi(:,:,izs-2) = phi(:,:,ize-1)
-      phi(:,:,ize+1) = phi(:,:,izs)
-      phi(:,:,ize+2) = phi(:,:,izs+1)
-
-      IF(SHEARED) THEN
-      DO iky = ikys,ikye
-        DO ikx = ikxs,ikxe
-          ikxBC = ikx_zBC_map(iky,ikx);
-          IF (ikxBC .NE. -1) THEN ! Exchanging the modes that have a periodic pair (a)
-            ! first-1 gets last
-            phi(iky,ikx,izs-1) = phi(iky,ikxBC,ize  )
-            ! first-2 gets last-1
-            phi(iky,ikx,izs-2) = phi(iky,ikxBC,ize-1)
-            ! last+1 gets first
-            phi(iky,ikx,ize+1) = phi(iky,ikxBC,izs  )
-            ! last+2 gets first+1
-            phi(iky,ikx,ize+2) = phi(iky,ikxBC,izs+1)
-          ELSE
-            phi(iky,ikx,izs-1) = 0._dp
-            phi(iky,ikx,izs-2) = 0._dp
-            phi(iky,ikx,ize+1) = 0._dp
-            phi(iky,ikx,ize+2) = 0._dp
-          ENDIF
-        ENDDO
-      ENDDO
-      ELSE ! No shear so simple periodic BC
-      ! first-1 gets last
-      phi(:,:,izs-1) = phi(:,:,ize  )
-      ! first-2 gets last-1
-      phi(:,:,izs-2) = phi(:,:,ize-1)
-      ! last+1 gets first
-      phi(:,:,ize+1) = phi(:,:,izs  )
-      ! last+2 gets first+1
-      phi(:,:,ize+2) = phi(:,:,izs+1)
-      ENDIF
+    ELSE !No parallel (copy)
+      buff_pjxy_zBC_i(:,:,:,:,-1) = moments_i(:,:,:,:,ize  ,updatetlevel)
+      buff_pjxy_zBC_i(:,:,:,:,-2) = moments_i(:,:,:,:,ize-1,updatetlevel)
+      buff_pjxy_zBC_i(:,:,:,:,+1) = moments_i(:,:,:,:,izs  ,updatetlevel)
+      buff_pjxy_zBC_i(:,:,:,:,+2) = moments_i(:,:,:,:,izs+1,updatetlevel)
     ENDIF
+    DO iky = ikys,ikye
+      DO ikx = ikxs,ikxe
+        ikxBC_L = ikx_zBC_L(iky,ikx);
+        IF (ikxBC_L .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
+          ! first-1 gets last
+          moments_i(:,:,iky,ikx,izs-1,updatetlevel) = buff_pjxy_zBC_i(:,:,iky,ikxBC_L,-1)
+          ! first-2 gets last-1
+          moments_i(:,:,iky,ikx,izs-2,updatetlevel) = buff_pjxy_zBC_i(:,:,iky,ikxBC_L,-2)
+        ELSE
+          moments_i(:,:,iky,ikx,izs-1,updatetlevel) = 0._dp
+          moments_i(:,:,iky,ikx,izs-2,updatetlevel) = 0._dp
+        ENDIF
+        ikxBC_R = ikx_zBC_R(iky,ikx);
+        IF (ikxBC_R .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
+          ! last+1 gets first
+          moments_i(:,:,iky,ikx,ize+1,updatetlevel) = buff_pjxy_zBC_i(:,:,iky,ikxBC_R,+1)
+          ! last+2 gets first+1
+          moments_i(:,:,iky,ikx,ize+2,updatetlevel) = buff_pjxy_zBC_i(:,:,iky,ikxBC_R,+2)
+        ELSE
+          moments_i(:,:,iky,ikx,ize+1,updatetlevel) = 0._dp
+          moments_i(:,:,iky,ikx,ize+2,updatetlevel) = 0._dp
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDIF
+END SUBROUTINE update_ghosts_z_i
+
+SUBROUTINE update_ghosts_z_phi
+  USE parallel, ONLY : buff_xy_zBC
+  IMPLICIT NONE
+  INTEGER :: ikxBC_L, ikxBC_R
+  CALL cpu_time(t1_ghost)
+  IF(Nz .GT. 1) THEN
+    IF (num_procs_z .GT. 1) THEN
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        count = (ikye-ikys+1) * (ikxe-ikxs+1)
+        !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
+        CALL mpi_sendrecv(     phi(:,:,ize  ), count, MPI_DOUBLE_COMPLEX, nbr_U, 30, & ! Send to Up the last
+                          buff_xy_zBC(:,:,-1), count, MPI_DOUBLE_COMPLEX, nbr_D, 30, & ! Receive from Down the first-1
+                          comm0, status, ierr)
+
+        CALL mpi_sendrecv(     phi(:,:,ize-1), count, MPI_DOUBLE_COMPLEX, nbr_U, 31, & ! Send to Up the last
+                          buff_xy_zBC(:,:,-2), count, MPI_DOUBLE_COMPLEX, nbr_D, 31, & ! Receive from Down the first-2
+                          comm0, status, ierr)
+
+        !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
+        CALL mpi_sendrecv(     phi(:,:,izs  ), count, MPI_DOUBLE_COMPLEX, nbr_D, 32, & ! Send to Down the first
+                          buff_xy_zBC(:,:,+1), count, MPI_DOUBLE_COMPLEX, nbr_U, 32, & ! Recieve from Up the last+1
+                          comm0, status, ierr)
+
+        CALL mpi_sendrecv(     phi(:,:,izs+1), count, MPI_DOUBLE_COMPLEX, nbr_D, 33, & ! Send to Down the first
+                          buff_xy_zBC(:,:,+2), count, MPI_DOUBLE_COMPLEX, nbr_U, 33, & ! Recieve from Up the last+2
+                          comm0, status, ierr)
+     ELSE
+       buff_xy_zBC(:,:,-1) = phi(:,:,ize  )
+       buff_xy_zBC(:,:,-2) = phi(:,:,ize-1)
+       buff_xy_zBC(:,:,+1) = phi(:,:,izs  )
+       buff_xy_zBC(:,:,+2) = phi(:,:,izs+1)
+     ENDIF
+    DO iky = ikys,ikye
+      DO ikx = ikxs,ikxe
+        ikxBC_L = ikx_zBC_L(iky,ikx);
+        IF (ikxBC_L .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
+          ! first-1 gets last
+          phi(iky,ikx,izs-1) = buff_xy_zBC(iky,ikxBC_L,-1)
+          ! first-2 gets last-1
+          phi(iky,ikx,izs-2) = buff_xy_zBC(iky,ikxBC_L,-2)
+        ELSE
+          phi(iky,ikx,izs-1) = 0._dp
+          phi(iky,ikx,izs-2) = 0._dp
+        ENDIF
+        ikxBC_R = ikx_zBC_R(iky,ikx);
+        IF (ikxBC_R .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
+          ! last+1 gets first
+          phi(iky,ikx,ize+1) = buff_xy_zBC(iky,ikxBC_R,+1)
+          ! last+2 gets first+1
+          phi(iky,ikx,ize+2) = buff_xy_zBC(iky,ikxBC_R,+2)
+        ELSE
+          phi(iky,ikx,ize+1) = 0._dp
+          phi(iky,ikx,ize+2) = 0._dp
+        ENDIF
+      ENDDO
+    ENDDO
   ENDIF
   CALL cpu_time(t1_ghost)
   tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
 END SUBROUTINE update_ghosts_z_phi
+
 
 END MODULE ghosts

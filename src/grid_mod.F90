@@ -82,7 +82,9 @@ MODULE grid
   LOGICAL,  PUBLIC, PROTECTED ::  contains_kx0   = .false. ! flag if the proc contains kx=0 index
   LOGICAL,  PUBLIC, PROTECTED ::  contains_ky0   = .false. ! flag if the proc contains ky=0 index
   LOGICAL,  PUBLIC, PROTECTED ::  contains_kymax = .false. ! flag if the proc contains kx=kxmax index
-
+  LOGICAL,  PUBLIC, PROTECTED ::  contains_zmax  = .false. ! flag if the proc contains z=pi-dz index
+  LOGICAL,  PUBLIC, PROTECTED ::  contains_zmin  = .false. ! flag if the proc contains z=-pi index
+  LOGICAL,  PUBLIC, PROTECTED ::       SINGLE_KY = .false. ! to check if it is a single non 0 ky simulation
   ! Grid containing the polynomials degrees
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_e, parray_e_full
   INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC :: parray_i, parray_i_full
@@ -286,9 +288,9 @@ CONTAINS
     Nky = Ny/2+1 ! Defined only on positive kx since fields are real
     ! Grid spacings
     IF (Ny .EQ. 1) THEN
-      deltaky = 0._dp
-      ky_max  = 0._dp
-      ky_min  = 0._dp
+      deltaky = 2._dp*PI/Ly
+      ky_max  = deltaky
+      ky_min  = deltaky
     ELSE
       deltaky = 2._dp*PI/Ly
       ky_max  = Nky*deltaky
@@ -315,7 +317,13 @@ CONTAINS
     ENDDO
     ! Creating a grid ordered as dk*(0 1 2 3)
     DO iky = ikys,ikye
-      kyarray(iky) = REAL(iky-1,dp) * deltaky
+      IF(Ny .EQ. 1) THEN
+        kyarray(iky)      = deltaky
+        kyarray_full(iky) = deltaky
+        SINGLE_KY         = .TRUE.
+      ELSE
+        kyarray(iky) = REAL(iky-1,dp) * deltaky
+      ENDIF
       ! Finding kx=0
       IF (kyarray(iky) .EQ. 0) THEN
         iky_0 = iky
@@ -351,7 +359,7 @@ CONTAINS
     INTEGER :: i_, counter
     IF(shear .GT. 0._dp) THEN
       IF(my_id.EQ.0) write(*,*) 'Magnetic shear detected: set up sheared kx grid..'
-      Lx = Ly/(2._dp*pi*shear)
+      Lx = Ly/(2._dp*pi*shear*Npol)
     ENDIF
     Nkx = Nx;
     ! Local data
@@ -361,7 +369,7 @@ CONTAINS
     local_nkx = ikxe - ikxs + 1
     ALLOCATE(kxarray(ikxs:ikxe))
     ALLOCATE(kxarray_full(1:Nkx))
-    IF (Nx .EQ. 1) THEN ! "cancel" y dimension
+    IF (Nx .EQ. 1) THEN
       deltakx         = 1._dp
       kxarray(1)      = 0._dp
       ikx_0           = 1
@@ -419,7 +427,7 @@ CONTAINS
     USE model, ONLY: mu_z
     IMPLICIT NONE
     INTEGER :: i_, fid
-    REAL    :: grid_shift, Lz
+    REAL    :: grid_shift, Lz, zmax, zmin
     INTEGER :: ip, istart, iend, in
     total_nz = Nz
     ! Length of the flux tube (in ballooning angle)
@@ -441,8 +449,11 @@ CONTAINS
     ! Build the full grids on process 0 to diagnose it without comm
     ALLOCATE(zarray_full(1:Nz))
     IF (Nz .EQ. 1) Npol = 0
-    DO iz = 1,total_nz
-      zarray_full(iz) = REAL(iz-1,dp)*deltaz - PI*REAL(Npol,dp)
+    zmax = 0; zmin = 0;
+    DO iz = 1,total_nz ! z in [-pi pi-dz] x Npol
+      zarray_full(iz) = REAL(iz-1,dp)*deltaz - Lz/2._dp
+      IF(zarray_full(iz) .GT. zmax) zmax = zarray_full(iz)
+      IF(zarray_full(iz) .LT. zmin) zmin = zarray_full(iz)
     END DO
     !! Parallel data distribution
     ! Local data distribution
@@ -484,6 +495,10 @@ CONTAINS
         zarray(iz,1) = zarray_full(iz) + grid_shift
       ENDIF
     ENDDO
+    IF(abs(zarray(izs,0) - zmin) .LT. EPSILON(zmin)) &
+      contains_zmin = .TRUE.
+    IF(abs(zarray(ize,0) - zmax) .LT. EPSILON(zmax)) &
+      contains_zmax = .TRUE.
     ! Weitghs for Simpson rule
     ALLOCATE(zweights_SR(izs:ize))
     DO iz = izs,ize

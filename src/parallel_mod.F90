@@ -1,11 +1,8 @@
 MODULE parallel
   USE basic
-  USE grid, ONLY: Nkx,Nky,Nz, ikys,ikye, izs,ize, local_nky, local_nz, &
-                  local_np_e, local_np_i, Np_e, Np_i, Nj_e, Nj_i, &
-                  pmaxi, pmaxe, ips_e, ipe_e, ips_i, ipe_i, &
-                  jmaxi, jmaxe, ijs_e, ije_e, ijs_i, ije_i, &
-                  rcv_p_e, rcv_p_i, dsp_p_e, dsp_p_i
+  USE grid
   use prec_const
+  USE model, ONLY: KIN_E
   IMPLICIT NONE
   ! recieve and displacement counts for gatherv
   INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_y, dsp_y, rcv_zy, dsp_zy
@@ -15,6 +12,11 @@ MODULE parallel
   INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_zp_i,  dsp_zp_i
   INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_yp_i,  dsp_yp_i
   INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_zyp_i, dsp_zyp_i
+
+  ! Various buffers used
+  COMPLEX(dp), ALLOCATABLE, DIMENSION(:,:,:)     :: buff_xy_zBC
+  COMPLEX(dp), ALLOCATABLE, DIMENSION(:,:,:,:,:) :: buff_pjxy_zBC_e
+  COMPLEX(dp), ALLOCATABLE, DIMENSION(:,:,:,:,:) :: buff_pjxy_zBC_i
 
   PUBLIC :: manual_0D_bcast, manual_3D_bcast, init_parallel_var, &
             gather_xyz, gather_pjz_i, gather_pjxyz_e, gather_pjxyz_i
@@ -114,6 +116,12 @@ CONTAINS
     DO i_=1,num_procs_z-1
        dsp_zyp_e(i_) =dsp_zyp_e(i_-1) + rcv_zyp_e(i_-1)
     END DO
+
+    !! Allocate some buffers
+    ALLOCATE(buff_xy_zBC(ikys:ikye,ikxs:ikxe,-2:2))
+    IF(KIN_E) &
+    ALLOCATE(buff_pjxy_zBC_e(ipgs_e:ipge_e,ijgs_e:ijge_e,ikys:ikye,ikxs:ikxe,-2:2))
+    ALLOCATE(buff_pjxy_zBC_i(ipgs_i:ipge_i,ijgs_i:ijge_i,ikys:ikye,ikxs:ikxe,-2:2))
 
   END SUBROUTINE init_parallel_var
 
