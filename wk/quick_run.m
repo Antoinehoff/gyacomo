@@ -16,21 +16,22 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 NU      = 0.01;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
 K_N     = 2.22;%2.0;   % Density gradient drive
-K_T     = 6.92;%0.25*K_N;   % Temperature '''
+K_T     = 6.96;%0.25*K_N;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
 % SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 0;     % 1: kinetic electrons, 2: adiabatic electrons
+BETA    = 0e-1;     % electron plasma beta 
 %% GRID PARAMETERS
-PMAXE   = 4;     % Hermite basis size of electrons
-JMAXE   = 2;     % Laguerre "
+PMAXE   = 12;     % Hermite basis size of electrons
+JMAXE   = 6;     % Laguerre "
 PMAXI   = 4;     % " ions
 JMAXI   = 2;     % "
-NX      = 12;    % real space x-gridpoints
-NY      = 8;     %     ''     y-gridpoints
+NX      = 16;    % real space x-gridpoints
+NY      = 2;     %     ''     y-gridpoints
 LX      = 2*pi/0.1;   % Size of the squared frequency domain
-LY      = 2*pi/0.1;     % Size of the squared frequency domain
-NZ      = 16;     % number of perpendicular planes (parallel grid)
+LY      = 2*pi/0.3;     % Size of the squared frequency domain
+NZ      = 32;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 %% GEOMETRY
@@ -41,7 +42,7 @@ SHEAR   = 0.8;    % magnetic shear (Not implemented yet)
 EPS     = 0.18;    % inverse aspect ratio
 %% TIME PARMETERS
 TMAX    = 20;  % Maximal time unit
-DT      = 5e-3;   % Time step
+DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
@@ -92,9 +93,9 @@ setup
 % Run linear simulation
 if RUN
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',HELAZDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 2 1 3 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 2 3 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
 end
 
@@ -107,7 +108,7 @@ JOBNUMMIN = 00; JOBNUMMAX = 00;
 data = compile_results(LOCALDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 
 %% Short analysis
-if 0
+if 1
 %% linear growth rate (adapted for 2D zpinch and fluxtube)
 trange = [0.5 1]*data.Ts3D(end);
 nplots = 1;
@@ -118,9 +119,9 @@ msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,lg.ky(kmax)); disp(msg);
 msg = sprintf('gmax/k = %2.2f, kmax/k = %2.2f',gmaxok,lg.ky(kmaxok)); disp(msg);
 end
 
-if 1
+if 0
 %% Ballooning plot
-options.time_2_plot = [1]*data.Ts3D(end);
+options.time_2_plot = [120];
 options.kymodes     = [0.1 0.2 0.3];
 options.normalized  = 1;
 options.field       = 'phi';

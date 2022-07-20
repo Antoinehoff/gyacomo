@@ -71,9 +71,10 @@ fprintf(fid,['  q_i     = ', num2str(MODEL.q_i),'\n']);
 fprintf(fid,['  K_n     = ', num2str(MODEL.K_n),'\n']);
 fprintf(fid,['  K_T     = ', num2str(MODEL.K_T),'\n']);
 fprintf(fid,['  K_E     = ', num2str(MODEL.K_E),'\n']);
-fprintf(fid,['  GradB     = ', num2str(MODEL.GradB),'\n']);
-fprintf(fid,['  CurvB     = ', num2str(MODEL.CurvB),'\n']);
+fprintf(fid,['  GradB   = ', num2str(MODEL.GradB),'\n']);
+fprintf(fid,['  CurvB   = ', num2str(MODEL.CurvB),'\n']);
 fprintf(fid,['  lambdaD = ', num2str(MODEL.lambdaD),'\n']);
+fprintf(fid,['  beta    = ', num2str(MODEL.beta),'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&COLLISION_PAR\n');

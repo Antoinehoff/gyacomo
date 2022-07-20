@@ -14,9 +14,11 @@ SUBROUTINE memory
 
   ! Electrostatic potential
   CALL allocate_array(           phi, ikys,ikye, ikxs,ikxe, izgs,izge)
+  CALL allocate_array(           psi, ikys,ikye, ikxs,ikxe, izgs,izge)
   CALL allocate_array(        phi_ZF, ikxs,ikxe, izs,ize)
   CALL allocate_array(        phi_EM, ikys,ikye, izs,ize)
   CALL allocate_array(inv_poisson_op, ikys,ikye, ikxs,ikxe, izs,ize)
+  CALL allocate_array( inv_ampere_op, ikys,ikye, ikxs,ikxe, izs,ize)
   CALL allocate_array(   inv_pol_ion, ikys,ikye, ikxs,ikxe, izs,ize)
   CALL allocate_array(HF_phi_correction_operator, ikys,ikye, ikxs,ikxe, izs,ize)
 
@@ -100,10 +102,16 @@ SUBROUTINE memory
     CALL allocate_array( xphij_e,   ips_e,ipe_e, ijs_e,ije_e)
     CALL allocate_array( xphijp1_e, ips_e,ipe_e, ijs_e,ije_e)
     CALL allocate_array( xphijm1_e, ips_e,ipe_e, ijs_e,ije_e)
+    CALL allocate_array( xpsij_e,   ips_e,ipe_e, ijs_e,ije_e)
+    CALL allocate_array( xpsijp1_e, ips_e,ipe_e, ijs_e,ije_e)
+    CALL allocate_array( xpsijm1_e, ips_e,ipe_e, ijs_e,ije_e)
   ENDIF
   CALL allocate_array( xphij_i,   ips_i,ipe_i, ijs_i,ije_i)
   CALL allocate_array( xphijp1_i, ips_i,ipe_i, ijs_i,ije_i)
   CALL allocate_array( xphijm1_i, ips_i,ipe_i, ijs_i,ije_i)
+  CALL allocate_array( xpsij_i,   ips_i,ipe_i, ijs_i,ije_i)
+  CALL allocate_array( xpsijp1_i, ips_i,ipe_i, ijs_i,ije_i)
+  CALL allocate_array( xpsijm1_i, ips_i,ipe_i, ijs_i,ije_i)
 
   !___________________ 2x5D ARRAYS __________________________
   !! Collision matrices

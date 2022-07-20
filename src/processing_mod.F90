@@ -295,12 +295,13 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
   !
   ! n_{pi} = N^{pj} + kernel(j) /tau_i phi delta_p0
   !
-  USE fields,           ONLY : moments_i, moments_e, phi
+  USE fields,           ONLY : moments_i, moments_e, phi, psi
   USE array,            ONLY : kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i, &
                                ddz_nepj, ddz4_Nepj, interp_nepj,&
                                ddz_nipj, ddz4_Nipj, interp_nipj
   USE time_integration, ONLY : updatetlevel
-  USE model,            ONLY : qe_taue, qi_taui, KIN_E, CLOS
+  USE model,            ONLY : qe_taue, qi_taui,q_o_sqrt_tau_sigma_e, q_o_sqrt_tau_sigma_i, &
+                               KIN_E, CLOS
   USE calculus,         ONLY : grad_z, grad_z4, interp_z
   IMPLICIT NONE
   INTEGER :: eo, p_int, j_int
@@ -315,6 +316,9 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
             nadiab_moments_e(ip,ij,:,:,:) = moments_e(ip,ij,:,:,:,updatetlevel) &
                                       + qe_taue*kernel_e(ij,:,:,:,0)*phi(:,:,:)
           ENDDO
+        ELSEIF(parray_e(ip) .EQ. 1) THEN
+            nadiab_moments_e(ip,ij,:,:,:) = moments_e(ip,ij,:,:,:,updatetlevel) &
+                                      - q_o_sqrt_tau_sigma_e*kernel_e(ij,:,:,:,0)*psi(:,:,:)
         ELSE
           DO ij=ijgs_e,ijge_e
             nadiab_moments_e(ip,ij,:,:,:) = moments_e(ip,ij,:,:,:,updatetlevel)
@@ -329,6 +333,9 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
           nadiab_moments_i(ip,ij,:,:,:) = moments_i(ip,ij,:,:,:,updatetlevel) &
                                     + qi_taui*kernel_i(ij,:,:,:,0)*phi(:,:,:)
         ENDDO
+      ELSEIF(parray_i(ip) .EQ. 1) THEN
+          nadiab_moments_e(ip,ij,:,:,:) = moments_i(ip,ij,:,:,:,updatetlevel) &
+                                    - q_o_sqrt_tau_sigma_i*kernel_i(ij,:,:,:,0)*psi(:,:,:)
       ELSE
         DO ij=ijgs_i,ijge_i
           nadiab_moments_i(ip,ij,:,:,:) = moments_i(ip,ij,:,:,:,updatetlevel)

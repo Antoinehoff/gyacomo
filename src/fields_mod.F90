@@ -12,4 +12,7 @@ MODULE fields
   ! Normalized electric potential: \hat{\phi} ! (kx,ky,z)
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: phi
 
+!------------------Vector field part
+  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: psi
+
 END MODULE fields

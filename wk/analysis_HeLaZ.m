@@ -44,18 +44,18 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-% options.NAME      = '\phi';
+options.NAME      = '\phi';
 % options.NAME      = 'N_i^{00}';
-options.NAME      = 'v_y';
+% options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+options.PLAN      = 'xz';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
-options.COMP      = 1;
+options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
-options.TIME      =  data.Ts3D(1:20:end);
+options.TIME      =  data.Ts3D(1:2:end);
 % options.TIME      = [750:1:1000];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
@@ -65,7 +65,7 @@ end
 if 0
 %% 2D snapshots
 % Options
-options.INTERP    = 1;
+options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;
 % options.NAME      = '\phi';
@@ -74,11 +74,11 @@ options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxz';
 % options.NAME      'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [500 800 1000];
+options.TIME      = [120 150 155];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 % save_figure(data,fig)
@@ -87,9 +87,9 @@ end
 if 0
 %% 3D plot on the geometry
 options.INTERP    = 1;
-options.NAME      = 'n_i';
-options.PLANES    = [1:10:80];
-options.TIME      = [200];
+options.NAME      = '\phi';
+options.PLANES    = [1:1:16];
+options.TIME      = [15];
 options.PLT_MTOPO = 0;
 data.rho_o_R      = 2e-3; % Sound larmor radius over Machine size ratio
 fig = show_geometry(data,options);
@@ -121,7 +121,7 @@ options.ST         = 1;
 options.PLOT_TYPE  = 'space-time';
 options.NORMALIZED = 1;
 options.JOBNUM     = 0;
-options.TIME       = [100:1200];
+options.TIME       = [1000];
 options.specie     = 'i';
 options.compz      = 'avg';
 fig = show_moments_spectrum(data,options);
@@ -167,7 +167,7 @@ if 0
 %% Mode evolution
 options.NORMALIZED = 0;
 options.K2PLOT = 1;
-options.TIME   = data.Ts3D;
+options.TIME   = [0:160];
 options.NMA    = 1;
 options.NMODES = 15;
 options.iz     = 'avg';

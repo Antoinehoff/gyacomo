@@ -35,9 +35,9 @@ SUBROUTINE moments_eq_rhs_e
   REAL(dp)    :: kx, ky, kperp2, dzlnB_o_J
   COMPLEX(dp) :: Tnepj, Tnepp2j, Tnepm2j, Tnepjp1, Tnepjm1 ! Terms from b x gradB and drives
   COMPLEX(dp) :: Tnepp1j, Tnepm1j, Tnepp1jm1, Tnepm1jm1 ! Terms from mirror force with non adiab moments
-  COMPLEX(dp) :: Tperp, Tpar, Tmir, Tphi
+  COMPLEX(dp) :: Tperp, Tpar, Tmir, Tphi, Tpsi
   COMPLEX(dp) :: Unepm1j, Unepm1jp1, Unepm1jm1 ! Terms from mirror force with adiab moments
-  COMPLEX(dp) :: i_kx,i_ky,phikykxz
+  COMPLEX(dp) :: i_kx,i_ky,phikykxz, psikykxz
 
    ! Measuring execution time
   CALL cpu_time(t0_rhs)
@@ -52,6 +52,7 @@ SUBROUTINE moments_eq_rhs_e
         ky     = kyarray(iky)   ! toroidal wavevector
         i_ky   = imagu * ky     ! toroidal derivative
         phikykxz = phi(iky,ikx,iz)! tmp phi value
+        psikykxz = psi(iky,ikx,iz)! tmp psi value
 
         ! Kinetic loops
         jloope : DO ij = ijs_e, ije_e  ! This loop is from 1 to jmaxi+1
@@ -93,11 +94,20 @@ SUBROUTINE moments_eq_rhs_e
             Tmir = Tnepp1j + Tnepp1jm1 + Tnepm1j + Tnepm1jm1 + Unepm1j + Unepm1jp1 + Unepm1jm1
             !! Electrical potential term
             IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
-              Tphi = (xphij_i  (ip,ij)*kernel_e(ij  ,iky,ikx,iz,eo) &
-                    + xphijp1_i(ip,ij)*kernel_e(ij+1,iky,ikx,iz,eo) &
-                    + xphijm1_i(ip,ij)*kernel_e(ij-1,iky,ikx,iz,eo))*phikykxz
+              Tphi = (xphij_e  (ip,ij)*kernel_e(ij  ,iky,ikx,iz,eo) &
+                    + xphijp1_e(ip,ij)*kernel_e(ij+1,iky,ikx,iz,eo) &
+                    + xphijm1_e(ip,ij)*kernel_e(ij-1,iky,ikx,iz,eo))*phikykxz
             ELSE
               Tphi = 0._dp
+            ENDIF
+
+            !! Vector potential term
+            IF ( (p_int .LE. 3) .AND. (p_int .GT. 1) ) THEN ! Kronecker p1 or p3
+              Tpsi = (xpsij_e  (ip,ij)*kernel_e(ij  ,iky,ikx,iz,eo) &
+                    + xpsijp1_e(ip,ij)*kernel_e(ij+1,iky,ikx,iz,eo) &
+                    + xpsijm1_e(ip,ij)*kernel_e(ij-1,iky,ikx,iz,eo))*psikykxz
+            ELSE
+              Tpsi = 0._dp
             ENDIF
 
             !! Sum of all RHS terms
@@ -109,7 +119,7 @@ SUBROUTINE moments_eq_rhs_e
                 ! Mirror term (parallel magnetic gradient)
                 - gradzB(iz,eo)* Tmir  *gradz_coeff(iz,eo) &
                 ! Drives (density + temperature gradients)
-                - i_ky * Tphi &
+                - i_ky * (Tphi - Tpsi) &
                 ! Numerical perpendicular hyperdiffusion (totally artificial, for stability purpose)
                 - mu_x*diff_kx_coeff*kx**N_HD*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
                 - mu_y*diff_ky_coeff*ky**N_HD*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
@@ -165,8 +175,8 @@ SUBROUTINE moments_eq_rhs_i
   COMPLEX(dp) :: Tnipj, Tnipp2j, Tnipm2j, Tnipjp1, Tnipjm1
   COMPLEX(dp) :: Tnipp1j, Tnipm1j, Tnipp1jm1, Tnipm1jm1 ! Terms from mirror force with non adiab moments
   COMPLEX(dp) :: Unipm1j, Unipm1jp1, Unipm1jm1 ! Terms from mirror force with adiab moments
-  COMPLEX(dp) :: Tperp, Tpar, Tmir, Tphi
-  COMPLEX(dp) :: i_kx, i_ky, phikykxz
+  COMPLEX(dp) :: Tperp, Tpar, Tmir, Tphi, Tpsi
+  COMPLEX(dp) :: i_kx, i_ky, phikykxz, psikykxz
 
   ! Measuring execution time
   CALL cpu_time(t0_rhs)
@@ -181,6 +191,7 @@ SUBROUTINE moments_eq_rhs_i
           ky     = kyarray(iky)   ! toroidal wavevector
           i_ky   = imagu * ky     ! toroidal derivative
           phikykxz = phi(iky,ikx,iz)! tmp phi value
+          psikykxz = psi(iky,ikx,iz)! tmp phi value
 
         ! Kinetic loops
         jloopi : DO ij = ijs_i, ije_i  ! This loop is from 1 to jmaxi+1
@@ -231,6 +242,16 @@ SUBROUTINE moments_eq_rhs_i
                 Tphi = 0._dp
               ENDIF
 
+              !! Vector potential term
+              IF ( (p_int .LE. 3) .AND. (p_int .GT. 1) ) THEN ! Kronecker p1 or p3
+                Tpsi = (xpsij_i  (ip,ij)*kernel_i(ij  ,iky,ikx,iz,eo) &
+                      + xpsijp1_i(ip,ij)*kernel_i(ij+1,iky,ikx,iz,eo) &
+                      + xpsijm1_i(ip,ij)*kernel_i(ij-1,iky,ikx,iz,eo))*psikykxz
+              ELSE
+                Tpsi = 0._dp
+              ENDIF
+
+
               !! Sum of all RHS terms
               moments_rhs_i(ip,ij,iky,ikx,iz,updatetlevel) = &
                   ! Perpendicular magnetic gradient/curvature effects
@@ -240,7 +261,7 @@ SUBROUTINE moments_eq_rhs_i
                   ! Mirror term (parallel magnetic gradient)
                   - gradzB(iz,eo) * gradz_coeff(iz,eo) * Tmir &
                   ! Drives (density + temperature gradients)
-                  - i_ky * Tphi &
+                  - i_ky * (Tphi - Tpsi) &
                   ! Numerical hyperdiffusion (totally artificial, for stability purpose)
                   - mu_x*diff_kx_coeff*kx**N_HD*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
                   - mu_y*diff_ky_coeff*ky**N_HD*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &

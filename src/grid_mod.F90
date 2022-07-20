@@ -99,6 +99,7 @@ MODULE grid
   LOGICAL,  PUBLIC, PROTECTED ::  CONTAINS_ip0_e, CONTAINS_ip0_i
   LOGICAL,  PUBLIC, PROTECTED ::  CONTAINS_ip1_e, CONTAINS_ip1_i
   LOGICAL,  PUBLIC, PROTECTED ::  CONTAINS_ip2_e, CONTAINS_ip2_i
+  LOGICAL,  PUBLIC, PROTECTED ::  SOLVE_POISSON, SOLVE_AMPERE
   ! Usefull inverse numbers
   REAL(dp), PUBLIC, PROTECTED :: inv_Nx, inv_Ny, inv_Nz
 
@@ -125,24 +126,13 @@ CONTAINS
                     Nx,  Lx,  Ny,  Ly, Nz, Npol, SG
     READ(lu_in,grid)
 
+    IF(Nz .EQ. 1) & ! overwrite SG option if Nz = 1 for safety of use
+      SG      = .FALSE.
+
     !! Compute the maximal degree of full GF moments set
     !   i.e. : all moments N_a^pj s.t. p+2j<=d are simulated (see GF closure)
     dmaxe = min(pmaxe,2*jmaxe+1)
     dmaxi = min(pmaxi,2*jmaxi+1)
-
-    ! If no parallel dim (Nz=1), the moment hierarchy is separable between odds and even P
-    !! and since the energy is injected in P=0 and P=2 for density/temperature gradients
-    !! there is no need of simulating the odd p which will only be damped.
-    !! We define in this case a grid Parray = 0,2,4,...,Pmax i.e. deltap = 2 instead of 1
-    !! to spare computation
-    IF(Nz .EQ. 1) THEN
-      deltape = 2; deltapi = 2;
-      pp2     = 1; ! index p+2 is ip+1
-      SG      = .FALSE.
-    ELSE
-      deltape = 1; deltapi = 1;
-      pp2     = 2; ! index p+2 is ip+1
-    ENDIF
 
     ! Usefull precomputations
     inv_Nx = 1._dp/REAL(Nx,dp)
@@ -160,8 +150,23 @@ CONTAINS
 
   SUBROUTINE set_pgrid
     USE prec_const
+    USE model, ONLY: beta ! To know if we solve ampere or not and put odd  p moments
     IMPLICIT NONE
     INTEGER :: ip, istart, iend, in
+
+    ! If no parallel dim (Nz=1) and no EM effects (beta=0), the moment hierarchy
+    !! is separable between odds and even P and since the energy is injected in
+    !! P=0 and P=2 for density/temperature gradients there is no need of
+    !! simulating the odd p which will only be damped.
+    !! We define in this case a grid Parray = 0,2,4,...,Pmax i.e. deltap = 2
+    !! instead of 1 to spare computation
+    IF((Nz .EQ. 1) .AND. (beta .EQ. 0._dp)) THEN
+      deltape = 2; deltapi = 2;
+      pp2     = 1; ! index p+2 is ip+1
+    ELSE
+      deltape = 1; deltapi = 1;
+      pp2     = 2; ! index p+2 is ip+2
+    ENDIF
 
     ! Total number of Hermite polynomials we will evolve
     total_np_e = (Pmaxe/deltape) + 1
@@ -204,6 +209,8 @@ CONTAINS
     CONTAINS_ip0_i = .FALSE.
     CONTAINS_ip1_i = .FALSE.
     CONTAINS_ip2_i = .FALSE.
+    SOLVE_POISSON  = .FALSE.
+    SOLVE_AMPERE   = .FALSE.
     ALLOCATE(parray_e(ipgs_e:ipge_e))
     ALLOCATE(parray_i(ipgs_i:ipge_i))
     DO ip = ipgs_e,ipge_e
@@ -212,10 +219,12 @@ CONTAINS
       IF(parray_e(ip) .EQ. 0) THEN
         ip0_e          = ip
         CONTAINS_ip0_e = .TRUE.
+        SOLVE_POISSON  = .TRUE.
       ENDIF
       IF(parray_e(ip) .EQ. 1) THEN
         ip1_e          = ip
         CONTAINS_ip1_e = .TRUE.
+        SOLVE_AMPERE   = .TRUE.
       ENDIF
       IF(parray_e(ip) .EQ. 2) THEN
         ip2_e          = ip
@@ -228,10 +237,12 @@ CONTAINS
       IF(parray_i(ip) .EQ. 0) THEN
         ip0_i          = ip
         CONTAINS_ip0_i = .TRUE.
-      ENDIF
+        SOLVE_POISSON  = .TRUE.
+    ENDIF
       IF(parray_i(ip) .EQ. 1) THEN
         ip1_i          = ip
         CONTAINS_ip1_i = .TRUE.
+        SOLVE_AMPERE   = .TRUE.
       ENDIF
       IF(parray_i(ip) .EQ. 2) THEN
         ip2_i          = ip
@@ -245,6 +256,11 @@ CONTAINS
     ! Precomputations
     pmaxe_dp   = real(pmaxe,dp)
     pmaxi_dp   = real(pmaxi,dp)
+
+    ! Overwrite SOLVE_AMPERE flag if beta is zero
+    IF(beta .EQ. 0._dp) THEN
+      SOLVE_AMPERE = .FALSE.
+    ENDIF
   END SUBROUTINE set_pgrid
 
   SUBROUTINE set_jgrid

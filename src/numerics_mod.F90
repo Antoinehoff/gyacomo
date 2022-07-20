@@ -6,8 +6,8 @@ MODULE numerics
     USE coeff
     implicit none
 
-    PUBLIC :: build_dnjs_table, evaluate_kernels, evaluate_poisson_op, compute_lin_coeff
-    PUBLIC :: play_with_modes, save_EM_ZF_modes
+    PUBLIC :: build_dnjs_table, evaluate_kernels, evaluate_poisson_op, evaluate_ampere_op
+    PUBLIC :: compute_lin_coeff, play_with_modes, save_EM_ZF_modes
 
 CONTAINS
 
@@ -151,10 +151,57 @@ SUBROUTINE evaluate_poisson_op
 END SUBROUTINE evaluate_poisson_op
 !******************************************************************************!
 
+!******************************************************************************!
+!!!!!!! Evaluate inverse polarisation operator for Poisson equation
+!******************************************************************************!
+SUBROUTINE evaluate_ampere_op
+  USE basic
+  USE array, Only : kernel_e, kernel_i, inv_ampere_op
+  USE grid
+  USE model, ONLY : tau_e, tau_i, q_e, q_i, KIN_E, beta
+  IMPLICIT NONE
+  REAL(dp)    :: pol_i, pol_e, kperp2     ! (Z_a^2/tau_a (1-sum_n kernel_na^2))
+  INTEGER     :: ini,ine
+
+  ! We do not solve Ampere if beta = 0 to spare waste of ressources
+  IF(SOLVE_AMPERE) THEN
+    ! This term has no staggered grid dependence. It is evalued for the
+    ! even z grid since poisson uses p=0 moments and phi only.
+    kxloop: DO ikx = ikxs,ikxe
+    kyloop: DO iky = ikys,ikye
+    zloop:  DO iz  = izs,ize
+    kperp2 = kparray(iky,ikx,iz,0)**2
+    IF( (kxarray(ikx).EQ.0._dp) .AND. (kyarray(iky).EQ.0._dp) ) THEN
+        inv_ampere_op(iky, ikx, iz) =  0._dp
+    ELSE
+      !!!!!!!!!!!!!!!!! Ion contribution
+      ! loop over n only if the max polynomial degree
+      pol_i = 0._dp
+      DO ini=1,jmaxi+1
+        pol_i = pol_i  + kernel_i(ini,iky,ikx,iz,0)**2 ! ... sum recursively ...
+      END DO
+      pol_i = q_i**2/(sigma_i**2) * pol_i
+      !!!!!!!!!!!!! Electron contribution
+      pol_e = 0._dp
+      ! loop over n only if the max polynomial degree
+      DO ine=1,jmaxe+1 ! ine = n+1
+        pol_e = pol_e  + kernel_e(ine,iky,ikx,iz,0)**2 ! ... sum recursively ...
+      END DO
+      pol_e = q_e**2/(sigma_e**2) * pol_e
+      inv_ampere_op(iky, ikx, iz) =  1._dp/(2._dp*kperp2 + beta*(pol_i + pol_e))
+    ENDIF
+    END DO zloop
+    END DO kyloop
+    END DO kxloop
+  ENDIF
+
+END SUBROUTINE evaluate_ampere_op
+!******************************************************************************!
+
 SUBROUTINE compute_lin_coeff
   USE array
   USE model, ONLY: taue_qe, taui_qi, sqrtTaue_qe, sqrtTaui_qi, &
-                   K_T, K_n, CurvB, GradB, KIN_E
+                   K_T, K_n, CurvB, GradB, KIN_E, tau_e, tau_i, sigma_e, sigma_i
   USE prec_const
   USE grid,  ONLY: parray_e, parray_i, jarray_e, jarray_i, &
                    ip,ij, ips_e,ipe_e, ips_i,ipe_i, ijs_e,ije_e, ijs_i,ije_i
@@ -270,7 +317,7 @@ SUBROUTINE compute_lin_coeff
       j_dp = REAL(j_int,dp) ! REALof Laguerre degree
       !! Electrostatic potential pj terms
       IF (p_int .EQ. 0) THEN ! kronecker p0
-        xphij_i(ip,ij)    =+K_n + 2.*j_dp*K_T
+        xphij_i(ip,ij)    =+K_n + 2._dp*j_dp*K_T
         xphijp1_i(ip,ij)  =-K_T*(j_dp+1._dp)
         xphijm1_i(ip,ij)  =-K_T* j_dp
       ELSE IF (p_int .EQ. 2) THEN ! kronecker p2
@@ -279,6 +326,48 @@ SUBROUTINE compute_lin_coeff
       ELSE
         xphij_i(ip,ij)    = 0._dp; xphijp1_i(ip,ij)  = 0._dp
         xphijm1_i(ip,ij)  = 0._dp;
+      ENDIF
+    ENDDO
+  ENDDO
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !! EM linear coefficients for moment RHS !!!!!!!!!!
+  IF (KIN_E) THEN
+    DO ip = ips_e, ipe_e
+      p_int= parray_e(ip)   ! Hermite degree
+      DO ij = ijs_e, ije_e
+        j_int= jarray_e(ij)   ! REALof Laguerre degree
+        j_dp = REAL(j_int,dp) ! REALof Laguerre degree
+        !! Electrostatic potential pj terms
+        IF (p_int .EQ. 1) THEN ! kronecker p1
+          xpsij_e(ip,ij)    =+(K_n + (2._dp*j_dp+1._dp)*K_T) * SQRT(tau_e)/sigma_e
+          xpsijp1_e(ip,ij)  =- K_T*(j_dp+1._dp)              * SQRT(tau_e)/sigma_e
+          xpsijm1_e(ip,ij)  =- K_T* j_dp                     * SQRT(tau_e)/sigma_e
+        ELSE IF (p_int .EQ. 3) THEN ! kronecker p3
+          xpsij_e(ip,ij)    =+ K_T*SQRT3/SQRT2               * SQRT(tau_e)/sigma_e
+          xpsijp1_e(ip,ij)  = 0._dp; xpsijm1_e(ip,ij)  = 0._dp;
+        ELSE
+          xpsij_e(ip,ij)    = 0._dp; xpsijp1_e(ip,ij)  = 0._dp
+          xpsijm1_e(ip,ij)  = 0._dp;
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDIF
+  DO ip = ips_i, ipe_i
+    p_int= parray_i(ip)   ! Hermite degree
+    DO ij = ijs_i, ije_i
+      j_int= jarray_i(ij)   ! REALof Laguerre degree
+      j_dp = REAL(j_int,dp) ! REALof Laguerre degree
+      !! Electrostatic potential pj terms
+      IF (p_int .EQ. 1) THEN ! kronecker p1
+        xpsij_i(ip,ij)    =+(K_n + (2._dp*j_dp+1._dp)*K_T) * SQRT(tau_i)/sigma_i
+        xpsijp1_i(ip,ij)  =- K_T*(j_dp+1._dp)              * SQRT(tau_i)/sigma_i
+        xpsijm1_i(ip,ij)  =- K_T* j_dp                     * SQRT(tau_i)/sigma_i
+      ELSE IF (p_int .EQ. 3) THEN ! kronecker p3
+        xpsij_i(ip,ij)    =+ K_T*SQRT3/SQRT2               * SQRT(tau_i)/sigma_i
+        xpsijp1_i(ip,ij)  = 0._dp; xpsijm1_i(ip,ij)  = 0._dp;
+      ELSE
+        xpsij_i(ip,ij)    = 0._dp; xpsijp1_i(ip,ij)  = 0._dp
+        xpsijm1_i(ip,ij)  = 0._dp;
       ENDIF
     ENDDO
   ENDDO

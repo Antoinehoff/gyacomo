@@ -3,7 +3,7 @@ SUBROUTINE stepon
   USE advance_field_routine, ONLY: advance_time_level, advance_field, advance_moments
   USE basic
   USE closure
-  USE ghosts, ONLY: update_ghosts_moments, update_ghosts_phi
+  USE ghosts, ONLY: update_ghosts_moments, update_ghosts_EM
   USE grid
   USE model, ONLY : LINEARITY, KIN_E
   use prec_const
@@ -34,9 +34,9 @@ SUBROUTINE stepon
       ! Exchanges the ghosts values of N_n+1
       CALL update_ghosts_moments
 
-      ! Update electrostatic potential phi_n = phi(N_n+1)
-      CALL poisson
-      CALL update_ghosts_phi
+      ! Update electrostatic potential phi_n = phi(N_n+1) and potential vect psi
+      CALL solve_EM_fields
+      CALL update_ghosts_EM
 
       ! Numerical experiments
       ! Store or cancel/maintain zonal modes artificially
@@ -130,7 +130,7 @@ SUBROUTINE stepon
       END SUBROUTINE anti_aliasing
 
       SUBROUTINE enforce_symmetry ! Force X(k) = X(N-k)* complex conjugate symmetry
-        USE fields, ONLY: phi, moments_e, moments_i
+        USE fields, ONLY: phi, psi, moments_e, moments_i
         IMPLICIT NONE
         IF ( contains_ky0 ) THEN
           ! Electron moments
@@ -165,6 +165,12 @@ SUBROUTINE stepon
           END DO
           ! must be real at origin
           phi(iky_0,ikx_0,izs:ize) = REAL(phi(iky_0,ikx_0,izs:ize))
+          ! Psi
+          DO ikx=2,Nkx/2 !symmetry at ky = 0
+            psi(iky_0,ikx,izs:ize) = psi(iky_0,Nkx+2-ikx,izs:ize)
+          END DO
+          ! must be real at origin
+          psi(iky_0,ikx_0,izs:ize) = REAL(psi(iky_0,ikx_0,izs:ize))
         ENDIF
       END SUBROUTINE enforce_symmetry
 

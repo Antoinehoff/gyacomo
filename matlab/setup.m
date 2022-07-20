@@ -23,6 +23,7 @@ MODEL.NL_CLOS = NL_CLOS;
 MODEL.LINEARITY = ['''',LINEARITY,''''];
 MODEL.KIN_E   = KIN_E;
 if KIN_E; MODEL.KIN_E = '.true.'; else; MODEL.KIN_E = '.false.';end;
+MODEL.beta    = BETA;
 MODEL.mu_x    = MU_X;
 MODEL.mu_y    = MU_Y;
 MODEL.N_HD    = N_HD;

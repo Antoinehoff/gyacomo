@@ -30,6 +30,7 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED ::   GradB =  1._dp     ! Magnetic gradient
   REAL(dp), PUBLIC, PROTECTED ::   CurvB =  1._dp     ! Magnetic curvature
   REAL(dp), PUBLIC, PROTECTED :: lambdaD =  1._dp     ! Debye length
+  REAL(dp), PUBLIC, PROTECTED ::    beta =  0._dp     ! electron plasma Beta (8piNT_e/B0^2)
 
   REAL(dp), PUBLIC, PROTECTED :: taue_qe         ! factor of the magnetic moment coupling
   REAL(dp), PUBLIC, PROTECTED :: taui_qi         !
@@ -46,23 +47,29 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED :: nu_e,  nu_i          ! electron-ion, ion-ion collision frequency
   REAL(dp), PUBLIC, PROTECTED :: nu_ee, nu_ie         ! e-e, i-e coll. frequ.
   REAL(dp), PUBLIC, PROTECTED :: qe2_taue, qi2_taui   ! factor of the gammaD sum
-
+  REAL(dp), PUBLIC, PROTECTED :: q_o_sqrt_tau_sigma_e, q_o_sqrt_tau_sigma_i
+  REAL(dp), PUBLIC, PROTECTED :: sqrt_tau_o_sigma_e, sqrt_tau_o_sigma_i
   PUBLIC :: model_readinputs, model_outputinputs
 
 CONTAINS
 
   SUBROUTINE model_readinputs
     !    Read the input parameters
-    USE basic, ONLY : lu_in
+    USE basic, ONLY : lu_in, my_id
     USE prec_const
     IMPLICIT NONE
 
     NAMELIST /MODEL_PAR/ CLOS, NL_CLOS, KERN, LINEARITY, KIN_E, &
                          mu_x, mu_y, N_HD, mu_z, mu_p, mu_j, nu,&
                          tau_e, tau_i, sigma_e, sigma_i, q_e, q_i,&
-                         K_n, K_T, K_E, GradB, CurvB, lambdaD
+                         K_n, K_T, K_E, GradB, CurvB, lambdaD, beta
 
     READ(lu_in,model_par)
+
+    IF(.NOT. KIN_E) THEN
+      IF(my_id.EQ.0) print*, 'Adiabatic electron model -> beta = 0'
+      beta = 0._dp
+    ENDIF
 
     taue_qe    = tau_e/q_e ! factor of the magnetic moment coupling
     taui_qi    = tau_i/q_i ! factor of the magnetic moment coupling
@@ -78,6 +85,10 @@ CONTAINS
     sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp
     sqrt_sigmae2_taue_o2 = SQRT(sigma_e**2 * tau_e/2._dp) ! to avoid multiple SQRT eval
     sqrt_sigmai2_taui_o2 = SQRT(sigma_i**2 * tau_i/2._dp)
+    q_o_sqrt_tau_sigma_e = q_e/SQRT(tau_e)/sigma_e ! For psi field terms
+    q_o_sqrt_tau_sigma_i = q_i/SQRT(tau_i)/sigma_i ! For psi field terms
+    sqrt_tau_o_sigma_e   = SQRT(tau_e)/sigma_e     ! For Ampere eq
+    sqrt_tau_o_sigma_i   = SQRT(tau_i)/sigma_i
     !! We use the ion-ion collision as normalization with definition
     !   nu_ii = 4 sqrt(pi)/3 T_i^(-3/2) m_i^(-1/2) q^4 n_i0 ln(Lambda)
     !

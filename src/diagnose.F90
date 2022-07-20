@@ -209,6 +209,7 @@ SUBROUTINE diagnose_full(kstep)
      CALL creatd(fidres, rank, dims, "/data/var3d/cstep", "iteration number")
 
      IF (write_phi) CALL creatg(fidres, "/data/var3d/phi", "phi")
+     IF (write_phi) CALL creatg(fidres, "/data/var3d/psi", "psi")
 
      IF (write_Na00) THEN
       IF(KIN_E)&
@@ -405,6 +406,7 @@ SUBROUTINE diagnose_3d
   CALL attach(fidres,"/data/var3d/" , "frames", iframe3d)
 
   IF (write_phi) CALL write_field3d_kykxz(phi (ikys:ikye,ikxs:ikxe,izs:ize), 'phi')
+  IF (write_phi) CALL write_field3d_kykxz(psi (ikys:ikye,ikxs:ikxe,izs:ize), 'psi')
 
   IF (write_Na00) THEN
     IF(KIN_E)THEN

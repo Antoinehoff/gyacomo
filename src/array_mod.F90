@@ -56,13 +56,15 @@ MODULE array
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: zNipm1j, zNipm1jp1, zNipm1jm1            ! mirror lin coeff for adiab mom
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xphij_e, xphijp1_e, xphijm1_e
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xphij_i, xphijp1_i, xphijm1_i
-
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xpsij_e, xpsijp1_e, xpsijm1_e
+  REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xpsij_i, xpsijp1_i, xpsijm1_i
   ! Kernel function evaluation (ij,ikx,iky,iz,odd/even p)
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: kernel_e
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: kernel_i
 
   ! Poisson operator (ikx,iky,iz)
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_poisson_op
+  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_ampere_op
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_pol_ion
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: HF_phi_correction_operator
 

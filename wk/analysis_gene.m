@@ -1,6 +1,6 @@
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_0.8/';
-% folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.2/';
+% folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/rm_corrections_HF/';
 % folder = '/misc/gene_results/shearless_cyclone/linear_s_alpha_CBC_100/';
 % folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.5/';
@@ -47,8 +47,8 @@ options.NAME      = '\phi';
 options.PLAN      = 'xy';
 % options.NAME      ='f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 'avg';
-options.TIME      = [1:10];
+options.COMP      = 1;
+options.TIME      = [15 50 100 200];
 gene_data.a = data.EPS * 2000;
 fig = photomaton(gene_data,options);
 save_figure(gene_data,fig,'.png')
@@ -64,7 +64,7 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';

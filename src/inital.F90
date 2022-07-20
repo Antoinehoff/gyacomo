@@ -8,7 +8,7 @@ SUBROUTINE inital
   USE time_integration, ONLY: set_updatetlevel
   USE collision,        ONLY: load_COSOlver_mat, cosolver_coll
   USE closure,          ONLY: apply_closure_model
-  USE ghosts,           ONLY: update_ghosts_moments, update_ghosts_phi
+  USE ghosts,           ONLY: update_ghosts_moments, update_ghosts_EM
   USE restarts,         ONLY: load_moments, job2load
   USE numerics,         ONLY: play_with_modes, save_EM_ZF_modes
   USE processing,       ONLY: compute_fluid_moments
@@ -24,8 +24,8 @@ SUBROUTINE inital
     IF (my_id .EQ. 0) WRITE(*,*) 'Load moments'
     CALL load_moments ! get N_0
     CALL update_ghosts_moments
-    CALL poisson ! compute phi_0=phi(N_0)
-    CALL update_ghosts_phi
+    CALL solve_EM_fields ! compute phi_0=phi(N_0)
+    CALL update_ghosts_EM
   ! through initialization
   ELSE
     SELECT CASE (INIT_OPT)
@@ -33,35 +33,35 @@ SUBROUTINE inital
     CASE ('phi')
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy phi'
       CALL init_phi
-      CALL update_ghosts_phi
+      CALL update_ghosts_EM
     ! set moments_00 (GC density) with noise and compute phi afterwards
     CASE('mom00')
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy gyrocenter density'
       CALL init_gyrodens ! init only gyrocenter density
       CALL update_ghosts_moments
-      CALL poisson
-      CALL update_ghosts_phi
+      CALL solve_EM_fields
+      CALL update_ghosts_EM
     ! init all moments randomly (unadvised)
     CASE('allmom')
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy moments'
       CALL init_moments ! init all moments
       CALL update_ghosts_moments
-      CALL poisson
-      CALL update_ghosts_phi
+      CALL solve_EM_fields
+      CALL update_ghosts_EM
     ! init a gaussian blob in gyrodens
     CASE('blob')
       IF (my_id .EQ. 0) WRITE(*,*) '--init a blob'
       CALL initialize_blob
       CALL update_ghosts_moments
-      CALL poisson
-      CALL update_ghosts_phi
+      CALL solve_EM_fields
+      CALL update_ghosts_EM
     ! init moments 00 with a power law similarly to GENE
     CASE('ppj')
       IF (my_id .EQ. 0) WRITE(*,*) 'ppj init ~ GENE'
       call init_ppj
       CALL update_ghosts_moments
-      CALL poisson
-      CALL update_ghosts_phi
+      CALL solve_EM_fields
+      CALL update_ghosts_EM
     END SELECT
   ENDIF
   ! closure of j>J, p>P and j<0, p<0 moments
@@ -70,7 +70,7 @@ SUBROUTINE inital
   ! ghosts for p parallelization
   IF (my_id .EQ. 0) WRITE(*,*) 'Ghosts communication'
   CALL update_ghosts_moments
-  CALL update_ghosts_phi
+  CALL update_ghosts_EM
   !! End of phi and moments initialization
 
   ! Save (kx,0) and (0,ky) modes for num exp
@@ -399,8 +399,8 @@ SUBROUTINE init_ppj
   REAL(dp) :: kx, ky, sigma_z, amp, ky_shift, z
   INTEGER, DIMENSION(12) :: iseedarr
 
-  sigma_z = pi/4.0
-  amp = 1e4
+  sigma_z = pi/4._dp
+  amp = 1.0_dp
 
     !**** Broad noise initialization *******************************************
     ! Electrons
@@ -418,11 +418,11 @@ SUBROUTINE init_ppj
                   IF(ky .EQ. 0) THEN
                     moments_e(ip,ij,iky,ikx,iz,:) = 0._dp
                   ELSE
-                    moments_e(ip,ij,iky,ikx,iz,:) = 0._dp!0.5_dp * ky_min/(ABS(ky)+ky_min)
+                    moments_e(ip,ij,iky,ikx,iz,:) = 0.5_dp * ky_min/(ABS(ky)+ky_min)
                   ENDIF
                 ELSE
                   IF(ky .GT. 0) THEN
-                    moments_e(ip,ij,iky,ikx,iz,:) = 0._dp!(kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
+                    moments_e(ip,ij,iky,ikx,iz,:) = (kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
                   ELSE
                     moments_e(ip,ij,iky,ikx,iz,:) = 0.5_dp*amp*(kx_min/(ABS(kx)+kx_min))
                   ENDIF
@@ -461,11 +461,11 @@ SUBROUTINE init_ppj
                   IF(ky .EQ. 0) THEN
                     moments_i(ip,ij,iky,ikx,iz,:) = 0._dp
                   ELSE
-                    moments_i(ip,ij,iky,ikx,iz,:) = 0._dp!0.5_dp * ky_min/(ABS(ky)+ky_min)
+                    moments_i(ip,ij,iky,ikx,iz,:) = 0.5_dp * ky_min/(ABS(ky)+ky_min)
                   ENDIF
                 ELSE
                   IF(ky .GT. 0) THEN
-                    moments_i(ip,ij,iky,ikx,iz,:) = 0._dp!(kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
+                    moments_i(ip,ij,iky,ikx,iz,:) = (kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
                   ELSE
                     moments_i(ip,ij,iky,ikx,iz,:) = 0.5_dp*amp*(kx_min/(ABS(kx)+kx_min))
                   ENDIF
@@ -509,9 +509,5 @@ SUBROUTINE init_ppj
       ENDDO
     ENDIF
 
-    ! Adjust the scaling to trigger faster NL saturation
-    IF(KIN_E) &
-    moments_e = 1e3*moments_e
-    moments_i = 1e3*moments_i
 END SUBROUTINE init_ppj
 !******************************************************************************!
