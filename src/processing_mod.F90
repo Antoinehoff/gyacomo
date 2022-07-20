@@ -317,8 +317,10 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
                                       + qe_taue*kernel_e(ij,:,:,:,0)*phi(:,:,:)
           ENDDO
         ELSEIF(parray_e(ip) .EQ. 1) THEN
+          DO ij=ijgs_e,ijge_e
             nadiab_moments_e(ip,ij,:,:,:) = moments_e(ip,ij,:,:,:,updatetlevel) &
                                       - q_o_sqrt_tau_sigma_e*kernel_e(ij,:,:,:,0)*psi(:,:,:)
+          ENDDO
         ELSE
           DO ij=ijgs_e,ijge_e
             nadiab_moments_e(ip,ij,:,:,:) = moments_e(ip,ij,:,:,:,updatetlevel)
@@ -334,8 +336,10 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
                                     + qi_taui*kernel_i(ij,:,:,:,0)*phi(:,:,:)
         ENDDO
       ELSEIF(parray_i(ip) .EQ. 1) THEN
-          nadiab_moments_e(ip,ij,:,:,:) = moments_i(ip,ij,:,:,:,updatetlevel) &
+        DO ij=ijgs_i,ijge_i
+          nadiab_moments_i(ip,ij,:,:,:) = moments_i(ip,ij,:,:,:,updatetlevel) &
                                     - q_o_sqrt_tau_sigma_i*kernel_i(ij,:,:,:,0)*psi(:,:,:)
+        ENDDO
       ELSE
         DO ij=ijgs_i,ijge_i
           nadiab_moments_i(ip,ij,:,:,:) = moments_i(ip,ij,:,:,:,updatetlevel)
