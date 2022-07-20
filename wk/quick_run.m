@@ -8,6 +8,7 @@ addpath(genpath('../matlab')) % ... add
 default_plots_options
 HELAZDIR = '/home/ahoffman/HeLaZ/';
 EXECNAME = 'helaz3';
+% EXECNAME = 'helaz3_shear'; %verified version
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
@@ -16,22 +17,22 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 NU      = 0.01;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
 K_N     = 2.22;%2.0;   % Density gradient drive
-K_T     = 6.96;%0.25*K_N;   % Temperature '''
+K_T     = 6.92;%0.25*K_N;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
 % SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 0;     % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 0e-1;     % electron plasma beta 
 %% GRID PARAMETERS
-PMAXE   = 12;     % Hermite basis size of electrons
-JMAXE   = 6;     % Laguerre "
+PMAXE   = 4;     % Hermite basis size of electrons
+JMAXE   = 2;     % Laguerre "
 PMAXI   = 4;     % " ions
 JMAXI   = 2;     % "
-NX      = 16;    % real space x-gridpoints
-NY      = 2;     %     ''     y-gridpoints
+NX      = 12;    % real space x-gridpoints
+NY      = 8;     %     ''     y-gridpoints
 LX      = 2*pi/0.1;   % Size of the squared frequency domain
-LY      = 2*pi/0.3;     % Size of the squared frequency domain
-NZ      = 32;    % number of perpendicular planes (parallel grid)
+LY      = 2*pi/0.1;     % Size of the squared frequency domain
+NZ      = 16;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 %% GEOMETRY
@@ -42,7 +43,7 @@ SHEAR   = 0.8;    % magnetic shear (Not implemented yet)
 EPS     = 0.18;    % inverse aspect ratio
 %% TIME PARMETERS
 TMAX    = 20;  % Maximal time unit
-DT      = 1e-2;   % Time step
+DT      = 5e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
