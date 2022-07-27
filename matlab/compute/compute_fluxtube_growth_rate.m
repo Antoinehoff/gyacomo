@@ -6,8 +6,8 @@ if DATA.Nx > 1
 else
     ikxnz = abs(DATA.PHI(1,:,1,1)) > -1;
 end
-ikynz = abs(DATA.PHI(:,1,1,1)) > 0;
-
+ikynz = (abs(DATA.PHI(:,1,1,1)) > 0);
+ikynz = logical(ikynz .* (DATA.ky > 0));
 phi = DATA.PHI(ikynz,ikxnz,:,:);
 t   = DATA.Ts3D;
 
@@ -39,34 +39,44 @@ linear_gr.g_ky   = real(w_ky(Is,:));
 linear_gr.w_ky   = imag(w_ky(Is,:));
 linear_gr.ce     = abs(ce);
 linear_gr.ky     = kys;
+linear_gr.std_g = std (real(w_ky(Is,:)),[],2);
+linear_gr.avg_g = mean(real(w_ky(Is,:)),2);
+linear_gr.std_w = std (imag(w_ky(Is,:)),[],2);
+linear_gr.avg_w = mean(imag(w_ky(Is,:)),2);
+
 if PLOT >0
-       figure
+   figure
+if PLOT >1
+    subplot(1,PLOT,1)
+end
+
        plot(linear_gr.ky,linear_gr.g_ky(:,end),'-o','DisplayName','$Re(\omega_{k_y})$'); hold on;
        plot(linear_gr.ky,linear_gr.w_ky(:,end),'--*','DisplayName','$Im(\omega_{k_y})$'); hold on;
        plot(linear_gr.ky,linear_gr.ce  (:,end),'x','DisplayName','$\epsilon$'); hold on;
+
+       errorbar(linear_gr.ky,linear_gr.avg_g,linear_gr.std_g,...
+           '-o','DisplayName','$Re(\omega_{k_y})$',...
+           'LineWidth',1.5); hold on;
+       errorbar(linear_gr.ky,linear_gr.avg_w,linear_gr.std_w,...
+           '--*','DisplayName','$Im(\omega_{k_y})$',...
+           'LineWidth',1.5); hold on;
+
 %        xlim([min(linear_gr.ky) max(linear_gr.ky)]);
        xlabel('$k_y$');
        legend('show');
        title(DATA.param_title);
-       if PLOT > 1
-           [YY,XX] = meshgrid(kys,t(its+1:ite));
-           figure
-              subplot(311)
-%            imagesc(t(its:ite),kys,real(w_ky)); set(gca,'YDir','normal'); 
-           pclr = pcolor(XX',YY',real(w_ky));    set(pclr, 'edgecolor','none'); 
-           xlabel('$t$'); ylabel('$k_y$');
-           title('Re($\omega$)')
-           
-              subplot(312)
-           pclr = pcolor(XX',YY',imag(w_ky));    set(pclr, 'edgecolor','none'); 
-           xlabel('$t$'); ylabel('$k_y$');
-           title('Im($\omega$)')
-           
-              subplot(313)
-           pclr = pcolor(XX',YY',abs(w_ky));    set(pclr, 'edgecolor','none'); 
-           xlabel('$t$'); ylabel('$k_y$');
-           title('|$\omega$|')
-       end
+       
+if PLOT > 1
+    subplot(1,PLOT,2)
+    plot(DATA.Ts3D(its+1:ite),linear_gr.g_ky(Is,:)); hold on;
+    plot(DATA.Ts3D(its+1:ite),linear_gr.w_ky(Is,:));
+    xlabel('t'); ylabel('$\gamma(t),\omega(t)$')
+end
+
+if PLOT > 2
+    subplot(1,PLOT,3)
+    semilogy(DATA.Ts3D,squeeze(abs(DATA.PHI(2,1,DATA.Nz/2,:)))); hold on;
+    xlabel('t'); ylabel('$|\phi_{ky}|(t)$')
 
 end
 

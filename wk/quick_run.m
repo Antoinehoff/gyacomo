@@ -3,35 +3,39 @@
 % from matlab framework. It is meant to run only small problems in linear
 % for benchmark and debugging purpose since it makes matlab "busy"
 %
-RUN = 1; % To run or just to load
+% RUN = 1; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
 HELAZDIR = '/home/ahoffman/HeLaZ/';
 EXECNAME = 'helaz3';
-% EXECNAME = 'helaz3_shear'; %verified version
+% EXECNAME = 'helaz3_dbg';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.01;   % Collision frequency
+% NU      = 0.0;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-K_N     = 2.22;%2.0;   % Density gradient drive
-K_T     = 6.92;%0.25*K_N;   % Temperature '''
-K_E     = 0.0;   % Electrostat '''
+K_N     = 2.22;%2.0;   % ion Density gradient drive
+K_Ne     = K_N;        % ele Density gradient drive
+% K_T     = 4.0;%0.25*K_N;   % Temperature '''
+K_Te     = K_T;            % Temperature '''
 % SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 0;     % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 0e-1;     % electron plasma beta 
 %% GRID PARAMETERS
-PMAXE   = 4;     % Hermite basis size of electrons
-JMAXE   = 2;     % Laguerre "
-PMAXI   = 4;     % " ions
-JMAXI   = 2;     % "
+% P = 12;
+J = P/2;
+PMAXE   = P;     % Hermite basis size of electrons
+JMAXE   = J;     % Laguerre "
+PMAXI   = P;     % " ions
+JMAXI   = J;     % "
 NX      = 12;    % real space x-gridpoints
-NY      = 8;     %     ''     y-gridpoints
+NY      = 2;     %     ''     y-gridpoints
 LX      = 2*pi/0.1;   % Size of the squared frequency domain
-LY      = 2*pi/0.1;     % Size of the squared frequency domain
+% LY      = 2*pi/0.3;     % Size of the squared frequency domain
+LY      = 2*pi/ky_;
 NZ      = 16;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
@@ -42,8 +46,8 @@ Q0      = 1.4;    % safety factor
 SHEAR   = 0.8;    % magnetic shear (Not implemented yet)
 EPS     = 0.18;    % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 20;  % Maximal time unit
-DT      = 5e-3;   % Time step
+% TMAX    = 100;  % Maximal time unit
+% DT      = 2e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
@@ -51,15 +55,16 @@ SPS5D   = 1/5;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
 %% OPTIONS
-SIMID   = 'linear_CBC';  % Name of the simulation
+% SIMID   = 'linear_CBC';  % Name of the simulation
+% SIMID   = 'scan';  % Name of the simulation
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-CO      = 'DG';
-GKCO    = 0; % gyrokinetic operator
+% CO      = 'SG';
+GKCO    = 1; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
-CLOS    = 0;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))s
+CLOS    = 0;   % Closure model (0: =0 truncation, 1: v^Nmax closure (p+2j<=Pmax))s
 NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)
 INIT_OPT= 'phi';   % Start simulation with a noisy mom00/phi/allmom
@@ -96,7 +101,7 @@ if RUN
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',HELAZDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 2 3 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 2 1 3 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
 end
 
@@ -112,7 +117,7 @@ data = compile_results(LOCALDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from 
 if 1
 %% linear growth rate (adapted for 2D zpinch and fluxtube)
 trange = [0.5 1]*data.Ts3D(end);
-nplots = 1;
+nplots = 0;
 lg = compute_fluxtube_growth_rate(data,trange,nplots);
 [gmax,     kmax] = max(lg.g_ky(:,end));
 [gmaxok, kmaxok] = max(lg.g_ky(:,end)./lg.ky);
@@ -157,17 +162,16 @@ options.kzky = 0;
 [lg, fig] = compute_3D_zpinch_growth_rate(data,trange,options);
 save_figure(data,fig)
 end
-
 if 0
 %% Mode evolution
-options.NORMALIZED = 1;
+options.NORMALIZED = 0;
 options.K2PLOT = 1;
-options.TIME   = [0 1]*data.Ts3D(end);
+options.TIME   = [0:1000];
 options.NMA    = 1;
 options.NMODES = 1;
-options.iz     = 9;
+options.iz     = 'avg';
 fig = mode_growth_meter(data,options);
-save_figure(gbms_dat,fig)
+save_figure(data,fig,'.png')
 end
 
 

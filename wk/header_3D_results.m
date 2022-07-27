@@ -31,7 +31,7 @@ helazdir = '/home/ahoffman/HeLaZ/';
 % outfile ='Zpinch_rerun/Kn_2.5_256x128x5x3';
 % outfile ='Zpinch_rerun/Kn_2.5_312x196x5x3_Lx_400_Ly_200';
 % outfile ='Zpinch_rerun/Kn_2.5_256x64x5x3';
-outfile ='Zpinch_rerun/Kn_2.0_200x48x9x5_large_box';
+% outfile ='Zpinch_rerun/Kn_2.0_200x48x9x5_large_box';
 % outfile ='Zpinch_rerun/Kn_2.0_256x64x9x5_Lx_240_Ly_120';
 % outfile ='Zpinch_rerun/Kn_1.6_256x128x7x4';
 % outfile ='Zpinch_rerun/Kn_1.6_200x48x11x6';
@@ -41,5 +41,12 @@ outfile ='Zpinch_rerun/Kn_2.0_200x48x9x5_large_box';
 % outfile = 'CBC/64x32x16x5x3';
 % outfile = 'CBC/64x128x16x5x3';
 % outfile = 'CBC/128x64x16x5x3';
-outfile = 'CBC/64x64x16x3x2';
+% outfile = 'CBC/192x96x16x3x2';
+% outfile = 'CBC/128x64x16x5x3';
+
+outfile = 'CBC/kT_scan_128x64x16x5x3';
+% outfile = 'CBC/kT_scan_192x96x16x3x2';
+
+%% Linear CBC
+% outfile = 'linear_CBC/20x2x32_21x11_Lx_62.8319_Ly_31.4159_q0_1.4_e_0.18_s_0.8_kN_2.22_kT_5.3_nu_1e-02_DGDK_adiabe';
 run analysis_HeLaZ

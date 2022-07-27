@@ -44,7 +44,7 @@ if MODEL.q_e == 0; SIMID = [SIMID,'_i']; end;
 % gradients L_perp/L_x
 MODEL.K_n     = K_N;        % source term kappa for HW
 MODEL.K_T     = K_T;        % Temperature
-MODEL.K_E     = K_E;        % Electric
+MODEL.K_E     = 0;        % Electric
 MODEL.GradB   = GRADB;      % Magnetic gradient
 MODEL.CurvB   = CURVB;      % Magnetic curvature
 MODEL.lambdaD = LAMBDAD;
@@ -98,7 +98,7 @@ drives_ = [];
 if abs(K_N) > 0; drives_ = [drives_,'_kN_',num2str(K_N)]; end;
 if abs(K_T) > 0; drives_ = [drives_,'_kT_',num2str(K_T)]; end;
 % collision
-coll_ = ['_nu_%0.0e_',CONAME];
+coll_ = ['_nu_%1.1e_',CONAME];
 coll_   = sprintf(coll_,NU);
 % nonlinear
 lin_ = [];

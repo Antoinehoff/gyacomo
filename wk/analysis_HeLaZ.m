@@ -11,7 +11,7 @@ system(['mkdir -p ',LOCALDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 system(CMD);
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 20;
+JOBNUMMIN = 00; JOBNUMMAX = 10;
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 data.localdir = LOCALDIR;
 data.FIGDIR   = LOCALDIR;
@@ -23,7 +23,7 @@ FMT = '.fig';
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-options.TAVG_0   = 0.7*data.Ts3D(end); data.scale = 1;%(1/data.Nx/data.Ny)^2;
+options.TAVG_0   = 0.7*data.Ts3D(end); data.scale = 1;%/(data.Nx*data.Ny)^2;
 options.TAVG_1   = data.Ts3D(end); % Averaging times duration
 options.NMVA     = 1;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';   % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
@@ -55,8 +55,8 @@ options.PLAN      = 'xz';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
-options.TIME      =  data.Ts3D(1:2:end);
-% options.TIME      = [750:1:1000];
+% options.TIME      =  data.Ts3D(1:10:end);
+options.TIME      = [200:2:400];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -67,18 +67,18 @@ if 0
 % Options
 options.INTERP    = 0;
 options.POLARPLOT = 0;
-options.AXISEQUAL = 1;
+options.AXISEQUAL = 0;
 % options.NAME      = '\phi';
 % options.NAME      = 'n_e';
 options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'kxz';
+options.PLAN      = 'kxky';
 % options.NAME      'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [120 150 155];
+options.TIME      = [20 60 200 400 500];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 % save_figure(data,fig)
@@ -98,12 +98,12 @@ end
 
 if 0
 %% Kinetic distribution function sqrt(<f_a^2>xy) (GENE vsp)
-options.SPAR      = linspace(-3,3,32)+(6/127/2);
-options.XPERP     = linspace( 0,6,32);
-% options.SPAR      = gene_data.vp';
-% options.XPERP     = gene_data.mu';
-options.iz        = 'avg';
-options.T         = [600];
+% options.SPAR      = linspace(-3,3,32)+(6/127/2);
+% options.XPERP     = linspace( 0,6,32);
+options.SPAR      = gene_data.vp';
+options.XPERP     = gene_data.mu';
+options.iz        = 1;
+options.T         = [500 1000];
 options.PLT_FCT   = 'contour';
 options.ONED      = 0;
 options.non_adiab = 0;
@@ -119,7 +119,7 @@ if 0
 options.P2J        = 0;
 options.ST         = 1;
 options.PLOT_TYPE  = 'space-time';
-options.NORMALIZED = 1;
+options.NORMALIZED = 0;
 options.JOBNUM     = 0;
 options.TIME       = [1000];
 options.specie     = 'i';
@@ -131,11 +131,11 @@ end
 
 if 0
 %% Time averaged spectrum
-options.TIME   = [300 600];
+options.TIME   = [100 500];
 options.NORM   =1;
 % options.NAME   = '\phi';
-% options.NAME      = 'N_i^{00}';
-options.NAME   ='\Gamma_x';
+options.NAME      = 'N_i^{00}';
+% options.NAME   ='\Gamma_x';
 options.PLAN   = 'kxky';
 options.COMPZ  = 'avg';
 options.OK     = 0;
@@ -169,7 +169,7 @@ options.NORMALIZED = 0;
 options.K2PLOT = 1;
 options.TIME   = [0:160];
 options.NMA    = 1;
-options.NMODES = 15;
+options.NMODES = 1;
 options.iz     = 'avg';
 fig = mode_growth_meter(data,options);
 save_figure(data,fig,'.png')

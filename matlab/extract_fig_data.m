@@ -8,12 +8,13 @@ for i = 1:numel(dataObjs)
     Y_ = [Y_ dataObjs(i).YData];
 end
 n0 = 1;
+n1 = 26;%numel(X_);
 figure;
 mvm = @(x) movmean(x,1);
 shift = X_(n0);
 % shift = 0;
 % plot(X_(n0:end),Y_(n0:end));
-plot(mvm(X_(n0:end)-shift),mvm(Y_(n0:end))); hold on;
+plot(mvm(X_(n0:n1)-shift),mvm(Y_(n0:n1))); hold on;
 
 t0 = ceil(numel(X_)*0.5); t1 = numel(X_);
 avg= mean(Y_(t0:t1)); dev = std(Y_(t0:t1));

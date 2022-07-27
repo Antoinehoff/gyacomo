@@ -159,6 +159,9 @@ else
     end
     pclr = pcolor(toplot.X,toplot.Y,Gk);
     set(pclr, 'edgecolor','none');
+    xlabel('$k_x$');
+    ylabel('$k_y$');
+    title(['GM $|$',fieldname,'$(k_x,k_y)|$ t-averaged']); 
 
 end
 

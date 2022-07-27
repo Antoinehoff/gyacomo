@@ -13,6 +13,9 @@
 % folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
 % folder = '/misc/gene_results/ZP_kn_2.5_large_box/';
 folder = '/misc/gene_results/CBC/128x64x16x24x12/';
+% folder = '/misc/gene_results/CBC/196x96x20x32x16_00/';
+% folder = '/misc/gene_results/CBC/128x64x16x6x4/';
+% folder = '/misc/gene_results/CBC/KT_5.3_128x64x16x24x12_00/';
 gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
@@ -101,7 +104,7 @@ end
 
 if 0
 %% Show f_i(vpar,mu)
-options.times   = 200:300;
+options.times   = 20:80;
 options.specie  = 'i';
 options.PLT_FCT = 'contour';
 options.folder  = folder;
