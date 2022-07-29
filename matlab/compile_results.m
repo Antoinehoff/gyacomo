@@ -7,7 +7,7 @@ DATA.NU_EVOL  = []; % evolution of parameter nu between jobs
 DATA.CO_EVOL  = []; % evolution of CO
 DATA.MUx_EVOL  = []; % evolution of parameter mu between jobs
 DATA.MUy_EVOL  = []; % evolution of parameter mu between jobs
-DATA.K_N_EVOL = []; %
+DATA.K_Ni_EVOL = []; %
 DATA.L_EVOL   = []; % 
 DATA.DT_EVOL  = []; %
 % FIELDS
@@ -20,6 +20,7 @@ PGAMMAI_ = [];
 GGAMMAE_ = [];
 PGAMMAE_ = [];
 PHI_     = [];
+PSI_     = [];
 DENS_E_  = [];
 DENS_I_  = [];
 UPAR_E_  = [];
@@ -61,7 +62,7 @@ while(CONTINUE)
         W_DENS    = strcmp(h5readatt(filename,'/data/input','write_dens' ),'y');
         W_TEMP    = strcmp(h5readatt(filename,'/data/input','write_temp' ),'y');
         KIN_E     = strcmp(h5readatt(filename,'/data/input',     'KIN_E' ),'y');
-        
+        BETA      = h5readatt(filename,'/data/input','beta');
         % Check polynomials degrees
         Pe_new= numel(Pe); Je_new= numel(Je);
         Pi_new= numel(Pi); Ji_new= numel(Ji);
@@ -129,6 +130,10 @@ while(CONTINUE)
         if W_PHI
             [ PHI, Ts3D, ~] = load_3D_data(filename, 'phi');
             PHI_  = cat(4,PHI_,PHI); clear PHI
+            if BETA > 0
+                [ PSI, Ts3D, ~] = load_3D_data(filename, 'psi');
+                PSI_  = cat(4,PSI_,PSI); clear PSI
+            end
         end
         if W_NA00
             if KIN_E
@@ -196,14 +201,14 @@ while(CONTINUE)
 
         % Evolution of simulation parameters
         load_params
-        DATA.TJOB_SE   = [DATA.TJOB_SE  Ts0D(1) Ts0D(end)];
-        DATA.NU_EVOL   = [DATA.NU_EVOL  DATA.NU     DATA.NU];
-        DATA.CO_EVOL   = [DATA.CO_EVOL  DATA.CO     DATA.CO];
-        DATA.MUx_EVOL  = [DATA.MUx_EVOL DATA.MUx    DATA.MUx];
-        DATA.MUy_EVOL  = [DATA.MUy_EVOL DATA.MUy    DATA.MUy];
-        DATA.K_N_EVOL  = [DATA.K_N_EVOL DATA.K_N    DATA.K_N];
-        DATA.L_EVOL    = [DATA.L_EVOL   DATA.L      DATA.L];
-        DATA.DT_EVOL   = [DATA.DT_EVOL  DATA.DT_SIM DATA.DT_SIM];
+        DATA.TJOB_SE   = [DATA.TJOB_SE   Ts0D(1)     Ts0D(end)];
+        DATA.NU_EVOL   = [DATA.NU_EVOL   DATA.NU     DATA.NU];
+        DATA.CO_EVOL   = [DATA.CO_EVOL   DATA.CO     DATA.CO];
+        DATA.MUx_EVOL  = [DATA.MUx_EVOL  DATA.MUx    DATA.MUx];
+        DATA.MUy_EVOL  = [DATA.MUy_EVOL  DATA.MUy    DATA.MUy];
+        DATA.K_Ni_EVOL = [DATA.K_Ni_EVOL DATA.K_Ni   DATA.K_Ni];
+        DATA.L_EVOL    = [DATA.L_EVOL    DATA.L      DATA.L];
+        DATA.DT_EVOL   = [DATA.DT_EVOL   DATA.DT_SIM DATA.DT_SIM];
         
         ii = ii + 1;
         JOBFOUND = JOBFOUND + 1;
@@ -263,6 +268,7 @@ else
     end
     DATA.Ts5D = Ts5D_; DATA.Ts3D = Ts3D_; DATA.Ts0D = Ts0D_;
     DATA.PHI  = PHI_; 
+    DATA.PSI  = PSI_; 
     DATA.KIN_E=KIN_E;
     % grids
     DATA.Pe = Pe; DATA.Pi = Pi; 
@@ -275,7 +281,7 @@ else
     DATA.dir      = DIRECTORY;
     DATA.localdir = DIRECTORY;
     DATA.param_title=['$\nu_{',DATA.CONAME,'}=$', num2str(DATA.NU), ...
-        ', $\kappa_N=$',num2str(DATA.K_N),', $\kappa_T=$',num2str(DATA.K_T),...
+        ', $\kappa_{Ni}=$',num2str(DATA.K_Ni),', $\kappa_{Ti}=$',num2str(DATA.K_Ti),...
         ', $L=',num2str(DATA.L),'$, $N=',...
         num2str(DATA.Nx),'$, $(P,J)=(',num2str(DATA.PMAXI),',',...
         num2str(DATA.JMAXI),')$,',' $\mu_{hd}=$(',num2str(DATA.MUx),...

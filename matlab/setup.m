@@ -42,9 +42,10 @@ MODEL.q_e     =-1.0;
 MODEL.q_i     = 1.0;
 if MODEL.q_e == 0; SIMID = [SIMID,'_i']; end;
 % gradients L_perp/L_x
-MODEL.K_n     = K_N;        % source term kappa for HW
-MODEL.K_T     = K_T;        % Temperature
-MODEL.K_E     = 0;        % Electric
+MODEL.K_Ne    = K_Ne;       % source term kappa for HW
+MODEL.K_Ni    = K_Ni;       % source term kappa for HW
+MODEL.K_Te    = K_Te;       % Temperature
+MODEL.K_Ti    = K_Te;       % Temperature
 MODEL.GradB   = GRADB;      % Magnetic gradient
 MODEL.CurvB   = CURVB;      % Magnetic curvature
 MODEL.lambdaD = LAMBDAD;
@@ -97,8 +98,8 @@ else
 end
 % temp. dens. drives
 drives_ = [];
-if abs(K_N) > 0; drives_ = [drives_,'_kN_',num2str(K_N)]; end;
-if abs(K_T) > 0; drives_ = [drives_,'_kT_',num2str(K_T)]; end;
+if abs(K_Ni) > 0; drives_ = [drives_,'_kNi_',num2str(K_Ni)]; end;
+if abs(K_Ti) > 0; drives_ = [drives_,'_kTi_',num2str(K_Ti)]; end;
 % collision
 coll_ = ['_nu_%1.1e_',CONAME];
 coll_   = sprintf(coll_,NU);

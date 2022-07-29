@@ -46,8 +46,8 @@ linear_gr.avg_w = mean(imag(w_ky(Is,:)),2);
 
 if PLOT >0
    figure
-if PLOT >1
-    subplot(1,PLOT,1)
+if PLOT > 1
+    subplot(1,2,1)
 end
 
        plot(linear_gr.ky,linear_gr.g_ky(:,end),'-o','DisplayName','$Re(\omega_{k_y})$'); hold on;
@@ -67,14 +67,19 @@ end
        title(DATA.param_title);
        
 if PLOT > 1
-    subplot(1,PLOT,2)
+    if PLOT == 2
+    subplot(1,2,2)
+    elseif PLOT == 3
+        subplot(2,2,2)
+    end
     plot(DATA.Ts3D(its+1:ite),linear_gr.g_ky(Is,:)); hold on;
     plot(DATA.Ts3D(its+1:ite),linear_gr.w_ky(Is,:));
-    xlabel('t'); ylabel('$\gamma(t),\omega(t)$')
+    xlabel('t'); ylabel('$\gamma(t),\omega(t)$'); xlim([DATA.Ts3D(1) DATA.Ts3D(end)]);
 end
 
 if PLOT > 2
-    subplot(1,PLOT,3)
+    xlabel([]); xticks([]);
+    subplot(2,2,4)
     semilogy(DATA.Ts3D,squeeze(abs(DATA.PHI(2,1,DATA.Nz/2,:)))); hold on;
     xlabel('t'); ylabel('$|\phi_{ky}|(t)$')
 

@@ -44,7 +44,7 @@ subroutine auxval
 
   CALL evaluate_kernels ! precompute the kernels
 
-  CALL evaluate_poisson_op ! precompute the kernels
+  CALL evaluate_EM_op ! compute inverse of poisson and ampere operators
 
   IF ( LINEARITY .NE. 'linear' ) THEN;
     CALL build_dnjs_table ! precompute the Laguerre nonlin product coeffs

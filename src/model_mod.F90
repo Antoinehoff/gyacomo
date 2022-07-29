@@ -24,9 +24,10 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED :: sigma_i =  1._dp     !
   REAL(dp), PUBLIC, PROTECTED ::     q_e = -1._dp     ! Charge
   REAL(dp), PUBLIC, PROTECTED ::     q_i =  1._dp     !
-  REAL(dp), PUBLIC, PROTECTED ::     K_n =  1._dp     ! Density drive
-  REAL(dp), PUBLIC, PROTECTED ::     K_T =  0._dp     ! Temperature drive
-  REAL(dp), PUBLIC, PROTECTED ::     K_E =  0._dp     ! Backg. electric field drive
+  REAL(dp), PUBLIC, PROTECTED ::    K_Ne =  1._dp     ! Density drive
+  REAL(dp), PUBLIC, PROTECTED ::    K_ni =  1._dp     ! Density drive
+  REAL(dp), PUBLIC, PROTECTED ::    K_Te =  0._dp     ! Temperature drive
+  REAL(dp), PUBLIC, PROTECTED ::    K_Ti =  0._dp     ! Backg. electric field drive
   REAL(dp), PUBLIC, PROTECTED ::   GradB =  1._dp     ! Magnetic gradient
   REAL(dp), PUBLIC, PROTECTED ::   CurvB =  1._dp     ! Magnetic curvature
   REAL(dp), PUBLIC, PROTECTED :: lambdaD =  1._dp     ! Debye length
@@ -62,7 +63,7 @@ CONTAINS
     NAMELIST /MODEL_PAR/ CLOS, NL_CLOS, KERN, LINEARITY, KIN_E, &
                          mu_x, mu_y, N_HD, mu_z, mu_p, mu_j, nu,&
                          tau_e, tau_i, sigma_e, sigma_i, q_e, q_i,&
-                         K_n, K_T, K_E, GradB, CurvB, lambdaD, beta
+                         K_Ne, K_Ni, K_Te, K_Ti, GradB, CurvB, lambdaD, beta
 
     READ(lu_in,model_par)
 
@@ -132,10 +133,12 @@ CONTAINS
     CALL attach(fidres, TRIM(str),   "sigma_i", sigma_i)
     CALL attach(fidres, TRIM(str),       "q_e",     q_e)
     CALL attach(fidres, TRIM(str),       "q_i",     q_i)
-    CALL attach(fidres, TRIM(str),       "K_n",     K_n)
-    CALL attach(fidres, TRIM(str),       "K_T",     K_T)
-    CALL attach(fidres, TRIM(str),       "K_E",     K_E)
+    CALL attach(fidres, TRIM(str),      "K_Ne",    K_Ne)
+    CALL attach(fidres, TRIM(str),      "K_Ni",    K_Ni)
+    CALL attach(fidres, TRIM(str),      "K_Te",    K_Te)
+    CALL attach(fidres, TRIM(str),      "K_Ti",    K_Ti)
     CALL attach(fidres, TRIM(str),   "lambdaD", lambdaD)
+    CALL attach(fidres, TRIM(str),      "beta",    beta)
   END SUBROUTINE model_outputinputs
 
 END MODULE model

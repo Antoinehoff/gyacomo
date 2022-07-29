@@ -4,7 +4,7 @@
 % for benchmark and debugging purpose since it makes matlab "busy"
 %
 SIMID   = 'Kinetic_ballooning_mode';  % Name of the simulation
-RUN     = 0; % To run or just to load
+RUN     = 1; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
 HELAZDIR = '/home/ahoffman/HeLaZ/';
@@ -15,12 +15,12 @@ EXECNAME = 'helaz3';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.05;   % Collision frequency
-TAU     = 1.0;    % e/i temperature ratio
-K_N     = 2.22;%2.0;   % ion Density gradient drive
-K_Ne    = K_N;        % ele Density gradient drive
-K_T     = 6.96;%0.25*K_N;   % Temperature '''
-K_Te     = K_T;            % Temperature '''
+NU      = 0.05;           % Collision frequency
+TAU     = 1.0;            % e/i temperature ratio
+K_Ne    = 3.0;            % ele Density gradient drive
+K_Ni    = 3.0;%2.0;       % ion Density gradient drive
+K_Te    = 4.5;            % Temperature '''
+K_Ti    = 8.0;%0.25*K_N;  % Temperature '''
 SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 % SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 1;     % 1: kinetic electrons, 2: adiabatic electrons
@@ -32,11 +32,11 @@ PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
-NX      = 12;    % real space x-gridpoints
-NY      = 10;     %     ''     y-gridpoints
+NX      = 6;    % real space x-gridpoints
+NY      = 2;     %     ''     y-gridpoints
 LX      = 2*pi/0.1;   % Size of the squared frequency domain
-LY      = 2*pi/0.1;     % Size of the squared frequency domain
-NZ      = 16;    % number of perpendicular planes (parallel grid)
+LY      = 2*pi/0.25;     % Size of the squared frequency domain
+NZ      = 32;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 %% GEOMETRY
@@ -47,7 +47,7 @@ Q0      = 1.4;    % safety factor
 SHEAR   = 0.8;    % magnetic shear (Not implemented yet)
 EPS     = 0.18;    % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 30;  % Maximal time unit
+TMAX    = 40;  % Maximal time unit
 DT      = 5e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
@@ -115,7 +115,7 @@ data = compile_results(LOCALDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from 
 if 1
 %% linear growth rate (adapted for 2D zpinch and fluxtube)
 trange = [0.5 1]*data.Ts3D(end);
-nplots = 1;
+nplots = 3;
 lg = compute_fluxtube_growth_rate(data,trange,nplots);
 [gmax,     kmax] = max(lg.g_ky(:,end));
 [gmaxok, kmaxok] = max(lg.g_ky(:,end)./lg.ky);
@@ -128,7 +128,7 @@ if 0
 options.time_2_plot = [120];
 options.kymodes     = [0.1 0.2 0.3];
 options.normalized  = 1;
-options.field       = 'phi';
+% options.field       = 'phi';
 fig = plot_ballooning(data,options);
 end
 

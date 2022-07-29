@@ -106,7 +106,6 @@ CONTAINS
     CALL cpu_time(t0_poisson)
     !! Ampere can be solved only with beta > 0 and for process containing p=1
     IF ( SOLVE_AMPERE ) THEN
-
       kxloop: DO ikx = ikxs,ikxe
         kyloop: DO iky = ikys,ikye
           psi(iky,ikx,izs:ize)  = 0._dp

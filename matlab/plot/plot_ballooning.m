@@ -7,6 +7,12 @@ function [FIG] = plot_ballooning(data,options)
 %     phi_imag=mean(imag(data.PHI(:,:,:,it0:it1)),4);
     phi_real=real(data.PHI(:,:,:,it1));
     phi_imag=imag(data.PHI(:,:,:,it1));
+    ncol = 1;
+    if data.BETA > 0
+        psi_real=real(data.PSI(:,:,:,it1));
+        psi_imag=imag(data.PSI(:,:,:,it1)); 
+        ncol = 2;
+    end
     % Apply baollooning tranform
     for iky=ikyarray
         dims = size(phi_real);
@@ -29,19 +35,13 @@ function [FIG] = plot_ballooning(data,options)
         phib_real = zeros(  Nkx*dims(3)  ,1);
         phib_imag = phib_real;
         b_angle   = phib_real;
-        
-        kk_=[];
-        ss_=[];
-        ee_=[];
+
         for i_ =1:Nkx
             start_ =  (i_ -1)*dims(3) +1;
             end_ =  i_*dims(3);
             ikx  = ordered_ikx(i_);
             phib_real(start_:end_)  = phi_real(iky,ikx,:);
             phib_imag(start_:end_)  = phi_imag(iky,ikx,:);
-            kk_ = [kk_ data.kx(ikx)];
-            ss_ = [ss_ start_];
-            ee_ = [ee_ end_];
         end
 
         % Define ballooning angle
@@ -61,11 +61,10 @@ function [FIG] = plot_ballooning(data,options)
         else
             normalization = 1;
         end
-        phib_norm = phib / normalization    ;
-        phib_real_norm  = real( phib_norm);%phib_real(:)/phib_real(idxLFS);
-        phib_imag_norm  = imag( phib_norm);%phib_imag(:)/ phib_imag(idxLFS);
-
-        subplot(numel(ikyarray),1,iplot)
+        phib_norm = phib / normalization;
+        phib_real_norm  = real( phib_norm);
+        phib_imag_norm  = imag( phib_norm);
+        subplot(numel(ikyarray),ncol,ncol*(iplot-1)+1)
         plot(b_angle/pi, phib_real_norm,'-b'); hold on;
         plot(b_angle/pi, phib_imag_norm ,'-r');
         plot(b_angle/pi, sqrt(phib_real_norm .^2 + phib_imag_norm.^2),'-k');
@@ -74,6 +73,30 @@ function [FIG] = plot_ballooning(data,options)
         ylabel('$\phi_B (\chi)$');
         title(['$k_y=',sprintf('%1.1f',data.ky(iky)),...
                ',t_{avg}\in [',sprintf('%1.1f',data.Ts3D(it0)),',',sprintf('%1.1f',data.Ts3D(it1)),']$']);
+
+        if data.BETA > 0
+            
+            psib_real = zeros(  Nkx*dims(3)  ,1);
+            psib_imag = psib_real;
+            for i_ =1:Nkx
+                start_ =  (i_ -1)*dims(3) +1;
+                end_ =  i_*dims(3);
+                ikx  = ordered_ikx(i_);
+                psib_real(start_:end_) = psi_real(iky,ikx,:);
+                psib_imag(start_:end_) = psi_imag(iky,ikx,:);
+            end
+
+            subplot(numel(ikyarray),ncol,ncol*(iplot-1)+2)
+            plot(b_angle/pi, psib_real,'-b'); hold on;
+            plot(b_angle/pi, psib_imag ,'-r');
+            plot(b_angle/pi, sqrt(psib_real .^2 + psib_imag.^2),'-k');
+            legend('real','imag','norm')
+            xlabel('$\chi / \pi$')
+            ylabel('$\psi_B (\chi)$');
+            title(['$k_y=',sprintf('%1.1f',data.ky(iky)),...
+                   ',t_{avg}\in [',sprintf('%1.1f',data.Ts3D(it0)),',',sprintf('%1.1f',data.Ts3D(it1)),']$']);
+        end
+        
         iplot = iplot + 1;
     end
 end
