@@ -7,8 +7,8 @@ for i = 1:numel(dataObjs)
     X_ = [X_ dataObjs(i).XData];
     Y_ = [Y_ dataObjs(i).YData];
 end
-n0 = 1;
-n1 = 26;%numel(X_);
+n0 = 250;
+n1 = numel(X_);
 figure;
 mvm = @(x) movmean(x,1);
 shift = X_(n0);

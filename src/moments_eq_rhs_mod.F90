@@ -128,7 +128,7 @@ SUBROUTINE moments_eq_rhs_e
                 ! Collision term
                 + TColl_e(ip,ij,iky,ikx,iz) &
                 ! Nonlinear term
-                - Sepj(ip,ij,iky,ikx,iz)
+                - hatB_NL(iz,eo) * Sepj(ip,ij,iky,ikx,iz)
 
             IF(ip-4 .GT. 0) &
               ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
@@ -269,8 +269,8 @@ SUBROUTINE moments_eq_rhs_i
                   + mu_z * diff_dz_coeff * ddz4_Nipj(ip,ij,iky,ikx,iz) &
                   ! Collision term
                   + TColl_i(ip,ij,iky,ikx,iz)&
-                  ! Nonlinear term
-                  - Sipj(ip,ij,iky,ikx,iz)
+                  ! Nonlinear term with a (gxx*gxy - gxy**2)^1/2 factor
+                  - hatB_NL(iz,eo) * Sipj(ip,ij,iky,ikx,iz)
 
                   IF(ip-4 .GT. 0) &
                     ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)

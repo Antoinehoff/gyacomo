@@ -31,7 +31,7 @@ implicit none
   ! derivatives of magnetic field strength
   REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: gradxB, gradyB, gradzB
   ! Relative magnetic field strength
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatB
+  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatB, hatB_NL
   ! Relative strength of major radius
   REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatR, hatZ
   ! Some geometrical coefficients
@@ -68,6 +68,9 @@ CONTAINS
       call eval_1D_geometry
     ELSE
       SELECT CASE(geom)
+        CASE('circular')
+          IF( my_id .eq. 0 ) WRITE(*,*) 'circular geometry'
+          call eval_circular_geometry
         CASE('s-alpha')
           IF( my_id .eq. 0 ) WRITE(*,*) 's-alpha-B geometry'
           call eval_salphaB_geometry
@@ -143,7 +146,8 @@ CONTAINS
       Jacobian(iz,eo) = q0*hatR(iz,eo)
 
     ! Relative strengh of modulus of B
-      hatB(iz,eo) = 1._dp / hatR(iz,eo)
+    hatB   (iz,eo) = 1._dp / hatR(iz,eo)
+    hatB_NL(iz,eo) = 1._dp ! Factor in front of the nonlinear term
 
     ! Derivative of the magnetic field strenght
       gradxB(iz,eo) = -COS(z) ! Gene put a factor hatB^2 or 1/hatR^2 in this
@@ -168,6 +172,71 @@ CONTAINS
   !
   !--------------------------------------------------------------------------------
   !
+
+
+    SUBROUTINE eval_circular_geometry
+    ! evaluate circular geometry model
+    ! Ref: Lapilonne et al., PoP, 2009
+  implicit none
+    REAL(dp) :: X, kx, ky, Gamma1, Gamma2, Gamma3
+
+    parity: DO eo = 0,1
+    zloop: DO iz = izgs,izge
+      X = zarray(iz,eo) - eps*SIN(zarray(iz,eo)) ! chi = theta - eps sin(theta)
+
+      ! metric
+        gxx(iz,eo) = 1._dp
+        gxy(iz,eo) = shear*X - eps*SIN(X)
+        gxz(iz,eo) = - SIN(X)
+        gyy(iz,eo) = 1._dp + (shear*X)**2 - 2._dp*eps*COS(X) - 2._dp*shear*X*eps*SIN(X)
+        gyz(iz,eo) = 1._dp/(eps + EPSILON(eps)) - 2._dp*COS(X) - shear*X*SIN(X)
+        gzz(iz,eo) = 1._dp/eps**2 - 2._dp*COS(X)/eps
+        dxdR(iz,eo)= COS(X)
+        dxdZ(iz,eo)= SIN(X)
+
+      ! Relative strengh of radius
+        hatR(iz,eo) = 1._dp + eps*COS(X)
+        hatZ(iz,eo) = 1._dp + eps*SIN(X)
+
+      ! toroidal coordinates
+        Rc  (iz,eo) = hatR(iz,eo)
+        phic(iz,eo) = X
+        Zc  (iz,eo) = hatZ(iz,eo)
+
+      ! Jacobian
+        Jacobian(iz,eo) = q0*hatR(iz,eo)**2
+
+      ! Relative strengh of modulus of B
+        hatB   (iz,eo) = SQRT(gxx(iz,eo)*gyy(iz,eo) - (gxy(iz,eo))**2)
+        hatB_NL(iz,eo) = SQRT(gxx(iz,eo)*gyy(iz,eo) - (gxy(iz,eo))**2) ! In front of the NL term
+
+      ! Derivative of the magnetic field strenght
+        gradxB(iz,eo) = -(COS(X) + eps*SIN(X)**2)/hatB(iz,eo)**2 ! Gene put a factor hatB^2 or 1/hatR^2 in this
+        gradyB(iz,eo) = 0._dp
+        gradzB(iz,eo) = eps * SIN(X) * (1._dp - eps*COS(X)) / hatB(iz,eo)**2 ! Gene put a factor hatB or 1/hatR in this
+
+        Gamma1 = gxy(iz,eo) * gxy(iz,eo) - gxx(iz,eo) * gyy(iz,eo)
+        Gamma2 = gxz(iz,eo) * gxy(iz,eo) - gxx(iz,eo) * gyz(iz,eo)
+        Gamma3 = gxz(iz,eo) * gyy(iz,eo) - gxy(iz,eo) * gyz(iz,eo)
+      ! Curvature operator
+        DO iky = ikys, ikye
+          ky = kyarray(iky)
+           DO ikx= ikxs, ikxe
+             kx = kxarray(ikx)
+             Ckxky(iky, ikx, iz,eo) = Gamma1*((kx + shear*X*ky)*gradzB(iz,eo)/eps - gradxB(iz,eo)*ky) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
+           ENDDO
+        ENDDO
+      ! coefficient in the front of parallel derivative
+        gradz_coeff(iz,eo) = 1._dp / Jacobian(iz,eo) / hatB(iz,eo)
+
+    ENDDO zloop
+    ENDDO parity
+
+  END SUBROUTINE eval_circular_geometry
+    !
+    !--------------------------------------------------------------------------------
+    !
+
 
     SUBROUTINE eval_zpinch_geometry
     ! evaluate s-alpha geometry model
@@ -202,7 +271,8 @@ CONTAINS
         Jacobian(iz,eo) = 1._dp
 
       ! Relative strengh of modulus of B
-        hatB(iz,eo) = 1._dp
+        hatB   (iz,eo) = 1._dp
+        hatB_NL(iz,eo) = 1._dp
 
       ! Derivative of the magnetic field strenght
         gradxB(iz,eo) = 0._dp ! Gene put a factor hatB^2 or 1/hatR^2 in this
@@ -357,6 +427,7 @@ END SUBROUTINE set_ikx_zBC_map
        CALL allocate_array(     gradyB,izgs,izge, 0,1)
        CALL allocate_array(     gradzB,izgs,izge, 0,1)
        CALL allocate_array(       hatB,izgs,izge, 0,1)
+       CALL allocate_array(    hatB_NL,izgs,izge, 0,1)
        CALL allocate_array(       hatR,izgs,izge, 0,1)
        CALL allocate_array(       hatZ,izgs,izge, 0,1)
        CALL allocate_array(         Rc,izgs,izge, 0,1)
