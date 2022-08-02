@@ -156,6 +156,26 @@ switch OPTIONS.NAME
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end                
         end
+    case '\psi'
+        NAME = 'psi';
+        if COMPDIM == 3
+            for it = 1:numel(FRAMES)
+                tmp = squeeze(compr(DATA.PSI(:,:,:,FRAMES(it))));
+                FIELD(:,:,it) = squeeze(process(tmp));
+            end
+        else
+            if REALP
+                tmp = zeros(Ny,Nx,Nz);
+            else
+                tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
+            end
+            for it = 1:numel(FRAMES)
+                for iz = 1:numel(DATA.z)
+                    tmp(:,:,iz) = squeeze(process(DATA.PSI(:,:,iz,FRAMES(it))));
+                end
+                FIELD(:,:,it) = squeeze(compr(tmp));
+            end                
+        end
     case 'N_i^{00}'
         NAME = 'Ni00';
         if COMPDIM == 3

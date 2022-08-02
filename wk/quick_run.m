@@ -32,7 +32,7 @@ PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
-NX      = 6;    % real space x-gridpoints
+NX      = 20;    % real space x-gridpoints
 NY      = 2;     %     ''     y-gridpoints
 LX      = 2*pi/0.1;   % Size of the squared frequency domain
 LY      = 2*pi/0.25;     % Size of the squared frequency domain
@@ -48,7 +48,7 @@ SHEAR   = 0.8;    % magnetic shear (Not implemented yet)
 EPS     = 0.18;    % inverse aspect ratio
 %% TIME PARMETERS
 TMAX    = 40;  % Maximal time unit
-DT      = 5e-3;   % Time step
+DT      = 2e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
@@ -60,13 +60,13 @@ LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
 CO      = 'DG';
-GKCO    = 1; % gyrokinetic operator
+GKCO    = 0; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: v^Nmax closure (p+2j<=Pmax))s
 NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)
-INIT_OPT= 'phi';   % Start simulation with a noisy mom00/phi/allmom
+INIT_OPT= 'mom00';   % Start simulation with a noisy mom00/phi/allmom
 %% OUTPUTS
 W_DOUBLE = 1;
 W_GAMMA  = 1; W_HF     = 1;
@@ -82,12 +82,12 @@ INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_X    = MU;     %
 MU_Y    = MU;     %
 N_HD    = 4;
-MU_Z    = 2.0;     %
+MU_Z    = 1.0;     %
 MU_P    = 0.0;     %
 MU_J    = 0.0;     %
 LAMBDAD = 0.0;
-NOISE0  = 0.0e-5; % Init noise amplitude
-BCKGD0  = 1.0;    % Init background
+NOISE0  = 1.0e-5; % Init noise amplitude
+BCKGD0  = 0.0;    % Init background
 GRADB   = 1.0;
 CURVB   = 1.0;
 %%-------------------------------------------------------------------------
@@ -123,10 +123,10 @@ msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,lg.ky(kmax)); disp(msg);
 msg = sprintf('gmax/k = %2.2f, kmax/k = %2.2f',gmaxok,lg.ky(kmaxok)); disp(msg);
 end
 
-if 0
+if 1
 %% Ballooning plot
 options.time_2_plot = [120];
-options.kymodes     = [0.1 0.2 0.3];
+options.kymodes     = [0.25];
 options.normalized  = 1;
 % options.field       = 'phi';
 fig = plot_ballooning(data,options);

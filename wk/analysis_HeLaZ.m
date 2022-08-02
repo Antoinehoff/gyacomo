@@ -64,16 +64,17 @@ end
 if 0
 %% 2D snapshots
 % Options
-options.INTERP    = 1;
+options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 0;
 % options.NAME      = '\phi';
+options.NAME      = '\psi';
 % options.NAME      = 'n_e';
-options.NAME      = 'N_i^{00}';
+% options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'xz';
 % options.NAME      'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -97,16 +98,16 @@ end
 
 if 0
 %% Kinetic distribution function sqrt(<f_a^2>xy) (GENE vsp)
-% options.SPAR      = linspace(-3,3,32)+(6/127/2);
-% options.XPERP     = linspace( 0,6,32);
-options.SPAR      = gene_data.vp';
-options.XPERP     = gene_data.mu';
-options.iz        = 1;
-options.T         = [500 1000];
-options.PLT_FCT   = 'contour';
+options.SPAR      = linspace(-3,3,32)+(6/127/2);
+options.XPERP     = linspace( 0,6,32);
+% options.SPAR      = gene_data.vp';
+% options.XPERP     = gene_data.mu';
+options.iz        = 'avg';
+options.T         = [40];
+options.PLT_FCT   = 'pcolor';
 options.ONED      = 0;
 options.non_adiab = 0;
-options.SPECIE    = 'i';
+options.SPECIE    = 'e';
 options.RMS       = 1; % Root mean square i.e. sqrt(sum_k|f_k|^2) as in Gene
 fig = plot_fa(data,options);
 % save_figure(data,fig,'.png')

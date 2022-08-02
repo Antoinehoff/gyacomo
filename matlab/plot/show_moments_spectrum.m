@@ -6,7 +6,7 @@ Ji = DATA.Ji;
 Nipj = sum(sum(sum(abs(DATA.Nipj),3),4),5);
 Nipj = squeeze(Nipj);
 
-if DATA.K_E
+if DATA.KIN_E
 Pe = DATA.Pe;
 Je = DATA.Je;
 Nepj = sum(sum(sum(abs(DATA.Nepj),3),4),5);
@@ -100,7 +100,7 @@ else
     for ip2j = 1:numel(p2ji)
         Ni_ST(ip2j,:) = Ni_ST(ip2j,:)/weights(ip2j);
     end
-    if DATA.K_E
+    if DATA.KIN_E
     % same for electrons!!
     [JJ,PP] = meshgrid(Je,Pe);
     P2Je = PP + 2*JJ;
@@ -131,7 +131,7 @@ else
     else
     plt = @(x,ip2j) x;
     end
-    if DATA.K_E
+    if DATA.KIN_E
     subplot(2,1,1)
     end
         imagesc(DATA.Ts5D,p2ji,plt(Ni_ST,1:numel(p2ji))); 
@@ -140,7 +140,7 @@ else
 %         set(pclr, 'edgecolor','none'); hold on;
     xlabel('$t$'); ylabel('$p+2j$')
     title('$\langle\sum_k |N_i^{pj}|\rangle_{p+2j=const}$')
-    if DATA.K_E
+    if DATA.KIN_E
     subplot(2,1,2)
         imagesc(DATA.Ts5D,p2je,plt(Ne_ST,1:numel(p2ji))); 
         set(gca,'YDir','normal')

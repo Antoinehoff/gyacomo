@@ -57,7 +57,7 @@ function [FIG] = plot_ballooning(data,options)
         % normalize real and imaginary parts at chi =0
         if options.normalized
             [~,idxLFS] = min(abs(b_angle -0));
-            normalization = phib( idxLFS);
+            normalization = abs(phib( idxLFS));
         else
             normalization = 1;
         end
@@ -71,7 +71,7 @@ function [FIG] = plot_ballooning(data,options)
         legend('real','imag','norm')
         xlabel('$\chi / \pi$')
         ylabel('$\phi_B (\chi)$');
-        title(['$k_y=',sprintf('%1.1f',data.ky(iky)),...
+        title(['$k_y=',sprintf('%2.2f',data.ky(iky)),...
                ',t_{avg}\in [',sprintf('%1.1f',data.Ts3D(it0)),',',sprintf('%1.1f',data.Ts3D(it1)),']$']);
 
         if data.BETA > 0
@@ -87,13 +87,13 @@ function [FIG] = plot_ballooning(data,options)
             end
 
             subplot(numel(ikyarray),ncol,ncol*(iplot-1)+2)
-            plot(b_angle/pi, psib_real,'-b'); hold on;
-            plot(b_angle/pi, psib_imag ,'-r');
-            plot(b_angle/pi, sqrt(psib_real .^2 + psib_imag.^2),'-k');
+            plot(b_angle/pi, psib_real/ normalization,'-b'); hold on;
+            plot(b_angle/pi, psib_imag/ normalization ,'-r');
+            plot(b_angle/pi, sqrt(psib_real .^2 + psib_imag.^2)/ normalization,'-k');
             legend('real','imag','norm')
             xlabel('$\chi / \pi$')
             ylabel('$\psi_B (\chi)$');
-            title(['$k_y=',sprintf('%1.1f',data.ky(iky)),...
+            title(['$k_y=',sprintf('%2.2f',data.ky(iky)),...
                    ',t_{avg}\in [',sprintf('%1.1f',data.Ts3D(it0)),',',sprintf('%1.1f',data.Ts3D(it1)),']$']);
         end
         

@@ -44,7 +44,8 @@ helazdir = '/home/ahoffman/HeLaZ/';
 % outfile = 'CBC/192x96x16x3x2';
 % outfile = 'CBC/128x64x16x5x3';
 % outfile = 'CBC/kT_9_128x64x16x5x3';
-outfile = 'CBC/kT_13_large_box_128x64x16x5x3';
+outfile = 'CBC/kT_4.5_128x64x16x13x7';
+% outfile = 'CBC/kT_13_large_box_128x64x16x5x3';
 JOBNUMMIN = 00; JOBNUMMAX = 06;
 
 % outfile = 'CBC/kT_scan_128x64x16x5x3';

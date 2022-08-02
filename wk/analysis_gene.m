@@ -1,3 +1,9 @@
+helazdir = '/home/ahoffman/HeLaZ/';
+addpath(genpath([helazdir,'matlab'])) % ... add
+addpath(genpath([helazdir,'matlab/plot'])) % ... add
+addpath(genpath([helazdir,'matlab/compute'])) % ... add
+addpath(genpath([helazdir,'matlab/load'])) % ... add
+
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_0.8/';
 % folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.0/';
@@ -9,7 +15,8 @@
 % folder = '/misc/gene_results/HP_fig_2a_mu_1e-2/';
 % folder = '/misc/gene_results/HP_fig_2b_mu_5e-2/';
 % folder = '/misc/gene_results/HP_fig_2c_mu_5e-2/';
-% folder = '/misc/gene_results/LD_zpinch_1.6/';
+folder = '/misc/gene_results/LD_zpinch_1.6/';
+% folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
 % folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
 % folder = '/misc/gene_results/ZP_kn_2.5_large_box/';
 % folder = '/misc/gene_results/CBC/128x64x16x24x12/';
@@ -18,7 +25,7 @@
 % folder = '/misc/gene_results/CBC/KT_5.3_128x64x16x24x12_00/';
 % folder = '/misc/gene_results/CBC/KT_4.5_128x64x16x24x12_01/';
 % folder = '/misc/gene_results/CBC/KT_13_128x64x16x24x12/';
-folder = '/misc/gene_results/CBC/KT_13_large_box_128x64x16x24x12/';
+% folder = '/misc/gene_results/CBC/KT_13_large_box_128x64x16x24x12/';
 gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
