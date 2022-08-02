@@ -12,10 +12,13 @@
 % folder = '/misc/gene_results/LD_zpinch_1.6/';
 % folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
 % folder = '/misc/gene_results/ZP_kn_2.5_large_box/';
-folder = '/misc/gene_results/CBC/128x64x16x24x12/';
+% folder = '/misc/gene_results/CBC/128x64x16x24x12/';
 % folder = '/misc/gene_results/CBC/196x96x20x32x16_00/';
 % folder = '/misc/gene_results/CBC/128x64x16x6x4/';
 % folder = '/misc/gene_results/CBC/KT_5.3_128x64x16x24x12_00/';
+% folder = '/misc/gene_results/CBC/KT_4.5_128x64x16x24x12_01/';
+% folder = '/misc/gene_results/CBC/KT_11_128x64x16x24x12/';
+folder = '/misc/gene_results/CBC/KT_11_large_box_128x64x16x24x12/';
 gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
@@ -41,7 +44,7 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.AXISEQUAL = 1;
+options.AXISEQUAL = 0;
 % options.NAME      = 'Q_x';
 options.NAME      = '\phi';
 % options.NAME      = 'n_i';
@@ -50,8 +53,8 @@ options.NAME      = '\phi';
 options.PLAN      = 'xy';
 % options.NAME      ='f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 1;
-options.TIME      = [15 50 100 200];
+options.COMP      = 'avg';
+options.TIME      = [20 30 40 50 60];
 gene_data.a = data.EPS * 2000;
 fig = photomaton(gene_data,options);
 save_figure(gene_data,fig,'.png')
@@ -67,7 +70,7 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';

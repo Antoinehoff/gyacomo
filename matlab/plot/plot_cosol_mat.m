@@ -65,8 +65,11 @@ subplot(224)
     
     %% FCGK
 P_ = 4; J_ = 2;
-mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5';
-kp = 1.0;
+% mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5';
+% mat_file_name = '/home/ahoffman/HeLaZ/iCa/gk_coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5';
+mat_file_name = '/home/ahoffman/HeLaZ/iCa/LDGK_P10_J5_dk_5e-2_km_5_NFLR_12.h5';
+
+kp = 2.0;
 kp_a =  h5read(mat_file_name,'/coordkperp');
 [~,matidx] = min(abs(kp_a-kp));
 matidx = sprintf('%5.5i',matidx);
@@ -93,7 +96,7 @@ subplot(224)
 %% Single eigenvalue analysis
 
 % mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_20_P_4_J_2_N_50_kpm_4.0/scanfiles_00005/self.0.h5';
-mat_file_name = '/home/ahoffman/cosolver/gk.coulomb_NFLR_20_P_6_J_3_N_50_kpm_4.0/scanfiles_00042/self.0.h5';
+mat_file_name = '/home/ahoffman/HeLaZ/iCa/gk.coulomb_NFLR_20_P_6_J_3_N_50_kpm_4.0/scanfiles_00042/self.0.h5';
 
 matidx = 01;
 
@@ -116,12 +119,23 @@ if 0
 %%
 mfns = {'/home/ahoffman/HeLaZ/iCa/gk_sugama_P_20_J_10_N_150_kpm_8.0.h5',...
         '/home/ahoffman/HeLaZ/iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5',...
+        '/home/ahoffman/HeLaZ/iCa/LDGK_P10_J5_dk_5e-2_km_5_NFLR_4.h5',...
+        '/home/ahoffman/HeLaZ/iCa/LDGK_P10_J5_dk_5e-2_km_5_NFLR_12.h5',...
+        '/home/ahoffman/HeLaZ/iCa/LDGK_P10_J5_dk_5e-2_km_5_NFLR_12_k2trunc.h5',...
         '/home/ahoffman/HeLaZ/iCa/gk_coulomb_NFLR_6_P_4_J_2_N_50_kpm_4.0.h5',...
         '/home/ahoffman/HeLaZ/iCa/gk_coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5',...
         '/home/ahoffman/HeLaZ/iCa/gk.hacked_sugama_P_10_J_5_N_150_kpm_8.0.h5',...
         '/home/ahoffman/HeLaZ/iCa/gk.hacked_sugama_P_4_J_2_N_75_kpm_5.0.h5',...
         };
-CONAME_A = {'SG 20 10','PA 20 10', 'FC 4 2 NFLR 6',  'FC 4 2 NFLR 12', 'Hacked SG A', 'Hacked SG B'};
+CONAME_A = {'SG 20 10',...
+    'PA 20 10',...
+    'FC 10  5 NFLR 4',...
+    'FC 10  5 NFLR 12',...
+    'FC 10  5 NFLR 12 k<2', ...
+    'FC 4 2 NFLR 6',...
+    'FC 4 2 NFLR 12', ...
+    'Hacked SG A',...
+    'Hacked SG B'};
 figure
 for j_ = 1:numel(mfns)
     mat_file_name = mfns{j_}; disp(mat_file_name);
@@ -142,6 +156,7 @@ for j_ = 1:numel(mfns)
 end
    subplot(121)
 legend('show'); grid on;
+ylim([0,100]);
 xlabel('$k_\perp$'); ylabel('$\gamma_{max}$ from Eig(iCa)')
    subplot(122)
 legend('show'); grid on;
@@ -151,14 +166,14 @@ end
 %% Van Kampen plot
 if 0
 %%
-kperp= 0.1;
+kperp= 1.5;
 mfns = {'/home/ahoffman/HeLaZ/iCa/gk_sugama_P_20_J_10_N_150_kpm_8.0.h5',...
         '/home/ahoffman/HeLaZ/iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5',...
         '/home/ahoffman/HeLaZ/iCa/gk_coulomb_NFLR_6_P_4_J_2_N_50_kpm_4.0.h5',...
         '/home/ahoffman/HeLaZ/iCa/gk_coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5',...
-        '/home/ahoffman/HeLaZ/wk/gk.hacked_sugama_P_10_J_5_N_150_kpm_8.0.h5',...
+        '/home/ahoffman/HeLaZ/iCa/LDGK_P10_J5_dk_5e-2_km_5_NFLR_12.h5',...
         };
-CONAME_A = {'SG 20 10','PA 20 10', 'FC 4 2 NFLR 6',  'FC 4 2 NFLR 12', 'Hacked SG'};
+CONAME_A = {'SG 20 10','PA 20 10', 'FC 4 2 NFLR 6',  'FC 4 2 NFLR 12', 'FC 10 5 NFLR 12'};
 grow = {};
 puls = {};
 for j_ = 1:numel(mfns)
@@ -176,6 +191,6 @@ for j_ = 1:numel(mfns)
 %    plot(puls{j_}, grow{j_},'o','DisplayName',CONAME_A{j_}); hold on;
    plot(grow{j_},'o','DisplayName',CONAME_A{j_}); hold on;
 end
-legend('show'); grid on;
+legend('show'); grid on; title(['$k_\perp=$',num2str(kperp)]);
 xlabel('$\omega$ from Eig(iCa)'); ylabel('$\gamma$ from Eig(iCa)')
 end

@@ -62,7 +62,9 @@ switch CO
         COLL.mat_file = '''../../../iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5''';
     case 'LD'
 %         COLL.mat_file = '''../../../iCa/gk_coulomb_NFLR_12_P_4_J_2_N_75_kpm_6.0.h5''';
-        COLL.mat_file = '''../../../iCa/gk_coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5''';
+%         COLL.mat_file = '''../../../iCa/gk_coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5''';
+        COLL.mat_file = '''../../../iCa/LDGK_P10_J5_dk_5e-2_km_5_NFLR_12_k2trunc.h5''';
+%         COLL.mat_file = '''../../../iCa/LDGK_P10_J5_dk_5e-2_km_5_NFLR_4.h5''';
 end
 % Time integration and intialization parameters
 TIME_INTEGRATION.numerical_scheme  = '''RK4''';
