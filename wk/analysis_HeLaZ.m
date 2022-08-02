@@ -73,7 +73,7 @@ options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
