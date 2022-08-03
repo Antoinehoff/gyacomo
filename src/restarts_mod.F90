@@ -25,6 +25,10 @@ CONTAINS
     !******************************************************************************!
     SUBROUTINE load_moments
         IMPLICIT NONE
+        REAL :: timer_tot_1, timer_find_CP_1, timer_load_mom_1
+        REAL :: timer_tot_2, timer_find_CP_2, timer_load_mom_2
+
+        CALL cpu_time(timer_tot_1)
 
         ! Checkpoint filename
         WRITE(rstfile,'(a,a1,i2.2,a3)') TRIM(resfile0),'_',job2load,'.h5'
@@ -47,6 +51,8 @@ CONTAINS
          CALL load_output_adapt_pj
         ELSE
 
+          CALL cpu_time(timer_find_CP_1)
+
           ! Find the last results of the checkpoint file by iteration
           n_ = n0+1
           WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_i", n_ ! start with moments_e/000001
@@ -67,6 +73,10 @@ CONTAINS
           iframe2d = iframe2d-1; iframe5d = iframe5d-1
           IF(my_id.EQ.0) WRITE(*,*) '.. restart from t = ', time
 
+          CALL cpu_time(timer_find_CP_2)
+          IF(my_id.EQ.0) WRITE(*,*) '** Time find CP : ', timer_find_CP_2 - timer_find_CP_1, ' **'
+
+          CALL cpu_time(timer_load_mom_1)
           ! Read state of system from checkpoint file
           IF (KIN_E) THEN
           WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
@@ -79,6 +89,13 @@ CONTAINS
 
           IF (my_id .EQ. 0) WRITE(*,'(3x,a)') "Reading from restart file "//TRIM(rstfile)//" completed!"
         ENDIF
+        CALL cpu_time(timer_load_mom_2)
+        CALL cpu_time(timer_tot_2)
+
+        CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+        
+        IF(my_id.EQ.0) WRITE(*,*) '** Time load mom : ', timer_load_mom_2 - timer_load_mom_1, ' **'
+        IF(my_id.EQ.0) WRITE(*,*) '** Total load time : ', timer_tot_2 - timer_tot_1, ' **'
 
     END SUBROUTINE load_moments
     !******************************************************************************!
