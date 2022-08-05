@@ -7,7 +7,7 @@ for i = 1:numel(dataObjs)
     X_ = [X_ dataObjs(i).XData];
     Y_ = [Y_ dataObjs(i).YData];
 end
-n0 = 250;
+n0 = 1;
 n1 = numel(X_);
 figure;
 mvm = @(x) movmean(x,1);
@@ -16,7 +16,7 @@ shift = X_(n0);
 % plot(X_(n0:end),Y_(n0:end));
 plot(mvm(X_(n0:n1)-shift),mvm(Y_(n0:n1))); hold on;
 
-t0 = ceil(numel(X_)*0.5); t1 = numel(X_);
+t0 = ceil(numel(X_)*0.2); t1 = numel(X_);
 avg= mean(Y_(t0:t1)); dev = std(Y_(t0:t1));
   disp(['AVG =',sprintf('%2.2f',avg),'+-',sprintf('%2.2f',dev)]);
 % 

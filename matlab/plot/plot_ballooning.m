@@ -8,14 +8,13 @@ function [FIG] = plot_ballooning(data,options)
     phi_real=real(data.PHI(:,:,:,it1));
     phi_imag=imag(data.PHI(:,:,:,it1));
     % Apply baollooning tranform
+    nexc = round(data.ky(2)*data.SHEAR*2*pi/data.kx(2));
     for iky=ikyarray
         dims = size(phi_real);
         Nkx  = dims(2);
         is   = max(1,iky-1);
-        Npi  = (Nkx-1)-2*(is-1);
-        if(Npi <= 0)
-            break
-        elseif(Npi == 1)
+        Npi  = (Nkx-1)-2*nexc*(is-1);
+        if(Npi <= 1)
             ordered_ikx = 1;
         else
             tmp_ = (Nkx-is+1):-is:(Nkx/2+2);

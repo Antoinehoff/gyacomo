@@ -3,8 +3,10 @@
 % from matlab framework. It is meant to run only small problems in linear
 % for benchmark and debugging purpose since it makes matlab "busy"
 %
-SIMID   = 'linear_CBC';  % Name of the simulation
-RUN     = 0; % To run or just to load
+% SIMID   = 'test_circular_geom';  % Name of the simulation
+% SIMID   = 'linear_CBC';  % Name of the simulation
+SIMID   = 'dbg';  % Name of the simulation
+RUN     = 1; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
 HELAZDIR = '/home/ahoffman/HeLaZ/';
@@ -19,23 +21,23 @@ NU      = 0.05;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
 K_N     = 2.22;%2.0;   % ion Density gradient drive
 K_Ne    = K_N;        % ele Density gradient drive
-K_T     = 11;%0.25*K_N;   % Temperature '''
+K_T     = 6.96;%0.25*K_N;   % Temperature '''
 K_Te     = K_T;            % Temperature '''
 SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 % SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 0;     % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 0.0;     % electron plasma beta 
 %% GRID PARAMETERS
-P = 8;
-J = P/2;
+P = 4;
+J = 2;%P/2;
 PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
-NX      = 12;    % real space x-gridpoints
-NY      = 10;     %     ''     y-gridpoints
+NX      = 32;    % real space x-gridpoints
+NY      = 16;     %     ''     y-gridpoints
 LX      = 2*pi/0.1;   % Size of the squared frequency domain
-LY      = 2*pi/0.1;     % Size of the squared frequency domain
+LY      = 2*pi/0.05;     % Size of the squared frequency domain
 NZ      = 16;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
@@ -44,8 +46,9 @@ SG      = 0;     % Staggered z grids option
 GEOMETRY= 's-alpha';
 % GEOMETRY= 'circular';
 Q0      = 1.4;    % safety factor
-SHEAR   = 0.8;    % magnetic shear (Not implemented yet)
-EPS     = 0.18;    % inverse aspect ratio
+SHEAR   = 0.8;    % magnetic shear
+NEXC    = 6;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
+EPS     = 0.18;   % inverse aspect ratio
 %% TIME PARMETERS
 TMAX    = 25;  % Maximal time unit
 DT      = 1e-2;   % Time step
@@ -126,7 +129,7 @@ end
 if 0
 %% Ballooning plot
 options.time_2_plot = [120];
-options.kymodes     = [0.1 0.2 0.3];
+options.kymodes     = [0.1];
 options.normalized  = 1;
 options.field       = 'phi';
 fig = plot_ballooning(data,options);

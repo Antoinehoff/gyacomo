@@ -1,24 +1,28 @@
-% NU_a = [0.05 0.15 0.25 0.35 0.45];
-NU_a = [0:0.1:0.5];
-g_max= NU_a*0;
-g_avg= NU_a*0;
-g_std= NU_a*0;
-k_max= NU_a*0;
-CO      = 'DG';
+addpath(genpath('../matlab')) % ... add
+default_plots_options
+HELAZDIR = '/home/ahoffman/HeLaZ/';
+EXECNAME = 'helaz3';
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+KY_a = 0.1:0.1:0.8;
+g_max= KY_a*0;
+g_avg= g_max*0;
+g_std= g_max*0;
+k_max= g_max*0;
 
-K_T   = 7;
-DT    = 5e-3;
-TMAX  = 20;
-ky_   = 0.3;
-SIMID = 'linear_CBC_nu_scan_kT_7_ky_0.3_DGGK';  % Name of the simulation
-% SIMID = 'linear_CBC_nu_scan_kT_11_ky_0.3_DGGK';  % Name of the simulation
-RUN   = 1;
-figure
-
-for P = [6 8 10]
+CO    = 'DG'; GKCO = 0;
+NU    = 0.05;
+DT    = 2e-3;
+TMAX  = 25;
+K_T    = 6.96;
+SIMID = 'linear_CBC_circ_conv';  % Name of the simulation
+RUN   = 0;
+% figure
+% P = 12;
+for P = [12]
+J = P/2;
 
 i=1;
-for NU = NU_a
+for ky_ = KY_a
     
 %Set Up parameters
 for j = 1
@@ -29,7 +33,6 @@ for j = 1
     SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
     KIN_E   = 0;     % 1: kinetic electrons, 2: adiabatic electrons
     BETA    = 0e-1;     % electron plasma beta 
-    J = P/2;
     PMAXE   = P; JMAXE   = J;
     PMAXI   = P; JMAXI   = J;
     NX      = 12;    % real space x-gridpoints
@@ -38,14 +41,14 @@ for j = 1
     LY      = 2*pi/ky_;
     NZ      = 16;    % number of perpendicular planes (parallel grid)
     NPOL    = 1; SG = 0;
-    GEOMETRY= 's-alpha';
+%     GEOMETRY= 's-alpha';
+    GEOMETRY= 'circular';
     Q0      = 1.4;    % safety factor
     SHEAR   = 0.8;    % magnetic shear (Not implemented yet)
     EPS     = 0.18;    % inverse aspect ratio
     SPS0D = 1; SPS2D = 0; SPS3D = 1;SPS5D= 1/5; SPSCP = 0;
     JOB2LOAD= -1;
     LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
-    GKCO    = 1; % gyrokinetic operator
     ABCO    = 1; % interspecies collisions
     INIT_ZF = 0; ZF_AMP = 0.0;
     CLOS    = 0;   % Closure model (0: =0 truncation, 1: v^Nmax closure (p+2j<=Pmax))s
@@ -89,7 +92,6 @@ lg = compute_fluxtube_growth_rate(data,trange,nplots);
 msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,lg.ky(kmax)); disp(msg);
 msg = sprintf('gmax/k = %2.2f, kmax/k = %2.2f',gmaxok,lg.ky(kmaxok)); disp(msg);
     
-    
     g_max(i) = gmax;
     k_max(i) = kmax;
     
@@ -106,12 +108,15 @@ e_ = g_std;
 
 y_ = y_.*(y_-e_>0);
 e_ = e_ .* (y_>0);
-errorbar(NU_a,y_,e_,...
-    'LineWidth',1.2,...
-    'DisplayName',['(',num2str(P),',',num2str(P/2),')']); 
-hold on;
-title(['$\kappa_T=$',num2str(K_T),' $k_y=$',num2str(ky_),' (CLOS = 0)']);
-legend('show'); xlabel('$\nu_{DGGK}$'); ylabel('$\gamma$');
-drawnow
+% errorbar(KY_a,y_,e_,...
+%     'LineWidth',1.2,...
+%     'DisplayName',['(',num2str(P),',',num2str(J),')']); 
+% hold on;
+% title(['Linear CBC $K_T$ threshold $k_y=$',num2str(ky_),' (CLOS = 1)']);
+% legend('show'); xlabel('$k_y$'); ylabel('$\gamma$');
+% drawnow
+
+fig = plot_ballooning(data,options);
+
 end
 

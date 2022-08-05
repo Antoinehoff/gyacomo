@@ -17,7 +17,17 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, OPTIONS)
     ikzf = min([ikzf,DATA.Nky]);
     Ns3D = numel(DATA.Ts3D);
     [KX, KY] = meshgrid(DATA.kx, DATA.ky);
-    
+    %% error estimation
+    DT_       = (tend-tstart)/OPTIONS.NCUT;
+    Qx_ee     = zeros(1,OPTIONS.NCUT);
+    for i = 1:OPTIONS.NCUT
+        [~,its_] = min(abs(DATA.Ts0D - (tstart+(i-1)*DT_)));
+        [~,ite_] = min(abs(DATA.Ts0D - (tstart+ i   *DT_)));
+        Qx_ee(i) = mean(DATA.HFLUX_X(its_:ite_))*SCALE;
+    end
+    Qx_avg    = mean(Qx_ee);
+    Qx_err    =  std(Qx_ee);
+    disp(['Q_avg=',sprintf('%2.2f',Qx_avg),'+-',sprintf('%2.2f',Qx_err)]);
     %% computations
 
     % Compute Gamma from ifft matlab
@@ -66,7 +76,7 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
         plot(mvm(DATA.Ts0D),mvm(DATA.HFLUX_X*SCALE),'DisplayName','$\langle n_i \partial_y\phi \rangle_y$'); hold on;
 %         plot(mvm(DATA.Ts3D),mvm(Qx_t_mtlb),'DisplayName','matlab comp.'); hold on;
         plot(DATA.Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*Qx_infty_avg, '-k',...
-            'DisplayName',['$Q_x^{\infty} = $',num2str(Qx_infty_avg),'$\pm$',num2str(Qx_infty_std)]);
+            'DisplayName',['$Q_{avg}=',sprintf('%2.2f',Qx_avg),'\pm',sprintf('%2.2f',Qx_err),'$']); legend('show');
         ylabel('$Q_x$')  
         ylim([0,5*abs(Qx_infty_avg)]); 
         xlim([DATA.Ts0D(1),DATA.Ts0D(end)]);

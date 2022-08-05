@@ -17,6 +17,7 @@ fprintf(fid,['  pmaxi  = ', num2str(GRID.pmaxi),'\n']);
 fprintf(fid,['  jmaxi  = ', num2str(GRID.jmaxi),'\n']);
 fprintf(fid,['  Nx     = ', num2str(GRID.Nx),'\n']);
 fprintf(fid,['  Lx     = ', num2str(GRID.Lx),'\n']);
+fprintf(fid,['  Nexc   = ', num2str(GRID.Nexc),'\n']);
 fprintf(fid,['  Ny     = ', num2str(GRID.Ny),'\n']);
 fprintf(fid,['  Ly     = ', num2str(GRID.Ly),'\n']);
 fprintf(fid,['  Nz     = ', num2str(GRID.Nz),'\n']);

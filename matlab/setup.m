@@ -7,6 +7,7 @@ GRID.pmaxi = PMAXI;  % Ion Hermite moments
 GRID.jmaxi = JMAXI;  % Ion Laguerre moments
 GRID.Nx    = NX; % x grid resolution
 GRID.Lx    = LX; % x length
+GRID.Nexc  = NEXC; % to extend Lx when s>0
 GRID.Ny    = NY; % y ''
 GRID.Ly    = LY; % y ''
 GRID.Nz    = NZ;    % z resolution
@@ -126,6 +127,11 @@ if (NZ > 1)  %3D case
        geo_   = [geo_,'_s_',num2str(SHEAR)];
     end
 end
+switch GEOMETRY
+    case 'circular'
+       geo_   = [geo_,'_circ_'];
+end
+        
 % put everything together in the param character chain
 u_ = '_'; % underscore variable
 PARAMS = [res_,HLdeg_,geo_,drives_,coll_,lin_,adiabe_];

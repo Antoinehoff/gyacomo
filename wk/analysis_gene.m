@@ -11,14 +11,15 @@
 % folder = '/misc/gene_results/HP_fig_2c_mu_5e-2/';
 % folder = '/misc/gene_results/LD_zpinch_1.6/';
 % folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
+% folder = '/misc/gene_results/Z-pinch/ZP_HP_kn_1.6_HRES/';
 % folder = '/misc/gene_results/ZP_kn_2.5_large_box/';
 % folder = '/misc/gene_results/CBC/128x64x16x24x12/';
-% folder = '/misc/gene_results/CBC/196x96x20x32x16_00/';
+% folder = '/misc/gene_results/CBC/196x96x20x32x16_01/';
 % folder = '/misc/gene_results/CBC/128x64x16x6x4/';
-% folder = '/misc/gene_results/CBC/KT_5.3_128x64x16x24x12_00/';
-% folder = '/misc/gene_results/CBC/KT_4.5_128x64x16x24x12_01/';
+% folder = '/misc/gene_results/CBC/KT_5.3_128x64x16x24x12_01/';
+folder = '/misc/gene_results/CBC/KT_4.5_128x64x16x24x12_01/';
 % folder = '/misc/gene_results/CBC/KT_11_128x64x16x24x12/';
-folder = '/misc/gene_results/CBC/KT_11_large_box_128x64x16x24x12/';
+% folder = '/misc/gene_results/CBC/KT_11_large_box_128x64x16x24x12/';
 gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
@@ -50,11 +51,11 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 % options.NAME      ='f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [20 30 40 50 60];
+options.TIME      = [325 400];
 gene_data.a = data.EPS * 2000;
 fig = photomaton(gene_data,options);
 save_figure(gene_data,fig,'.png')
@@ -107,11 +108,11 @@ end
 
 if 0
 %% Show f_i(vpar,mu)
-options.times   = 20:80;
+options.times   = 250:500;
 options.specie  = 'i';
 options.PLT_FCT = 'contour';
 options.folder  = folder;
-options.iz      = 1;
+options.iz      = 'avg';
 options.FIELD   = '<f_>';
 options.ONED    = 0;
 % options.FIELD   = 'Q_es';
@@ -122,9 +123,9 @@ if 0
 %% Time averaged spectrum
 options.TIME   = 300:600;
 options.NORM   =1;
-% options.NAME   = '\phi';
+options.NAME   = '\phi';
 % options.NAME      = 'n_i';
-options.NAME      ='\Gamma_x';
+% options.NAME      ='\Gamma_x';
 options.PLAN   = 'kxky';
 options.COMPZ  = 'avg';
 options.OK     = 0;
