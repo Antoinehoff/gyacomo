@@ -41,13 +41,17 @@
 % fname ='GENE_LIN_Kn_1.6_KT_0.4_nu_0_32x16.txt';
 % fname ='GENE_LIN_Kn_2.5_KT_0.625_nu_0_32x16.txt';
 path = '/home/ahoffman/gene/linear_CBC_results/';
+fname = 'CBC_100_20x1x32x30x14_Lv_3_Lw_12_circ.txt';
 % fname = 'CBC_100_20x1x32x32x12_Lv_3_Lw_12.txt';
 % fname = 'CBC_KT_4_20x1x32x32x12_Lv_3_Lw_12.txt';
 % fname = 'CBC_KT_4_20x1x32x64x24_Lv_6_Lw_24.txt';
 % fname = 'CBC_KT_5.3_20x1x32x32x12_Lv_3_Lw_12.txt';
 % fname = 'CBC_KT_5.3_32x1x48x40x16_Lv_3_Lw_12.txt';
-fname = 'CBC_ky_0.3_20x1x32x32x12_Lv_3_Lw_12.txt';
+% fname = 'CBC_ky_0.3_20x1x32x32x12_Lv_3_Lw_12.txt';
 % fname = 'CBC_ky_0.3_20x1x32x32x12_Lv_3_Lw_12_nuv_1e-3.txt';
+% fname = 'CBC_KT_11_20x1x16x24x10_Lv_3_Lw_12.txt';
+% fname = 'CBC_KT_11_20x1x32x30x14_Lv_3_Lw_12.txt';
+% fname = 'CBC_ky_0.3_20x1x16x24x10_Lv_3_Lw_12_nuv_1e-3.txt';
 data_ = load([path,fname]);
 
 figure

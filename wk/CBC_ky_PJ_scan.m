@@ -3,26 +3,26 @@ default_plots_options
 HELAZDIR = '/home/ahoffman/HeLaZ/';
 EXECNAME = 'helaz3';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-KT_a = [9:2:17];
-g_max= KT_a*0;
-g_avg= KT_a*0;
-g_std= KT_a*0;
-k_max= KT_a*0;
+KY_a = 0.1:0.1:0.8;
+g_max= KY_a*0;
+g_avg= g_max*0;
+g_std= g_max*0;
+k_max= g_max*0;
 
 CO    = 'DG'; GKCO = 0;
-NU    = 0.01;
-DT    = 1e-2;
+NU    = 0.05;
+DT    = 2e-3;
 TMAX  = 25;
-ky_   = 0.3;
-SIMID = 'linear_CBC_kT_scan_ky_0.3';  % Name of the simulation
+K_T    = 6.96;
+SIMID = 'linear_CBC_circ_conv';  % Name of the simulation
 RUN   = 0;
-figure
+% figure
 % P = 12;
-for P = [2 4 6]
+for P = [12]
 J = P/2;
 
 i=1;
-for K_T = KT_a
+for ky_ = KY_a
     
 %Set Up parameters
 for j = 1
@@ -41,7 +41,8 @@ for j = 1
     LY      = 2*pi/ky_;
     NZ      = 16;    % number of perpendicular planes (parallel grid)
     NPOL    = 1; SG = 0;
-    GEOMETRY= 's-alpha';
+%     GEOMETRY= 's-alpha';
+    GEOMETRY= 'circular';
     Q0      = 1.4;    % safety factor
     SHEAR   = 0.8;    % magnetic shear (Not implemented yet)
     EPS     = 0.18;    % inverse aspect ratio
@@ -107,12 +108,15 @@ e_ = g_std;
 
 y_ = y_.*(y_-e_>0);
 e_ = e_ .* (y_>0);
-errorbar(KT_a,y_,e_,...
-    'LineWidth',1.2,...
-    'DisplayName',['(',num2str(P),',',num2str(J),')']); 
-hold on;
-title(['Linear CBC $K_T$ threshold $k_y=$',num2str(ky_),' (CLOS = 1)']);
-legend('show'); xlabel('$K_T$'); ylabel('$\gamma$');
-drawnow
+% errorbar(KY_a,y_,e_,...
+%     'LineWidth',1.2,...
+%     'DisplayName',['(',num2str(P),',',num2str(J),')']); 
+% hold on;
+% title(['Linear CBC $K_T$ threshold $k_y=$',num2str(ky_),' (CLOS = 1)']);
+% legend('show'); xlabel('$k_y$'); ylabel('$\gamma$');
+% drawnow
+
+fig = plot_ballooning(data,options);
+
 end
 

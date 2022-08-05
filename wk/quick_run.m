@@ -3,7 +3,9 @@
 % from matlab framework. It is meant to run only small problems in linear
 % for benchmark and debugging purpose since it makes matlab "busy"
 %
-SIMID   = 'Kinetic_ballooning_mode';  % Name of the simulation
+% SIMID   = 'test_circular_geom';  % Name of the simulation
+% SIMID   = 'linear_CBC';  % Name of the simulation
+SIMID   = 'dbg';  % Name of the simulation
 RUN     = 1; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
@@ -23,20 +25,20 @@ K_Te    = 4.5;            % Temperature '''
 K_Ti    = 8.0;%0.25*K_N;  % Temperature '''
 SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 % SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
-KIN_E   = 1;     % 1: kinetic electrons, 2: adiabatic electrons
-BETA    = 0.03;     % electron plasma beta 
+KIN_E   = 0;     % 1: kinetic electrons, 2: adiabatic electrons
+BETA    = 0.0;     % electron plasma beta
 %% GRID PARAMETERS
-P = 8;
-J = P/2;
+P = 4;
+J = 2;%P/2;
 PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
-NX      = 20;    % real space x-gridpoints
-NY      = 2;     %     ''     y-gridpoints
+NX      = 32;    % real space x-gridpoints
+NY      = 16;     %     ''     y-gridpoints
 LX      = 2*pi/0.1;   % Size of the squared frequency domain
-LY      = 2*pi/0.25;     % Size of the squared frequency domain
-NZ      = 32;    % number of perpendicular planes (parallel grid)
+LY      = 2*pi/0.05;     % Size of the squared frequency domain
+NZ      = 16;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 %% GEOMETRY
@@ -44,11 +46,12 @@ SG      = 0;     % Staggered z grids option
 GEOMETRY= 's-alpha';
 % GEOMETRY= 'circular';
 Q0      = 1.4;    % safety factor
-SHEAR   = 0.8;    % magnetic shear (Not implemented yet)
-EPS     = 0.18;    % inverse aspect ratio
+SHEAR   = 0.8;    % magnetic shear
+NEXC    = 6;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
+EPS     = 0.18;   % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 40;  % Maximal time unit
-DT      = 2e-3;   % Time step
+TMAX    = 25;  % Maximal time unit
+DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
@@ -126,7 +129,7 @@ end
 if 1
 %% Ballooning plot
 options.time_2_plot = [120];
-options.kymodes     = [0.25];
+options.kymodes     = [0.1];
 options.normalized  = 1;
 % options.field       = 'phi';
 fig = plot_ballooning(data,options);

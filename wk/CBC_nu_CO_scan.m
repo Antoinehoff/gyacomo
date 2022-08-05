@@ -1,20 +1,21 @@
 % NU_a = [0.05 0.15 0.25 0.35 0.45];
-NU_a = [0:0.05:0.5];
+NU_a = [0:0.1:0.5];
 g_max= NU_a*0;
 g_avg= NU_a*0;
 g_std= NU_a*0;
 k_max= NU_a*0;
-CO      = 'LD';
+CO      = 'DG';
 
-K_T   = 5.3;
-DT    = 2e-3;
-TMAX  = 30;
+K_T   = 7;
+DT    = 5e-3;
+TMAX  = 20;
 ky_   = 0.3;
-SIMID = 'linear_CBC_nu_scan_kT_5.3_ky_0.3_LDGK';  % Name of the simulation
-RUN   = 0;
+SIMID = 'linear_CBC_nu_scan_kT_7_ky_0.3_DGGK';  % Name of the simulation
+% SIMID = 'linear_CBC_nu_scan_kT_11_ky_0.3_DGGK';  % Name of the simulation
+RUN   = 1;
 figure
 
-for P = [2 4 6]
+for P = [6 8 10]
 
 i=1;
 for NU = NU_a

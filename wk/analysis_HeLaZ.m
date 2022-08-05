@@ -22,8 +22,10 @@ FMT = '.fig';
 
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-options.TAVG_0   = 0.5*data.Ts3D(end); data.scale = 1;%/(data.Nx*data.Ny)^2;
-options.TAVG_1   = data.Ts3D(end); % Averaging times duration
+% data.scale = 1;%/(data.Nx*data.Ny)^2;
+options.TAVG_0   = 25;%0.4*data.Ts3D(end);
+options.TAVG_1   = 40;%0.9*data.Ts3D(end); % Averaging times duration
+options.NCUT     = 4;              % Number of cuts for averaging and error estimation
 options.NMVA     = 1;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';   % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
@@ -37,7 +39,7 @@ if 0
 options.T = [200 400];
 fig = statistical_transport_averaging(data,options);
 end
-    
+
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
@@ -49,13 +51,13 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
-options.TIME      =  data.Ts3D(1:2:end);
-% options.TIME      = [550:2:750];
+options.TIME      =  data.Ts3D;
+% options.TIME      = [850:0.1:1000];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
@@ -74,11 +76,11 @@ options.NAME      = '\psi';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xz';
+options.PLAN      = 'kxky';
 % options.NAME      'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [550 650];
+options.TIME      = [400 440];
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 % save_figure(data,fig)
@@ -98,13 +100,13 @@ end
 
 if 0
 %% Kinetic distribution function sqrt(<f_a^2>xy) (GENE vsp)
-options.SPAR      = linspace(-3,3,32)+(6/127/2);
-options.XPERP     = linspace( 0,6,32);
-% options.SPAR      = gene_data.vp';
-% options.XPERP     = gene_data.mu';
+% options.SPAR      = linspace(-3,3,32)+(6/127/2);
+% options.XPERP     = linspace( 0,6,32);
+options.SPAR      = gene_data.vp';
+options.XPERP     = gene_data.mu';
 options.iz        = 'avg';
-options.T         = [40];
-options.PLT_FCT   = 'pcolor';
+options.T         = [300 600];
+options.PLT_FCT   = 'contour';
 options.ONED      = 0;
 options.non_adiab = 0;
 options.SPECIE    = 'e';
@@ -131,10 +133,10 @@ end
 
 if 0
 %% Time averaged spectrum
-options.TIME   = [100 500];
+options.TIME   = [300 600];
 options.NORM   =1;
-% options.NAME   = '\phi';
-options.NAME      = 'N_i^{00}';
+options.NAME   = '\phi';
+% options.NAME      = 'N_i^{00}';
 % options.NAME   ='\Gamma_x';
 options.PLAN   = 'kxky';
 options.COMPZ  = 'avg';

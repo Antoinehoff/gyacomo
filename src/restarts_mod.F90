@@ -12,7 +12,7 @@ IMPLICIT NONE
 INTEGER :: rank, sz_, n_
 INTEGER :: dims(1) = (/0/)
 CHARACTER(LEN=50) :: dset_name
-INTEGER :: pmaxe_cp, jmaxe_cp, pmaxi_cp, jmaxi_cp, n0
+INTEGER :: pmaxe_cp, jmaxe_cp, pmaxi_cp, jmaxi_cp, n0, Nkx_cp, Nky_cp, Nz_cp
 COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: moments_e_cp
 COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: moments_i_cp
 
@@ -25,6 +25,9 @@ CONTAINS
     !******************************************************************************!
     SUBROUTINE load_moments
         IMPLICIT NONE
+        REAL    :: timer_tot_1, timer_find_CP_1, timer_load_mom_1
+        REAL    :: timer_tot_2, timer_find_CP_2, timer_load_mom_2
+        CALL cpu_time(timer_tot_1)
 
         ! Checkpoint filename
         WRITE(rstfile,'(a,a1,i2.2,a3)') TRIM(resfile0),'_',job2load,'.h5'
@@ -33,6 +36,9 @@ CONTAINS
         ! Open file
         CALL openf(rstfile, fidrst,mpicomm=comm0)
         ! Get the checkpoint moments degrees to allocate memory
+        CALL getatt(fidrst,"/data/input/" ,   "Nkx",   Nkx_cp)
+        CALL getatt(fidrst,"/data/input/" ,   "Nky",   Nky_cp)
+        CALL getatt(fidrst,"/data/input/" ,    "Nz",    Nz_cp)
         IF (KIN_E) THEN
         CALL getatt(fidrst,"/data/input/" , "pmaxe", pmaxe_cp)
         CALL getatt(fidrst,"/data/input/" , "jmaxe", jmaxe_cp)
@@ -46,6 +52,8 @@ CONTAINS
          IF(my_id.EQ.0) WRITE(*,*) '! Extending the polynomials basis !'
          CALL load_output_adapt_pj
         ELSE
+
+          CALL cpu_time(timer_find_CP_1)
 
           ! Find the last results of the checkpoint file by iteration
           n_ = n0+1
@@ -67,18 +75,47 @@ CONTAINS
           iframe2d = iframe2d-1; iframe5d = iframe5d-1
           IF(my_id.EQ.0) WRITE(*,*) '.. restart from t = ', time
 
+          CALL cpu_time(timer_find_CP_2)
+          IF(my_id.EQ.0) WRITE(*,*) '** Time find CP : ', timer_find_CP_2 - timer_find_CP_1, ' **'
+
+          CALL cpu_time(timer_load_mom_1)
           ! Read state of system from checkpoint file
+
+          ! Super slow futils routine in Marconi.... but spare RAM
+          ! IF (KIN_E) THEN
+          ! WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
+          ! CALL getarrnd(fidrst, dset_name, moments_e(ips_e:ipe_e, ijs_e:ije_e, ikys:ikye, ikxs:ikxe, izs:ize, 1),(/1,3,5/))
+          ! ENDIF
+          ! WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_i", n_
+          ! CALL getarrnd(fidrst, dset_name, moments_i(ips_i:ipe_i, ijs_i:ije_i, ikys:ikye, ikxs:ikxe, izs:ize, 1),(/1,3,5/))
+
+          ! Brute force loading: load the full moments and take what is needed (RAM dangerous...)
           IF (KIN_E) THEN
-          WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
-          CALL getarrnd(fidrst, dset_name, moments_e(ips_e:ipe_e, ijs_e:ije_e, ikys:ikye, ikxs:ikxe, izs:ize, 1),(/1,3,5/))
+            CALL allocate_array(moments_e_cp,1,Nky_cp, 1,Nkx_cp, 1,Nz_cp, 1,pmaxe_cp+1, 1,jmaxe_cp+1)
+            WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
+            CALL getarr(fidrst, dset_name, moments_e_cp(:,:,:,:,:))
+            moments_e(ips_e:ipe_e, ijs_e:ije_e, ikys:ikye, ikxs:ikxe, izs:ize, 1) &
+            = moments_e_cp(ips_e:ipe_e, ijs_e:ije_e, ikys:ikye, ikxs:ikxe, izs:ize)
+            DEALLOCATE(moments_e_cp)
           ENDIF
+          CALL allocate_array(moments_i_cp, 1,pmaxi_cp+1, 1,jmaxi_cp+1, 1,Nky_cp, 1,Nkx_cp, 1,Nz_cp)
           WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_i", n_
-          CALL getarrnd(fidrst, dset_name, moments_i(ips_i:ipe_i, ijs_i:ije_i, ikys:ikye, ikxs:ikxe, izs:ize, 1),(/1,3,5/))
+          CALL getarr(fidrst, dset_name, moments_i_cp(:,:,:,:,:))
+          moments_i(ips_i:ipe_i, ijs_i:ije_i, ikys:ikye, ikxs:ikxe, izs:ize, 1) &
+          = moments_i_cp(ips_i:ipe_i, ijs_i:ije_i, ikys:ikye, ikxs:ikxe, izs:ize)
+          DEALLOCATE(moments_i_cp)
 
           CALL closef(fidrst)
 
           IF (my_id .EQ. 0) WRITE(*,'(3x,a)') "Reading from restart file "//TRIM(rstfile)//" completed!"
         ENDIF
+        CALL cpu_time(timer_load_mom_2)
+        CALL cpu_time(timer_tot_2)
+
+        CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+
+        IF(my_id.EQ.0) WRITE(*,*) '** Time load mom : ', timer_load_mom_2 - timer_load_mom_1, ' **'
+        IF(my_id.EQ.0) WRITE(*,*) '** Total load time : ', timer_tot_2 - timer_tot_1, ' **'
 
     END SUBROUTINE load_moments
     !******************************************************************************!

@@ -208,7 +208,8 @@ END SUBROUTINE evaluate_ampere_op
 SUBROUTINE compute_lin_coeff
   USE array
   USE model, ONLY: taue_qe, taui_qi, sqrtTaue_qe, sqrtTaui_qi, &
-                   K_Te, K_Ti, K_Ne, K_Ni, CurvB, GradB, KIN_E, tau_e, tau_i, sigma_e, sigma_i
+                   k_T, eta_T, k_N, eta_N, CurvB, GradB, KIN_E,&
+                   tau_e, tau_i, sigma_e, sigma_i
   USE prec_const
   USE grid,  ONLY: parray_e, parray_i, jarray_e, jarray_i, &
                    ip,ij, ips_e,ipe_e, ips_i,ipe_i, ijs_e,ije_e, ijs_i,ije_i
@@ -304,11 +305,11 @@ SUBROUTINE compute_lin_coeff
         j_dp = REAL(j_int,dp) ! REALof Laguerre degree
         !! Electrostatic potential pj terms
         IF (p_int .EQ. 0) THEN ! kronecker p0
-          xphij_e(ip,ij)    =+K_Ne + 2.*j_dp*K_Te
-          xphijp1_e(ip,ij)  =-K_Te*(j_dp+1._dp)
-          xphijm1_e(ip,ij)  =-K_Te* j_dp
+          xphij_e(ip,ij)    =+eta_N*k_N + 2.*j_dp*eta_T*k_T
+          xphijp1_e(ip,ij)  =-eta_T*k_T*(j_dp+1._dp)
+          xphijm1_e(ip,ij)  =-eta_T*k_T* j_dp
         ELSE IF (p_int .EQ. 2) THEN ! kronecker p2
-          xphij_e(ip,ij)    =+K_Te/SQRT2
+          xphij_e(ip,ij)    =+eta_T*k_T/SQRT2
           xphijp1_e(ip,ij)  = 0._dp; xphijm1_e(ip,ij)  = 0._dp;
         ELSE
           xphij_e(ip,ij)    = 0._dp; xphijp1_e(ip,ij)  = 0._dp
@@ -324,11 +325,11 @@ SUBROUTINE compute_lin_coeff
       j_dp = REAL(j_int,dp) ! REALof Laguerre degree
       !! Electrostatic potential pj terms
       IF (p_int .EQ. 0) THEN ! kronecker p0
-        xphij_i(ip,ij)    =+K_Ni + 2._dp*j_dp*K_Ti
-        xphijp1_i(ip,ij)  =-K_Ti*(j_dp+1._dp)
-        xphijm1_i(ip,ij)  =-K_Ti* j_dp
+        xphij_i(ip,ij)    =+k_N + 2._dp*j_dp*k_T
+        xphijp1_i(ip,ij)  =-k_T*(j_dp+1._dp)
+        xphijm1_i(ip,ij)  =-k_T* j_dp
       ELSE IF (p_int .EQ. 2) THEN ! kronecker p2
-        xphij_i(ip,ij)    =+K_Ti/SQRT2
+        xphij_i(ip,ij)    =+k_T/SQRT2
         xphijp1_i(ip,ij)  = 0._dp; xphijm1_i(ip,ij)  = 0._dp;
       ELSE
         xphij_i(ip,ij)    = 0._dp; xphijp1_i(ip,ij)  = 0._dp
@@ -346,11 +347,11 @@ SUBROUTINE compute_lin_coeff
         j_dp = REAL(j_int,dp) ! REALof Laguerre degree
         !! Electrostatic potential pj terms
         IF (p_int .EQ. 1) THEN ! kronecker p1
-          xpsij_e(ip,ij)    =+(K_Ne + (2._dp*j_dp+1._dp)*K_Te)* SQRT(tau_e)/sigma_e
-          xpsijp1_e(ip,ij)  =- K_Te*(j_dp+1._dp)              * SQRT(tau_e)/sigma_e
-          xpsijm1_e(ip,ij)  =- K_Te* j_dp                     * SQRT(tau_e)/sigma_e
+          xpsij_e(ip,ij)    =+(eta_N*k_N + (2._dp*j_dp+1._dp)*eta_T*k_T) * SQRT(tau_e)/sigma_e
+          xpsijp1_e(ip,ij)  =- eta_T*k_T*(j_dp+1._dp) * SQRT(tau_e)/sigma_e
+          xpsijm1_e(ip,ij)  =- eta_T*k_T* j_dp        * SQRT(tau_e)/sigma_e
         ELSE IF (p_int .EQ. 3) THEN ! kronecker p3
-          xpsij_e(ip,ij)    =+ K_Te*SQRT3/SQRT2               * SQRT(tau_e)/sigma_e
+          xpsij_e(ip,ij)    =+ eta_T*k_T*SQRT3/SQRT2  * SQRT(tau_e)/sigma_e
           xpsijp1_e(ip,ij)  = 0._dp; xpsijm1_e(ip,ij)  = 0._dp;
         ELSE
           xpsij_e(ip,ij)    = 0._dp; xpsijp1_e(ip,ij)  = 0._dp
@@ -366,11 +367,11 @@ SUBROUTINE compute_lin_coeff
       j_dp = REAL(j_int,dp) ! REALof Laguerre degree
       !! Electrostatic potential pj terms
       IF (p_int .EQ. 1) THEN ! kronecker p1
-        xpsij_i(ip,ij)    =+(K_Ni + (2._dp*j_dp+1._dp)*K_Ti)* SQRT(tau_i)/sigma_i
-        xpsijp1_i(ip,ij)  =- K_Ti*(j_dp+1._dp)              * SQRT(tau_i)/sigma_i
-        xpsijm1_i(ip,ij)  =- K_Ti* j_dp                     * SQRT(tau_i)/sigma_i
+        xpsij_i(ip,ij)    =+(k_N + (2._dp*j_dp+1._dp)*k_T) * SQRT(tau_i)/sigma_i
+        xpsijp1_i(ip,ij)  =- k_T*(j_dp+1._dp)              * SQRT(tau_i)/sigma_i
+        xpsijm1_i(ip,ij)  =- k_T* j_dp                     * SQRT(tau_i)/sigma_i
       ELSE IF (p_int .EQ. 3) THEN ! kronecker p3
-        xpsij_i(ip,ij)    =+ K_Ti*SQRT3/SQRT2               * SQRT(tau_i)/sigma_i
+        xpsij_i(ip,ij)    =+ k_T*SQRT3/SQRT2               * SQRT(tau_i)/sigma_i
         xpsijp1_i(ip,ij)  = 0._dp; xpsijm1_i(ip,ij)  = 0._dp;
       ELSE
         xpsij_i(ip,ij)    = 0._dp; xpsijp1_i(ip,ij)  = 0._dp
