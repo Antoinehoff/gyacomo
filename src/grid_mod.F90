@@ -16,6 +16,7 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED :: dmaxi = 1      ! The maximal full GF set of i-moments v^dmax
   INTEGER,  PUBLIC, PROTECTED :: Nx    = 16     ! Number of total internal grid points in x
   REAL(dp), PUBLIC, PROTECTED :: Lx    = 1._dp  ! horizontal length of the spatial box
+  INTEGER,  PUBLIC, PROTECTED :: Nexc  = 1      ! factor to increase Lx when shear>0 (Lx = Nexc/kymin/shear)
   INTEGER,  PUBLIC, PROTECTED :: Ny    = 16     ! Number of total internal grid points in y
   REAL(dp), PUBLIC, PROTECTED :: Ly    = 1._dp  ! vertical length of the spatial box
   INTEGER,  PUBLIC, PROTECTED :: Nz    = 1      ! Number of total perpendicular planes
@@ -123,7 +124,7 @@ CONTAINS
     INTEGER :: lu_in   = 90              ! File duplicated from STDIN
 
     NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, &
-                    Nx,  Lx,  Ny,  Ly, Nz, Npol, SG
+                    Nx, Lx, Nexc, Ny, Ly, Nz, Npol, SG
     READ(lu_in,grid)
 
     IF(Nz .EQ. 1) & ! overwrite SG option if Nz = 1 for safety of use
@@ -375,7 +376,7 @@ CONTAINS
     INTEGER :: i_, counter
     IF(shear .GT. 0._dp) THEN
       IF(my_id.EQ.0) write(*,*) 'Magnetic shear detected: set up sheared kx grid..'
-      Lx = Ly/(2._dp*pi*shear*Npol)
+      Lx = Ly/(2._dp*pi*shear*Npol)*Nexc
     ENDIF
     Nkx = Nx;
     ! Local data
@@ -542,6 +543,7 @@ CONTAINS
     CALL attach(fidres, TRIM(str), "jmaxi", jmaxi)
     CALL attach(fidres, TRIM(str),   "Nx",   Nx)
     CALL attach(fidres, TRIM(str),   "Lx",   Lx)
+    CALL attach(fidres, TRIM(str), "Nexc", Nexc)
     CALL attach(fidres, TRIM(str),   "Ny",   Ny)
     CALL attach(fidres, TRIM(str),   "Ly",   Ly)
     CALL attach(fidres, TRIM(str),   "Nz",   Nz)
