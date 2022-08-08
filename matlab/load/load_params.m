@@ -1,8 +1,21 @@
 DATA.CO      = h5readatt(filename,'/data/input','CO');
-DATA.K_Ne    = h5readatt(filename,'/data/input','K_Ne');
-DATA.K_Ni    = h5readatt(filename,'/data/input','K_Ni');
-DATA.K_Te    = h5readatt(filename,'/data/input','K_Te');
-DATA.K_Ti    = h5readatt(filename,'/data/input','K_Ti');
+try
+    DATA.ETA_N   = h5readatt(filename,'/data/input','ETA_N');
+    DATA.ETA_T   = h5readatt(filename,'/data/input','ETA_T');
+catch
+    DATA.ETA_N = 1.0;
+    DATA.ETA_T = 1.0;
+end
+try
+    DATA.K_N     = h5readatt(filename,'/data/input','K_n');
+catch
+    DATA.K_N     = h5readatt(filename,'/data/input','k_N');
+end
+try
+    DATA.K_T     = h5readatt(filename,'/data/input','K_T');
+catch
+    DATA.K_T     = h5readatt(filename,'/data/input','k_T');
+end
 DATA.Q0      = h5readatt(filename,'/data/input','q0');
 DATA.SHEAR   = h5readatt(filename,'/data/input','shear');
 DATA.EPS     = h5readatt(filename,'/data/input','eps');
@@ -21,7 +34,11 @@ DATA.DT_SIM  = h5readatt(filename,'/data/input','dt');
 DATA.MU      = h5readatt(filename,'/data/input','mu');
 DATA.MUx     = h5readatt(filename,'/data/input','mu_x');
 DATA.MUy     = h5readatt(filename,'/data/input','mu_y');
-DATA.BETA    = h5readatt(filename,'/data/input','beta');
+try
+    DATA.BETA    = h5readatt(filename,'/data/input','beta');
+catch
+    DATA.BETA  = 0;
+end
 DATA.W_GAMMA   = h5readatt(filename,'/data/input','write_gamma') == 'y';
 DATA.W_PHI     = h5readatt(filename,'/data/input','write_phi')   == 'y';
 DATA.W_NA00    = h5readatt(filename,'/data/input','write_Na00')  == 'y';
@@ -48,7 +65,7 @@ else
 end
 degngrad = [degngrad,'_Kni_%1.1f_nu_%0.0e_',...
         DATA.CONAME,'_CLOS_',num2str(DATA.CLOS),'_mu_%0.0e'];
-degngrad   = sprintf(degngrad,[DATA.K_Ni,DATA.NU,DATA.MU]);
+degngrad   = sprintf(degngrad,[DATA.K_N,DATA.NU,DATA.MU]);
 % if ~DATA.LINEARITY; degngrad = ['lin_',degngrad]; end
 resolution = [num2str(DATA.Nx),'x',num2str(DATA.Ny),'_'];
 gridname   = ['L_',num2str(DATA.L),'_'];

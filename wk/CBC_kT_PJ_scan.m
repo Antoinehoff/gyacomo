@@ -3,7 +3,8 @@ default_plots_options
 HELAZDIR = '/home/ahoffman/HeLaZ/';
 EXECNAME = 'helaz3';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-KT_a = [9:2:17];
+% KT_a = [9:2:17];
+KT_a = 7;
 g_max= KT_a*0;
 g_avg= KT_a*0;
 g_std= KT_a*0;
@@ -15,10 +16,10 @@ DT    = 1e-2;
 TMAX  = 25;
 ky_   = 0.3;
 SIMID = 'linear_CBC_kT_scan_ky_0.3';  % Name of the simulation
-RUN   = 0;
+RUN   = 1;
 figure
-% P = 12;
-for P = [2 4 6]
+P = 4;
+% for P = [2 4 6]
 J = P/2;
 
 i=1;
@@ -114,5 +115,5 @@ hold on;
 title(['Linear CBC $K_T$ threshold $k_y=$',num2str(ky_),' (CLOS = 1)']);
 legend('show'); xlabel('$K_T$'); ylabel('$\gamma$');
 drawnow
-end
+
 

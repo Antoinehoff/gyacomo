@@ -9,7 +9,7 @@ MISCDIR   = ['/misc/HeLaZ_outputs/results/',outfile,'/'];
 system(['mkdir -p ',MISCDIR]);
 system(['mkdir -p ',LOCALDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
-system(CMD);
+% system(CMD);
 % Load outputs from jobnummin up to jobnummax
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 data.localdir = LOCALDIR;
@@ -23,8 +23,8 @@ FMT = '.fig';
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
 % data.scale = 1;%/(data.Nx*data.Ny)^2;
-options.TAVG_0   = 25;%0.4*data.Ts3D(end);
-options.TAVG_1   = 40;%0.9*data.Ts3D(end); % Averaging times duration
+options.TAVG_0   = 250;%0.4*data.Ts3D(end);
+options.TAVG_1   = 350;%0.9*data.Ts3D(end); % Averaging times duration
 options.NCUT     = 4;              % Number of cuts for averaging and error estimation
 options.NMVA     = 1;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';   % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
@@ -51,7 +51,7 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xz';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -105,11 +105,11 @@ if 0
 options.SPAR      = gene_data.vp';
 options.XPERP     = gene_data.mu';
 options.iz        = 'avg';
-options.T         = [300 600];
+options.T         = [250 600];
 options.PLT_FCT   = 'contour';
 options.ONED      = 0;
 options.non_adiab = 0;
-options.SPECIE    = 'e';
+options.SPECIE    = 'i';
 options.RMS       = 1; % Root mean square i.e. sqrt(sum_k|f_k|^2) as in Gene
 fig = plot_fa(data,options);
 % save_figure(data,fig,'.png')
@@ -121,14 +121,14 @@ if 0
 options.P2J        = 0;
 options.ST         = 1;
 options.PLOT_TYPE  = 'space-time';
-options.NORMALIZED = 0;
+options.NORMALIZED = 1;
 options.JOBNUM     = 0;
 options.TIME       = [1000];
 options.specie     = 'i';
 options.compz      = 'avg';
 fig = show_moments_spectrum(data,options);
 % fig = show_napjz(data,options);
-save_figure(data,fig,'.png');
+% save_figure(data,fig,'.png');
 end
 
 if 0

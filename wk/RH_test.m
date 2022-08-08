@@ -5,8 +5,8 @@
 %
 % SIMID   = 'test_circular_geom';  % Name of the simulation
 % SIMID   = 'linear_CBC';  % Name of the simulation
-SIMID   = 'dbg';  % Name of the simulation
-RUN     = 0; % To run or just to load
+SIMID   = 'RH_test';  % Name of the simulation
+RUN     = 1; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
 HELAZDIR = '/home/ahoffman/HeLaZ/';
@@ -17,27 +17,27 @@ EXECNAME = 'helaz3';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.05;           % Collision frequency
+NU      = 0.0;           % Collision frequency
 TAU     = 1.0;            % e/i temperature ratio
-K_N     = 2.22;            % ele Density gradient drive
-ETA_N   = 1.0;        % ion Density gradient drive
-K_T     = 6.96;            % Temperature '''
-ETA_T   = 1.0;        % Temperature '''
+K_N     = 0.0;            % ele Density gradient drive
+ETA_N   = 0.0/K_N;        % ion Density gradient drive
+K_T     = 0.0;            % Temperature '''
+ETA_T   = 0.0/K_T;        % Temperature '''
 SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 % SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 0;     % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 0.0;     % electron plasma beta
 %% GRID PARAMETERS
-P = 12;
+P = 20;
 J = P/2;
 PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
-NX      = 16;    % real space x-gridpoints
-NY      = 8;     %     ''     y-gridpoints
-LX      = 2*pi/0.1;   % Size of the squared frequency domain
-LY      = 2*pi/0.1;     % Size of the squared frequency domain
+NX      = 2;    % real space x-gridpoints
+NY      = 2;     %     ''     y-gridpoints
+LX      = 2*pi/0.05;   % Size of the squared frequency domain
+LY      = 2*pi/0.25;     % Size of the squared frequency domain
 NZ      = 16;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
@@ -46,12 +46,12 @@ SG      = 0;     % Staggered z grids option
 GEOMETRY= 's-alpha';
 % GEOMETRY= 'circular';
 Q0      = 1.4;    % safety factor
-SHEAR   = 0.8;    % magnetic shear
+SHEAR   = 0.0;    % magnetic shear
 NEXC    = 1;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 EPS     = 0.18;   % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 40;  % Maximal time unit
-DT      = 1e-2;   % Time step
+TMAX    = 100;  % Maximal time unit
+DT      = 5e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
@@ -90,7 +90,7 @@ MU_P    = 0.0;     %
 MU_J    = 0.0;     %
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5; % Init noise amplitude
-BCKGD0  = 0.0;    % Init background
+BCKGD0  = 1.0;    % Init background
 GRADB   = 1.0;
 CURVB   = 1.0;
 %%-------------------------------------------------------------------------
@@ -115,7 +115,7 @@ JOBNUMMIN = 00; JOBNUMMAX = 00;
 data = compile_results(LOCALDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 
 %% Short analysis
-if 1
+if 0
 %% linear growth rate (adapted for 2D zpinch and fluxtube)
 trange = [0.5 1]*data.Ts3D(end);
 nplots = 3;
@@ -126,7 +126,7 @@ msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,lg.ky(kmax)); disp(msg);
 msg = sprintf('gmax/k = %2.2f, kmax/k = %2.2f',gmaxok,lg.ky(kmaxok)); disp(msg);
 end
 
-if 1
+if 0
 %% Ballooning plot
 options.time_2_plot = [120];
 options.kymodes     = [0.1];
@@ -176,7 +176,7 @@ save_figure(data,fig,'.png')
 end
 
 
-if 0
+if 1
 %% RH TEST
 ikx = 2; t0 = 0; t1 = data.Ts3D(end);
 [~, it0] = min(abs(t0-data.Ts3D));[~, it1] = min(abs(t1-data.Ts3D));

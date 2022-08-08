@@ -50,12 +50,13 @@ helazdir = '/home/ahoffman/HeLaZ/';
 % outfile = 'CBC/kT_4.5_192x96x24x13x7';
 % outfile = 'CBC/kT_5.3_192x96x24x13x7';
 % outfile = 'CBC/kT_13_large_box_128x64x16x5x3';
-outfile = 'CBC/kT_13_96x96x16x3x2_Nexc_6';
+% outfile = 'CBC/kT_13_96x96x16x3x2_Nexc_6';
 % outfile = 'CBC/kT_11_96x64x16x5x3_ky_0.02';
 
 % outfile = 'CBC/kT_scan_128x64x16x5x3';
 % outfile = 'CBC/kT_scan_192x96x16x3x2';
 
+outfile = 'CBC/kT_13_96x96x16x3x2_Nexc_6';
 %% Linear CBC
 % outfile = 'linear_CBC/20x2x32_21x11_Lx_62.8319_Ly_31.4159_q0_1.4_e_0.18_s_0.8_kN_2.22_kT_5.3_nu_1e-02_DGDK_adiabe';
 

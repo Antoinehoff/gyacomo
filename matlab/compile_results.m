@@ -7,7 +7,7 @@ DATA.NU_EVOL  = []; % evolution of parameter nu between jobs
 DATA.CO_EVOL  = []; % evolution of CO
 DATA.MUx_EVOL  = []; % evolution of parameter mu between jobs
 DATA.MUy_EVOL  = []; % evolution of parameter mu between jobs
-DATA.K_Ni_EVOL = []; %
+DATA.K_N_EVOL = []; %
 DATA.L_EVOL   = []; % 
 DATA.DT_EVOL  = []; %
 % FIELDS
@@ -62,7 +62,11 @@ while(CONTINUE)
         W_DENS    = strcmp(h5readatt(filename,'/data/input','write_dens' ),'y');
         W_TEMP    = strcmp(h5readatt(filename,'/data/input','write_temp' ),'y');
         KIN_E     = strcmp(h5readatt(filename,'/data/input',     'KIN_E' ),'y');
-        BETA      = h5readatt(filename,'/data/input','beta');
+        try
+            BETA      = h5readatt(filename,'/data/input','beta');
+        catch
+            BETA = 0;
+        end
         % Check polynomials degrees
         Pe_new= numel(Pe); Je_new= numel(Je);
         Pi_new= numel(Pi); Ji_new= numel(Ji);
@@ -206,7 +210,7 @@ while(CONTINUE)
         DATA.CO_EVOL   = [DATA.CO_EVOL   DATA.CO     DATA.CO];
         DATA.MUx_EVOL  = [DATA.MUx_EVOL  DATA.MUx    DATA.MUx];
         DATA.MUy_EVOL  = [DATA.MUy_EVOL  DATA.MUy    DATA.MUy];
-        DATA.K_Ni_EVOL = [DATA.K_Ni_EVOL DATA.K_Ni   DATA.K_Ni];
+        DATA.K_N_EVOL  = [DATA.K_N_EVOL DATA.K_N   DATA.K_N];
         DATA.L_EVOL    = [DATA.L_EVOL    DATA.L      DATA.L];
         DATA.DT_EVOL   = [DATA.DT_EVOL   DATA.DT_SIM DATA.DT_SIM];
         
@@ -281,7 +285,7 @@ else
     DATA.dir      = DIRECTORY;
     DATA.localdir = DIRECTORY;
     DATA.param_title=['$\nu_{',DATA.CONAME,'}=$', num2str(DATA.NU), ...
-        ', $\kappa_{Ni}=$',num2str(DATA.K_Ni),', $\kappa_{Ti}=$',num2str(DATA.K_Ti),...
+        ', $\kappa_{Ni}=$',num2str(DATA.K_N),', $\kappa_{Ti}=$',num2str(DATA.K_T),...
         ', $L=',num2str(DATA.L),'$, $N=',...
         num2str(DATA.Nx),'$, $(P,J)=(',num2str(DATA.PMAXI),',',...
         num2str(DATA.JMAXI),')$,',' $\mu_{hd}=$(',num2str(DATA.MUx),...

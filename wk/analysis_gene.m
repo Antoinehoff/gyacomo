@@ -15,23 +15,23 @@ addpath(genpath([helazdir,'matlab/load'])) % ... add
 % folder = '/misc/gene_results/HP_fig_2a_mu_1e-2/';
 % folder = '/misc/gene_results/HP_fig_2b_mu_5e-2/';
 % folder = '/misc/gene_results/HP_fig_2c_mu_5e-2/';
-folder = '/misc/gene_results/LD_zpinch_1.6/';
+% folder = '/misc/gene_results/LD_zpinch_1.6/';
 % folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
 % folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
 % folder = '/misc/gene_results/Z-pinch/ZP_HP_kn_1.6_HRES/';
 % folder = '/misc/gene_results/ZP_kn_2.5_large_box/';
 % folder = '/misc/gene_results/CBC/128x64x16x24x12/';
-% folder = '/misc/gene_results/CBC/196x96x20x32x16_01/';
+folder = '/misc/gene_results/CBC/196x96x20x32x16_01/';
 % folder = '/misc/gene_results/CBC/128x64x16x6x4/';
 % folder = '/misc/gene_results/CBC/KT_5.3_128x64x16x24x12_01/';
-folder = '/misc/gene_results/CBC/KT_4.5_128x64x16x24x12_01/';
-% folder = '/misc/gene_results/CBC/KT_11_128x64x16x24x12/';
-% folder = '/misc/gene_results/CBC/KT_11_large_box_128x64x16x24x12/';
+% folder = '/misc/gene_results/CBC/KT_4.5_128x64x16x24x12_01/';
+% folder = '/misc/gene_results/CBC/KT_9_128x64x16x24x12/';
+% folder = '/misc/gene_results/CBC/KT_13_large_box_128x64x16x24x12/';
 gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
-options.TAVG_0   = 0.6*gene_data.Ts3D(end);
+options.TAVG_0   = 0.1*gene_data.Ts3D(end);
 options.TAVG_1   = gene_data.Ts3D(end); % Averaging times duration
 options.NMVA     = 1;              % Moving average for time traces
 options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x, Q_x)
