@@ -221,7 +221,7 @@ SUBROUTINE init_gyrodens
         END DO
         IF ( contains_ky0 ) THEN
           DO ikx=2,Nkx/2 !symmetry at ky = 0 for all z
-            moments_e(ip,ij,iky_0,ikx,:,:) = moments_e( ip,ij,iky_0,Nkx+2-ikx,:, :)
+            moments_e(ip,ij,iky_0,ikx,:,:) = moments_e(ip,ij,iky_0,Nkx+2-ikx,:,:)
           END DO
         ENDIF
       END DO
@@ -422,9 +422,9 @@ SUBROUTINE init_ppj
                   ENDIF
                 ELSE
                   IF(ky .GT. 0) THEN
-                    moments_e(ip,ij,iky,ikx,iz,:) = (kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
+                    moments_e(ip,ij,iky,ikx,iz,:) = (deltakx/(ABS(kx)+deltakx))*(ky_min/(ABS(ky)+ky_min))
                   ELSE
-                    moments_e(ip,ij,iky,ikx,iz,:) = 0.5_dp*amp*(kx_min/(ABS(kx)+kx_min))
+                    moments_e(ip,ij,iky,ikx,iz,:) = 0.5_dp*amp*(deltakx/(ABS(kx)+deltakx))
                   ENDIF
                 ENDIF
                 CALL RANDOM_NUMBER(noise)
@@ -465,9 +465,9 @@ SUBROUTINE init_ppj
                   ENDIF
                 ELSE
                   IF(ky .GT. 0) THEN
-                    moments_i(ip,ij,iky,ikx,iz,:) = (kx_min/(ABS(kx)+kx_min))*(ky_min/(ABS(ky)+ky_min))
+                    moments_i(ip,ij,iky,ikx,iz,:) = (deltakx/(ABS(kx)+deltakx))*(ky_min/(ABS(ky)+ky_min))
                   ELSE
-                    moments_i(ip,ij,iky,ikx,iz,:) = 0.5_dp*amp*(kx_min/(ABS(kx)+kx_min))
+                    moments_i(ip,ij,iky,ikx,iz,:) = 0.5_dp*amp*(deltakx/(ABS(kx)+deltakx))
                   ENDIF
                 ENDIF
                 CALL RANDOM_NUMBER(noise)
