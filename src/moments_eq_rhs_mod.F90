@@ -6,6 +6,7 @@ CONTAINS
 SUBROUTINE compute_moments_eq_rhs
   USE model, only: KIN_E
   IMPLICIT NONE
+
   IF(KIN_E) CALL moments_eq_rhs_e
             CALL moments_eq_rhs_i
   !! BETA TESTING !!
@@ -21,13 +22,18 @@ SUBROUTINE moments_eq_rhs_e
 
   USE basic
   USE time_integration
-  USE array
-  USE fields
+  USE array, ONLY: xnepj, xnepp2j, xnepm2j, xnepjp1, xnepjm1, xnepp1j, xnepm1j,&
+                   ynepp1j, ynepp1jm1, ynepm1j, ynepm1jm1, &
+                   znepm1j, znepm1jp1, znepm1jm1, &
+                   xphij_e, xphijp1_e, xphijm1_e, xpsij_e, xpsijp1_e, xpsijm1_e,&
+                   nadiab_moments_e, ddz_nepj, interp_nepj, moments_rhs_e, Sepj,&
+                   TColl_e, ddzND_nepj, kernel_e
+  USE fields, ONLY: phi, psi, moments_e
   USE grid
   USE model
   USE prec_const
   USE collision
-  use geometry
+  USE geometry, ONLY: gradz_coeff, gradzB, Ckxky, hatB_NL, hatR
   USE calculus, ONLY : interp_z, grad_z, grad_z2
   IMPLICIT NONE
 
@@ -77,6 +83,8 @@ SUBROUTINE moments_eq_rhs_e
             Tnepjp1 = xnepjp1(ij) * nadiab_moments_e(ip,ij+1,iky,ikx,iz)
             ! term propto n_e^{p,j-1}
             Tnepjm1 = xnepjm1(ij) * nadiab_moments_e(ip,ij-1,iky,ikx,iz)
+            ! Tperp
+            Tperp   = Tnepj + Tnepp2j + Tnepm2j + Tnepjp1 + Tnepjm1
             ! Parallel dynamic
             ! ddz derivative for Landau damping term
             Tpar      = xnepp1j(ip) * ddz_nepj(ip+1,ij,iky,ikx,iz) &
@@ -102,7 +110,7 @@ SUBROUTINE moments_eq_rhs_e
             ENDIF
 
             !! Vector potential term
-            IF ( (p_int .LE. 3) .AND. (p_int .GT. 1) ) THEN ! Kronecker p1 or p3
+            IF ( (p_int .LE. 3) .AND. (p_int .GE. 1) ) THEN ! Kronecker p1 or p3
               Tpsi = (xpsij_e  (ip,ij)*kernel_e(ij  ,iky,ikx,iz,eo) &
                     + xpsijp1_e(ip,ij)*kernel_e(ij+1,iky,ikx,iz,eo) &
                     + xpsijm1_e(ip,ij)*kernel_e(ij-1,iky,ikx,iz,eo))*psikykxz
@@ -113,22 +121,22 @@ SUBROUTINE moments_eq_rhs_e
             !! Sum of all RHS terms
             moments_rhs_e(ip,ij,iky,ikx,iz,updatetlevel) = &
                 ! Perpendicular magnetic gradient/curvature effects
-                - imagu*Ckxky(iky,ikx,iz,eo)*hatR(iz,eo)* (Tnepj + Tnepp2j + Tnepm2j + Tnepjp1 + Tnepjm1)&
+                -imagu*Ckxky(iky,ikx,iz,eo)*hatR(iz,eo) * Tperp&
                 ! Parallel coupling (Landau Damping)
-                - Tpar*gradz_coeff(iz,eo) &
+                -gradz_coeff(iz,eo) * Tpar &
                 ! Mirror term (parallel magnetic gradient)
-                - gradzB(iz,eo)* Tmir  *gradz_coeff(iz,eo) &
+                -gradzB(iz,eo)*gradz_coeff(iz,eo) * Tmir&
                 ! Drives (density + temperature gradients)
-                - i_ky * (Tphi - Tpsi) &
+                -i_ky * (Tphi - Tpsi) &
                 ! Numerical perpendicular hyperdiffusion (totally artificial, for stability purpose)
-                - mu_x*diff_kx_coeff*kx**N_HD*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
-                - mu_y*diff_ky_coeff*ky**N_HD*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
-                ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"  see Pueschel 2010 (eq 25)
-                - mu_z * diff_dz_coeff * ddz4_Nepj(ip,ij,iky,ikx,iz) &
+                -mu_x*diff_kx_coeff*kx**N_HD*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
+                -mu_y*diff_ky_coeff*ky**N_HD*moments_e(ip,ij,iky,ikx,iz,updatetlevel) &
+                ! Numerical parallel hyperdiffusion "mu_z*ddz**4"  see Pueschel 2010 (eq 25)
+                -mu_z*diff_dz_coeff*ddzND_nepj(ip,ij,iky,ikx,iz) &
                 ! Collision term
-                + TColl_e(ip,ij,iky,ikx,iz) &
+                +TColl_e(ip,ij,iky,ikx,iz) &
                 ! Nonlinear term
-                - hatB_NL(iz,eo) * Sepj(ip,ij,iky,ikx,iz)
+                -hatB_NL(iz,eo) * Sepj(ip,ij,iky,ikx,iz)
 
             IF(ip-4 .GT. 0) &
               ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
@@ -160,13 +168,18 @@ SUBROUTINE moments_eq_rhs_i
 
   USE basic
   USE time_integration, ONLY: updatetlevel
-  USE array
-  USE fields
+  USE array, ONLY: xnipj, xnipp2j, xnipm2j, xnipjp1, xnipjm1, xnipp1j, xnipm1j,&
+                   ynipp1j, ynipp1jm1, ynipm1j, ynipm1jm1, &
+                   znipm1j, znipm1jp1, znipm1jm1, &
+                   xphij_i, xphijp1_i, xphijm1_i, xpsij_i, xpsijp1_i, xpsijm1_i,&
+                   nadiab_moments_i, ddz_nipj, interp_nipj, moments_rhs_i, Sipj,&
+                   TColl_i, ddzND_nipj, kernel_i
+  USE fields, ONLY: phi, psi, moments_i
   USE grid
   USE model
   USE prec_const
   USE collision
-  USE geometry
+  USE geometry, ONLY: gradz_coeff, gradzB, Ckxky, hatB_NL, hatR
   USE calculus, ONLY : interp_z, grad_z, grad_z2
   IMPLICIT NONE
 
@@ -201,6 +214,7 @@ SUBROUTINE moments_eq_rhs_i
             p_int = parray_i(ip)    ! Hermite degree
             eo    = MODULO(p_int,2) ! Indicates if we are on odd or even z grid
             kperp2= kparray(iky,ikx,iz,eo)**2
+
             IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmaxi)) THEN
               !! Compute moments mixing terms
               Tperp = 0._dp; Tpar = 0._dp; Tmir = 0._dp
@@ -243,7 +257,7 @@ SUBROUTINE moments_eq_rhs_i
               ENDIF
 
               !! Vector potential term
-              IF ( (p_int .LE. 3) .AND. (p_int .GT. 1) ) THEN ! Kronecker p1 or p3
+              IF ( (p_int .LE. 3) .AND. (p_int .GE. 1) ) THEN ! Kronecker p1 or p3
                 Tpsi = (xpsij_i  (ip,ij)*kernel_i(ij  ,iky,ikx,iz,eo) &
                       + xpsijp1_i(ip,ij)*kernel_i(ij+1,iky,ikx,iz,eo) &
                       + xpsijm1_i(ip,ij)*kernel_i(ij-1,iky,ikx,iz,eo))*psikykxz
@@ -255,22 +269,22 @@ SUBROUTINE moments_eq_rhs_i
               !! Sum of all RHS terms
               moments_rhs_i(ip,ij,iky,ikx,iz,updatetlevel) = &
                   ! Perpendicular magnetic gradient/curvature effects
-                  - imagu*Ckxky(iky,ikx,iz,eo)*hatR(iz,eo) * Tperp &
+                  -imagu*Ckxky(iky,ikx,iz,eo)*hatR(iz,eo) * Tperp &
                   ! Parallel coupling (Landau damping)
-                  - gradz_coeff(iz,eo) * Tpar &
+                  -gradz_coeff(iz,eo) * Tpar &
                   ! Mirror term (parallel magnetic gradient)
-                  - gradzB(iz,eo) * gradz_coeff(iz,eo) * Tmir &
+                  -gradzB(iz,eo)*gradz_coeff(iz,eo) * Tmir &
                   ! Drives (density + temperature gradients)
-                  - i_ky * (Tphi - Tpsi) &
+                  -i_ky * (Tphi - Tpsi) &
                   ! Numerical hyperdiffusion (totally artificial, for stability purpose)
-                  - mu_x*diff_kx_coeff*kx**N_HD*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
-                  - mu_y*diff_ky_coeff*ky**N_HD*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
-                  ! Numerical parallel hyperdiffusion "+ (mu_z*kz**4)"
-                  + mu_z * diff_dz_coeff * ddz4_Nipj(ip,ij,iky,ikx,iz) &
+                  -mu_x*diff_kx_coeff*kx**N_HD*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
+                  -mu_y*diff_ky_coeff*ky**N_HD*moments_i(ip,ij,iky,ikx,iz,updatetlevel) &
+                  ! Numerical parallel hyperdiffusion "mu_z*ddz**4"
+                  -mu_z*diff_dz_coeff*ddzND_nipj(ip,ij,iky,ikx,iz) &
                   ! Collision term
-                  + TColl_i(ip,ij,iky,ikx,iz)&
+                  +TColl_i(ip,ij,iky,ikx,iz)&
                   ! Nonlinear term with a (gxx*gxy - gxy**2)^1/2 factor
-                  - hatB_NL(iz,eo) * Sipj(ip,ij,iky,ikx,iz)
+                  -hatB_NL(iz,eo) * Sipj(ip,ij,iky,ikx,iz)
 
                   IF(ip-4 .GT. 0) &
                     ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
@@ -300,7 +314,7 @@ SUBROUTINE add_Maxwellian_background_terms
   ! 40, 01,02, 21 with background gradient dependences.
   USE prec_const
   USE time_integration, ONLY : updatetlevel
-  USE model,      ONLY: taue_qe, taui_qi, k_N, eta_N, k_T, eta_T, KIN_E
+  USE model,      ONLY: taue_qe, taui_qi, k_Ni, k_Ne, k_Ti, k_Te, KIN_E
   USE array,      ONLY: moments_rhs_e, moments_rhs_i
   USE grid,       ONLY: contains_kx0, contains_ky0, ikx_0, iky_0,&
                         ips_e,ipe_e,ijs_e,ije_e,ips_i,ipe_i,ijs_i,ije_i,&
@@ -320,28 +334,28 @@ SUBROUTINE add_Maxwellian_background_terms
             SELECT CASE (ip-1)
             CASE(0) ! Na00 term
                 moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
-                  +taue_qe * sinz(izs:ize) * (1.5_dp*eta_N*k_N - 1.125_dp*eta_N*k_T)
+                  +taue_qe * sinz(izs:ize) * (1.5_dp*k_Ne - 1.125_dp*k_Te)
             CASE(2) ! Na20 term
                 moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
-                  +taue_qe * sinz(izs:ize) * (SQRT2*0.5_dp*eta_N*k_N - 2.75_dp*eta_T*k_T)
+                  +taue_qe * sinz(izs:ize) * (SQRT2*0.5_dp*k_Ne - 2.75_dp*k_Te)
             CASE(4) ! Na40 term
                 moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
-                  +taue_qe * sinz(izs:ize) * SQRT6*0.75_dp*eta_T*k_T
+                  +taue_qe * sinz(izs:ize) * SQRT6*0.75_dp*k_Te
             END SELECT
           CASE(1) ! j = 1
             SELECT CASE (ip-1)
             CASE(0) ! Na01 term
                 moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
-                  -taue_qe * sinz(izs:ize) * (eta_N*k_N + 3.5_dp*eta_T*k_T)
+                  -taue_qe * sinz(izs:ize) * (k_Ne + 3.5_dp*k_Te)
             CASE(2) ! Na21 term
                 moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
-                  -taue_qe * sinz(izs:ize) * SQRT2*eta_T*k_T
+                  -taue_qe * sinz(izs:ize) * SQRT2*k_Te
             END SELECT
           CASE(2) ! j = 2
             SELECT CASE (ip-1)
             CASE(0) ! Na02 term
                 moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_e(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
-                  +taue_qe * sinz(izs:ize) * 2._dp*eta_T*k_T
+                  +taue_qe * sinz(izs:ize) * 2._dp*k_Te
             END SELECT
           END SELECT
         ENDDO
@@ -355,28 +369,28 @@ SUBROUTINE add_Maxwellian_background_terms
           SELECT CASE (ip-1)
           CASE(0) ! Na00 term
               moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
-                +taui_qi * sinz(izs:ize) * (1.5_dp*k_N - 1.125_dp*k_T)
+                +taui_qi * sinz(izs:ize) * (1.5_dp*k_Ni - 1.125_dp*k_Ti)
           CASE(2) ! Na20 term
               moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
-                +taui_qi * sinz(izs:ize) * (SQRT2*0.5_dp*k_N - 2.75_dp*k_T)
+                +taui_qi * sinz(izs:ize) * (SQRT2*0.5_dp*k_Ni - 2.75_dp*k_Ti)
           CASE(4) ! Na40 term
               moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
-                +taui_qi * sinz(izs:ize) * SQRT6*0.75_dp*k_T
+                +taui_qi * sinz(izs:ize) * SQRT6*0.75_dp*k_Ti
           END SELECT
         CASE(1) ! j = 1
           SELECT CASE (ip-1)
           CASE(0) ! Na01 term
               moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
-                -taui_qi * sinz(izs:ize) * (k_N + 3.5_dp*k_T)
+                -taui_qi * sinz(izs:ize) * (k_Ni + 3.5_dp*k_Ti)
           CASE(2) ! Na21 term
               moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
-                -taui_qi * sinz(izs:ize) * SQRT2*k_T
+                -taui_qi * sinz(izs:ize) * SQRT2*k_Ti
           END SELECT
         CASE(2) ! j = 2
           SELECT CASE (ip-1)
           CASE(0) ! Na02 term
               moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel) = moments_rhs_i(ip,ij,iky_0,ikx_0,izs:ize,updatetlevel)&
-                +taui_qi * sinz(izs:ize) * 2._dp*k_T
+                +taui_qi * sinz(izs:ize) * 2._dp*k_Ti
           END SELECT
         END SELECT
       ENDDO
