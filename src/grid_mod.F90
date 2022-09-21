@@ -310,7 +310,7 @@ CONTAINS
       ky_min  = deltaky
     ELSE
       deltaky = 2._dp*PI/Ly
-      ky_max  = Nky*deltaky
+      ky_max  = (Nky-1)*deltaky
       ky_min  = deltaky
       diff_ky_coeff= (1._dp/ky_max)**N_HD
     ENDIF
@@ -398,35 +398,70 @@ CONTAINS
       local_kxmax     = 0._dp
     ELSE ! Build apprpopriate grid
       deltakx      = 2._dp*PI/Lx
-      kx_max       = (Nkx/2)*deltakx
-      kx_min       = deltakx
-      diff_kx_coeff= (1._dp/kx_max)**N_HD
-      ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
-      local_kxmax = 0._dp
-      DO ikx = ikxs,ikxe
-        kxarray(ikx) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*real(ikx-1)/real(Nkx)))
-        if (ikx .EQ. Nx/2+1)     kxarray(ikx) = -kxarray(ikx)
-        ! Finding kx=0
-        IF (kxarray(ikx) .EQ. 0) THEN
-          ikx_0 = ikx
-          contains_kx0 = .true.
-        ENDIF
-        ! Finding local kxmax
-        IF (ABS(kxarray(ikx)) .GT. local_kxmax) THEN
-          local_kxmax = ABS(kxarray(ikx))
-        ENDIF
-        ! Finding kxmax
-        IF (kxarray(ikx) .EQ. kx_max) ikx_max = ikx
-      END DO
-      ! Build the full grids on process 0 to diagnose it without comm
-      ! kx
-      DO ikx = 1,Nkx
-          kxarray_full(ikx) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*real(ikx-1)/real(Nkx)))
-          IF (ikx .EQ. Nx/2+1) kxarray_full(ikx) = -kxarray_full(ikx)
-      END DO
+      IF(MODULO(Nkx,2) .EQ. 0) THEN ! Even number of Nkx (-2 -1 0 1 2 3)
+        kx_max = (Nkx/2)*deltakx
+        kx_min = -kx_max+deltakx
+        ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
+        local_kxmax = 0._dp
+        DO ikx = ikxs,ikxe
+          kxarray(ikx) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*real(ikx-1)/real(Nkx)))
+          if (ikx .EQ. Nx/2+1)     kxarray(ikx) = -kxarray(ikx)
+          ! Finding kx=0
+          IF (kxarray(ikx) .EQ. 0) THEN
+            ikx_0 = ikx
+            contains_kx0 = .true.
+          ENDIF
+          ! Finding local kxmax
+          IF (ABS(kxarray(ikx)) .GT. local_kxmax) THEN
+            local_kxmax = ABS(kxarray(ikx))
+          ENDIF
+          ! Finding kxmax
+          IF (kxarray(ikx) .EQ. kx_max) ikx_max = ikx
+        END DO
+        ! Build the full grids on process 0 to diagnose it without comm
+        ! kx
+        DO ikx = 1,Nkx
+            kxarray_full(ikx) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*real(ikx-1)/real(Nkx)))
+            IF (ikx .EQ. Nx/2+1) kxarray_full(ikx) = -kxarray_full(ikx)
+        END DO
+      ELSE ! Odd number of kx (-2 -1 0 1 2)
+        kx_max = (Nkx-1)/2*deltakx
+        kx_min = -kx_max
+        ! Creating a grid ordered as dk*(0 1 2 -2 -1)
+        local_kxmax = 0._dp
+        DO ikx = ikxs,ikxe
+          IF(ikx .LE. (Nkx-1)/2+1) THEN
+            kxarray(ikx) = deltakx*(ikx-1)
+          ELSE
+            kxarray(ikx) = deltakx*(ikx-Nkx-1)
+          ENDIF
+          ! Finding kx=0
+          IF (kxarray(ikx) .EQ. 0) THEN
+            ikx_0 = ikx
+            contains_kx0 = .true.
+          ENDIF
+          ! Finding local kxmax
+          IF (ABS(kxarray(ikx)) .GT. local_kxmax) THEN
+            local_kxmax = ABS(kxarray(ikx))
+          ENDIF
+          ! Finding kxmax
+          IF (kxarray(ikx) .EQ. kx_max) ikx_max = ikx
+        END DO
+        ! Build the full grids on process 0 to diagnose it without comm
+        ! kx
+        DO ikx = 1,Nkx
+          IF(ikx .LE. (Nkx-1)/2+1) THEN
+            kxarray_full(ikx) = deltakx*(ikx-1)
+          ELSE
+            kxarray_full(ikx) = deltakx*(ikx-Nkx-1)
+          ENDIF
+        END DO
+      ENDIF
     ENDIF
+    ! For hyperdiffusion
+    diff_kx_coeff= (1._dp/kx_max)**N_HD
     ! Orszag 2/3 filter
-    two_third_kxmax = 2._dp/3._dp*deltakx*(Nkx/2-1);
+    two_third_kxmax = 2._dp/3._dp*kx_max;
     ALLOCATE(AA_x(ikxs:ikxe))
     DO ikx = ikxs,ikxe
       IF ( ((kxarray(ikx) .GT. -two_third_kxmax) .AND. &
@@ -441,7 +476,7 @@ CONTAINS
 
   SUBROUTINE set_zgrid
     USE prec_const
-    USE model, ONLY: mu_z
+    USE model, ONLY: mu_z, N_HD
     IMPLICIT NONE
     INTEGER :: i_, fid
     REAL    :: grid_shift, Lz, zmax, zmin
@@ -454,7 +489,7 @@ CONTAINS
     inv_deltaz    = 1._dp/deltaz
     ! Parallel hyperdiffusion coefficient
     IF(mu_z .GT. 0) THEN
-      diff_dz_coeff = -(deltaz/2._dp)**4 ! adaptive fourth derivative (~GENE)
+      diff_dz_coeff = REAL((imagu*deltaz/2._dp)**4) ! adaptive fourth derivative (~GENE)
     ELSE
       diff_dz_coeff = 1._dp    ! non adaptive (positive sign to compensate mu_z neg)
     ENDIF
