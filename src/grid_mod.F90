@@ -95,13 +95,15 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED ::  ips_i,ipe_i, ijs_i,ije_i
   INTEGER,  PUBLIC, PROTECTED ::  ipgs_e,ipge_e, ijgs_e,ijge_e ! Ghosts start and end indices
   INTEGER,  PUBLIC, PROTECTED ::  ipgs_i,ipge_i, ijgs_i,ijge_i
-  INTEGER,  PUBLIC, PROTECTED ::  deltape, ip0_e, ip1_e, ip2_e ! Pgrid spacing and moment 0,1,2 index
-  INTEGER,  PUBLIC, PROTECTED ::  deltapi, ip0_i, ip1_i, ip2_i
+  INTEGER,  PUBLIC, PROTECTED ::  deltape, ip0_e, ip1_e, ip2_e, ip3_e ! Pgrid spacing and moment 0,1,2 index
+  INTEGER,  PUBLIC, PROTECTED ::  deltapi, ip0_i, ip1_i, ip2_i, ip3_i
   LOGICAL,  PUBLIC, PROTECTED ::  CONTAINS_ip0_e, CONTAINS_ip0_i
   LOGICAL,  PUBLIC, PROTECTED ::  CONTAINS_ip1_e, CONTAINS_ip1_i
   LOGICAL,  PUBLIC, PROTECTED ::  CONTAINS_ip2_e, CONTAINS_ip2_i
+  LOGICAL,  PUBLIC, PROTECTED ::  CONTAINS_ip3_e, CONTAINS_ip3_i
   LOGICAL,  PUBLIC, PROTECTED ::  SOLVE_POISSON, SOLVE_AMPERE
-  ! Usefull inverse numbers
+  INTEGER,  PUBLIC, PROTECTED ::  ij0_i, ij0_e
+! Usefull inverse numbers
   REAL(dp), PUBLIC, PROTECTED :: inv_Nx, inv_Ny, inv_Nz
 
   ! Public Functions
@@ -205,42 +207,32 @@ CONTAINS
 
     !! local grid computations
     ! Flag to avoid unnecessary logical operations
-    CONTAINS_ip0_e = .FALSE.; CONTAINS_ip1_e = .FALSE.; CONTAINS_ip2_e = .FALSE.
-    CONTAINS_ip0_i = .FALSE.; CONTAINS_ip1_i = .FALSE.; CONTAINS_ip2_i = .FALSE.
+    CONTAINS_ip0_e = .FALSE.; CONTAINS_ip1_e = .FALSE.
+    CONTAINS_ip2_e = .FALSE.; CONTAINS_ip3_e = .FALSE.
+    CONTAINS_ip0_i = .FALSE.; CONTAINS_ip1_i = .FALSE.
+    CONTAINS_ip2_i = .FALSE.; CONTAINS_ip3_i = .FALSE.
     SOLVE_POISSON  = .FALSE.; SOLVE_AMPERE   = .FALSE.
     ALLOCATE(parray_e(ipgs_e:ipge_e))
     ALLOCATE(parray_i(ipgs_i:ipge_i))
     DO ip = ipgs_e,ipge_e
       parray_e(ip) = (ip-1)*deltape
       ! Storing indices of particular degrees for fluid moments computations
-      IF(parray_e(ip) .EQ. 0) THEN
-        ip0_e          = ip
-        CONTAINS_ip0_e = .TRUE.
-      ENDIF
-      IF(parray_e(ip) .EQ. 1) THEN
-        ip1_e          = ip
-        CONTAINS_ip1_e = .TRUE.
-      ENDIF
-      IF(parray_e(ip) .EQ. 2) THEN
-        ip2_e          = ip
-        CONTAINS_ip2_e = .TRUE.
-      ENDIF
+      SELECT CASE (parray_e(ip))
+      CASE(0); ip0_e = ip; CONTAINS_ip0_e = .TRUE.
+      CASE(1); ip1_e = ip; CONTAINS_ip1_e = .TRUE.
+      CASE(2); ip2_e = ip; CONTAINS_ip2_e = .TRUE.
+      CASE(3); ip3_e = ip; CONTAINS_ip3_e = .TRUE.
+      END SELECT
     END DO
     DO ip = ipgs_i,ipge_i
       parray_i(ip) = (ip-1)*deltapi
       ! Storing indices of particular degrees for fluid moments computations
-      IF(parray_i(ip) .EQ. 0) THEN
-        ip0_i          = ip
-        CONTAINS_ip0_i = .TRUE.
-    ENDIF
-      IF(parray_i(ip) .EQ. 1) THEN
-        ip1_i          = ip
-        CONTAINS_ip1_i = .TRUE.
-      ENDIF
-      IF(parray_i(ip) .EQ. 2) THEN
-        ip2_i          = ip
-        CONTAINS_ip2_i = .TRUE.
-      ENDIF
+      SELECT CASE (parray_i(ip))
+      CASE(0); ip0_i = ip; CONTAINS_ip0_i = .TRUE.
+      CASE(1); ip1_i = ip; CONTAINS_ip1_i = .TRUE.
+      CASE(2); ip2_i = ip; CONTAINS_ip2_i = .TRUE.
+      CASE(3); ip3_i = ip; CONTAINS_ip3_i = .TRUE.
+      END SELECT
     END DO
     IF(CONTAINS_ip0_e .AND. CONTAINS_ip0_i) SOLVE_POISSON = .TRUE.
     IF(CONTAINS_ip1_e .AND. CONTAINS_ip1_i) SOLVE_AMPERE  = .TRUE.
@@ -285,9 +277,12 @@ CONTAINS
     DO ij = ijgs_e,ijge_e; jarray_e(ij) = ij-1; END DO
     DO ij = ijgs_i,ijge_i; jarray_i(ij) = ij-1; END DO
     ! Precomputations
-    maxj  = MAX(jmaxi, jmaxe)
+    maxj       = MAX(jmaxi, jmaxe)
     jmaxe_dp   = real(jmaxe,dp)
     jmaxi_dp   = real(jmaxi,dp)
+    ! j=0 indices
+    DO ij = ijs_e,ij0_e; IF(jarray_e(ij) .EQ. 0) ij0_e = ij; END DO
+    DO ij = ijs_i,ij0_i; IF(jarray_i(ij) .EQ. 0) ij0_i = ij; END DO
   END SUBROUTINE set_jgrid
 
 
