@@ -3,7 +3,7 @@ MODULE array
   use prec_const
   implicit none
 
-  ! Arrays to store the rhs, for time integration (ip,ij,ikx,iky,iz,updatetlevel)
+  ! Arrays to store the rhs, for time integration (ip,ij,iky,ikx,iz,updatetlevel)
   COMPLEX(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: moments_rhs_e
   COMPLEX(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: moments_rhs_i
 
@@ -14,10 +14,10 @@ MODULE array
   ! Derivatives and interpolated moments
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz_nepj
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: interp_nepj
-  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz4_Nepj
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddzND_nepj
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz_nipj
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: interp_nipj
-  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz4_Nipj
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddzND_nipj
 
   ! Arrays to store special initial modes (semi linear simulation)
   ! Zonal ones (ky=0)
@@ -29,17 +29,17 @@ MODULE array
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_i_EM
   COMPLEX(dp), DIMENSION(:,:),     ALLOCATABLE :: phi_EM
 
-  ! Non linear term array (ip,ij,ikx,iky,iz)
+  ! Non linear term array (ip,ij,iky,ikx,iz)
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Sepj ! electron
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Sipj ! ion
 
-  ! To load collision matrix (ip,ij,ikx,iky,iz)
+  ! To load collision matrix (ip,ij,iky,ikx,iz)
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Ceepj, CeipjT
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: CeipjF
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Ciipj, CiepjT
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: CiepjF
 
-  ! Collision term (ip,ij,ikx,iky,iz)
+  ! Collision term (ip,ij,iky,ikx,iz)
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: TColl_e, TColl_i
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: TColl_e_local, TColl_i_local
 
@@ -58,17 +58,17 @@ MODULE array
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xphij_i, xphijp1_i, xphijm1_i
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xpsij_e, xpsijp1_e, xpsijm1_e
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xpsij_i, xpsijp1_i, xpsijm1_i
-  ! Kernel function evaluation (ij,ikx,iky,iz,odd/even p)
+  ! Kernel function evaluation (ij,iky,ikx,iz,odd/even p)
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: kernel_e
   REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: kernel_i
 
-  ! Poisson operator (ikx,iky,iz)
+  ! Poisson operator (iky,ikx,iz)
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_poisson_op
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_ampere_op
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_pol_ion
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: HF_phi_correction_operator
 
-  ! Gyrocenter density for electron and ions (ikx,iky,iz)
+  ! Gyrocenter density for electron and ions (iky,ikx,iz)
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ne00
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ni00
 
@@ -76,17 +76,17 @@ MODULE array
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: Nepjz
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: Nipjz
 
-  ! particle density for electron and ions (ikx,iky,iz)
+  ! particle density for electron and ions (iky,ikx,iz)
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: dens_e
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: dens_i
 
-  ! particle fluid velocity for electron and ions (ikx,iky,iz)
+  ! particle fluid velocity for electron and ions (iky,ikx,iz)
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: upar_e
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: upar_i
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: uper_e
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: uper_i
 
-  ! particle temperature for electron and ions (ikx,iky,iz)
+  ! particle temperature for electron and ions (iky,ikx,iz)
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Tpar_e
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Tpar_i
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Tper_e
