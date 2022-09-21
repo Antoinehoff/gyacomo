@@ -21,12 +21,13 @@ addpath(genpath([helazdir,'matlab/load'])) % ... add
 % folder = '/misc/gene_results/Z-pinch/ZP_HP_kn_1.6_HRES/';
 % folder = '/misc/gene_results/ZP_kn_2.5_large_box/';
 % folder = '/misc/gene_results/CBC/128x64x16x24x12/';
-folder = '/misc/gene_results/CBC/196x96x20x32x16_01/';
-% folder = '/misc/gene_results/CBC/128x64x16x6x4/';
+% folder = '/misc/gene_results/CBC/196x96x20x32x16_02/';
+folder = '/misc/gene_results/CBC/128x64x16x6x4/';
 % folder = '/misc/gene_results/CBC/KT_5.3_128x64x16x24x12_01/';
 % folder = '/misc/gene_results/CBC/KT_4.5_128x64x16x24x12_01/';
 % folder = '/misc/gene_results/CBC/KT_9_128x64x16x24x12/';
 % folder = '/misc/gene_results/CBC/KT_13_large_box_128x64x16x24x12/';
+% folder = '/misc/gene_results/CBC/Lapillone_Fig6/';
 gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
@@ -78,7 +79,7 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';

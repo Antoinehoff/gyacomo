@@ -31,7 +31,7 @@ Xfl = @(z) (R+a*cos(z)).*cos(q*z);
 Yfl = @(z) (R+a*cos(z)).*sin(q*z);
 Zfl = @(z) a*sin(z);
 Rvec= @(z) [Xfl(z); Yfl(z); Zfl(z)];
-% xvec
+% xvec shearless
 xX  = @(z) (Xfl(z)-R*cos(q*z))./sqrt((Xfl(z)-R*cos(q*z)).^2+(Yfl(z)-R*sin(q*z)).^2+Zfl(z).^2);
 xY  = @(z) (Yfl(z)-R*sin(q*z))./sqrt((Xfl(z)-R*cos(q*z)).^2+(Yfl(z)-R*sin(q*z)).^2+Zfl(z).^2);
 xZ  = @(z)              Zfl(z)./sqrt((Xfl(z)-R*cos(q*z)).^2+(Yfl(z)-R*sin(q*z)).^2+Zfl(z).^2);
@@ -65,12 +65,26 @@ for it_ = 1:numel(OPTIONS.TIME)
 subplot(1,numel(OPTIONS.TIME),it_)
     %plot magnetic geometry
     if OPTIONS.PLT_MTOPO
-    magnetic_topo=surf(x_tor, y_tor, z_tor); hold on;alpha 1.0;%light('Position',[-1 1 1],'Style','local')
-    set(magnetic_topo,'edgecolor',[1 1 1]*0.7,'facecolor','none')
+    magnetic_topo=surf(x_tor, y_tor, z_tor); hold on;alpha 0.5;%light('Position',[-1 1 1],'Style','local')
+    set(magnetic_topo,'edgecolor',[1     1 1]*0.8,'facecolor','none')
+%     set(magnetic_topo,'edgecolor','none','facecolor','white')
     end
     %plot field line
     theta  = linspace(-Nturns*pi, Nturns*pi, 512)   ; % Poloidal angle
     plot3(Xfl(theta),Yfl(theta),Zfl(theta)); hold on;
+    %plot fluxe tube
+    if OPTIONS.PLT_FTUBE
+    theta  = linspace(-Nturns*pi, Nturns*pi, 64)    ; % Poloidal angle
+    %store the shifts in an order (top left to bottom right)
+    s_x = r_o_R*[DATA.x(1) DATA.x(end) DATA.x(1)   DATA.x(end)]; 
+    s_y = r_o_R*[DATA.y(1) DATA.y(1)   DATA.y(end) DATA.y(end)];
+    for i_ = 1:4
+    vx_ = Xfl(theta) + s_x(i_)*xX(theta) + s_y(i_)*yX(theta);
+    vy_ = Yfl(theta) + s_x(i_)*xY(theta) + s_y(i_)*yY(theta);
+    vz_ = Zfl(theta) + s_x(i_)*xZ(theta) + s_y(i_)*yZ(theta);
+    plot3(vx_,vy_,vz_,'-','color',[1.0 0.6 0.6]*0.8,'linewidth',1.5); hold on;
+    end
+    end
     %plot vector basis
     theta  = DATA.z   ; % Poloidal angle
     plot3(Xfl(theta),Yfl(theta),Zfl(theta),'ok'); hold on;
@@ -105,6 +119,6 @@ end
     %%
     axis equal
     view([1,-2,1])
-
+    grid on
 end
 

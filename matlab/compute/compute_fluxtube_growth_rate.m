@@ -80,9 +80,16 @@ end
 if PLOT > 2
     xlabel([]); xticks([]);
     subplot(2,2,4)
-    semilogy(DATA.Ts3D,squeeze(abs(DATA.PHI(2,1,DATA.Nz/2,:)))); hold on;
-    xlabel('t'); ylabel('$|\phi_{ky}|(t)$')
-
+    [~,ikx0] = min(abs(DATA.kx));
+    for i_ = 1:(DATA.Nkx+1)/2
+        iky = 1 + (DATA.ky(1) == 0);
+        ikx = ikx0 + (i_-1);
+        semilogy(DATA.Ts3D,squeeze(abs(DATA.PHI(iky,ikx,DATA.Nz/2,:))),...
+            'DisplayName',['$k_x=',num2str(DATA.kx(ikx)),'$, $k_y=',num2str(DATA.ky(iky)),'$']); 
+        hold on;
+        xlabel('t,'); ylabel('$|\phi_{ky}|(t)$')
+    end
+legend('show')
 end
 
 end

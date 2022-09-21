@@ -9,12 +9,20 @@ end
 try
     DATA.K_N     = h5readatt(filename,'/data/input','K_n');
 catch
-    DATA.K_N     = h5readatt(filename,'/data/input','k_N');
+    try
+        DATA.K_N     = h5readatt(filename,'/data/input','k_N');
+    catch
+        DATA.K_N     = h5readatt(filename,'/data/input','k_Ni');
+    end
 end
 try
     DATA.K_T     = h5readatt(filename,'/data/input','K_T');
 catch
-    DATA.K_T     = h5readatt(filename,'/data/input','k_T');
+    try
+        DATA.K_T     = h5readatt(filename,'/data/input','k_T');
+    catch
+        DATA.K_T     = h5readatt(filename,'/data/input','k_Ti');
+    end
 end
 DATA.Q0      = h5readatt(filename,'/data/input','q0');
 DATA.SHEAR   = h5readatt(filename,'/data/input','shear');

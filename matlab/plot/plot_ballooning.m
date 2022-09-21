@@ -13,8 +13,12 @@ function [FIG] = plot_ballooning(data,options)
         psi_imag=imag(data.PSI(:,:,:,it1)); 
         ncol = 2;
     end
-    % Apply baollooning tranform
-    nexc = round(data.ky(2)*data.SHEAR*2*pi/data.kx(2));
+    % Apply ballooning transform
+    if(data.Nkx > 1)
+        nexc = round(data.ky(2)*data.SHEAR*2*pi/data.kx(2));
+    else
+        nexc = 1;
+    end
     for iky=ikyarray
         dims = size(phi_real);
         Nkx  = dims(2);
@@ -22,12 +26,18 @@ function [FIG] = plot_ballooning(data,options)
         Npi  = (Nkx-1)-2*nexc*(is-1);
         if(Npi <= 1)
             ordered_ikx = 1;
-        else
+        elseif(mod(Nkx,2) == 0)
             tmp_ = (Nkx-is+1):-is:(Nkx/2+2);
             ordered_ikx = [tmp_(end:-1:1), 1:is:(Nkx/2)];
+        else
+            Np_ = (Nkx+1)/(2*is);
+            ordered_ikx = [(Np_+1):Nkx 1:Np_];
         end
-
-        idx=data.kx./data.kx(2);
+        try
+            idx=data.kx./data.kx(2);
+        catch
+            idx=0;
+        end
         idx= idx(ordered_ikx);
         Nkx = numel(idx);
 
@@ -36,7 +46,7 @@ function [FIG] = plot_ballooning(data,options)
         b_angle   = phib_real;
 
         for i_ =1:Nkx
-            start_ =  (i_ -1)*dims(3) +1;
+            start_ =  (i_-1)*dims(3) +1;
             end_ =  i_*dims(3);
             ikx  = ordered_ikx(i_);
             phib_real(start_:end_)  = phi_real(iky,ikx,:);
@@ -47,7 +57,7 @@ function [FIG] = plot_ballooning(data,options)
         coordz = data.z;
         for i_ =1: Nkx
             for iz=1:dims(3)
-                ii = dims(3)*(i_ -1) + iz;
+                ii = dims(3)*(i_-1) + iz;
                 b_angle(ii) =coordz(iz) + 2*pi*idx(i_)./is;
             end
         end
@@ -56,7 +66,7 @@ function [FIG] = plot_ballooning(data,options)
         % normalize real and imaginary parts at chi =0
         if options.normalized
             [~,idxLFS] = min(abs(b_angle -0));
-            normalization = abs(phib( idxLFS));
+            normalization = (phib( idxLFS));
         else
             normalization = 1;
         end
@@ -73,8 +83,7 @@ function [FIG] = plot_ballooning(data,options)
         title(['$k_y=',sprintf('%2.2f',data.ky(iky)),...
                ',t_{avg}\in [',sprintf('%1.1f',data.Ts3D(it0)),',',sprintf('%1.1f',data.Ts3D(it1)),']$']);
 
-        if data.BETA > 0
-            
+        if data.BETA > 0         
             psib_real = zeros(  Nkx*dims(3)  ,1);
             psib_imag = psib_real;
             for i_ =1:Nkx
@@ -84,11 +93,14 @@ function [FIG] = plot_ballooning(data,options)
                 psib_real(start_:end_) = psi_real(iky,ikx,:);
                 psib_imag(start_:end_) = psi_imag(iky,ikx,:);
             end
-
+            psib = psib_real(:) + 1i * psib_imag(:);
+            psib_norm = psib / normalization;
+            psib_real_norm  = real( psib_norm);
+            psib_imag_norm  = imag( psib_norm);   
             subplot(numel(ikyarray),ncol,ncol*(iplot-1)+2)
-            plot(b_angle/pi, psib_real/ normalization,'-b'); hold on;
-            plot(b_angle/pi, psib_imag/ normalization ,'-r');
-            plot(b_angle/pi, sqrt(psib_real .^2 + psib_imag.^2)/ normalization,'-k');
+            plot(b_angle/pi, psib_real_norm,'-b'); hold on;
+            plot(b_angle/pi, psib_imag_norm ,'-r');
+            plot(b_angle/pi, abs(psib_norm),'-k');
             legend('real','imag','norm')
             xlabel('$\chi / \pi$')
             ylabel('$\psi_B (\chi)$');

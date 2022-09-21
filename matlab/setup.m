@@ -43,10 +43,10 @@ MODEL.q_e     =-1.0;
 MODEL.q_i     = 1.0;
 if MODEL.q_e == 0; SIMID = [SIMID,'_i']; end;
 % gradients L_perp/L_x
-MODEL.K_N     = K_N;       
-MODEL.ETA_N   = ETA_N;
-MODEL.K_T     = K_T;    
-MODEL.ETA_T   = ETA_T;    
+MODEL.K_Ni    = K_Ni;       
+MODEL.K_Ne    = K_Ne;
+MODEL.K_Ti    = K_Ti;    
+MODEL.K_Te    = K_Te;    
 MODEL.GradB   = GRADB;      % Magnetic gradient
 MODEL.CurvB   = CURVB;      % Magnetic curvature
 MODEL.lambdaD = LAMBDAD;

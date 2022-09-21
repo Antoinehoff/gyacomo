@@ -11,19 +11,19 @@ ny=2*nky-1;
 
 if ny~=1
     %note, we need one extra point which we set to zero for the ifft 
-    spectrumKxKyZ=zeros(ny,nx,nz);
-    spectrumKxKyZ(1:nky,:,:)=field_c(:,:,:);
-    spectrumKxKyZ((nky+1):(ny),1,:)=conj(field_c(nky:-1:2,1,:));
-    spectrumKxKyZ((nky+1):(ny),2:nx,:)=conj(field_c(nky:-1:2,nx:-1:2,:));
+    spectrumKyKxZ=zeros(ny,nx,nz);
+    spectrumKyKxZ(1:nky,:,:)=field_c(:,:,:);
+    spectrumKyKxZ((nky+1):(ny),1,:)=conj(field_c(nky:-1:2,1,:));
+    spectrumKyKxZ((nky+1):(ny),2:nx,:)=conj(field_c(nky:-1:2,nx:-1:2,:));
 else
     %pad with zeros to interpolate on fine scale
     ny=20;
-    spectrumKxKyZ=zeros(nx,ny,nz);
-    spectrumKxKyZ(:,2,:)=field_c(:,:,:);
+    spectrumKyKxZ=zeros(nx,ny,nz);
+    spectrumKyKxZ(:,2,:)=field_c(:,:,:);
 end   
 
 %inverse fft, symmetric as we are using real data
-spectrumXKyZ=nx*ifft(spectrumKxKyZ,[],1);
+spectrumXKyZ=nx*ifft(spectrumKyKxZ,[],1);
 field_r=ny*ifft(spectrumXKyZ,[],2,'symmetric');
 clear spectrumKxKyZ 
 
