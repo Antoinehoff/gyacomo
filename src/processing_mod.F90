@@ -277,7 +277,7 @@ SUBROUTINE compute_radial_ion_heatflux
          +tau_i*sqrt_tau_o_sigma_i*imagu*ky_*CONJG(psi(iky,ikx,izgs:izge))&
            *kernel_i(in,iky,ikx,izgs:izge,0)*(&
                    0.5_dp*SQRT2*SQRT3*moments_i(ip3_i,in  ,iky,ikx,izgs:izge,updatetlevel)&
-                        +1.5_dp*CONJG(moments_i(ip1_i,in  ,iky,ikx,izgs:izge,updatetlevel))& !?????
+                              +1.5_dp*moments_i(ip1_i,in  ,iky,ikx,izgs:izge,updatetlevel)&
                   +(2._dp*n_dp+1._dp)*moments_i(ip1_i,in  ,iky,ikx,izgs:izge,updatetlevel)&
                         -(n_dp+1._dp)*moments_i(ip1_i,in+1,iky,ikx,izgs:izge,updatetlevel)&
                                 -n_dp*moments_i(ip1_i,in-1,iky,ikx,izgs:izge,updatetlevel))
