@@ -20,7 +20,7 @@ CONTAINS
     USE grid
     USE calculus,         ONLY : simpson_rule_z
     USE parallel,         ONLY : manual_3D_bcast
-    use model,            ONLY : qe2_taue, qi2_taui, q_e, q_i, lambdaD, KIN_E
+    use model,            ONLY : qe2_taue, qi2_taui, q_e, q_i, lambdaD, KIN_E, sigma_e, sigma_i
     USE processing,       ONLY : compute_density
     USE geometry,         ONLY : iInt_Jacobian, Jacobian
     IMPLICIT NONE
@@ -33,9 +33,7 @@ CONTAINS
     ! Execution time start
     CALL cpu_time(t0_poisson)
     !! Poisson can be solved only for process containing p=0
-    ! IF ( SOLVE_POISSON ) THEN
-    IF ( (ips_e .EQ. ip0_e) .AND. (ips_i .EQ. ip0_i) ) THEN
-
+    IF ( SOLVE_POISSON ) THEN
       kxloop: DO ikx = ikxs,ikxe
         kyloop: DO iky = ikys,ikye
           phi(iky,ikx,izs:ize)  = 0._dp
@@ -45,14 +43,13 @@ CONTAINS
             rho_i(izs:ize) = rho_i(izs:ize) &
              +q_i*kernel_i(ini,iky,ikx,izs:ize,0)*moments_i(ip0_i,ini,iky,ikx,izs:ize,updatetlevel)
           END DO
-
           !!!! Compute electron particle charge density q_e n_e
           rho_e = 0._dp
           IF (KIN_E) THEN ! Kinetic electrons
-            DO ine=1,jmaxe+1
-              rho_e(izs:ize) = rho_e(izs:ize) &
-               +q_e*kernel_e(ine,iky,ikx,izs:ize,0)*moments_e(ip0_e,ine,iky,ikx,izs:ize,updatetlevel)
-            END DO
+          DO ine=1,jmaxe+1
+            rho_e(izs:ize) = rho_e(izs:ize) &
+             +q_e*kernel_e(ine,iky,ikx,izs:ize,0)*moments_e(ip0_e,ine,iky,ikx,izs:ize,updatetlevel)
+          END DO
           ELSE  ! Adiabatic electrons
             ! Adiabatic charge density (linked to flux surface averaged phi)
             ! We compute the flux surface average solving a flux surface averaged
@@ -70,13 +67,10 @@ CONTAINS
           ENDIF
           !!!!!!!!!!!!!!! Inverting the poisson equation !!!!!!!!!!!!!!!!!!!!!!!!!!
           phi(iky,ikx,izs:ize) = (rho_e(izs:ize) + rho_i(izs:ize))*inv_poisson_op(iky,ikx,izs:ize)
-
         END DO kyloop
       END DO kxloop
-
       ! Cancel origin singularity
       IF (contains_kx0 .AND. contains_ky0) phi(iky_0,ikx_0,:) = 0._dp
-
     ENDIF
 
     ! Transfer phi to all the others process along p
@@ -85,7 +79,6 @@ CONTAINS
     ! Execution time end
     CALL cpu_time(t1_poisson)
     tc_poisson = tc_poisson + (t1_poisson - t0_poisson)
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   END SUBROUTINE poisson
 
   SUBROUTINE ampere
@@ -104,34 +97,24 @@ CONTAINS
 
     ! Execution time start
     CALL cpu_time(t0_poisson)
-    !! Ampere can be solved only with beta > 0 and for process containing p=1
+    !! Ampere can be solved only with beta > 0 and for process containing p=1 moments
     IF ( SOLVE_AMPERE ) THEN
-      kxloop: DO ikx = ikxs,ikxe
-        kyloop: DO iky = ikys,ikye
-          psi(iky,ikx,izs:ize)  = 0._dp
-          !!!! Compute ion particle current density q_i u_i
-          I_i = 0._dp
-          DO ini=1,jmaxi+1
-            I_i(izs:ize) = I_i(izs:ize) &
-             +kernel_i(ini,iky,ikx,izs:ize,0)*moments_i(ip1_i,ini,iky,ikx,izs:ize,updatetlevel)
-          END DO
-          I_i = q_i * sqrt_tau_o_sigma_i * I_i
-          !!!! Compute electron particle charge density q_e n_e
-          I_e = 0._dp
-          DO ine=1,jmaxe+1
-            I_e(izs:ize) = I_e(izs:ize) &
-             +q_e*kernel_e(ine,iky,ikx,izs:ize,0)*moments_e(ip1_e,ine,iky,ikx,izs:ize,updatetlevel)
-          END DO
-          I_e = q_e * sqrt_tau_o_sigma_e * I_e
-          !!!!!!!!!!!!!!! Inverting the poisson equation !!!!!!!!!!!!!!!!!!!!!!!!!!
-          psi(iky,ikx,izs:ize) = beta*(I_e(izs:ize) + I_i(izs:ize))*inv_ampere_op(iky,ikx,izs:ize)
-
-        END DO kyloop
-      END DO kxloop
+      psi(ikys:ikye,ikxs:ikxe,izs:ize)  = 0._dp
+      !!!! ion particle current density contribution "q_i u_i"
+      DO ini=1,jmaxi+1
+        psi(ikys:ikye,ikxs:ikxe,izs:ize) = psi(ikys:ikye,ikxs:ikxe,izs:ize) &
+         +q_i*sqrt_tau_o_sigma_i*kernel_i(ini,ikys:ikye,ikxs:ikxe,izs:ize,0)*moments_i(ip1_i,ini,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel)
+      END DO
+      !!!! electron particle current density contribution "q_e u_e"
+      DO ine=1,jmaxe+1
+        psi(ikys:ikye,ikxs:ikxe,izs:ize) = psi(ikys:ikye,ikxs:ikxe,izs:ize) &
+          +q_e*sqrt_tau_o_sigma_e*kernel_e(ine,ikys:ikye,ikxs:ikxe,izs:ize,0)*moments_e(ip1_e,ine,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel)
+      END DO
+      !!!!!!!!!!!!!!! Inverting the poisson equation !!!!!!!!!!!!!!!!!!!!!!!!!!
+      psi(ikys:ikye,ikxs:ikxe,izs:ize) = beta*psi(ikys:ikye,ikxs:ikxe,izs:ize)*inv_ampere_op(ikys:ikye,ikxs:ikxe,izs:ize)
 
       ! Cancel origin singularity
       IF (contains_kx0 .AND. contains_ky0) psi(iky_0,ikx_0,:) = 0._dp
-
     ENDIF
 
     ! Transfer phi to all the others process along p
@@ -140,7 +123,6 @@ CONTAINS
     ! Execution time end
     CALL cpu_time(t1_poisson)
     tc_poisson = tc_poisson + (t1_poisson - t0_poisson)
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   END SUBROUTINE ampere
 
 END SUBROUTINE solve_EM_fields
