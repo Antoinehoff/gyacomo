@@ -35,7 +35,6 @@ SUBROUTINE update_ghosts_EM
 
   IF(Nz .GT. 1) THEN
     CALL update_ghosts_z_phi
-
     IF(beta .GT. 0._dp) &
       CALL update_ghosts_z_psi
   ENDIF
@@ -311,21 +310,21 @@ SUBROUTINE update_ghosts_z_psi
       CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
         count = (ikye-ikys+1) * (ikxe-ikxs+1)
         !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
-        CALL mpi_sendrecv(     psi(:,:,ize  ), count, MPI_DOUBLE_COMPLEX, nbr_U, 30, & ! Send to Up the last
-                          buff_xy_zBC(:,:,-1), count, MPI_DOUBLE_COMPLEX, nbr_D, 30, & ! Receive from Down the first-1
+        CALL mpi_sendrecv(     psi(:,:,ize  ), count, MPI_DOUBLE_COMPLEX, nbr_U, 40, & ! Send to Up the last
+                          buff_xy_zBC(:,:,-1), count, MPI_DOUBLE_COMPLEX, nbr_D, 40, & ! Receive from Down the first-1
                           comm0, status, ierr)
 
-        CALL mpi_sendrecv(     psi(:,:,ize-1), count, MPI_DOUBLE_COMPLEX, nbr_U, 31, & ! Send to Up the last
-                          buff_xy_zBC(:,:,-2), count, MPI_DOUBLE_COMPLEX, nbr_D, 31, & ! Receive from Down the first-2
+        CALL mpi_sendrecv(     psi(:,:,ize-1), count, MPI_DOUBLE_COMPLEX, nbr_U, 41, & ! Send to Up the last
+                          buff_xy_zBC(:,:,-2), count, MPI_DOUBLE_COMPLEX, nbr_D, 41, & ! Receive from Down the first-2
                           comm0, status, ierr)
 
         !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
-        CALL mpi_sendrecv(     psi(:,:,izs  ), count, MPI_DOUBLE_COMPLEX, nbr_D, 32, & ! Send to Down the first
-                          buff_xy_zBC(:,:,+1), count, MPI_DOUBLE_COMPLEX, nbr_U, 32, & ! Recieve from Up the last+1
+        CALL mpi_sendrecv(     psi(:,:,izs  ), count, MPI_DOUBLE_COMPLEX, nbr_D, 42, & ! Send to Down the first
+                          buff_xy_zBC(:,:,+1), count, MPI_DOUBLE_COMPLEX, nbr_U, 42, & ! Recieve from Up the last+1
                           comm0, status, ierr)
 
-        CALL mpi_sendrecv(     psi(:,:,izs+1), count, MPI_DOUBLE_COMPLEX, nbr_D, 33, & ! Send to Down the first
-                          buff_xy_zBC(:,:,+2), count, MPI_DOUBLE_COMPLEX, nbr_U, 33, & ! Recieve from Up the last+2
+        CALL mpi_sendrecv(     psi(:,:,izs+1), count, MPI_DOUBLE_COMPLEX, nbr_D, 43, & ! Send to Down the first
+                          buff_xy_zBC(:,:,+2), count, MPI_DOUBLE_COMPLEX, nbr_U, 43, & ! Recieve from Up the last+2
                           comm0, status, ierr)
      ELSE
        buff_xy_zBC(:,:,-1) = psi(:,:,ize  )
