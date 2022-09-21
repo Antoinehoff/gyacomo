@@ -138,14 +138,12 @@ SUBROUTINE evaluate_poisson_op
     END DO
     !!!!!!!!!!!!! Electron contribution
     pol_e = 0._dp
-    ! Kinetic model
-    IF (KIN_E) THEN
-      ! loop over n only if the max polynomial degree
-      DO ine=1,jmaxe+1 ! ine = n+1
-        pol_e = pol_e  + qe2_taue*kernel_e(ine,iky,ikx,iz,0)**2 ! ... sum recursively ...
-      END DO
-    ! Adiabatic model
-    ELSE
+    IF (KIN_E) THEN ! Kinetic model
+    ! loop over n only if the max polynomial degree
+    DO ine=1,jmaxe+1 ! ine = n+1
+      pol_e = pol_e  + qe2_taue*kernel_e(ine,iky,ikx,iz,0)**2 ! ... sum recursively ...
+    END DO
+    ELSE ! Adiabatic model
       pol_e = qe2_taue - 1._dp
     ENDIF
     inv_poisson_op(iky, ikx, iz) =  1._dp/(qe2_taue + qi2_taui - pol_i - pol_e)
@@ -166,6 +164,7 @@ SUBROUTINE evaluate_ampere_op
   USE array, Only : kernel_e, kernel_i, inv_ampere_op
   USE grid
   USE model, ONLY : tau_e, tau_i, q_e, q_i, KIN_E, beta
+  USE geometry, ONLY : hatB
   IMPLICIT NONE
   REAL(dp)    :: pol_i, pol_e, kperp2     ! (Z_a^2/tau_a (1-sum_n kernel_na^2))
   INTEGER     :: ini,ine
@@ -182,20 +181,20 @@ SUBROUTINE evaluate_ampere_op
         inv_ampere_op(iky, ikx, iz) =  0._dp
     ELSE
       !!!!!!!!!!!!!!!!! Ion contribution
-      ! loop over n only if the max polynomial degree
       pol_i = 0._dp
+      ! loop over n only up to the max polynomial degree
       DO ini=1,jmaxi+1
         pol_i = pol_i  + kernel_i(ini,iky,ikx,iz,0)**2 ! ... sum recursively ...
       END DO
       pol_i = q_i**2/(sigma_i**2) * pol_i
       !!!!!!!!!!!!! Electron contribution
       pol_e = 0._dp
-      ! loop over n only if the max polynomial degree
+      ! loop over n only up to the max polynomial degree
       DO ine=1,jmaxe+1 ! ine = n+1
         pol_e = pol_e  + kernel_e(ine,iky,ikx,iz,0)**2 ! ... sum recursively ...
       END DO
       pol_e = q_e**2/(sigma_e**2) * pol_e
-      inv_ampere_op(iky, ikx, iz) =  1._dp/(2._dp*kperp2 + beta*(pol_i + pol_e))
+      inv_ampere_op(iky, ikx, iz) =  1._dp/(2._dp*kperp2*hatB(iz,0)**2 + beta*(pol_i + pol_e))
     ENDIF
     END DO zloop
     END DO kyloop
@@ -208,7 +207,7 @@ END SUBROUTINE evaluate_ampere_op
 SUBROUTINE compute_lin_coeff
   USE array
   USE model, ONLY: taue_qe, taui_qi, sqrtTaue_qe, sqrtTaui_qi, &
-                   k_T, eta_T, k_N, eta_N, CurvB, GradB, KIN_E,&
+                   k_Te, k_Ti, k_Ne, k_Ni, CurvB, GradB, KIN_E,&
                    tau_e, tau_i, sigma_e, sigma_i
   USE prec_const
   USE grid,  ONLY: parray_e, parray_i, jarray_e, jarray_i, &
@@ -305,11 +304,11 @@ SUBROUTINE compute_lin_coeff
         j_dp = REAL(j_int,dp) ! REALof Laguerre degree
         !! Electrostatic potential pj terms
         IF (p_int .EQ. 0) THEN ! kronecker p0
-          xphij_e(ip,ij)    =+eta_N*k_N + 2.*j_dp*eta_T*k_T
-          xphijp1_e(ip,ij)  =-eta_T*k_T*(j_dp+1._dp)
-          xphijm1_e(ip,ij)  =-eta_T*k_T* j_dp
+          xphij_e(ip,ij)    = +k_Ne+ 2.*j_dp*k_Te
+          xphijp1_e(ip,ij)  = -k_Te*(j_dp+1._dp)
+          xphijm1_e(ip,ij)  = -k_Te* j_dp
         ELSE IF (p_int .EQ. 2) THEN ! kronecker p2
-          xphij_e(ip,ij)    =+eta_T*k_T/SQRT2
+          xphij_e(ip,ij)    = +k_Te/SQRT2
           xphijp1_e(ip,ij)  = 0._dp; xphijm1_e(ip,ij)  = 0._dp;
         ELSE
           xphij_e(ip,ij)    = 0._dp; xphijp1_e(ip,ij)  = 0._dp
@@ -325,11 +324,11 @@ SUBROUTINE compute_lin_coeff
       j_dp = REAL(j_int,dp) ! REALof Laguerre degree
       !! Electrostatic potential pj terms
       IF (p_int .EQ. 0) THEN ! kronecker p0
-        xphij_i(ip,ij)    =+k_N + 2._dp*j_dp*k_T
-        xphijp1_i(ip,ij)  =-k_T*(j_dp+1._dp)
-        xphijm1_i(ip,ij)  =-k_T* j_dp
+        xphij_i(ip,ij)    = +k_Ni + 2._dp*j_dp*k_Ti
+        xphijp1_i(ip,ij)  = -k_Ti*(j_dp+1._dp)
+        xphijm1_i(ip,ij)  = -k_Ti* j_dp
       ELSE IF (p_int .EQ. 2) THEN ! kronecker p2
-        xphij_i(ip,ij)    =+k_T/SQRT2
+        xphij_i(ip,ij)    = +k_Ti/SQRT2
         xphijp1_i(ip,ij)  = 0._dp; xphijm1_i(ip,ij)  = 0._dp;
       ELSE
         xphij_i(ip,ij)    = 0._dp; xphijp1_i(ip,ij)  = 0._dp
@@ -347,14 +346,14 @@ SUBROUTINE compute_lin_coeff
         j_dp = REAL(j_int,dp) ! REALof Laguerre degree
         !! Electrostatic potential pj terms
         IF (p_int .EQ. 1) THEN ! kronecker p1
-          xpsij_e(ip,ij)    =+(eta_N*k_N + (2._dp*j_dp+1._dp)*eta_T*k_T) * SQRT(tau_e)/sigma_e
-          xpsijp1_e(ip,ij)  =- eta_T*k_T*(j_dp+1._dp) * SQRT(tau_e)/sigma_e
-          xpsijm1_e(ip,ij)  =- eta_T*k_T* j_dp        * SQRT(tau_e)/sigma_e
+          xpsij_e  (ip,ij)  = +(k_Ne + (2._dp*j_dp+1._dp)*k_Te)* SQRT(tau_e)/sigma_e
+          xpsijp1_e(ip,ij)  = - k_Te*(j_dp+1._dp)              * SQRT(tau_e)/sigma_e
+          xpsijm1_e(ip,ij)  = - k_Te* j_dp                     * SQRT(tau_e)/sigma_e
         ELSE IF (p_int .EQ. 3) THEN ! kronecker p3
-          xpsij_e(ip,ij)    =+ eta_T*k_T*SQRT3/SQRT2  * SQRT(tau_e)/sigma_e
+          xpsij_e  (ip,ij)  = + k_Te*SQRT3/SQRT2               * SQRT(tau_e)/sigma_e
           xpsijp1_e(ip,ij)  = 0._dp; xpsijm1_e(ip,ij)  = 0._dp;
         ELSE
-          xpsij_e(ip,ij)    = 0._dp; xpsijp1_e(ip,ij)  = 0._dp
+          xpsij_e  (ip,ij)  = 0._dp; xpsijp1_e(ip,ij)  = 0._dp
           xpsijm1_e(ip,ij)  = 0._dp;
         ENDIF
       ENDDO
@@ -367,14 +366,14 @@ SUBROUTINE compute_lin_coeff
       j_dp = REAL(j_int,dp) ! REALof Laguerre degree
       !! Electrostatic potential pj terms
       IF (p_int .EQ. 1) THEN ! kronecker p1
-        xpsij_i(ip,ij)    =+(k_N + (2._dp*j_dp+1._dp)*k_T) * SQRT(tau_i)/sigma_i
-        xpsijp1_i(ip,ij)  =- k_T*(j_dp+1._dp)              * SQRT(tau_i)/sigma_i
-        xpsijm1_i(ip,ij)  =- k_T* j_dp                     * SQRT(tau_i)/sigma_i
+        xpsij_i  (ip,ij)  = +(k_Ni + (2._dp*j_dp+1._dp)*k_Ti)* SQRT(tau_i)/sigma_i
+        xpsijp1_i(ip,ij)  = - k_Ti*(j_dp+1._dp)              * SQRT(tau_i)/sigma_i
+        xpsijm1_i(ip,ij)  = - k_Ti* j_dp                     * SQRT(tau_i)/sigma_i
       ELSE IF (p_int .EQ. 3) THEN ! kronecker p3
-        xpsij_i(ip,ij)    =+ k_T*SQRT3/SQRT2               * SQRT(tau_i)/sigma_i
+        xpsij_i  (ip,ij)  = + k_Ti*SQRT3/SQRT2               * SQRT(tau_i)/sigma_i
         xpsijp1_i(ip,ij)  = 0._dp; xpsijm1_i(ip,ij)  = 0._dp;
       ELSE
-        xpsij_i(ip,ij)    = 0._dp; xpsijp1_i(ip,ij)  = 0._dp
+        xpsij_i  (ip,ij)  = 0._dp; xpsijp1_i(ip,ij)  = 0._dp
         xpsijm1_i(ip,ij)  = 0._dp;
       ENDIF
     ENDDO
