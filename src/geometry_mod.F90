@@ -151,25 +151,18 @@ CONTAINS
 
     ! Derivative of the magnetic field strenght
       gradxB(iz,eo) = -COS(z) ! Gene put a factor hatB^2 or 1/hatR^2 in this
-      gradyB(iz,eo) = 0._dp
-      gradzB(iz,eo) = eps * SIN(z) / hatR(iz,eo) ! Gene put a factor hatB or 1/hatR in this
+      gradyB(iz,eo) =  0._dp
+      gradzB(iz,eo) =  eps*SIN(z)/hatR(iz,eo)  ! Gene put a factor hatB or 1/hatR in this
 
-    ! ! Curvature operator
-    !   DO iky = ikys, ikye
-    !     ky = kyarray(iky)
-    !      DO ikx= ikxs, ikxe
-    !        kx = kxarray(ikx)
-    !        Ckxky(iky, ikx, iz,eo) = (-SIN(z)*kx - ( COS(z) + (shear*z-alpha_MHD*SIN(z))*SIN(z) )*ky) * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
-    !      ENDDO
-    !   ENDDO
     ! Curvature operator
     Gx =           (gxz(iz,eo) * gxy(iz,eo) - gxx(iz,eo) * gyz(iz,eo)) *eps*SIN(Z) ! Kx
-    Gy = -COS(Z) + (gxz(iz,eo) * gyy(iz,eo) - gxy(iz,eo) * gyz(iz,eo)) *eps*SIN(Z) ! Ky
+    Gy = -COS(z) + (gxz(iz,eo) * gyy(iz,eo) - gxy(iz,eo) * gyz(iz,eo)) *eps*SIN(Z) ! Ky
     DO iky = ikys, ikye
         ky = kyarray(iky)
          DO ikx= ikxs, ikxe
            kx = kxarray(ikx)
-           Ckxky(iky, ikx, iz,eo) = (Gx*kx + Gy*ky) * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
+           Ckxky(iky, ikx, iz,eo) = (-SIN(z)*kx - COS(z)*ky -(shear*z-alpha_MHD*SIN(z))*SIN(z)*ky)* hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
+           ! Ckxky(iky, ikx, iz,eo) = (Gx*kx + Gy*ky) * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
          ENDDO
       ENDDO
     ! coefficient in the front of parallel derivative
@@ -446,9 +439,15 @@ CONTAINS
 
  SUBROUTINE set_ikx_zBC_map
  IMPLICIT NONE
- REAL :: shift, kx_shift, kxmax_, kxmin_
+ REAL :: shift, kx_shift
+ ! For periodic CHI BC or 0 dirichlet
+ LOGICAL :: PERIODIC_CHI_BC = .false.
  ALLOCATE(ikx_zBC_R(ikys:ikye,ikxs:ikxe))
  ALLOCATE(ikx_zBC_L(ikys:ikye,ikxs:ikxe))
+
+ ! No periodic connection for extension of the domain
+ IF(Nexc .GT. 1) PERIODIC_CHI_BC = .false.
+
  !! No shear case (simple id mapping)
  !3            | 1    2    3    4    5    6 |  ky = 3 dky
  !2   ky       | 1    2    3    4    5    6 |  ky = 2 dky
@@ -463,25 +462,31 @@ CONTAINS
  ENDDO
  ! Modify connection map only at border of z
  IF(SHEARED) THEN
-   ! connection map BC of the RIGHT boundary (z=pi*Npol-dz)
+   ! connection map BC of the RIGHT boundary (z=pi*Npol-dz) (even NZ)
    !3            | 4    x    x    x    2    3 |  ky = 3 dky
    !2   ky       | 3    4    x    x    1    2 |  ky = 2 dky
    !1   A        | 2    3    4    x    6    1 |  ky = 1 dky
    !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
    !kx =           0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
-   kxmax_ =  kx_max
+
+   ! connection map BC of the RIGHT boundary (z=pi*Npol-dz) (ODD NZ)
+   !3            | x    x    x    2    3 |  ky = 3 dky
+   !2   ky       | 3    x    x    1    2 |  ky = 2 dky
+   !1   A        | 2    3    x    5    1 |  ky = 1 dky
+   !0   | -> kx  | 1____2____3____4____5 |  ky = 0 dky
+   !kx =           0   0.1  0.2 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
    IF(contains_zmax) THEN ! Check if the process is at the end of the FT
      DO iky = ikys,ikye
-       shift = 2._dp*PI*shear*kyarray(iky)*Npol*Nexc
+       shift = 2._dp*PI*shear*kyarray(iky)*Npol
          DO ikx = ikxs,ikxe
            kx_shift = kxarray(ikx) + shift
-           IF(kx_shift .GT. kxmax_) THEN ! outside of the frequ domain
+           ! We use EPSILON() to treat perfect equality case
+           IF( ((kx_shift-EPSILON(kx_shift)) .GT. kx_max) .AND. (.NOT. PERIODIC_CHI_BC) )THEN ! outside of the frequ domain
              ikx_zBC_R(iky,ikx) = -99
            ELSE
-             ikx_zBC_R(iky,ikx) = (ikx+iky)-1
-             IF(SINGLE_KY) ikx_zBC_R(iky,ikx) = (ikx+(iky+1))-1
+             ikx_zBC_R(iky,ikx) = ikx+(iky-1)*Nexc
              IF( ikx_zBC_R(iky,ikx) .GT. Nkx ) &
-             ikx_zBC_R(iky,ikx) = ikx_zBC_R(iky,ikx) - Nkx
+              ikx_zBC_R(iky,ikx) = ikx_zBC_R(iky,ikx) - Nkx
            ENDIF
          ENDDO
      ENDDO
@@ -492,19 +497,18 @@ CONTAINS
    !1   A        | 6    1    2    3    x    5 |  ky = 1 dky
    !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
    !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
-   kxmin_ = -kx_max+deltakx
    IF(contains_zmin) THEN ! Check if the process is at the start of the FT
      DO iky = ikys,ikye
-       shift = 2._dp*PI*shear*kyarray(iky)*Npol*Nexc
+       shift = 2._dp*PI*shear*kyarray(iky)*Npol
          DO ikx = ikxs,ikxe
            kx_shift = kxarray(ikx) - shift
-           IF( kx_shift .LT. kxmin_ ) THEN ! outside of the frequ domain
+           ! We use EPSILON() to treat perfect equality case
+           IF( ((kx_shift+EPSILON(kx_shift)) .LT. kx_min) .AND. (.NOT. PERIODIC_CHI_BC) ) THEN ! outside of the frequ domain
              ikx_zBC_L(iky,ikx) = -99
            ELSE
-             ikx_zBC_L(iky,ikx) = (ikx-iky)+1
-             IF(SINGLE_KY) ikx_zBC_L(iky,ikx) = (ikx-(iky+1))+1
-             IF( ikx_zBC_L(iky,ikx) .LE. 0 ) &
-             ikx_zBC_L(iky,ikx) = ikx_zBC_L(iky,ikx) + Nkx
+             ikx_zBC_L(iky,ikx) = ikx-(iky-1)*Nexc
+             IF( ikx_zBC_L(iky,ikx) .LT. 1 ) &
+              ikx_zBC_L(iky,ikx) = ikx_zBC_L(iky,ikx) + Nkx
            ENDIF
          ENDDO
      ENDDO
