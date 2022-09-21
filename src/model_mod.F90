@@ -24,16 +24,17 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED :: sigma_i =  1._dp     !
   REAL(dp), PUBLIC, PROTECTED ::     q_e = -1._dp     ! Charge
   REAL(dp), PUBLIC, PROTECTED ::     q_i =  1._dp     !
-  REAL(dp), PUBLIC, PROTECTED ::     k_N =  1._dp     ! Ion density drive
-  REAL(dp), PUBLIC, PROTECTED ::   eta_N =  1._dp     ! electron-ion density drive ratio (k_Ne/k_Ni)
-  REAL(dp), PUBLIC, PROTECTED ::     k_T =  0._dp     ! Temperature drive
-  REAL(dp), PUBLIC, PROTECTED ::   eta_T =  0._dp     ! electron-ion temperature drive ratio (k_Te/k_Ti)
+  REAL(dp), PUBLIC, PROTECTED ::    k_Ni =  7._dp     ! Ion density drive
+  REAL(dp), PUBLIC, PROTECTED ::    k_Ne =  7._dp     ! Ele ''
+  REAL(dp), PUBLIC, PROTECTED ::    k_Ti =  2._dp     ! Ion temperature drive
+  REAL(dp), PUBLIC, PROTECTED ::    k_Te =  2._dp     ! Ele ''
   REAL(dp), PUBLIC, PROTECTED ::     K_E =  0._dp     ! Backg. electric field drive
   REAL(dp), PUBLIC, PROTECTED ::   GradB =  1._dp     ! Magnetic gradient
   REAL(dp), PUBLIC, PROTECTED ::   CurvB =  1._dp     ! Magnetic curvature
   REAL(dp), PUBLIC, PROTECTED :: lambdaD =  1._dp     ! Debye length
   REAL(dp), PUBLIC, PROTECTED ::    beta =  0._dp     ! electron plasma Beta (8piNT_e/B0^2)
 
+  LOGICAL,  PUBLIC, PROTECTED ::      EM =  .false.   ! Electromagnetic effects flag
   REAL(dp), PUBLIC, PROTECTED :: taue_qe         ! factor of the magnetic moment coupling
   REAL(dp), PUBLIC, PROTECTED :: taui_qi         !
   REAL(dp), PUBLIC, PROTECTED :: qi_taui         !
@@ -64,13 +65,18 @@ CONTAINS
     NAMELIST /MODEL_PAR/ CLOS, NL_CLOS, KERN, LINEARITY, KIN_E, &
                          mu_x, mu_y, N_HD, mu_z, mu_p, mu_j, nu,&
                          tau_e, tau_i, sigma_e, sigma_i, q_e, q_i,&
-                         k_N, eta_N, k_T, eta_T, K_E, GradB, CurvB, lambdaD, beta
+                         k_Ne, k_Ni, k_Te, k_Ti, GradB, CurvB, lambdaD, beta
 
     READ(lu_in,model_par)
 
     IF(.NOT. KIN_E) THEN
       IF(my_id.EQ.0) print*, 'Adiabatic electron model -> beta = 0'
       beta = 0._dp
+    ENDIF
+
+    IF(beta .GT. 0) THEN
+      EM = .TRUE.
+      IF(my_id.EQ.0) print*, 'Electromagnetic effects are included'
     ENDIF
 
     taue_qe    = tau_e/q_e ! factor of the magnetic moment coupling
@@ -134,10 +140,10 @@ CONTAINS
     CALL attach(fidres, TRIM(str),   "sigma_i", sigma_i)
     CALL attach(fidres, TRIM(str),       "q_e",     q_e)
     CALL attach(fidres, TRIM(str),       "q_i",     q_i)
-    CALL attach(fidres, TRIM(str),       "k_N",     k_N)
-    CALL attach(fidres, TRIM(str),     "eta_N",   eta_N)
-    CALL attach(fidres, TRIM(str),       "k_T",     k_T)
-    CALL attach(fidres, TRIM(str),     "eta_T",   eta_T)
+    CALL attach(fidres, TRIM(str),      "k_Ne",    k_Ne)
+    CALL attach(fidres, TRIM(str),      "k_Ni",    k_Ni)
+    CALL attach(fidres, TRIM(str),      "k_Te",    k_Te)
+    CALL attach(fidres, TRIM(str),      "k_Ti",    k_Ti)
     CALL attach(fidres, TRIM(str),       "K_E",     K_E)
     CALL attach(fidres, TRIM(str),   "lambdaD", lambdaD)
     CALL attach(fidres, TRIM(str),      "beta",    beta)
