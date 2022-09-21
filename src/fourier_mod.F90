@@ -92,7 +92,6 @@ MODULE fourier
     ENDDO
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
-    ! bracket_sum_r = bracket_sum_r + real_data_f*inv_Ny*inv_Nx  * real_data_g*inv_Ny*inv_Nx
     bracket_sum_r = bracket_sum_r + real_data_f  * real_data_g*inv_Ny*inv_Nx
     ! Second term -df/dy x dg/dx
     DO ikx = ikxs, ikxe
@@ -105,7 +104,6 @@ MODULE fourier
     ENDDO
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
-    ! bracket_sum_r = bracket_sum_r - real_data_f*inv_Ny*inv_Nx  * real_data_g*inv_Ny*inv_Nx
     bracket_sum_r = bracket_sum_r - real_data_f  * real_data_g*inv_Ny*inv_Nx
 END SUBROUTINE poisson_bracket_and_sum
 
@@ -124,7 +122,6 @@ SUBROUTINE convolve_and_add( F_, G_)
   ENDDO
   call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
   call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
-  ! bracket_sum_r = bracket_sum_r + real_data_f*inv_Ny*inv_Nx  * real_data_g*inv_Ny*inv_Nx
   bracket_sum_r = bracket_sum_r + real_data_f  * real_data_g*inv_Ny*inv_Nx
 END SUBROUTINE convolve_and_add
 
