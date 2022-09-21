@@ -203,15 +203,11 @@ CONTAINS
       dsp_p_i(in+1) = istart-1
     ENDDO
 
-    ! local grid computation
-    CONTAINS_ip0_e = .FALSE.
-    CONTAINS_ip1_e = .FALSE.
-    CONTAINS_ip2_e = .FALSE.
-    CONTAINS_ip0_i = .FALSE.
-    CONTAINS_ip1_i = .FALSE.
-    CONTAINS_ip2_i = .FALSE.
-    SOLVE_POISSON  = .FALSE.
-    SOLVE_AMPERE   = .FALSE.
+    !! local grid computations
+    ! Flag to avoid unnecessary logical operations
+    CONTAINS_ip0_e = .FALSE.; CONTAINS_ip1_e = .FALSE.; CONTAINS_ip2_e = .FALSE.
+    CONTAINS_ip0_i = .FALSE.; CONTAINS_ip1_i = .FALSE.; CONTAINS_ip2_i = .FALSE.
+    SOLVE_POISSON  = .FALSE.; SOLVE_AMPERE   = .FALSE.
     ALLOCATE(parray_e(ipgs_e:ipge_e))
     ALLOCATE(parray_i(ipgs_i:ipge_i))
     DO ip = ipgs_e,ipge_e
@@ -220,12 +216,10 @@ CONTAINS
       IF(parray_e(ip) .EQ. 0) THEN
         ip0_e          = ip
         CONTAINS_ip0_e = .TRUE.
-        SOLVE_POISSON  = .TRUE.
       ENDIF
       IF(parray_e(ip) .EQ. 1) THEN
         ip1_e          = ip
         CONTAINS_ip1_e = .TRUE.
-        SOLVE_AMPERE   = .TRUE.
       ENDIF
       IF(parray_e(ip) .EQ. 2) THEN
         ip2_e          = ip
@@ -238,18 +232,18 @@ CONTAINS
       IF(parray_i(ip) .EQ. 0) THEN
         ip0_i          = ip
         CONTAINS_ip0_i = .TRUE.
-        SOLVE_POISSON  = .TRUE.
     ENDIF
       IF(parray_i(ip) .EQ. 1) THEN
         ip1_i          = ip
         CONTAINS_ip1_i = .TRUE.
-        SOLVE_AMPERE   = .TRUE.
       ENDIF
       IF(parray_i(ip) .EQ. 2) THEN
         ip2_i          = ip
         CONTAINS_ip2_i = .TRUE.
       ENDIF
     END DO
+    IF(CONTAINS_ip0_e .AND. CONTAINS_ip0_i) SOLVE_POISSON = .TRUE.
+    IF(CONTAINS_ip1_e .AND. CONTAINS_ip1_i) SOLVE_AMPERE  = .TRUE.
     !DGGK operator uses moments at index p=2 (ip=3) for the p=0 term so the
     ! process that contains ip=1 MUST contain ip=3 as well for both e and i.
     IF(((ips_e .EQ. ip0_e) .OR. (ips_i .EQ. ip0_e)) .AND. ((ipe_e .LT. ip2_e) .OR. (ipe_i .LT. ip2_i)))&
