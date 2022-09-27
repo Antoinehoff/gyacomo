@@ -18,7 +18,9 @@ How to run it
 # Changelog
 
 3. HeLaZ 3D
-	3.8 HeLaZ has been benchmarked in shearless CBC with GENE for various gradients values
+  3.9 HeLaZ can now evolve electromagnetic fluctuations by solving Ampere equations (benchmarked linearly)
+
+	3.8 HeLaZ has been benchmarked for CBC with GENE for various gradients values (see Dimits_fig3.m)
 
 	3.7 The frequency plane has been transposed from positive kx to positive ky for easier implementation of shear. Also added 3D zpinch geometry
 
