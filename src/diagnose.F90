@@ -296,14 +296,17 @@ SUBROUTINE diagnose_full(kstep)
      ! empty in our case
 
 
-     !                       2.3   2d profiles
+     !                       2.3   3d profiles
      IF (nsave_3d .GT. 0) THEN
         IF (MOD(cstep, nsave_3d) == 0) THEN
           CALL diagnose_3d
-        END IF
-     END IF
+          ! Looks at the folder if the file check_phi exists and spits a snapshot
+          ! of the current electrostatic potential in a basic text file
+          CALL spit_snapshot_check
+        ENDIF
+     ENDIF
 
-     !                       2.4   3d profiles
+     !                       2.4   5d profiles
      IF (nsave_5d .GT. 0 .AND. cstep .GT. 0) THEN
         IF (MOD(cstep, nsave_5d) == 0) THEN
            CALL diagnose_5d
@@ -609,3 +612,35 @@ SUBROUTINE diagnose_5d
 
   END SUBROUTINE write_field5d_i
 END SUBROUTINE diagnose_5d
+
+SUBROUTINE spit_snapshot_check
+  USE fields, ONLY: phi
+  USE grid, ONLY: ikxs,ikxe,Nkx,ikys,ikye,Nky,izs,ize,Nz
+  USE parallel, ONLY: gather_xyz
+  USE basic
+  IMPLICIT NONE
+  LOGICAL :: file_exist
+  INTEGER :: fid_check, ikx, iky, iz
+  CHARACTER(256) :: check_filename
+  COMPLEX(dp), DIMENSION(1:Nky,1:Nkx,1:Nz) :: field_to_check
+  !! Spit a snapshot of PHI if requested (triggered by creating a file named "check_phi")
+  INQUIRE(file='check_phi', exist=file_exist)
+  IF( file_exist ) THEN
+     IF(my_id.EQ. 0) WRITE(*,*) 'Check file found -> gather phi..'
+     CALL gather_xyz(phi(ikys:ikye,ikxs:ikxe,izs:ize), field_to_check)
+     IF(my_id.EQ. 0) THEN
+       WRITE(check_filename,'(a16)') 'check_phi.out'
+       OPEN(fid_check, file=check_filename, form='formatted')
+       WRITE(*,*) 'Check file found -> output phi ..'
+       WRITE(fid_check,*) Nky, Nkx, Nz
+       DO iky = 1,Nky; DO ikx = 1, Nkx; DO iz = 1,Nz
+         WRITE(fid_check,*) real(field_to_check(iky,ikx,iz)), ',' , imag(field_to_check(iky,ikx,iz))
+       ENDDO; ENDDO; ENDDO
+       CLOSE(fid_check)
+       WRITE(*,*) 'Check file found -> done.'
+       ! delete the check_phi flagfile
+       OPEN(fid_check, file='check_phi')
+       CLOSE(fid_check, status='delete')
+     ENDIF
+  ENDIF
+END SUBROUTINE spit_snapshot_check
