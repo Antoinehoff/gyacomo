@@ -27,6 +27,7 @@ CONTAINS
         IMPLICIT NONE
         REAL    :: timer_tot_1, timer_find_CP_1, timer_load_mom_1
         REAL    :: timer_tot_2, timer_find_CP_2, timer_load_mom_2
+        INTEGER :: deltap = 1
         CALL cpu_time(timer_tot_1)
 
         ! Checkpoint filename
@@ -39,6 +40,7 @@ CONTAINS
         CALL getatt(fidrst,"/data/input/" ,   "Nkx",   Nkx_cp)
         CALL getatt(fidrst,"/data/input/" ,   "Nky",   Nky_cp)
         CALL getatt(fidrst,"/data/input/" ,    "Nz",    Nz_cp)
+        IF(Nz .EQ. 1) deltap = 2
         IF (KIN_E) THEN
         CALL getatt(fidrst,"/data/input/" , "pmaxe", pmaxe_cp)
         CALL getatt(fidrst,"/data/input/" , "jmaxe", jmaxe_cp)
@@ -91,14 +93,14 @@ CONTAINS
 
           ! Brute force loading: load the full moments and take what is needed (RAM dangerous...)
           IF (KIN_E) THEN
-            CALL allocate_array(moments_e_cp,1,Nky_cp, 1,Nkx_cp, 1,Nz_cp, 1,pmaxe_cp+1, 1,jmaxe_cp+1)
+            CALL allocate_array(moments_e_cp, 1,pmaxe_cp/deltap+1, 1,jmaxe_cp+1, 1,Nky_cp, 1,Nkx_cp, 1,Nz_cp)
             WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
             CALL getarr(fidrst, dset_name, moments_e_cp(:,:,:,:,:))
             moments_e(ips_e:ipe_e, ijs_e:ije_e, ikys:ikye, ikxs:ikxe, izs:ize, 1) &
             = moments_e_cp(ips_e:ipe_e, ijs_e:ije_e, ikys:ikye, ikxs:ikxe, izs:ize)
             DEALLOCATE(moments_e_cp)
           ENDIF
-          CALL allocate_array(moments_i_cp, 1,pmaxi_cp+1, 1,jmaxi_cp+1, 1,Nky_cp, 1,Nkx_cp, 1,Nz_cp)
+          CALL allocate_array(moments_i_cp, 1,pmaxi_cp/deltap+1, 1,jmaxi_cp+1, 1,Nky_cp, 1,Nkx_cp, 1,Nz_cp)
           WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_i", n_
           CALL getarr(fidrst, dset_name, moments_i_cp(:,:,:,:,:))
           moments_i(ips_i:ipe_i, ijs_i:ije_i, ikys:ikye, ikxs:ikxe, izs:ize, 1) &
@@ -127,6 +129,7 @@ CONTAINS
     SUBROUTINE load_output_adapt_pj
         IMPLICIT NONE
         INTEGER :: pmaxloop_e, pmaxloop_i, jmaxloop_e, jmaxloop_i, Nkx_cp, Nky_cp, Nz_cp
+        INTEGER :: deltap = 1
 
         ! Checkpoint filename
         WRITE(rstfile,'(a,a1,i2.2,a3)') TRIM(resfile0),'_',job2load,'.h5'
@@ -138,6 +141,7 @@ CONTAINS
         CALL getatt(fidrst,"/data/input/" , "Nkx", Nkx_cp)
         CALL getatt(fidrst,"/data/input/" , "Nky", Nky_cp)
         CALL getatt(fidrst,"/data/input/" ,  "Nz",  Nz_cp)
+        IF(Nz .EQ. 1) deltap = 2
         !!!!!!!!! Load electron moments
         IF (KIN_E) THEN
         ! Get the checkpoint moments degrees to allocate memory
@@ -148,7 +152,7 @@ CONTAINS
         CALL getatt(fidrst,"/data/input/" , "start_iframe5d", n0)
         ! Allocate the required size to load checkpoints moments
         ! CALL allocate_array(moments_e_cp, 1,pmaxe_cp+1, 1,jmaxe_cp+1, ikxs,ikxe, ikys,ikye, izs,ize)
-        CALL allocate_array(moments_e_cp, 1,pmaxe_cp+1, 1,jmaxe_cp+1, 1,Nky_cp, 1,Nkx_cp, 1,Nz_cp)
+        CALL allocate_array(moments_e_cp, 1,pmaxe_cp/deltap+1, 1,jmaxe_cp+1, 1,Nky_cp, 1,Nkx_cp, 1,Nz_cp)
         ! Find the last results of the checkpoint file by iteration
         n_ = n0+1
         WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_ ! start with moments_e/000001
@@ -160,13 +164,13 @@ CONTAINS
         ! Read state of system from checkpoint file and load every moment to change the distribution
         WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_e", n_
         ! CALL getarrnd(fidrst, dset_name, moments_e_cp(1:pmaxe_cp+1, 1:jmaxe_cp+1, ikys:ikye, ikxs:ikxe, izs:ize),(/1,3/))
-        CALL getarr(fidrst, dset_name, moments_e_cp(1:pmaxe_cp+1, 1:jmaxe_cp+1, 1:Nky_cp, 1:Nkx_cp, 1:Nz_cp))
+        CALL getarr(fidrst, dset_name, moments_e_cp(1:pmaxe_cp/deltap+1, 1:jmaxe_cp+1, 1:Nky_cp, 1:Nkx_cp, 1:Nz_cp))
         ! Initialize simulation moments array with checkpoints ones
         ! (they may have a larger number of polynomials, set to 0 at the begining)
         moments_e = 0._dp;
-        pmaxloop_e = min(ipe_e,pmaxe_cp+1)
+        pmaxloop_e = min(ipe_e,pmaxe_cp/deltap+1)
         jmaxloop_e = min(ije_e,jmaxe_cp+1)
-        IF (ips_e .LE. pmaxe_cp+1) THEN
+        IF (ips_e .LE. pmaxe_cp/deltap+1) THEN
           DO ip=ips_e,pmaxloop_e
           IF (ijs_e .LE. jmaxe_cp+1) THEN
             DO ij=ijs_e,jmaxloop_e
@@ -193,7 +197,7 @@ CONTAINS
         CALL getatt(fidrst,"/data/input/" , "start_iframe5d", n0)
         ! Allocate the required size to load checkpoints moments
         ! CALL allocate_array(moments_i_cp, 1,pmaxi_cp+1, 1,jmaxi_cp+1, ikxs,ikxe, ikys,ikye, izs,ize)
-        CALL allocate_array(moments_i_cp, 1,pmaxi_cp+1, 1,jmaxi_cp+1, 1,Nky_cp, 1,Nkx_cp, 1,Nz_cp)
+        CALL allocate_array(moments_i_cp, 1,pmaxi_cp/deltap+1, 1,jmaxi_cp+1, 1,Nky_cp, 1,Nkx_cp, 1,Nz_cp)
         ! Find the last results of the checkpoint file by iteration
         n_ = n0+1
         WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_i", n_ ! start with moments_e/000001
@@ -206,14 +210,14 @@ CONTAINS
         ! Read state of system from checkpoint file and load every moment to change the distribution
         WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments_i", n_
         ! CALL getarrnd(fidrst, dset_name, moments_i_cp(1:pmaxi_cp+1, 1:jmaxi_cp+1, ikys:ikye, ikxs:ikxe, izs:ize),(/1,3/))
-        CALL getarr(fidrst, dset_name, moments_i_cp(1:pmaxi_cp+1, 1:jmaxi_cp+1, 1:Nky_cp, 1:Nkx_cp, 1:Nz_cp))
+        CALL getarr(fidrst, dset_name, moments_i_cp(1:pmaxi_cp/deltap+1, 1:jmaxi_cp+1, 1:Nky_cp, 1:Nkx_cp, 1:Nz_cp))
 
         ! Initialize simulation moments array with checkpoints ones
         ! (they may have a larger number of polynomials, set to 0 at the begining)
         moments_i = 0._dp;
-        pmaxloop_i = min(ipe_i,pmaxi_cp+1)
+        pmaxloop_i = min(ipe_i,pmaxi_cp/deltap+1)
         jmaxloop_i = min(ije_i,jmaxi_cp+1)
-        IF (ips_i .LE. pmaxi_cp+1) THEN
+        IF (ips_i .LE. pmaxi_cp/deltap+1) THEN
           DO ip=ips_i,pmaxloop_i
           IF (ijs_i .LE. jmaxi_cp+1) THEN
             DO ij=ijs_i,jmaxloop_i
