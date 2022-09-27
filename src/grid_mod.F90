@@ -362,10 +362,19 @@ CONTAINS
     USE model, ONLY: LINEARITY, N_HD
     IMPLICIT NONE
     REAL(dp), INTENT(IN) :: shear
+    REAL    :: Lx_adapted
     INTEGER :: i_, counter
     IF(shear .GT. 0._dp) THEN
       IF(my_id.EQ.0) write(*,*) 'Magnetic shear detected: set up sheared kx grid..'
-      Lx = Ly/(2._dp*pi*shear*Npol)*Nexc
+      ! mininal size of box in x to respect dkx = 2pi shear dky
+      Lx_adapted = Ly/(2._dp*pi*shear*Npol)
+      ! Put Nexc to 0 so that it is computed from a target value Lx
+      IF(Nexc .EQ. 0) THEN
+        Nexc = CEILING(0.9 * Lx/Lx_adapted)
+        IF(my_id.EQ.0) write(*,*) 'Adapted Nexc =', Nexc
+      ENDIF
+      ! x length is adapted
+      Lx = Lx_adapted*Nexc
     ENDIF
     Nkx = Nx;
     ! Local data
