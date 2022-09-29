@@ -17,7 +17,7 @@ CHARACTER(len=2),PUBLIC,PROTECTED :: collision_model
 LOGICAL, PUBLIC, PROTECTED :: gyrokin_CO   =.true. ! activates GK effects on CO
 LOGICAL, PUBLIC, PROTECTED :: interspecies =.true. ! activates interpecies collision
 CHARACTER(len=128), PUBLIC :: mat_file    ! COSOlver matrix file names
-
+REAL(dp), PUBLIC, PROTECTED :: collision_kcut = 100.0
 LOGICAL, PUBLIC, PROTECTED :: cosolver_coll ! check if cosolver matrices are used
 
 PUBLIC :: collision_readinputs, coll_outputinputs
@@ -33,7 +33,7 @@ CONTAINS
   SUBROUTINE collision_readinputs
     ! Read the input parameters
     IMPLICIT NONE
-    NAMELIST /COLLISION_PAR/ collision_model, gyrokin_CO, interspecies, mat_file
+    NAMELIST /COLLISION_PAR/ collision_model, gyrokin_CO, interspecies, mat_file, collision_kcut
     READ(lu_in,collision_par)
     SELECT CASE(collision_model)
       CASE ('LB') ! Lenhard bernstein
@@ -55,6 +55,7 @@ CONTAINS
       CASE DEFAULT
         ERROR STOP 'Error stop: collision model not recognized!!'
     END SELECT
+    print*, collision_kcut
 
   END SUBROUTINE collision_readinputs
 
@@ -840,7 +841,7 @@ CONTAINS
           DO iky = ikys,ikye
             DO iz = izs,ize
               ! Check for nonlinear case if we are in the anti aliased domain or the filtered one
-              kperp_sim = kparray(iky,ikx,iz,0) ! current simulation kperp
+              kperp_sim = MIN(kparray(iky,ikx,iz,0),collision_kcut) ! current simulation kperp
               ! Find the interval in kp grid mat where kperp_sim is contained
               ! Loop over the whole kp mat grid to find the smallest kperp that is
               ! larger than the current kperp_sim (brute force...)
