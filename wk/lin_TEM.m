@@ -26,19 +26,19 @@ K_Ti    = 6.96;            % ion Temperature '''
 SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 % SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 1;         % 1: kinetic electrons, 0: adiabatic electrons
-BETA    = 0.0;     % electron plasma beta
+BETA    = 0.001;     % electron plasma beta
 %% GRID PARAMETERS
-P = 4;
-J = P/2;
+P = 3;
+J = 2;
 PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
-NX      = 11;    % real space x-gridpoints
-NY      = 2;     %     ''     y-gridpoints
-LX      = 2*pi/0.1;   % Size of the squared frequency domain
-LY      = 2*pi/0.9;     % Size of the squared frequency domain
-NZ      = 32;    % number of perpendicular planes (parallel grid)
+NX      = 32;    % real space x-gridpoints
+NY      = 16;     %     ''     y-gridpoints
+LX      = 64;%2*pi/0.1;   % Size of the squared frequency domain
+LY      = 200;%2*pi/0.9;     % Size of the squared frequency domain
+NZ      = 16;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 %% GEOMETRY
@@ -47,7 +47,7 @@ GEOMETRY= 's-alpha';
 % GEOMETRY= 'circular';
 Q0      = 1.4;    % safety factor
 SHEAR   = 0.8;    % magnetic shear
-NEXC    = 1;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
+NEXC    = 4;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 EPS     = 0.18;   % inverse aspect ratio
 %% TIME PARMETERS
 TMAX    = 7;  % Maximal time unit

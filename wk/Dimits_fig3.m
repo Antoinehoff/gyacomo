@@ -37,6 +37,7 @@
 	     4.5 1.1e+0 4.0e-1;...%192x96x24x13x7 kymin=0.05
 	     4.5 9.6e-1 1.5e-1;...%128x64x16x13x2 kymin=0.05
          4.5 7.9e-1 1.8e-1;...%128x64x16x13x7 kymin=0.05
+         4.5 1.2e+0 5.4e-1;...%192x64x24x6x4  kymin=0.05 ! Lx is too small... (weird oscillations)
 	    ];
 	%-------------- GENE ---------------
 	kT_Qi_GENE = ...

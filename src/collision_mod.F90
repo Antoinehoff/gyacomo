@@ -55,7 +55,6 @@ CONTAINS
       CASE DEFAULT
         ERROR STOP 'Error stop: collision model not recognized!!'
     END SELECT
-    print*, collision_kcut
 
   END SUBROUTINE collision_readinputs
 

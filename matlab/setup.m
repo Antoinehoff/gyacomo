@@ -99,8 +99,8 @@ else
 end
 % temp. dens. drives
 drives_ = [];
-if abs(K_N) > 0; drives_ = [drives_,'_kN_',num2str(K_N)]; end;
-if abs(K_T) > 0; drives_ = [drives_,'_kT_',num2str(K_T)]; end;
+if abs(K_Ni) > 0; drives_ = [drives_,'_kN_',num2str(K_Ni)]; end;
+if abs(K_Ti) > 0; drives_ = [drives_,'_kT_',num2str(K_Ti)]; end;
 % collision
 coll_ = ['_nu_%1.1e_',CONAME];
 coll_   = sprintf(coll_,NU);

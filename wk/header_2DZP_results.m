@@ -1,4 +1,5 @@
 %% Directory of the simulation
+helazdir = '/home/ahoffman/HeLaZ/';
 % if 1% Local results
 outfile ='';
 outfile ='';
@@ -168,4 +169,14 @@ outfile ='';
 % MISCDIR = ['/misc/HeLaZ_outputs/',outfile(46:end-8),'/'];
 % end
 
-analysis_HeLaZ
+%% nu scan
+% outfile = 'Zpinch_rerun/kN_2.2_coll_scan_128x48x5x3';
+% outfile = 'Zpinch_rerun/Ultra_HD_312x196x5x3';
+% outfile = 'Zpinch_rerun/UHD_nu_001_LDGK';
+outfile = 'Zpinch_rerun/UHD_nu_01_LDGK';
+% outfile = 'Zpinch_rerun/UHD_nu_1_LDGK';
+
+%%
+JOBNUMMIN = 01; JOBNUMMAX = 10;
+
+run analysis_HeLaZ

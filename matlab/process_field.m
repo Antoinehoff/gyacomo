@@ -89,18 +89,18 @@ switch OPTIONS.COMP
             i = OPTIONS.COMP;
             compr = @(x) x(i,:,:);
             if REALP
-                COMPNAME = sprintf(['x=','%2.1f'],DATA.x(i));
+                COMPNAME = sprintf(['y=','%2.1f'],DATA.x(i));
             else
-                COMPNAME = sprintf(['k_x=','%2.1f'],DATA.kx(i));
+                COMPNAME = sprintf(['k_y=','%2.1f'],DATA.kx(i));
             end
             FIELDNAME = [LTXNAME,'(',COMPNAME,')'];
         case 2
             i = OPTIONS.COMP;
             compr = @(x) x(:,i,:);
             if REALP
-                COMPNAME = sprintf(['y=','%2.1f'],DATA.y(i));
+                COMPNAME = sprintf(['x=','%2.1f'],DATA.y(i));
             else
-                COMPNAME = sprintf(['k_y=','%2.1f'],DATA.ky(i));
+                COMPNAME = sprintf(['k_x=','%2.1f'],DATA.ky(i));
             end
             FIELDNAME = [LTXNAME,'(',COMPNAME,')'];
         case 3
