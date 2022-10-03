@@ -1,3 +1,6 @@
+GYACOMO (Gyrokinetic Advanced Collision Moment solver, 2021)
+Copyright (C) 2022  A.C.D. Hoffmann
+
 Cloning the code :
 
 1. ssh-keygen to generate a public key (press enter to the questions)
