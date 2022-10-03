@@ -1,9 +1,9 @@
 include local/dirs.inc
 include local/make.inc
 
-EXEC = $(BINDIR)/helaz3
-EFST = $(BINDIR)/helaz3_fst
-EDBG = $(BINDIR)/helaz3_dbg
+EXEC = $(BINDIR)/gyacomo
+EFST = $(BINDIR)/gyacomo_fst
+EDBG = $(BINDIR)/gyacomo_dbg
 
 F90 = mpiifort
 # #F90 = ftn #for piz-daint cluster

@@ -12,6 +12,7 @@
 *.emf
 *.pptx
 *.jpg
+*.gif
 *.jpeg
 *.mat
 *.dat
@@ -34,10 +35,10 @@ iCa/
 *.out
 src/srcinfo.h
 src/srcinfo/srcinfo.h
-*/fort*.90
 local/
 */*.sh
 Gallery/
 .vscode/settings.json
 *figure*
 *results*
+out*

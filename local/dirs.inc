@@ -1,5 +1,5 @@
 #Local code, binaries, pputils library
-PREFIX   = $(HOME)/HeLaZ
+PREFIX   = $(HOME)/gyacomo
 SRCDIR   = $(PREFIX)/src
 BINDIR   = $(PREFIX)/bin
 OBJDIR   = $(PREFIX)/obj

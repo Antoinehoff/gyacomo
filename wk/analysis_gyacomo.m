@@ -1,11 +1,16 @@
-addpath(genpath([helazdir,'matlab'])) % ... add
-addpath(genpath([helazdir,'matlab/plot'])) % ... add
-addpath(genpath([helazdir,'matlab/compute'])) % ... add
-addpath(genpath([helazdir,'matlab/load'])) % ... add
+%% UNCOMMENT FOR TUTORIAL
+% gyacomodir = pwd; gyacomodir = gyacomodir(1:end-2); % get code directory
+% resdir = '.'; %Name of the directory where the results are located
+% JOBNUMMIN = 00; JOBNUMMAX = 10;
+%%
+addpath(genpath([gyacomodir,'matlab'])) % ... add
+addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
+addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
+addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 
 %% Load the results
-LOCALDIR  = [helazdir,'results/',outfile,'/'];
-MISCDIR   = ['/misc/HeLaZ_outputs/results/',outfile,'/'];
+LOCALDIR  = [gyacomodir,resdir,'/'];
+MISCDIR   = ['/misc/gyacomo_outputs/',resdir,'/']; %For long term storage
 system(['mkdir -p ',MISCDIR]);
 system(['mkdir -p ',LOCALDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
@@ -28,8 +33,8 @@ options.TAVG_1   = 1000;%0.9*data.Ts3D(end); % Averaging times duration
 options.NCUT     = 4;              % Number of cuts for averaging and error estimation
 options.NMVA     = 1;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';   % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
-options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
-options.INTERP   = 1;
+% options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
+% options.INTERP   = 1;
 fig = plot_radial_transport_and_spacetime(data,options);
 save_figure(data,fig,'.png')
 end
@@ -45,8 +50,8 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.NAME      = '\phi';
-% options.NAME      = 'N_i^{00}';
+% options.NAME      = '\phi';
+options.NAME      = 'N_i^{00}';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
@@ -57,7 +62,7 @@ options.PLAN      = 'xy';
 options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
 % options.TIME      =  data.Ts3D;
-options.TIME      = [1:0.2:500];
+options.TIME      = [0:500];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 create_film(data,options,'.gif')
