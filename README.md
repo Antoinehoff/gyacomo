@@ -1,21 +1,39 @@
-# HeLaZ (Hermite-Laguerre Z-pinch solver, 2021)
+GYACOMO (Gyrokinetic Advanced Collision Moment solver, 2021)
+Copyright (C) 2022  A.C.D. Hoffmann
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# How to compile and run GYACOMO
 To compile it check INSTALLATION.txt
 
 How to run it
 
 1. Be sure to have correct library paths in local/dirs.inc for the different libraries
-2. Compile from /HeLaZ using make, the binary will be located in /HeLaZ/bin
+2. Compile from /gyacomo using make, the binary will be located in /gyacomo/bin
 4. You can run a typical CBC to test the compilation using the basic fort.90 parameter file,
-   just type ./bin/helaz3
-5. It is possible to run it in parallel (MPI) as mpirun -np N ./bin/helaz3 Np Ny Nz
+   just type ./bin/gyacomo
+5. It is possible to run it in parallel (MPI) as mpirun -np N ./bin/gyacomo Np Ny Nz
    where N=Np x Ny x Nz is the number of processes and Np Ny Nz are the parallel dimensions in
 	 Hermite polynomials, binormal direction and parallel direction, respectively
 6. You can stop your simulation without breaking output file by creating a blank file call "mystop"
    in the directory where the simulation is running. (the file will be removed once read)
-7. You can obtain various plots and gifs using HeLaZ/wk/header_3D_results.m once the simulation is done.
-// Comment : For some collision operators (Sugama and Full Coulomb) you have to run COSOlver from B.J.Frei first in order to generate the required matrices in HeLaZ/iCa folder.
+7. You can obtain various plots and gifs using gyacomo/wk/header_3D_results.m once the simulation is done.
+// Comment : For some collision operators (Sugama and Full Coulomb) you have to run COSOlver from B.J.Frei first in order to generate the required matrices in gyacomo/iCa folder.
 
 # Changelog
+4. GYACOMO
+  4.0 new naming and opening the code with GNU GPLv3 license
 
 3. HeLaZ 3D
   3.9 HeLaZ can now evolve electromagnetic fluctuations by solving Ampere equations (benchmarked linearly)
@@ -85,11 +103,3 @@ How to run it
 	0.1 implement linear Poisson equation in fourier space
 
 	0.0 go from 1D space to 2D fourier and from Hermite basis to Hermite-Laguerre basis
-
-# Roadmap
-
-3. 3D shearless periodic version
-
-	3.x Benchmark with Gene and 3D transport analysis
-
-4. Shear and complex boundary conditions

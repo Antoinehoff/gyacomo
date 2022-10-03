@@ -2,7 +2,7 @@ Cloning the code :
 
 1. ssh-keygen to generate a public key (press enter to the questions)
 2. copy .ssh/id_rsa.pub in the ssh public key list of c4science with your account
-3. git clone ssh://git@c4science.ch/source/HeLaZ.git
+3. git clone ssh://git@c4science.ch/source/gyacomo.git
 
 Installing librairies :
 
@@ -19,7 +19,7 @@ fftw3-mpi :
 7. mv lib64 lib in the fftw3 folder so the HeLaZ makefile finds it
 
 FM Multiple-Precision Software Package:
-0. ??? (copy paste...)
+0. copy the source code from https://dmsmith.lmu.build/
 
 
 hdf5:
@@ -49,10 +49,10 @@ futils:
 5. make install
 
 
-Compilation of HeLaZ
-1. ensure that HeLaZ/local/dirs.inc contains the right paths to the librairies (Be careful of fftw name)
+Compilation of GYACOMO
+1. ensure that gyacomo/local/dirs.inc contains the right paths to the librairies (Be careful of fftw name)
 2. make install
-3. (TODO: test script for installation check)
+3. the file fort.90 is a Z-pinch turbulence test that can be run easily with ./bin/gyacomo in the home folder
 4. next times, for compilation, make is sufficient
 
 Remark for PPB110
