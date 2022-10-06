@@ -512,6 +512,7 @@ CONTAINS
     ! Ghosts boundaries (depend on the order of z operators)
     IF(Nz .EQ. 1) THEN
       izgs = izs;     izge = ize;
+      zarray(izs) = 0; zarray_full(izs) = 0;
     ELSEIF(Nz .GE. 4) THEN
       izgs = izs - 2; izge = ize + 2;
     ELSE
