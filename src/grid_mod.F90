@@ -301,7 +301,6 @@ CONTAINS
       deltaky = 2._dp*PI/Ly
       ky_max  = (Nky-1)*deltaky
       ky_min  = deltaky
-      diff_ky_coeff= (1._dp/ky_max)**N_HD
     ENDIF
     ! Build the full grids on process 0 to diagnose it without comm
     ALLOCATE(kyarray_full(1:Nky))
@@ -347,6 +346,13 @@ CONTAINS
     END DO
     ! Orszag 2/3 filter
     two_third_kymax = 2._dp/3._dp*deltaky*(Nky-1)
+    ! For hyperdiffusion
+    IF(LINEARITY.EQ.'linear') THEN
+      diff_ky_coeff= (1._dp/ky_max)**N_HD
+    ELSE
+      diff_ky_coeff= (1._dp/two_third_kymax)**N_HD
+    ENDIF
+
     ALLOCATE(AA_y(ikys:ikye))
     DO iky = ikys,ikye
       IF ( (kyarray(iky) .LT. two_third_kymax) .OR. (LINEARITY .EQ. 'linear')) THEN
@@ -456,10 +462,17 @@ CONTAINS
         END DO
       ENDIF
     ENDIF
-    ! For hyperdiffusion
-    diff_kx_coeff= (1._dp/kx_max)**N_HD
     ! Orszag 2/3 filter
     two_third_kxmax = 2._dp/3._dp*kx_max;
+
+    ! For hyperdiffusion
+    IF(LINEARITY.EQ.'linear') THEN
+      diff_kx_coeff= (1._dp/kx_max)**N_HD
+    ELSE
+      diff_kx_coeff= (1._dp/two_third_kxmax)**N_HD
+    ENDIF
+
+    ! Antialiasing filter
     ALLOCATE(AA_x(ikxs:ikxe))
     DO ikx = ikxs,ikxe
       IF ( ((kxarray(ikx) .GT. -two_third_kxmax) .AND. &
