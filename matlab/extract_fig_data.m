@@ -1,3 +1,11 @@
+% tw = [500 1000];
+% tw = [1000 1500];
+% tw = [2000 3000];
+% tw = [3000 4000];
+% tw = [4000 4500];
+% tw = [4500 5000];
+tw = [0 6500];
+
 fig = gcf;
 axObjs = fig.Children;
 dataObjs = axObjs.Children;
@@ -7,18 +15,21 @@ for i = 1:numel(dataObjs)
     X_ = [X_ dataObjs(i).XData];
     Y_ = [Y_ dataObjs(i).YData];
 end
-n0 = 1;
-n1 = numel(X_);
-figure;
-mvm = @(x) movmean(x,1);
+% n0 = 1;
+% n1 = numel(X_);
+[~,n0] = min(abs(X_-tw(1)));
+[~,n1] = min(abs(X_-tw(2)));
+mvm = @(x) movmean(x,50);
 shift = X_(n0);
 % shift = 0;
-% plot(X_(n0:end),Y_(n0:end));
+
+figure;
+plot(X_(n0:end),Y_(n0:end));
 plot(mvm(X_(n0:n1)-shift),mvm(Y_(n0:n1))); hold on;
 
-t0 = ceil(numel(X_)*0.2); t1 = numel(X_);
-avg= mean(Y_(t0:t1)); dev = std(Y_(t0:t1));
-  disp(['AVG =',sprintf('%2.2f',avg),'+-',sprintf('%2.2f',dev)]);
+% t0 = ceil(numel(X_)*0.2); t1 = numel(X_);
+avg= mean(Y_(n0:n1)); dev = std(Y_(n0:n1));
+  disp(['AVG =',sprintf('%4.4f',avg),'+-',sprintf('%4.4f',dev)]);
 % 
 % n1 = n0+1; n2 = min(n1 + 50000,numel(Y_));
 % avg_ = mean(Y_(n1:n2));

@@ -1,19 +1,19 @@
 % Options
-SHOW_FILM = 0;
-field2plot  ='Ni00';
+SHOW_FILM = 1;
+field2plot  ='phi';
 INIT     = 'lin';   % lin (for a line)/ round (for a small round)/ gauss for random
-U_TIME   = 200;     % >0 for frozen velocity at a given time, -1 for evolving field
+U_TIME   = 40;     % >0 for frozen velocity at a given time, -1 for evolving field
 Evolve_U = 1;       % 0 for frozen velocity at a given time, 1 for evolving field
-Tfin     = 200;
-dt_      = 0.1;
+Tfin     = 100;
+dt_      = 0.01;
 Nstep    = ceil(Tfin/dt_);
 % Init tracers
 Np      = 20; %number of tracers
 % color = tcolors;
 color = jet(Np);
 tcolors = distinguishable_colors(Np); %Their colors
-
-Na = 1/dt_; %length of trace
+dimmed  = 0; % to dimm the colormap in the background (infty = white, 0 normal color)
+Na = 10/dt_; %length of trace
 
 Traj_x = zeros(Np,Nstep);
 Traj_y = zeros(Np,Nstep);
@@ -224,8 +224,8 @@ while(t_<Tfin && it <= Nstep)
         end
         scale = max(max(abs(F2P))); % Scaling to normalize
         pclr = pcolor(XX_,YY_,F2P/scale); 
-        colormap(bluewhitered); caxis([-1 1]);
-        set(pclr, 'edgecolor','none'); hold on; caxis([-2,2]); shading interp
+        caxis([-1 1]); colormap(bluewhitered); colorbar;
+        set(pclr, 'edgecolor','none'); hold on; caxis([-1+dimmed,1+dimmed]); shading interp
         for ip = 1:Np
             ia0 = max(1,it-Na);
             plot(Traj_x(ip,ia0:it),Traj_y(ip,ia0:it),'.','Color',color(ip,:)); hold on

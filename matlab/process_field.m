@@ -52,8 +52,8 @@ Xmax_ = max(max(abs(X))); Ymax_ = max(max(abs(Y)));
 Lmin_ = min([Xmax_,Ymax_]);
 Rx    = Xmax_/Lmin_ * SCALE + (1-SCALE)*1.2; 
 Ry    = Ymax_/Lmin_ * SCALE + (1-SCALE)*1.2; 
-DIMENSIONS = [100, 100, 400*Rx, 400*Ry];
 ASPECT     = [Rx, Ry, 1];
+DIMENSIONS = [100, 100, OPTIONS.RESOLUTION*Rx, OPTIONS.RESOLUTION*Ry];
 % Polar grid
 POLARNAME = [];
 if POLARPLOT
@@ -64,7 +64,7 @@ if POLARPLOT
     Y = Y__;
     XNAME='X';
     YNAME='Z';
-    DIMENSIONS = [100, 100, 500, 500];
+    DIMENSIONS = [100, 100, OPTIONS.RESOLUTION, OPTIONS.RESOLUTION];
     ASPECT     = [1,1,1];
     sz = size(X);
     FIELD = zeros(sz(1),sz(2),Nt);
@@ -407,8 +407,8 @@ switch OPTIONS.NAME
         end 
    case 's_y'
         NAME     = 'sy';
-        [~, KX] = meshgrid(DATA.ky, DATA.kx);
-        vE      = zeros(DATA.Nx,DATA.Ny,DATA.Nz,numel(FRAMES));
+        [KX, ~] = meshgrid(DATA.kx, DATA.ky);
+        vE      = zeros(DATA.Ny,DATA.Nx,DATA.Nz,numel(FRAMES));
         for it = 1:numel(FRAMES)
             for iz = 1:DATA.Nz
             vE(:,:,iz,it)  = real(ifourier_GENE(KX.^2.*(DATA.PHI(:,:,iz,FRAMES(it)))));
@@ -424,6 +424,29 @@ switch OPTIONS.NAME
             for it = 1:FRAMES
                 for iz = 1:numel(DATA.z)
                     tmp(:,:,iz) = squeeze(process(KX.^2.*(DATA.PHI(:,:,iz,FRAMES(it)))));
+                end
+                FIELD(:,:,it) = squeeze(compr(tmp));
+            end   
+        end 
+   case '\omega_z'
+        NAME     = 'vorticity';
+        [KX, KY] = meshgrid(DATA.kx, DATA.ky);
+        wE      = zeros(DATA.Ny,DATA.Nx,DATA.Nz,numel(FRAMES));
+        for it = 1:numel(FRAMES)
+            for iz = 1:DATA.Nz
+            wE(:,:,iz,it)  = real(ifourier_GENE(-(KX.^2+KY.^2).*(DATA.PHI(:,:,iz,FRAMES(it)))));
+            end
+        end
+        if REALP % plot in real space
+            for it = 1:numel(FRAMES)
+                FIELD(:,:,it) = squeeze(compr(wE(:,:,:,it)));
+            end
+        else % Plot spectrum
+            process = @(x) abs(fftshift(x,2));
+            tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
+            for it = 1:FRAMES
+                for iz = 1:numel(DATA.z)
+                    tmp(:,:,iz) = squeeze(process(-(KX.^2+KY.^2).*(DATA.PHI(:,:,iz,FRAMES(it)))));
                 end
                 FIELD(:,:,it) = squeeze(compr(tmp));
             end   

@@ -10,8 +10,8 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, OPTIONS)
     Gx_infty_std = std (DATA.PGAMMA_RI(its0D:ite0D))*SCALE;
     Qx_infty_avg = mean(DATA.HFLUX_X(its0D:ite0D))*SCALE;
     Qx_infty_std = std (DATA.HFLUX_X(its0D:ite0D))*SCALE;
-    disp(['G_x=',sprintf('%2.2f',Gx_infty_avg),'+-',sprintf('%2.2f',Gx_infty_std)]);
-    disp(['Q_x=',sprintf('%2.2f',Qx_infty_avg),'+-',sprintf('%2.2f',Qx_infty_std)]);
+    disp(['G_x=',sprintf('%2.2e',Gx_infty_avg),'+-',sprintf('%2.2e',Gx_infty_std)]);
+%     disp(['Q_x=',sprintf('%2.2e',Qx_infty_avg),'+-',sprintf('%2.2e',Qx_infty_std)]);
     f_avg_z      = squeeze(mean(DATA.PHI(:,:,:,:),3));
     [~,ikzf] = max(squeeze(mean(abs(f_avg_z(1,:,its3D:ite3D)),3)));
     ikzf = min([ikzf,DATA.Nky]);
@@ -27,7 +27,7 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, OPTIONS)
     end
     Qx_avg    = mean(Qx_ee);
     Qx_err    =  std(Qx_ee);
-    disp(['Q_avg=',sprintf('%2.2f',Qx_avg),'+-',sprintf('%2.2f',Qx_err)]);
+%     disp(['Q_avg=',sprintf('%2.2e',Qx_avg),'+-',sprintf('%2.2e',Qx_err)]);
     %% computations
 
     % Compute Gamma from ifft matlab
@@ -78,7 +78,9 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
         plot(DATA.Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*Qx_infty_avg, '-k',...
             'DisplayName',['$Q_{avg}=',sprintf('%2.2f',Qx_avg),'\pm',sprintf('%2.2f',Qx_err),'$']); legend('show');
         ylabel('$Q_x$')  
+        if(~isnan(Qx_infty_avg))
         ylim([0,5*abs(Qx_infty_avg)]); 
+        end
         xlim([DATA.Ts0D(1),DATA.Ts0D(end)]);
     grid on; set(gca,'xticklabel',[]); 
     title({DATA.param_title,...
