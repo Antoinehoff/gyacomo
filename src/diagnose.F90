@@ -413,12 +413,12 @@ SUBROUTINE diagnose_3d
 
   IF (write_Na00) THEN
     IF(KIN_E)THEN
-    IF (ips_e .EQ. 1) &
-      Ne00(ikys:ikye,ikxs:ikxe,izs:ize) = moments_e(ips_e,1,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel)
+    IF (CONTAINS_ip0_e) &
+      Ne00(ikys:ikye,ikxs:ikxe,izs:ize) = moments_e(ip0_e,ij0_e,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel)
     CALL write_field3d_kykxz(Ne00(ikys:ikye,ikxs:ikxe,izs:ize), 'Ne00')
     ENDIF
-    IF (ips_i .EQ. 1) &
-      Ni00(ikys:ikye,ikxs:ikxe,izs:ize) = moments_i(ips_i,1,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel)
+    IF (CONTAINS_ip0_i) &
+      Ni00(ikys:ikye,ikxs:ikxe,izs:ize) = moments_i(ip0_i,ij0_i,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel)
     CALL write_field3d_kykxz(Ni00(ikys:ikye,ikxs:ikxe,izs:ize), 'Ni00')
 
     ! CALL compute_Napjz_spectrum
