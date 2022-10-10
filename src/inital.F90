@@ -386,7 +386,8 @@ END SUBROUTINE initialize_blob
 SUBROUTINE init_ppj
   USE basic
   USE grid
-  USE fields
+  USE fields, ONLY: moments_e, moments_i
+  USE array,  ONLY: kernel_e, kernel_i
   USE prec_const
   USE utility, ONLY: checkfield
   USE initial_par
@@ -427,10 +428,12 @@ SUBROUTINE init_ppj
                     moments_e(ip,ij,iky,ikx,iz,:) = 0.5_dp*amp*(deltakx/(ABS(kx)+deltakx))
                   ENDIF
                 ENDIF
-                CALL RANDOM_NUMBER(noise)
                 ! z-dep and noise
                 moments_e(ip,ij,iky,ikx,iz,:) = moments_e(ip,ij,iky,ikx,iz,:) * &
-                (Jacobian(iz,0)*iInt_Jacobian)**2 !+ (init_background + init_noiselvl*(noise-0.5_dp))
+                (Jacobian(iz,0)*iInt_Jacobian)**2
+
+                ! divide by kernel_0 to adjust to particle density (n = kernel_0 N00)
+                moments_e(ip,ij,iky,ikx,iz,:) = moments_e(ip,ij,iky,ikx,iz,:)/kernel_e(ij,iky,ikx,iz,0)
               END DO
             END DO
           END DO
@@ -470,10 +473,11 @@ SUBROUTINE init_ppj
                     moments_i(ip,ij,iky,ikx,iz,:) = 0.5_dp*amp*(deltakx/(ABS(kx)+deltakx))
                   ENDIF
                 ENDIF
-                CALL RANDOM_NUMBER(noise)
                 ! z-dep and noise
                 moments_i(ip,ij,iky,ikx,iz,:) = moments_i(ip,ij,iky,ikx,iz,:) * &
-                (Jacobian(iz,0)*iInt_Jacobian)**2 !+ (init_background + init_noiselvl*(noise-0.5_dp))
+                (Jacobian(iz,0)*iInt_Jacobian)**2
+                ! divide by kernel_0 to adjust to particle density (n = kernel_0 N00)
+                moments_i(ip,ij,iky,ikx,iz,:) = moments_i(ip,ij,iky,ikx,iz,:)/kernel_i(ij,iky,ikx,iz,0)
               END DO
             END DO
           END DO
