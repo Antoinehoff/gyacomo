@@ -28,10 +28,11 @@ FMT = '.fig';
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
 % data.scale = 1;%/(data.Nx*data.Ny)^2;
-options.TAVG_0   = 350;%0.4*data.Ts3D(end);
-options.TAVG_1   = 1000;%0.9*data.Ts3D(end); % Averaging times duration
+i_ = 19; disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
+options.TAVG_0   = data.TJOB_SE(i_);%0.4*data.Ts3D(end);
+options.TAVG_1   = data.TJOB_SE(i_+1);%0.9*data.Ts3D(end); % Averaging times duration
 options.NCUT     = 4;              % Number of cuts for averaging and error estimation
-options.NMVA     = 1;              % Moving average for time traces
+options.NMVA     = 100;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';   % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 % options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 % options.INTERP   = 1;
@@ -51,7 +52,8 @@ if 0
 options.INTERP    = 1;
 options.POLARPLOT = 0;
 % options.NAME      = '\phi';
-options.NAME      = 'N_i^{00}';
+options.NAME      = '\omega_z';
+% options.NAME      = 'N_i^{00}';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
@@ -59,33 +61,35 @@ options.NAME      = 'N_i^{00}';
 options.PLAN      = 'xy';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
-options.COMP      = 'avg';
+% options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
 % options.TIME      =  data.Ts3D;
-options.TIME      = [0:500];
+options.TIME      = [100:1:300];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
-create_film(data,options,'.gif')
+options.RESOLUTION = 256;
+create_film(data,options,'.avi')
 end
 
 if 1
 %% 2D snapshots
 % Options
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.AXISEQUAL = 0;
-% options.NAME      = '\phi';
+options.AXISEQUAL = 1;
+options.NAME      = '\phi';
 % options.NAME      = '\psi';
-% options.NAME      = 'n_e';
-options.NAME      = 'N_i^{00}';
+% options.NAME      = 'n_i';
+% options.NAME      = 'N_i^{00}';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [1000 1100 1200];
+options.TIME      = [200];
+
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
 % save_figure(data,fig)
@@ -95,10 +99,10 @@ if 0
 %% 3D plot on the geometry
 options.INTERP    = 0;
 options.NAME      = '\phi';
-options.PLANES    = [1:1:16];
+options.PLANES    = [1];
 options.TIME      = [30];
 options.PLT_MTOPO = 1;
-options.PLT_FTUBE = 1;
+options.PLT_FTUBE = 0;
 data.EPS = 0.4;
 data.rho_o_R      = 3e-3; % Sound larmor radius over Machine size ratio
 fig = show_geometry(data,options);
