@@ -693,6 +693,7 @@ CONTAINS
       CALL allocate_array(kp_grid_mat, 1,nkp_mat)
       CALL getarr(fid, '/coordkperp', kp_grid_mat)
 
+      kp_max = SQRT(kx_max**2+ky_max**2)
       ! check that we have enough kperps mat
       IF (LINEARITY .NE. 'linear') THEN
         IF ( (kp_grid_mat(nkp_mat) .LT. 2./3.*kp_max) .AND. (my_id .EQ. 0)) WRITE(*,*) '!! Matrix kperp grid too small !!'
