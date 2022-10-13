@@ -60,3 +60,8 @@ Compilation of GYACOMO
 
 Remark for PPB110
 - before compilation do : module purge, then module load ProgEnv-intel/17.0
+
+Installation on Piz Daint (CSCS)
+- module cray-hdf5-parallel, cray-fftw
+- Have to install futils, FM
+- Modify the Makefile by removing -XHOST option and using ftn as compiler
