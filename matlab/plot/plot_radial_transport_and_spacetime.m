@@ -75,11 +75,15 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
 %     yyaxis right
         plot(mvm(DATA.Ts0D),mvm(DATA.HFLUX_X*SCALE),'DisplayName','$\langle n_i \partial_y\phi \rangle_y$'); hold on;
 %         plot(mvm(DATA.Ts3D),mvm(Qx_t_mtlb),'DisplayName','matlab comp.'); hold on;
+        ylabel('Transport')  
+        if(~isnan(Qx_infty_avg))
         plot(DATA.Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*Qx_infty_avg, '-k',...
             'DisplayName',['$Q_{avg}=',sprintf('%2.2f',Qx_avg),'\pm',sprintf('%2.2f',Qx_err),'$']); legend('show');
-        ylabel('$Q_x$')  
-        if(~isnan(Qx_infty_avg))
-        ylim([0,5*abs(Qx_infty_avg)]); 
+            ylim([0,5*abs(Qx_infty_avg)]); 
+        else
+        plot(DATA.Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*Gx_infty_avg, '-k',...
+            'DisplayName',['$\Gamma_{avg}=',sprintf('%2.2f',Gx_infty_avg),'\pm',sprintf('%2.2f',Gx_infty_std),'$']); legend('show');
+            ylim([0,5*abs(Gx_infty_avg)]); 
         end
         xlim([DATA.Ts0D(1),DATA.Ts0D(end)]);
     grid on; set(gca,'xticklabel',[]); 

@@ -189,7 +189,11 @@ resdir ='';
 % resdir = 'Zpinch_rerun/UHD_nu_01_LDGK';
 % resdir = 'Zpinch_rerun/UHD_nu_1_LDGK';
 % resdir ='Zpinch_rerun/kN_1.7_SGGK_conv_200x32x7x3_nu_0.01';
-resdir ='Zpinch_rerun/kN_1.7_LDGK_conv_200x32x7x3_nu_0.01';
+% resdir ='Zpinch_rerun/kN_1.7_LDGKii_200x32x7x3_nu_scan';
+% resdir ='Zpinch_rerun/nu_0.1_LDGKii_200x48x7x4_kN_scan';
+resdir ='Zpinch_rerun/nu_0.1_FCGK_200x48x5x3_kN_scan';
+% resdir = 'Zpinch_rerun/kN_1.7_FCGK_200x32x5x3_nu_scan';
+% resdir = 'Zpinch_rerun/kN_1.7_SGGK_200x32x7x4_nu_scan';
 %%
 JOBNUMMIN = 00; JOBNUMMAX = 10;
 resdir = ['results/',resdir];

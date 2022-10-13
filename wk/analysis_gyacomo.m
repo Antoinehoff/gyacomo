@@ -28,7 +28,9 @@ FMT = '.fig';
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
 % data.scale = 1;%/(data.Nx*data.Ny)^2;
-i_ = 19; disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
+i_ = 11; 
+disp([num2str(data.TJOB_SE(i_)),' ',num2str(data.TJOB_SE(i_+1))])
+disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
 options.TAVG_0   = data.TJOB_SE(i_);%0.4*data.Ts3D(end);
 options.TAVG_1   = data.TJOB_SE(i_+1);%0.9*data.Ts3D(end); % Averaging times duration
 options.NCUT     = 4;              % Number of cuts for averaging and error estimation
@@ -51,8 +53,8 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-% options.NAME      = '\phi';
-options.NAME      = '\omega_z';
+options.NAME      = '\phi';
+% options.NAME      = '\omega_z';
 % options.NAME      = 'N_i^{00}';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
@@ -64,11 +66,11 @@ options.PLAN      = 'xy';
 % options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
 % options.TIME      =  data.Ts3D;
-options.TIME      = [100:1:300];
+options.TIME      = [000:50:7000];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
-create_film(data,options,'.avi')
+create_film(data,options,'.gif')
 end
 
 if 1
@@ -88,7 +90,7 @@ options.PLAN      = 'xy';
 % options.NAME      'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [200];
+options.TIME      = [1000 1800 2500 3000 4000];
 
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);

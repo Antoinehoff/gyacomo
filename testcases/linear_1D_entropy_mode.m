@@ -6,24 +6,30 @@ default_plots_options
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.01;   % Collision frequency
+NU      = 0.1;   % Collision frequency
 TAU     = 1.0;    % e/i temperature ratio
-K_N     = 2.0;   % Density gradient drive
-K_T     = 0.25*K_N;   % Temperature '''
+K_Ne    = 2.0;   % Density gradient drive
+K_Ni    = 2.0;   % Density gradient drive
+K_Te    = 0.25*K_Ne;   % Temperature '''
+K_Ti    = 0.25*K_Ni;   % Temperature '''
 K_E     = 0.0;   % Electrostat '''
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+BETA    = 0;
 %% GRID PARAMETERS
-NX      = 40;     % real space x-gridpoints
-NY      = 1;     %     ''     y-gridpoints
+NX      = 2;     % real space x-gridpoints
+NY      = 80;     %     ''     y-gridpoints
 LX      = 120;     % Size of the squared frequency domain
-LY      = 1;     % Size of the squared frequency domain
+LY      = 120;     % Size of the squared frequency domain
 NZ      = 1;      % number of perpendicular planes (parallel grid)
-SG      = 1;         % Staggered z grids option
+SG      = 0;         % Staggered z grids option
 %% GEOMETRY
 GEOMETRY= 'Z-pinch';
 Q0      = 1.0;    % safety factor
 SHEAR   = 0.0;    % magnetic shear
 EPS     = 0.0;    % inverse aspect ratio
+NEXC    = 1;
+NPOL    = 1;
+COLL_KCUT = 1.8;
 %% TIME PARMETERS
 TMAX    = 100;  % Maximal time unit
 DT      = 1e-2;   % Time step
@@ -39,8 +45,8 @@ LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 KIN_E   = 1;
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-CO      = 'DG';
-GKCO    = 0; % gyrokinetic operator
+CO      = 'LR';
+GKCO    = 1; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))s
@@ -59,6 +65,7 @@ W_NAPJ   = 1; W_SAPJ   = 0;
 HD_CO   = 0.0;    % Hyper diffusivity cutoff ratio
 kmax    = NX*pi/LX;% Highest fourier mode
 MU      = 0.0; % Hyperdiffusivity coefficient
+N_HD    = 4;
 INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_X    = MU;     % 
 MU_Y    = MU;     % 
@@ -74,8 +81,8 @@ CURVB   = 1.0;
 
 if 1
 % Parameter scan over PJ
-PA = [4];
-JA = [2];
+PA = [10];
+JA = [5];
 Nparam = numel(PA);
 % Parameter scan over KN
 % PA = [4]; JA = [2];
@@ -88,9 +95,9 @@ Nparam = numel(PA);
 DTA= DT*ones(1,Nparam)./sqrt(JA);
 % DTA= DT;
 param_name = 'KN';
-gamma_Ni00 = zeros(Nparam,floor(NX/2)+1);
-gamma_Nipj = zeros(Nparam,floor(NX/2)+1);
-gamma_phi  = zeros(Nparam,floor(NX/2)+1);
+gamma_Ni00 = zeros(Nparam,numel(ky));
+gamma_Nipj = zeros(Nparam,numel(ky));
+gamma_phi  = zeros(Nparam,numel(ky));
 for i = 1:Nparam
     % Change scan parameter
     PMAXE = PA(i); PMAXI = PA(i);
@@ -101,7 +108,7 @@ for i = 1:Nparam
     system(['rm fort*.90']);
     % Run linear simulation
     if RUN
-        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ./../../../bin/helaz3 1 1 1 0; cd ../../../wk'])
+        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ./../../../bin/gyacomo 1 4 1 0; cd ../../../wk'])
 % disp([param_name,'=',num2str(K_N)]);
 % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ./../../../bin/helaz3 1 6 0 > out.txt; cd ../../../wk']);
 %         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ./../../../bin/helaz 1 2 0; cd ../../../wk'])
@@ -111,27 +118,27 @@ for i = 1:Nparam
     %%
     filename = ['../results/',SIMID,'/',PARAMS,'/outputs_00.h5'];
     load_results
-    for ikx = 1:NX/2+1
-        tend   = max(Ts3D(abs(Ni00(ikx,1,1,:))~=0));
+    for iky = 1:numel(ky)
+        tend   = max(Ts3D(abs(Ni00(iky,1,1,:))~=0));
         tstart   = 0.6*tend;
         [~,itstart] = min(abs(Ts3D-tstart));
         [~,itend]   = min(abs(Ts3D-tend));
         trange = itstart:itend;
         % exp fit on moment 00
-        X_ = Ts3D(trange); Y_ = squeeze(abs(Ni00(ikx,1,1,trange)));
-        gamma_Ni00(i,ikx) = LinearFit_s(X_,Y_);
+        X_ = Ts3D(trange); Y_ = squeeze(abs(Ni00(iky,1,1,trange)));
+        gamma_Ni00(i,iky) = LinearFit_s(X_,Y_);
         % exp fit on phi
-        X_ = Ts3D(trange); Y_ = squeeze(abs(PHI(ikx,1,1,trange)));
-        gamma_phi (i,ikx) = LinearFit_s(X_,Y_);
+        X_ = Ts3D(trange); Y_ = squeeze(abs(PHI(iky,1,1,trange)));
+        gamma_phi (i,iky) = LinearFit_s(X_,Y_);
     end
     gamma_Ni00(i,:) = real(gamma_Ni00(i,:));% .* (gamma_Ni00(i,:)>=0.0));
     gamma_Nipj(i,:) = real(gamma_Nipj(i,:));% .* (gamma_Nipj(i,:)>=0.0));
     if 0
     %% Fit verification
     figure;
-    for i = 1:1:NX/2+1
+    for i = 1:1:numel(ky)
         X_ = Ts3D(:); Y_ = squeeze(abs(Ni00(i,1,1,:)));
-        semilogy(X_,Y_,'DisplayName',['k=',num2str(kx(i))]); hold on;
+        semilogy(X_,Y_,'DisplayName',['k_y=',num2str(ky(i))]); hold on;
     end
 end
 
@@ -146,15 +153,15 @@ plt = @(x) x;
         colors = jet(Nparam);
         clr       = colors(mod(i-1,numel(line_colors(:,1)))+1,:);
         linestyle = line_styles(floor((i-1)/numel(line_colors(:,1)))+1);
-        plot(plt(SCALE*kx),plt(gamma_phi(i,1:end)),...
+        plot(plt(SCALE*ky),plt(gamma_phi(i,1:end)),...
             'Color',clr,...
             'LineStyle',linestyle{1},'Marker','^',...
 ...%             'DisplayName',['$\kappa_N=',num2str(K_N),'$, $\nu_{',CONAME,'}=',num2str(NU),'$, $P=',num2str(PA(i)),'$, $J=',num2str(JA(i)),'$']);
             'DisplayName',[CONAME,', $P,J=',num2str(PA(i)),',',num2str(JA(i)),'$']);
         hold on;
     end
-    grid on; xlabel('$k_y\rho_s^{R}$'); ylabel('$\gamma(\phi)L_\perp/c_s$'); xlim([0.0,max(kx)]);
-    title(['$\kappa_N=',num2str(K_N),'$, $\nu_{',CONAME,'}=',num2str(NU),'$'])
+    grid on; xlabel('$k_y\rho_s^{R}$'); ylabel('$\gamma(\phi)L_\perp/c_s$'); xlim([0.0,max(ky)]);
+    title(['$\kappa_N=',num2str(K_Ni),'$, $\nu_{',CONAME,'}=',num2str(NU),'$'])
     legend('show'); %xlim([0.01,10])
 saveas(fig,[SIMDIR,'/',PARAMS,'/gamma_vs_',param_name,'_',PARAMS,'.fig']);
 saveas(fig,[SIMDIR,'/',PARAMS,'/gamma_vs_',param_name,'_',PARAMS,'.png']);
