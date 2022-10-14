@@ -9,17 +9,34 @@ module geometry
   use fields
   use basic
   use calculus, ONLY: simpson_rule_z
-
+  use miller, ONLY: set_miller_parameters, get_miller
 implicit none
   PRIVATE
-  ! Geometry parameters
+  ! Geometry input parameters
   CHARACTER(len=16), &
                PUBLIC, PROTECTED :: geom
-  REAL(dp),    PUBLIC, PROTECTED :: q0       = 1.4_dp  ! safety factor
-  REAL(dp),    PUBLIC, PROTECTED :: shear    = 0._dp   ! magnetic field shear
-  REAL(dp),    PUBLIC, PROTECTED :: eps      = 0.18_dp ! inverse aspect ratio
-  LOGICAL,     PUBLIC, PROTECTED :: SHEARED  = .false.     ! flag for shear magn. geom or not
-  ! Geometrical operators
+  REAL(dp),    PUBLIC, PROTECTED :: q0        = 1.4_dp  ! safety factor
+  REAL(dp),    PUBLIC, PROTECTED :: shear     = 0._dp   ! magnetic field shear
+  REAL(dp),    PUBLIC, PROTECTED :: eps       = 0.18_dp ! inverse aspect ratio
+  REAL(dp),    PUBLIC, PROTECTED :: alpha_MHD = 0 ! shafranov shift effect alpha = -q2 R dbeta/dr
+  ! parameters for Miller geometry
+  REAL(dp),    PUBLIC, PROTECTED :: kappa     = 1._dp ! elongation
+  REAL(dp),    PUBLIC, PROTECTED :: s_kappa   = 0._dp ! r normalized derivative skappa = r/kappa dkappa/dr
+  REAL(dp),    PUBLIC, PROTECTED :: delta     = 0._dp ! triangularity
+  REAL(dp),    PUBLIC, PROTECTED :: s_delta   = 0._dp ! '' sdelta = r/sqrt(1-delta2) ddelta/dr
+  REAL(dp),    PUBLIC, PROTECTED :: zeta      = 0._dp ! squareness
+  REAL(dp),    PUBLIC, PROTECTED :: s_zeta    = 0._dp ! '' szeta = r dzeta/dr
+
+  ! GENE unused additional parameters for miller_mod
+  REAL(dp), PUBLIC, PROTECTED :: edge_opt      = 0 ! meant to redistribute the points in z
+  REAL(dp), PUBLIC, PROTECTED :: major_R       = 1 ! major radius
+  REAL(dp), PUBLIC, PROTECTED :: major_Z       = 0 ! vertical elevation
+  REAL(dp), PUBLIC, PROTECTED :: dpdx_pm_geom  = 0 ! amplitude mag. eq. pressure grad.
+  REAL(dp), PUBLIC, PROTECTED ::          C_y  = 0 ! defines y coordinate : Cy (q theta - phi)
+  REAL(dp), PUBLIC, PROTECTED ::         C_xy  = 0 ! defines x coordinate : B = Cxy Vx x Vy
+
+  ! Geometrical auxiliary variables
+  LOGICAL,     PUBLIC, PROTECTED :: SHEARED  = .false. ! flag for shear magn. geom or not
   ! Curvature
   REAL(dp),    PUBLIC, DIMENSION(:,:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z, odd/even p
   ! Jacobian
@@ -38,6 +55,7 @@ implicit none
   REAL(dp),    PUBLIC, DIMENSION(:,:) , ALLOCATABLE :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
   ! Array to map the index of mode (kx,ky,-pi) to (kx+2pi*s*ky,ky,pi) for sheared periodic boundary condition
   INTEGER,     PUBLIC, DIMENSION(:,:), ALLOCATABLE :: ikx_zBC_L, ikx_zBC_R
+
   ! Functions
   PUBLIC :: geometry_readinputs, geometry_outputinputs,&
             eval_magnetic_geometry, set_ikx_zBC_map
@@ -47,7 +65,8 @@ CONTAINS
   SUBROUTINE geometry_readinputs
     ! Read the input parameters
     IMPLICIT NONE
-    NAMELIST /GEOMETRY/ geom, q0, shear, eps
+    NAMELIST /GEOMETRY/ geom, q0, shear, eps,&
+      kappa, s_kappa,delta, s_delta, zeta, s_zeta ! For miller
     READ(lu_in,geometry)
     IF(shear .NE. 0._dp) SHEARED = .true.
 
@@ -78,8 +97,14 @@ CONTAINS
           IF( my_id .eq. 0 ) WRITE(*,*) 'Z-pinch geometry'
           call eval_zpinch_geometry
           SHEARED = .FALSE.
+        CASE('miller')
+          IF( my_id .eq. 0 ) WRITE(*,*) 'Miller geometry'
+          call set_miller_parameters(kappa,s_kappa,delta,s_delta,zeta,s_zeta)
+          call get_miller(eps,major_R,major_Z,q0,shear,alpha_MHD,edge_opt,&
+               C_y,C_xy,dpdx_pm_geom,gxx,gyy,gzz,gxy,gxz,gyz,&
+               gradxB,gradyB,hatB,jacobian,gradzB,hatR,hatZ,dxdR,dxdZ)
         CASE DEFAULT
-          ERROR STOP 'Error stop: geometry not recognized!!'
+          STOP 'geometry not recognized!!'
         END SELECT
     ENDIF
     !
@@ -116,7 +141,7 @@ CONTAINS
   SUBROUTINE eval_salphaB_geometry
   ! evaluate s-alpha geometry model
   implicit none
-  REAL(dp) :: z, kx, ky, alpha_MHD, Gx, Gy
+  REAL(dp) :: z, kx, ky, Gx, Gy
   alpha_MHD = 0._dp
 
   parity: DO eo = 0,1

@@ -1,8 +1,8 @@
-#include "redef.h"
 !! This source is taken from GENE https://genecode.org/ !!
 !>lagrange_interpolation contains subroutines to perform
 !!a mid-point lagrange interpolation of order 3
 MODULE lagrange_interpolation
+  USE prec_const
   IMPLICIT NONE
   PUBLIC:: lag3interp, lag3deriv, lag3interp_2d
   PUBLIC:: lag3interp_complex
@@ -21,11 +21,11 @@ CONTAINS
   !> Third order lagrange interpolation
   SUBROUTINE lag3interp_scalar(y_in,x_in,n_in,y_out,x_out)
     INTEGER, INTENT(IN) :: n_in
-    REAL, DIMENSION(n_in), INTENT(IN) :: y_in,x_in
-    REAL, INTENT(IN) :: x_out
-    REAL, INTENT(OUT) :: y_out
+    REAL(dp), DIMENSION(n_in), INTENT(IN) :: y_in,x_in
+    REAL(dp), INTENT(IN) :: x_out
+    REAL(dp), INTENT(OUT) :: y_out
 
-    REAL, DIMENSION(1) :: xout_wrap, yout_wrap
+    REAL(dp), DIMENSION(1) :: xout_wrap, yout_wrap
 
     xout_wrap = x_out
     call lag3interp_array(y_in,x_in,n_in,yout_wrap,xout_wrap,1)
@@ -36,11 +36,11 @@ CONTAINS
   !> Third order lagrange interpolation
   subroutine lag3interp_array(y_in,x_in,n_in,y_out,x_out,n_out)
     INTEGER, INTENT(IN) :: n_in,n_out
-    REAL, DIMENSION(n_in), INTENT(IN) :: y_in,x_in
-    REAL, DIMENSION(n_out), INTENT(IN) :: x_out
-    REAL, DIMENSION(n_out), INTENT(OUT) :: y_out
+    REAL(dp), DIMENSION(n_in), INTENT(IN) :: y_in,x_in
+    REAL(dp), DIMENSION(n_out), INTENT(IN) :: x_out
+    REAL(dp), DIMENSION(n_out), INTENT(OUT) :: y_out
 
-    REAL :: x,aintm,aint0,aint1,aint2,xm,x0,x1,x2
+    REAL(dp) :: x,aintm,aint0,aint1,aint2,xm,x0,x1,x2
     INTEGER :: j,jm,j0,j1,j2
     INTEGER :: jstart,jfirst,jlast,jstep
 
@@ -91,11 +91,11 @@ CONTAINS
   SUBROUTINE lag3interp_complex(y_in,x_in,n_in,y_out,x_out,n_out)
     INTEGER, INTENT(IN) :: n_in,n_out
     COMPLEX, DIMENSION(n_in), INTENT(IN) :: y_in
-    REAL, DIMENSION(n_in), INTENT(IN) :: x_in
+    REAL(dp), DIMENSION(n_in), INTENT(IN) :: x_in
     COMPLEX, DIMENSION(n_out), INTENT(OUT) :: y_out
-    REAL, DIMENSION(n_out), INTENT(IN) :: x_out
+    REAL(dp), DIMENSION(n_out), INTENT(IN) :: x_out
 
-    REAL :: x,aintm,aint0,aint1,aint2,xm,x0,x1,x2
+    REAL(dp) :: x,aintm,aint0,aint1,aint2,xm,x0,x1,x2
     INTEGER :: j,jm,j0,j1,j2
     INTEGER :: jstart,jfirst,jlast,jstep
 
@@ -143,22 +143,22 @@ CONTAINS
 
 
   !>2D interpolation
-  !\TODO check whether a "real" 2D interpolation would
+  !\TODO check whether a "REAL(dp)" 2D interpolation would
   !! be more appropriate
   SUBROUTINE lag3interp_2d(y_in,x1_in,n1_in,x2_in,n2_in,&
        &y_out,x1_out,n1_out,x2_out,n2_out)
     INTEGER, INTENT(IN) :: n1_in,n2_in,n1_out,n2_out
-    REAL, DIMENSION(n1_in,n2_in), INTENT(IN) :: y_in
-    REAL, DIMENSION(n1_in) :: x1_in
-    REAL, DIMENSION(n2_in) :: x2_in
-    REAL, DIMENSION(n1_out), INTENT(IN) :: x1_out
-    REAL, DIMENSION(n2_out), INTENT(IN) :: x2_out
-    REAL, DIMENSION(n1_out,n2_out), INTENT(OUT) :: y_out
+    REAL(dp), DIMENSION(n1_in,n2_in), INTENT(IN) :: y_in
+    REAL(dp), DIMENSION(n1_in) :: x1_in
+    REAL(dp), DIMENSION(n2_in) :: x2_in
+    REAL(dp), DIMENSION(n1_out), INTENT(IN) :: x1_out
+    REAL(dp), DIMENSION(n2_out), INTENT(IN) :: x2_out
+    REAL(dp), DIMENSION(n1_out,n2_out), INTENT(OUT) :: y_out
 
     !local variables
-    REAL, DIMENSION(n2_in) :: y2_in_tmp
-    REAL, DIMENSION(n2_out) :: y2_out_tmp
-    REAL, DIMENSION(n1_in,n2_out) :: y_tmp
+    REAL(dp), DIMENSION(n2_in) :: y2_in_tmp
+    REAL(dp), DIMENSION(n2_out) :: y2_out_tmp
+    REAL(dp), DIMENSION(n1_in,n2_out) :: y_tmp
     INTEGER :: i
 
     DO i=1,n1_in
@@ -181,11 +181,11 @@ CONTAINS
     IMPLICIT NONE
 
     INTEGER, INTENT(IN) :: n_in
-    REAL, DIMENSION(n_in), INTENT(IN) :: y_in,x_in
-    REAL, INTENT(IN) :: x_out
-    REAL, INTENT(OUT) :: dydx_out
+    REAL(dp), DIMENSION(n_in), INTENT(IN) :: y_in,x_in
+    REAL(dp), INTENT(IN) :: x_out
+    REAL(dp), INTENT(OUT) :: dydx_out
 
-    REAL, DIMENSION(1) :: xout_wrap, dydxout_wrap
+    REAL(dp), DIMENSION(1) :: xout_wrap, dydxout_wrap
 
     xout_wrap = x_out
     call lag3deriv_array(y_in,x_in,n_in,dydxout_wrap,xout_wrap,1)
@@ -198,11 +198,11 @@ CONTAINS
 !>Returns Derivative based on a 3rd order lagrange interpolation
   subroutine lag3deriv_array(y_in,x_in,n_in,dydx_out,x_out,n_out)
     INTEGER :: n_in,n_out
-    REAL, DIMENSION(n_in), INTENT(IN) :: y_in,x_in
-    REAL, DIMENSION(n_out), INTENT(IN) :: x_out
-    REAL, DIMENSION(n_out), INTENT(OUT) :: dydx_out
+    REAL(dp), DIMENSION(n_in), INTENT(IN) :: y_in,x_in
+    REAL(dp), DIMENSION(n_out), INTENT(IN) :: x_out
+    REAL(dp), DIMENSION(n_out), INTENT(OUT) :: dydx_out
 
-    REAL :: x,aintm,aint0,aint1,aint2,xm,x0,x1,x2
+    REAL(dp) :: x,aintm,aint0,aint1,aint2,xm,x0,x1,x2
     INTEGER :: j,jm,j0,j1,j2
     INTEGER :: jstart,jfirst,jlast,jstep
 
