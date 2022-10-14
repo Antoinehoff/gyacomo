@@ -1,0 +1,4 @@
+This is a testcase reproducing the cyclone base case of Dimits 2000
+Adiabatic electrons, s-alpha geometry, gradlnN = 2.22, gradlnT = 6.96
+With a small P,J=4,2 polynomial basis, one should observe the secondary instability (KHI) at t~50R/cs.
+The saturated heat flux should be located around Qx ~ 30, i.e. Qx/QGB ~ 2 which is close to Dimits results.
