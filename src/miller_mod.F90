@@ -78,7 +78,7 @@ CONTAINS
   !>Get Miller metric, magnetic field, jacobian etc.
   subroutine get_miller(trpeps,major_R,major_Z,q0,shat,amhd,edge_opt,&
        C_y,C_xy,dpdx_pm_geom,gxx_,gyy_,gzz_,gxy_,gxz_,gyz_,dBdx_,dBdy_,&
-       Bfield_,jacobian_,dBdz_,R_hat_,Z_hat_,dxdR_,dxdZ_)
+       Bfield_,jacobian_,dBdz_,R_hat_,Z_hat_,dxdR_,dxdZ_,Ckxky_,gradz_coeff_)
     !!!!!!!!!!!!!!!! GYACOMO INTERFACE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     real(dp), INTENT(INOUT) :: trpeps          ! eps in gyacomo (inverse aspect ratio)
     real(dp), INTENT(INOUT) :: major_R         ! major radius
@@ -93,13 +93,16 @@ CONTAINS
     real(dp), dimension(izgs:izge,0:1), INTENT(INOUT) :: &
                                               gxx_,gyy_,gzz_,gxy_,gxz_,gyz_,&
                                               dBdx_,dBdy_,Bfield_,jacobian_,&
-                                              dBdz_,R_hat_,Z_hat_,dxdR_,dxdZ_
+                                              dBdz_,R_hat_,Z_hat_,dxdR_,dxdZ_, &
+                                              gradz_coeff_
+    real(dp), dimension(ikys:ikye,ikxs:ikxe,izgs:izge,0:1), INTENT(INOUT) :: Ckxky_
     ! No parameter in gyacomo yet
     integer  :: ikxgs     =1 ! the left ghost gpdisc%pi1gl
     real(dp) :: sign_Ip_CW=1 ! current sign (only normal current)
     real(dp) :: sign_Bt_CW=1 ! current sign (only normal current)
     !!!!!!!!!!!!!! END GYACOMO INTERFACE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+    ! Auxiliary variables for curvature computation
+    real(dp) :: G1,G2,G3,Cx,Cy,ky,kx
 
     integer:: np, np_s, Npol_ext, Npol_s
 
@@ -525,17 +528,36 @@ CONTAINS
     CALL update_ghosts_z(gxx_(:,eo))
     CALL update_ghosts_z(gyy_(:,eo))
     CALL update_ghosts_z(gxz_(:,eo))
-    CALL update_ghosts_z(dBdx_(:,eo))
-    CALL update_ghosts_z(dBdy_(:,eo))
     CALL update_ghosts_z(gxy_(:,eo))
     CALL update_ghosts_z(gzz_(:,eo))
     CALL update_ghosts_z(Bfield_(:,eo))
-    CALL update_ghosts_z(jacobian_(:,eo))
+    CALL update_ghosts_z(dBdx_(:,eo))
+    CALL update_ghosts_z(dBdy_(:,eo))
     CALL update_ghosts_z(dBdz_(:,eo))
+    CALL update_ghosts_z(jacobian_(:,eo))
     CALL update_ghosts_z(R_hat_(:,eo))
     CALL update_ghosts_z(Z_hat_(:,eo))
     CALL update_ghosts_z(dxdR_(:,eo))
     CALL update_ghosts_z(dxdZ_(:,eo))
+
+    ! Curvature operator (Frei et al. 2022 eq 2.15)
+    DO iz = izgs,izge
+      G1 = gxx_(iz,eo)*gyy_(iz,eo)-gxy_(iz,eo)*gxy_(iz,eo)
+      G2 = gxx_(iz,eo)*gyz_(iz,eo)-gxy_(iz,eo)*gxz_(iz,eo)
+      G3 = gxy_(iz,eo)*gyz_(iz,eo)-gyy_(iz,eo)*gxz_(iz,eo)
+      Cx = (G1*dBdy_(iz,eo) + G2*dBdz_(iz,eo))/Bfield_(iz,eo)
+      Cy = (G3*dBdz_(iz,eo) - G1*dBdx_(iz,eo))/Bfield_(iz,eo)
+
+      DO iky = ikys, ikye
+        ky = kyarray(iky)
+         DO ikx= ikxs, ikxe
+           kx = kxarray(ikx)
+           Ckxky_(iky, ikx, iz,eo) = (Cx*kx + Cy*ky)/Bfield_(iz,eo)
+         ENDDO
+      ENDDO
+    ENDDO
+    ! coefficient in the front of parallel derivative
+    gradz_coeff_(iz,eo) = 1._dp / Jacobian_(iz,eo) / Bfield_(iz,eo)
   enddo
 
   contains

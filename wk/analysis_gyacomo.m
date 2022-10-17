@@ -28,26 +28,32 @@ FMT = '.fig';
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
 % data.scale = 1;%/(data.Nx*data.Ny)^2;
-i_ = 11; 
+i_ = 1; 
 disp([num2str(data.TJOB_SE(i_)),' ',num2str(data.TJOB_SE(i_+1))])
 disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
 options.TAVG_0   = data.TJOB_SE(i_);%0.4*data.Ts3D(end);
 options.TAVG_1   = data.TJOB_SE(i_+1);%0.9*data.Ts3D(end); % Averaging times duration
 options.NCUT     = 4;              % Number of cuts for averaging and error estimation
-options.NMVA     = 100;              % Moving average for time traces
+options.NMVA     = 1;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';   % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
-% options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
-% options.INTERP   = 1;
+options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
+options.INTERP   = 0;
+options.RESOLUTION = 256;
 fig = plot_radial_transport_and_spacetime(data,options);
 save_figure(data,fig,'.png')
 end
 
 if 0
 %% statistical transport averaging
-options.T = [200 400];
+for i_ = 1:2:21 
+% i_ = 3; 
+disp([num2str(data.TJOB_SE(i_)),' ',num2str(data.TJOB_SE(i_+1))])
+disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
+options.T = [data.TJOB_SE(i_) data.TJOB_SE(i_+1)];
+options.NPLOTS = 0;
 fig = statistical_transport_averaging(data,options);
 end
-
+end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
@@ -55,7 +61,7 @@ options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.NAME      = '\phi';
 % options.NAME      = '\omega_z';
-% options.NAME      = 'N_i^{00}';
+% options.NAME      = 'N_e^{00}';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
@@ -63,10 +69,10 @@ options.NAME      = '\phi';
 options.PLAN      = 'xy';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
-% options.COMP      = 'avg';
+options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
 % options.TIME      =  data.Ts3D;
-options.TIME      = [000:50:7000];
+options.TIME      = [000:0.1:7000];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
@@ -146,7 +152,7 @@ end
 
 if 0
 %% Time averaged spectrum
-options.TIME   = [300 600];
+options.TIME   = [2000 3000];
 options.NORM   =1;
 options.NAME   = '\phi';
 % options.NAME      = 'N_i^{00}';

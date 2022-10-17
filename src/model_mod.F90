@@ -52,6 +52,7 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED :: qe2_taue, qi2_taui   ! factor of the gammaD sum
   REAL(dp), PUBLIC, PROTECTED :: q_o_sqrt_tau_sigma_e, q_o_sqrt_tau_sigma_i
   REAL(dp), PUBLIC, PROTECTED :: sqrt_tau_o_sigma_e, sqrt_tau_o_sigma_i
+  REAL(dp), PUBLIC, PROTECTED :: dpdx = 0             ! radial pressure gradient
   PUBLIC :: model_readinputs, model_outputinputs
 
 CONTAINS
@@ -75,8 +76,9 @@ CONTAINS
     ENDIF
 
     IF(beta .GT. 0) THEN
-      EM = .TRUE.
       IF(my_id.EQ.0) print*, 'Electromagnetic effects are included'
+      EM   = .TRUE.
+      dpdx = -(tau_i*(k_Ni + k_Ti) + tau_e*(k_Ne + k_Te))
     ENDIF
 
     taue_qe    = tau_e/q_e ! factor of the magnetic moment coupling

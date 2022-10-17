@@ -18,7 +18,7 @@
   SG     = .false.
 /
 &GEOMETRY
-  geom   = 'miller'
+  geom   = 's-alpha'
   q0     = 1.4
   shear  = 0.0
   eps    = 0.18

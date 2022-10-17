@@ -87,9 +87,6 @@ CONTAINS
       call eval_1D_geometry
     ELSE
       SELECT CASE(geom)
-        CASE('circular')
-          IF( my_id .eq. 0 ) WRITE(*,*) 'circular geometry'
-          call eval_circular_geometry
         CASE('s-alpha')
           IF( my_id .eq. 0 ) WRITE(*,*) 's-alpha-B geometry'
           call eval_salphaB_geometry
@@ -102,7 +99,8 @@ CONTAINS
           call set_miller_parameters(kappa,s_kappa,delta,s_delta,zeta,s_zeta)
           call get_miller(eps,major_R,major_Z,q0,shear,alpha_MHD,edge_opt,&
                C_y,C_xy,dpdx_pm_geom,gxx,gyy,gzz,gxy,gxz,gyz,&
-               gradxB,gradyB,hatB,jacobian,gradzB,hatR,hatZ,dxdR,dxdZ)
+               gradxB,gradyB,hatB,jacobian,gradzB,hatR,hatZ,dxdR,dxdZ,&
+               Ckxky,gradz_coeff)
         CASE DEFAULT
           STOP 'geometry not recognized!!'
         END SELECT
@@ -112,18 +110,22 @@ CONTAINS
     !  k_\perp^2 = g^{xx} k_x^2 + 2 g^{xy}k_x k_y + k_y^2 g^{yy}
     !  normalized to rhos_
     DO eo = 0,1
-     DO iky = ikys, ikye
-       ky = kyarray(iky)
-        DO ikx = ikxs, ikxe
-          kx = kxarray(ikx)
-          DO iz = izgs,izge
-             kparray(iky, ikx, iz, eo) = &
-              SQRT( gxx(iz,eo)*kx**2 + 2._dp*gxy(iz,eo)*kx*ky + gyy(iz,eo)*ky**2)/hatB(iz,eo)
-              ! there is a factor 1/B from the normalization; important to match GENE
+      DO iz = izgs,izge
+        DO iky = ikys, ikye
+          ky = kyarray(iky)
+          DO ikx = ikxs, ikxe
+            kx = kxarray(ikx)
+            kparray(iky, ikx, iz, eo) = &
+            SQRT( gxx(iz,eo)*kx**2 + 2._dp*gxy(iz,eo)*kx*ky + gyy(iz,eo)*ky**2)/hatB(iz,eo)
+            ! there is a factor 1/B from the normalization; important to match GENE
           ENDDO
-       ENDDO
+        ENDDO
+      ENDDO
     ENDDO
-    ENDDO
+    ! Factor in front of the nonlinear term
+    hatB_NL(izgs:izge,0:1) = Jacobian(izgs:izge,0:1)&
+        *(gxx(izgs:izge,0:1)*gyy(izgs:izge,0:1) - gxy(izgs:izge,0:1)**2)/hatB(izgs:izge,0:1)
+
     ! set the mapping for parallel boundary conditions
     CALL set_ikx_zBC_map
 
@@ -171,8 +173,7 @@ CONTAINS
       Jacobian(iz,eo) = q0*hatR(iz,eo)
 
     ! Relative strengh of modulus of B
-    hatB   (iz,eo) = 1._dp / hatR(iz,eo)
-    hatB_NL(iz,eo) = 1._dp ! Factor in front of the nonlinear term
+      hatB(iz,eo) = 1._dp / hatR(iz,eo)
 
     ! Derivative of the magnetic field strenght
       gradxB(iz,eo) = -COS(z) ! Gene put a factor hatB^2 or 1/hatR^2 in this
@@ -186,7 +187,7 @@ CONTAINS
         ky = kyarray(iky)
          DO ikx= ikxs, ikxe
            kx = kxarray(ikx)
-           Ckxky(iky, ikx, iz,eo) = (-SIN(z)*kx - COS(z)*ky -(shear*z-alpha_MHD*SIN(z))*SIN(z)*ky)* hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
+           Ckxky(iky, ikx, iz,eo) = (-SIN(z)*kx - COS(z)*ky -(shear*z-alpha_MHD*SIN(z))*SIN(z)*ky)/ hatB(iz,eo)
            ! Ckxky(iky, ikx, iz,eo) = (Gx*kx + Gy*ky) * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
          ENDDO
       ENDDO
@@ -201,220 +202,59 @@ CONTAINS
   !--------------------------------------------------------------------------------
   !
 
-
-    SUBROUTINE eval_circular_geometry
-    ! evaluate circular geometry model
-    ! Ref: Lapilonne et al., PoP, 2009, GENE circular.F90 applied at r=r0
+  SUBROUTINE eval_zpinch_geometry
   implicit none
-    REAL(dp) :: chi, kx, ky, Gx, Gy
+  REAL(dp) :: z, kx, ky, alpha_MHD
+  alpha_MHD = 0._dp
 
-    parity: DO eo = 0,1
-    zloop: DO iz = izgs,izge
-      chi    = zarray(iz,eo) ! = chi
+  parity: DO eo = 0,1
+  zloop: DO iz = izgs,izge
+    z = zarray(iz,eo)
 
-      ! metric in x,y,z
+    ! metric
       gxx(iz,eo) = 1._dp
-      gyy(iz,eo) = 1._dp + (shear*chi)**2 - 2._dp*eps*COS(chi) - 2._dp*shear*chi*eps*SIN(chi)
-      gxy(iz,eo) = shear*chi - eps*SIN(chi)
-      gxz(iz,eo) = -SIN(chi)
-      gyz(iz,eo) = (1._dp - 2._dp*eps*COS(chi) - shear*chi*eps*SIN(chi))/eps
-      gzz(iz,eo) = (1._dp - 2._dp*eps*COS(chi))/eps**2
-      dxdR(iz,eo)= COS(chi)
-      dxdZ(iz,eo)= SIN(chi)
+      gxy(iz,eo) = 0._dp
+      gxz(iz,eo) = 0._dp
+      gyy(iz,eo) = 1._dp
+      gyz(iz,eo) = 0._dp
+      gzz(iz,eo) = 1._dp
+      dxdR(iz,eo)= COS(z)
+      dxdZ(iz,eo)= SIN(z)
 
     ! Relative strengh of radius
-      hatR(iz,eo) = 1._dp + eps*COS(chi)
-      hatZ(iz,eo) = 1._dp + eps*SIN(chi)
+      hatR(iz,eo) = 1._dp
+      hatZ(iz,eo) = 1._dp
 
     ! toroidal coordinates
       Rc  (iz,eo) = hatR(iz,eo)
-      phic(iz,eo) = chi
+      phic(iz,eo) = z
       Zc  (iz,eo) = hatZ(iz,eo)
 
     ! Jacobian
-      Jacobian(iz,eo) = q0*hatR(iz,eo)
+      Jacobian(iz,eo) = 1._dp
 
     ! Relative strengh of modulus of B
-    hatB   (iz,eo) = 1._dp / hatR(iz,eo)
-    hatB_NL(iz,eo) = 1._dp ! Factor in front of the nonlinear term
+      hatB   (iz,eo) = 1._dp
+      hatB_NL(iz,eo) = 1._dp
 
     ! Derivative of the magnetic field strenght
-    gradxB(iz,eo) = -COS(chi) ! Gene put a factor hatB^2 or 1/hatR^2 in this
-    gradyB(iz,eo) = 0._dp
-    gradzB(iz,eo) = eps * SIN(chi) / hatR(iz,eo) ! Gene put a factor hatB or 1/hatR in this
+      gradxB(iz,eo) = 0._dp ! Gene put a factor hatB^2 or 1/hatR^2 in this
+      gradyB(iz,eo) = 0._dp
+      gradzB(iz,eo) = 0._dp ! Gene put a factor hatB or 1/hatR in this
 
     ! Curvature operator
-    Gx =             (gxz(iz,eo) * gxy(iz,eo) - gxx(iz,eo) * gyz(iz,eo)) *eps*SIN(chi) ! Kx
-    Gy = -COS(chi) + (gxz(iz,eo) * gyy(iz,eo) - gxy(iz,eo) * gyz(iz,eo)) *eps*SIN(chi) ! Ky
-    DO iky = ikys, ikye
+      DO iky = ikys, ikye
         ky = kyarray(iky)
          DO ikx= ikxs, ikxe
            kx = kxarray(ikx)
-           Ckxky(iky, ikx, iz,eo) = (Gx*kx + Gy*ky) * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
+           Ckxky(iky, ikx, iz,eo) = -ky * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
          ENDDO
       ENDDO
     ! coefficient in the front of parallel derivative
       gradz_coeff(iz,eo) = 1._dp / Jacobian(iz,eo) / hatB(iz,eo)
 
-    ENDDO zloop
-    ENDDO parity
-
-  END SUBROUTINE eval_circular_geometry
-    !
-    !--------------------------------------------------------------------------------
-    !
-
-        SUBROUTINE eval_circular_geometry_GENE
-        ! evaluate circular geometry model
-        ! Ref: Lapilonne et al., PoP, 2009, GENE circular.F90 applied at r=r0
-      implicit none
-        REAL(dp) :: qbar, dxdr_, dpsidr, dqdr, dqbardr, Cy, dCydr_Cy, Cxy, fac2, &
-                    cost, sint, dchidr, dchidt, sign_Ip, B, dBdt, dBdr, &
-                    g11, g22, g12, g33, dBdchi, dBdr_c !GENE variables
-        REAL(dp) :: X, z, kx, ky, Gamma1, Gamma2, Gamma3, feps
-
-        sign_Ip  = 1._dp
-        feps     = SQRT(1._dp-eps**2)
-        qbar     = q0 * feps
-        dxdr_    = 1._dp
-        dpsidr   = eps/qbar
-        dqdr     = q0/eps*shear
-        dqbardr  = feps*q0/eps*(shear - eps**2/feps**2)
-        Cy       = eps/q0 * sign_Ip
-        dCydr_Cy = 0._dp
-        Cxy      = 1._dp/feps
-        fac2     = dCydr_Cy + dqdr/q0
-
-
-        parity: DO eo = 0,1
-        zloop: DO iz = izgs,izge
-          z    = zarray(iz,eo)
-
-          cost   = (COS(z)-eps)/(1._dp-eps*COS(z))
-          sint   =  feps*sin(sign_Ip*z)/(1._dp-eps*COS(z))
-          dchidr = -SIN(z)/feps**2
-          dchidt = sign_Ip*feps/(1._dp+eps*cost)
-          B      = SQRT(1._dp+(eps/qbar)**2)/(1._dp+eps*cost)
-          dBdt   = eps*sint*B/(1._dp+eps*cost)
-
-          ! metric in r,chi,Phi
-          g11    = 1._dp
-          g22    = dchidr**2 + dchidt**2/eps**2
-          g12    = dchidr
-          g33    = 1._dp/(1._dp+eps*cost)**2
-
-          ! magnetic field derivatives in
-          dBdchi=dBdt/dchidt
-          dBdr_c=(dBdr-g12*dBdt/dchidt)/g11
-
-          ! metric in x,y,z
-          gxx(iz,eo) = dxdr_**2*g11
-          gyy(iz,eo) =  (Cy*q0)**2 * (fac2*z)**2*g11 &
-                      + 2._dp*fac2*z*g12 &
-                      + Cy**2*g33
-          gxy(iz,eo) = dxdr_*Cy*sign_Ip*q0*(fac2*z*g11 + g12)
-          gxz(iz,eo) = dxdr_*g12
-          gyz(iz,eo) = Cy*q0*sign_Ip*(fac2*z*g12 + g22)
-          gzz(iz,eo) = g22
-
-          ! Jacobian
-          Jacobian(iz,eo) = Cxy*abs(q0)*(1._dp+eps*cost)**2
-
-          ! Background equilibrium magnetic field
-          hatB   (iz,eo) = B
-          hatB_NL(iz,eo) = SQRT(gxx(iz,eo)*gyy(iz,eo) - (gxy(iz,eo))**2) ! In front of the NL term
-          gradxB(iz,eo)  = dBdr_c/dxdr_ ! Gene put a factor hatB^2 or 1/hatR^2 in this
-          gradyB(iz,eo)  = 0._dp
-          gradzB(iz,eo)  = dBdchi! Gene put a factor hatB or 1/hatR in this
-
-          ! Cylindrical coordinates derivatives
-          dxdR(iz,eo) = cost
-          dxdZ(iz,eo) = sint
-          hatR(iz,eo) = 1._dp + eps*cost
-          hatZ(iz,eo) = 1._dp + eps*sint
-
-          ! toroidal coordinates
-            Rc  (iz,eo) = hatR(iz,eo)
-            phic(iz,eo) = X
-            Zc  (iz,eo) = hatZ(iz,eo)
-
-            Gamma1 = gxy(iz,eo) * gxy(iz,eo) - gxx(iz,eo) * gyy(iz,eo)
-            Gamma2 = gxz(iz,eo) * gxy(iz,eo) - gxx(iz,eo) * gyz(iz,eo) ! Kx
-            Gamma3 = gxz(iz,eo) * gyy(iz,eo) - gxy(iz,eo) * gyz(iz,eo) ! Ky
-          ! Curvature operator
-            DO iky = ikys, ikye
-              ky = kyarray(iky)
-               DO ikx= ikxs, ikxe
-                 kx = kxarray(ikx)
-                 ! Ckxky(iky, ikx, iz,eo) = (-SIN(z)*kx - (COS(z) + (shear*z - alpha_MHD*SIN(z))* SIN(z))*ky) * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
-                 Ckxky(iky, ikx, iz,eo) = (-sint*kx - cost*ky) * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
-               ENDDO
-            ENDDO
-          ! coefficient in the front of parallel derivative
-            gradz_coeff(iz,eo) = 1._dp / Jacobian(iz,eo) / hatB(iz,eo)
-
-        ENDDO zloop
-        ENDDO parity
-
-      END SUBROUTINE eval_circular_geometry_GENE
-        !
-        !--------------------------------------------------------------------------------
-        !
-
-    SUBROUTINE eval_zpinch_geometry
-    ! evaluate s-alpha geometry model
-    implicit none
-    REAL(dp) :: z, kx, ky, alpha_MHD
-    alpha_MHD = 0._dp
-
-    parity: DO eo = 0,1
-    zloop: DO iz = izgs,izge
-      z = zarray(iz,eo)
-
-      ! metric
-        gxx(iz,eo) = 1._dp
-        gxy(iz,eo) = 0._dp
-        gxz(iz,eo) = 0._dp
-        gyy(iz,eo) = 1._dp
-        gyz(iz,eo) = 0._dp
-        gzz(iz,eo) = 1._dp
-        dxdR(iz,eo)= COS(z)
-        dxdZ(iz,eo)= SIN(z)
-
-      ! Relative strengh of radius
-        hatR(iz,eo) = 1._dp
-        hatZ(iz,eo) = 1._dp
-
-      ! toroidal coordinates
-        Rc  (iz,eo) = hatR(iz,eo)
-        phic(iz,eo) = z
-        Zc  (iz,eo) = hatZ(iz,eo)
-
-      ! Jacobian
-        Jacobian(iz,eo) = 1._dp
-
-      ! Relative strengh of modulus of B
-        hatB   (iz,eo) = 1._dp
-        hatB_NL(iz,eo) = 1._dp
-
-      ! Derivative of the magnetic field strenght
-        gradxB(iz,eo) = 0._dp ! Gene put a factor hatB^2 or 1/hatR^2 in this
-        gradyB(iz,eo) = 0._dp
-        gradzB(iz,eo) = 0._dp ! Gene put a factor hatB or 1/hatR in this
-
-      ! Curvature operator
-        DO iky = ikys, ikye
-          ky = kyarray(iky)
-           DO ikx= ikxs, ikxe
-             kx = kxarray(ikx)
-             Ckxky(iky, ikx, iz,eo) = -ky * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
-           ENDDO
-        ENDDO
-      ! coefficient in the front of parallel derivative
-        gradz_coeff(iz,eo) = 1._dp / Jacobian(iz,eo) / hatB(iz,eo)
-
-    ENDDO zloop
-    ENDDO parity
+  ENDDO zloop
+  ENDDO parity
 
   END SUBROUTINE eval_zpinch_geometry
     !

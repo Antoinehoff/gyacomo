@@ -22,7 +22,9 @@ dt_const = numel(unique(round(diff(data.Ts0D(it0:it1))*100)))==1;
     end
 
     time_seg = (data.Ts0D(it0:it1)-data.Ts0D(it0)); 
-
+    
+    fig = 0;
+if options.NPLOTS > 0
     fig = figure;
     subplot(211)
     plot(time_seg,transp_seg_avg,'-'); hold on;
@@ -40,6 +42,9 @@ dt_const = numel(unique(round(diff(data.Ts0D(it0:it1))*100)))==1;
     plot(time_seg,transp_seg_avg,'-'); hold on;
     xlabel('Averaging time'); ylabel('$\langle Q_x\rangle_{\tau}$');
     legend(['$Q_x^\infty=$',sprintf('%2.2e',transp_seg_avg(end))])
-    
+end   
+Gx_infty_avg = mean(gamma);
+Gx_infty_std = std (gamma);
+disp(['G_x=',sprintf('%2.2e',Gx_infty_avg),'+-',sprintf('%2.2e',Gx_infty_std)]);
 end
 

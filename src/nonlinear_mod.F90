@@ -141,7 +141,7 @@ ENDIF
       eo = MODULO(parray_i(ip),2)
       jloopi: DO ij = ijs_i, ije_i ! Loop over Laguerre moments
         j_int=jarray_i(ij)
-        IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmaxi)) THEN !compute
+        IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmaxi)) THEN !compute for every moments except for closure 1
           ! Set non linear sum truncation
           IF (NL_CLOS .EQ. -2) THEN
             nmax = Jmaxi
@@ -152,7 +152,7 @@ ENDIF
           ENDIF
           bracket_sum_r = 0._dp ! initialize sum over real nonlinear term
           nloopi: DO in = 1,nmax+1 ! Loop over laguerre for the sum
-!-----------!! ELECTROMAGNETIC CONTRIBUTION -sqrt(tau)/sigma*{Sum_s dnjs [sqrt(p+1)Nap+1s + sqrt(p)Nap-1s], Kernel psi}
+!-----------!! ELECTROSTATIC CONTRIBUTION
             ! First convolution terms
             F_cmpx(ikys:ikye,ikxs:ikxe) = phi(ikys:ikye,ikxs:ikxe,iz) * kernel_i(in, ikys:ikye,ikxs:ikxe, iz, eo)
             ! Second convolution terms

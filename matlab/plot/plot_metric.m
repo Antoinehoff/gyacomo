@@ -13,7 +13,7 @@ subplot(311)
     for i = 1:5
     plot(data.z, geo_arrays(1,:,i),'DisplayName',names{i}); hold on;
     end
-    xlim([min(data.z),max(data.z)]); legend('show'); title('MoNoLiT geometry');
+    xlim([min(data.z),max(data.z)]); legend('show'); title('GYACOMO geometry');
 
 subplot(312)
     for i = 6:10
