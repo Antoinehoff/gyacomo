@@ -258,7 +258,7 @@ CONTAINS
       hatB_NL(iz,eo) = 1._dp
 
     ! Derivative of the magnetic field strenght
-      gradxB(iz,eo) = 0._dp ! Gene put a factor hatB^2 or 1/hatR^2 in this
+      gradxB(iz,eo) = -1._dp ! Gene put a factor hatB^2 or 1/hatR^2 in this
       gradyB(iz,eo) = 0._dp
       gradzB(iz,eo) = 0._dp ! Gene put a factor hatB or 1/hatR in this
 
@@ -267,7 +267,7 @@ CONTAINS
         ky = kyarray(iky)
          DO ikx= ikxs, ikxe
            kx = kxarray(ikx)
-           Ckxky(iky, ikx, iz,eo) = -ky * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
+           Ckxky(iky, ikx, iz,eo) = -ky
          ENDDO
       ENDDO
     ! coefficient in the front of parallel derivative
