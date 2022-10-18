@@ -11,8 +11,8 @@
   jmaxi  = 1
   Nx     = 128
   Lx     = 100
-  Ny     = 64
-  Ly     = 120
+  Ny     = 128
+  Ly     = 240
   Nz     = 16
   Npol   = 1
   SG     = .false.
@@ -28,7 +28,7 @@
   nsave_1d = -1
   nsave_2d = Inf
   nsave_3d = 100
-  nsave_5d = 500
+  nsave_5d = 1000
   write_doubleprecision = .false.
   write_gamma = .true.
   write_hf    = .true.
@@ -46,10 +46,10 @@
   NL_CLOS = -1
   LINEARITY = 'nonlinear'
   KIN_E   = .false.
-  mu_x    = 0.1
-  mu_y    = 0.1
+  mu_x    = 1.0
+  mu_y    = 1.0
   N_HD    = 4
-  mu_z    = 0.2
+  mu_z    = 1.0
   mu_p    = 0
   mu_j    = 0
   nu      = 0.2

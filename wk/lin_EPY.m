@@ -16,10 +16,10 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %% PHYSICAL PARAMETERS
 NU      = 0.1;           % Collision frequency
 TAU     = 1.0;            % e/i temperature ratio
-K_Ne    = 2.0;            % ele Density '''
-K_Te    = 0.5;            % ele Temperature '''
-K_Ni    = 2.0;            % ion Density gradient drive
-K_Ti    = 0.5;            % ion Temperature '''
+K_Ne    = 2.2;            % ele Density '''
+K_Te    = K_Ne/4;            % ele Temperature '''
+K_Ni    = K_Ne;            % ion Density gradient drive
+K_Ti    = K_Ni/4;            % ion Temperature '''
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 1;         % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 0.0;     % electron plasma beta
@@ -33,7 +33,7 @@ JMAXI   = J;     % "
 NX      = 2;    % real space x-gridpoints
 NY      = 100;     %     ''     y-gridpoints
 LX      = 2*pi/0.8;   % Size of the squared frequency domain
-LY      = 2*pi/0.05;     % Size of the squared frequency domain
+LY      = 120;%2*pi/0.05;     % Size of the squared frequency domain
 NZ      = 1;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option

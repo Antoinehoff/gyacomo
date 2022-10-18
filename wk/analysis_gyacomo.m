@@ -28,7 +28,7 @@ FMT = '.fig';
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
 % data.scale = 1;%/(data.Nx*data.Ny)^2;
-i_ = 3; 
+i_ = 1; 
 disp([num2str(data.TJOB_SE(i_)),' ',num2str(data.TJOB_SE(i_+1))])
 disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
 options.TAVG_0   = data.TJOB_SE(i_);%0.4*data.Ts3D(end);
@@ -59,14 +59,14 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-% options.NAME      = '\phi';
-options.NAME      = '\omega_z';
+options.NAME      = '\phi';
+% options.NAME      = '\omega_z';
 % options.NAME      = 'N_i^{00}';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';

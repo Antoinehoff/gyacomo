@@ -59,6 +59,8 @@ gyacomodir = '/home/ahoffman/gyacomo/';
 % resdir = 'NL_KBM/192x64x24x5x3';
 %% Linear CBC
 % resdir = 'linear_CBC/20x2x32_21x11_Lx_62.8319_Ly_31.4159_q0_1.4_e_0.18_s_0.8_kN_2.22_kT_5.3_nu_1e-02_DGDK_adiabe';
-resdir = 'testcases/miller_example';
+% resdir = 'testcases/miller_example';
+resdir = 'Miller/128x256x3x2_CBC_dt_5e-3';
+% resdir = ['results/',resdir];
 JOBNUMMIN = 00; JOBNUMMAX = 10;
 run analysis_gyacomo
