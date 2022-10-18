@@ -197,7 +197,7 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 
  $(OBJDIR)/miller_mod.o : src/miller_mod.F90 \
  	 $(OBJDIR)/basic_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/lag_interp_mod.o \
-	 $(OBJDIR)/geometry_mod.o $(OBJDIR)/prec_const_mod.o
+   $(OBJDIR)/prec_const_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/miller_mod.F90 -o $@
 
  $(OBJDIR)/model_mod.o : src/model_mod.F90 \
