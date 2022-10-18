@@ -1,7 +1,7 @@
 &BASIC
   nrun   = 100000000
-  dt     = 0.01
-  tmax   = 400
+  dt     = 0.0075
+  tmax   = 100
   maxruntime = 356400
 /
 &GRID
@@ -38,7 +38,7 @@
   write_Sapj  = .false.
   write_dens  = .true.
   write_temp  = .true.
-  job2load    = 0
+  job2load    = 1
 /
 &MODEL_PAR
   ! Collisionality
@@ -49,7 +49,7 @@
   mu_x    = 0.1
   mu_y    = 0.1
   N_HD    = 4
-  mu_z    = 0.2
+  mu_z    = 1.0
   mu_p    = 0
   mu_j    = 0
   nu      = 0.2

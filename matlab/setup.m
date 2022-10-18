@@ -18,6 +18,9 @@ GEOM.geom  = ['''',GEOMETRY,''''];
 GEOM.q0    = Q0;    % q factor
 GEOM.shear = SHEAR; % shear
 GEOM.eps   = EPS;   % inverse aspect ratio
+GEOM.kappa = KAPPA; % elongation
+GEOM.delta = DELTA; % triangularity
+GEOM.zeta  = ZETA;  % squareness
 % Model parameters
 MODEL.CLOS    = CLOS;
 MODEL.NL_CLOS = NL_CLOS;

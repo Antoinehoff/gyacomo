@@ -542,9 +542,9 @@ CONTAINS
 
     ! Curvature operator (Frei et al. 2022 eq 2.15)
     DO iz = izgs,izge
-      G1 = gxx_(iz,eo)*gyy_(iz,eo)-gxy_(iz,eo)*gxy_(iz,eo)
-      G2 = gxx_(iz,eo)*gyz_(iz,eo)-gxy_(iz,eo)*gxz_(iz,eo)
-      G3 = gxy_(iz,eo)*gyz_(iz,eo)-gyy_(iz,eo)*gxz_(iz,eo)
+      G1 = gxy_(iz,eo)*gxy_(iz,eo)-gxx_(iz,eo)*gyy_(iz,eo)
+      G2 = gxy_(iz,eo)*gxz_(iz,eo)-gxx_(iz,eo)*gyz_(iz,eo)
+      G3 = gyy_(iz,eo)*gxz_(iz,eo)-gxy_(iz,eo)*gyz_(iz,eo)
       Cx = (G1*dBdy_(iz,eo) + G2*dBdz_(iz,eo))/Bfield_(iz,eo)
       Cy = (G3*dBdz_(iz,eo) - G1*dBdx_(iz,eo))/Bfield_(iz,eo)
 
@@ -552,13 +552,13 @@ CONTAINS
         ky = kyarray(iky)
          DO ikx= ikxs, ikxe
            kx = kxarray(ikx)
-           Ckxky_(iky, ikx, iz,eo) = (Cx*kx + Cy*ky)/Bfield_(iz,eo)
+           Ckxky_(iky, ikx, iz,eo) = (Cx*kx + Cy*ky)
          ENDDO
       ENDDO
+      ! coefficient in the front of parallel derivative
+      gradz_coeff_(iz,eo) = 1._dp / jacobian_(iz,eo) / Bfield_(iz,eo)
     ENDDO
-    ! coefficient in the front of parallel derivative
-    gradz_coeff_(iz,eo) = 1._dp / Jacobian_(iz,eo) / Bfield_(iz,eo)
-  enddo
+  ENDDO
 
   contains
 

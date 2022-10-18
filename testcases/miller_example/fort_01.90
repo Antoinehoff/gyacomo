@@ -38,7 +38,7 @@
   write_Sapj  = .false.
   write_dens  = .true.
   write_temp  = .true.
-  job2load    = -1
+  job2load    = 0
 /
 &MODEL_PAR
   ! Collisionality

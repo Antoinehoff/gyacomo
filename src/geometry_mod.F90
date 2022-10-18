@@ -78,6 +78,7 @@ CONTAINS
     REAL(dp) :: kx,ky
     COMPLEX(dp), DIMENSION(izs:ize) :: integrant
     INTEGER :: fid
+    real(dp) :: G1,G2,G3,Cx,Cy
 
     ! Allocate arrays
     CALL geometry_allocate_mem
@@ -121,10 +122,29 @@ CONTAINS
           ENDDO
         ENDDO
       ENDDO
+      ! Curvature operator (Frei et al. 2022 eq 2.15)
+      DO iz = izgs,izge
+        G1 = gxy(iz,eo)*gxy(iz,eo)-gxx(iz,eo)*gyy(iz,eo)
+        G2 = gxy(iz,eo)*gxz(iz,eo)-gxx(iz,eo)*gyz(iz,eo)
+        G3 = gyy(iz,eo)*gxz(iz,eo)-gxy(iz,eo)*gyz(iz,eo)
+        Cx = (G1*gradyB(iz,eo) + G2*gradzB(iz,eo))/hatB(iz,eo)
+        Cy = (G3*gradzB(iz,eo) - G1*gradxB(iz,eo))/hatB(iz,eo)
+
+        DO iky = ikys, ikye
+          ky = kyarray(iky)
+           DO ikx= ikxs, ikxe
+             kx = kxarray(ikx)
+             Ckxky(iky, ikx, iz,eo) = (Cx*kx + Cy*ky)
+           ENDDO
+        ENDDO
+        ! coefficient in the front of parallel derivative
+        gradz_coeff(iz,eo) = 1._dp / jacobian(iz,eo) / hatB(iz,eo)
+        ! Factor in front of the nonlinear term
+        hatB_NL(iz,eo) = Jacobian(iz,eo)&
+            *(gxx(iz,eo)*gyy(iz,eo) - gxy(iz,eo)**2)/hatB(iz,eo)
+      ENDDO
     ENDDO
-    ! Factor in front of the nonlinear term
-    hatB_NL(izgs:izge,0:1) = Jacobian(izgs:izge,0:1)&
-        *(gxx(izgs:izge,0:1)*gyy(izgs:izge,0:1) - gxy(izgs:izge,0:1)**2)/hatB(izgs:izge,0:1)
+
 
     ! set the mapping for parallel boundary conditions
     CALL set_ikx_zBC_map
