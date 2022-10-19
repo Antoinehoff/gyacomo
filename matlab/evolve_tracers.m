@@ -1,14 +1,14 @@
 % Options
-SHOW_FILM = 1;
+SHOW_FILM = 0;
 field2plot  ='phi';
 INIT     = 'lin';   % lin (for a line)/ round (for a small round)/ gauss for random
-U_TIME   = 15000;     % >0 for frozen velocity at a given time, -1 for evolving field
+U_TIME   = 1000;     % >0 for frozen velocity at a given time, -1 for evolving field
 Evolve_U = 1;       % 0 for frozen velocity at a given time, 1 for evolving field
 Tfin     = 100;
 dt_      = 0.1;
 Nstep    = ceil(Tfin/dt_);
 % Init tracers
-Np      = 20; %number of tracers
+Np      = 200; %number of tracers
 % color = tcolors;
 color = jet(Np);
 tcolors = distinguishable_colors(Np); %Their colors
@@ -182,7 +182,7 @@ while(t_<Tfin && it <= Nstep)
 
 %             push the particle
 %             q = sign(-u___(3));
-            q = -u___(3);
+            q = 1;%-u___(3);
 %             q =1;
             x_ = x_ + dt_*u___(1)*q;
             y_ = y_ + dt_*u___(2)*q;

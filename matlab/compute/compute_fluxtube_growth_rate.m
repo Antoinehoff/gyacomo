@@ -1,4 +1,4 @@
-function [ linear_gr ] = compute_fluxtube_growth_rate(DATA, TRANGE, PLOT)
+function [ linear_gr ] = compute_fluxtube_growth_rate(DATA, OPTIONS)
 
 % Remove AA part
 if DATA.Nx > 1
@@ -11,8 +11,8 @@ ikynz = logical(ikynz .* (DATA.ky > 0));
 phi = DATA.PHI(ikynz,ikxnz,:,:);
 t   = DATA.Ts3D;
 
-[~,its] = min(abs(t-TRANGE(1)));
-[~,ite] = min(abs(t-TRANGE(end)));
+[~,its] = min(abs(t-OPTIONS.TRANGE(1)));
+[~,ite] = min(abs(t-OPTIONS.TRANGE(end)));
 
 w_ky = zeros(sum(ikynz),ite-its);
 ce   = zeros(sum(ikynz),ite-its);
@@ -34,7 +34,7 @@ for it = its+1:ite
 end
 [kys, Is] = sort(DATA.ky(ikynz));
 
-linear_gr.trange = t(its:ite);
+linear_gr.OPTIONS.TRANGE = t(its:ite);
 linear_gr.g_ky   = real(w_ky(Is,:));
 linear_gr.w_ky   = imag(w_ky(Is,:));
 linear_gr.ce     = abs(ce);
@@ -44,20 +44,29 @@ linear_gr.avg_g = mean(real(w_ky(Is,:)),2);
 linear_gr.std_w = std (imag(w_ky(Is,:)),[],2);
 linear_gr.avg_w = mean(imag(w_ky(Is,:)),2);
 
-if PLOT >0
+if OPTIONS.NPLOTS >0
    figure
-if PLOT > 1
+if OPTIONS.NPLOTS > 1
     subplot(1,2,1)
 end
+    x_ = linear_gr.ky;
+    plt = @(x) x;
+    OVERK = '';
+    if OPTIONS.GOK == 1
+        plt = @(x) x./x_;
+        OVERK = '/$k_y$';
+    elseif OPTIONS.GOK == 2
+        plt = @(x) x.^2./x_.^3;
+        OVERK = '/$k_y$';
+    end
+       plot(x_,plt(linear_gr.g_ky(:,end)),'-o','DisplayName',['$Re(\omega_{k_y})$',OVERK]); hold on;
+       plot(x_,plt(linear_gr.w_ky(:,end)),'--*','DisplayName',['$Im(\omega_{k_y})$',OVERK]); hold on;
+       plot(x_,plt(linear_gr.ce  (:,end)),'x','DisplayName',['$\epsilon$',OVERK]); hold on;
 
-       plot(linear_gr.ky,linear_gr.g_ky(:,end),'-o','DisplayName','$Re(\omega_{k_y})$'); hold on;
-       plot(linear_gr.ky,linear_gr.w_ky(:,end),'--*','DisplayName','$Im(\omega_{k_y})$'); hold on;
-       plot(linear_gr.ky,linear_gr.ce  (:,end),'x','DisplayName','$\epsilon$'); hold on;
-
-       errorbar(linear_gr.ky,linear_gr.avg_g,linear_gr.std_g,...
+       errorbar(linear_gr.ky,plt(linear_gr.avg_g),plt(linear_gr.std_g),...
            '-o','DisplayName','$Re(\omega_{k_y})$',...
            'LineWidth',1.5); hold on;
-       errorbar(linear_gr.ky,linear_gr.avg_w,linear_gr.std_w,...
+       errorbar(linear_gr.ky,plt(linear_gr.avg_w),plt(linear_gr.std_w),...
            '--*','DisplayName','$Im(\omega_{k_y})$',...
            'LineWidth',1.5); hold on;
 
@@ -66,10 +75,10 @@ end
        legend('show');
        title(DATA.param_title);
        
-if PLOT > 1
-    if PLOT == 2
+if OPTIONS.NPLOTS > 1
+    if OPTIONS.NPLOTS == 2
     subplot(1,2,2)
-    elseif PLOT == 3
+    elseif OPTIONS.NPLOTS == 3
         subplot(2,2,2)
     end
     plot(DATA.Ts3D(its+1:ite),linear_gr.g_ky(Is,:)); hold on;
@@ -77,7 +86,7 @@ if PLOT > 1
     xlabel('t'); ylabel('$\gamma(t),\omega(t)$'); xlim([DATA.Ts3D(1) DATA.Ts3D(end)]);
 end
 
-if PLOT > 2
+if OPTIONS.NPLOTS > 2
     xlabel([]); xticks([]);
     subplot(2,2,4)
     [~,ikx0] = min(abs(DATA.kx));

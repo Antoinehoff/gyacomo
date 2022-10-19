@@ -4,17 +4,19 @@
 % for benchmark and debugging purpose since it makes matlab "busy"
 %
 SIMID   = 'lin_EPY';  % Name of the simulation
+SIMID   = 'dbg';  % Name of the simulation
 RUN     = 1; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
 PROGDIR  = '/home/ahoffman/gyacomo/';
-EXECNAME = 'gyacomo';
+EXECNAME = 'gyacomo_dbg';
+% EXECNAME = 'gyacomo';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;           % Collision frequency
+NU      = 0.01;           % Collision frequency
 TAU     = 1.0;            % e/i temperature ratio
 K_Ne    = 2.2;            % ele Density '''
 K_Te    = K_Ne/4;            % ele Temperature '''
@@ -24,14 +26,14 @@ SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 1;         % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 0.0;     % electron plasma beta
 %% GRID PARAMETERS
-P = 4;
+P = 2;
 J = P/2;
 PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
 NX      = 2;    % real space x-gridpoints
-NY      = 100;     %     ''     y-gridpoints
+NY      = 2;     %     ''     y-gridpoints
 LX      = 2*pi/0.8;   % Size of the squared frequency domain
 LY      = 120;%2*pi/0.05;     % Size of the squared frequency domain
 NZ      = 1;    % number of perpendicular planes (parallel grid)
@@ -44,7 +46,7 @@ SHEAR   = 0.8;    % magnetic shear
 NEXC    = 1;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 EPS     = 0.18;   % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 50;  % Maximal time unit
+TMAX    = 200;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
@@ -56,7 +58,7 @@ JOB2LOAD= -1;
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-CO      = 'LD';
+CO      = 'SG';
 GKCO    = 1; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
@@ -93,7 +95,8 @@ setup
 % system(['rm fort*.90']);
 % Run linear simulation
 if RUN
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',PROGDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',PROGDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',PROGDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
 end
 
 %% Load results
@@ -107,9 +110,10 @@ data = compile_results(LOCALDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from 
 %% Short analysis
 if 1
 %% linear growth rate (adapted for 2D zpinch and fluxtube)
-trange = [0.5 1]*data.Ts3D(end);
-nplots = 1; % 1 for only growth rate and error, 2 for omega local evolution, 3 for plot according to z
-lg = compute_fluxtube_growth_rate(data,trange,nplots);
+options.TRANGE = [0.5 1]*data.Ts3D(end);
+options.NPLOTS = 1; % 1 for only growth rate and error, 2 for omega local evolution, 3 for plot according to z
+options.GOK    = 0; %plot 0: gamma 1: gamma/k 2: gamma^2/k^3
+lg = compute_fluxtube_growth_rate(data,options);
 [gmax,     kmax] = max(lg.g_ky(:,end));
 [gmaxok, kmaxok] = max(lg.g_ky(:,end)./lg.ky);
 msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,lg.ky(kmax)); disp(msg);

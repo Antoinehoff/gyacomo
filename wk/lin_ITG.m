@@ -4,7 +4,7 @@
 % for benchmark and debugging purpose since it makes matlab "busy"
 %
 SIMID   = 'lin_ITG';  % Name of the simulation
-RUN     = 1; % To run or just to load
+RUN     = 0; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
 HELAZDIR = '/home/ahoffman/gyacomo/';

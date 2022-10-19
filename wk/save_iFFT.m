@@ -3,7 +3,7 @@ simdir    = '/misc/gyacomo_outputs/results/Zpinch_rerun';
 resolu    = 'UHD_512x256x2x1';
 output    = 'outputs_01.h5';
 filename  = [simdir,'/',resolu,'/',output]; 
-fieldname = 'Ni00';
+fieldname = 'vEy';
 
 %% OUTPUT
 outdir    = '.';
