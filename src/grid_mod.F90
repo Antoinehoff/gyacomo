@@ -281,8 +281,8 @@ CONTAINS
     jmaxe_dp   = real(jmaxe,dp)
     jmaxi_dp   = real(jmaxi,dp)
     ! j=0 indices
-    DO ij = ijs_e,ij0_e; IF(jarray_e(ij) .EQ. 0) ij0_e = ij; END DO
-    DO ij = ijs_i,ij0_i; IF(jarray_i(ij) .EQ. 0) ij0_i = ij; END DO
+    DO ij = ijs_e,ije_e; IF(jarray_e(ij) .EQ. 0) ij0_e = ij; END DO
+    DO ij = ijs_i,ije_i; IF(jarray_i(ij) .EQ. 0) ij0_i = ij; END DO
   END SUBROUTINE set_jgrid
 
 
