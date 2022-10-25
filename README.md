@@ -15,9 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # How to compile and run GYACOMO
-To compile it check INSTALLATION.txt
-
-How to run it
 
 1. Be sure to have correct library paths in local/dirs.inc for the different libraries, see INSTALATION.txt for a tutorial to install the required libraries.
 2. Compile from /gyacomo using make, the binary will be located in /gyacomo/bin (you can also compile a debug version using make dbg)
@@ -31,29 +28,21 @@ How to run it
 # Changelog
 
 4. GYACOMO
-  4.1 Miller geometry is added and benchmarked for CBC adiabatic electrons
 
+  4.1 Miller geometry is added and benchmarked for CBC adiabatic electrons
   4.0 new naming and opening the code with GNU GPLv3 license
 
 3. HeLaZ 3D
+
   3.9 HeLaZ can now evolve electromagnetic fluctuations by solving Ampere equations (benchmarked linearly)
-
 	3.8 HeLaZ has been benchmarked for CBC with GENE for various gradients values (see Dimits_fig3.m)
-
 	3.7 The frequency plane has been transposed from positive kx to positive ky for easier implementation of shear. Also added 3D zpinch geometry
-
 	3.6 HeLaZ is now parallelized in p, kx and z and benchmarked for each parallel options with gbms (new molix) for linear fluxtube shearless.
-
 	3.5 Staggered grid for parallel odd/even coupling
-
 	3.4 HeLaZ can run with adiabatic electrons now!
-
 	3.3 HeLaZ 3D has been benchmarked in fluxtube salphaB geometry linear run with molix (B.J.Frei) code and works now for shear = 0 with periodic z BC
-
 	3.2 Stopping file procedure like in GBS is added
-
 	3.1 Implementation of mirror force
-
 	3.0 HeLaZ is now 3D and works like HeLaZ 2D if Nz = 1, the axis were renamed (r,z) -> (x,y,z) and now the parallel direction is ez. All arrays have been extended, diagnostics and analysis too. The linear coefficients are now precomputed with lin_coeff_and_geometry routines.
 
 2. MPI parallel version
