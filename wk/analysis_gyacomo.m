@@ -34,7 +34,7 @@ disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
 options.TAVG_0   = data.TJOB_SE(i_);%0.4*data.Ts3D(end);
 options.TAVG_1   = data.TJOB_SE(i_+1);%0.9*data.Ts3D(end); % Averaging times duration
 options.NCUT     = 4;              % Number of cuts for averaging and error estimation
-options.NMVA     = 1;              % Moving average for time traces
+options.NMVA     = 100;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';   % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 options.INTERP   = 0;
@@ -59,13 +59,13 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = '\omega_z';
 % options.NAME      = 'N_i^{00}';
 % options.NAME      = 'v_y';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
-% options.NAME      = 'n_i';
+options.NAME      = 'n_i';
 options.PLAN      = 'xy';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
@@ -154,9 +154,9 @@ if 0
 %% Time averaged spectrum
 options.TIME   = [2000 3000];
 options.NORM   =1;
-options.NAME   = '\phi';
+% options.NAME   = '\phi';
 % options.NAME      = 'N_i^{00}';
-% options.NAME   ='\Gamma_x';
+options.NAME   ='\Gamma_x';
 options.PLAN   = 'kxky';
 options.COMPZ  = 'avg';
 options.OK     = 0;

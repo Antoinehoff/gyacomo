@@ -12,9 +12,9 @@ addpath(genpath([helazdir,'matlab/load'])) % ... add
 % folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.5/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_0.8/';
-% folder = '/misc/gene_results/HP_fig_2a_mu_1e-2/';
-% folder = '/misc/gene_results/HP_fig_2b_mu_5e-2/';
-% folder = '/misc/gene_results/HP_fig_2c_mu_5e-2/';
+folder = '/misc/gene_results/Z-pinch/HP_fig_2a_mu_1e-2/';
+% folder = '/misc/gene_results/Z-pinch/HP_fig_2b_mu_5e-2/';
+% folder = '/misc/gene_results/Z-pinch/HP_fig_2c_mu_5e-2/';
 % folder = '/misc/gene_results/LD_zpinch_1.6/';
 % folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
 % folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
@@ -29,7 +29,7 @@ addpath(genpath([helazdir,'matlab/load'])) % ... add
 % folder = '/misc/gene_results/CBC/KT_13_large_box_128x64x16x24x12/';
 % folder = '/misc/gene_results/CBC/Lapillone_Fig6/';
 % folder = '/misc/gene_results/Z-pinch/HP_kN_1.6_adapt_mu_01/';
-folder = '/misc/gene_results/miller/';
+% folder = '/misc/gene_results/miller/';
 gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
@@ -76,9 +76,9 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = 'v_y';
-% options.NAME      = 'n_i^{NZ}';
+options.NAME      = 'n_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
 options.PLAN      = 'xy';
@@ -131,15 +131,15 @@ end
 
 if 0
 %% Time averaged spectrum
-options.TIME   = 300:600;
+options.TIME   = [4000 8000];
 options.NORM   =1;
-options.NAME   = '\phi';
+% options.NAME   = '\phi';
 % options.NAME      = 'n_i';
-% options.NAME      ='\Gamma_x';
+options.NAME   ='\Gamma_x';
 options.PLAN   = 'kxky';
 options.COMPZ  = 'avg';
 options.OK     = 0;
-options.COMPXY = 'zero';
+options.COMPXY = 'avg'; % avg/sum/max/zero/ 2D plot otherwise
 options.COMPT  = 'avg';
 options.PLOT   = 'semilogy';
 fig = spectrum_1D(gene_data,options);

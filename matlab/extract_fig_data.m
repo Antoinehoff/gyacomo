@@ -4,7 +4,7 @@
 % tw = [3000 4000];
 % tw = [4000 4500];
 % tw = [4500 5000];
-tw = [500 1000];
+tw = [00 5000];
 
 fig = gcf;
 axObjs = fig.Children;
@@ -19,13 +19,13 @@ end
 % n1 = numel(X_);
 [~,n0] = min(abs(X_-tw(1)));
 [~,n1] = min(abs(X_-tw(2)));
-mvm = @(x) movmean(x,50);
-shift = X_(n0);
+mvm = @(x) movmean(x,1);
+shift = 0;%X_(n0);
 % shift = 0;
+skip = 50;
 
 figure;
-plot(X_(n0:end),Y_(n0:end));
-plot(mvm(X_(n0:n1)-shift),mvm(Y_(n0:n1))); hold on;
+plot(mvm(X_(n0:skip:n1)-shift),mvm(Y_(n0:skip:n1))); hold on;
 
 % t0 = ceil(numel(X_)*0.2); t1 = numel(X_);
 avg= mean(Y_(n0:n1)); dev = std(Y_(n0:n1));

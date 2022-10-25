@@ -4,21 +4,21 @@
 % for benchmark and debugging purpose since it makes matlab "busy"
 %
 SIMID   = 'lin_EPY';  % Name of the simulation
-SIMID   = 'dbg';  % Name of the simulation
-RUN     = 1; % To run or just to load
+% SIMID   = 'dbg';  % Name of the simulation
+RUN     = 0; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
 PROGDIR  = '/home/ahoffman/gyacomo/';
-EXECNAME = 'gyacomo_dbg';
-% EXECNAME = 'gyacomo';
+% EXECNAME = 'gyacomo_dbg';
+EXECNAME = 'gyacomo';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.01;           % Collision frequency
+NU      = 0.1;           % Collision frequency
 TAU     = 1.0;            % e/i temperature ratio
-K_Ne    = 2.2;            % ele Density '''
+K_Ne    = 1.6;            % ele Density '''
 K_Te    = K_Ne/4;            % ele Temperature '''
 K_Ni    = K_Ne;            % ion Density gradient drive
 K_Ti    = K_Ni/4;            % ion Temperature '''
@@ -33,7 +33,7 @@ JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
 NX      = 2;    % real space x-gridpoints
-NY      = 2;     %     ''     y-gridpoints
+NY      = 100;     %     ''     y-gridpoints
 LX      = 2*pi/0.8;   % Size of the squared frequency domain
 LY      = 120;%2*pi/0.05;     % Size of the squared frequency domain
 NZ      = 1;    % number of perpendicular planes (parallel grid)
@@ -46,11 +46,11 @@ SHEAR   = 0.8;    % magnetic shear
 NEXC    = 1;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 EPS     = 0.18;   % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 200;  % Maximal time unit
+TMAX    = 500;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
-SPS3D   = 2;      % Sampling per time unit for 2D arrays
+SPS3D   = 1/5;      % Sampling per time unit for 2D arrays
 SPS5D   = 1/5;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
@@ -111,7 +111,7 @@ data = compile_results(LOCALDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from 
 if 1
 %% linear growth rate (adapted for 2D zpinch and fluxtube)
 options.TRANGE = [0.5 1]*data.Ts3D(end);
-options.NPLOTS = 1; % 1 for only growth rate and error, 2 for omega local evolution, 3 for plot according to z
+options.NPLOTS = 2; % 1 for only growth rate and error, 2 for omega local evolution, 3 for plot according to z
 options.GOK    = 0; %plot 0: gamma 1: gamma/k 2: gamma^2/k^3
 lg = compute_fluxtube_growth_rate(data,options);
 [gmax,     kmax] = max(lg.g_ky(:,end));
@@ -157,13 +157,13 @@ options.kzky = 0;
 [lg, fig] = compute_3D_zpinch_growth_rate(data,trange,options);
 save_figure(data,fig)
 end
-if 0
+if 1
 %% Mode evolution
 options.NORMALIZED = 0;
-options.K2PLOT = 1;
+options.K2PLOT = 10;
 options.TIME   = [0:1000];
 options.NMA    = 1;
-options.NMODES = 1;
+options.NMODES = 10;
 options.iz     = 'avg';
 fig = mode_growth_meter(data,options);
 save_figure(data,fig,'.png')

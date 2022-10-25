@@ -1,10 +1,10 @@
 % Options
-SHOW_FILM = 0;
+SHOW_FILM = 1;
 field2plot  ='phi';
 INIT     = 'lin';   % lin (for a line)/ round (for a small round)/ gauss for random
 U_TIME   = 1000;     % >0 for frozen velocity at a given time, -1 for evolving field
 Evolve_U = 1;       % 0 for frozen velocity at a given time, 1 for evolving field
-Tfin     = 100;
+Tfin     = 500;
 dt_      = 0.1;
 Nstep    = ceil(Tfin/dt_);
 % Init tracers
@@ -181,8 +181,7 @@ while(t_<Tfin && it <= Nstep)
             u___  =  linterp(u__0,u__1,a__i);
 
 %             push the particle
-%             q = sign(-u___(3));
-            q = 1;%-u___(3);
+            q = sign(-u___(3));
 %             q =1;
             x_ = x_ + dt_*u___(1)*q;
             y_ = y_ + dt_*u___(2)*q;
@@ -224,19 +223,20 @@ while(t_<Tfin && it <= Nstep)
         end
         scale = max(max(abs(F2P))); % Scaling to normalize
         pclr = pcolor(XX_,YY_,F2P/scale); 
-        caxis([-1 1]); colormap(bluewhitered); colorbar;
+        caxis([-1 1]); colormap(bluewhitered); %colorbar;
         set(pclr, 'edgecolor','none'); hold on; caxis([-1+dimmed,1+dimmed]); shading interp
         for ip = 1:Np
             ia0 = max(1,it-Na);
             plot(Traj_x(ip,ia0:it),Traj_y(ip,ia0:it),'.','Color',color(ip,:)); hold on
         end
         for ip = 1:Np
-            plot(Traj_x(ip, 1),Traj_y(ip, 1),'xk'); hold on
+%             plot(Traj_x(ip, 1),Traj_y(ip, 1),'xk'); hold on
             plot(Traj_x(ip,it),Traj_y(ip,it),'ok','MarkerFaceColor',color(ip,:)); hold on
         end
         title(['$t \approx$', sprintf('%.3d',ceil(data.Ts3D(itu_)))]);
         axis equal
         xlim([xmin xmax]); ylim([ymin ymax]);
+        xlabel('$x/\rho_s$'); ylabel('$y/\rho_s$');
         drawnow
         % Capture the plot as an image 
         frame = getframe(fig); 
@@ -303,10 +303,14 @@ xlim(U_TIME + [0 Tfin]);
 subplot(222);
     itf = floor(Nt/2); %fit end time
     % x^2 displacement
-    plot(time_,mean(xtot.^2,1),'DisplayName','$\langle x.^2\rangle_p$'); hold on
+    x2tot = mean(xtot.^2,1);
+    plot(time_-time_(1),x2tot,'DisplayName','$\langle x.^2\rangle_p$'); hold on
     fit = polyfit(time_(1:itf),mean(xtot(:,1:itf).^2,1),1);
-    plot(time_,fit(1)*time_+fit(2),'--k'); hold on
-    ylabel('$\langle x^2 \rangle_p$');
+    plot(time_-time_(1),fit(1)*time_+fit(2),'--k'); hold on
+    % Put a linear growth from the first point to check if it super/sub
+    % diffusive
+%     loglog(time_-time_(1),(time_-time_(1))*x2tot(2)/(time_(2)-time_(1)),'--k'); hold on
+%     ylabel('$\langle x^2 \rangle_p$');
 
 %     % y^2 displacement
 %     fit = polyfit(time_(1:itf),mean(ytot(:,1:itf).^2,1),1);

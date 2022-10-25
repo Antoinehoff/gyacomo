@@ -200,10 +200,25 @@ resdir ='';
 %% Convergence cases kN = (1.6 2.2) nu = (0.01 1.0)
 % resdir = 'Zpinch_rerun/convcoll_Kn_1.6_200x32x3x2_mu_0.01';
 % resdir = 'Zpinch_rerun/convcoll_Kn_1.6_200x32x5x3_mu_0.01';
+% resdir = 'Zpinch_rerun/convcoll_Kn_1.6_200x32x7x4_mu_0.01';
+% resdir = 'Zpinch_rerun/convcoll_Kn_1.6_200x32x9x5_mu_0.01';
 
 % resdir = 'Zpinch_rerun/convcoll_Kn_2.2_200x32x3x2_mu_0.01';
-resdir = 'Zpinch_rerun/convcoll_Kn_2.2_200x32x7x4_mu_0.01';
+% resdir = 'Zpinch_rerun/convcoll_Kn_2.2_200x32x5x3_mu_0.01';
+% resdir = 'Zpinch_rerun/convcoll_Kn_2.2_200x32x7x4_mu_0.01';
+resdir = 'Zpinch_rerun/convcoll_Kn_2.2_200x32x9x5_mu_0.01';
 
-JOBNUMMIN = 00; JOBNUMMAX = 10;
+% resdir = 'Zpinch_rerun/convcoll_Kn_1.6_200x32x3x2_nu_0.1';
+% resdir = 'Zpinch_rerun/convcoll_Kn_1.6_200x32x5x3_nu_0.1';
+% resdir = 'Zpinch_rerun/convcoll_Kn_1.6_200x32x7x4_nu_0.1';
+% resdir = 'Zpinch_rerun/convcoll_Kn_1.6_200x32x9x5_nu_0.1';
+
+% resdir = 'Zpinch_rerun/convcoll_Kn_2.2_200x32x3x2_nu_0.1';
+% resdir = 'Zpinch_rerun/convcoll_Kn_2.2_200x32x5x3_nu_0.1';
+% resdir = 'Zpinch_rerun/convcoll_Kn_2.2_200x32x7x4_nu_0.1';
+% resdir = 'Zpinch_rerun/convcoll_Kn_2.2_200x32x9x5_nu_0.1';
+
+
+JOBNUMMIN = 00; JOBNUMMAX = 03;
 resdir = ['results/',resdir];
 run analysis_gyacomo
