@@ -33,7 +33,7 @@ SUBROUTINE moments_eq_rhs_e
   USE model
   USE prec_const
   USE collision
-  USE geometry, ONLY: gradz_coeff, gradzB, Ckxky, hatB_NL, hatR
+  USE geometry, ONLY: gradz_coeff, gradzB, Ckxky, hatB_NL, hatB
   USE calculus, ONLY : interp_z, grad_z, grad_z2
   IMPLICIT NONE
 
@@ -121,7 +121,9 @@ SUBROUTINE moments_eq_rhs_e
             !! Sum of all RHS terms
             moments_rhs_e(ip,ij,iky,ikx,iz,updatetlevel) = &
                 ! Perpendicular magnetic gradient/curvature effects
-                -imagu*Ckxky(iky,ikx,iz,eo)*hatR(iz,eo) * Tperp&
+                -imagu*Ckxky(iky,ikx,iz,eo)*hatB(iz,eo) * Tperp&
+                ! Perpendicular pressure effects
+                -i_ky*beta*dpdx * Tperp&
                 ! Parallel coupling (Landau Damping)
                 -gradz_coeff(iz,eo) * Tpar &
                 ! Mirror term (parallel magnetic gradient)
@@ -179,7 +181,7 @@ SUBROUTINE moments_eq_rhs_i
   USE model
   USE prec_const
   USE collision
-  USE geometry, ONLY: gradz_coeff, gradzB, Ckxky, hatB_NL, hatR
+  USE geometry, ONLY: gradz_coeff, gradzB, Ckxky, hatB_NL, hatB
   USE calculus, ONLY : interp_z, grad_z, grad_z2
   IMPLICIT NONE
 
@@ -269,7 +271,9 @@ SUBROUTINE moments_eq_rhs_i
               !! Sum of all RHS terms
               moments_rhs_i(ip,ij,iky,ikx,iz,updatetlevel) = &
                   ! Perpendicular magnetic gradient/curvature effects
-                  -imagu*Ckxky(iky,ikx,iz,eo)*hatR(iz,eo) * Tperp &
+                  -imagu*Ckxky(iky,ikx,iz,eo)*hatB(iz,eo) * Tperp &
+                  ! Perpendicular pressure effects
+                  -i_ky*beta*dpdx * Tperp&
                   ! Parallel coupling (Landau damping)
                   -gradz_coeff(iz,eo) * Tpar &
                   ! Mirror term (parallel magnetic gradient)

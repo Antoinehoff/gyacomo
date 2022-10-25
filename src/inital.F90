@@ -243,7 +243,7 @@ SUBROUTINE init_gyrodens
           END DO
         END DO
         IF ( contains_ky0 ) THEN
-          DO iky=2,Nky/2 !symmetry at ky = 0 for all z
+          DO ikx=2,Nkx/2 !symmetry at ky = 0 for all z
             moments_i( ip,ij,iky_0,ikx,:,:) = moments_i( ip,ij,iky_0,Nkx+2-ikx,:,:)
           END DO
         ENDIF

@@ -18,6 +18,9 @@ GEOM.geom  = ['''',GEOMETRY,''''];
 GEOM.q0    = Q0;    % q factor
 GEOM.shear = SHEAR; % shear
 GEOM.eps   = EPS;   % inverse aspect ratio
+GEOM.kappa = KAPPA; % elongation
+GEOM.delta = DELTA; % triangularity
+GEOM.zeta  = ZETA;  % squareness
 % Model parameters
 MODEL.CLOS    = CLOS;
 MODEL.NL_CLOS = NL_CLOS;
@@ -64,8 +67,9 @@ switch CO
         COLL.mat_file = '''../../../iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5''';
     case 'LD'
 %         COLL.mat_file = '''../../../iCa/gk_coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5''';
-%         COLL.mat_file = '''../../../iCa/LDGK_P10_J5_dk_5e-2_km_5_NFLR_12_k2trunc.h5''';
-        COLL.mat_file = '''../../../iCa/LDGK_P10_J5_dk_5e-2_km_5_NFLR_30.h5''';        
+%         COLL.mat_file = '''../../../iCa/LDGKii_P10_J5_dk_5e-2_km_5_NFLR_12_k2trunc.h5''';
+%         COLL.mat_file = '''../../../iCa/LDGKii_P10_J5_dk_5e-2_km_5_NFLR_30.h5''';        
+        COLL.mat_file = '''../../../iCa/LDGK_P6_J3_dk_5e-2_km_2.5_NFLR_20.h5''';        
 end
 COLL.coll_kcut = COLL_KCUT;
 % Time integration and intialization parameters

@@ -286,8 +286,8 @@ SUBROUTINE compute_radial_ion_heatflux
     ENDDO
   ENDIF
   ! Add polarisation contribution
-  integrant(izs:ize) = integrant(izs:ize) + tau_i*imagu*ky_&
-  *CONJG(phi(iky,ikx,izs:ize))*phi(iky,ikx,izs:ize) * HF_phi_correction_operator(iky,ikx,izs:ize)
+  ! integrant(izgs:izge) = integrant(izgs:izge) + tau_i*imagu*ky_&
+  ! *CONJG(phi(iky,ikx,izgs:izge))*phi(iky,ikx,izgs:izge) * HF_phi_correction_operator(iky,ikx,izgs:izge)
   ! Integrate over z
   integrant(izgs:izge) = Jacobian(izgs:izge,0)*integrant(izgs:izge)
   call simpson_rule_z(integrant,integral)
@@ -370,8 +370,8 @@ SUBROUTINE compute_radial_electron_heatflux
     ENDDO
   ENDIF
   ! Add polarisation contribution
-  integrant(izs:ize) = integrant(izs:ize) + tau_e*imagu*ky_&
-  *CONJG(phi(iky,ikx,izs:ize))*phi(iky,ikx,izs:ize) * HF_phi_correction_operator(iky,ikx,izs:ize)
+  ! integrant(izs:ize) = integrant(izs:ize) + tau_e*imagu*ky_&
+  ! *CONJG(phi(iky,ikx,izs:ize))*phi(iky,ikx,izs:ize) * HF_phi_correction_operator(iky,ikx,izs:ize)
   ! Integrate over z
   integrant(izgs:izge) = Jacobian(izgs:izge,0)*integrant(izgs:izge)
   call simpson_rule_z(integrant,integral)

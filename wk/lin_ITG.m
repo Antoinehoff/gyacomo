@@ -4,18 +4,19 @@
 % for benchmark and debugging purpose since it makes matlab "busy"
 %
 SIMID   = 'lin_ITG';  % Name of the simulation
-RUN     = 1; % To run or just to load
+RUN     = 0; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
-HELAZDIR = '/home/ahoffman/HeLaZ/';
-% EXECNAME = 'helaz3';
-EXECNAME = 'helaz3_dbg';
+HELAZDIR = '/home/ahoffman/gyacomo/';
+% EXECNAME = 'gyacomo_1.0';
+% EXECNAME = 'gyacomo_dbg';
+EXECNAME = 'gyacomo';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.0;           % Collision frequency
+NU      = 0.05;           % Collision frequency
 TAU     = 1.0;            % e/i temperature ratio
 K_Ne    = 2.22;            % ele Density '''
 K_Te    = 6.96;            % ele Temperature '''
@@ -32,24 +33,26 @@ PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
-NX      = 11;    % real space x-gridpoints
+NX      = 20;    % real space x-gridpoints
 NY      = 2;     %     ''     y-gridpoints
 LX      = 2*pi/0.8;   % Size of the squared frequency domain
 LY      = 2*pi/0.3;     % Size of the squared frequency domain
-NZ      = 16;    % number of perpendicular planes (parallel grid)
+NZ      = 32;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 %% GEOMETRY
-% GEOMETRY= 'Z-pinch'; % Z-pinch overwrites q0, shear and eps
-GEOMETRY= 's-alpha';
-% GEOMETRY= 'circular';
+% GEOMETRY= 's-alpha';
+GEOMETRY= 'miller';
 Q0      = 1.4;    % safety factor
 SHEAR   = 0.8;    % magnetic shear
+KAPPA   = 0.0;    % elongation
+DELTA   = 0.0;    % triangularity
+ZETA    = 0.0;    % squareness
 NEXC    = 1;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 EPS     = 0.18;   % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 25;  % Maximal time unit
-DT      = 5e-3;   % Time step
+TMAX    = 1;  % Maximal time unit
+DT      = 3e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
 SPS3D   = 5;      % Sampling per time unit for 2D arrays
@@ -127,7 +130,7 @@ end
 if 1
 %% Ballooning plot
 options.time_2_plot = [120];
-options.kymodes     = [0.9];
+options.kymodes     = [0.3];
 options.normalized  = 1;
 % options.field       = 'phi';
 fig = plot_ballooning(data,options);

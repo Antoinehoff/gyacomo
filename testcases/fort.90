@@ -1,0 +1,86 @@
+&BASIC
+  nrun   = 100000000
+  dt     = 0.01
+  tmax   = 100
+  maxruntime = 356400
+/
+&GRID
+  pmaxe  = 2
+  jmaxe  = 1
+  pmaxi  = 2
+  jmaxi  = 1
+  Nx     = 128
+  Lx     = 100
+  Ny     = 128
+  Ly     = 240
+  Nz     = 16
+  Npol   = 1
+  SG     = .false.
+/
+&GEOMETRY
+  geom   = 'miller'
+  q0     = 1.4
+  shear  = 0.0
+  eps    = 0.18
+/
+&OUTPUT_PAR
+  nsave_0d = 50
+  nsave_1d = -1
+  nsave_2d = Inf
+  nsave_3d = 100
+  nsave_5d = 1000
+  write_doubleprecision = .false.
+  write_gamma = .true.
+  write_hf    = .true.
+  write_phi   = .true.
+  write_Na00  = .true.
+  write_Napj  = .true.
+  write_Sapj  = .false.
+  write_dens  = .true.
+  write_temp  = .true.
+  job2load    = -1
+/
+&MODEL_PAR
+  ! Collisionality
+  CLOS    = 0
+  NL_CLOS = -1
+  LINEARITY = 'nonlinear'
+  KIN_E   = .false.
+  mu_x    = 1.0
+  mu_y    = 1.0
+  N_HD    = 4
+  mu_z    = 1.0
+  mu_p    = 0
+  mu_j    = 0
+  nu      = 0.2
+  tau_e   = 1
+  tau_i   = 1
+  sigma_e = 0.023338
+  sigma_i = 1
+  q_e     = -1
+  q_i     = 1
+  K_Ni    = 2.22
+  K_Ti    = 6.92
+  K_Ne    = 0
+  K_Te    = 0
+  GradB   = 1
+  CurvB   = 1
+  lambdaD = 0
+  beta    = 0
+/
+&COLLISION_PAR
+  collision_model = 'DG'
+  gyrokin_CO      = .false.
+  interspecies    = .true.
+  mat_file        = 'null'
+/
+&INITIAL_CON
+  INIT_OPT      = 'ppj'
+  ACT_ON_MODES  = 'none'
+  init_background  = 0
+  init_noiselvl = 1e-3
+  iseed         = 42
+/
+&TIME_INTEGRATION_PAR
+  numerical_scheme = 'RK4'
+/

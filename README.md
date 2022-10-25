@@ -24,15 +24,16 @@ How to run it
 4. You can run a typical CBC to test the compilation using the basic fort.90 parameter file,
    just type ./bin/gyacomo
 5. It is possible to run it in parallel (MPI) as mpirun -np N ./bin/gyacomo Np Ny Nz
-   where N=Np x Ny x Nz is the number of processes and Np Ny Nz are the parallel dimensions in
-	 Hermite polynomials, binormal direction and parallel direction, respectively
+   where N=Np x Ny x Nz is the number of processes and Np Ny Nz are the parallel dimensions in Hermite polynomials, binormal direction and parallel direction, respectively
 6. You can stop your simulation without breaking output file by creating a blank file call "mystop"
    in the directory where the simulation is running. (the file will be removed once read)
 7. You can obtain various plots and gifs using gyacomo/wk/header_3D_results.m once the simulation is done.
-// Comment : For some collision operators (Sugama and Full Coulomb) you have to run COSOlver from B.J.Frei first in order to generate the required matrices in gyacomo/iCa folder.
+// Comment : For some collision operators (Sugama and Full Coulomb) you have to run COSOlver from B.J.Frei first in order to generate the required matrices in gyacomo/iCa folder. //
 
 # Changelog
 4. GYACOMO
+  4.1 Miller geometry is added and benchmarked for CBC adiabatic electrons
+
   4.0 new naming and opening the code with GNU GPLv3 license
 
 3. HeLaZ 3D
