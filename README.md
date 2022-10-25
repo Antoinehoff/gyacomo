@@ -27,7 +27,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Changelog
 
-4. GYACOMO
+*4. GYACOMO
 
   -[] General and quantitative benchmark for Miller and edge simulations
 
@@ -35,7 +35,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
   -[x] new naming and opening the code with GNU GPLv3 license
 
-3. HeLaZ 3D
+*3. HeLaZ 3D
 
   -[x] HeLaZ can now evolve electromagnetic fluctuations by solving Ampere equations (benchmarked linearly)
 
@@ -57,7 +57,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
   -[x] HeLaZ is now 3D and works like HeLaZ 2D if Nz = 1, the axis were renamed (r,z) -> (x,y,z) and now the parallel direction is ez. All arrays have been extended, diagnostics and analysis too. The linear coefficients are now precomputed with lin_coeff_and_geometry routines.
 
-2. MPI parallel version
+*2. MPI parallel version
 
 	-[x] Versatile interpolation of kperp for the cosolver matrices and corrections done on DGGK
 
@@ -73,7 +73,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 	-[x] First compilable parallel version (1D parallel along kr)
 
-1. Implementation of the non linear Poisson brackets term
+*1. Implementation of the non linear Poisson brackets term
 
 	-[x] Quantitative study with stationary average particle flux \Gamma_\infty
 
@@ -87,7 +87,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 	-[x] FFTW3 has been used to treat the convolution as a product and discrete fourier transform
 
-0. Write MOLI matlab solver in Fortran using Monli1D as starting point
+*0. Write MOLI matlab solver in Fortran using Monli1D as starting point
 
 	-[x] Benchmarks now include Dougherty, Lenard-Bernstein and Full Coulomb collision operators
 
