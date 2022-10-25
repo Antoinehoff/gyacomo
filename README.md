@@ -15,9 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # How to compile and run GYACOMO
-To compile it check INSTALLATION.txt
-
-How to run it
 
 1. Be sure to have correct library paths in local/dirs.inc for the different libraries, see INSTALATION.txt for a tutorial to install the required libraries.
 2. Compile from /gyacomo using make, the binary will be located in /gyacomo/bin (you can also compile a debug version using make dbg)
@@ -31,11 +28,13 @@ How to run it
 # Changelog
 
 4. GYACOMO
+
   4.1 Miller geometry is added and benchmarked for CBC adiabatic electrons
 
   4.0 new naming and opening the code with GNU GPLv3 license
 
 3. HeLaZ 3D
+
   3.9 HeLaZ can now evolve electromagnetic fluctuations by solving Ampere equations (benchmarked linearly)
 
 	3.8 HeLaZ has been benchmarked for CBC with GENE for various gradients values (see Dimits_fig3.m)
