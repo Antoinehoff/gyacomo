@@ -31,11 +31,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ### 4.x GYACOMO
 
-> 4.1 Miller geometry is added and benchmarked for CBC adiabatic electrons
+>4.1 Miller geometry is added and benchmarked for CBC adiabatic electrons
 
->4.0 new naming and opening the code with GNU GPLv3 license
+>4.0 new name and opening the code with GNU GPLv3 license
 
-### 3.x HeLaZ 3D
+### 3.x HeLaZ 3D (flux tube s-alpha)
 
 >3.9 HeLaZ can now evolve electromagnetic fluctuations by solving Ampere equations (benchmarked linearly)
 
@@ -57,7 +57,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 >3.0 HeLaZ is now 3D and works like HeLaZ 2D if Nz = 1, the axis were renamed from r and z  to x,y and z. Now the parallel direction is ez. All arrays have been extended, diagnostics and analysis too. The linear coefficients are now precomputed with geometry routines.
 
-### 2.x MPI parallel version
+### 2.x 2D Zpinch MPI parallel version
 
 >2.7 Versatile interpolation of kperp for the cosolver matrices and corrections done on DGGK
 
