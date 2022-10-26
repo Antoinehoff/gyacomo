@@ -607,8 +607,8 @@ CONTAINS
 
     !> Generate an equidistant array from min to max with n points
     function linspace(min,max,n) result(out)
-      real(dp):: min, max
-      integer:: n
+      real(dp), INTENT(IN):: min, max
+      integer,  INTENT(IN):: n
       real(dp), dimension(n):: out
 
       do i=1,n
@@ -618,20 +618,20 @@ CONTAINS
 
     !> Weighted average
     real(dp) function average(var,weight)
-      real(dp), dimension(np):: var, weight
+      real(dp), dimension(np), INTENT(IN):: var, weight
       average=sum(var*weight)/sum(weight)
     end function average
 
     !> full theta integral with weight function dlp
     real(dp) function dlp_int(var,dlp)
-      real(dp), dimension(np):: var, dlp
+      real(dp), dimension(np), INTENT(IN):: var, dlp
       dlp_int=sum(var*dlp)*2*pi*Npol_ext/np
     end function dlp_int
 
     !> theta integral with weight function dlp, up to index 'ind'
     real(dp) function dlp_int_ind(var,dlp,ind)
-      real(dp), dimension(np):: var, dlp
-      integer:: ind
+      real(dp), dimension(np), INTENT(IN):: var, dlp
+      integer, INTENT(IN):: ind
 
       dlp_int_ind=0.
       if (ind.gt.1) then
@@ -643,8 +643,9 @@ CONTAINS
 
     !> 1st derivative with 2nd order finite differences
     function deriv_fd(y,x,n) result(out)
-      integer, intent(in) :: n
-      real(dp), dimension(n):: x,y,out,dx
+      integer,                INTENT(IN) :: n
+      real(dp), dimension(n), INTENT(IN):: x,y
+      real(dp), dimension(n) :: out,dx
 
       !call lag3deriv(y,x,n,out,x,n)
 

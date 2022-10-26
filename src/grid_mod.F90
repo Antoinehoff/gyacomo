@@ -20,7 +20,7 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED :: Ny    = 16     ! Number of total internal grid points in y
   REAL(dp), PUBLIC, PROTECTED :: Ly    = 1._dp  ! vertical length of the spatial box
   INTEGER,  PUBLIC, PROTECTED :: Nz    = 1      ! Number of total perpendicular planes
-  REAL(dp), PUBLIC, PROTECTED :: Npol  = 1._dp  ! number of poloidal turns
+  INTEGER,  PUBLIC, PROTECTED :: Npol  = 1      ! number of poloidal turns
   INTEGER,  PUBLIC, PROTECTED :: Odz   = 4      ! order of z interp and derivative schemes
   INTEGER,  PUBLIC, PROTECTED :: Nkx   = 8      ! Number of total internal grid points in kx
   REAL(dp), PUBLIC, PROTECTED :: Lkx   = 1._dp  ! horizontal length of the fourier box
@@ -370,7 +370,7 @@ CONTAINS
     REAL(dp), INTENT(IN) :: shear
     REAL    :: Lx_adapted
     INTEGER :: i_, counter
-    IF(shear .GT. 0._dp) THEN
+    IF(shear .GT. 0) THEN
       IF(my_id.EQ.0) write(*,*) 'Magnetic shear detected: set up sheared kx grid..'
       ! mininal size of box in x to respect dkx = 2pi shear dky
       Lx_adapted = Ly/(2._dp*pi*shear*Npol)

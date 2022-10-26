@@ -95,6 +95,7 @@ CONTAINS
           IF( my_id .eq. 0 ) WRITE(*,*) 'Z-pinch geometry'
           call eval_zpinch_geometry
           SHEARED = .FALSE.
+          shear   = 0._dp
         CASE('miller')
           IF( my_id .eq. 0 ) WRITE(*,*) 'Miller geometry'
           call set_miller_parameters(kappa,s_kappa,delta,s_delta,zeta,s_zeta)
