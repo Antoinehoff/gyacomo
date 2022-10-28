@@ -79,9 +79,9 @@ CONTAINS
     use prec_const
     IMPLICIT NONE
 
-    CALL find_input_file
-
     NAMELIST /BASIC/  nrun, dt, tmax, maxruntime
+
+    CALL find_input_file
 
     READ(lu_in,basic)
 

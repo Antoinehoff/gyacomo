@@ -3,7 +3,7 @@ MODULE numerics
     USE prec_const
     USE grid
     USE utility
-    USE coeff
+
     implicit none
 
     PUBLIC :: build_dnjs_table, evaluate_kernels, evaluate_EM_op
@@ -117,7 +117,7 @@ SUBROUTINE evaluate_poisson_op
   USE basic
   USE array, Only : kernel_e, kernel_i, inv_poisson_op, inv_pol_ion
   USE grid
-  USE model, ONLY : tau_e, tau_i, q_e, q_i, KIN_E
+  USE model, ONLY : tau_e, tau_i, q_e, q_i, qe2_taue, qi2_taui, KIN_E
   IMPLICIT NONE
   REAL(dp)    :: pol_i, pol_e     ! (Z_a^2/tau_a (1-sum_n kernel_na^2))
   INTEGER     :: ini,ine
@@ -163,7 +163,7 @@ SUBROUTINE evaluate_ampere_op
   USE basic
   USE array, Only : kernel_e, kernel_i, inv_ampere_op
   USE grid
-  USE model, ONLY : tau_e, tau_i, q_e, q_i, KIN_E, beta
+  USE model, ONLY : tau_e, tau_i, q_e, q_i, KIN_E, beta, sigma_e, sigma_i
   USE geometry, ONLY : hatB
   IMPLICIT NONE
   REAL(dp)    :: pol_i, pol_e, kperp2     ! (Z_a^2/tau_a (1-sum_n kernel_na^2))
