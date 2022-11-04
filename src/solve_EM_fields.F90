@@ -20,14 +20,13 @@ CONTAINS
     USE grid
     USE calculus,         ONLY : simpson_rule_z
     USE parallel,         ONLY : manual_3D_bcast
-    use model,            ONLY : qe2_taue, qi2_taui, q_e, q_i, lambdaD, KIN_E, sigma_e, sigma_i
+    use model,            ONLY : q_e, q_i, lambdaD, KIN_E, sigma_e, sigma_i
     USE processing,       ONLY : compute_density
     USE geometry,         ONLY : iInt_Jacobian, Jacobian
     IMPLICIT NONE
 
-    INTEGER     :: ini,ine, i_, root_bcast
+    INTEGER     :: ini,ine
     COMPLEX(dp) :: fsa_phi, intf_   ! current flux averaged phi
-    INTEGER     :: count !! mpi integer to broadcast the electric potential at the end
     COMPLEX(dp), DIMENSION(izs:ize) :: rho_i, rho_e, integrant  ! charge density q_a n_a and aux var
 
     ! Execution time start
@@ -91,9 +90,7 @@ CONTAINS
     use model,            ONLY : sqrt_tau_o_sigma_e, sqrt_tau_o_sigma_i, q_e, q_i, beta, KIN_E
     IMPLICIT NONE
 
-    INTEGER     :: ini,ine, i_, root_bcast
-    INTEGER     :: count !! mpi integer to broadcast the electric potential at the end
-    COMPLEX(dp), DIMENSION(izs:ize) :: I_i, I_e  ! current density q_a u_a and aux var
+    INTEGER     :: ini,ine
 
     ! Execution time start
     CALL cpu_time(t0_poisson)

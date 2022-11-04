@@ -162,7 +162,7 @@ CONTAINS
     !******************************************************************************!
     SUBROUTINE LenardBernstein_i(ip_,ij_,iky_,ikx_,iz_,TColl_)
       USE fields, ONLY: moments_i
-      USE grid,   ONLY: parray_i, jarray_i, kxarray, kyarray
+      USE grid,   ONLY: parray_i, jarray_i
       USE basic
       USE model,  ONLY: sigmai2_taui_o2, nu_i
       USE time_integration, ONLY : updatetlevel
@@ -230,7 +230,6 @@ CONTAINS
     IMPLICIT NONE
     INTEGER,     INTENT(IN)    :: ip_,ij_,iky_,ikx_,iz_
     COMPLEX(dp), INTENT(OUT)   :: TColl_
-    COMPLEX(dp) :: upar, Tpar, Tperp
     REAL(dp)    :: j_dp, p_dp
     !** Auxiliary variables **
     p_dp      = REAL(parray_e(ip_),dp)
@@ -255,7 +254,6 @@ CONTAINS
     IMPLICIT NONE
     INTEGER,     INTENT(IN)    :: ip_,ij_,iky_,ikx_,iz_
     COMPLEX(dp), INTENT(OUT)   :: TColl_
-    COMPLEX(dp) :: upar, Tpar, Tperp
     REAL(dp)    :: j_dp, p_dp
     !** Auxiliary variables **
     p_dp      = REAL(parray_i(ip_),dp)
@@ -478,12 +476,11 @@ CONTAINS
   !******************************************************************************!
   SUBROUTINE compute_cosolver_coll
     IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(1:total_np_e)   :: local_sum_e, buffer_e, total_sum_e
+    COMPLEX(dp), DIMENSION(1:total_np_e)   :: local_sum_e, buffer_e
     COMPLEX(dp), DIMENSION(ips_e:ipe_e) :: TColl_distr_e
-    COMPLEX(dp), DIMENSION(1:total_np_i)   :: local_sum_i, buffer_i, total_sum_i
+    COMPLEX(dp), DIMENSION(1:total_np_i)   :: local_sum_i, buffer_i
     COMPLEX(dp), DIMENSION(ips_i:ipe_i) :: TColl_distr_i
     COMPLEX(dp) :: TColl
-    INTEGER :: ikxs_C, ikxe_C, ikys_C, ikye_C
     DO iz = izs,ize
       DO ikx = ikxs,ikxe
         DO iky = ikys,ikye
@@ -652,14 +649,13 @@ CONTAINS
       REAL(dp), DIMENSION(:,:),   ALLOCATABLE :: CiepjF_full             ! .
       REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ciipj__kp, CiepjT_kp    ! .
       REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: CiepjF_kp               ! .
-      INTEGER  :: NFLR
 
       REAL(dp), DIMENSION(:),     ALLOCATABLE :: kp_grid_mat             ! kperp grid of the matrices
       INTEGER  :: ikp_next, ikp_prev, nkp_mat, ikp_mat
       REAL(dp) :: kp_max
-      REAL(dp) :: kp_next,  kp_prev, kperp_sim, kperp_mat, zerotoone, be_2, bi_2
+      REAL(dp) :: kperp_sim, kperp_mat, zerotoone
 
-      CHARACTER(len=128) :: var_name, kperp_string, ikp_string
+      CHARACTER(len=128) :: var_name, ikp_string
 
       !! Some terminal info
       SELECT CASE (collision_model)

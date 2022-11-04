@@ -38,7 +38,7 @@ SUBROUTINE moments_eq_rhs_e
   IMPLICIT NONE
 
   INTEGER     :: p_int, j_int ! loops indices and polynom. degrees
-  REAL(dp)    :: kx, ky, kperp2, dzlnB_o_J
+  REAL(dp)    :: kx, ky, kperp2
   COMPLEX(dp) :: Tnepj, Tnepp2j, Tnepm2j, Tnepjp1, Tnepjm1 ! Terms from b x gradB and drives
   COMPLEX(dp) :: Tnepp1j, Tnepm1j, Tnepp1jm1, Tnepm1jm1 ! Terms from mirror force with non adiab moments
   COMPLEX(dp) :: Tperp, Tpar, Tmir, Tphi, Tpsi
@@ -322,7 +322,7 @@ SUBROUTINE add_Maxwellian_background_terms
   USE array,      ONLY: moments_rhs_e, moments_rhs_i
   USE grid,       ONLY: contains_kx0, contains_ky0, ikx_0, iky_0,&
                         ips_e,ipe_e,ijs_e,ije_e,ips_i,ipe_i,ijs_i,ije_i,&
-                        jarray_e,parray_e,jarray_i,parray_i, zarray, izs,ize,&
+                        zarray, izs,ize,&
                         ip,ij
   IMPLICIT NONE
   real(dp), DIMENSION(izs:ize) :: sinz

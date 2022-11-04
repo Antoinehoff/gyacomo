@@ -5,14 +5,14 @@ subroutine auxval
   USE grid
   USE array
   USE model
-  USE fourier, ONLY: init_grid_distr_and_plans, alloc_local_1, alloc_local_2
+  USE fourier, ONLY: init_grid_distr_and_plans
   use prec_const
   USE numerics
   USE geometry
   USE parallel, ONLY: init_parallel_var
   IMPLICIT NONE
 
-  INTEGER :: irows,irowe, irow, icol, i_
+  INTEGER :: i_
   IF (my_id .EQ. 0) WRITE(*,*) '=== Set auxiliary values ==='
 
   IF (LINEARITY .NE. 'linear') THEN

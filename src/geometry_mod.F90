@@ -77,7 +77,6 @@ CONTAINS
     implicit none
     REAL(dp) :: kx,ky
     COMPLEX(dp), DIMENSION(izs:ize) :: integrant
-    INTEGER :: fid
     real(dp) :: G1,G2,G3,Cx,Cy
 
     ! Allocate arrays

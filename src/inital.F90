@@ -196,7 +196,6 @@ SUBROUTINE init_gyrodens
   IMPLICIT NONE
 
   REAL(dp) :: noise
-  REAL(dp) :: kx, ky, sigma, gain, ky_shift
   INTEGER, DIMENSION(12) :: iseedarr
 
   ! Seed random number generator
@@ -287,7 +286,6 @@ SUBROUTINE init_phi
   IMPLICIT NONE
 
   REAL(dp) :: noise
-  REAL(dp) :: kx, ky, kp, sigma, gain, ky_shift
   INTEGER, DIMENSION(12) :: iseedarr
 
   ! Seed random number generator
@@ -340,7 +338,7 @@ END SUBROUTINE init_phi
 SUBROUTINE initialize_blob
   USE fields
   USE grid
-  USE model, ONLY: sigmai2_taui_o2, KIN_E, LINEARITY
+  USE model, ONLY: KIN_E, LINEARITY
   IMPLICIT NONE
   REAL(dp) ::kx, ky, sigma, gain
   sigma = 0.5_dp
@@ -396,9 +394,7 @@ SUBROUTINE init_ppj
 
   IMPLICIT NONE
 
-  REAL(dp) :: noise
-  REAL(dp) :: kx, ky, sigma_z, amp, ky_shift, z
-  INTEGER, DIMENSION(12) :: iseedarr
+  REAL(dp) :: kx, ky, sigma_z, amp, z
 
   sigma_z = pi/4._dp
   amp = 1.0_dp

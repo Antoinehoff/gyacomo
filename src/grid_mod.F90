@@ -290,7 +290,7 @@ CONTAINS
     USE prec_const
     USE model, ONLY: LINEARITY, N_HD
     IMPLICIT NONE
-    INTEGER :: i_, in, istart, iend
+    INTEGER :: in, istart, iend
     Nky = Ny/2+1 ! Defined only on positive kx since fields are real
     ! Grid spacings
     IF (Ny .EQ. 1) THEN
@@ -369,7 +369,6 @@ CONTAINS
     IMPLICIT NONE
     REAL(dp), INTENT(IN) :: shear
     REAL    :: Lx_adapted
-    INTEGER :: i_, counter
     IF(shear .GT. 0) THEN
       IF(my_id.EQ.0) write(*,*) 'Magnetic shear detected: set up sheared kx grid..'
       ! mininal size of box in x to respect dkx = 2pi shear dky
@@ -487,11 +486,10 @@ CONTAINS
 
   SUBROUTINE set_zgrid
     USE prec_const
-    USE model, ONLY: mu_z, N_HD
+    USE model, ONLY: mu_z
     IMPLICIT NONE
-    INTEGER :: i_, fid
     REAL    :: grid_shift, Lz, zmax, zmin
-    INTEGER :: ip, istart, iend, in
+    INTEGER :: istart, iend, in
     total_nz = Nz
     ! Length of the flux tube (in ballooning angle)
     Lz         = 2_dp*pi*Npol

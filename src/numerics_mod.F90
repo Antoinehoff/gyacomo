@@ -51,8 +51,7 @@ SUBROUTINE evaluate_kernels
   USE basic
   USE array, Only : kernel_e, kernel_i, HF_phi_correction_operator
   USE grid
-  USE model, ONLY : tau_e, tau_i, sigma_e, sigma_i, q_e, q_i, &
-                    lambdaD, CLOS, sigmae2_taue_o2, sigmai2_taui_o2, KIN_E
+  USE model, ONLY : sigmae2_taue_o2, sigmai2_taui_o2, KIN_E
   IMPLICIT NONE
   INTEGER    :: j_int
   REAL(dp)   :: j_dp, y_
@@ -117,7 +116,7 @@ SUBROUTINE evaluate_poisson_op
   USE basic
   USE array, Only : kernel_e, kernel_i, inv_poisson_op, inv_pol_ion
   USE grid
-  USE model, ONLY : tau_e, tau_i, q_e, q_i, qe2_taue, qi2_taui, KIN_E
+  USE model, ONLY : qe2_taue, qi2_taui, KIN_E
   IMPLICIT NONE
   REAL(dp)    :: pol_i, pol_e     ! (Z_a^2/tau_a (1-sum_n kernel_na^2))
   INTEGER     :: ini,ine
@@ -163,7 +162,7 @@ SUBROUTINE evaluate_ampere_op
   USE basic
   USE array, Only : kernel_e, kernel_i, inv_ampere_op
   USE grid
-  USE model, ONLY : tau_e, tau_i, q_e, q_i, KIN_E, beta, sigma_e, sigma_i
+  USE model, ONLY : q_e, q_i, beta, sigma_e, sigma_i
   USE geometry, ONLY : hatB
   IMPLICIT NONE
   REAL(dp)    :: pol_i, pol_e, kperp2     ! (Z_a^2/tau_a (1-sum_n kernel_na^2))
@@ -206,7 +205,7 @@ END SUBROUTINE evaluate_ampere_op
 
 SUBROUTINE compute_lin_coeff
   USE array
-  USE model, ONLY: taue_qe, taui_qi, sqrtTaue_qe, sqrtTaui_qi, &
+  USE model, ONLY: taue_qe, taui_qi, &
                    k_Te, k_Ti, k_Ne, k_Ni, CurvB, GradB, KIN_E,&
                    tau_e, tau_i, sigma_e, sigma_i
   USE prec_const
@@ -215,7 +214,6 @@ SUBROUTINE compute_lin_coeff
   IMPLICIT NONE
   INTEGER     :: p_int, j_int ! polynom. degrees
   REAL(dp)    :: p_dp, j_dp
-  REAL(dp)    :: kx, ky, z
   !! Electrons linear coefficients for moment RHS !!!!!!!!!!
   IF(KIN_E)THEN
   DO ip = ips_e, ipe_e
@@ -388,7 +386,6 @@ SUBROUTINE save_EM_ZF_modes
   USE array, ONLY : moments_e_ZF, moments_i_ZF, phi_ZF, moments_e_EM,moments_i_EM,phi_EM
   USE grid
   USE time_integration, ONLY: updatetlevel
-  USE initial_par, ONLY: ACT_ON_MODES
   USE model, ONLY: KIN_E
   IMPLICIT NONE
   ! Store Zonal and entropy modes

@@ -5,14 +5,12 @@ SUBROUTINE ppinit
   use prec_const
   IMPLICIT NONE
 
-  INTEGER :: version_prov=-1
   ! Variables for cartesian domain decomposition
   INTEGER, PARAMETER :: ndims=3 ! p, kx and z
-  INTEGER, DIMENSION(ndims) :: dims=0, coords=0, coords_L=0, coords_R=0
+  INTEGER, DIMENSION(ndims) :: dims=0, coords=0
   LOGICAL :: periods(ndims) = .FALSE., reorder=.FALSE.
   CHARACTER(len=32) :: str
-  INTEGER :: nargs, i, l, r_
-  INTEGER, DIMENSION(:), ALLOCATABLE :: rank2exclude
+  INTEGER :: nargs, i, l
 
   CALL MPI_INIT(ierr)
 

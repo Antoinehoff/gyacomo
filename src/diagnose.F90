@@ -33,7 +33,7 @@ END SUBROUTINE diagnose
 
 SUBROUTINE init_outfile(comm,file0,file,fid)
   USE diagnostics_par, ONLY : write_doubleprecision, diag_par_outputinputs, input_fname
-  USE basic,           ONLY : my_id, jobnum, lu_in, basic_outputinputs
+  USE basic,           ONLY : my_id, jobnum, basic_outputinputs
   USE grid,            ONLY : grid_outputinputs
   USE geometry,        ONLY : geometry_outputinputs
   USE model,           ONLY : model_outputinputs
@@ -47,7 +47,7 @@ SUBROUTINE init_outfile(comm,file0,file,fid)
   CHARACTER(len=256), INTENT(IN)    :: file0
   CHARACTER(len=256), INTENT(OUT)   :: file
   INTEGER,            INTENT(OUT)   :: fid
-  CHARACTER(len=256)                :: str,fname
+  CHARACTER(len=256)                :: str
   INCLUDE 'srcinfo.h'
 
   ! Writing output filename
@@ -113,8 +113,6 @@ SUBROUTINE diagnose_full(kstep)
   INTEGER, parameter  :: BUFSIZE = 2
   INTEGER :: rank = 0
   INTEGER :: dims(1) = (/0/)
-  INTEGER :: cp_counter = 0
-  CHARACTER(len=256) :: str,test_
   !____________________________________________________________________________
   !                   1.   Initial diagnostics
 
@@ -402,8 +400,6 @@ SUBROUTINE diagnose_3d
 
   IMPLICIT NONE
 
-  INTEGER        :: i_, root, world_rank, world_size
-  CHARACTER(256) :: dset_name
   CALL append(fidres,  "/data/var3d/time",           time,ionode=0)
   CALL append(fidres, "/data/var3d/cstep", real(cstep,dp),ionode=0)
   CALL getatt(fidres,      "/data/var3d/",       "frames",iframe3d)
@@ -528,7 +524,6 @@ SUBROUTINE diagnose_5d
   USE prec_const
   USE model, ONLY: KIN_E
   IMPLICIT NONE
-  CHARACTER(LEN=50) :: dset_name
 
   CALL append(fidres,  "/data/var5d/time",           time,ionode=0)
   CALL append(fidres, "/data/var5d/cstep", real(cstep,dp),ionode=0)

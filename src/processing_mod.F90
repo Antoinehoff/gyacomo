@@ -26,7 +26,7 @@ SUBROUTINE compute_radial_ion_transport
   IMPLICIT NONE
   COMPLEX(dp) :: pflux_local, gflux_local, integral
   REAL(dp)    :: ky_, buffer(1:2)
-  INTEGER     :: i_, world_rank, world_size, root
+  INTEGER     :: i_, root
   COMPLEX(dp), DIMENSION(izgs:izge) :: integrant
 
   pflux_local = 0._dp ! particle flux
@@ -135,7 +135,7 @@ SUBROUTINE compute_radial_electron_transport
   IMPLICIT NONE
   COMPLEX(dp) :: pflux_local, gflux_local, integral
   REAL(dp)    :: ky_, buffer(1:2)
-  INTEGER     :: i_, world_rank, world_size, root
+  INTEGER     :: i_, root
   COMPLEX(dp), DIMENSION(izgs:izge) :: integrant
 
   pflux_local = 0._dp ! particle flux
@@ -234,16 +234,15 @@ END SUBROUTINE compute_radial_electron_transport
 ! 1D diagnostic to compute the average radial particle transport <T_i v_ExB_x>_xyz
 SUBROUTINE compute_radial_ion_heatflux
   USE fields,           ONLY : moments_i, phi, psi
-  USE array,            ONLY : kernel_i, HF_phi_correction_operator
+  USE array,            ONLY : kernel_i!, HF_phi_correction_operator
   USE geometry,         ONLY : Jacobian, iInt_Jacobian
   USE time_integration, ONLY : updatetlevel
-  USE model,            ONLY : qi_taui, KIN_E, tau_i, EM
   USE calculus,         ONLY : simpson_rule_z
-  USE model,            ONLY : sqrt_tau_o_sigma_i
+  USE model,            ONLY : tau_i, sqrt_tau_o_sigma_i, EM
   IMPLICIT NONE
   COMPLEX(dp) :: hflux_local, integral
   REAL(dp)    :: ky_, buffer(1:2), n_dp
-  INTEGER     :: i_, world_rank, world_size, root, in
+  INTEGER     :: i_, root, in
   COMPLEX(dp), DIMENSION(izgs:izge) :: integrant        ! charge density q_a n_a
 
   hflux_local = 0._dp ! heat flux
@@ -318,16 +317,15 @@ END SUBROUTINE compute_radial_ion_heatflux
 ! 1D diagnostic to compute the average radial particle transport <T_e v_ExB_x>_xyz
 SUBROUTINE compute_radial_electron_heatflux
   USE fields,           ONLY : moments_e, phi, psi
-  USE array,            ONLY : kernel_e, HF_phi_correction_operator
+  USE array,            ONLY : kernel_e!, HF_phi_correction_operator
   USE geometry,         ONLY : Jacobian, iInt_Jacobian
   USE time_integration, ONLY : updatetlevel
-  USE model,            ONLY : qi_taui, KIN_E, tau_e, EM
   USE calculus,         ONLY : simpson_rule_z
-  USE model,            ONLY : sqrt_tau_o_sigma_e
+  USE model,            ONLY : tau_e, sqrt_tau_o_sigma_e, EM
   IMPLICIT NONE
   COMPLEX(dp) :: hflux_local, integral
   REAL(dp)    :: ky_, buffer(1:2), n_dp
-  INTEGER     :: i_, world_rank, world_size, root, in
+  INTEGER     :: i_, root, in
   COMPLEX(dp), DIMENSION(izgs:izge) :: integrant        ! charge density q_a n_a
 
   hflux_local = 0._dp ! heat flux
@@ -532,7 +530,7 @@ SUBROUTINE compute_Napjz_spectrum
   IMPLICIT NONE
   REAL(dp), DIMENSION(ips_e:ipe_e,ijs_e:ije_e,izs:ize) :: local_sum_e,global_sum_e, buffer_e
   REAL(dp), DIMENSION(ips_i:ipe_i,ijs_i:ije_i,izs:ize) :: local_sum_i,global_sum_i, buffer_i
-  INTEGER  :: i_, world_rank, world_size, root, count
+  INTEGER  :: i_, root, count
   root = 0
   ! Electron moments spectrum
   IF (KIN_E) THEN
@@ -793,6 +791,7 @@ SUBROUTINE compute_fluid_moments
   CALL compute_Tpar
   CALL compute_Tperp
   ! Temperature
+  IF(KIN_E)&
   temp_e = (Tpar_e - 2._dp * Tper_e)/3._dp - dens_e
   temp_i = (Tpar_i - 2._dp * Tper_i)/3._dp - dens_i
 END SUBROUTINE compute_fluid_moments

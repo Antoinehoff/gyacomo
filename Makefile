@@ -5,7 +5,8 @@ EXEC = $(BINDIR)/gyacomo
 EFST = $(BINDIR)/gyacomo_fst
 EDBG = $(BINDIR)/gyacomo_dbg
 
-F90 = mpiifort
+# F90 = mpiifort
+F90 = mpif90
 # #F90 = ftn #for piz-daint cluster
 # # Add Multiple-Precision Library
 # EXTLIBS += -L$(FMDIR)/lib
@@ -26,7 +27,7 @@ fast: F90FLAGS = -fast
 fast: $(EFST)
 
 dbg: dirs src/srcinfo.h
-dbg: F90FLAGS = -g -traceback -CB
+dbg: F90FLAGS = -g -traceback -CB -ftrapuv -warn all -debug all
 dbg: $(EDBG)
 
 install: dirs src/srcinfo.h $(EXEC) mvmod
