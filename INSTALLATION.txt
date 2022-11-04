@@ -65,3 +65,9 @@ Installation on Piz Daint (CSCS)
 - module cray-hdf5-parallel, cray-fftw
 - Have to install futils, FM
 - Modify the Makefile by removing -XHOST option and using ftn as compiler
+
+Installation on Marconi (CINECA)
+- module load autoload hdf5/1.8...mpi... fftw3
+(note: the module miller does not compile on Marconi with intelmpi 2020 compiler on Marconi)
+- Have to install futils and FM
+- Makefile works once local/dirs.inc is adapted
