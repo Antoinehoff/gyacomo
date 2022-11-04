@@ -1,5 +1,5 @@
 
-function [ fig ] = statistical_transport_averaging( data, options )
+function [ fig, Gx_infty_avg, Gx_infty_std ] = statistical_transport_averaging( data, options )
 scale = data.scale;
 Trange  = options.T;
 [~,it0] = min(abs(Trange(1)-data.Ts0D)); 

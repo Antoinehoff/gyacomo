@@ -154,7 +154,7 @@ subplot(1,nplots,3)
             legend('show')
         otherwise
             for it = 1:numel(toplot.FRAMES)
-                Y    = compx(toplot.FIELD(:,:,toplot.FRAMES(it)));
+                Y    = compx(toplot.FIELD(:,:,it));
                 Y    = squeeze(Y);
                 if options.NORM
                     Y    = Y./max(abs(Y));

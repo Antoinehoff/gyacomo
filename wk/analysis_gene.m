@@ -1,8 +1,8 @@
-helazdir = '/home/ahoffman/HeLaZ/';
-addpath(genpath([helazdir,'matlab'])) % ... add
-addpath(genpath([helazdir,'matlab/plot'])) % ... add
-addpath(genpath([helazdir,'matlab/compute'])) % ... add
-addpath(genpath([helazdir,'matlab/load'])) % ... add
+gyacomodir = '/home/ahoffman/gyacomo/';
+addpath(genpath([gyacomodir,'matlab'])) % ... add
+addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
+addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
+addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/miller_output_0.8/';
@@ -12,14 +12,17 @@ addpath(genpath([helazdir,'matlab/load'])) % ... add
 % folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.5/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_0.8/';
-folder = '/misc/gene_results/Z-pinch/HP_fig_2a_mu_1e-2/';
-% folder = '/misc/gene_results/Z-pinch/HP_fig_2b_mu_5e-2/';
+% folder = '/misc/gene_results/Z-pinch/HP_fig_2a_mu_1e-2/';
+folder = '/misc/gene_results/Z-pinch/HP_fig_2b_mu_5e-2/';
 % folder = '/misc/gene_results/Z-pinch/HP_fig_2c_mu_5e-2/';
 % folder = '/misc/gene_results/LD_zpinch_1.6/';
 % folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
 % folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
 % folder = '/misc/gene_results/Z-pinch/ZP_HP_kn_1.6_HRES/';
 % folder = '/misc/gene_results/ZP_kn_2.5_large_box/';
+% folder = '/misc/gene_results/Z-pinch/kN_2.0_HD_transport_spectrum_00/';
+% folder = '/misc/gene_results/Z-pinch/kN_2.5_HD_transport_spectrum_00/';
+
 % folder = '/misc/gene_results/CBC/128x64x16x24x12/';
 % folder = '/misc/gene_results/CBC/196x96x20x32x16_02/';
 % folder = '/misc/gene_results/CBC/128x64x16x6x4/';
@@ -39,6 +42,7 @@ options.TAVG_1   = gene_data.Ts3D(end); % Averaging times duration
 options.NMVA     = 1;              % Moving average for time traces
 options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x, Q_x)
 options.INTERP   = 1;
+options.NCUT     = 4;              % Number of cuts for averaging and error estimation
 gene_data.FIGDIR = folder;
 fig = plot_radial_transport_and_spacetime(gene_data,options);
 save_figure(gene_data,fig,'.png')
@@ -57,15 +61,15 @@ options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 0;
 % options.NAME      = 'Q_x';
-options.NAME      = '\phi';
-% options.NAME      = 'n_i';
+% options.NAME      = '\phi';
+options.NAME      = 'n_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      ='f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [325 400];
+options.TIME      = [1:10];
 gene_data.a = data.EPS * 2000;
 fig = photomaton(gene_data,options);
 save_figure(gene_data,fig,'.png')
@@ -76,12 +80,11 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-% options.NAME      = '\phi';
+options.NAME      = '\phi';
 % options.NAME      = 'v_y';
-options.NAME      = 'n_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -118,7 +121,7 @@ end
 
 if 0
 %% Show f_i(vpar,mu)
-options.times   = 250:500;
+options.times   = 600:5000;
 options.specie  = 'i';
 options.PLT_FCT = 'contour';
 options.folder  = folder;
@@ -131,7 +134,7 @@ end
 
 if 0
 %% Time averaged spectrum
-options.TIME   = [4000 8000];
+options.TIME   = [60 10000];
 options.NORM   =1;
 % options.NAME   = '\phi';
 % options.NAME      = 'n_i';
@@ -150,7 +153,7 @@ if 0
 %% Mode evolution
 options.NORMALIZED = 0;
 options.K2PLOT = 1;
-options.TIME   = 100:700;
+options.TIME   = 1:700;
 options.NMA    = 1;
 options.NMODES = 15;
 options.iz     = 'avg';

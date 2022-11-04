@@ -1,7 +1,7 @@
 &BASIC
   nrun   = 100000000
-  dt     = 0.005
-  tmax   = 100
+  dt     = 0.01
+  tmax   = 200
   maxruntime = 356400
 /
 &GRID
@@ -58,20 +58,20 @@
   sigma_i = 1
   q_e     = -1
   q_i     = 1
-  K_Ne    = 2.22
-  K_Te    = 6.96
-  K_Ni    = 2.22
-  K_Ti    = 6.96
+  K_Ne    = 2.0
+  K_Te    = 0.4
+  K_Ni    = 2.0
+  K_Ti    = 0.4
   GradB   = 1
   CurvB   = 1
   lambdaD = 0
-  beta    = 1e-4
+  beta    = 0
 /
 &COLLISION_PAR
-  collision_model = 'SG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
+  collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
   gyrokin_CO      = .false.
   interspecies    = .true.
-  mat_file        = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
+  !mat_file        = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /
 &INITIAL_CON
   INIT_OPT    = 'phi'

@@ -1,5 +1,5 @@
 %% UNCOMMENT FOR TUTORIAL
-% gyacomodir = pwd; gyacomodir = gyacomodir(1:end-2); % get code directory
+gyacomodir = pwd; gyacomodir = gyacomodir(1:end-2); % get code directory
 % resdir = '.'; %Name of the directory where the results are located
 % JOBNUMMIN = 00; JOBNUMMAX = 10;
 %%
@@ -31,7 +31,7 @@ if 1
 i_ = 1; 
 disp([num2str(data.TJOB_SE(i_)),' ',num2str(data.TJOB_SE(i_+1))])
 disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
-options.TAVG_0   = data.TJOB_SE(i_);%0.4*data.Ts3D(end);
+options.TAVG_0   = data.TJOB_SE(i_)+600;%0.4*data.Ts3D(end);
 options.TAVG_1   = data.TJOB_SE(i_+1);%0.9*data.Ts3D(end); % Averaging times duration
 options.NCUT     = 4;              % Number of cuts for averaging and error estimation
 options.NMVA     = 100;              % Moving average for time traces
@@ -40,46 +40,49 @@ options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag
 options.INTERP   = 0;
 options.RESOLUTION = 256;
 fig = plot_radial_transport_and_spacetime(data,options);
-save_figure(data,fig,'.png')
+% save_figure(data,fig,'.png')
 end
 
 if 0
 %% statistical transport averaging
-for i_ = 1:2:21 
+gavg =[]; gstd = [];
+for i_ = 3:2:numel(data.TJOB_SE) 
 % i_ = 3; 
 disp([num2str(data.TJOB_SE(i_)),' ',num2str(data.TJOB_SE(i_+1))])
 disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
 options.T = [data.TJOB_SE(i_) data.TJOB_SE(i_+1)];
 options.NPLOTS = 0;
-fig = statistical_transport_averaging(data,options);
+[fig, gavg_, gstd_] = statistical_transport_averaging(data,options);
+gavg = [gavg gavg_]; gstd = [gstd gstd_];
 end
+disp(gavg); disp(gstd);
 end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-% options.NAME      = '\phi';
+options.NAME      = '\phi';
 % options.NAME      = '\omega_z';
 % options.NAME      = 'N_i^{00}';
-% options.NAME      = 'v_y';
+% options.NAME      = 'v_x';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
-options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+% options.NAME      = 'n_i';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
 % options.TIME      =  data.Ts3D;
-options.TIME      = [000:0.1:7000];
+options.TIME      = [000:1:8000];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
 create_film(data,options,'.gif')
 end
 
-if 1
+if 0
 %% 2D snapshots
 % Options
 options.INTERP    = 1;
@@ -96,7 +99,7 @@ options.PLAN      = 'xy';
 % options.NAME      'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [1000 1800 2500 3000 4000];
+options.TIME      = [1000 3000 5000 8000 10000];
 
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
@@ -119,16 +122,16 @@ end
 
 if 0
 %% Kinetic distribution function sqrt(<f_a^2>xy) (GENE vsp)
-options.SPAR      = linspace(-3,3,32)+(6/127/2);
-options.XPERP     = linspace( 0,6,32);
-% options.SPAR      = gene_data.vp';
-% options.XPERP     = gene_data.mu';
+% options.SPAR      = linspace(-3,3,32)+(6/127/2);
+% options.XPERP     = linspace( 0,6,32);
+options.SPAR      = gene_data.vp';
+options.XPERP     = gene_data.mu';
 options.iz        = 'avg';
-options.T         = [250 600];
-options.PLT_FCT   = 'pcolor';
-options.ONED      = 0;
+options.T         = [1500 5000];
+options.PLT_FCT   = 'contour';
+options.ONED      = 1;
 options.non_adiab = 0;
-options.SPECIE    = 'i';
+options.SPECIE    = 'e';
 options.RMS       = 1; % Root mean square i.e. sqrt(sum_k|f_k|^2) as in Gene
 fig = plot_fa(data,options);
 % save_figure(data,fig,'.png')
@@ -175,8 +178,8 @@ options.NAME   = '\phi';
 % options.NAME      = 'n_i';
 % options.NAME      ='\Gamma_x';
 % options.NAME      ='s_y';
-options.COMPX  = 'avg';
-options.COMPY  = 'avg';
+options.COMPX  = 1;
+options.COMPY  = 2;
 options.COMPZ  = 1;
 options.COMPT  = 1;
 options.MOVMT  = 1;
@@ -220,11 +223,11 @@ end
 
 if 0
 %% linear growth rate for 3D Zpinch
-trange = [5 15];
+trange = [5 20];
 options.keq0 = 1; % chose to plot planes at k=0 or max
 options.kxky = 1;
 options.kzkx = 0;
 options.kzky = 1;
 [lg, fig] = compute_3D_zpinch_growth_rate(data,trange,options);
-save_figure(data,fig,'.png')
+% save_figure(data,fig,'.png')
 end

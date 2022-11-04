@@ -4,7 +4,7 @@
 % tw = [3000 4000];
 % tw = [4000 4500];
 % tw = [4500 5000];
-tw = [00 5000];
+tw = [00 1.3];
 
 fig = gcf;
 axObjs = fig.Children;
@@ -22,7 +22,7 @@ end
 mvm = @(x) movmean(x,1);
 shift = 0;%X_(n0);
 % shift = 0;
-skip = 50;
+skip = 1;
 
 figure;
 plot(mvm(X_(n0:skip:n1)-shift),mvm(Y_(n0:skip:n1))); hold on;

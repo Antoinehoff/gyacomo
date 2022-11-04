@@ -1,9 +1,9 @@
-%% QUICK RUN SCRIPT for linear entropy mode in a Zpinch
+%% QUICK RUN SCRIPT for linear entropy mode (ETPY) in a Zpinch
 % This script create a directory in /results and run a simulation directly
 % from matlab framework. It is meant to run only small problems in linear
 % for benchmark and debugging purpose since it makes matlab "busy"
 %
-SIMID   = 'lin_EPY';  % Name of the simulation
+SIMID   = 'lin_ETPY';  % Name of the simulation
 % SIMID   = 'dbg';  % Name of the simulation
 RUN     = 0; % To run or just to load
 addpath(genpath('../matlab')) % ... add
@@ -16,9 +16,9 @@ EXECNAME = 'gyacomo';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;           % Collision frequency
+NU      = 0.01;           % Collision frequency
 TAU     = 1.0;            % e/i temperature ratio
-K_Ne    = 1.6;            % ele Density '''
+K_Ne    = 2.5;            % ele Density '''
 K_Te    = K_Ne/4;            % ele Temperature '''
 K_Ni    = K_Ne;            % ion Density gradient drive
 K_Ti    = K_Ni/4;            % ion Temperature '''
@@ -26,7 +26,7 @@ SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 1;         % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 0.0;     % electron plasma beta
 %% GRID PARAMETERS
-P = 2;
+P = 4;
 J = P/2;
 PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
@@ -35,7 +35,7 @@ JMAXI   = J;     % "
 NX      = 2;    % real space x-gridpoints
 NY      = 100;     %     ''     y-gridpoints
 LX      = 2*pi/0.8;   % Size of the squared frequency domain
-LY      = 120;%2*pi/0.05;     % Size of the squared frequency domain
+LY      = 200;%2*pi/0.05;     % Size of the squared frequency domain
 NZ      = 1;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
@@ -43,14 +43,17 @@ SG      = 0;     % Staggered z grids option
 GEOMETRY= 'Z-pinch'; % Z-pinch overwrites q0, shear and eps
 Q0      = 1.4;    % safety factor
 SHEAR   = 0.8;    % magnetic shear
+KAPPA   = 0.0;    % elongation
+DELTA   = 0.0;    % triangularity
+ZETA    = 0.0;    % squareness
 NEXC    = 1;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 EPS     = 0.18;   % inverse aspect ratio
 %% TIME PARMETERS
 TMAX    = 500;  % Maximal time unit
-DT      = 1e-2;   % Time step
+DT      = 5e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
-SPS3D   = 1/5;      % Sampling per time unit for 2D arrays
+SPS3D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 1/5;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
@@ -58,7 +61,7 @@ JOB2LOAD= -1;
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-CO      = 'SG';
+CO      = 'LD';
 GKCO    = 1; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
@@ -85,18 +88,19 @@ MU_Z    = 2.0;     %
 MU_P    = 0.0;     %
 MU_J    = 0.0;     %
 LAMBDAD = 0.0;
-NOISE0  = 0.0e-5; % Init noise amplitude
-BCKGD0  = 1.0;    % Init background
+NOISE0  = 1.0e-5; % Init noise amplitude
+BCKGD0  = 0.0;    % Init background
 GRADB   = 1.0;
 CURVB   = 1.0;
+COLL_KCUT = 1000;
 %%-------------------------------------------------------------------------
 %% RUN
 setup
 % system(['rm fort*.90']);
 % Run linear simulation
 if RUN
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',PROGDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',PROGDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',PROGDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',PROGDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
 end
 
 %% Load results
@@ -157,7 +161,7 @@ options.kzky = 0;
 [lg, fig] = compute_3D_zpinch_growth_rate(data,trange,options);
 save_figure(data,fig)
 end
-if 1
+if 0
 %% Mode evolution
 options.NORMALIZED = 0;
 options.K2PLOT = 10;
