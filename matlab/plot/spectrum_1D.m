@@ -1,7 +1,7 @@
 function [ FIGURE ] = spectrum_1D( data, options )
 
 options.PLAN      = 'kxky';
-options.COMP      = 'avg';
+options.COMP      = 1;
 options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 1;

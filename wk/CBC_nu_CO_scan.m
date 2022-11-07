@@ -1,12 +1,15 @@
 gyacomodir = '/home/ahoffman/gyacomo/';
-% EXECNAME = 'gyacomo_1.0';
+addpath(genpath([gyacomodir,'matlab'])) % ... add
+addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
+addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
+addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0';
 % EXECNAME = 'gyacomo_dbg';
 EXECNAME = 'gyacomo';
 %%
 NU_a = [0.005 0.01:0.01:0.1];
 % P_a  = [2 4 6 8 10 12 16];
-% NU_a = 0.05;
-P_a  = [10];
+% NU_a = 0.1;
+P_a  = [2 4 8 10 12 16 20];
 
 
 CO      = 'SG';
@@ -19,7 +22,7 @@ kymin = 0.05;
 Ny    = 40;
 SIMID = 'linear_CBC_nu+PJ_scan_kT_6.96_SGGK';  % Name of the simulation
 % SIMID = 'linear_CBC_nu_scan_kT_11_ky_0.3_DGGK';  % Name of the simulation
-RUN   = 1;
+RUN   = 0;
 
 g_ky = zeros(numel(NU_a),numel(P_a),Ny/2);
 g_avg= g_ky*0;
@@ -56,7 +59,7 @@ for NU = NU_a
     ZETA    = 0.0;    % squareness
     NEXC    = 1;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
     EPS     = 0.18;   % inverse aspect ratio
-    SPS0D = 1; SPS2D = 0; SPS3D = 1;SPS5D= 1/5; SPSCP = 0;
+    SPS0D = 1; SPS2D = -1; SPS3D = 1;SPS5D= 1/5; SPSCP = 0;
     JOB2LOAD= -1;
     LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
     GKCO    = 1; % gyrokinetic operator
@@ -65,7 +68,7 @@ for NU = NU_a
     CLOS    = 0;   % Closure model (0: =0 truncation, 1: v^Nmax closure (p+2j<=Pmax))s
     NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
     KERN    = 0;   % Kernel model (0 : GK)
-    INIT_OPT= 'phi';   % Start simulation with a noisy mom00/phi/allmom
+    INIT_OPT= 'mom00';   % Start simulation with a noisy mom00/phi/allmom
     W_DOUBLE = 1;
     W_GAMMA  = 1; W_HF     = 1;
     W_PHI    = 1; W_NA00   = 1;
@@ -86,6 +89,7 @@ for NU = NU_a
     setup
     if RUN
         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 2 3 1 0; cd ../../../wk'])
+%         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
     end
 
     % Load results
@@ -130,24 +134,28 @@ for i = 1:numel(idx_)
     e_ = g_std(:,:,idx_(i));
 end
 
+colors_ = summer(numel(NU_a));
 subplot(121)
 for i = 1:numel(NU_a)
     errorbar(P_a,y_(i,:),e_(i,:),...
         'LineWidth',1.2,...
-        'DisplayName',['$\nu=$',num2str(NU_a(i))]); 
+        'DisplayName',['$\nu=$',num2str(NU_a(i))],...
+        'color',colors_(i,:)); 
     hold on;
 end
 title(['$\kappa_T=$',num2str(K_Ti),' $k_y=k_y^{max}$']);
 legend('show'); xlabel('$P$, $J=P/2$'); ylabel('$\gamma$');
 
+colors_ = jet(numel(P_a));
 subplot(122)
 for j = 1:numel(P_a)
     errorbar(NU_a,y_(:,j),e_(:,j),...
         'LineWidth',1.2,...
-        'DisplayName',['(',num2str(P_a(j)),',',num2str(P_a(j)/2),')']); 
+        'DisplayName',['(',num2str(P_a(j)),',',num2str(P_a(j)/2),')'],...
+        'color',colors_(j,:)); 
     hold on;
 end
-title(['$\kappa_T=$',num2str(K_Ti),' $k_y=$',num2str(data.ky(idx_))]);
+title(['$\kappa_T=$',num2str(K_Ti),' $k_y=k_y^{max}$']);
 legend('show'); xlabel(['$\nu_{',CO,'}$']); ylabel('$\gamma$');
 end
 
