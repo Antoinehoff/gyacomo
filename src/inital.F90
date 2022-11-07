@@ -10,7 +10,6 @@ SUBROUTINE inital
   USE closure,          ONLY: apply_closure_model
   USE ghosts,           ONLY: update_ghosts_moments, update_ghosts_EM
   USE restarts,         ONLY: load_moments, job2load
-  USE numerics,         ONLY: play_with_modes, save_EM_ZF_modes
   USE processing,       ONLY: compute_fluid_moments
   USE model,            ONLY: KIN_E, LINEARITY
   USE nonlinear,        ONLY: compute_Sapj, nonlinear_init
@@ -72,11 +71,6 @@ SUBROUTINE inital
   CALL update_ghosts_moments
   CALL update_ghosts_EM
   !! End of phi and moments initialization
-
-  ! Save (kx,0) and (0,ky) modes for num exp
-  CALL save_EM_ZF_modes
-  ! Freeze/Wipe some selected modes (entropy,zonal,turbulent)
-  CALL play_with_modes
 
   ! Load the COSOlver collision operator coefficients
   IF(cosolver_coll) &
