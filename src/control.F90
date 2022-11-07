@@ -66,7 +66,8 @@ SUBROUTINE control
 
      CALL diagnose(step)
 
-    CALL cpu_time(t1_step); tc_step = tc_step + (t1_step - t0_step)
+    CALL cpu_time(t1_step);
+    tc_step = tc_step + (t1_step - t0_step)
 
   END DO
 

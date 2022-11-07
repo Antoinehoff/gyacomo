@@ -86,9 +86,10 @@ CONTAINS
     READ(lu_in,basic)
 
     !Init cumulative timers
-    tc_rhs       = 0.;tc_adv_field = 0.; tc_poisson  = 0.
-    tc_Sapj      = 0.; tc_diag     = 0.; tc_checkfield = 0.
-
+    tc_rhs       = 0.; tc_adv_field = 0.; tc_poisson    = 0.
+    tc_Sapj      = 0.; tc_diag      = 0.; tc_checkfield = 0.
+    tc_ghost     = 0.; tc_coll      = 0.; tc_process    = 0.
+    tc_clos      = 0.; tc_step      = 0.;
   END SUBROUTINE basic_data
 
 
