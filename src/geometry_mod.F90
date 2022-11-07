@@ -326,12 +326,9 @@ CONTAINS
  IMPLICIT NONE
  REAL :: shift, kx_shift
  ! For periodic CHI BC or 0 dirichlet
- LOGICAL :: PERIODIC_CHI_BC = .TRUE.
+ LOGICAL :: PERIODIC_CHI_BC = .FALSE.
  ALLOCATE(ikx_zBC_R(ikys:ikye,ikxs:ikxe))
  ALLOCATE(ikx_zBC_L(ikys:ikye,ikxs:ikxe))
-
- ! No periodic connection for extension of the domain
- IF(Nexc .GT. 1) PERIODIC_CHI_BC = .TRUE.
 
  !! No shear case (simple id mapping)
  !3            | 1    2    3    4    5    6 |  ky = 3 dky

@@ -8,7 +8,6 @@ SUBROUTINE stepon
   USE model, ONLY : LINEARITY, KIN_E
   use prec_const
   USE time_integration
-  USE numerics, ONLY: play_with_modes
   USE utility, ONLY: checkfield
   IMPLICIT NONE
 
@@ -37,10 +36,6 @@ SUBROUTINE stepon
       ! Update electrostatic potential phi_n = phi(N_n+1) and potential vect psi
       CALL solve_EM_fields
       CALL update_ghosts_EM
-
-      ! Numerical experiments
-      ! Store or cancel/maintain zonal modes artificially
-      ! CALL play_with_modes
 
       !-  Check before next step
       CALL checkfield_all()
