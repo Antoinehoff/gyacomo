@@ -517,6 +517,7 @@ CONTAINS
       IF(zarray_full(iz) .LT. zmin) zmin = zarray_full(iz)
     END DO
     !! Parallel data distribution
+    IF( num_procs_z .GT. 1) stop '>>STOPPED<< Cannot have multiple core in z-direction (Nz = 1)'
     ! Local data distribution
     CALL decomp1D(total_nz, num_procs_z, rank_z, izs, ize)
     local_nz = ize - izs + 1
