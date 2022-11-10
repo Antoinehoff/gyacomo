@@ -378,7 +378,7 @@ SUBROUTINE compute_radial_electron_heatflux
   buffer(2) = 2._dp*REAL(hflux_local)
   root = 0
   !Gather manually among the rank_p=0 processes and perform the sum
-  hflux_xi = 0
+  hflux_xe = 0
   IF (num_procs_ky .GT. 1) THEN
       !! Everyone sends its local_sum to root = 0
       IF (rank_ky .NE. root) THEN
@@ -388,11 +388,11 @@ SUBROUTINE compute_radial_electron_heatflux
           DO i_ = 0,num_procs_ky-1
               IF (i_ .NE. rank_ky) &
                   CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
-                  hflux_xi = hflux_xi + buffer(2)
+                  hflux_xe = hflux_xe + buffer(2)
           ENDDO
       ENDIF
   ELSE
-    hflux_xi = hflux_local
+    hflux_xe = hflux_local
   ENDIF
 END SUBROUTINE compute_radial_electron_heatflux
 

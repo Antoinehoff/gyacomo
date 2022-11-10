@@ -39,7 +39,8 @@ SUBROUTINE update_ghosts_EM
     IF(beta .GT. 0._dp) &
       CALL update_ghosts_z_psi
   ENDIF
-
+  
+  CALL cpu_time(t1_ghost)
   tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
 END SUBROUTINE update_ghosts_EM
 
