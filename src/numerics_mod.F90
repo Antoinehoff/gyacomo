@@ -69,8 +69,7 @@ DO iz  = izgs,izge
     j_int = jarray_e(ij)
     j_dp  = REAL(j_int,dp)
     y_    =  sigmae2_taue_o2 * kparray(iky,ikx,iz,eo)**2
-    IF(j_int .LE. 0) THEN
-      factj = 1._dp
+    IF(j_int .LT. 0) THEN
       kernel_e(ij,iky,ikx,iz,eo) = 0._dp
     ELSE
       factj = GAMMA(j_dp+1._dp)
