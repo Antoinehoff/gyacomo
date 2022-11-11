@@ -10,7 +10,7 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 
 %% Load the results
 LOCALDIR  = [gyacomodir,resdir,'/'];
-MISCDIR   = ['/misc/gyacomo_outputs/',resdir,'/']; %For long term storage
+MISCDIR   = ['/misc/',resdir,'/']; %For long term storage
 system(['mkdir -p ',MISCDIR]);
 system(['mkdir -p ',LOCALDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
@@ -62,14 +62,14 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = '\omega_z';
-% options.NAME      = 'N_i^{00}';
+options.NAME     = 'N_e^{00}';
 % options.NAME      = 'v_x';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';

@@ -3,6 +3,7 @@ SUBROUTINE diagnose(kstep)
 
   USE basic
   USE diagnostics_par
+  USE processing, ONLY: gflux_ri, hflux_xi
   IMPLICIT NONE
 
   INTEGER, INTENT(in) :: kstep
@@ -16,7 +17,8 @@ SUBROUTINE diagnose(kstep)
   IF (kstep .GE. 0) THEN
     ! Terminal info
     IF (MOD(cstep, INT(1.0/dt)) == 0 .AND. (my_id .EQ. 0)) THEN
-     WRITE(*,"(F6.0,A,F6.0)") time,"/",tmax
+      ! WRITE(*,"(F6.0,A,F6.0)") time,"/",tmax
+      WRITE(*,"(A,F6.0,A1,F6.0,A8,G10.2,A8,G10.2,A)")'|t/tmax = ', time,"/",tmax,'| Gxi = ',gflux_ri,'| Qxi = ',hflux_xi,'|'
     ENDIF
   ELSEIF (kstep .EQ. -1) THEN
     CALL cpu_time(finish)

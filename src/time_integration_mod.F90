@@ -62,10 +62,12 @@ CONTAINS
     SELECT CASE (numerical_scheme)
     CASE ('RK4')
       CALL RK4
+    CASE ('SSPx_RK3')
+      CALL SSPx_RK3
+    CASE ('SSPx_RK2')
+      CALL SSPx_RK2
     CASE ('DOPRI5')
-       CALL DOPRI5
-    CASE ('DOPRI5_ADAPT')
-      CALL DOPRI5_ADAPT
+      CALL DOPRI5
     CASE DEFAULT
        IF (my_id .EQ. 0) WRITE(*,*) 'Cannot initialize time integration scheme. Name invalid.'
     END SELECT
@@ -104,7 +106,73 @@ CONTAINS
 
   END SUBROUTINE RK4
 
+  SUBROUTINE SSPx_RK3
+    ! Butcher coeff for modified strong stability  preserving RK3
+    ! used in GX (Hammett 2022, Mandell et al. 2022)
 
+    USE basic
+    USE prec_const
+    IMPLICIT NONE
+    INTEGER,PARAMETER :: nbstep = 3
+    REAL(dp) :: a1, a2, a3, w1, w2, w3
+    a1 = (1._dp/6._dp)**(1._dp/3._dp)! (1/6)^(1/3)
+    ! a1 = 0.5503212081491044571635029569733887910843_dp ! (1/6)^(1/3)
+    a2 = a1
+    a3 = a1
+    w1 = 0.5_dp*(-1._dp + SQRT( 9._dp - 2._dp * 6._dp**(2._dp/3._dp))) ! (-1 + sqrt(9-2*6^(2/3)))/2
+    ! w1 = 0.2739744023885328783052273138309828937054_dp ! (sqrt(9-2*6^(2/3))-1)/2
+    w2 = 0.5_dp*(-1._dp + 6._dp**(2._dp/3._dp) - SQRT(9._dp - 2._dp * 6._dp**(2._dp/3._dp))) ! (6^(2/3)-1-sqrt(9-2*6^(2/3)))/2
+    ! w2 = 0.3769892220587804931852815570891834795475_dp ! (6^(2/3)-1-sqrt(9-2*6^(2/3)))/2
+    w3 = 1._dp/a1 - w2 * (1._dp + w1)
+    ! w3 = 1.3368459739528868457369981115334667265415_dp
+
+    CALL allocate_array_dp1(c_E,1,nbstep)
+    CALL allocate_array_dp1(b_E,1,nbstep)
+    CALL allocate_array_dp2(A_E,1,nbstep,1,nbstep)
+
+    ntimelevel = 3
+
+    c_E(1) = 0.0_dp
+    c_E(2) = 1.0_dp/2.0_dp
+    c_E(3) = 1.0_dp/2.0_dp
+
+    b_E(1) = a1 * (w1*w2 + w3)
+    b_E(2) = a2 * w2
+    b_E(3) = a3
+
+    A_E(2,1) = a1
+    A_E(3,1) = a1 * w1
+    A_E(3,2) = a2
+
+  END SUBROUTINE SSPx_RK3
+
+  SUBROUTINE SSPx_RK2
+    ! Butcher coeff for modified strong stability  preserving RK2
+    ! used in GX (Hammett 2022, Mandell et al. 2022)
+
+    USE basic
+    USE prec_const
+    IMPLICIT NONE
+    INTEGER,PARAMETER :: nbstep = 2
+    REAL(dp) :: alpha, beta
+    alpha = 1._dp/SQRT(2._dp)
+    beta  = SQRT(2._dp) - 1._dp
+
+    CALL allocate_array_dp1(c_E,1,nbstep)
+    CALL allocate_array_dp1(b_E,1,nbstep)
+    CALL allocate_array_dp2(A_E,1,nbstep,1,nbstep)
+
+    ntimelevel = 2
+
+    c_E(1) = 0.0_dp
+    c_E(2) = 1.0_dp/2.0_dp
+
+    b_E(1) = alpha*beta/2._dp
+    b_E(2) = alpha/2._dp
+
+    A_E(2,1) = alpha
+
+  END SUBROUTINE SSPx_RK2
 
   SUBROUTINE DOPRI5
     ! Butcher coeff for DOPRI5 --> Stiffness detection

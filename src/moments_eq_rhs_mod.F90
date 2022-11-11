@@ -140,12 +140,12 @@ SUBROUTINE moments_eq_rhs_e
                 ! Nonlinear term
                 -hatB_NL(iz,eo) * Sepj(ip,ij,iky,ikx,iz)
 
-              IF( (ip-4 .GT. 0) .AND. (num_procs_p .EQ. 1) ) &
-              ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
-              ! (not used often so not parallelized)
-              moments_rhs_e(ip,ij,iky,ikx,iz,updatetlevel) = &
-                moments_rhs_e(ip,ij,iky,ikx,iz,updatetlevel) &
-                  + mu_p * moments_e(ip-4,ij,iky,ikx,iz,updatetlevel)
+              ! IF( (ip-4 .GT. 0) .AND. (num_procs_p .EQ. 1) ) &
+              ! ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
+              ! ! (not used often so not parallelized)
+              ! moments_rhs_e(ip,ij,iky,ikx,iz,updatetlevel) = &
+              !   moments_rhs_e(ip,ij,iky,ikx,iz,updatetlevel) &
+              !     + mu_p * moments_e(ip-4,ij,iky,ikx,iz,updatetlevel)
 
           ELSE
             moments_rhs_e(ip,ij,iky,ikx,iz,updatetlevel) = 0._dp
@@ -291,12 +291,12 @@ SUBROUTINE moments_eq_rhs_i
                   ! Nonlinear term with a (gxx*gxy - gxy**2)^1/2 factor
                   -hatB_NL(iz,eo) * Sipj(ip,ij,iky,ikx,iz)
 
-                  IF( (ip-4 .GT. 0) .AND. (num_procs_p .EQ. 1) ) &
-                    ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
-                    ! (not used often so not parallelized)
-                    moments_rhs_i(ip,ij,iky,ikx,iz,updatetlevel) = &
-                      moments_rhs_i(ip,ij,iky,ikx,iz,updatetlevel) &
-                        + mu_p * moments_i(ip-4,ij,iky,ikx,iz,updatetlevel)
+                  ! IF( (ip-4 .GT. 0) .AND. (num_procs_p .EQ. 1) ) &
+                  !   ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
+                  !   ! (not used often so not parallelized)
+                  !   moments_rhs_i(ip,ij,iky,ikx,iz,updatetlevel) = &
+                  !     moments_rhs_i(ip,ij,iky,ikx,iz,updatetlevel) &
+                  !       + mu_p * moments_i(ip-4,ij,iky,ikx,iz,updatetlevel)
           ELSE
             moments_rhs_i(ip,ij,iky,ikx,iz,updatetlevel) = 0._dp
           ENDIF

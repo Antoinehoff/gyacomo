@@ -126,7 +126,7 @@ CONTAINS
     INTEGER :: lu_in   = 90              ! File duplicated from STDIN
 
     NAMELIST /GRID/ pmaxe, jmaxe, pmaxi, jmaxi, &
-                    Nx, Lx, Nexc, Ny, Ly, Nz, Npol, SG
+                    Nx, Lx, Ny, Ly, Nz, Npol, SG, Nexc
     READ(lu_in,grid)
 
     IF(Nz .EQ. 1) & ! overwrite SG option if Nz = 1 for safety of use
@@ -517,7 +517,8 @@ CONTAINS
       IF(zarray_full(iz) .LT. zmin) zmin = zarray_full(iz)
     END DO
     !! Parallel data distribution
-    IF( num_procs_z .GT. 1) stop '>>STOPPED<< Cannot have multiple core in z-direction (Nz = 1)'
+    IF( (Nz .EQ. 1) .AND. (num_procs_z .GT. 1) ) &
+    stop '>>STOPPED<< Cannot have multiple core in z-direction (Nz = 1)'
     ! Local data distribution
     CALL decomp1D(total_nz, num_procs_z, rank_z, izs, ize)
     local_nz = ize - izs + 1

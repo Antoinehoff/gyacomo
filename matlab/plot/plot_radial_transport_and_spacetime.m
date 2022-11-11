@@ -83,7 +83,9 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
         else
         plot(DATA.Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*Gx_infty_avg, '-k',...
             'DisplayName',['$\Gamma_{avg}=',sprintf('%2.2f',Gx_infty_avg),'\pm',sprintf('%2.2f',Gx_infty_std),'$']); legend('show');
-            ylim([0,5*abs(Gx_infty_avg)]); 
+            try ylim([0,5*abs(Gx_infty_avg)]); 
+            catch
+            end
         end
         xlim([DATA.Ts0D(1),DATA.Ts0D(end)]);
     grid on; set(gca,'xticklabel',[]); 

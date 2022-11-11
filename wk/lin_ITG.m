@@ -3,8 +3,9 @@
 % from matlab framework. It is meant to run only small problems in linear
 % for benchmark and debugging purpose since it makes matlab "busy"
 %
-SIMID   = 'lin_ITG';  % Name of the simulation
-RUN     = 0; % To run or just to load
+% SIMID   = 'lin_ITG';  % Name of the simulation
+SIMID   = 'dbg';  % Name of the simulation
+RUN     = 1; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
 gyacomodir = '/home/ahoffman/gyacomo/';
@@ -18,9 +19,9 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %% PHYSICAL PARAMETERS
 NU      = 0.05;           % Collision frequency
 TAU     = 1.0;            % e/i temperature ratio
-K_Ne    = 2.22;            % ele Density '''
+K_Ne    = 0*2.22;            % ele Density '''
 K_Te    = 6.96;            % ele Temperature '''
-K_Ni    = 2.22;            % ion Density gradient drive
+K_Ni    = 0*2.22;            % ion Density gradient drive
 K_Ti    = 6.96;            % ion Temperature '''
 SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 % SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
@@ -45,13 +46,13 @@ SG      = 0;     % Staggered z grids option
 GEOMETRY= 'miller';
 Q0      = 1.4;    % safety factor
 SHEAR   = 0.8;    % magnetic shear
-KAPPA   = 0.0;    % elongation
+KAPPA   = 1.0;    % elongation
 DELTA   = 0.0;    % triangularity
 ZETA    = 0.0;    % squareness
 NEXC    = 1;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 EPS     = 0.18;   % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 1;  % Maximal time unit
+TMAX    = 25;  % Maximal time unit
 DT      = 3e-3;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
