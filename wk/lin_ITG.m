@@ -3,8 +3,8 @@
 % from matlab framework. It is meant to run only small problems in linear
 % for benchmark and debugging purpose since it makes matlab "busy"
 %
-% SIMID   = 'lin_ITG';  % Name of the simulation
-SIMID   = 'dbg';  % Name of the simulation
+SIMID   = 'lin_ITG';  % Name of the simulation
+% SIMID   = 'dbg';  % Name of the simulation
 RUN     = 1; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
@@ -34,11 +34,11 @@ PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
-NX      = 20;    % real space x-gridpoints
-NY      = 20;     %     ''     y-gridpoints
+NX      = 8;    % real space x-gridpoints
+NY      = 16;     %     ''     y-gridpoints
 LX      = 2*pi/0.8;   % Size of the squared frequency domain
 LY      = 2*pi/0.05;     % Size of the squared frequency domain
-NZ      = 32;    % number of perpendicular planes (parallel grid)
+NZ      = 16;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 %% GEOMETRY
@@ -49,14 +49,14 @@ SHEAR   = 0.8;    % magnetic shear
 KAPPA   = 1.0;    % elongation
 DELTA   = 0.0;    % triangularity
 ZETA    = 0.0;    % squareness
-NEXC    = 1;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
+NEXC    = 0;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 EPS     = 0.18;   % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 20;  % Maximal time unit
+TMAX    = 60;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = -1;      % Sampling per time unit for 2D arrays
-SPS3D   = 5;      % Sampling per time unit for 2D arrays
+SPS3D   = 2;      % Sampling per time unit for 2D arrays
 SPS5D   = 1/5;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
@@ -72,7 +72,7 @@ CLOS    = 0;   % Closure model (0: =0 truncation, 1: v^Nmax closure (p+2j<=Pmax)
 NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)
 INIT_OPT= 'mom00';   % Start simulation with a noisy mom00/phi/allmom
-NUMERICAL_SCHEME = 'RK3'; % RK2,SSPx_RK2,RK3,SSP_RK3,SSPx_RK3,IMEX_SSP2,ARK2,RK4,DOPRI5
+NUMERICAL_SCHEME = 'RK4'; % RK2,SSPx_RK2,RK3,SSP_RK3,SSPx_RK3,IMEX_SSP2,ARK2,RK4,DOPRI5
 %% OUTPUTS
 W_DOUBLE = 1;
 W_GAMMA  = 1; W_HF     = 1;
@@ -106,8 +106,8 @@ if RUN
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',HELAZDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 2 3 0; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 2 3 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
 end
 
 %% Load results
@@ -115,7 +115,7 @@ end
 filename = [SIMID,'/',PARAMS,'/'];
 LOCALDIR  = [gyacomodir,'results/',filename,'/'];
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 00;
+JOBNUMMIN = 00; JOBNUMMAX = 01;
 data = compile_results(LOCALDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 
 %% Short analysis
@@ -174,7 +174,7 @@ options.NORMALIZED = 0;
 options.K2PLOT = 1;
 options.TIME   = [0:1000];
 options.NMA    = 1;
-options.NMODES = 1;
+options.NMODES = 16;
 options.iz     = 'avg';
 fig = mode_growth_meter(data,options);
 save_figure(data,fig,'.png')

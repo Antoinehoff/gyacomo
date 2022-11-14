@@ -62,9 +62,9 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-% options.NAME      = '\phi';
+options.NAME      = '\phi';
 % options.NAME      = '\omega_z';
-options.NAME     = 'N_i^{00}';
+% options.NAME     = 'N_i^{00}';
 % options.NAME      = 'v_x';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
@@ -189,11 +189,11 @@ end
 
 if 0
 %% Mode evolution
-options.NORMALIZED = 1;
+options.NORMALIZED = 0;
 options.K2PLOT = [0.1 0.5 1.0 2.0 6.0];
 options.TIME   = [00:1200];
 options.NMA    = 1;
-options.NMODES = 5;
+options.NMODES = 30;
 options.iz     = 'avg';
 fig = mode_growth_meter(data,options);
 save_figure(data,fig,'.png')

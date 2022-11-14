@@ -71,7 +71,8 @@ for i = 1:2
         amp(i_)   = gr(2);
         i_=i_+1;
     end
-
+    mod2plot = [2:OPTIONS.NMODES+1];
+    clr_ = jet(numel(mod2plot));
     %plot
     subplot(2,3,1+3*(i-1))
         [YY,XX] = meshgrid(t,fftshift(k));
@@ -82,9 +83,8 @@ for i = 1:2
         title(MODESTR)  
 
     subplot(2,3,2+3*(i-1))
-        mod2plot = [2:OPTIONS.NMODES+1];
-        for i_ = mod2plot
-            semilogy(t,plt(field,MODES(i_))); hold on;
+        for i_ = 1:numel(mod2plot)
+            semilogy(t,plt(field,MODES(mod2plot(i_))),'color',clr_(i_,:)); hold on;
     %         semilogy(t,exp(gamma(i_).*t+amp(i_)),'--k')
         end
         if MODES_SELECTOR == 2
@@ -96,7 +96,9 @@ for i = 1:2
 
     subplot(2,3,3+3*(i-1))
         plot(k(MODES),gamma); hold on;
-        plot(k(MODES(mod2plot)),gamma(mod2plot),'x')
+        for i_ = 1:numel(mod2plot)
+            plot(k(MODES(mod2plot(i_))),gamma(mod2plot(i_)),'x','color',clr_(i_,:))
+        end
         if MODES_SELECTOR == 2
             plot(k(ikzf),gamma(ikzf),'ok');
         end

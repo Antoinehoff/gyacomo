@@ -34,7 +34,7 @@ gyacomodir = '/home/ahoffman/gyacomo/';
 % resdir = 'CBC/128x64x16x5x3';
 % resdir = 'CBC/96x96x16x3x2_Nexc_6';
 % resdir = 'CBC/128x96x16x3x2';
-% resdir = 'CBC/192x96x16x3x2';
+resdir = 'CBC/192x96x16x3x2';
 % resdir = 'CBC/192x96x24x13x7';
 % resdir = 'CBC/kT_11_128x64x16x5x3';
 % resdir = 'CBC/kT_9_256x128x16x3x2';
@@ -62,10 +62,11 @@ gyacomodir = '/home/ahoffman/gyacomo/';
 % resdir = 'testcases/miller_example';
 % resdir = 'Miller/128x256x3x2_CBC_dt_5e-3';
 %% CBC Miller
-resdir = 'GCM_CBC/daint/Miller_GX_comparison';
+% resdir = 'GCM_CBC/daint/Miller_GX_comparison';
+% resdir = 'GCM_CBC/daint/Salpha_GX_comparison';
 %% RK3
 % resdir = 'dbg/SSPx_RK3_test';
 % resdir = 'dbg/SSPx_RK3_test/RK4';
-% resdir = ['results/',resdir];
+resdir = ['gyacomo_outputs/results/',resdir];
 JOBNUMMIN = 00; JOBNUMMAX = 10;
 run analysis_gyacomo
