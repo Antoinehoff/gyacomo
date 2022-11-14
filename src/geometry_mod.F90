@@ -139,9 +139,6 @@ CONTAINS
         ENDDO
         ! coefficient in the front of parallel derivative
         gradz_coeff(iz,eo) = 1._dp / jacobian(iz,eo) / hatB(iz,eo)
-        ! Factor in front of the nonlinear term
-        hatB_NL(iz,eo) = Jacobian(iz,eo)&
-            *(gxx(iz,eo)*gyy(iz,eo) - gxy(iz,eo)**2)/hatB(iz,eo)
       ENDDO
     ENDDO
 
@@ -213,6 +210,8 @@ CONTAINS
       ENDDO
     ! coefficient in the front of parallel derivative
       gradz_coeff(iz,eo) = 1._dp / Jacobian(iz,eo) / hatB(iz,eo)
+    ! Nonlinear term prefactor
+    hatB_NL(iz,eo) = 1._dp !Jacobian(iz,eo)*(gxx(iz,eo)*gyy(iz,eo) - gxy(iz,eo)**2)/hatB(iz,eo)
 
   ENDDO zloop
   ENDDO parity
