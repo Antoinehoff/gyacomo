@@ -64,7 +64,7 @@ options.INTERP    = 1;
 options.POLARPLOT = 0;
 % options.NAME      = '\phi';
 % options.NAME      = '\omega_z';
-options.NAME     = 'N_e^{00}';
+options.NAME     = 'N_i^{00}';
 % options.NAME      = 'v_x';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
@@ -95,7 +95,7 @@ options.NAME      = '\phi';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 % options.NAME      'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -189,8 +189,8 @@ end
 
 if 0
 %% Mode evolution
-options.NORMALIZED = 0;
-options.K2PLOT = [0.1 0.2 0.3 0.4];
+options.NORMALIZED = 1;
+options.K2PLOT = [0.1 0.5 1.0 2.0 6.0];
 options.TIME   = [00:1200];
 options.NMA    = 1;
 options.NMODES = 5;

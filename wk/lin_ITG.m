@@ -19,9 +19,9 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %% PHYSICAL PARAMETERS
 NU      = 0.05;           % Collision frequency
 TAU     = 1.0;            % e/i temperature ratio
-K_Ne    = 0*2.22;            % ele Density '''
+K_Ne    = 2.22;            % ele Density '''
 K_Te    = 6.96;            % ele Temperature '''
-K_Ni    = 0*2.22;            % ion Density gradient drive
+K_Ni    = 2.22;            % ion Density gradient drive
 K_Ti    = 6.96;            % ion Temperature '''
 SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 % SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
@@ -35,15 +35,15 @@ JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
 NX      = 20;    % real space x-gridpoints
-NY      = 2;     %     ''     y-gridpoints
+NY      = 20;     %     ''     y-gridpoints
 LX      = 2*pi/0.8;   % Size of the squared frequency domain
-LY      = 2*pi/0.3;     % Size of the squared frequency domain
+LY      = 2*pi/0.05;     % Size of the squared frequency domain
 NZ      = 32;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 %% GEOMETRY
-% GEOMETRY= 's-alpha';
-GEOMETRY= 'miller';
+GEOMETRY= 's-alpha';
+% GEOMETRY= 'miller';
 Q0      = 1.4;    % safety factor
 SHEAR   = 0.8;    % magnetic shear
 KAPPA   = 1.0;    % elongation
@@ -52,10 +52,10 @@ ZETA    = 0.0;    % squareness
 NEXC    = 1;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 EPS     = 0.18;   % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 25;  % Maximal time unit
-DT      = 3e-3;   % Time step
+TMAX    = 20;  % Maximal time unit
+DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
-SPS2D   = 0;      % Sampling per time unit for 2D arrays
+SPS2D   = -1;      % Sampling per time unit for 2D arrays
 SPS3D   = 5;      % Sampling per time unit for 2D arrays
 SPS5D   = 1/5;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
@@ -72,6 +72,7 @@ CLOS    = 0;   % Closure model (0: =0 truncation, 1: v^Nmax closure (p+2j<=Pmax)
 NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)
 INIT_OPT= 'mom00';   % Start simulation with a noisy mom00/phi/allmom
+NUMERICAL_SCHEME = 'RK3'; % RK2,SSPx_RK2,RK3,SSP_RK3,SSPx_RK3,IMEX_SSP2,ARK2,RK4,DOPRI5
 %% OUTPUTS
 W_DOUBLE = 1;
 W_GAMMA  = 1; W_HF     = 1;
@@ -91,10 +92,11 @@ MU_Z    = 2.0;     %
 MU_P    = 0.0;     %
 MU_J    = 0.0;     %
 LAMBDAD = 0.0;
-NOISE0  = 0.0e-5; % Init noise amplitude
-BCKGD0  = 1.0;    % Init background
+NOISE0  = 1.0e-5; % Init noise amplitude
+BCKGD0  = 0.0;    % Init background
 GRADB   = 1.0;
 CURVB   = 1.0;
+COLL_KCUT = 1000;
 %%-------------------------------------------------------------------------
 %% RUN
 setup

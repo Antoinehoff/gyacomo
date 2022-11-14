@@ -3,57 +3,56 @@
 % from matlab framework. It is meant to run only small problems in linear
 % for benchmark and debugging purpose since it makes matlab "busy"
 %
-% SIMID   = 'lin_ETPY';  % Name of the simulation
-SIMID   = 'dbg';  % Name of the simulation
+SIMID   = 'lin_ETPY';  % Name of the simulation
+% SIMID   = 'dbg';  % Name of the simulation
 RUN     = 1; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
 PROGDIR  = '/home/ahoffman/gyacomo/';
-% EXECNAME = 'gyacomo_dbg';
-EXECNAME = 'gyacomo';
+EXECNAME = 'gyacomo_dbg';
+% EXECNAME = 'gyacomo';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.05;           % Collision frequency
+NU      = 0.01;           % Collision frequency
 TAU     = 1.0;            % e/i temperature ratio
-K_Ne    = 2.0;            % ele Density '''
-K_Te    = 0.4;            % ele Temperature '''
-K_Ni    = 2.0;            % ion Density gradient drive
-K_Ti    = 0.4;            % ion Temperature '''
+K_Ne    = 2.5;            % ele Density '''
+K_Te    = K_Ne/4;            % ele Temperature '''
+K_Ni    = K_Ne;            % ion Density gradient drive
+K_Ti    = K_Ni/4;            % ion Temperature '''
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 1;         % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 0.0;     % electron plasma beta
 %% GRID PARAMETERS
-P = 4;
+P = 8;
 J = P/2;
 PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
 NX      = 2;    % real space x-gridpoints
-NY      = 50;     %     ''     y-gridpoints
+NY      = 100;     %     ''     y-gridpoints
 LX      = 2*pi/0.8;   % Size of the squared frequency domain
-LY      = 2*pi/0.05;     % Size of the squared frequency domain
+LY      = 200;%2*pi/0.05;     % Size of the squared frequency domain
 NZ      = 1;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 %% GEOMETRY
-GEOMETRY= 'Z-pinch';
+GEOMETRY= 'Z-pinch'; % Z-pinch overwrites q0, shear and eps
 Q0      = 1.4;    % safety factor
 SHEAR   = 0.8;    % magnetic shear
-KAPPA   = 1.0;    % elongation
+KAPPA   = 0.0;    % elongation
 DELTA   = 0.0;    % triangularity
 ZETA    = 0.0;    % squareness
 NEXC    = 1;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 EPS     = 0.18;   % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 100;  % Maximal time unit
+TMAX    = 500;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
-SPS2D   = 0;      % Sampling per time unit for 2D arrays
+SPS2D   = -1;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 1/5;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
@@ -63,13 +62,14 @@ LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
 CO      = 'DG';
-GKCO    = 0; % gyrokinetic operator
+GKCO    = 1; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: v^Nmax closure (p+2j<=Pmax))s
 NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
 KERN    = 0;   % Kernel model (0 : GK)
-INIT_OPT= 'phi';   % Start simulation with a noisy mom00/phi/allmom
+INIT_OPT= 'mom00';   % Start simulation with a noisy mom00/phi/allmom
+NUMERICAL_SCHEME = 'RK2'; % RK2,SSPx_RK2,RK3,SSP_RK3,SSPx_RK3,IMEX_SSP2,ARK2,RK4,DOPRI5
 %% OUTPUTS
 W_DOUBLE = 1;
 W_GAMMA  = 1; W_HF     = 1;
@@ -85,7 +85,7 @@ INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_X    = MU;     %
 MU_Y    = MU;     %
 N_HD    = 4;
-MU_Z    = 0.0;     %
+MU_Z    = 2.0;     %
 MU_P    = 0.0;     %
 MU_J    = 0.0;     %
 LAMBDAD = 0.0;

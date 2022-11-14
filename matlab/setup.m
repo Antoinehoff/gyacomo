@@ -73,7 +73,7 @@ switch CO
 end
 COLL.coll_kcut = COLL_KCUT;
 % Time integration and intialization parameters
-TIME_INTEGRATION.numerical_scheme  = '''RK4''';
+TIME_INTEGRATION.numerical_scheme  = ['''',NUMERICAL_SCHEME,''''];
 INITIAL.INIT_OPT = ['''',INIT_OPT,''''];
 INITIAL.ACT_ON_MODES   = ['''',ACT_ON_MODES,''''];
 INITIAL.init_background  = BCKGD0;

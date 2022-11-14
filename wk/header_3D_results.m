@@ -62,10 +62,10 @@ gyacomodir = '/home/ahoffman/gyacomo/';
 % resdir = 'testcases/miller_example';
 % resdir = 'Miller/128x256x3x2_CBC_dt_5e-3';
 %% CBC Miller
-% resdir = 'GCM_CBC/daint/Miller_GX_comparison';
+resdir = 'GCM_CBC/daint/Miller_GX_comparison';
 %% RK3
-resdir = 'dbg/SSPx_RK3_test';
-resdir = 'dbg/SSPx_RK3_test/RK4';
-resdir = ['results/',resdir];
+% resdir = 'dbg/SSPx_RK3_test';
+% resdir = 'dbg/SSPx_RK3_test/RK4';
+% resdir = ['results/',resdir];
 JOBNUMMIN = 00; JOBNUMMAX = 10;
 run analysis_gyacomo
