@@ -7,15 +7,15 @@ DT_SIM    = h5readatt(outfilename,'/data/input','dt');
 
 
 rhs_Tc       = h5read(outfilename,'/profiler/Tc_rhs');
+poisson_Tc   = h5read(outfilename,'/profiler/Tc_poisson');
+Sapj_Tc      = h5read(outfilename,'/profiler/Tc_Sapj');
+coll_Tc      = h5read(outfilename,'/profiler/Tc_coll');
+process_Tc   = h5read(outfilename,'/profiler/Tc_process');
 adv_field_Tc = h5read(outfilename,'/profiler/Tc_adv_field');
 ghost_Tc      = h5read(outfilename,'/profiler/Tc_ghost');
 clos_Tc      = h5read(outfilename,'/profiler/Tc_clos');
-coll_Tc      = h5read(outfilename,'/profiler/Tc_coll');
-poisson_Tc   = h5read(outfilename,'/profiler/Tc_poisson');
-Sapj_Tc      = h5read(outfilename,'/profiler/Tc_Sapj');
 checkfield_Tc= h5read(outfilename,'/profiler/Tc_checkfield');
 diag_Tc      = h5read(outfilename,'/profiler/Tc_diag');
-process_Tc   = h5read(outfilename,'/profiler/Tc_process');
 step_Tc      = h5read(outfilename,'/profiler/Tc_step');
 Ts0D         = h5read(outfilename,'/profiler/time');
 
@@ -65,9 +65,10 @@ FIGNAME = 'profiler';
 else
     %% Normalized Area plot
 fig = figure;
-
+colors = colorcube(N_T);
 p1 = area(Ts0D(2:end),100*TIME_PER_FCT./diff(total_Tc),'LineStyle','none', 'FaceColor','flat');
-for i = 1:N_T; p1(i).FaceColor = rand(1,3); end;
+% for i = 1:N_T; p1(i).FaceColor = rand(1,3); end;
+for i = 1:N_T; p1(i).FaceColor = colors(i,:); end;
 legend('Compute RHS','Adv. fields','ghosts comm', 'closure', 'collision','Poisson','Nonlin','Check+sym', 'Diagnos.', 'Missing')
 xlabel('Sim. Time'); ylabel('Step Comp. Time [\%]')
 ylim([0,100]); xlim([Ts0D(2),Ts0D(end)]);
