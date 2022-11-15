@@ -31,7 +31,7 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED ::     K_E =  0._dp     ! Backg. electric field drive
   REAL(dp), PUBLIC, PROTECTED ::   GradB =  1._dp     ! Magnetic gradient
   REAL(dp), PUBLIC, PROTECTED ::   CurvB =  1._dp     ! Magnetic curvature
-  REAL(dp), PUBLIC, PROTECTED :: lambdaD =  1._dp     ! Debye length
+  REAL(dp), PUBLIC, PROTECTED :: lambdaD =  0._dp     ! Debye length
   REAL(dp), PUBLIC, PROTECTED ::    beta =  0._dp     ! electron plasma Beta (8piNT_e/B0^2)
 
   LOGICAL,  PUBLIC, PROTECTED ::      EM =  .false.   ! Electromagnetic effects flag
