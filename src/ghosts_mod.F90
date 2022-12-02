@@ -3,7 +3,7 @@ USE basic
 USE grid
 USE time_integration
 USE model, ONLY : KIN_E, beta
-USE geometry, ONLY : SHEARED, ikx_zBC_L, ikx_zBC_R
+USE geometry, ONLY : SHEARED, ikx_zBC_L, ikx_zBC_R, pb_phase_L, pb_phase_R
 IMPLICIT NONE
 
 INTEGER :: status(MPI_STATUS_SIZE), source, dest, count, ipg
@@ -39,7 +39,7 @@ SUBROUTINE update_ghosts_EM
     IF(beta .GT. 0._dp) &
       CALL update_ghosts_z_psi
   ENDIF
-  
+
   CALL cpu_time(t1_ghost)
   tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
 END SUBROUTINE update_ghosts_EM
@@ -159,9 +159,9 @@ SUBROUTINE update_ghosts_z_e
         ikxBC_L = ikx_zBC_L(iky,ikx);
         IF (ikxBC_L .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
           ! first-1 gets last
-          moments_e(:,:,iky,ikx,izs-1,updatetlevel) = buff_pjxy_zBC_e(:,:,iky,ikxBC_L,-1)
+          moments_e(:,:,iky,ikx,izs-1,updatetlevel) = pb_phase_L(iky)*buff_pjxy_zBC_e(:,:,iky,ikxBC_L,-1)
           ! first-2 gets last-1
-          moments_e(:,:,iky,ikx,izs-2,updatetlevel) = buff_pjxy_zBC_e(:,:,iky,ikxBC_L,-2)
+          moments_e(:,:,iky,ikx,izs-2,updatetlevel) = pb_phase_L(iky)*buff_pjxy_zBC_e(:,:,iky,ikxBC_L,-2)
         ELSE
           moments_e(:,:,iky,ikx,izs-1,updatetlevel) = 0._dp
           moments_e(:,:,iky,ikx,izs-2,updatetlevel) = 0._dp
@@ -169,9 +169,9 @@ SUBROUTINE update_ghosts_z_e
         ikxBC_R = ikx_zBC_R(iky,ikx);
         IF (ikxBC_R .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
           ! last+1 gets first
-          moments_e(:,:,iky,ikx,ize+1,updatetlevel) = buff_pjxy_zBC_e(:,:,iky,ikxBC_R,+1)
+          moments_e(:,:,iky,ikx,ize+1,updatetlevel) = pb_phase_R(iky)*buff_pjxy_zBC_e(:,:,iky,ikxBC_R,+1)
           ! last+2 gets first+1
-          moments_e(:,:,iky,ikx,ize+2,updatetlevel) = buff_pjxy_zBC_e(:,:,iky,ikxBC_R,+2)
+          moments_e(:,:,iky,ikx,ize+2,updatetlevel) = pb_phase_R(iky)*buff_pjxy_zBC_e(:,:,iky,ikxBC_R,+2)
         ELSE
           moments_e(:,:,iky,ikx,ize+1,updatetlevel) = 0._dp
           moments_e(:,:,iky,ikx,ize+2,updatetlevel) = 0._dp
@@ -217,9 +217,9 @@ SUBROUTINE update_ghosts_z_i
         ikxBC_L = ikx_zBC_L(iky,ikx);
         IF (ikxBC_L .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
           ! first-1 gets last
-          moments_i(:,:,iky,ikx,izs-1,updatetlevel) = buff_pjxy_zBC_i(:,:,iky,ikxBC_L,-1)
+          moments_i(:,:,iky,ikx,izs-1,updatetlevel) = pb_phase_L(iky)*buff_pjxy_zBC_i(:,:,iky,ikxBC_L,-1)
           ! first-2 gets last-1
-          moments_i(:,:,iky,ikx,izs-2,updatetlevel) = buff_pjxy_zBC_i(:,:,iky,ikxBC_L,-2)
+          moments_i(:,:,iky,ikx,izs-2,updatetlevel) = pb_phase_L(iky)*buff_pjxy_zBC_i(:,:,iky,ikxBC_L,-2)
         ELSE
           moments_i(:,:,iky,ikx,izs-1,updatetlevel) = 0._dp
           moments_i(:,:,iky,ikx,izs-2,updatetlevel) = 0._dp
@@ -227,9 +227,9 @@ SUBROUTINE update_ghosts_z_i
         ikxBC_R = ikx_zBC_R(iky,ikx);
         IF (ikxBC_R .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
           ! last+1 gets first
-          moments_i(:,:,iky,ikx,ize+1,updatetlevel) = buff_pjxy_zBC_i(:,:,iky,ikxBC_R,+1)
+          moments_i(:,:,iky,ikx,ize+1,updatetlevel) = pb_phase_R(iky)*buff_pjxy_zBC_i(:,:,iky,ikxBC_R,+1)
           ! last+2 gets first+1
-          moments_i(:,:,iky,ikx,ize+2,updatetlevel) = buff_pjxy_zBC_i(:,:,iky,ikxBC_R,+2)
+          moments_i(:,:,iky,ikx,ize+2,updatetlevel) = pb_phase_R(iky)*buff_pjxy_zBC_i(:,:,iky,ikxBC_R,+2)
         ELSE
           moments_i(:,:,iky,ikx,ize+1,updatetlevel) = 0._dp
           moments_i(:,:,iky,ikx,ize+2,updatetlevel) = 0._dp
@@ -277,9 +277,9 @@ SUBROUTINE update_ghosts_z_phi
         ikxBC_L = ikx_zBC_L(iky,ikx);
         IF (ikxBC_L .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
           ! first-1 gets last
-          phi(iky,ikx,izs-1) = buff_xy_zBC(iky,ikxBC_L,-1)
+          phi(iky,ikx,izs-1) = pb_phase_L(iky)*buff_xy_zBC(iky,ikxBC_L,-1)
           ! first-2 gets last-1
-          phi(iky,ikx,izs-2) = buff_xy_zBC(iky,ikxBC_L,-2)
+          phi(iky,ikx,izs-2) = pb_phase_L(iky)*buff_xy_zBC(iky,ikxBC_L,-2)
         ELSE
           phi(iky,ikx,izs-1) = 0._dp
           phi(iky,ikx,izs-2) = 0._dp
@@ -287,9 +287,9 @@ SUBROUTINE update_ghosts_z_phi
         ikxBC_R = ikx_zBC_R(iky,ikx);
         IF (ikxBC_R .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
           ! last+1 gets first
-          phi(iky,ikx,ize+1) = buff_xy_zBC(iky,ikxBC_R,+1)
+          phi(iky,ikx,ize+1) = pb_phase_R(iky)*buff_xy_zBC(iky,ikxBC_R,+1)
           ! last+2 gets first+1
-          phi(iky,ikx,ize+2) = buff_xy_zBC(iky,ikxBC_R,+2)
+          phi(iky,ikx,ize+2) = pb_phase_R(iky)*buff_xy_zBC(iky,ikxBC_R,+2)
         ELSE
           phi(iky,ikx,ize+1) = 0._dp
           phi(iky,ikx,ize+2) = 0._dp
@@ -339,9 +339,9 @@ SUBROUTINE update_ghosts_z_psi
         ikxBC_L = ikx_zBC_L(iky,ikx);
         IF (ikxBC_L .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
           ! first-1 gets last
-          psi(iky,ikx,izs-1) = buff_xy_zBC(iky,ikxBC_L,-1)
+          psi(iky,ikx,izs-1) = pb_phase_L(iky)*buff_xy_zBC(iky,ikxBC_L,-1)
           ! first-2 gets last-1
-          psi(iky,ikx,izs-2) = buff_xy_zBC(iky,ikxBC_L,-2)
+          psi(iky,ikx,izs-2) = pb_phase_L(iky)*buff_xy_zBC(iky,ikxBC_L,-2)
         ELSE
           psi(iky,ikx,izs-1) = 0._dp
           psi(iky,ikx,izs-2) = 0._dp
@@ -349,9 +349,9 @@ SUBROUTINE update_ghosts_z_psi
         ikxBC_R = ikx_zBC_R(iky,ikx);
         IF (ikxBC_R .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
           ! last+1 gets first
-          psi(iky,ikx,ize+1) = buff_xy_zBC(iky,ikxBC_R,+1)
+          psi(iky,ikx,ize+1) = pb_phase_R(iky)*buff_xy_zBC(iky,ikxBC_R,+1)
           ! last+2 gets first+1
-          psi(iky,ikx,ize+2) = buff_xy_zBC(iky,ikxBC_R,+2)
+          psi(iky,ikx,ize+2) = pb_phase_R(iky)*buff_xy_zBC(iky,ikxBC_R,+2)
         ELSE
           psi(iky,ikx,ize+1) = 0._dp
           psi(iky,ikx,ize+2) = 0._dp

@@ -20,12 +20,21 @@ implicit none
   REAL(dp),    PUBLIC, PROTECTED :: eps       = 0.18_dp ! inverse aspect ratio
   REAL(dp),    PUBLIC, PROTECTED :: alpha_MHD = 0 ! shafranov shift effect alpha = -q2 R dbeta/dr
   ! parameters for Miller geometry
-  REAL(dp),    PUBLIC, PROTECTED :: kappa     = 1._dp ! elongation
+  REAL(dp),    PUBLIC, PROTECTED :: kappa     = 1._dp ! elongation (1 for circular)
   REAL(dp),    PUBLIC, PROTECTED :: s_kappa   = 0._dp ! r normalized derivative skappa = r/kappa dkappa/dr
   REAL(dp),    PUBLIC, PROTECTED :: delta     = 0._dp ! triangularity
   REAL(dp),    PUBLIC, PROTECTED :: s_delta   = 0._dp ! '' sdelta = r/sqrt(1-delta2) ddelta/dr
   REAL(dp),    PUBLIC, PROTECTED :: zeta      = 0._dp ! squareness
   REAL(dp),    PUBLIC, PROTECTED :: s_zeta    = 0._dp ! '' szeta = r dzeta/dr
+  ! to apply shift in the parallel z-BC if shearless
+  REAL(dp),    PUBLIC, PROTECTED :: shift_y   = 0._dp ! for Arno
+  ! Chooses the type of parallel BC we use for the unconnected kx modes (active for non-zero shear only)
+  !  'periodic'     : Connect a disconnected kx to a mode on the other cadran
+  !  'dirichlet'    : Connect a disconnected kx to 0
+  !  'disconnected' : Connect all kx to 0
+  !  'shearless'    : Connect all kx to itself
+  CHARACTER(len=256), &
+               PUBLIC, PROTECTED :: parallel_bc
 
   ! GENE unused additional parameters for miller_mod
   REAL(dp), PUBLIC, PROTECTED :: edge_opt      = 0 ! meant to redistribute the points in z
@@ -55,6 +64,10 @@ implicit none
   REAL(dp),    PUBLIC, DIMENSION(:,:) , ALLOCATABLE :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
   ! Array to map the index of mode (kx,ky,-pi) to (kx+2pi*s*ky,ky,pi) for sheared periodic boundary condition
   INTEGER,     PUBLIC, DIMENSION(:,:), ALLOCATABLE :: ikx_zBC_L, ikx_zBC_R
+  ! pb_phase, for parallel boundary phase, contains the factor that occurs when taking into account
+  !   that q0 is defined in the middle of the fluxtube whereas the radial position spans in [0,Lx)
+  !   This shift introduces a (-1)^(Nexc*iky) phase change that is included in GENE
+  COMPLEX(dp), PUBLIC, DIMENSION(:),   ALLOCATABLE :: pb_phase_L, pb_phase_R
 
   ! Functions
   PUBLIC :: geometry_readinputs, geometry_outputinputs,&
@@ -66,9 +79,19 @@ CONTAINS
     ! Read the input parameters
     IMPLICIT NONE
     NAMELIST /GEOMETRY/ geom, q0, shear, eps,&
-      kappa, s_kappa,delta, s_delta, zeta, s_zeta ! For miller
+      kappa, s_kappa,delta, s_delta, zeta, s_zeta,& ! For miller
+      parallel_bc, shift_y
     READ(lu_in,geometry)
     IF(shear .NE. 0._dp) SHEARED = .true.
+    SELECT CASE(parallel_bc)
+      CASE ('dirichlet')
+      CASE ('periodic')
+      CASE ('shearless')
+      CASE ('disconnected')
+      CASE DEFAULT
+        stop 'Parallel BC not recognized'
+    END SELECT
+    IF(my_id .EQ. 0) print*, 'Parallel BC : ', parallel_bc
 
   END SUBROUTINE geometry_readinputs
 
@@ -324,12 +347,13 @@ CONTAINS
  SUBROUTINE set_ikx_zBC_map
  IMPLICIT NONE
  REAL :: shift, kx_shift
- ! For periodic CHI BC or 0 dirichlet
- LOGICAL :: PERIODIC_CHI_BC = .FALSE.
- ALLOCATE(ikx_zBC_R(ikys:ikye,ikxs:ikxe))
- ALLOCATE(ikx_zBC_L(ikys:ikye,ikxs:ikxe))
+ INTEGER :: ikx_shift
 
- !! No shear case (simple id mapping)
+ ALLOCATE(ikx_zBC_L(ikys:ikye,ikxs:ikxe))
+ ALLOCATE(ikx_zBC_R(ikys:ikye,ikxs:ikxe))
+ ALLOCATE(pb_phase_L(ikys:ikye))
+ ALLOCATE(pb_phase_R(ikys:ikye))
+ !! No shear case (simple id mapping) or not at the end of the z domain
  !3            | 1    2    3    4    5    6 |  ky = 3 dky
  !2   ky       | 1    2    3    4    5    6 |  ky = 2 dky
  !1   A        | 1    2    3    4    5    6 |  ky = 1 dky
@@ -337,65 +361,109 @@ CONTAINS
  !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=free)
  DO iky = ikys,ikye
    DO ikx = ikxs,ikxe
-     ikx_zBC_L(iky,ikx) = ikx
+     ikx_zBC_L(iky,ikx) = ikx ! connect to itself per default
      ikx_zBC_R(iky,ikx) = ikx
    ENDDO
+   pb_phase_L(iky) = 1._dp ! no phase change per default
+   pb_phase_R(iky) = 1._dp
  ENDDO
- ! Modify connection map only at border of z
- IF(SHEARED) THEN
-   ! connection map BC of the RIGHT boundary (z=pi*Npol-dz) (even NZ)
-   !3            | 4    x    x    x    2    3 |  ky = 3 dky
-   !2   ky       | 3    4    x    x    1    2 |  ky = 2 dky
-   !1   A        | 2    3    4    x    6    1 |  ky = 1 dky
-   !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
-   !kx =           0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
+ ! Parallel boundary are not trivial for sheared case and if
+ !  the user does not ask explicitly for shearless bc
+ IF(SHEARED .AND. (parallel_bc .NE. 'shearless')) THEN
+   !!!!!!!!!! LEFT PARALLEL BOUNDARY
+   ! Modify connection map only at border of z (matters for MPI z-parallelization)
+   IF(contains_zmin) THEN ! Check if the process is at the start of the fluxtube
+     DO iky = ikys,ikye
+       ! Formula for the shift due to shear after Npol turns
+       shift = 2._dp*PI*shear*kyarray(iky)*Npol
+         DO ikx = ikxs,ikxe
+           ! Usual formula for shifting indices using that dkx = 2pi*shear*dky/Nexc
+           ikx_zBC_L(iky,ikx) = ikx-(iky-1)*Nexc
+           ! Check if it points out of the kx domain
+           ! IF( (kxarray(ikx) - shift) .LT. kx_min ) THEN
+           IF( (ikx-(iky-1)*Nexc) .LT. 1 ) THEN ! outside of the frequ domain
+             SELECT CASE(parallel_bc)
+               CASE ('dirichlet')! connected to 0
+                 ikx_zBC_L(iky,ikx) = -99
+               CASE ('periodic') !reroute it by cycling through modes
+                 ikx_zBC_L(iky,ikx) = MODULO(ikx_zBC_L(iky,ikx)-1,Nkx)+1
+             END SELECT
+           ENDIF
+         ENDDO
+         ! phase present in GENE from a shift of the x origin by Lx/2 (useless?)
+         ! We also put the user defined shift in the y direction (see Volcokas et al. 2022)
+         pb_phase_L(iky) = (-1._dp)**(Nexc*(iky-1))*EXP(imagu*REAL(iky-1,dp)*2._dp*pi*shift_y)
+     ENDDO
+   ENDIF
+   ! Option for disconnecting every modes, viz. connecting all boundary to 0
+   IF(parallel_bc .EQ. 'disconnected') ikx_zBC_L = -99
+   !!!!!!!!!! RIGHT PARALLEL BOUNDARY
+   IF(contains_zmax) THEN ! Check if the process is at the end of the flux-tube
+     DO iky = ikys,ikye
+       ! Formula for the shift due to shear after Npol
+       shift = 2._dp*PI*shear*kyarray(iky)*Npol
+         DO ikx = ikxs,ikxe
+           ! Usual formula for shifting indices
+           ikx_zBC_R(iky,ikx) = ikx+(iky-1)*Nexc
+           ! Check if it points out of the kx domain
+           ! IF( (kxarray(ikx) + shift) .GT. kx_max ) THEN ! outside of the frequ domain
+           IF( (ikx+(iky-1)*Nexc) .GT. Nkx ) THEN ! outside of the frequ domain
+             SELECT CASE(parallel_bc)
+               CASE ('dirichlet') ! connected to 0
+                 ikx_zBC_R(iky,ikx) = -99
+               CASE ('periodic') !reroute it by cycling through modes
+                 write(*,*) 'check',ikx,iky, kxarray(ikx) + shift, '>', kx_max
+                 ikx_zBC_R(iky,ikx) = MODULO(ikx_zBC_R(iky,ikx)-1,Nkx)+1
+             END SELECT
+           ENDIF
+         ENDDO
+         ! phase present in GENE from a shift ofthe x origin by Lx/2 (useless?)
+         ! We also put the user defined shift in the y direction (see Volcokas et al. 2022)
+         pb_phase_R(iky) = (-1._dp)**(Nexc*(iky-1))*EXP(-imagu*REAL(iky-1,dp)*2._dp*pi*shift_y)
+     ENDDO
+   ENDIF
+   ! Option for disconnecting every modes, viz. connecting all boundary to 0
+   IF(parallel_bc .EQ. 'disconnected') ikx_zBC_R = -99
+  ENDIF
+  ! write(*,*) kxarray
+  ! write(*,*) kyarray
+  ! write(*,*) 'ikx_zBC_L :-----------'
+  ! DO iky = ikys,ikye
+  !   print*, ikx_zBC_L(iky,:)
+  ! enddo
+  ! write(*,*) 'ikx_zBC_R :-----------'
+  ! DO iky = ikys,ikye
+  !   print*, ikx_zBC_R(iky,:)
+  ! enddo
+  ! stop
+  !!!!!!! Example of maps ('x' means connected to 0 value, in the table it is -99)
+  ! dirichlet connection map BC of the RIGHT boundary (z=pi*Npol-dz)
+  !3            | 4    x    x    x    2    3 |  ky = 3 dky
+  !2   ky       | 3    4    x    x    1    2 |  ky = 2 dky
+  !1   A        | 2    3    4    x    6    1 |  ky = 1 dky
+  !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
+  !kx =           0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
 
-   ! connection map BC of the RIGHT boundary (z=pi*Npol-dz) (ODD NZ)
-   !3            | x    x    x    2    3 |  ky = 3 dky
-   !2   ky       | 3    x    x    1    2 |  ky = 2 dky
-   !1   A        | 2    3    x    5    1 |  ky = 1 dky
-   !0   | -> kx  | 1____2____3____4____5 |  ky = 0 dky
-   !kx =           0   0.1  0.2 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
-   IF(contains_zmax) THEN ! Check if the process is at the end of the FT
-     DO iky = ikys,ikye
-       shift = 2._dp*PI*shear*kyarray(iky)*Npol
-         DO ikx = ikxs,ikxe
-           kx_shift = kxarray(ikx) + shift
-           ! We use EPSILON() to treat perfect equality case
-           IF( ((kx_shift-EPSILON(kx_shift)) .GT. kx_max) .AND. (.NOT. PERIODIC_CHI_BC) )THEN ! outside of the frequ domain
-             ikx_zBC_R(iky,ikx) = -99
-           ELSE
-             ikx_zBC_R(iky,ikx) = ikx+(iky-1)*Nexc
-             IF( ikx_zBC_R(iky,ikx) .GT. Nkx ) &
-              ikx_zBC_R(iky,ikx) = ikx_zBC_R(iky,ikx) - Nkx
-           ENDIF
-         ENDDO
-     ENDDO
-   ENDIF
-   ! connection map BC of the LEFT boundary (z=-pi*Npol)
-   !3            | x    5    6    1    x    x |  ky = 3 dky
-   !2   ky       | 5    6    1    2    x    x |  ky = 2 dky
-   !1   A        | 6    1    2    3    x    5 |  ky = 1 dky
-   !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
-   !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
-   IF(contains_zmin) THEN ! Check if the process is at the start of the FT
-     DO iky = ikys,ikye
-       shift = 2._dp*PI*shear*kyarray(iky)*Npol
-         DO ikx = ikxs,ikxe
-           kx_shift = kxarray(ikx) - shift
-           ! We use EPSILON() to treat perfect equality case
-           IF( ((kx_shift+EPSILON(kx_shift)) .LT. kx_min) .AND. (.NOT. PERIODIC_CHI_BC) ) THEN ! outside of the frequ domain
-             ikx_zBC_L(iky,ikx) = -99
-           ELSE
-             ikx_zBC_L(iky,ikx) = ikx-(iky-1)*Nexc
-             IF( ikx_zBC_L(iky,ikx) .LT. 1 ) &
-              ikx_zBC_L(iky,ikx) = ikx_zBC_L(iky,ikx) + Nkx
-           ENDIF
-         ENDDO
-     ENDDO
-   ENDIF
- ELSE
-ENDIF
+  ! periodic connection map BC of the LEFT boundary (z=-pi*Npol)
+  !3            | 4    5    6    1    2    3 |  ky = 3 dky
+  !2   ky       | 5    6    1    2    3    4 |  ky = 2 dky
+  !1   A        | 6    1    2    3    4    5 |  ky = 1 dky
+  !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
+  !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
+
+  ! shearless connection map BC of the LEFT/RIGHT boundary (z=+/-pi*Npol)
+  !3            | 1    2    3    4    5    6 |  ky = 3 dky
+  !2   ky       | 1    2    3    4    5    6 |  ky = 2 dky
+  !1   A        | 1    2    3    4    5    6 |  ky = 1 dky
+  !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
+  !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
+
+  ! disconnected connection map BC of the LEFT/RIGHT boundary (z=+/-pi*Npol)
+  !3            | x    x    x    x    x    x |  ky = 3 dky
+  !2   ky       | x    x    x    x    x    x |  ky = 2 dky
+  !1   A        | x    x    x    x    x    x |  ky = 1 dky
+  !0   | -> kx  | x____x____x____x____x____x |  ky = 0 dky
+  !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
 END SUBROUTINE set_ikx_zBC_map
 
 !
