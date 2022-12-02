@@ -54,7 +54,7 @@ switch options.COMPXY
         ynamecx = ['$\max_{k_x}',options.NAME,'$'];
         ynamecy = ['$\max_{k_y}',options.NAME,'$'];
     case 'zero'
-        compx = @(x) x(:,data.Nx/2);
+        compx = @(x) x(:,1);
         compy = @(x) x(1,:);
         ynamecx = ['$',options.NAME,'(k_x=',num2str(data.kx(1)),')$'];
         ynamecy = ['$',options.NAME,'(k_y=',num2str(data.ky(1)),')$'];

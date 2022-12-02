@@ -10,7 +10,7 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 
 %% Load the results
 LOCALDIR  = [gyacomodir,resdir,'/'];
-MISCDIR   = ['/misc/',resdir,'/']; %For long term storage
+MISCDIR   = ['/misc/gyacomo_outputs/',resdir,'/']; %For long term storage
 system(['mkdir -p ',MISCDIR]);
 system(['mkdir -p ',LOCALDIR]);
 CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
@@ -34,7 +34,7 @@ disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
 options.TAVG_0   = data.TJOB_SE(i_)+600;%0.4*data.Ts3D(end);
 options.TAVG_1   = data.TJOB_SE(i_+1);%0.9*data.Ts3D(end); % Averaging times duration
 options.NCUT     = 4;              % Number of cuts for averaging and error estimation
-options.NMVA     = 100;              % Moving average for time traces
+options.NMVA     = 50;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';   % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 options.INTERP   = 0;
@@ -46,7 +46,7 @@ end
 if 0
 %% statistical transport averaging
 gavg =[]; gstd = [];
-for i_ = 3:2:numel(data.TJOB_SE) 
+for i_ = 1:2:numel(data.TJOB_SE) 
 % i_ = 3; 
 disp([num2str(data.TJOB_SE(i_)),' ',num2str(data.TJOB_SE(i_+1))])
 disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
@@ -75,7 +75,7 @@ options.PLAN      = 'xy';
 options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
 % options.TIME      =  data.Ts3D;
-options.TIME      = [000:1:8000];
+options.TIME      = [6000:1:9000];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
@@ -95,11 +95,12 @@ options.NAME      = '\phi';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'kxky';
-% options.NAME      'f_i';
-% options.PLAN      = 'sx';
+options.PLAN      = 'xy';
+options.NAME      = 'f_i';
+options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [1000 3000 5000 8000 10000];
+options.TIME      = [5 20 50 100 150];
+options.RESOLUTION = 256;
 
 data.a = data.EPS * 2e3;
 fig = photomaton(data,options);
@@ -127,11 +128,11 @@ if 0
 options.SPAR      = gene_data.vp';
 options.XPERP     = gene_data.mu';
 options.iz        = 'avg';
-options.T         = [1500 5000];
+options.T         = [100 150];
 options.PLT_FCT   = 'contour';
-options.ONED      = 1;
+options.ONED      = 0;
 options.non_adiab = 0;
-options.SPECIE    = 'e';
+options.SPECIE    = 'i';
 options.RMS       = 1; % Root mean square i.e. sqrt(sum_k|f_k|^2) as in Gene
 fig = plot_fa(data,options);
 % save_figure(data,fig,'.png')
@@ -155,7 +156,7 @@ end
 
 if 0
 %% Time averaged spectrum
-options.TIME   = [2000 3000];
+options.TIME   = [5000 9000];
 options.NORM   =1;
 % options.NAME   = '\phi';
 % options.NAME      = 'N_i^{00}';
@@ -163,7 +164,7 @@ options.NAME   ='\Gamma_x';
 options.PLAN   = 'kxky';
 options.COMPZ  = 'avg';
 options.OK     = 0;
-options.COMPXY = 'avg'; % avg/sum/max/zero/ 2D plot otherwise
+options.COMPXY = '2D'; % avg/sum/max/zero/ 2D plot otherwise
 options.COMPT  = 'avg';
 options.PLOT   = 'semilogy';
 fig = spectrum_1D(data,options);
@@ -189,12 +190,14 @@ end
 
 if 0
 %% Mode evolution
-options.NORMALIZED = 0;
-options.K2PLOT = [0.1 0.5 1.0 2.0 6.0];
-options.TIME   = [00:1200];
+options.NORMALIZED = 1;
+options.TIME   = [6000:9000];
+options.KX_TW  = [6000:9000]; %kx Z modes time window
+options.KY_TW  = [6000:9000]; %ky Growth rate time window
 options.NMA    = 1;
-options.NMODES = 30;
-options.iz     = 'avg';
+options.NMODES = 800;
+options.iz     = 'avg'; % avg or index
+options.ik     = 1; % sum, max or index
 fig = mode_growth_meter(data,options);
 save_figure(data,fig,'.png')
 end
@@ -215,19 +218,25 @@ fig = plot_metric(data,options);
 end
 
 if 0
-%% linear growth rate for 3D fluxtube
-trange = [0 100];
-nplots = 1;
-lg = compute_fluxtube_growth_rate(data,trange,nplots);
+%% linear growth rate (adapted for 2D zpinch and fluxtube)
+options.TRANGE = [0.5 1]*data.Ts3D(end);
+options.NPLOTS = 2; % 1 for only growth rate and error, 2 for omega local evolution, 3 for plot according to z
+options.GOK    = 0; %plot 0: gamma 1: gamma/k 2: gamma^2/k^3
+lg = compute_fluxtube_growth_rate(data,options);
+[gmax,     kmax] = max(lg.g_ky(:,end));
+[gmaxok, kmaxok] = max(lg.g_ky(:,end)./lg.ky);
+msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,lg.ky(kmax)); disp(msg);
+msg = sprintf('gmax/k = %2.2f, kmax/k = %2.2f',gmaxok,lg.ky(kmaxok)); disp(msg);
 end
 
 if 0
 %% linear growth rate for 3D Zpinch
-trange = [5 20];
+trange = [100 200];
 options.keq0 = 1; % chose to plot planes at k=0 or max
 options.kxky = 1;
-options.kzkx = 0;
+options.kzkx = 1;
 options.kzky = 1;
+options.INTERP = 0;
 [lg, fig] = compute_3D_zpinch_growth_rate(data,trange,options);
 % save_figure(data,fig,'.png')
 end

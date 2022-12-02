@@ -17,41 +17,52 @@ end
 FRAMES = unique(FRAMES);
 t  = DATA.Ts3D(FRAMES);
 
+
 [~,ikzf] = max(mean(squeeze(abs(field(1,:,FRAMES))),2));
 
 FIGURE.fig = figure; set(gcf, 'Position',  [100 100 1200 700])
 FIGURE.FIGNAME = 'mode_growth_meter';
 for i = 1:2
-    MODES_SELECTOR = i; %(2:Zonal, 1: NZonal, 3: ky=kx)
+    MODES_SELECTOR = i; %(2:Zonal, 1: NZonal)
 
     if MODES_SELECTOR == 2
-        if NORMALIZED
-            plt = @(x,ik) movmean(abs(squeeze(x(1,ik,FRAMES)))./max(abs(squeeze(x(1,ik,FRAMES)))),Nma);
-        else
-            plt = @(x,ik) movmean(abs(squeeze(x(1,ik,FRAMES))),Nma);
+        switch OPTIONS.ik
+            case 'sum'
+                plt_ = @(x,ik) movmean(squeeze(sum(abs((x(:,ik,FRAMES))),1)),Nma);
+                MODESTR = '$\sum_{k_y}$';
+            case 'max'
+                plt_ = @(x,ik) movmean(squeeze(max(abs((x(:,ik,FRAMES))),[],1)),Nma);
+                MODESTR = '$\max_{k_y}$';
+            otherwise
+                plt_ = @(x,ik) movmean(abs(squeeze(x(OPTIONS.ik,ik,FRAMES))),Nma);
+                MODESTR = ['$k_y=$',num2str(DATA.ky(OPTIONS.ik))];
         end
         kstr = 'k_x';
+        % Number max of modes to plot is kx>0 (1/2) of the non filtered modes (2/3)
+        Nmax = ceil(DATA.Nkx*1/3);
         k = DATA.kx;
-        MODESTR = 'Zonal modes';
     elseif MODES_SELECTOR == 1
-        if NORMALIZED
-            plt = @(x,ik) movmean(abs(squeeze(x(ik,1,FRAMES)))./max(abs(squeeze(x(ik,1,FRAMES)))),Nma);
-        else
-            plt = @(x,ik) movmean(abs(squeeze(x(ik,1,FRAMES))),Nma);
+        switch OPTIONS.ik
+            case 'sum'
+                plt_ = @(x,ik) movmean(squeeze(sum(abs((x(ik,:,FRAMES))),2)),Nma);
+                MODESTR = '$\sum_{k_x}$';
+            case 'max'
+                plt_ = @(x,ik) movmean(squeeze(max(abs((x(ik,:,FRAMES))),[],2)),Nma);
+                MODESTR = '$\max_{k_x}$';
+            otherwise
+                plt_ = @(x,ik) movmean(abs(squeeze(x(ik,OPTIONS.ik,FRAMES))),Nma);
+                MODESTR = ['$k_x=$',num2str(DATA.kx(OPTIONS.ik))];
         end
         kstr = 'k_y';
+        % Number max of modes to plot is ky>0 (1/1) of the non filtered modes (2/3)
+        Nmax = ceil(DATA.Nky*2/3);
         k = DATA.ky;
-        MODESTR = 'NZ modes';
-    elseif MODES_SELECTOR == 3
-        if NORMALIZED
-            plt = @(x,ik) movmean(abs(squeeze(x(ik,ik,FRAMES)))./max(abs(squeeze(x(ik,ik,FRAMES)))),Nma);
-        else
-            plt = @(x,ik) movmean(abs(squeeze(x(ik,ik,FRAMES))),Nma);
-        end
-        kstr = 'k_y=k_x';
-        k = DATA.ky;
-        MODESTR = 'Diag modes';
     end 
+    if NORMALIZED
+        plt = @(x,ik) plt_(x,ik)./max(plt_(x,ik));
+    else
+        plt = @(x,ik) plt_(x,ik);
+    end
 
     MODES = 1:numel(k);
     % MODES = zeros(size(OPTIONS.K2PLOT));
@@ -71,7 +82,7 @@ for i = 1:2
         amp(i_)   = gr(2);
         i_=i_+1;
     end
-    mod2plot = [2:OPTIONS.NMODES+1];
+    mod2plot = [2:min(Nmax,OPTIONS.NMODES+1)];
     clr_ = jet(numel(mod2plot));
     %plot
     subplot(2,3,1+3*(i-1))

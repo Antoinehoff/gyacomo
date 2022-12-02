@@ -11,6 +11,7 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, OPTIONS)
     Qx_infty_avg = mean(DATA.HFLUX_X(its0D:ite0D))*SCALE;
     Qx_infty_std = std (DATA.HFLUX_X(its0D:ite0D))*SCALE;
     disp(['G_x=',sprintf('%2.2e',Gx_infty_avg),'+-',sprintf('%2.2e',Gx_infty_std)]);
+    disp(['Q_x=',sprintf('%2.2e',Qx_infty_avg),'+-',sprintf('%2.2e',Qx_infty_std)]);
 %     disp(['Q_x=',sprintf('%2.2e',Qx_infty_avg),'+-',sprintf('%2.2e',Qx_infty_std)]);
     f_avg_z      = squeeze(mean(DATA.PHI(:,:,:,:),3));
     [~,ikzf] = max(squeeze(mean(abs(f_avg_z(1,:,its3D:ite3D)),3)));
@@ -62,7 +63,7 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, OPTIONS)
 
 %% Figure    
 mvm = @(x) movmean(x,OPTIONS.NMVA);
-    FIGURE.fig = figure; FIGURE.FIGNAME = ['ZF_transport_drphi','_',DATA.PARAMS]; set(gcf, 'Position',  [100, 100, 1000, 600])
+    FIGURE.fig = figure; FIGURE.FIGNAME = ['ZF_transport_drphi','_',DATA.PARAMS]; set(gcf, 'Position',  [500, 1000, 1000, 600])
     subplot(311)
 %     yyaxis left
         plot(mvm(DATA.Ts0D),mvm(DATA.PGAMMA_RI*SCALE),'DisplayName','$\langle n_i \partial_y\phi \rangle_y$'); hold on;

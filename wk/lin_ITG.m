@@ -3,8 +3,8 @@
 % from matlab framework. It is meant to run only small problems in linear
 % for benchmark and debugging purpose since it makes matlab "busy"
 %
-SIMID   = 'lin_ITG';  % Name of the simulation
-% SIMID   = 'dbg';  % Name of the simulation
+% SIMID   = 'lin_ITG';  % Name of the simulation
+SIMID   = 'dbg';  % Name of the simulation
 RUN     = 1; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
@@ -34,23 +34,25 @@ PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
-NX      = 8;    % real space x-gridpoints
-NY      = 16;     %     ''     y-gridpoints
+NX      = 6;    % real space x-gridpoints
+NY      = 10;     %     ''     y-gridpoints
 LX      = 2*pi/0.8;   % Size of the squared frequency domain
-LY      = 2*pi/0.05;     % Size of the squared frequency domain
+LY      = 2*pi/0.1;     % Size of the squared frequency domain
 NZ      = 16;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
+NEXC    = 1;     % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 %% GEOMETRY
-GEOMETRY= 's-alpha';
-% GEOMETRY= 'miller';
+% GEOMETRY= 's-alpha';
+GEOMETRY= 'miller';
+EPS     = 0.18;   % inverse aspect ratio
 Q0      = 1.4;    % safety factor
 SHEAR   = 0.8;    % magnetic shear
 KAPPA   = 1.0;    % elongation
 DELTA   = 0.0;    % triangularity
 ZETA    = 0.0;    % squareness
-NEXC    = 0;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
-EPS     = 0.18;   % inverse aspect ratio
+PARALLEL_BC = 'dirichlet'; %'dirichlet','periodic','shearless','disconnected'
+SHIFT_Y = 0.0;
 %% TIME PARMETERS
 TMAX    = 60;  % Maximal time unit
 DT      = 1e-2;   % Time step
@@ -103,11 +105,11 @@ setup
 % system(['rm fort*.90']);
 % Run linear simulation
 if RUN
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',HELAZDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 2 3 0; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
 end
 
 %% Load results
@@ -133,8 +135,8 @@ end
 
 if 1
 %% Ballooning plot
-options.time_2_plot = [120];
-options.kymodes     = [0.3];
+options.time_2_plot = [10 50];
+options.kymodes     = [0.1 0.2 0.4];
 options.normalized  = 1;
 % options.field       = 'phi';
 fig = plot_ballooning(data,options);

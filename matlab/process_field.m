@@ -53,7 +53,7 @@ Lmin_ = min([Xmax_,Ymax_]);
 Rx    = Xmax_/Lmin_ * SCALE + (1-SCALE)*1.2; 
 Ry    = Ymax_/Lmin_ * SCALE + (1-SCALE)*1.2; 
 ASPECT     = [Rx, Ry, 1];
-DIMENSIONS = [100, 100, OPTIONS.RESOLUTION*Rx, OPTIONS.RESOLUTION*Ry];
+DIMENSIONS = [500, 1000, OPTIONS.RESOLUTION*Rx, OPTIONS.RESOLUTION*Ry];
 % Polar grid
 POLARNAME = [];
 if POLARPLOT

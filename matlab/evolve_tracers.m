@@ -2,18 +2,18 @@
 SHOW_FILM = 1;
 field2plot  ='phi';
 INIT     = 'lin';   % lin (for a line)/ round (for a small round)/ gauss for random
-U_TIME   = 1000;     % >0 for frozen velocity at a given time, -1 for evolving field
+U_TIME   = 500;     % >0 for frozen velocity at a given time, -1 for evolving field
 Evolve_U = 1;       % 0 for frozen velocity at a given time, 1 for evolving field
-Tfin     = 500;
+Tfin     = 2000;
 dt_      = 0.1;
 Nstep    = ceil(Tfin/dt_);
 % Init tracers
-Np      = 200; %number of tracers
+Np      = 3; %number of tracers
 % color = tcolors;
 color = jet(Np);
 tcolors = distinguishable_colors(Np); %Their colors
 dimmed  = 0; % to dimm the colormap in the background (infty = white, 0 normal color)
-Na = 10/dt_; %length of trace
+Na = 1000/dt_; %length of trace
 
 Traj_x = zeros(Np,Nstep);
 Traj_y = zeros(Np,Nstep);

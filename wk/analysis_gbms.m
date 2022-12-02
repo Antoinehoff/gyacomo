@@ -7,9 +7,9 @@
 % resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/shearless_linear_cyclone/';
 % resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/new_RH_test/';
 % resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/RH_test_kine/';
-resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/KBM/';
+% resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/KBM/';
 % resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/TEM/';
-% resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/ITG/';
+resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/ITG/';
 % resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/linear_cyclone/';
 % resdir = '/home/ahoffman/molix/';
 

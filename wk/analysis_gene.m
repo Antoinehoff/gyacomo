@@ -13,14 +13,17 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_0.8/';
 % folder = '/misc/gene_results/Z-pinch/HP_fig_2a_mu_1e-2/';
+folder = '/misc/gene_results/Z-pinch/HP_fig_2a_gyroLES/';
 % folder = '/misc/gene_results/Z-pinch/HP_fig_2b_mu_5e-2/';
 % folder = '/misc/gene_results/Z-pinch/HP_fig_2c_mu_5e-2/';
+% folder = '/misc/gene_results/Z-pinch/HP_fig_2c_gyroLES/';
+% folder = '/misc/gene_results/Z-pinch/HP_fig_2c_mu_1e-2_muv_1e-1/';
 % folder = '/misc/gene_results/LD_zpinch_1.6/';
 % folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
 % folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
 % folder = '/misc/gene_results/Z-pinch/ZP_HP_kn_1.6_HRES/';
 % folder = '/misc/gene_results/ZP_kn_2.5_large_box/';
-folder = '/misc/gene_results/Z-pinch/kN_2.0_HD_transport_spectrum_01/';
+% folder = '/misc/gene_results/Z-pinch/kN_2.0_HD_transport_spectrum_01/';
 % folder = '/misc/gene_results/Z-pinch/kN_2.5_HD_transport_spectrum_01/';
 
 % folder = '/misc/gene_results/CBC/128x64x16x24x12/';
@@ -33,6 +36,11 @@ folder = '/misc/gene_results/Z-pinch/kN_2.0_HD_transport_spectrum_01/';
 % folder = '/misc/gene_results/CBC/Lapillone_Fig6/';
 % folder = '/misc/gene_results/Z-pinch/HP_kN_1.6_adapt_mu_01/';
 % folder = '/misc/gene_results/miller/';
+% folder = '/misc/gene_results/CBC/KT_4.5_192x96x24x30x16_00/';
+% folder = '/misc/gene_results/CBC/KT_5.0_192x96x24x30x16_00/';
+% folder = '/misc/gene_results/CBC/KT_5.3_192x96x24x30x16_00/';
+% folder = '/misc/gene_results/CBC/KT_6.96_64x32x32x24x12_Nexc_5/';
+
 gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
@@ -123,7 +131,7 @@ end
 
 if 0
 %% Show f_i(vpar,mu)
-options.times   = 600:5000;
+options.times   = 100:200;
 options.specie  = 'i';
 options.PLT_FCT = 'contour';
 options.folder  = folder;
@@ -136,7 +144,7 @@ end
 
 if 0
 %% Time averaged spectrum
-options.TIME   = [600 5000];
+options.TIME   = [4000 5000];
 options.NORM   =1;
 % options.NAME   = '\phi';
 % options.NAME      = 'n_i';

@@ -21,6 +21,8 @@ GEOM.eps   = EPS;   % inverse aspect ratio
 GEOM.kappa = KAPPA; % elongation
 GEOM.delta = DELTA; % triangularity
 GEOM.zeta  = ZETA;  % squareness
+GEOM.parallel_bc  = ['''',PARALLEL_BC,''''];
+GEOM.shift_y  = SHIFT_Y;
 % Model parameters
 MODEL.CLOS    = CLOS;
 MODEL.NL_CLOS = NL_CLOS;

@@ -56,7 +56,7 @@ for jt = 1:numel(DATA.Ts3D)
 %  
     tmp = h5read([folder,momfile],['/mom_ions/T_perp/',sprintf('%10.10d',it-1)]);
     DATA.TPER_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
-    
+%     
     tmp = h5read([folder,phifile],['/field/phi/',sprintf('%10.10d',it-1)]);
     DATA.PHI(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
 

@@ -31,11 +31,24 @@ gyacomodir = '/home/ahoffman/gyacomo/';
 %% CBC
 % resdir = 'CBC/64x32x16x5x3';
 % resdir = 'CBC/64x128x16x5x3';
-% resdir = 'CBC/128x64x16x5x3';
+% resdir = 'CBC/old/128x64x16x5x3';
 % resdir = 'CBC/96x96x16x3x2_Nexc_6';
-% resdir = 'CBC/128x96x16x3x2';
-resdir = 'CBC/192x96x16x3x2';
-% resdir = 'CBC/192x96x24x13x7';
+% resdir = 'CBC/128x96x16x3x2_Nexc_0';
+% resdir = 'CBC/old/192x96x24x13x7';
+
+% resdir = 'CBC/128x96x16x3x2_Nexc_0_periodic_chi';
+% resdir = 'CBC/64x32x16x3x2_Nexc_0_periodic_chi';
+% resdir = 'CBC/64x32x16x3x2_Nexc_0_Miller';
+% resdir = 'CBC/64x32x16x3x2_Nexc_1';
+% resdir = 'CBC/64x32x16x3x2_Nexc_2';
+% resdir = 'CBC/64x32x16x3x2_Nexc_3';
+% resdir = 'CBC/64x32x16x3x2_Nexc_3_change_dt';
+% resdir = 'CBC/64x32x16x3x2_Nexc_6';
+% resdir = 'CBC/64x32x16x3x2_Nexc_0';
+resdir = 'CBC/64x32x16x3x2_Nexc_0_change_dt';
+% resdir = 'CBC/128x96x16x3x2_Nexc_0';
+% resdir = 'CBC/128x96x16x3x2_Nexc_0';
+
 % resdir = 'CBC/kT_11_128x64x16x5x3';
 % resdir = 'CBC/kT_9_256x128x16x3x2';
 % resdir = 'CBC/kT_4.5_128x64x16x13x3';
@@ -59,14 +72,14 @@ resdir = 'CBC/192x96x16x3x2';
 % resdir = 'NL_KBM/192x64x24x5x3';
 %% Linear CBC
 % resdir = 'linear_CBC/20x2x32_21x11_Lx_62.8319_Ly_31.4159_q0_1.4_e_0.18_s_0.8_kN_2.22_kT_5.3_nu_1e-02_DGDK_adiabe';
+% resdir = 'lin_CBC/128x64x16_5x3_Lx_7.854_Ly_125.6637_q0_1.4_e_0.18_s_0.8_kN_2.22_kT_6.96_nu_5.0e-02_DGDK_adiabe';
 % resdir = 'testcases/miller_example';
 % resdir = 'Miller/128x256x3x2_CBC_dt_5e-3';
 %% CBC Miller
 % resdir = 'GCM_CBC/daint/Miller_GX_comparison';
 % resdir = 'GCM_CBC/daint/Salpha_GX_comparison';
 %% RK3
-% resdir = 'dbg/SSPx_RK3_test';
-% resdir = 'dbg/SSPx_RK3_test/RK4';
-resdir = ['gyacomo_outputs/results/',resdir];
+% resdir = '';
+resdir = ['results/',resdir];
 JOBNUMMIN = 00; JOBNUMMAX = 10;
 run analysis_gyacomo

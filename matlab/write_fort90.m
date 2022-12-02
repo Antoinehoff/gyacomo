@@ -33,6 +33,7 @@ fprintf(fid,['  eps    = ', num2str(GEOM.eps),'\n']);
 fprintf(fid,['  kappa  = ', num2str(GEOM.kappa),'\n']);
 fprintf(fid,['  delta  = ', num2str(GEOM.delta),'\n']);
 fprintf(fid,['  zeta   = ', num2str(GEOM.zeta),'\n']);
+fprintf(fid,['  parallel_bc = ', GEOM.parallel_bc,'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&OUTPUT_PAR\n');

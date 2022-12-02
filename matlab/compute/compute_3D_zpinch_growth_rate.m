@@ -34,6 +34,7 @@ posky = ky>=0;
 poskz = kz>=0;
 
 kxeq0 = kx==0;
+kyeq0 = ky==0;
 kzeq0 = kz==0;
 
 omega = omega(posky,poskx,poskz);
@@ -56,6 +57,8 @@ subplot(1,nplots,iplot)
         xlabel('$k_x$'); ylabel('$k_y$');
         title('$\gamma(k_z=0)$');
     end
+    if OPTIONS.INTERP; shading interp; end
+    caxis(max(max(abs(toplot))).*[-1,1]);
     iplot = iplot + 1;
 end
 if OPTIONS.kzky
@@ -72,6 +75,8 @@ subplot(1,nplots,iplot)
         xlabel('$k_z$'); ylabel('$k_y$');
         title('$\gamma(k_x=0)$');
     end
+    if OPTIONS.INTERP; shading interp; end
+    caxis(max(max(abs(toplot))).*[-1,1]);
     iplot = iplot + 1;
 end
 if OPTIONS.kzkx
@@ -84,11 +89,12 @@ subplot(1,nplots,iplot)
         title('$\max(\gamma)_{ky}$');
     else
         toplot = squeeze(real(omega(kyeq0,:,:)));
-        pclr= pcolor(Z_ZY,Y_ZY,toplot'); set(pclr,'EdgeColor','none');
+        pclr= pcolor(Z_ZX,X_ZX,toplot'); set(pclr,'EdgeColor','none');
         xlabel('$k_z$'); ylabel('$k_x$');
         title('$\gamma(k_y=0)$');
     end
 end
-shading interp
+if OPTIONS.INTERP; shading interp; end
+caxis(max(max(abs(toplot))).*[-1,1]);
 colormap(bluewhitered);
 end
