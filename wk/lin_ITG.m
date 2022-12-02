@@ -23,10 +23,10 @@ K_Ne    = 2.22;            % ele Density '''
 K_Te    = 6.96;            % ele Temperature '''
 K_Ni    = 2.22;            % ion Density gradient drive
 K_Ti    = 6.96;            % ion Temperature '''
-SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
-% SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+% SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 0;         % 1: kinetic electrons, 2: adiabatic electrons
-BETA    = 0.0;     % electron plasma beta
+BETA    = 0.0001;     % electron plasma beta
 %% GRID PARAMETERS
 P = 4;
 J = P/2;
@@ -34,8 +34,8 @@ PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
-NX      = 6;    % real space x-gridpoints
-NY      = 10;     %     ''     y-gridpoints
+NX      = 2;    % real space x-gridpoints
+NY      = 12;     %     ''     y-gridpoints
 LX      = 2*pi/0.8;   % Size of the squared frequency domain
 LY      = 2*pi/0.1;     % Size of the squared frequency domain
 NZ      = 16;    % number of perpendicular planes (parallel grid)
@@ -43,18 +43,18 @@ NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 NEXC    = 1;     % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 %% GEOMETRY
-% GEOMETRY= 's-alpha';
-GEOMETRY= 'miller';
+GEOMETRY= 's-alpha';
+% GEOMETRY= 'miller';
 EPS     = 0.18;   % inverse aspect ratio
 Q0      = 1.4;    % safety factor
-SHEAR   = 0.8;    % magnetic shear
+SHEAR   = 0.0;    % magnetic shear
 KAPPA   = 1.0;    % elongation
 DELTA   = 0.0;    % triangularity
 ZETA    = 0.0;    % squareness
 PARALLEL_BC = 'dirichlet'; %'dirichlet','periodic','shearless','disconnected'
 SHIFT_Y = 0.0;
 %% TIME PARMETERS
-TMAX    = 60;  % Maximal time unit
+TMAX    = 100;  % Maximal time unit
 DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = -1;      % Sampling per time unit for 2D arrays
@@ -90,7 +90,7 @@ INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_X    = MU;     %
 MU_Y    = MU;     %
 N_HD    = 4;
-MU_Z    = 2.0;     %
+MU_Z    = 1.0;     %
 MU_P    = 0.0;     %
 MU_J    = 0.0;     %
 LAMBDAD = 0.0;
@@ -107,9 +107,9 @@ setup
 if RUN
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 2 3 0; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
 end
 
 %% Load results
@@ -121,10 +121,10 @@ JOBNUMMIN = 00; JOBNUMMAX = 01;
 data = compile_results(LOCALDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 
 %% Short analysis
-if 1
+if 0
 %% linear growth rate (adapted for 2D zpinch and fluxtube)
 options.TRANGE = [0.5 1]*data.Ts3D(end);
-options.NPLOTS = 2; % 1 for only growth rate and error, 2 for omega local evolution, 3 for plot according to z
+options.NPLOTS = 3; % 1 for only growth rate and error, 2 for omega local evolution, 3 for plot according to z
 options.GOK    = 0; %plot 0: gamma 1: gamma/k 2: gamma^2/k^3
 lg = compute_fluxtube_growth_rate(data,options);
 [gmax,     kmax] = max(lg.g_ky(:,end));
@@ -170,7 +170,7 @@ options.kzky = 0;
 [lg, fig] = compute_3D_zpinch_growth_rate(data,trange,options);
 save_figure(data,fig)
 end
-if 0
+if 1
 %% Mode evolution
 options.NORMALIZED = 0;
 options.K2PLOT = 1;
