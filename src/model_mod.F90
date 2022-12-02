@@ -24,10 +24,10 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED :: sigma_i =  1._dp     !
   REAL(dp), PUBLIC, PROTECTED ::     q_e = -1._dp     ! Charge
   REAL(dp), PUBLIC, PROTECTED ::     q_i =  1._dp     !
-  REAL(dp), PUBLIC, PROTECTED ::    k_Ni =  7._dp     ! Ion density drive
-  REAL(dp), PUBLIC, PROTECTED ::    k_Ne =  7._dp     ! Ele ''
-  REAL(dp), PUBLIC, PROTECTED ::    k_Ti =  2._dp     ! Ion temperature drive
-  REAL(dp), PUBLIC, PROTECTED ::    k_Te =  2._dp     ! Ele ''
+  REAL(dp), PUBLIC, PROTECTED ::    k_Ni =  0._dp     ! Ion density drive
+  REAL(dp), PUBLIC, PROTECTED ::    k_Ne =  0._dp     ! Ele ''
+  REAL(dp), PUBLIC, PROTECTED ::    k_Ti =  0._dp     ! Ion temperature drive
+  REAL(dp), PUBLIC, PROTECTED ::    k_Te =  0._dp     ! Ele ''
   REAL(dp), PUBLIC, PROTECTED ::     K_E =  0._dp     ! Backg. electric field drive
   REAL(dp), PUBLIC, PROTECTED ::   GradB =  1._dp     ! Magnetic gradient
   REAL(dp), PUBLIC, PROTECTED ::   CurvB =  1._dp     ! Magnetic curvature
