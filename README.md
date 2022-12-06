@@ -1,4 +1,5 @@
-![Alt Text](https://c4scdn.ch/file/data/7a6vpqgtfcxtwhkpd4hu/PHID-FILE-wlsgn3omnbfilbqnzsvb/ezgif-2-ebfac79eeb26.gif)
+![Alt Text]() <img src="https://c4scdn.ch/file/data/7a6vpqgtfcxtwhkpd4hu/PHID-FILE-wlsgn3omnbfilbqnzsvb/ezgif-2-ebfac79eeb26.gif" width="120">
+
 GYACOMO (Gyrokinetic Advanced Collision Moment solver, 2021)
 Copyright (C) 2022  A.C.D. Hoffmann
 
