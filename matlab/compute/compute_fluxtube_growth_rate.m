@@ -18,21 +18,36 @@ w_ky = zeros(sum(ikynz),ite-its);
 ce   = zeros(sum(ikynz),ite-its);
 
 is = 1;
+% for it = its+1:ite
+%     phi_n   = phi(:,:,:,it); 
+%     phi_nm1 = phi(:,:,:,it-1);
+%     dt      = t(it)-t(it-1);
+%     ZS      = sum(sum(phi_nm1,2),3);
+%    
+%     wl         = log(phi_n./phi_nm1)/dt;
+%     w_ky(:,is) = squeeze(sum(sum(wl.*phi_nm1,2),3)./ZS);
+%     
+%     for iky = 1:numel(w_ky(:,is))
+%         ce(iky,is)   = abs(sum(sum(abs(w_ky(iky,is)-wl(iky,:,:)).^2.*phi_nm1(iky,:,:),2),3)./ZS(iky,:,:));
+%     end
+%     is = is + 1;
+% end
+%no sum over kx version
+ikx = 1;
 for it = its+1:ite
-    phi_n   = phi(:,:,:,it); 
-    phi_nm1 = phi(:,:,:,it-1);
+    phi_n   = squeeze(phi(:,ikx,:,it)); 
+    phi_nm1 = squeeze(phi(:,ikx,:,it-1));
     dt      = t(it)-t(it-1);
-    ZS      = sum(sum(phi_nm1,2),3);
+    ZS      = sum(phi_nm1,2); %sum over z
    
     wl         = log(phi_n./phi_nm1)/dt;
-    w_ky(:,is) = squeeze(sum(sum(wl.*phi_nm1,2),3)./ZS);
+    w_ky(:,is) = squeeze(sum(wl.*phi_nm1,2)./ZS);
     
     for iky = 1:numel(w_ky(:,is))
-        ce(iky,is)   = abs(sum(sum(abs(w_ky(iky,is)-wl(iky,:,:)).^2.*phi_nm1(iky,:,:),2),3)./ZS(iky,:,:));
+        ce(iky,is)   = abs(sum(abs(w_ky(iky,is)-wl(iky,:)).^2.*phi_nm1(iky,:),2)./ZS(iky,:));
     end
     is = is + 1;
 end
-
 
 [kys, Is] = sort(DATA.ky(ikynz));
 
