@@ -1,5 +1,9 @@
+<figure>
 <img src="https://c4scdn.ch/file/data/7a6vpqgtfcxtwhkpd4hu/PHID-FILE-wlsgn3omnbfilbqnzsvb/ezgif-2-ebfac79eeb26.gif" width="240">
-*Turbulence in a Z-pinch simulation*
+<figcaption align = "center">
+<i>Turbulence in a Z-pinch</i>
+</figcaption>
+</figure>
 
 GYACOMO (Gyrokinetic Advanced Collision Moment solver, 2021)
 Copyright (C) 2022  A.C.D. Hoffmann
