@@ -1,7 +1,7 @@
 <figure>
 <img src="https://c4scdn.ch/file/data/7a6vpqgtfcxtwhkpd4hu/PHID-FILE-wlsgn3omnbfilbqnzsvb/ezgif-2-ebfac79eeb26.gif" width="240">
 <figcaption align = "center">
-<i>Turbulence in a Z-pinch</i>
+<i>Turbulence in a Z-pinch (the axis (r,z) corresponds to (x,y) in the current version of the code)</i>
 </figcaption>
 </figure>
 
