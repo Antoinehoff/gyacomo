@@ -290,8 +290,8 @@ SUBROUTINE init_phi
 
     DO ikx=ikxs,ikxe
       DO iky=ikys,ikye
+        CALL RANDOM_NUMBER(noise)
         DO iz=izs,ize
-          CALL RANDOM_NUMBER(noise)
           phi(iky,ikx,iz) = (init_background + init_noiselvl*(noise-0.5_dp))!*AA_x(ikx)*AA_y(iky)
         ENDDO
       END DO
