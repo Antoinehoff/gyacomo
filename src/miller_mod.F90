@@ -15,24 +15,13 @@ MODULE miller
   public:: get_miller, set_miller_parameters
   public:: rho, kappa, delta, s_kappa, s_delta, drR, drZ, zeta, s_zeta
   public:: thetaShift
-  public:: mMode, nMode
   public:: thetak, thetad
-  public:: aSurf, Delta2, Delta3, theta2, theta3, Raxis, Zaxis
-  public:: Deltam, Deltan, s_Deltam, s_Deltan, thetam, thetan
-  public:: cN_m, sN_m, cNdr_m, sNdr_m
 
   private
 
   real(dp) :: rho, kappa, delta, s_kappa, s_delta, drR, drZ, zeta, s_zeta
-
-  INTEGER :: mMode, nMode
   real(dp) :: thetaShift
   real(dp) :: thetak, thetad
-  real(dp) :: aSurf, Delta2, Delta3, theta2, theta3, Raxis, Zaxis
-  real(dp) :: Deltam, Deltan, s_Deltam, s_Deltan, thetam, thetan
-
-  INTEGER, PARAMETER :: IND_M=32
-  real(dp), DIMENSION(0:IND_M-1) :: cN_m, sN_m, cNdr_m, sNdr_m
 
 CONTAINS
 
@@ -52,27 +41,6 @@ CONTAINS
     thetak = 0.0
     thetad = 0.0
 
-    aSurf = 0.54
-    Delta2 = 1.0
-    Delta3 = 1.0
-    theta2 = 0.0
-    theta3 = 0.0
-    Raxis = 1.0
-    Zaxis = 0.0
-
-    mMode = 2
-    nMode = 3
-    Deltam = 1.0
-    Deltan = 1.0
-    s_Deltam = 0.0
-    s_Deltan = 0.0
-    thetam = 0.0
-    thetan = 0.0
-
-    cN_m = 0.0
-    sN_m = 0.0
-    cNdr_m = 0.0
-    sNdr_m = 0.0
   end subroutine set_miller_parameters
 
   !>Get Miller metric, magnetic field, jacobian etc.
