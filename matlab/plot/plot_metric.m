@@ -1,7 +1,10 @@
 function [ fig ] = plot_metric( data, options )
 
-names = {'Jacobian','gradxB','gradyB','gradzB','gradz_coeff',...
-         'gxx','gxy','gyy','gyz','gzz','hatB','hatR','hatZ'};
+% names = {'Jacobian','gradxB','gradyB','gradzB','gradz_coeff',...
+%          'gxx','gxy','gxz','gyy','gyz','gzz','hatB','hatR','hatZ'};
+names = {'gxx','gxy','gxz','gyy','gyz','gzz',...
+         'hatB', 'gradxB', 'gradyB', 'gradzB',...
+         'Jacobian','hatR','hatZ','gradz_coeff'};
 geo_arrays = zeros(2,data.Nz,numel(names));
 
 for i_ = 1:numel(names)
@@ -13,19 +16,19 @@ if NPLOT > 0
     fig = figure;
     if options.SHOW_METRICS
     subplot(311)
-        for i = 1:5
+        for i = 1:6
         plot(data.z, geo_arrays(1,:,i),'DisplayName',names{i}); hold on;
         end
         xlim([min(data.z),max(data.z)]); legend('show'); title('GYACOMO geometry');
 
     subplot(312)
-        for i = 6:10
+        for i = 7:10
         plot(data.z, geo_arrays(1,:,i),'DisplayName',names{i}); hold on;
         end
         xlim([min(data.z),max(data.z)]); legend('show');
 
     subplot(313)
-        for i = 11:13
+        for i = 11:14
         plot(data.z, geo_arrays(1,:,i),'DisplayName',names{i}); hold on;
         end
         xlim([min(data.z),max(data.z)]); legend('show');

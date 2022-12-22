@@ -136,7 +136,11 @@ if (NZ > 1)  %3D case
 end
 switch GEOMETRY
     case 'circular'
-       geo_   = [geo_,'_circ_'];
+       geo_   = [geo_,'_cir_'];
+    case 's-alpha'
+       geo_   = [geo_,'_s-a_'];
+    case 'miller'
+       geo_   = [geo_,'_mil_'];
 end
         
 % put everything together in the param character chain
@@ -175,9 +179,9 @@ end
 if ~exist(BASIC.RESDIR, 'dir')
 mkdir(BASIC.RESDIR)
 end
-if ~exist(BASIC.MISCDIR, 'dir')
-mkdir(BASIC.MISCDIR)
-end
+% if ~exist(BASIC.MISCDIR, 'dir')
+% mkdir(BASIC.MISCDIR)
+% end
 %% Compile and WRITE input file
 INPUT = write_fort90(OUTPUTS,GRID,GEOM,MODEL,COLL,INITIAL,TIME_INTEGRATION,BASIC);
 nproc = 1;

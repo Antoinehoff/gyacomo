@@ -1,40 +1,45 @@
-gyacomodir = '/home/ahoffman/gyacomo/';
+gyacomodir  = pwd;
+gyacomodir = gyacomodir(1:end-2);
 addpath(genpath([gyacomodir,'matlab'])) % ... add
 addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
 addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0';
 % EXECNAME = 'gyacomo_dbg';
-EXECNAME = 'gyacomo';
+% EXECNAME = 'gyacomo';
+EXECNAME = 'gyacomo_alpha';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%
 % SIMID = 'linear_CBC_nu+PJ_scan_kT_6.96_SGGK';  % Name of the simulation
-SIMID = 'convergence_pITG_dbg';  % Name of the simulation
+SIMID = 'convergence_pITG_miller';  % Name of the simulation
 % SIMID = 'linear_CBC_nu_scan_kT_11_ky_0.3_DGGK';  % Name of the simulation
-RERUN   = 1; % If you want to rerun the sim (bypass the check of existing data)
+RUN     = 0; % to make sure it does not try to run
+RERUN   = 0; % rerun if the data does not exist
 
+NU_a = [0.02];
+P_a  = [24];
 % NU_a = [0.0 0.01 0.02 0.05 0.1];
-NU_a = [0.0];
-P_a  = [30];
-% P_a  = [2 4:4:36];
+% P_a  = [2 4:4:28];
+% P_a  = [24:4:28];
 J_a  = floor(P_a/2);
 % collision setting
 CO        = 'DG';
 GKCO      = 0; % gyrokinetic operator
 COLL_KCUT = 1.75;
 % model
-KIN_E   = 0;         % 1: kinetic electrons, 2: adiabatic electrons
+KIN_E   = 1;         % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 1e-4;     % electron plasma beta
 % background gradients setting
-K_Ne    = 0*2.22;            % ele Density '''
-K_Te    = 0*6.96;            % ele Temperature '''
-K_Ni    = 0*2.22;            % ion Density gradient drive
+K_Ne    = 1*2.22;            % ele Density '''
+K_Te    = 1*6.96;            % ele Temperature '''
+K_Ni    = 1*2.22;            % ion Density gradient drive
 K_Ti    = 6.96;            % ion Temperature '''
 % Geometry
 GEOMETRY= 'miller';
 % GEOMETRY= 's-alpha';
-SHEAR   = 0.0;    % magnetic shear
+SHEAR   = 0.8;    % magnetic shear
 % time and numerical grid
-DT    = 1e-2;
+% DT    = 2e-3;
+DT    = 5e-4;
 TMAX  = 50;
 kymin = 0.4;
 NY    = 2;
@@ -58,7 +63,7 @@ for NU = NU_a
     JMAXE   = J;     % Laguerre "
     PMAXI   = P;     % " ions
     JMAXI   = J;     % "
-    NX      = 2;    % real space x-gridpoints
+    NX      = 8;    % real space x-gridpoints
     LX      = 2*pi/0.8;   % Size of the squared frequency domain
     LY      = 2*pi/kymin;     % Size of the squared frequency domain
     NZ      = 24;    % number of perpendicular planes (parallel grid)
@@ -122,7 +127,7 @@ for NU = NU_a
     LOCALDIR  = [gyacomodir,'results/',filename,'/'];
     % check if data exist to run if no data
     data = compile_results(LOCALDIR,0,0); %Compile the results from first output found to JOBNUMMAX if existing
-    if (RERUN || isempty(data.NU_EVOL))
+    if ((RERUN || isempty(data.NU_EVOL)) && RUN)
         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
 %         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
     end

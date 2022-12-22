@@ -69,13 +69,13 @@ options.NAME      = '\phi';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+options.PLAN      = 'yz';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
 % options.TIME      =  data.Ts3D;
-options.TIME      = [6000:1:9000];
+options.TIME      = [1:1:9000];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
@@ -85,9 +85,9 @@ end
 if 0
 %% 2D snapshots
 % Options
-options.INTERP    = 1;
+options.INTERP    = 0;
 options.POLARPLOT = 0;
-options.AXISEQUAL = 1;
+options.AXISEQUAL = 0;
 options.NAME      = '\phi';
 % options.NAME      = '\psi';
 % options.NAME      = 'n_i';
@@ -95,11 +95,11 @@ options.NAME      = '\phi';
 % options.NAME      = 'T_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
-options.NAME      = 'f_i';
-options.PLAN      = 'sx';
+options.PLAN      = 'kxz';
+% options.NAME      = 'f_i';
+% options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [5 20 50 100 150];
+options.TIME      = [100 250 300];
 options.RESOLUTION = 256;
 
 data.a = data.EPS * 2e3;
@@ -124,12 +124,15 @@ end
 if 0
 %% Kinetic distribution function sqrt(<f_a^2>xy) (GENE vsp)
 % options.SPAR      = linspace(-3,3,32)+(6/127/2);
-% options.XPERP     = linspace( 0,6,32);
-options.SPAR      = gene_data.vp';
-options.XPERP     = gene_data.mu';
+options.SPAR      = linspace(-3,3,32);
+options.XPERP     = linspace( 0,sqrt(6),16).^2;
+% options.SPAR      = gene_data.vp';
+% options.XPERP     = gene_data.mu';
 options.iz        = 'avg';
-options.T         = [100 150];
-options.PLT_FCT   = 'contour';
+options.T         = [100];
+% options.PLT_FCT   = 'contour';
+% options.PLT_FCT   = 'contourf';
+options.PLT_FCT   = 'surfvv';
 options.ONED      = 0;
 options.non_adiab = 0;
 options.SPECIE    = 'i';
@@ -142,11 +145,11 @@ if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
 options.P2J        = 0;
-options.ST         = 1;
+options.ST         = 0;
 options.PLOT_TYPE  = 'space-time';
 options.NORMALIZED = 0;
 options.JOBNUM     = 0;
-options.TIME       = [1000];
+options.TIME       = [200:500];
 options.specie     = 'i';
 options.compz      = 'avg';
 fig = show_moments_spectrum(data,options);
@@ -212,8 +215,8 @@ end
 
 if 0
 %% Metric infos
-options.SHOW_FLUXSURF = 1;
-options.SHOW_METRICS  = 0;
+options.SHOW_FLUXSURF = 0;
+options.SHOW_METRICS  = 1;
 fig = plot_metric(data,options);
 end
 

@@ -31,7 +31,7 @@ gyacomodir = '/home/ahoffman/gyacomo/';
 %% CBC
 % resdir = 'CBC/64x32x16x5x3';
 % resdir = 'CBC/64x128x16x5x3';
-% resdir = 'CBC/old/128x64x16x5x3';
+resdir = 'CBC/old/128x64x16x5x3';
 % resdir = 'CBC/96x96x16x3x2_Nexc_6';
 % resdir = 'CBC/128x96x16x3x2_Nexc_0';
 % resdir = 'CBC/old/192x96x24x13x7';
@@ -45,7 +45,7 @@ gyacomodir = '/home/ahoffman/gyacomo/';
 % resdir = 'CBC/64x32x16x3x2_Nexc_3_change_dt';
 % resdir = 'CBC/64x32x16x3x2_Nexc_6';
 % resdir = 'CBC/64x32x16x3x2_Nexc_0';
-resdir = 'CBC/64x32x16x3x2_Nexc_0_change_dt';
+% resdir = 'CBC/64x32x16x3x2_Nexc_0_change_dt';
 % resdir = 'CBC/128x96x16x3x2_Nexc_0';
 % resdir = 'CBC/128x96x16x3x2_Nexc_0';
 

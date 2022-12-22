@@ -17,6 +17,9 @@ end
 FRAMES = unique(FRAMES);
 t  = DATA.Ts3D(FRAMES);
 
+% time window where we measure the growth
+it1 = floor(numel(t)/2);
+it2 = numel(t);
 
 [~,ikzf] = max(mean(squeeze(abs(field(1,:,FRAMES))),2));
 
@@ -77,7 +80,8 @@ for i = 1:2
     amp   = MODES;
     i_=1;
     for ik = MODES
-        gr = polyfit(t,log(plt(field,ik)),1);
+        to_measure = log(plt(field,ik));
+        gr = polyfit(t(it1:it2),to_measure(it1:it2),1);
         gamma(i_) = gr(1);
         amp(i_)   = gr(2);
         i_=i_+1;
@@ -101,14 +105,18 @@ for i = 1:2
         if MODES_SELECTOR == 2
             semilogy(t,plt(field,ikzf),'--k');
         end
+        %plot the time window where the gr are measured
+        plot(t(it1)*[1 1],[1e-10 1],'--k')
+        plot(t(it2)*[1 1],[1e-10 1],'--k')
         xlim([t(1) t(end)]); %ylim([1e-5 1])
         xlabel('$t c_s /\rho_s$'); ylabel(['$|\phi_{',kstr,'}|$']);
         title('Measure time window')
 
     subplot(2,3,3+3*(i-1))
-        plot(k(MODES),gamma); hold on;
+        plot(k(MODES),gamma,...
+                'DisplayName',['(',num2str(DATA.Pmaxi-1),',',num2str(DATA.Jmaxi-1),')']); hold on;
         for i_ = 1:numel(mod2plot)
-            plot(k(MODES(mod2plot(i_))),gamma(mod2plot(i_)),'x','color',clr_(i_,:))
+            plot(k(MODES(mod2plot(i_))),gamma(mod2plot(i_)),'x','color',clr_(i_,:));
         end
         if MODES_SELECTOR == 2
             plot(k(ikzf),gamma(ikzf),'ok');

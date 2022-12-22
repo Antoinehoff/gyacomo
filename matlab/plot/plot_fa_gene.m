@@ -73,6 +73,10 @@ switch specie
             pclr = contourf(SS,XX,FFa);
         case 'pcolor'
             pclr = pcolor(SS,XX,FFa); set(pclr, 'edgecolor','none'); shading interp
+        case 'surf'
+            surf(SS,XX,FFa);
+        case 'surfvv'
+            surf([SS; SS(:,end-1:-1:1)],sqrt([XX; XX(:,end-1:-1:1)]),[FFa; FFa(:,end-1:-1:1)]);
     end
     case 'i'
     name  = '$f_i(v_\parallel,\mu_p)$';
@@ -85,6 +89,13 @@ switch specie
             pclr = contourf(SS,XX,FFa,(nvp+nmu)/2);
         case 'pcolor'
             pclr = pcolor(SS,XX,FFa); set(pclr, 'edgecolor','none'); shading interp
+        case 'surf'
+            surf(SS,XX,FFa);
+        case 'surfvv'
+            surf([SS(:,end:-1:1) SS ],[-sqrt(XX(:,end:-1:1)) sqrt(XX)],[FFa(:,end:-1:1) FFa]);
+            xlabel('$v_\parallel$'); ylabel('$v_\perp$');
+            xlim([min(vp) max(vp)]);
+            ylim(sqrt(max(mu))*[-1 1]);
     end
 end
 if numel(TIMES) == 1

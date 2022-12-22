@@ -13,7 +13,7 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
 % folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_0.8/';
 % folder = '/misc/gene_results/Z-pinch/HP_fig_2a_mu_1e-2/';
-folder = '/misc/gene_results/Z-pinch/HP_fig_2a_gyroLES/';
+% folder = '/misc/gene_results/Z-pinch/HP_fig_2a_gyroLES/';
 % folder = '/misc/gene_results/Z-pinch/HP_fig_2b_mu_5e-2/';
 % folder = '/misc/gene_results/Z-pinch/HP_fig_2c_mu_5e-2/';
 % folder = '/misc/gene_results/Z-pinch/HP_fig_2c_gyroLES/';
@@ -27,7 +27,8 @@ folder = '/misc/gene_results/Z-pinch/HP_fig_2a_gyroLES/';
 % folder = '/misc/gene_results/Z-pinch/kN_2.5_HD_transport_spectrum_01/';
 
 % folder = '/misc/gene_results/CBC/128x64x16x24x12/';
-% folder = '/misc/gene_results/CBC/196x96x20x32x16_02/';
+% folder = '/misc/gene_results/CBC/196x96x20x32x16_01/';
+% folder = '/misc/gene_results/CBC/256x96x24x32x12/';
 % folder = '/misc/gene_results/CBC/128x64x16x6x4/';
 % folder = '/misc/gene_results/CBC/KT_5.3_128x64x16x24x12_01/';
 % folder = '/misc/gene_results/CBC/KT_4.5_128x64x16x24x12_01/';
@@ -41,6 +42,9 @@ folder = '/misc/gene_results/Z-pinch/HP_fig_2a_gyroLES/';
 % folder = '/misc/gene_results/CBC/KT_5.3_192x96x24x30x16_00/';
 % folder = '/misc/gene_results/CBC/KT_6.96_64x32x32x24x12_Nexc_5/';
 
+% folder = '/misc/gene_results/CBC/196x96x20x32x16_01/';
+% folder = '/misc/gene_results/linear_miller_CBC/hdf5_miller_s0_adiabe/';
+folder = '/misc/gene_results/linear_miller_CBC/hdf5_salpha_s0_adiabe/';
 gene_data = load_gene_data(folder);
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 if 1
@@ -70,15 +74,15 @@ options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 0;
 % options.NAME      = 'Q_x';
-% options.NAME      = '\phi';
-options.NAME      = 'n_i';
+options.NAME      = '\phi';
+% options.NAME      = 'n_i';
 % options.NAME      = '\Gamma_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxz';
 % options.NAME      ='f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
-options.TIME      = [1:10];
+options.TIME      = [40 55 70];
 gene_data.a = data.EPS * 2000;
 fig = photomaton(gene_data,options);
 save_figure(gene_data,fig,'.png')
@@ -89,11 +93,11 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-% options.NAME      = '\phi';
+options.NAME      = '\phi';
 % options.NAME      = 'v_y';
 % options.NAME      = '\Gamma_x';
-options.NAME      = 'n_i';
-options.PLAN      = 'xy';
+% options.NAME      = 'n_i';
+options.PLAN      = 'kyz';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -122,7 +126,7 @@ subplot(312)
     xlim([min(gene_data.z),max(gene_data.z)]); legend('show');
 
 subplot(313)
-    for i = 11:16
+    for i = [11 12 14]
     plot(gene_data.z, gene_data.geo_arrays(:,i),'DisplayName',names{i}); hold on;
     end
     xlim([min(gene_data.z),max(gene_data.z)]); legend('show');
@@ -131,9 +135,12 @@ end
 
 if 0
 %% Show f_i(vpar,mu)
-options.times   = 100:200;
+options.times   = 70;
 options.specie  = 'i';
-options.PLT_FCT = 'contour';
+% options.PLT_FCT = 'contour';
+% options.PLT_FCT = 'contourf';
+% options.PLT_FCT = 'surf';
+options.PLT_FCT = 'surfvv';
 options.folder  = folder;
 options.iz      = 'avg';
 options.FIELD   = '<f_>';

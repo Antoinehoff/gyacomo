@@ -41,7 +41,7 @@
 % fname ='GENE_LIN_Kn_1.6_KT_0.4_nu_0_32x16.txt';
 % fname ='GENE_LIN_Kn_2.5_KT_0.625_nu_0_32x16.txt';
 path = '/home/ahoffman/gene/linear_CBC_results/';
-fname = 'CBC_100_20x1x32x30x14_Lv_3_Lw_12_circ.txt';
+% fname = 'CBC_100_20x1x32x30x14_Lv_3_Lw_12_circ.txt';
 % fname = 'CBC_100_20x1x32x32x12_Lv_3_Lw_12.txt';
 % fname = 'CBC_KT_4_20x1x32x32x12_Lv_3_Lw_12.txt';
 % fname = 'CBC_KT_4_20x1x32x64x24_Lv_6_Lw_24.txt';
@@ -52,8 +52,38 @@ fname = 'CBC_100_20x1x32x30x14_Lv_3_Lw_12_circ.txt';
 % fname = 'CBC_KT_11_20x1x16x24x10_Lv_3_Lw_12.txt';
 % fname = 'CBC_KT_11_20x1x32x30x14_Lv_3_Lw_12.txt';
 % fname = 'CBC_ky_0.3_20x1x16x24x10_Lv_3_Lw_12_nuv_1e-3.txt';
+%----------Shearless CBC
+% fname = 'CBC_salpha_s0_nz_24_nv_48_nw_16_adiabe.txt';
+% fname = 'CBC_salpha_s0_nz_24_nv_48_nw_16_kine.txt';
+% fname = 'CBC_salpha_s0_nz_24_nv_48_nw_16_kine_beta_1e-4.txt';
+% fname = 'CBC_miller_s0_nz_24_nv_48_nw_16_adiabe.txt';
+% fname = 'CBC_miller_s0_nz_24_nv_48_nw_16_kine.txt';
+%----------Shearless pITG
+% fname = 'pITG_salpha_s0_nz_24_nv_48_nw_16_adiabe.txt';
+% fname = 'pITG_miller_s0_nz_24_nv_48_nw_16_adiabe.txt';
+% fname = 'pITG_salpha_s0_nz_24_nv_48_nw_16_kine.txt';
+% fname = 'pITG_miller_s0_nz_24_nv_48_nw_16_kine.txt';
+%----------Convergence nvpar shearless pITG
+% fname = 'pITG_salpha_s0_nz_24_nv_scan_nw_16_adiabe.txt';
+% fname = 'pITG_miller_s0_nz_24_nv_scan_nw_16_adiabe.txt';
+% fname = 'pITG_salpha_s0_nz_24_nv_scan_nw_16_kine.txt';
+% fname = 'pITG_miller_s0_nz_24_nv_scan_nw_16_kine.txt';
+% fname = 'pITG_salpha_s0_nz_24_nv_scan_nw_24_adiabe.txt';
+% fname = 'pITG_miller_s0_nz_24_nv_scan_nw_24_adiabe.txt';
+%----------Convergence nvpar shearless CBC
+% fname = 'CBC_salpha_nz_24_nv_scan_nw_16_adiabe.txt';
+% fname = 'CBC_miller_nz_24_nv_scan_nw_16_adiabe.txt';
+% fname = 'CBC_salpha_nz_24_nv_scan_nw_16_kine.txt';
+fname = 'CBC_miller_nz_24_nv_scan_nw_16_kine.txt';
+%---------- CBC
+% fname = 'CBC_salpha_nx_8_nz_24_nv_36_nw_16_adiabe.txt';
+% fname = 'CBC_salpha_nx_8_nz_24_nv_36_nw_16_kine.txt';
+% fname = 'CBC_miller_nx_20_nz_32_nv_32_nw_12_adiabe.txt';
+% fname = 'CBC_miller_nx_8_nz_24_nv_36_nw_16_adiabe.txt';
+% fname = 'CBC_miller_nx_20_nz_32_nv_32_nw_12_kine.txt';
+% fname = 'CBC_miller_nx_8_nz_24_nv_36_nw_16_kine.txt';
 data_ = load([path,fname]);
 
 figure
-plot(data_(:,2),data_(:,3),'-dk','DisplayName','GENE'); hold on;
-plot(data_(:,2),data_(:,4),'--*k','DisplayName','GENE');
+plot(data_(:,2),data_(:,3),'-dk','DisplayName',fname); hold on;
+plot(data_(:,2),data_(:,4),'--*k','DisplayName',fname);

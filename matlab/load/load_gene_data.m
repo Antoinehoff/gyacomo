@@ -21,7 +21,12 @@ DATA.Ny  = DATA.Nky*2-1;
 DATA.z   = h5read([folder,coofile],'/coord/z');
 DATA.Nz  = numel(DATA.z);
 
-dkx = DATA.kx(2); dky = DATA.ky(2);
+if numel(DATA.kx)>1
+    dkx = DATA.kx(2); 
+else
+    dkx = 1;
+end
+dky = DATA.ky(2);
 Lx = 2*pi/dkx;   Ly = 2*pi/dky;
 x = linspace(-Lx/2,Lx/2,DATA.Nx+1); x = x(1:end-1);
 y = linspace(-Ly/2,Ly/2,DATA.Ny+1); y = y(1:end-1);
@@ -48,14 +53,14 @@ for jt = 1:numel(DATA.Ts3D)
     t = DATA.Ts3D(jt);
     [~, it] = min(abs(DATA.Ts3D-t));
 % 
-    tmp = h5read([folder,momfile],['/mom_ions/dens/',sprintf('%10.10d',it-1)]);
-    DATA.DENS_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
-% 
-    tmp = h5read([folder,momfile],['/mom_ions/T_par/',sprintf('%10.10d',it-1)]);
-    DATA.TPAR_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
-%  
-    tmp = h5read([folder,momfile],['/mom_ions/T_perp/',sprintf('%10.10d',it-1)]);
-    DATA.TPER_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
+%     tmp = h5read([folder,momfile],['/mom_ions/dens/',sprintf('%10.10d',it-1)]);
+%     DATA.DENS_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
+% % 
+%     tmp = h5read([folder,momfile],['/mom_ions/T_par/',sprintf('%10.10d',it-1)]);
+%     DATA.TPAR_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
+% %  
+%     tmp = h5read([folder,momfile],['/mom_ions/T_perp/',sprintf('%10.10d',it-1)]);
+%     DATA.TPER_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
 %     
     tmp = h5read([folder,phifile],['/field/phi/',sprintf('%10.10d',it-1)]);
     DATA.PHI(:,:,:,it) = tmp.real + 1i*tmp.imaginary;

@@ -12,7 +12,13 @@ data.TEMP_I = rotate(data.TEMP_I);
 data.Ny = data.Nky*2-1;
 data.Nx = data.Nkx;
 
-dkx = data.kx(2); dky = data.ky(2);
+if numel(data.kx)>1
+    dkx = data.kx(2); 
+else
+    dkx = 1;
+end
+
+dky = data.ky(2);
 Lx = 2*pi/dkx;   Ly = 2*pi/dky;
 x = linspace(-Lx/2,Lx/2,data.Nx+1); x = x(1:end-1);
 y = linspace(-Ly/2,Ly/2,data.Ny+1); y = y(1:end-1);

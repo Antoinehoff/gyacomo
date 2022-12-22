@@ -26,17 +26,27 @@ if OPTIONS.ONED
         end
 
 else
-    [SS,XX,FFa] = compute_fa_2D(DATA, OPTIONS);  sz = size(SS);
+    [SS,XX,FFa] = compute_fa_2D(DATA, OPTIONS);  sz = size(SS); FFa = FFa';
     [~,it] = min(abs(OPTIONS.T-DATA.Ts5D)); 
         switch OPTIONS.PLT_FCT
             case 'contour'
-            contour(SS,XX,FFa',sum(sz)/2);
+            contour(SS,XX,FFa,sum(sz)/2);
+            xlabel('$v_\parallel$'); ylabel('$\mu$');
             case 'pcolor'
-            pclr = pcolor(SS,XX,FFa'); set(pclr, 'edgecolor','none'); shading interp
+            pclr = pcolor(SS,XX,FFa); set(pclr, 'edgecolor','none'); shading interp
+            xlabel('$v_\parallel$'); ylabel('$\mu$');
             case 'contourf'
-            contourf(SS,XX,FFa',sum(sz)/2);                
+            contourf(SS,XX,FFa,sum(sz)/2);    
+            xlabel('$v_\parallel$'); ylabel('$\mu$');
+            case 'surf'
+            surf(SS,XX,FFa); 
+            xlabel('$v_\parallel$'); ylabel('$\mu$');
+            case 'surfvv'
+            surf([SS(end:-1:1,:) SS ],[-sqrt(XX(end:-1:1,:)) sqrt(XX)],[FFa(end:-1:1,:) FFa]);
+            xlabel('$v_\parallel$'); ylabel('$v_\perp$');
+            xlim([min(OPTIONS.SPAR) max(OPTIONS.SPAR)]);
+            ylim(sqrt(max(OPTIONS.XPERP))*[-1 1]);
         end
-        xlabel('$v_\parallel$'); ylabel('$\mu$');
         legend(['$\langle |f_',OPTIONS.SPECIE,'|^2\rangle_{xy}^{1/2}$',zcomp])
         if numel(it) == 1
             title(['HeLaZ''$\langle |f_',OPTIONS.SPECIE...
