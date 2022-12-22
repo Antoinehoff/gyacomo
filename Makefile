@@ -1,9 +1,10 @@
 include local/dirs.inc
 include local/make.inc
-
-EXEC = $(BINDIR)/gyacomo
-EFST = $(BINDIR)/gyacomo_fst
-EDBG = $(BINDIR)/gyacomo_dbg
+#Different namings depending on the make input
+EXEC = $(BINDIR)/gyacomo				#all
+EFST = $(BINDIR)/gyacomo_fast		#fast
+EDBG = $(BINDIR)/gyacomo_debug	#debug
+EALP = $(BINDIR)/gyacomo_alpha  #alpha
 
 # F90 = mpiifort
 F90 = mpif90
@@ -17,18 +18,22 @@ F90 = mpif90
 # # Add lapack
 # EXTLIBS += -L$(LAPACKDIR)/lib
 # EXTINC += -I$(LAPACKDIR)/mod
-
+# Standard version with optimized compilation
 all: dirs src/srcinfo.h
 all: F90FLAGS = -O3 -xHOST
 all: $(EXEC)
-
+# Fast compilation
 fast: dirs src/srcinfo.h
 fast: F90FLAGS = -fast
 fast: $(EFST)
-
-dbg: dirs src/srcinfo.h
-dbg: F90FLAGS = -g -traceback -CB -ftrapuv -warn all -debug all
-dbg: $(EDBG)
+# Debug version with all flags
+debug: dirs src/srcinfo.h
+debug: F90FLAGS = -g -traceback -CB -ftrapuv -warn all -debug all
+debug: $(EDBG)
+# Alpha version, optimized as all but creates another binary
+alpha: dirs src/srcinfo.h
+alpha: F90FLAGS = -O3 -xHOST
+alpha: $(EALP)
 
 install: dirs src/srcinfo.h $(EXEC) mvmod
 
@@ -84,6 +89,10 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 
  $(EDBG): $(FOBJ)
 	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
+
+ $(EALP): $(FOBJ)
+	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
+
 
  $(OBJDIR)/advance_field.o : src/advance_field.F90 \
    $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/initial_par_mod.o \
