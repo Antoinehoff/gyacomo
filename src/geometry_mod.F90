@@ -55,7 +55,7 @@ implicit none
   REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: gxx, gxy, gxz, gyy, gyz, gzz ! dimensions: z, odd/even p
   REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dxdr, dxdZ, Rc, phic, Zc
   ! derivatives of magnetic field strength
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: gradxB, gradyB, gradzB
+  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dBdx, dBdy, dBdz
   ! Relative magnetic field strength
   REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatB, hatB_NL
   ! Relative strength of major radius
@@ -111,8 +111,8 @@ CONTAINS
     ELSE
       SELECT CASE(geom)
         CASE('s-alpha')
-          IF( my_id .eq. 0 ) WRITE(*,*) 's-alpha-B geometry'
-          call eval_salphaB_geometry
+          IF( my_id .eq. 0 ) WRITE(*,*) 's-alpha geometry'
+          call eval_salpha_geometry
         CASE('Z-pinch')
           IF( my_id .eq. 0 ) WRITE(*,*) 'Z-pinch geometry'
           call eval_zpinch_geometry
@@ -123,7 +123,7 @@ CONTAINS
           call set_miller_parameters(kappa,s_kappa,delta,s_delta,zeta,s_zeta)
           call get_miller(eps,major_R,major_Z,q0,shear,alpha_MHD,edge_opt,&
                C_y,C_xy,dpdx_pm_geom,gxx,gyy,gzz,gxy,gxz,gyz,&
-               gradxB,gradyB,hatB,jacobian,gradzB,hatR,hatZ,dxdR,dxdZ,&
+               dBdx,dBdy,hatB,jacobian,dBdz,hatR,hatZ,dxdR,dxdZ,&
                Ckxky,gradz_coeff)
         CASE DEFAULT
           STOP 'geometry not recognized!!'
@@ -139,9 +139,10 @@ CONTAINS
           ky = kyarray(iky)
           DO ikx = ikxs, ikxe
             kx = kxarray(ikx)
-            kparray(iky, ikx, iz, eo) = &
-            SQRT( gxx(iz,eo)*kx**2 + 2._dp*gxy(iz,eo)*kx*ky + gyy(iz,eo)*ky**2)/hatB(iz,eo)
             ! there is a factor 1/B from the normalization; important to match GENE
+            ! this factor comes from $b_a$ argument in the Bessel. Kperp is not used otherwise.
+            kparray(iky, ikx, iz, eo) = &
+            SQRT( gxx(iz,eo)*kx**2 + 2._dp*gxy(iz,eo)*kx*ky + gyy(iz,eo)*ky**2)/ hatB(iz,eo)
           ENDDO
         ENDDO
       ENDDO
@@ -150,18 +151,24 @@ CONTAINS
         G1 = gxy(iz,eo)*gxy(iz,eo)-gxx(iz,eo)*gyy(iz,eo)
         G2 = gxy(iz,eo)*gxz(iz,eo)-gxx(iz,eo)*gyz(iz,eo)
         G3 = gyy(iz,eo)*gxz(iz,eo)-gxy(iz,eo)*gyz(iz,eo)
-        Cx = (G1*gradyB(iz,eo) + G2*gradzB(iz,eo))/hatB(iz,eo)
-        Cy = (G3*gradzB(iz,eo) - G1*gradxB(iz,eo))/hatB(iz,eo)
+        ! Here we divide by hatB because our equation is formulated with grad(lnB) terms (not gradB like in GENE)
+        Cx =-(dBdy(iz,eo) + G2/G1*dBdz(iz,eo))/hatB(iz,eo)
+        Cy = (dBdx(iz,eo) - G3/G1*dBdz(iz,eo))/hatB(iz,eo)
 
         DO iky = ikys, ikye
           ky = kyarray(iky)
            DO ikx= ikxs, ikxe
              kx = kxarray(ikx)
-             Ckxky(iky, ikx, iz,eo) = (Cx*kx + Cy*ky)
+             Ckxky(iky, ikx, iz,eo) = (Cx*kx + Cy*ky)/C_xy
            ENDDO
         ENDDO
         ! coefficient in the front of parallel derivative
-        gradz_coeff(iz,eo) = 1._dp / jacobian(iz,eo) / hatB(iz,eo)
+        gradz_coeff(iz,eo) = 1._dp /(jacobian(iz,eo)*hatB(iz,eo))
+
+        ! Nonlinear term prefactor
+        ! (according to my derivations, there should be a metric dependent factor in front of the Poisson bracket)
+        hatB_NL(iz,eo) = 1._dp !Jacobian(iz,eo)*(gxx(iz,eo)*gyy(iz,eo) - gxy(iz,eo)**2)/hatB(iz,eo)
+
       ENDDO
     ENDDO
 
@@ -180,7 +187,7 @@ CONTAINS
   !--------------------------------------------------------------------------------
   !
 
-  SUBROUTINE eval_salphaB_geometry
+  SUBROUTINE eval_salpha_geometry
   ! evaluate s-alpha geometry model
   implicit none
   REAL(dp) :: z, kx, ky, Gx, Gy
@@ -196,11 +203,11 @@ CONTAINS
       gxz(iz,eo) = 0._dp
       gyy(iz,eo) = 1._dp + (shear*z - alpha_MHD*SIN(z))**2
       gyz(iz,eo) = 1._dp/eps
-      gzz(iz,eo) = 0._dp
+      gzz(iz,eo) = 1._dp/eps**2
       dxdR(iz,eo)= COS(z)
       dxdZ(iz,eo)= SIN(z)
 
-    ! Relative strengh of radius
+    ! Poloidal plane coordinates
       hatR(iz,eo) = 1._dp + eps*COS(z)
       hatZ(iz,eo) = 1._dp + eps*SIN(z)
 
@@ -209,37 +216,24 @@ CONTAINS
       phic(iz,eo) = z
       Zc  (iz,eo) = hatZ(iz,eo)
 
-    ! Jacobian
-      Jacobian(iz,eo) = q0*hatR(iz,eo)
-
     ! Relative strengh of modulus of B
-      hatB(iz,eo) = 1._dp / hatR(iz,eo)
+      hatB(iz,eo) = 1._dp/(1._dp + eps*COS(z))
+
+    ! Jacobian
+      Jacobian(iz,eo) = q0/hatB(iz,eo)
 
     ! Derivative of the magnetic field strenght
-      gradxB(iz,eo) = -COS(z) ! Gene put a factor hatB^2 or 1/hatR^2 in this
-      gradyB(iz,eo) =  0._dp
-      gradzB(iz,eo) =  eps*SIN(z)/hatR(iz,eo)  ! Gene put a factor hatB or 1/hatR in this
+      dBdx(iz,eo) = -COS(z)*hatB(iz,eo) ! LB = 1
+      dBdy(iz,eo) =  0._dp
+      dBdz(iz,eo) =  eps*SIN(z)*hatB(iz,eo)**2
 
-    ! Curvature operator
-    Gx =           (gxz(iz,eo) * gxy(iz,eo) - gxx(iz,eo) * gyz(iz,eo)) *eps*SIN(Z) ! Kx
-    Gy = -COS(z) + (gxz(iz,eo) * gyy(iz,eo) - gxy(iz,eo) * gyz(iz,eo)) *eps*SIN(Z) ! Ky
-    DO iky = ikys, ikye
-        ky = kyarray(iky)
-         DO ikx= ikxs, ikxe
-           kx = kxarray(ikx)
-           Ckxky(iky, ikx, iz,eo) = (-SIN(z)*kx - COS(z)*ky -(shear*z-alpha_MHD*SIN(z))*SIN(z)*ky)/ hatB(iz,eo)
-           ! Ckxky(iky, ikx, iz,eo) = (Gx*kx + Gy*ky) * hatB(iz,eo) ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
-         ENDDO
-      ENDDO
-    ! coefficient in the front of parallel derivative
-      gradz_coeff(iz,eo) = 1._dp / Jacobian(iz,eo) / hatB(iz,eo)
-    ! Nonlinear term prefactor
-    hatB_NL(iz,eo) = 1._dp !Jacobian(iz,eo)*(gxx(iz,eo)*gyy(iz,eo) - gxy(iz,eo)**2)/hatB(iz,eo)
+    ! Curvature factor
+      C_xy = 1._dp
 
   ENDDO zloop
   ENDDO parity
 
-  END SUBROUTINE eval_salphaB_geometry
+  END SUBROUTINE eval_salpha_geometry
   !
   !--------------------------------------------------------------------------------
   !
@@ -280,9 +274,9 @@ CONTAINS
       hatB_NL(iz,eo) = 1._dp
 
     ! Derivative of the magnetic field strenght
-      gradxB(iz,eo) = -1._dp ! Gene put a factor hatB^2 or 1/hatR^2 in this
-      gradyB(iz,eo) = 0._dp
-      gradzB(iz,eo) = 0._dp ! Gene put a factor hatB or 1/hatR in this
+      dBdx(iz,eo) = -hatB(iz,eo) ! LB = 1
+      dBdy(iz,eo) = 0._dp
+      dBdz(iz,eo) = 0._dp ! Gene put a factor hatB or 1/hatR in this
 
     ! Curvature operator
       DO iky = ikys, ikye
@@ -431,10 +425,13 @@ CONTAINS
   ! DO iky = ikys,ikye
   !   print*, ikx_zBC_L(iky,:)
   ! enddo
+  ! print*, pb_phase_L
   ! write(*,*) 'ikx_zBC_R :-----------'
   ! DO iky = ikys,ikye
   !   print*, ikx_zBC_R(iky,:)
   ! enddo
+  ! print*, pb_phase_R
+  ! print*, shift_y
   ! stop
   !!!!!!! Example of maps ('x' means connected to 0 value, in the table it is -99)
   ! dirichlet connection map BC of the RIGHT boundary (z=pi*Npol-dz)
@@ -481,9 +478,9 @@ END SUBROUTINE set_ikx_zBC_map
        CALL allocate_array(        gyy,izgs,izge, 0,1)
        CALL allocate_array(        gyz,izgs,izge, 0,1)
        CALL allocate_array(        gzz,izgs,izge, 0,1)
-       CALL allocate_array(     gradxB,izgs,izge, 0,1)
-       CALL allocate_array(     gradyB,izgs,izge, 0,1)
-       CALL allocate_array(     gradzB,izgs,izge, 0,1)
+       CALL allocate_array(     dBdx,izgs,izge, 0,1)
+       CALL allocate_array(     dBdy,izgs,izge, 0,1)
+       CALL allocate_array(     dBdz,izgs,izge, 0,1)
        CALL allocate_array(       hatB,izgs,izge, 0,1)
        CALL allocate_array(    hatB_NL,izgs,izge, 0,1)
        CALL allocate_array(       hatR,izgs,izge, 0,1)

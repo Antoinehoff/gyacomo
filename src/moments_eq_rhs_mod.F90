@@ -33,7 +33,7 @@ SUBROUTINE moments_eq_rhs_e
   USE model
   USE prec_const
   USE collision
-  USE geometry, ONLY: gradz_coeff, gradzB, Ckxky, hatB_NL, hatB
+  USE geometry, ONLY: gradz_coeff, dBdz, Ckxky, hatB_NL, hatB
   USE calculus, ONLY : interp_z, grad_z, grad_z2
   IMPLICIT NONE
 
@@ -121,13 +121,13 @@ SUBROUTINE moments_eq_rhs_e
             !! Sum of all RHS terms
             moments_rhs_e(ip,ij,iky,ikx,iz,updatetlevel) = &
                 ! Perpendicular magnetic gradient/curvature effects
-                -imagu*Ckxky(iky,ikx,iz,eo)*hatB(iz,eo) * Tperp&
+                -imagu*Ckxky(iky,ikx,iz,eo) * Tperp&
                 ! Perpendicular pressure effects
                 -i_ky*beta*dpdx * Tperp&
                 ! Parallel coupling (Landau Damping)
                 -gradz_coeff(iz,eo) * Tpar &
                 ! Mirror term (parallel magnetic gradient)
-                -gradzB(iz,eo)*gradz_coeff(iz,eo) * Tmir&
+                -dBdz(iz,eo)*gradz_coeff(iz,eo) * Tmir&
                 ! Drives (density + temperature gradients)
                 -i_ky * (Tphi - Tpsi) &
                 ! Numerical perpendicular hyperdiffusion (totally artificial, for stability purpose)
@@ -182,7 +182,7 @@ SUBROUTINE moments_eq_rhs_i
   USE model
   USE prec_const
   USE collision
-  USE geometry, ONLY: gradz_coeff, gradzB, Ckxky, hatB_NL, hatB
+  USE geometry, ONLY: gradz_coeff, dBdz, Ckxky, hatB_NL, hatB
   USE calculus, ONLY : interp_z, grad_z, grad_z2
   IMPLICIT NONE
 
@@ -272,13 +272,13 @@ SUBROUTINE moments_eq_rhs_i
               !! Sum of all RHS terms
               moments_rhs_i(ip,ij,iky,ikx,iz,updatetlevel) = &
                   ! Perpendicular magnetic gradient/curvature effects
-                  -imagu*Ckxky(iky,ikx,iz,eo)*hatB(iz,eo) * Tperp &
+                  -imagu*Ckxky(iky,ikx,iz,eo) * Tperp &
                   ! Perpendicular pressure effects
                   -i_ky*beta*dpdx * Tperp&
                   ! Parallel coupling (Landau damping)
                   -gradz_coeff(iz,eo) * Tpar &
                   ! Mirror term (parallel magnetic gradient)
-                  -gradzB(iz,eo)*gradz_coeff(iz,eo) * Tmir &
+                  -dBdz(iz,eo)*gradz_coeff(iz,eo) * Tmir &
                   ! Drives (density + temperature gradients)
                   -i_ky * (Tphi - Tpsi) &
                   ! Numerical hyperdiffusion (totally artificial, for stability purpose)
