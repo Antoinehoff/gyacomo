@@ -33,6 +33,7 @@ To compile and run GYACOMO, follow these steps:
 5. To stop the simulation without corrupting the output file, create a blank file called "mystop" using touch mystop in the directory where the simulation is running. The file will be removed once it is read.
 6. It is possible to chain simulations by using the parameter "Job2load" in the fort.90 file. For example, to restart a simulation from the latest 5D state saved in outputs_00.h5, create a new fort.90 file called fort_01.90 and set "Job2load" to 0. Then run GYACOMO with the command ./gyacomo 0 or mpirun -np N ./gyacomo Np Ny Nz 0. This will create a new output file called output_01.h5.
 7. To generate plots and gifs using the simulation results, use the script gyacomo/wk/gyacomo_analysis.m and specify the directory where the results are located. Note that this script is not currently a function.
+
 Note: For some collision operators (Sugama and Full Coulomb), you will need to run COSOlver from B.J.Frei to generate the required matrices in the gyacomo/iCa folder before running GYACOMO.
 
 
