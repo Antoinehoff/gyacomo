@@ -23,14 +23,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # How to compile and run GYACOMO
 
-1. Be sure to have correct library paths in local/dirs.inc for the different libraries, see INSTALATION.txt for a tutorial to install the required libraries.
-2. Compile from /gyacomo using make, the binary will be located in /gyacomo/bin (you can also compile a debug version using make dbg)
-4. The fort.90 file should contain the parameters for a typical CBC to test the compilation. One can run it by calling the executable /bin/gyacomo in the directory where the fort.90 is located.
-5. It is possible to run GYACOMO in parallel using MPI: mpirun -np N ./bin/gyacomo Np Ny Nz where N=Np x Ny x Nz is the number of processes and Np Ny Nz are the parallel dimensions in Hermite polynomials, binormal direction and parallel direction, respectively
-6. You can stop your simulation without corrupting the output file by creating a blank file call "mystop", using e.g. "touch mystop" in the directory where the simulation is running. (the file will be removed once read)
-7. It is also possible to put simulations ID in order to chain them. The parameter Job2load allows you to tell which output file should be read in order to restart a simulation. E.g. I run a first simulation with job2load = -1, it creates a outputs_00.h5 then I create a new fort.90 which I call fort_01.90 where job2load = 0. I run then GYACOMO, indicating that I want it to read the fort_00.90 using 0 as a last argument, i.e. "./gyacomo 0" or "mpirun -np N ./gyacomo Np Ny Nz 0", which will start from the latest 5D state saved in outputs_00.h5. A new output file has also been created, output_01.h5.
-8. You can obtain various plots and gifs using gyacomo/wk/gyacomo_analysis.m once the simulation is done. The directory where the results are located must be given in the scripts. It is not a function (yet...)
-// Comment : For some collision operators (Sugama and Full Coulomb) you have to run COSOlver from B.J.Frei first in order to generate the required matrices in gyacomo/iCa folder. //
+To compile and run GYACOMO, follow these steps:
+
+
+1. Make sure the correct library paths are set in local/dirs.inc. Refer to INSTALATION.txt for instructions on installing the required libraries.
+2. Go to the /gyacomo directory and run make to compile the code. The resulting binary will be located in /gyacomo/bin. You can also compile a debug version by running make dbg.
+3. The file fort.90 should contain the parameters for a typical CBC. To test the compilation, navigate to the directory where fort.90 is located and run the executable /bin/gyacomo.
+4. GYACOMO can be run in parallel using MPI by running mpirun -np N ./bin/gyacomo Np Ny Nz, where N = Np x Ny x Nz is the number of processes and Np Ny Nz are the parallel dimensions in Hermite polynomials, binormal direction, and parallel direction, respectively.
+5. To stop the simulation without corrupting the output file, create a blank file called "mystop" using touch mystop in the directory where the simulation is running. The file will be removed once it is read.
+6. It is possible to chain simulations by using the parameter "Job2load" in the fort.90 file. For example, to restart a simulation from the latest 5D state saved in outputs_00.h5, create a new fort.90 file called fort_01.90 and set "Job2load" to 0. Then run GYACOMO with the command ./gyacomo 0 or mpirun -np N ./gyacomo Np Ny Nz 0. This will create a new output file called output_01.h5.
+7. To generate plots and gifs using the simulation results, use the script gyacomo/wk/gyacomo_analysis.m and specify the directory where the results are located. Note that this script is not currently a function.
+Note: For some collision operators (Sugama and Full Coulomb), you will need to run COSOlver from B.J.Frei to generate the required matrices in the gyacomo/iCa folder before running GYACOMO.
 
 
 
