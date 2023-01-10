@@ -15,10 +15,10 @@ SIMID = 'convergence_pITG_miller';  % Name of the simulation
 RUN     = 0; % to make sure it does not try to run
 RERUN   = 0; % rerun if the data does not exist
 
-NU_a = [0.02];
-P_a  = [24];
-% NU_a = [0.0 0.01 0.02 0.05 0.1];
-% P_a  = [2 4:4:28];
+% NU_a = [0.02];
+% P_a  = [24];
+NU_a = [0.0 0.01 0.02 0.05 0.1];
+P_a  = [2 4:4:28];
 % P_a  = [24:4:28];
 J_a  = floor(P_a/2);
 % collision setting

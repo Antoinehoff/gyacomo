@@ -5,7 +5,7 @@ switch OPTIONS.PLAN
     case 'RZ'
         toplot = poloidal_plot(DATA,OPTIONS);
     otherwise
-        toplot = process_field(DATA,OPTIONS);
+        toplot = process_field_v2(DATA,OPTIONS);
 end
 FNAME  = toplot.FILENAME;
 FRAMES = toplot.FRAMES;
@@ -15,9 +15,14 @@ Ncols  = ceil(Nframes/Nrows);
 %
 TNAME = [];
 FIGURE.fig = figure; set(gcf, 'Position',  toplot.DIMENSIONS.*[1 1 Ncols Nrows])
+    frame_max = max(max(max(abs(toplot.FIELD(:,:,:)))));
     for i_ = 1:numel(FRAMES)
     subplot(Nrows,Ncols,i_); TNAME = [TNAME,'_',sprintf('%.0f',DATA.Ts3D(FRAMES(i_)))];
-        scale = max(max(abs(toplot.FIELD(:,:,i_)))); % Scaling to normalize
+    if OPTIONS.NORMALIZE
+        scale = frame_max; % Scaling to normalize
+    else
+        scale = 1;
+    end
         if ~strcmp(OPTIONS.PLAN,'sx')
             tshot = DATA.Ts3D(FRAMES(i_));
             pclr = pcolor(toplot.X,toplot.Y,toplot.FIELD(:,:,i_)./scale); set(pclr, 'edgecolor','none');
@@ -25,7 +30,7 @@ FIGURE.fig = figure; set(gcf, 'Position',  toplot.DIMENSIONS.*[1 1 Ncols Nrows])
                 pbaspect(toplot.ASPECT)
             end
             if ~strcmp(OPTIONS.PLAN,'kxky')
-                caxis([-1,1]);
+                caxis([-1,1]*frame_max/scale);
                 colormap(bluewhitered);
                 if OPTIONS.INTERP
                     shading interp; 

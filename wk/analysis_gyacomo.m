@@ -62,20 +62,20 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = '\omega_z';
 % options.NAME     = 'N_i^{00}';
 % options.NAME      = 'v_x';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
-% options.NAME      = 'n_i';
-options.PLAN      = 'yz';
+options.NAME      = 'n_i-n_e';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
 % options.TIME      =  data.Ts3D;
-options.TIME      = [1:1:9000];
+options.TIME      = [500:1:9000];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
@@ -83,23 +83,25 @@ create_film(data,options,'.gif')
 end
 
 if 0
-%% 2D snapshots
+%% fields snapshots
 % Options
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 0;
+options.NORMALIZE = 0;
 options.NAME      = '\phi';
 % options.NAME      = '\psi';
+% options.NAME      = '\omega_z';
 % options.NAME      = 'n_i';
+% options.NAME      = 'n_i-n_e';
+% options.NAME      = '\phi^{NZ}';
 % options.NAME      = 'N_i^{00}';
-% options.NAME      = 'T_i';
-% options.NAME      = '\Gamma_x';
+% options.NAME      = 's_{Ex}';
+% options.NAME      = 'Q_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'kxz';
-% options.NAME      = 'f_i';
-% options.PLAN      = 'sx';
+options.PLAN      = 'xy';
 options.COMP      = 'avg';
-options.TIME      = [100 250 300];
+options.TIME      = [800];
 options.RESOLUTION = 256;
 
 data.a = data.EPS * 2e3;
@@ -108,7 +110,7 @@ fig = photomaton(data,options);
 end
 
 if 0
-%% 3D plot on the geometry
+%% plot on the geometry
 options.INTERP    = 0;
 options.NAME      = '\phi';
 options.PLANES    = [1];

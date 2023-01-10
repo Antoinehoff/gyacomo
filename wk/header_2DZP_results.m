@@ -180,7 +180,7 @@ resdir ='';
 % resdir ='Zpinch_rerun/Kn_1.6_200x64x11x6';
 % resdir ='Zpinch_rerun/Kn_1.6_200x64x11x6_conv';
 % resdir ='Zpinch_rerun/Kn_1.6_200x64x11x6_mu_0.5';
-% resdir ='Zpinch_rerun/Kn_1.6_256x128x21x11';
+resdir ='Zpinch_rerun/Kn_1.6_256x128x21x11';
 
 %% nu scan
 % resdir = 'Zpinch_rerun/kN_2.2_coll_scan_128x48x5x3';
@@ -237,7 +237,7 @@ resdir ='';
 % resdir = 'Zpinch_rerun/DGGK_kN_1.7_200x64x9x5_nu_0.01';
 % resdir = 'Zpinch_rerun/LRGK_kN_2.4_300x98x5x3_nu_0.01';
 % resdir = 'Zpinch_rerun/LDGK_kN_1.9_200x64x5x3_nu_0.01';
-resdir = 'Zpinch_rerun/COLLESS_kN_1.7_200x64x5x3';
+% resdir = 'Zpinch_rerun/COLLESS_kN_1.7_200x64x5x3';
 % resdir = 'Zpinch_rerun/COLLESS_kN_1.7_200x64x9x5';
 
 JOBNUMMIN = 00; JOBNUMMAX = 10;

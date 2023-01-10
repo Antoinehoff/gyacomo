@@ -12,7 +12,7 @@ switch OPTIONS.PLAN
     case 'RZ'
         toplot = poloidal_plot(DATA,OPTIONS);
     otherwise
-        toplot = process_field(DATA,OPTIONS);
+        toplot = process_field_v2(DATA,OPTIONS);
 end
 %%
 FILENAME  = [DATA.localdir,toplot.FILENAME,format];
