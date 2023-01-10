@@ -67,7 +67,7 @@ mvmod:
 
 $(OBJDIR)/diagnose.o : src/srcinfo.h
 
-FOBJ=$(OBJDIR)/advance_field.o $(OBJDIR)/array_mod.o $(OBJDIR)/auxval.o \
+FOBJ=$(OBJDIR)/advance_field_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/auxval.o \
 $(OBJDIR)/basic_mod.o $(OBJDIR)/coeff_mod.o $(OBJDIR)/closure_mod.o \
 $(OBJDIR)/collision_mod.o $(OBJDIR)/nonlinear_mod.o $(OBJDIR)/control.o \
 $(OBJDIR)/diagnose.o $(OBJDIR)/diagnostics_par_mod.o $(OBJDIR)/endrun.o \
@@ -94,11 +94,11 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
 
 
- $(OBJDIR)/advance_field.o : src/advance_field.F90 \
+ $(OBJDIR)/advance_field_mod.o : src/advance_field_mod.F90 \
    $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/initial_par_mod.o \
 	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)/basic_mod.o \
 	 $(OBJDIR)/fields_mod.o
-	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/advance_field.F90 -o $@
+	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/advance_field_mod.F90 -o $@
 
  $(OBJDIR)/array_mod.o : src/array_mod.F90 \
 	 $(OBJDIR)/prec_const_mod.o
@@ -269,7 +269,7 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/solve_EM_fields.F90 -o $@
 
  $(OBJDIR)/stepon.o : src/stepon.F90 \
- 	 $(OBJDIR)/initial_par_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/advance_field.o \
+ 	 $(OBJDIR)/initial_par_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/advance_field_mod.o \
    $(OBJDIR)/basic_mod.o $(OBJDIR)/nonlinear_mod.o $(OBJDIR)/grid_mod.o \
 	 $(OBJDIR)/array_mod.o $(OBJDIR)/numerics_mod.o $(OBJDIR)/fields_mod.o \
 	 $(OBJDIR)/ghosts_mod.o $(OBJDIR)/moments_eq_rhs_mod.o $(OBJDIR)/solve_EM_fields.o\
