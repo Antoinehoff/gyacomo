@@ -598,8 +598,10 @@ END SUBROUTINE compute_Napjz_spectrum
 !!!!! FLUID MOMENTS COMPUTATIONS !!!!!
 ! Compute the 2D particle density for electron and ions (sum over Laguerre)
 SUBROUTINE compute_density
-  USE array, ONLY : dens_e, dens_i, kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i
-  USE model, ONLY : KIN_E
+  USE array,  ONLY : dens_e, dens_i, kernel_e, kernel_i
+  USE model,  ONLY : KIN_E
+  USE fields, ONLY : moments_e, moments_i
+  USE time_integration, ONLY : updatetlevel
   IMPLICIT NONE
   COMPLEX(dp) :: dens
 
@@ -613,14 +615,14 @@ SUBROUTINE compute_density
             ! electron density
             dens = 0._dp
             DO ij = ijs_e, ije_e
-                dens = dens + kernel_e(ij,iky,ikx,iz,0) * nadiab_moments_e(ip0_e,ij,iky,ikx,iz)
+                dens = dens + kernel_e(ij,iky,ikx,iz,0) * moments_e(ip0_e,ij,iky,ikx,iz,updatetlevel)
             ENDDO
             dens_e(iky,ikx,iz) = dens
             ENDIF
             ! ion density
             dens = 0._dp
             DO ij = ijs_i, ije_i
-                dens = dens + kernel_i(ij,iky,ikx,iz,0) * nadiab_moments_i(ip0_e,ij,iky,ikx,iz)
+                dens = dens + kernel_i(ij,iky,ikx,iz,0) * moments_i(ip0_e,ij,iky,ikx,iz,updatetlevel)
             ENDDO
             dens_i(iky,ikx,iz) = dens
           ENDDO
@@ -631,8 +633,10 @@ END SUBROUTINE compute_density
 
 ! Compute the 2D particle fluid perp velocity for electron and ions (sum over Laguerre)
 SUBROUTINE compute_uperp
-  USE array, ONLY : uper_e, uper_i, kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i
-  USE model, ONLY : KIN_E
+  USE array,  ONLY : uper_e, uper_i, kernel_e, kernel_i
+  USE model,  ONLY : KIN_E
+  USE fields, ONLY : moments_e, moments_i
+  USE time_integration, ONLY : updatetlevel
   IMPLICIT NONE
   COMPLEX(dp) :: uperp
 
@@ -646,7 +650,7 @@ SUBROUTINE compute_uperp
             uperp = 0._dp
             DO ij = ijs_e, ije_e
                 uperp = uperp + kernel_e(ij,iky,ikx,iz,0) *&
-                 0.5_dp*(nadiab_moments_e(ip0_e,ij,iky,ikx,iz) - nadiab_moments_e(ip0_e,ij-1,iky,ikx,iz))
+                 0.5_dp*(moments_e(ip0_e,ij,iky,ikx,iz,updatetlevel) - moments_e(ip0_e,ij-1,iky,ikx,iz,updatetlevel))
             ENDDO
             uper_e(iky,ikx,iz) = uperp
             ENDIF
@@ -654,7 +658,7 @@ SUBROUTINE compute_uperp
             uperp = 0._dp
             DO ij = ijs_i, ije_i
               uperp = uperp + kernel_i(ij,iky,ikx,iz,0) *&
-               0.5_dp*(nadiab_moments_i(ip0_i,ij,iky,ikx,iz) - nadiab_moments_i(ip0_i,ij-1,iky,ikx,iz))
+               0.5_dp*(moments_i(ip0_i,ij,iky,ikx,iz,updatetlevel) - moments_i(ip0_i,ij-1,iky,ikx,iz,updatetlevel))
              ENDDO
             uper_i(iky,ikx,iz) = uperp
           ENDDO
@@ -665,8 +669,10 @@ END SUBROUTINE compute_uperp
 
 ! Compute the 2D particle fluid par velocity for electron and ions (sum over Laguerre)
 SUBROUTINE compute_upar
-  USE array, ONLY : upar_e, upar_i, kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i
-  USE model, ONLY : KIN_E
+  USE array,  ONLY : upar_e, upar_i, kernel_e, kernel_i
+  USE model,  ONLY : KIN_E
+  USE fields, ONLY : moments_e, moments_i
+  USE time_integration, ONLY : updatetlevel
   IMPLICIT NONE
   COMPLEX(dp) :: upar
 
@@ -678,14 +684,14 @@ SUBROUTINE compute_upar
           ! electron
           upar = 0._dp
           DO ij = ijs_e, ije_e
-            upar = upar + kernel_e(ij,iky,ikx,iz,1)*nadiab_moments_e(ip1_e,ij,iky,ikx,iz)
+            upar = upar + kernel_e(ij,iky,ikx,iz,1)*moments_e(ip1_e,ij,iky,ikx,iz,updatetlevel)
           ENDDO
           upar_e(iky,ikx,iz) = upar
           ENDIF
           ! ion
           upar = 0._dp
           DO ij = ijs_i, ije_i
-            upar = upar + kernel_i(ij,iky,ikx,iz,1)*nadiab_moments_i(ip1_i,ij,iky,ikx,iz)
+            upar = upar + kernel_i(ij,iky,ikx,iz,1)*moments_i(ip1_i,ij,iky,ikx,iz,updatetlevel)
            ENDDO
           upar_i(iky,ikx,iz) = upar
         ENDDO
@@ -700,8 +706,10 @@ END SUBROUTINE compute_upar
 
 ! Compute the 2D particle temperature for electron and ions (sum over Laguerre)
 SUBROUTINE compute_tperp
-  USE array, ONLY : Tper_e, Tper_i, kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i
-  USE model, ONLY : KIN_E
+  USE array,  ONLY : Tper_e, Tper_i, kernel_e, kernel_i
+  USE model,  ONLY : KIN_E
+  USE fields, ONLY : moments_e, moments_i
+  USE time_integration, ONLY : updatetlevel
   IMPLICIT NONE
   REAL(dp)    :: j_dp
   COMPLEX(dp) :: Tperp
@@ -718,9 +726,9 @@ SUBROUTINE compute_tperp
             DO ij = ijs_e, ije_e
               j_dp = REAL(ij-1,dp)
               Tperp = Tperp + kernel_e(ij,iky,ikx,iz,0)*&
-                  ((2_dp*j_dp+1)*nadiab_moments_e(ip0_e,ij  ,iky,ikx,iz)&
-                  -j_dp         *nadiab_moments_e(ip0_e,ij-1,iky,ikx,iz)&
-                  -j_dp+1       *nadiab_moments_e(ip0_e,ij+1,iky,ikx,iz))
+                  ((2_dp*j_dp+1)*moments_e(ip0_e,ij  ,iky,ikx,iz,updatetlevel)&
+                  -j_dp         *moments_e(ip0_e,ij-1,iky,ikx,iz,updatetlevel)&
+                  -j_dp+1       *moments_e(ip0_e,ij+1,iky,ikx,iz,updatetlevel))
             ENDDO
             Tper_e(iky,ikx,iz) = Tperp
             ENDIF
@@ -729,9 +737,9 @@ SUBROUTINE compute_tperp
             DO ij = ijs_i, ije_i
               j_dp = REAL(ij-1,dp)
               Tperp = Tperp + kernel_i(ij,iky,ikx,iz,0)*&
-                  ((2_dp*j_dp+1)*nadiab_moments_i(ip0_i,ij  ,iky,ikx,iz)&
-                  -j_dp         *nadiab_moments_i(ip0_i,ij-1,iky,ikx,iz)&
-                  -j_dp+1       *nadiab_moments_i(ip0_i,ij+1,iky,ikx,iz))
+                  ((2_dp*j_dp+1)*moments_i(ip0_i,ij  ,iky,ikx,iz,updatetlevel)&
+                  -j_dp         *moments_i(ip0_i,ij-1,iky,ikx,iz,updatetlevel)&
+                  -j_dp+1       *moments_i(ip0_i,ij+1,iky,ikx,iz,updatetlevel))
             ENDDO
             Tper_i(iky,ikx,iz) = Tperp
           ENDDO
@@ -742,8 +750,10 @@ END SUBROUTINE compute_Tperp
 
 ! Compute the 2D particle temperature for electron and ions (sum over Laguerre)
 SUBROUTINE compute_Tpar
-  USE array, ONLY : Tpar_e, Tpar_i, kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i
-  USE model, ONLY : KIN_E
+  USE array,  ONLY : Tpar_e, Tpar_i, kernel_e, kernel_i
+  USE model,  ONLY : KIN_E
+  USE fields, ONLY : moments_e, moments_i
+  USE time_integration, ONLY : updatetlevel
   IMPLICIT NONE
   REAL(dp)    :: j_dp
   COMPLEX(dp) :: tpar
@@ -760,8 +770,8 @@ SUBROUTINE compute_Tpar
             DO ij = ijs_e, ije_e
               j_dp = REAL(ij-1,dp)
               Tpar  = Tpar + kernel_e(ij,iky,ikx,iz,0)*&
-               (SQRT2 * nadiab_moments_e(ip2_e,ij,iky,ikx,iz) &
-                      + nadiab_moments_e(ip0_e,ij,iky,ikx,iz))
+               (SQRT2 * moments_e(ip2_e,ij,iky,ikx,iz,updatetlevel) &
+                      + moments_e(ip0_e,ij,iky,ikx,iz,updatetlevel))
             ENDDO
             Tpar_e(iky,ikx,iz) = Tpar
             ENDIF
@@ -770,8 +780,8 @@ SUBROUTINE compute_Tpar
             DO ij = ijs_i, ije_i
               j_dp = REAL(ij-1,dp)
               Tpar  = Tpar + kernel_i(ij,iky,ikx,iz,0)*&
-               (SQRT2 * nadiab_moments_i(ip2_i,ij,iky,ikx,iz) &
-                      + nadiab_moments_i(ip0_i,ij,iky,ikx,iz))
+               (SQRT2 * moments_i(ip2_i,ij,iky,ikx,iz,updatetlevel) &
+                      + moments_i(ip0_i,ij,iky,ikx,iz,updatetlevel))
             ENDDO
             Tpar_i(iky,ikx,iz) = Tpar
           ENDDO
