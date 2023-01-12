@@ -158,7 +158,7 @@ SUBROUTINE evaluate_poisson_op
     ELSE ! Adiabatic model
       pol_e = qe2_taue - 1._dp
     ENDIF
-    inv_poisson_op(iky, ikx, iz) =  1._dp/(qe2_taue + qi2_taui - pol_i - pol_e)
+    inv_poisson_op(iky, ikx, iz) =  1._dp/(qi2_taui - pol_i + qe2_taue - pol_e)
     inv_pol_ion   (iky, ikx, iz) =  1._dp/(qi2_taui - pol_i)
   ENDIF
   END DO zloop
