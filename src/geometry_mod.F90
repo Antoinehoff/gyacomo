@@ -37,12 +37,12 @@ implicit none
                PUBLIC, PROTECTED :: parallel_bc
 
   ! GENE unused additional parameters for miller_mod
-  REAL(dp), PUBLIC, PROTECTED :: edge_opt      = 0 ! meant to redistribute the points in z
-  REAL(dp), PUBLIC, PROTECTED :: major_R       = 1 ! major radius
-  REAL(dp), PUBLIC, PROTECTED :: major_Z       = 0 ! vertical elevation
-  REAL(dp), PUBLIC, PROTECTED :: dpdx_pm_geom  = 0 ! amplitude mag. eq. pressure grad.
-  REAL(dp), PUBLIC, PROTECTED ::          C_y  = 0 ! defines y coordinate : Cy (q theta - phi)
-  REAL(dp), PUBLIC, PROTECTED ::         C_xy  = 0 ! defines x coordinate : B = Cxy Vx x Vy
+  REAL(dp), PUBLIC, PROTECTED :: edge_opt      = 0._dp ! meant to redistribute the points in z
+  REAL(dp), PUBLIC, PROTECTED :: major_R       = 1._dp ! major radius
+  REAL(dp), PUBLIC, PROTECTED :: major_Z       = 0._dp ! vertical elevation
+  REAL(dp), PUBLIC, PROTECTED :: dpdx_pm_geom  = 0._dp ! amplitude mag. eq. pressure grad.
+  REAL(dp), PUBLIC, PROTECTED ::          C_y  = 0._dp ! defines y coordinate : Cy (q theta - phi)
+  REAL(dp), PUBLIC, PROTECTED ::         C_xy  = 1._dp ! defines x coordinate : B = Cxy Vx x Vy
 
   ! Geometrical auxiliary variables
   LOGICAL,     PUBLIC, PROTECTED :: SHEARED  = .false. ! flag for shear magn. geom or not
@@ -190,7 +190,7 @@ CONTAINS
   SUBROUTINE eval_salpha_geometry
   ! evaluate s-alpha geometry model
   implicit none
-  REAL(dp) :: z, kx, ky, Gx, Gy
+  REAL(dp) :: z
   alpha_MHD = 0._dp
 
   parity: DO eo = 0,1
@@ -240,7 +240,7 @@ CONTAINS
 
   SUBROUTINE eval_zpinch_geometry
   implicit none
-  REAL(dp) :: z, kx, ky, alpha_MHD
+  REAL(dp) :: z
   alpha_MHD = 0._dp
 
   parity: DO eo = 0,1
@@ -251,14 +251,14 @@ CONTAINS
       gxx(iz,eo) = 1._dp
       gxy(iz,eo) = 0._dp
       gxz(iz,eo) = 0._dp
-      gyy(iz,eo) = 1._dp
+      gyy(iz,eo) = 1._dp ! 1/R but R is the normalization length
       gyz(iz,eo) = 0._dp
       gzz(iz,eo) = 1._dp
       dxdR(iz,eo)= COS(z)
       dxdZ(iz,eo)= SIN(z)
 
     ! Relative strengh of radius
-      hatR(iz,eo) = 1._dp
+      hatR(iz,eo) = 1._dp ! R but R is the normalization length
       hatZ(iz,eo) = 1._dp
 
     ! toroidal coordinates
@@ -267,7 +267,7 @@ CONTAINS
       Zc  (iz,eo) = hatZ(iz,eo)
 
     ! Jacobian
-      Jacobian(iz,eo) = 1._dp
+      Jacobian(iz,eo) = 1._dp ! R but R is the normalization length
 
     ! Relative strengh of modulus of B
       hatB   (iz,eo) = 1._dp
@@ -278,20 +278,11 @@ CONTAINS
       dBdy(iz,eo) = 0._dp
       dBdz(iz,eo) = 0._dp ! Gene put a factor hatB or 1/hatR in this
 
-    ! Curvature operator
-      DO iky = ikys, ikye
-        ky = kyarray(iky)
-         DO ikx= ikxs, ikxe
-           kx = kxarray(ikx)
-           Ckxky(iky, ikx, iz,eo) = -ky
-         ENDDO
-      ENDDO
-    ! coefficient in the front of parallel derivative
-      gradz_coeff(iz,eo) = 1._dp / Jacobian(iz,eo) / hatB(iz,eo)
-
   ENDDO zloop
   ENDDO parity
 
+  ! Curvature factor
+    C_xy = 1._dp
   END SUBROUTINE eval_zpinch_geometry
     !
     !--------------------------------------------------------------------------------
@@ -340,8 +331,7 @@ CONTAINS
 
  SUBROUTINE set_ikx_zBC_map
  IMPLICIT NONE
- REAL :: shift, kx_shift
- INTEGER :: ikx_shift
+ REAL :: shift
 
  ALLOCATE(ikx_zBC_L(ikys:ikye,ikxs:ikxe))
  ALLOCATE(ikx_zBC_R(ikys:ikye,ikxs:ikxe))
