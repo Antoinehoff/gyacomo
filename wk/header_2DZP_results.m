@@ -194,7 +194,7 @@ resdir ='Zpinch_rerun/Kn_1.6_256x128x21x11';
 % resdir ='Zpinch_rerun/nu_0.1_FCGK_200x48x5x3_kN_scan';
 % resdir ='Zpinch_rerun/nu_0.1_SGGK_200x48x5x3_kN_scan';
 % resdir = 'Zpinch_rerun/kN_1.7_FCGK_200x32x5x3_nu_scan';
-% % resdir = 'Zpinch_rerun/kN_1.7_SGGK_200x32x7x4_nu_scan';
+% resdir = 'Zpinch_rerun/kN_1.7_SGGK_200x32x7x4_nu_scan';
 % resdir = 'Zpinch_rerun/kN_2.2_SGGK_200x32x5x3_nu_scan';
 % resdir = 'Zpinch_rerun/kN_1.7_SGGK_256x64x5x3_nu_scan';
 
@@ -230,7 +230,7 @@ resdir ='Zpinch_rerun/Kn_1.6_256x128x21x11';
 % resdir = 'Zpinch_rerun/DGGK_kN_scan_200x64x5x3_nu_0.01';
 % resdir = 'Zpinch_rerun/even_DGGK_kN_scan_200x64x5x3_nu_0.01';
 % resdir = 'Zpinch_rerun/LRGK_kN_scan_200x64x5x3_nu_0.01';
-% resdir = 'Zpinch_rerun/LDGK_kN_scan_200x64x5x3_nu_0.01';
+% resdir = 'Zpinch_rerun/LDGK_kN_scan_202x64x5x3_nu_0.01';
 
 % resdir = 'Zpinch_rerun/DGGK_kN_1.6_200x64x5x3_nu_0.01';
 % resdir = 'Zpinch_rerun/DGGK_kN_1.7_200x64x5x3_nu_0.01';
@@ -240,6 +240,6 @@ resdir ='Zpinch_rerun/Kn_1.6_256x128x21x11';
 % resdir = 'Zpinch_rerun/COLLESS_kN_1.7_200x64x5x3';
 % resdir = 'Zpinch_rerun/COLLESS_kN_1.7_200x64x9x5';
 
-JOBNUMMIN = 00; JOBNUMMAX = 10;
+JOBNUMMIN = 01; JOBNUMMAX = 03;
 resdir = ['results/',resdir];
 run analysis_gyacomo

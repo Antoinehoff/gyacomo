@@ -65,7 +65,29 @@ else
     FIELD = zeros(sz(1),sz(2),Nt);
 end
 %% Process the field to plot
+% short term writing --
+b_e = DATA.sigma_e*sqrt(2*DATA.tau_e)*sqrt(KX.^2+KY.^2);
+adiab_e = kernel(0,b_e);
+pol_e        = kernel(0,b_e).^2;
+for n = 1:DATA.Jmaxe
+    adiab_e = adiab_e + kernel(n,b_e).^2;
+    pol_e   = pol_e + kernel(n,b_e).^2;
+end
+adiab_e = DATA.q_e/DATA.tau_e .* adiab_e;
+pol_e   = DATA.q_e^2/DATA.tau_e * (1 - pol_e);
 
+b_i = DATA.sigma_i*sqrt(2*DATA.tau_i)*sqrt(KX.^2+KY.^2);
+adiab_i = kernel(0,b_i);
+pol_i        = kernel(0,b_i).^2;
+for n = 1:DATA.Jmaxi
+    adiab_i = adiab_i + kernel(n,b_i).^2;
+    pol_i   = pol_i + kernel(n,b_i).^2;
+end
+pol_i      = DATA.q_i^2/DATA.tau_i * (1 - pol_i);
+adiab_i    = DATA.q_i/DATA.tau_i .* adiab_i;
+poisson_op = (pol_i + pol_e);
+
+% --
 switch OPTIONS.COMP
     case 'avg'
         compr = @(x) mean(x,COMPDIM);
@@ -130,6 +152,7 @@ end
 switch OPTIONS.NAME
     case '\phi' %ES pot
         NAME = 'phi';
+%         FLD_ = DATA.PHI(:,:,:,FRAMES); % data to plot
         FLD_ = DATA.PHI(:,:,:,FRAMES); % data to plot
         OPE_ = 1;        % Operation on data
     case '\psi' %EM pot
@@ -168,13 +191,17 @@ switch OPTIONS.NAME
         NAME = 'Ne00';
         FLD_ = DATA.Ne00(:,:,:,FRAMES);
         OPE_ = 1;
+    case 'N_i^{00}-N_e^{00}' % first electron gyromoment 
+        NAME = 'Ni00-Ne00';
+        FLD_ = (DATA.Ni00(:,:,:,FRAMES)-DATA.Ne00(:,:,:,FRAMES))./(poisson_op+(poisson_op==0));
+        OPE_ = 1;
     case 'n_i' % ion density
         NAME = 'ni';
-        FLD_ = DATA.DENS_I(:,:,:,FRAMES);
+        FLD_ = DATA.DENS_I(:,:,:,FRAMES) - adiab_i.* DATA.PHI(:,:,:,FRAMES);
         OPE_ = 1;  
     case 'n_e' % electron density
         NAME = 'ne';
-        FLD_ = DATA.DENS_E(:,:,:,FRAMES);
+        FLD_ = DATA.DENS_E(:,:,:,FRAMES) - adiab_e.* DATA.PHI(:,:,:,FRAMES);
         OPE_ = 1;
     case 'k^2n_e' % electron vorticity
         NAME = 'k2ne';
@@ -183,7 +210,8 @@ switch OPTIONS.NAME
     case 'n_i-n_e' % polarisation
         NAME = 'pol';
         OPE_ = 1;
-        FLD_ = DATA.DENS_I(:,:,:,FRAMES)+DATA.DENS_E(:,:,:,FRAMES);
+        FLD_ = ((DATA.DENS_I(:,:,:,FRAMES)- adiab_i.* DATA.PHI(:,:,:,FRAMES))...
+              -(DATA.DENS_E(:,:,:,FRAMES)- adiab_e.* DATA.PHI(:,:,:,FRAMES)));
     case 'T_i' % ion temperature
         NAME = 'Ti';
         FLD_ = DATA.TEMP_I(:,:,:,FRAMES);

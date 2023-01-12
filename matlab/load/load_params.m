@@ -24,6 +24,12 @@ catch
         DATA.K_T     = h5readatt(filename,'/data/input','k_Ti');
     end
 end
+DATA.sigma_e = h5readatt(filename,'/data/input','sigma_e');
+DATA.sigma_i = h5readatt(filename,'/data/input','sigma_i');
+DATA.tau_e   = h5readatt(filename,'/data/input','tau_e');
+DATA.tau_i   = h5readatt(filename,'/data/input','tau_i');
+DATA.q_e     = h5readatt(filename,'/data/input','q_e');
+DATA.q_i     = h5readatt(filename,'/data/input','q_i');
 DATA.Q0      = h5readatt(filename,'/data/input','q0');
 DATA.SHEAR   = h5readatt(filename,'/data/input','shear');
 DATA.EPS     = h5readatt(filename,'/data/input','eps');

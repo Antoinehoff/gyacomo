@@ -277,7 +277,7 @@ else
     % grids
     DATA.Pe = Pe; DATA.Pi = Pi; 
     DATA.Je = Je; DATA.Ji = Ji; 
-    DATA.kx = kx; DATA.ky = ky; DATA.z = z;
+    DATA.kx = kx; DATA.ky = ky; DATA.z = z; DATA.Npol = -z(1)/pi;
     DATA.x  = x;  DATA.y  = y;
     DATA.ikx0 = ikx0; DATA.iky0 = iky0;
     DATA.Nx = Nx; DATA.Ny = Ny; DATA.Nz = Nz; DATA.Nkx = Nkx; DATA.Nky = Nky; 

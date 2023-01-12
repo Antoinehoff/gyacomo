@@ -1,9 +1,8 @@
-%% QUICK RUN SCRIPT
+%% QUICK RUN SCRIPT for linear entropy mode (ETPY) in a Zpinch
 % This script create a directory in /results and run a simulation directly
 % from matlab framework. It is meant to run only small problems in linear
 % for benchmark and debugging purpose since it makes matlab "busy"
 %
-
 gyacomodir  = pwd;
 gyacomodir = gyacomodir(1:end-2);
 addpath(genpath([gyacomodir,'matlab'])) % ... add
@@ -11,26 +10,25 @@ addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
 addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0';
 SIMID   = 'dbg';  % Name of the simulation
-RUN     = 1; % To run or just to load
+RUN     = 0; % To run or just to load
 default_plots_options
 % EXECNAME = 'gyacomo_debug';
-EXECNAME = 'gyacomo_alpha';
-% EXECNAME = 'gyacomo';
+% EXECNAME = 'gyacomo_alpha';
+EXECNAME = 'gyacomo';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.05;           % Collision frequency
-TAU     = 1.0;            % e/i temperature ratio
-K_Ne    = 1*2.22;            % ele Density '''
-K_Te    = 1*6.96;            % ele Temperature '''
-K_Ni    = 1*2.22;            % ion Density gradient drive
-K_Ti    = 6.96;            % ion Temperature '''
-% SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+NU      = 0.1;           % Collision frequency
+TAU     = 1e-2;            % e/i temperature ratio
+K_Ne    = 0;            % ele Density '''
+K_Te    = 0;            % ele Temperature '''
+K_Ni    = 0;            % ion Density gradient drive
+K_Ti    = 70;            % ion Temperature '''
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 0;         % 1: kinetic electrons, 2: adiabatic electrons
-BETA    = 1e-4;     % electron plasma beta
+BETA    = 0.0;     % electron plasma beta
 %% GRID PARAMETERS
 P = 4;
 J = P/2;
@@ -38,20 +36,20 @@ PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
-NX      = 8;     % real space x-gridpoints
-NY      = 2;     %     ''     y-gridpoints
-LX      = 2*pi/0.1;   % Size of the squared frequency domain
-LY      = 2*pi/0.3;   % Size of the squared frequency domain
-NZ      = 24;    % number of perpendicular planes (parallel grid)
+NX      = 20;    % real space x-gridpoints
+NY      = 20;     %     ''     y-gridpoints
+LX      = 2*pi/0.4;   % Size of the squared frequency domain
+LY      = 2*pi/0.4;     % Size of the squared frequency domain
+NZ      = 48;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 NEXC    = 1;     % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 %% GEOMETRY
-% GEOMETRY= 's-alpha';
-GEOMETRY= 'miller';
+%% GEOMETRY
+GEOMETRY= 'Z-pinch'; % Z-pinch overwrites q0, shear and eps
 EPS     = 0.18;   % inverse aspect ratio
 Q0      = 1.4;    % safety factor
-SHEAR   = 0.8;    % magnetic shear
+SHEAR   = 0.0;    % magnetic shear
 KAPPA   = 1.0;    % elongation
 DELTA   = 0.0;    % triangularity
 ZETA    = 0.0;    % squareness
@@ -60,8 +58,7 @@ PARALLEL_BC = 'dirichlet'; %'dirichlet','periodic','shearless','disconnected'
 SHIFT_Y = 0.0;
 %% TIME PARMETERS
 TMAX    = 50;  % Maximal time unit
-DT      = 1e-2;   % Time step
-% DT      = 5e-4;   % Time step
+DT      = 5e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = -1;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
@@ -96,14 +93,14 @@ INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_X    = MU;     %
 MU_Y    = MU;     %
 N_HD    = 4;
-MU_Z    = 0.2;     %
+MU_Z    = 1.0;     %
 MU_P    = 0.0;     %
 MU_J    = 0.0;     %
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5; % Init noise amplitude
 BCKGD0  = 0.0;    % Init background
-GRADB   = 1.0;
-CURVB   = 1.0;
+GRADB   = 0.1;
+CURVB   = 0.1;
 COLL_KCUT = 1000;
 %%-------------------------------------------------------------------------
 %% RUN
@@ -111,11 +108,9 @@ setup
 % system(['rm fort*.90']);
 % Run linear simulation
 if RUN
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 2 3 0; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 3 2 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
 end
 
@@ -154,8 +149,8 @@ end
 if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
-options.P2J        = 1;
-options.ST         = 1;
+options.P2J        = 0;
+options.ST         = 0;
 options.PLOT_TYPE  = 'space-time';
 % options.PLOT_TYPE  =   'Tavg-1D';ls
 
@@ -167,20 +162,19 @@ options.specie     = 'i';
 options.compz      = 'avg';
 fig = show_moments_spectrum(data,options);
 % fig = show_napjz(data,options);
-save_figure(data,fig)
+% save_figure(data,fig)
 end
 
-if 0
+if 1
 %% linear growth rate for 3D Zpinch (kz fourier transform)
 trange = [0.5 1]*data.Ts3D(end);
-options.keq0 = 1; % chose to plot planes at k=0 or max
-options.kxky = 1;
+options.INTERP = 0;
+options.kxky = 0;
 options.kzkx = 0;
-options.kzky = 0;
+options.kzky = 1;
 [lg, fig] = compute_3D_zpinch_growth_rate(data,trange,options);
-save_figure(data,fig)
 end
-if 1
+if 0
 %% Mode evolution
 options.NORMALIZED = 0;
 options.K2PLOT = 1;

@@ -22,7 +22,7 @@ if ~OPTIONS.ST
     [~,it0] = min(abs(t0-DATA.Ts5D));
     [~,it1] = min(abs(t1-DATA.Ts5D));
     Nipj = mean(Nipj(:,:,it0:it1),3);
-    if DATA.K_E
+    if DATA.KIN_E
     Nepj = mean(Nepj(:,:,it0:it1),3);
     end
     if numel(OPTIONS.TIME) == 1
@@ -34,13 +34,13 @@ if ~OPTIONS.ST
 
     ymini = min(Nipj); ymaxi = max(Nipj);
 
-    if DATA.K_E
+    if DATA.KIN_E
     Nepj = squeeze(Nepj);
     ymine = min(Nepj); ymaxe = max(Nepj);
     ymax  = max([ymaxi ymaxe]);
     ymin  = min([ymini ymine]);
     end
-    if DATA.K_E
+    if DATA.KIN_E
     subplot(121)
     end
     if ~OPTIONS.P2J
@@ -60,7 +60,7 @@ if ~OPTIONS.ST
     legend('show');
     title([TITLE,' He-La ion spectrum']);
     
-    if DATA.K_E
+    if DATA.KIN_E
     subplot(122)
     if ~OPTIONS.P2J
         for ij = 1:numel(Je)
