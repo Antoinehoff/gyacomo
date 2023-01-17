@@ -53,7 +53,7 @@ CONTAINS
         cosolver_coll = .false.
         interspecies  = .false.
       CASE DEFAULT
-        ERROR STOP 'Error stop: collision model not recognized!!'
+        ERROR STOP '>> ERROR << collision model not recognized!!'
     END SELECT
 
   END SUBROUTINE collision_readinputs

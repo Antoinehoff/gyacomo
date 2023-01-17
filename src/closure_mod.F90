@@ -47,7 +47,7 @@ SUBROUTINE apply_closure_model
     ! + ghosts truncation
     CALL ghosts_upper_truncation
   ELSE
-    ERROR STOP '! Closure scheme not found !'
+    ERROR STOP '>> ERROR << Closure scheme not found '
 
   ENDIF
 

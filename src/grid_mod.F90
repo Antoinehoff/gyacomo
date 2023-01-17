@@ -518,7 +518,7 @@ CONTAINS
     END DO
     !! Parallel data distribution
     IF( (Nz .EQ. 1) .AND. (num_procs_z .GT. 1) ) &
-    stop '>>STOPPED<< Cannot have multiple core in z-direction (Nz = 1)'
+    ERROR STOP '>> ERROR << Cannot have multiple core in z-direction (Nz = 1)'
     ! Local data distribution
     CALL decomp1D(total_nz, num_procs_z, rank_z, izs, ize)
     local_nz = ize - izs + 1
@@ -529,7 +529,7 @@ CONTAINS
     ELSEIF(Nz .GE. 4) THEN
       izgs = izs - 2; izge = ize + 2;
     ELSE
-      ERROR STOP 'Error stop: Nz is not appropriate!!'
+      ERROR STOP '>> ERROR << Nz is not appropriate!!'
     ENDIF
     ! List of shift and local numbers between the different processes (used in scatterv and gatherv)
     ALLOCATE(counts_nz (1:num_procs_z))

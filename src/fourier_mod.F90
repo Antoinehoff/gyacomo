@@ -68,8 +68,7 @@ MODULE fourier
     planb = fftw_mpi_plan_dft_c2r_2D(NX_, NY_, cmpx_data_f, real_data_f, communicator,  ior(FFTW_MEASURE, FFTW_MPI_TRANSPOSED_IN))
 
    if ((.not. c_associated(planf)) .OR. (.not. c_associated(planb))) then
-      IF (my_id .EQ. 0) write(*,*) "plan creation error!!"
-      stop
+      ERROR STOP '>> ERROR << plan creation error!!'
    end if
 
   END SUBROUTINE init_grid_distr_and_plans

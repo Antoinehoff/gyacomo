@@ -165,7 +165,7 @@ SUBROUTINE simpson_rule_z(f,intf)
 
  ELSE !3D fluxtube
    IF(mod(Nz,2) .ne. 0 ) THEN
-      ERROR STOP 'Simpson rule: Nz must be an even number  !!!!'
+      ERROR STOP '>> ERROR << Simpson rule: Nz must be an even number  !!!!'
    ENDIF
    ! Buil local sum using the weights of composite Simpson's rule
    local_int = 0._dp

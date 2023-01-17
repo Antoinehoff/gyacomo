@@ -89,7 +89,7 @@ CONTAINS
       CASE ('shearless')
       CASE ('disconnected')
       CASE DEFAULT
-        stop 'Parallel BC not recognized'
+        ERROR STOP '>> ERROR << Parallel BC not recognized'
     END SELECT
     IF(my_id .EQ. 0) print*, 'Parallel BC : ', parallel_bc
 
@@ -126,7 +126,7 @@ CONTAINS
                dBdx,dBdy,hatB,jacobian,dBdz,hatR,hatZ,dxdR,dxdZ,&
                Ckxky,gradz_coeff)
         CASE DEFAULT
-          STOP 'geometry not recognized!!'
+          ERROR STOP '>> ERROR << geometry not recognized!!'
         END SELECT
     ENDIF
     !

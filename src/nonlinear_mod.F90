@@ -54,8 +54,7 @@ SUBROUTINE compute_Sapj
     CASE ('linear')
       Sepj = 0._dp; Sipj = 0._dp
     CASE DEFAULT
-      IF(my_id.EQ.0) write(*,*) '/!\ Linearity not recognized /!\'
-      stop
+      ERROR STOP '>> ERROR << Linearity not recognized '
   END SELECT
 
   ! Execution time END

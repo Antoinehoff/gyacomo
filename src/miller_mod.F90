@@ -109,7 +109,7 @@ CONTAINS
     np_s = 500*Npol_s
 
     rho = trpeps*major_R
-    if (rho.le.0.0) stop 'flux surface radius not defined'
+    if (rho.le.0.0) ERROR STOP '>> ERROR << flux surface radius not defined'
     trpeps = rho/major_R
 
     q0 = sign_Ip_CW * sign_Bt_CW * abs(q0)
@@ -437,7 +437,7 @@ CONTAINS
     else
        !new parallel coordinate chi_out==zprime
        !see also tracer_aux.F90
-       if (Npol>1) STOP "ERROR: Npol>1 has not been implemented for edge_opt=\=0.0"
+       if (Npol>1) ERROR STOP '>> ERROR << Npol>1 has not been implemented for edge_opt=\=0.0'
        do k=izs,ize
           chi_out(k)=sinh((-pi+k*2.*pi/Nz)*log(edge_opt*pi+sqrt(edge_opt**2*pi**2+1))/pi)/edge_opt
        enddo
