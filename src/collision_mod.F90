@@ -95,7 +95,7 @@ CONTAINS
           TColl_e = 0._dp
           TColl_i = 0._dp
         CASE DEFAULT
-          ERROR STOP 'Error stop: collision operator not recognized!!'
+          ERROR STOP '>> ERROR << collision operator not recognized!!'
       END SELECT
     ELSE
       IF(KIN_E) &
@@ -682,8 +682,8 @@ CONTAINS
       pdime = dims_e(1); jdime = dims_e(2);
       CALL getarr(fid, '/dims_i', dims_i) ! Get the ion      polynomial degrees
       pdimi = dims_i(1); jdimi = dims_i(2);
-      IF ( ((pdime .LT. pmaxe) .OR. (jdime .LT. jmaxe)) .AND. (my_id .EQ. 0)) WRITE(*,*) '!! Pe,Je Matrix too small !!'
-      IF ( ((pdimi .LT. pmaxi) .OR. (jdimi .LT. jmaxi)) .AND. (my_id .EQ. 0)) WRITE(*,*) '!! Pi,Ji Matrix too small !!'
+      IF ( ((pdime .LT. pmaxe) .OR. (jdime .LT. jmaxe)) .AND. (my_id .EQ. 0)) ERROR STOP '>> ERROR << Pe,Je Matrix too small'
+      IF ( ((pdimi .LT. pmaxi) .OR. (jdimi .LT. jmaxi)) .AND. (my_id .EQ. 0)) ERROR STOP '>> ERROR << Pi,Ji Matrix too small'
 
       CALL getsize(fid, '/coordkperp', nkp_mat) ! Get the dimension kperp grid of the matrices
       CALL allocate_array(kp_grid_mat, 1,nkp_mat)
@@ -692,9 +692,9 @@ CONTAINS
       kp_max = SQRT(kx_max**2+ky_max**2)
       ! check that we have enough kperps mat
       IF (LINEARITY .NE. 'linear') THEN
-        IF ( (kp_grid_mat(nkp_mat) .LT. 2./3.*kp_max) .AND. (my_id .EQ. 0)) WRITE(*,*) '!! Matrix kperp grid too small !!'
+        IF ( (kp_grid_mat(nkp_mat) .LT. 2./3.*kp_max) .AND. (my_id .EQ. 0)) WRITE(*,*) 'warning: Matrix kperp grid too small'
       ELSE
-        IF ( (kp_grid_mat(nkp_mat) .LT. kp_max) .AND. (my_id .EQ. 0)) WRITE(*,*) '!! Matrix kperp grid too small !!'
+        IF ( (kp_grid_mat(nkp_mat) .LT. kp_max) .AND. (my_id .EQ. 0)) WRITE(*,*) 'warning: Matrix kperp grid too small !!'
       ENDIF
 
       IF (gyrokin_CO) THEN ! GK operator (k-dependant)
