@@ -13,13 +13,14 @@ LOCALDIR  = [gyacomodir,resdir,'/'];
 MISCDIR   = ['/misc/gyacomo_outputs/',resdir,'/']; %For long term storage
 system(['mkdir -p ',MISCDIR]);
 system(['mkdir -p ',LOCALDIR]);
-CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
+% CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 % system(CMD);
 % Load outputs from jobnummin up to jobnummax
 data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 data.localdir = LOCALDIR;
 data.FIGDIR   = LOCALDIR;
-
+data.folder   = LOCALDIR;
+data.CODENAME = 'GYACOMO';
 %% PLOTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 default_plots_options
 disp('Plots')
@@ -34,12 +35,12 @@ disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
 options.TAVG_0   = data.TJOB_SE(i_)+600;%0.4*data.Ts3D(end);
 options.TAVG_1   = data.TJOB_SE(i_+1);%0.9*data.Ts3D(end); % Averaging times duration
 options.NCUT     = 4;              % Number of cuts for averaging and error estimation
-options.NMVA     = 50;              % Moving average for time traces
+options.NMVA     = 1;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';   % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 options.INTERP   = 0;
 options.RESOLUTION = 256;
-fig = plot_radial_transport_and_spacetime(data,options);
+fig = plot_radial_transport_and_spacetime(data,options,'GYACOMO');
 % save_figure(data,fig,'.png')
 end
 
@@ -62,21 +63,21 @@ if 0
 % Options
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-% options.NAME      = '\phi';
+options.NAME      = '\phi';
 % options.NAME      = '\omega_z';
 % options.NAME     = 'N_i^{00}';
 % options.NAME      = 'v_x';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = '\Gamma_x';
-options.NAME      = 'n_e';
+% options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
 options.PLAN      = 'xy';
-% options.NAME      = 'f_i';
-% options.PLAN      = 'sx';
+options.NAME      = 'f_i';
+options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
 % options.TIME      =  data.Ts3D;
-options.TIME      = [00:1:9000];
+options.TIME      = [0:10000];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
@@ -86,7 +87,7 @@ end
 if 0
 %% fields snapshots
 % Options
-options.INTERP    = 1;
+options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 0;
 options.NORMALIZE = 0;
@@ -133,13 +134,13 @@ options.XPERP     = linspace( 0,sqrt(6),16).^2;
 % options.SPAR      = gene_data.vp';
 % options.XPERP     = gene_data.mu';
 options.iz        = 'avg';
-options.T         = [100];
+options.T         = [0.5:0.1:1]*data.Ts3D(end);
 % options.PLT_FCT   = 'contour';
 % options.PLT_FCT   = 'contourf';
 options.PLT_FCT   = 'surfvv';
 options.ONED      = 0;
 options.non_adiab = 0;
-options.SPECIE    = 'i';
+options.SPECIES   = 'i';
 options.RMS       = 1; % Root mean square i.e. sqrt(sum_k|f_k|^2) as in Gene
 fig = plot_fa(data,options);
 % save_figure(data,fig,'.png')
@@ -149,7 +150,7 @@ if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
 options.P2J        = 0;
-options.ST         = 0;
+options.ST         = 1;
 options.PLOT_TYPE  = 'space-time';
 options.NORMALIZED = 0;
 options.JOBNUM     = 0;
@@ -171,7 +172,7 @@ options.NAME   ='\Gamma_x';
 options.PLAN   = 'kxky';
 options.COMPZ  = 'avg';
 options.OK     = 0;
-options.COMPXY = '2D'; % avg/sum/max/zero/ 2D plot otherwise
+options.COMPXY = 'avg';%'2D'; % avg/sum/max/zero/ 2D plot otherwise
 options.COMPT  = 'avg';
 options.PLOT   = 'semilogy';
 fig = spectrum_1D(data,options);
@@ -198,13 +199,14 @@ end
 if 0
 %% Mode evolution
 options.NORMALIZED = 1;
-options.TIME   = [6000:9000];
-options.KX_TW  = [6000:9000]; %kx Z modes time window
-options.KY_TW  = [6000:9000]; %ky Growth rate time window
+options.TIME   = [000:9000];
+options.KX_TW  = [25 55]; %kx Growth rate time window
+options.KY_TW  = [0 20];  %ky Growth rate time window
 options.NMA    = 1;
 options.NMODES = 800;
 options.iz     = 'avg'; % avg or index
 options.ik     = 1; % sum, max or index
+options.fftz.flag = 0;
 fig = mode_growth_meter(data,options);
 save_figure(data,fig,'.png')
 end

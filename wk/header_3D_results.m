@@ -31,7 +31,7 @@ gyacomodir = '/home/ahoffman/gyacomo/';
 %% CBC
 % resdir = 'CBC/64x32x16x5x3';
 % resdir = 'CBC/64x128x16x5x3';
-resdir = 'CBC/old/128x64x16x5x3';
+% resdir = 'CBC/old/128x64x16x5x3';
 % resdir = 'CBC/96x96x16x3x2_Nexc_6';
 % resdir = 'CBC/128x96x16x3x2_Nexc_0';
 % resdir = 'CBC/old/192x96x24x13x7';
@@ -78,8 +78,21 @@ resdir = 'CBC/old/128x64x16x5x3';
 %% CBC Miller
 % resdir = 'GCM_CBC/daint/Miller_GX_comparison';
 % resdir = 'GCM_CBC/daint/Salpha_GX_comparison';
-%% RK3
-% resdir = '';
+%% Paper 2 simulations
+% resdir = 'paper_2_nonlinear/kT_6.96/CBC_7x4x128x64x24';
+% resdir = 'paper_2_nonlinear/kT_6.96/CBC_3x2x128x64x24_Nexc_5';
+% resdir = 'paper_2_nonlinear/kT_6.96/CBC_5x3x128x64x24_Nexc_5';
+% resdir = 'paper_2_nonlinear/kT_6.96/CBC_7x4x128x64x24_Nexc_5';
+% resdir = 'paper_2_nonlinear/kT_6.96/CBC_9x5x128x64x24_Nexc_5';
+% resdir = 'paper_2_nonlinear/kT_5.3/CBC_11x6x128x64x24_Nexc_5';
+% resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_3x2x128x64x24_Nexc_5';
+% resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_5x3x128x64x24_Nexc_5';
+% resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_7x4x128x64x24_Nexc_5';
+% resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_9x5x128x64x24_Nexc_5';
+% resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_11x6x128x64x24_Nexc_5';
+% resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_15x8x128x64x24_Nexc_5';
+resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_17x9x128x64x24_Nexc_5';
+
 resdir = ['results/',resdir];
 JOBNUMMIN = 00; JOBNUMMAX = 10;
 run analysis_gyacomo

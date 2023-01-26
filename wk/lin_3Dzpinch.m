@@ -10,7 +10,7 @@ addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
 addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0';
 SIMID   = 'dbg';  % Name of the simulation
-RUN     = 0; % To run or just to load
+RUN     = 1; % To run or just to load
 default_plots_options
 % EXECNAME = 'gyacomo_debug';
 % EXECNAME = 'gyacomo_alpha';
@@ -20,12 +20,12 @@ EXECNAME = 'gyacomo';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.1;           % Collision frequency
+NU      = 0.5;           % Collision frequency
 TAU     = 1e-2;            % e/i temperature ratio
 K_Ne    = 0;            % ele Density '''
 K_Te    = 0;            % ele Temperature '''
 K_Ni    = 0;            % ion Density gradient drive
-K_Ti    = 70;            % ion Temperature '''
+K_Ti    = 200;            % ion Temperature '''
 SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 0;         % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 0.0;     % electron plasma beta
@@ -36,12 +36,12 @@ PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
-NX      = 20;    % real space x-gridpoints
-NY      = 20;     %     ''     y-gridpoints
+NX      = 2;    % real space x-gridpoints
+NY      = 40;     %     ''     y-gridpoints
 LX      = 2*pi/0.4;   % Size of the squared frequency domain
-LY      = 2*pi/0.4;     % Size of the squared frequency domain
-NZ      = 48;    % number of perpendicular planes (parallel grid)
-NPOL    = 1;
+LY      = 2*pi/0.2;     % Size of the squared frequency domain
+NZ      = 64;    % number of perpendicular planes (parallel grid)
+NPOL    = 2;
 SG      = 0;     % Staggered z grids option
 NEXC    = 1;     % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 %% GEOMETRY
@@ -57,8 +57,8 @@ PARALLEL_BC = 'dirichlet'; %'dirichlet','periodic','shearless','disconnected'
 % PARALLEL_BC = 'periodic'; %'dirichlet','periodic','shearless','disconnected'
 SHIFT_Y = 0.0;
 %% TIME PARMETERS
-TMAX    = 50;  % Maximal time unit
-DT      = 5e-2;   % Time step
+TMAX    = 20;  % Maximal time unit
+DT      = 1e-2;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = -1;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
@@ -69,7 +69,7 @@ JOB2LOAD= -1;
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-CO      = 'DG';
+CO      = 'SG';
 GKCO    = 0; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
@@ -93,7 +93,7 @@ INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_X    = MU;     %
 MU_Y    = MU;     %
 N_HD    = 4;
-MU_Z    = 1.0;     %
+MU_Z    = 0.0;     %
 MU_P    = 0.0;     %
 MU_J    = 0.0;     %
 LAMBDAD = 0.0;
@@ -101,7 +101,7 @@ NOISE0  = 1.0e-5; % Init noise amplitude
 BCKGD0  = 0.0;    % Init background
 GRADB   = 0.1;
 CURVB   = 0.1;
-COLL_KCUT = 1000;
+COLL_KCUT = 1.5;
 %%-------------------------------------------------------------------------
 %% RUN
 setup
@@ -168,14 +168,14 @@ end
 if 1
 %% linear growth rate for 3D Zpinch (kz fourier transform)
 trange = [0.5 1]*data.Ts3D(end);
-options.INTERP = 0;
+options.INTERP = 1;
 options.kxky = 0;
 options.kzkx = 0;
 options.kzky = 1;
 [lg, fig] = compute_3D_zpinch_growth_rate(data,trange,options);
 end
 if 0
-%% Mode evolution
+%% ES Mode evolution
 options.NORMALIZED = 0;
 options.K2PLOT = 1;
 options.TIME   = [0:1000];
@@ -184,6 +184,8 @@ options.NMA    = 1;
 options.NMODES = 32;
 options.iz     = 'avg';
 options.ik     = 1;
+options.fftz.flag = 1;
+options.fftz.ky = 1.5; options.fftz.kx = 0;
 fig = mode_growth_meter(data,options);
 save_figure(data,fig,'.png')
 end

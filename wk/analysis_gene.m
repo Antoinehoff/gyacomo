@@ -29,7 +29,7 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 % folder = '/misc/gene_results/CBC/128x64x16x24x12/';
 % folder = '/misc/gene_results/CBC/196x96x20x32x16_01/';
 % folder = '/misc/gene_results/CBC/256x96x24x32x12/';
-% folder = '/misc/gene_results/CBC/128x64x16x6x4/';
+folder = '/misc/gene_results/CBC/128x64x16x6x4/';
 % folder = '/misc/gene_results/CBC/KT_5.3_128x64x16x24x12_01/';
 % folder = '/misc/gene_results/CBC/KT_4.5_128x64x16x24x12_01/';
 % folder = '/misc/gene_results/CBC/KT_9_128x64x16x24x12/';
@@ -40,14 +40,29 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 % folder = '/misc/gene_results/CBC/KT_4.5_192x96x24x30x16_00/';
 % folder = '/misc/gene_results/CBC/KT_5.0_192x96x24x30x16_00/';
 % folder = '/misc/gene_results/CBC/KT_5.3_192x96x24x30x16_00/';
-% folder = '/misc/gene_results/CBC/KT_6.96_64x32x32x24x12_Nexc_5/';
-
 % folder = '/misc/gene_results/CBC/196x96x20x32x16_01/';
 % folder = '/misc/gene_results/linear_miller_CBC/hdf5_miller_s0_adiabe/';
-folder = '/misc/gene_results/linear_miller_CBC/hdf5_salpha_s0_adiabe/';
+% folder = '/misc/gene_results/linear_miller_CBC/hdf5_salpha_s0_adiabe/';
+
+%Paper 2
+% folder = '/misc/gene_results/CBC/KT_6.96_64x32x32x24x12_Nexc_5/';
+% folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x32x16_Nexc_5_00/';
+% folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x32x16_Nexc_5_01/';
+% folder = '/misc/gene_results/CBC/KT_5.3_128x64x24x32x16_Nexc_5_00/';
+% folder = '/misc/gene_results/CBC/KT_5.3_128x64x24x32x16_Nexc_5_01/';
+
 gene_data = load_gene_data(folder);
+gene_data.FIGDIR = folder;
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
-if 1
+gene_data.Pmaxi = gene_data.Nvp-1;
+gene_data.Jmaxi = gene_data.Nmu-1;
+gene_data.CODENAME = 'GENE';
+
+%% Dashboard (Compilation of main plots of the sim)
+dashboard(gene_data);
+
+%% Separated plot routines
+if 0
 %% Space time diagramm (fig 11 Ivanov 2020)
 options.TAVG_0   = 0.1*gene_data.Ts3D(end);
 options.TAVG_1   = gene_data.Ts3D(end); % Averaging times duration
@@ -56,8 +71,7 @@ options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag
 options.INTERP   = 1;
 options.NCUT     = 4;              % Number of cuts for averaging and error estimation
 options.RESOLUTION = 256;
-gene_data.FIGDIR = folder;
-fig = plot_radial_transport_and_spacetime(gene_data,options);
+fig = plot_radial_transport_and_spacetime(gene_data,options,'GENE');
 save_figure(gene_data,fig,'.png')
 end
 
@@ -94,10 +108,10 @@ if 0
 options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.NAME      = '\phi';
-% options.NAME      = 'v_y';
-% options.NAME      = '\Gamma_x';
+% options.NAME      = 'v_{Ey}';
+% options.NAME      = 'G_x';
 % options.NAME      = 'n_i';
-options.PLAN      = 'kyz';
+options.PLAN      = 'xz';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -135,23 +149,26 @@ end
 
 if 0
 %% Show f_i(vpar,mu)
-options.times   = 70;
-options.specie  = 'i';
+options.T         = [0.5 1]*gene_data.Ts3D(end);
+options.SPECIES   = 'i';
 % options.PLT_FCT = 'contour';
 % options.PLT_FCT = 'contourf';
 % options.PLT_FCT = 'surf';
 options.PLT_FCT = 'surfvv';
-options.folder  = folder;
+options.non_adiab = 0;
+options.RMS       = 1; % Root mean square i.e. sqrt(sum_k|f_k|^2) as in Gene
+options.folder  = gene_data.folder;
 options.iz      = 'avg';
 options.FIELD   = '<f_>';
-options.ONED    = 0;
-% options.FIELD   = 'Q_es';
+options.SPAR    = linspace(-3,3,32);
+options.XPERP   = linspace( 0,sqrt(6),16).^2;
+options.ONED    = 1;
 plot_fa_gene(options);
 end
 
 if 0
 %% Time averaged spectrum
-options.TIME   = [4000 5000];
+options.TIME   = [100 500];
 options.NORM   =1;
 % options.NAME   = '\phi';
 % options.NAME      = 'n_i';
@@ -171,9 +188,13 @@ if 0
 options.NORMALIZED = 0;
 options.K2PLOT = 1;
 options.TIME   = 1:700;
+options.KX_TW  = [25 55]; %kx Growth rate time window
+options.KY_TW  = [0 20];  %ky Growth rate time window
 options.NMA    = 1;
 options.NMODES = 15;
 options.iz     = 'avg';
+options.ik     = 1; % sum, max or index
+options.fftz.flag = 0;
 fig = mode_growth_meter(gene_data,options);
 save_figure(gene_data,fig)
 end

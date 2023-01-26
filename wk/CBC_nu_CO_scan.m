@@ -1,21 +1,21 @@
-gyacomodir = '/home/ahoffman/gyacomo/';
+gyacomodir  = pwd;
+gyacomodir = gyacomodir(1:end-2);
 addpath(genpath([gyacomodir,'matlab'])) % ... add
 addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
 addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0';
-% EXECNAME = 'gyacomo_dbg';
+% EXECNAME = 'gyacomo_debug';
 EXECNAME = 'gyacomo';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%
-% SIMID = 'linear_CBC_nu+PJ_scan_kT_6.96_SGGK';  % Name of the simulation
-SIMID = 'convergence_pITG_dbg';  % Name of the simulation
-% SIMID = 'linear_CBC_nu_scan_kT_11_ky_0.3_DGGK';  % Name of the simulation
-RERUN   = 1; % If you want to rerun the sim (bypass the check of existing data)
+SIMID = 'p2_CBC_convergence_coll_PJ';  % Name of the simulation
+RERUN = 0; % If you want to rerun the sim (bypass the check of existing data)
+RUN   = 1;
+% NU_a = [0.0];
+% P_a  = [8];
 
-% NU_a = [0.0 0.01 0.02 0.05 0.1];
-NU_a = [0.0];
-P_a  = [30];
-% P_a  = [2 4:4:36];
+NU_a = [0.0:0.01:0.1];
+P_a  = [2:2:30];
 J_a  = floor(P_a/2);
 % collision setting
 CO        = 'DG';
@@ -25,18 +25,16 @@ COLL_KCUT = 1.75;
 KIN_E   = 0;         % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 1e-4;     % electron plasma beta
 % background gradients setting
-K_Ne    = 0*2.22;            % ele Density '''
-K_Te    = 0*6.96;            % ele Temperature '''
-K_Ni    = 0*2.22;            % ion Density gradient drive
-K_Ti    = 6.96;            % ion Temperature '''
+K_N = 2.22;
+% K_T = 6.96;
+K_T = 5.3;
 % Geometry
-GEOMETRY= 'miller';
-% GEOMETRY= 's-alpha';
-SHEAR   = 0.0;    % magnetic shear
+GEOMETRY= 's-alpha';
+SHEAR   = 0.8;    % magnetic shear
 % time and numerical grid
-DT    = 1e-2;
+DT    = 1e-3;
 TMAX  = 50;
-kymin = 0.4;
+kymin = 0.3;
 NY    = 2;
 % arrays for the result
 g_ky = zeros(numel(NU_a),numel(P_a),NY/2+1);
@@ -58,7 +56,11 @@ for NU = NU_a
     JMAXE   = J;     % Laguerre "
     PMAXI   = P;     % " ions
     JMAXI   = J;     % "
-    NX      = 2;    % real space x-gridpoints
+    K_Ne    = K_N;            % ele Density '''
+    K_Te    = K_T;            % ele Temperature '''
+    K_Ni    = K_N;            % ion Density gradient drive
+    K_Ti    = K_T;            % ion Temperature '''
+    NX      = 12;    % real space x-gridpoints
     LX      = 2*pi/0.8;   % Size of the squared frequency domain
     LY      = 2*pi/kymin;     % Size of the squared frequency domain
     NZ      = 24;    % number of perpendicular planes (parallel grid)
@@ -121,8 +123,8 @@ for NU = NU_a
     filename = [SIMID,'/',PARAMS,'/'];
     LOCALDIR  = [gyacomodir,'results/',filename,'/'];
     % check if data exist to run if no data
-    data = compile_results(LOCALDIR,0,0); %Compile the results from first output found to JOBNUMMAX if existing
-    if (RERUN || isempty(data.NU_EVOL))
+    data_ = compile_results(LOCALDIR,0,0); %Compile the results from first output found to JOBNUMMAX if existing
+    if RUN && (RERUN || isempty(data_.NU_EVOL) || numel(data_.Ts3D)<10)
         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
 %         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
     end
@@ -130,34 +132,25 @@ for NU = NU_a
     % Load results after trying to run
     filename = [SIMID,'/',PARAMS,'/'];
     LOCALDIR  = [gyacomodir,'results/',filename,'/'];
-    data = compile_results(LOCALDIR,0,0); %Compile the results from first output found to JOBNUMMAX if existing
+    data_ = compile_results(LOCALDIR,0,0); %Compile the results from first output found to JOBNUMMAX if existing
 
-    % linear growth rate (adapted for 2D zpinch and fluxtube)
-    options.TRANGE = [0.5 1]*data.Ts3D(end);
-    options.NPLOTS = 0; % 1 for only growth rate and error, 2 for omega local evolution, 3 for plot according to z
-    options.GOK    = 0; %plot 0: gamma 1: gamma/k 2: gamma^2/k^3
-%     lg = compute_fluxtube_growth_rate(data,options);
-%     [gmax,     kmax] = max(lg.g_ky(:,end));
-%     [gmaxok, kmaxok] = max(lg.g_ky(:,end)./lg.ky);
-%     g_ky(i,j,:)  = g_ky;
-%     
-%     g_avg(i,j,:) = lg.avg_g;
-%     g_std(i,j,:) = lg.std_g;
-    
-    [~,it1] = min(abs(data.Ts3D-0.5*data.Ts3D(end))); % start of the measurement time window
-    [~,it2] = min(abs(data.Ts3D-1.0*data.Ts3D(end))); % end of ...
+    [~,it1] = min(abs(data_.Ts3D-0.8*data_.Ts3D(end))); % start of the measurement time window
+    [~,it2] = min(abs(data_.Ts3D-1.0*data_.Ts3D(end))); % end of ...
     field   = 0;
     field_t = 0;
-    for ik = 1:NY/2+1
-        field   = squeeze(sum(abs(data.PHI),3)); % take the sum over z
+    for ik = 2:NY/2+1
+        field   = squeeze(sum(abs(data_.PHI),3)); % take the sum over z
         field_t = squeeze(field(ik,1,:)); % take the kx =0, ky = ky mode only
-        to_measure = log(field_t);
-        gr = polyfit(data.Ts3D(it1:it2),to_measure(it1:it2),1);
-        g_ky(i,j,ik) = gr(1);
+        to_measure = log(field_t(it1:it2));
+        tw = data_.Ts3D(it1:it2);
+        gr = fit(tw,to_measure,'poly1');
+        err= confint(gr);
+        g_ky(i,j,ik)  = gr.p1;
+        g_std(i,j,ik) = abs(err(2,1)-err(1,1))/2;
     end
     [gmax, ikmax] = max(g_ky(i,j,:));
     
-    msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,data.ky(ikmax)); disp(msg);
+    msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,data_.ky(ikmax)); disp(msg);
 
     
     i = i + 1;
@@ -165,6 +158,12 @@ end
 j = j + 1;
 end
 
+if 0 
+%% Check time evolution
+figure;
+plot(data_.Ts3D,to_measure); hold on
+plot(data_.Ts3D(it1:it2),to_measure(it1:it2),'--');
+end
 if 1
 %% Study of the peak growth rate
 figure
@@ -181,7 +180,7 @@ for i = 1:numel(idx_)
     e_ = g_std(:,:,idx_(i));
 end
 
-colors_ = lines(numel(NU_a));
+colors_ = jet(numel(NU_a));
 subplot(121)
 for i = 1:numel(NU_a)
 %     errorbar(P_a,y_(i,:),e_(i,:),...
@@ -194,23 +193,19 @@ for i = 1:numel(NU_a)
         'color',colors_(i,:)); 
     hold on;
 end
-title(['$\kappa_T=$',num2str(K_Ti),' $k_y=k_y^{max}$']);
+title(['$\kappa_T=$',num2str(K_Ti),' $k_y=$',num2str(kymin)]);
 legend('show'); xlabel('$P$, $J=P/2$'); ylabel('$\gamma$');
 
 colors_ = jet(numel(P_a));
 subplot(122)
 for j = 1:numel(P_a)
-% errorbar(NU_a,y_(:,j),e_(:,j),...
-%     'LineWidth',1.2,...
-%     'DisplayName',['(',num2str(P_a(j)),',',num2str(J_a(j)),')'],...
-%     'color',colors_(j,:)); 
     plot(NU_a,y_(:,j),'s-',...
         'LineWidth',2.0,...
         'DisplayName',['(',num2str(P_a(j)),',',num2str(J_a(j)),')'],...
         'color',colors_(j,:)); 
     hold on;
 end
-title(['$\kappa_T=$',num2str(K_Ti),' $k_y=k_y^{max}$']);
+title(['$\kappa_T=$',num2str(K_Ti),' $k_y=$',num2str(kymin)]);
 legend('show'); xlabel(['$\nu_{',CO,'}$']); ylabel('$\gamma$');
 end
 
@@ -218,5 +213,38 @@ if 0
 %% Pcolor of the peak
 figure;
 [XX_,YY_] = meshgrid(NU_a,P_a);
-pclr=pcolor(XX_,YY_,y_'); set(pclr,'EdgeColor','none');
+% pclr=pcolor(XX_,YY_,y_'); set(pclr,'EdgeColor','none'); axis ij;
+pclr=imagesc_custom(XX_,YY_,y_'.*(y_>0)');
+title(['$\kappa_T$',num2str(data_.K_T),', $\kappa_N=$',num2str(K_N),', $k_y=$',num2str(kymin)]);
+xlabel('$\nu$'); ylabel('$P$, $J=P/2$');
+colormap(jet)
+clb=colorbar; 
+clb.Label.String = '$\gamma c_s/R$';
+clb.Label.Interpreter = 'latex';
+clb.Label.FontSize= 18;
 end
+
+%% Save metadata
+numin = num2str(min(NU_a)); numax = num2str(max(NU_a));
+ pmin = num2str(min(P_a));   pmax = num2str(max(P_a));
+filename = [num2str(NX),'x',num2str(NZ),'_ky_',num2str(kymin),...
+            '_nu_',numin,'_',numax,'_',...
+            '_P_',pmin,'_',pmax,'_KT_',num2str(K_Ti),'.mat'];
+metadata.name   = filename;
+metadata.kymin  = kymin;
+metadata.title  = ['$\kappa_T$',num2str(K_Ti),', $\kappa_N=$',num2str(K_N),', $k_y=$',num2str(kymin)];
+metadata.par    = data_.PARAMS;
+metadata.nscan  = 2;
+metadata.s1name = '$\nu$';
+metadata.s1     = NU_a;
+metadata.s2name = '$P$, $J=P/2$';
+metadata.s2     = P_a;
+metadata.dname  = '$\gamma c_s/R$';
+metadata.data   = y_;
+metadata.err    = e_;
+metadata.input_file = h5read([data_.localdir,'/outputs_00.h5'],'/files/STDIN.00');
+metadata.date   = date;
+% tosave.data     = metadata;
+save([SIMDIR,filename],'-struct','metadata');
+disp(['saved in ',SIMDIR,filename]);
+clear metadata tosave
