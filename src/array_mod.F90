@@ -27,7 +27,7 @@ MODULE array
   ! non-zonal modes (kx=0)
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_e_NZ
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_i_NZ
-  COMPLEX(dp), DIMENSION(:,:),     ALLOCATABLE :: phi_EM
+  COMPLEX(dp), DIMENSION(:,:),     ALLOCATABLE :: phi_NZ
 
   ! Non linear term array (ip,ij,iky,ikx,iz)
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: Sepj ! electron
