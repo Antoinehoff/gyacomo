@@ -17,7 +17,7 @@ CONTAINS
 !******************************************************************************!
 SUBROUTINE save_EM_ZF_modes
   USE fields
-  USE array, ONLY : moments_e_ZF, moments_i_ZF, phi_ZF, moments_e_EM,moments_i_EM,phi_EM
+  USE array, ONLY : moments_e_ZF, moments_i_ZF, phi_ZF, moments_e_NZ,moments_i_NZ,phi_EM
   USE grid
   USE time_integration, ONLY: updatetlevel
   USE model, ONLY: KIN_E
@@ -36,20 +36,20 @@ SUBROUTINE save_EM_ZF_modes
   ENDIF
   IF(contains_kx0) THEN
     IF(KIN_E) &
-    moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikx_0,izs:ize,updatetlevel)
-    moments_i_EM(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,ikx_0,izs:ize,updatetlevel)
+    moments_e_NZ(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = moments_e(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikx_0,izs:ize,updatetlevel)
+    moments_i_NZ(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,izs:ize) = moments_i(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,ikx_0,izs:ize,updatetlevel)
     phi_EM(ikys:ikye,izs:ize) = phi(ikys:ikye,ikx_0,izs:ize)
   ELSE
     IF(KIN_E) &
-    moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = 0._dp
-    moments_i_EM(ips_e:ipe_e,ijs_i:ije_i,ikys:ikye,izs:ize) = 0._dp
+    moments_e_NZ(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize) = 0._dp
+    moments_i_NZ(ips_e:ipe_e,ijs_i:ije_i,ikys:ikye,izs:ize) = 0._dp
     phi_EM(ikys:ikye,izs:ize) = 0._dp
   ENDIF
 END SUBROUTINE
 
 SUBROUTINE play_with_modes
   USE fields
-  USE array, ONLY : moments_e_ZF, moments_i_ZF, phi_ZF, moments_e_EM,moments_i_EM,phi_EM
+  USE array, ONLY : moments_e_ZF, moments_i_ZF, phi_ZF, moments_e_NZ,moments_i_NZ,phi_EM
   USE grid
   USE time_integration, ONLY: updatetlevel
   USE initial_par, ONLY: ACT_ON_MODES
@@ -98,8 +98,8 @@ SUBROUTINE play_with_modes
   CASE('freeze_entropymode')
     IF(contains_kx0) THEN
       IF(KIN_E) &
-      moments_e(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikx_0,izs:ize,updatetlevel) = moments_e_EM(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize)
-      moments_i(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,ikx_0,izs:ize,updatetlevel) = moments_i_EM(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,izs:ize)
+      moments_e(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikx_0,izs:ize,updatetlevel) = moments_e_NZ(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,izs:ize)
+      moments_i(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,ikx_0,izs:ize,updatetlevel) = moments_i_NZ(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,izs:ize)
       phi(ikys:ikye,ikx_0,izs:ize) = phi_EM(ikys:ikye,izs:ize)
     ENDIF
   CASE('amplify_zonal')

@@ -24,9 +24,9 @@ MODULE array
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_e_ZF
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_i_ZF
   COMPLEX(dp), DIMENSION(:,:),     ALLOCATABLE :: phi_ZF
-  ! Entropy modes (kx=0)
-  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_e_EM
-  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_i_EM
+  ! non-zonal modes (kx=0)
+  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_e_NZ
+  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: moments_i_NZ
   COMPLEX(dp), DIMENSION(:,:),     ALLOCATABLE :: phi_EM
 
   ! Non linear term array (ip,ij,iky,ikx,iz)
