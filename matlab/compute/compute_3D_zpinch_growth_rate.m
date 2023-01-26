@@ -4,7 +4,7 @@ FIGURE.FIGNAME = ['growth_rate_kx=0_ky=0_planes',DATA.PARAMS];
 t   = DATA.Ts3D;
 [~,its] = min(abs(t-TRANGE(1)));
 [~,ite] = min(abs(t-TRANGE(end)));
-nkx = DATA.Nkx; nky = DATA.Nky; nkz = DATA.Nz/2;
+nkx = DATA.Nkx; nky = DATA.Nky; nt = numel(t);
 % Remove AA part
 if DATA.Nx > 1
     ikxnz = abs(DATA.PHI(1,:,1,1)) > 0;
@@ -15,19 +15,27 @@ ikynz = abs(DATA.PHI(:,1,1,1)) > 0;
 
 ikynz(1) = 1; ikxnz(1) = 1; %put k=0 in the analysis
 
+% phi = fft(DATA.PHI(:,:,:,:),[],3);
 Y = fft(DATA.PHI(ikynz,ikxnz,:,:),[],3);
-phi = Y(:,:,2:2:end,:);
+phi = Y(:,:,2:2:end,:); sz_=size(phi);
+nkz = sz_(3);
+% tmp_ = ifourier_GENE(DATA.PHI(:,:,:,1)); sz_ = size(tmp_);
+% phi  = zeros(sz_(1),sz_(2),sz_(3),nt);
+% for it = 1:nt
+%    tmp_ = ifourier_GENE(DATA.PHI(:,:,:,it));
+%    phi(:,:,:,it) = fftn(tmp_);
+% end
 
 omega = zeros(nky,nkx,nkz);
 
 for ikz = 1:nkz
     for iky = 1:nky
-        for ix = 1:nkx
+        for ikx = 1:nkx
 %             omega(iy,ix,iz) = LinearFit_s(t(its:ite),squeeze(abs(phi(iy,ix,iz,its:ite))));
-            to_measure = squeeze(log(phi(iky,ix,ikz,its:ite)));
+            to_measure = squeeze(log(abs(phi(iky,ikx,ikz,its:ite))));
             tmp = polyfit(t(its:ite),to_measure(:),1);
             if ~(isnan(tmp(1)) || isinf(tmp(1)))
-                omega(iky,ix,ikz) = tmp(1);
+                omega(iky,ikx,ikz) = tmp(1);
             end
         end
     end

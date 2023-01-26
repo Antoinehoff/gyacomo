@@ -2,6 +2,7 @@ function [ DATA ] = load_gene_data( folder )
 %to load gene data as for HeLaZ results
 namelist      = read_namelist([folder,'parameters.dat']);
 DATA.namelist = namelist;
+DATA.folder   = folder;
 %% Grid
 coofile = 'coord.dat.h5';
 DATA.vp  = h5read([folder,coofile],'/coord/vp');
@@ -52,16 +53,24 @@ momfile = 'mom_ions.dat.h5';
 for jt = 1:numel(DATA.Ts3D)
     t = DATA.Ts3D(jt);
     [~, it] = min(abs(DATA.Ts3D-t));
-% 
-%     tmp = h5read([folder,momfile],['/mom_ions/dens/',sprintf('%10.10d',it-1)]);
-%     DATA.DENS_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
-% % 
-%     tmp = h5read([folder,momfile],['/mom_ions/T_par/',sprintf('%10.10d',it-1)]);
-%     DATA.TPAR_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
-% %  
-%     tmp = h5read([folder,momfile],['/mom_ions/T_perp/',sprintf('%10.10d',it-1)]);
-%     DATA.TPER_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
-%     
+try
+    tmp = h5read([folder,momfile],['/mom_ions/dens/',sprintf('%10.10d',it-1)]);
+    DATA.DENS_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
+catch
+    DATA.DENS_I(:,:,:,it) = 0;
+end
+try
+    tmp = h5read([folder,momfile],['/mom_ions/T_par/',sprintf('%10.10d',it-1)]);
+    DATA.TPAR_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
+catch
+    DATA.TPAR_I(:,:,:,it) = 0;
+end
+try
+    tmp = h5read([folder,momfile],['/mom_ions/T_perp/',sprintf('%10.10d',it-1)]);
+    DATA.TPER_I(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
+catch
+    DATA.TPER_I(:,:,:,it) = 0;
+end
     tmp = h5read([folder,phifile],['/field/phi/',sprintf('%10.10d',it-1)]);
     DATA.PHI(:,:,:,it) = tmp.real + 1i*tmp.imaginary;
 

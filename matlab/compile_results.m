@@ -45,10 +45,18 @@ DATA.outfilenames = {};
 ii = 1;
 while(CONTINUE)
     filename = sprintf([DIRECTORY,'outputs_%.2d.h5'],JOBNUM);
+    % Check presence and jobnummax
     if (exist(filename, 'file') == 2 && JOBNUM <= JOBNUMMAX)
         DATA.outfilenames{ii} = filename;
+        %test if it is corrupted or currently running
+        try
+            openable = ~isempty(h5read(filename,'/data/var3d/time'));
+        catch
+            openable = 0
+        end
+        if openable
         %% load results %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        disp(['Loading ',filename])
+        disp(sprintf('Loading ID %.2d (%s)',JOBNUM,filename));
         % Loading from output file
         CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
         DT_SIM    = h5readatt(filename,'/data/input','dt');
@@ -219,6 +227,7 @@ while(CONTINUE)
         LASTJOB  = JOBNUM;
         Pe_old = Pe_new; Je_old = Je_new;
         Pi_old = Pi_new; Ji_old = Ji_new;
+        end
     elseif (JOBNUM > JOBNUMMAX)
         CONTINUE = 0;
         disp(['found ',num2str(JOBFOUND),' results']);

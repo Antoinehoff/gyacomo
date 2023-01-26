@@ -66,8 +66,7 @@ end
 
 if ~PLOT2D
     set(gcf, 'Position',  [20 50 1200 500])
-    subplot(1,2,1)
-
+    FIGURE.ax1 = subplot(1,2,1,'parent',FIGURE.fig);
     k     = data.ky;
     xname = '$k_y$';
 
@@ -111,7 +110,7 @@ if ~PLOT2D
 %     legend('show','Location','eastoutside')
     xlabel(xname); ylabel(ynamecx)
 
-    subplot(1,2,2)
+    FIGURE.ax2 = subplot(1,2,2,'parent',FIGURE.fig);
 
     k     = data.kx;
     xname = '$k_x$';

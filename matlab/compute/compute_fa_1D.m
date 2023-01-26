@@ -17,7 +17,7 @@ xmin = min(abs(x));
 [~, iky0] = min(abs(data.ky));
 kx_ = data.kx; ky_ = data.ky;
 
-switch options.SPECIE
+switch options.SPECIES
     case 'e'
         Napj_     = data.Nepj;
         parray    = double(data.Pe);

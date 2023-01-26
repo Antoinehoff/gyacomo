@@ -10,7 +10,7 @@ end
 FRAMES = unique(FRAMES);
 %% Setup the plot geometry
 [KX, KY] = meshgrid(DATA.kx, DATA.ky);
-directions = {'x','y','z'};
+directions = {'y','x','z'};
 Nx = DATA.Nx; Ny = DATA.Ny; Nz = DATA.Nz; Nt = numel(FRAMES);
 POLARPLOT = OPTIONS.POLARPLOT;
 LTXNAME = OPTIONS.NAME;
@@ -39,6 +39,14 @@ switch OPTIONS.PLAN
         XNAME = '$k_y$'; YNAME = '$z$';
         [Y,X] = meshgrid(DATA.z,DATA.ky);
         REALP = 0; COMPDIM = 2; POLARPLOT = 0; SCALE = 0;
+    case 'sx'
+        XNAME = '$v_\parallel$'; YNAME = '$\mu$';
+        [Y,X] = meshgrid(OPTIONS.XPERP,OPTIONS.SPAR);
+        REALP = 1; COMPDIM = 3; POLARPLOT = 0; SCALE = 0;
+        for i = 1:numel(OPTIONS.TIME)
+            [~,FRAMES(i)] =min(abs(OPTIONS.TIME(i)-DATA.Ts5D));
+        end
+        FRAMES = unique(FRAMES); Nt = numel(FRAMES);
 end
 Xmax_ = max(max(abs(X))); Ymax_ = max(max(abs(Y)));
 Lmin_ = min([Xmax_,Ymax_]);
@@ -66,27 +74,28 @@ else
 end
 %% Process the field to plot
 % short term writing --
-b_e = DATA.sigma_e*sqrt(2*DATA.tau_e)*sqrt(KX.^2+KY.^2);
-adiab_e = kernel(0,b_e);
-pol_e        = kernel(0,b_e).^2;
-for n = 1:DATA.Jmaxe
-    adiab_e = adiab_e + kernel(n,b_e).^2;
-    pol_e   = pol_e + kernel(n,b_e).^2;
-end
-adiab_e = DATA.q_e/DATA.tau_e .* adiab_e;
-pol_e   = DATA.q_e^2/DATA.tau_e * (1 - pol_e);
-
-b_i = DATA.sigma_i*sqrt(2*DATA.tau_i)*sqrt(KX.^2+KY.^2);
-adiab_i = kernel(0,b_i);
-pol_i        = kernel(0,b_i).^2;
-for n = 1:DATA.Jmaxi
-    adiab_i = adiab_i + kernel(n,b_i).^2;
-    pol_i   = pol_i + kernel(n,b_i).^2;
-end
-pol_i      = DATA.q_i^2/DATA.tau_i * (1 - pol_i);
-adiab_i    = DATA.q_i/DATA.tau_i .* adiab_i;
-poisson_op = (pol_i + pol_e);
-
+% b_e = DATA.sigma_e*sqrt(2*DATA.tau_e)*sqrt(KX.^2+KY.^2);
+% adiab_e = kernel(0,b_e);
+% pol_e        = kernel(0,b_e).^2;
+% for n = 1:DATA.Jmaxe
+%     adiab_e = adiab_e + kernel(n,b_e).^2;
+%     pol_e   = pol_e + kernel(n,b_e).^2;
+% end
+% adiab_e = DATA.q_e/DATA.tau_e .* adiab_e;
+% pol_e   = DATA.q_e^2/DATA.tau_e * (1 - pol_e);
+% 
+% b_i = DATA.sigma_i*sqrt(2*DATA.tau_i)*sqrt(KX.^2+KY.^2);
+% adiab_i = kernel(0,b_i);
+% pol_i        = kernel(0,b_i).^2;
+% for n = 1:DATA.Jmaxi
+%     adiab_i = adiab_i + kernel(n,b_i).^2;
+%     pol_i   = pol_i + kernel(n,b_i).^2;
+% end
+% pol_i      = DATA.q_i^2/DATA.tau_i * (1 - pol_i);
+% adiab_i    = DATA.q_i/DATA.tau_i .* adiab_i;
+% poisson_op = (pol_i + pol_e);
+adiab_e =0; adiab_i =0; poisson_op=1;
+SKIP_COMP = 0; % Turned on only for kin. distr. func. plot
 % --
 switch OPTIONS.COMP
     case 'avg'
@@ -247,11 +256,34 @@ switch OPTIONS.NAME
             end
             FLD_(:,:,it)= squeeze(compr(tmp(1:DATA.Nky,1:DATA.Nkx,:)));
         end     
+    case 'f_i'
+        SKIP_COMP = 1;
+        shift_x = @(x) x; shift_y = @(y) y;
+        NAME = 'fi'; OPTIONS.SPECIE = 'i';
+        for it = 1:numel(FRAMES)
+            OPTIONS.T = DATA.Ts5D(FRAMES(it));
+            OPTIONS.Z = OPTIONS.COMP;
+            [~,~,FIELD(:,:,it)] = compute_fa(DATA,OPTIONS);
+        end  
+    case 'f_e'
+        SKIP_COMP = 1;
+        shift_x = @(x) x; shift_y = @(y) y;
+        NAME = 'fe'; OPTIONS.SPECIE = 'e';
+        [~,it0_] =min(abs(OPTIONS.TIME(1)-DATA.Ts5D));
+        [~,it1_]=min(abs(OPTIONS.TIME(end)-DATA.Ts5D));
+        dit_ = 1;%ceil((it1_-it0_+1)/10); 
+        FRAMES = it0_:dit_:it1_;
+        iz = 1;
+        for it = 1:numel(FRAMES)
+            OPTIONS.T = DATA.Ts5D(FRAMES(it));
+            [~,~,FIELD(:,:,it)] = compute_fa(DATA,OPTIONS);
+        end  
     otherwise
         disp('Fieldname not recognized');
         return
 end
 % Process the field according to the 2D plane and the space (real/cpx)
+if ~SKIP_COMP
 if COMPDIM == 3
     for it = 1:numel(FRAMES)
         tmp = squeeze(compr(OPE_.*FLD_(:,:,:,it)));
@@ -265,10 +297,11 @@ else
     end
     for it = 1:numel(FRAMES)
         for iz = 1:numel(DATA.z)
-            tmp(:,:,iz) = squeeze(process(OPE_.*FLD_(:,:,:,it)));
+            tmp(:,:,iz) = squeeze(process(OPE_.*FLD_(:,:,iz,it)));
         end
         FIELD(:,:,it) = squeeze(compr(tmp));
     end                
+end
 end
 TOPLOT.FIELD     = FIELD;
 TOPLOT.FRAMES    = FRAMES;

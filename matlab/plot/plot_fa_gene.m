@@ -1,7 +1,7 @@
-function plot_fa_gene(OPTIONS)
+function [FIGURE] =  plot_fa_gene(OPTIONS)
 folder = OPTIONS.folder;
-TIMES  = OPTIONS.times;
-specie = OPTIONS.specie;
+TIMES  = OPTIONS.T;
+SPECIES = OPTIONS.SPECIES;
 PLT_FCT= OPTIONS.PLT_FCT;
 
 file = 'coord.dat.h5';
@@ -25,7 +25,7 @@ end
 file = 'vsp.dat.h5';
 time  = h5read([folder,file],'/vsp/time');
 
-fig = figure;
+FIGURE.fig = figure;
 
 G_t = [];
 Gdata = 0;
@@ -38,30 +38,32 @@ end
 Gdata = Gdata ./ numel(TIMES);
 
 if OPTIONS.ONED
-    switch specie
+    switch SPECIES
         case 'e'
         FFa    = zcomp(Gdata(:,:,:,2));
         FFa    = abs(FFa)./max(max(abs(FFa)));
-    subplot(1,2,1)
+    FIGURE.ax1 = subplot(1,2,1,'parent',FIGURE.fig);
         plot(vp,FFa(:,im0)); hold on;
-    subplot(1,2,2)
+    FIGURE.ax2 = subplot(1,2,2,'parent',FIGURE.fig);
         plot(mu,FFa(iv0,:)); hold on;
         case 'i'
         FFa   = zcomp(Gdata(:,:,:,1));    
         FFa    = abs(FFa)./max(max(abs(FFa)));
     end
 
-    subplot(1,2,1)
+    FIGURE.ax1 = subplot(1,2,1,'parent',FIGURE.fig);
         plot(vp,FFa(:,im0)); hold on;
-        legend(specie)
+        legend(SPECIES)
         xlabel('$v_\parallel, (\mu=0)$'); ylabel('$\langle |f_a|^2\rangle_{xy}^{1/2}$'); 
 
-    subplot(1,2,2)
+    FIGURE.ax2 = subplot(1,2,2,'parent',FIGURE.fig);
         plot(mu,FFa(iv0,:)); hold on;
-        legend(specie)
-        xlabel('$\mu, (v_\parallel=0)$'); ylabel('$\langle |f_a|^2\rangle_{xy}^{1/2}$'); 
+        legend(SPECIES)
+        xlabel('$\mu, (v_\parallel=0)$'); %ylabel('$\langle |f_a|^2\rangle_{xy}^{1/2}$'); 
+        xticks(FIGURE.ax2,[]);
 else
-switch specie
+    FIGURE.ax1 = subplot(1,1,1,'parent',FIGURE.fig);
+switch SPECIES
     case 'e'
     name  = '$f_e(v_\parallel,\mu_p)$';
     FFa    = zcomp(squeeze(Gdata(:,:,:,2)));

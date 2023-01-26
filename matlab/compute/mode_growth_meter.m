@@ -2,12 +2,16 @@ function [FIGURE] = mode_growth_meter(DATA,OPTIONS)
 
 NORMALIZED = OPTIONS.NORMALIZED;
 Nma   = OPTIONS.NMA; %Number moving average
+d     = OPTIONS.fftz.flag;  % To add spectral evolution of z (useful for 3d zpinch)
 
+    
 switch OPTIONS.iz
     case 'avg'
         field = squeeze(mean(DATA.PHI,3));
+        zstrcomp = 'z-avg';
     otherwise
         field = squeeze(DATA.PHI(:,:,OPTIONS.iz,:));
+        zstrcomp = ['z=',DATA.z(OPTIONS.iz)];
 end
 
 FRAMES = zeros(size(OPTIONS.TIME));
@@ -18,16 +22,18 @@ FRAMES = unique(FRAMES);
 t  = DATA.Ts3D(FRAMES);
 
 % time window where we measure the growth
-it1 = floor(numel(t)/2);
-it2 = numel(t);
+TW = [OPTIONS.KY_TW; OPTIONS.KX_TW];
 
 [~,ikzf] = max(mean(squeeze(abs(field(1,:,FRAMES))),2));
 
 FIGURE.fig = figure; set(gcf, 'Position',  [100 100 1200 700])
 FIGURE.FIGNAME = 'mode_growth_meter';
 for i = 1:2
-    MODES_SELECTOR = i; %(2:Zonal, 1: NZonal)
+    MODES_SELECTOR = i; %(1:kx=0; 2:ky=0)
 
+    [~,it1] = min(abs(t-TW(i,1)));
+    [~,it2] = min(abs(t-TW(i,2)));
+    
     if MODES_SELECTOR == 2
         switch OPTIONS.ik
             case 'sum'
@@ -68,13 +74,6 @@ for i = 1:2
     end
 
     MODES = 1:numel(k);
-    % MODES = zeros(size(OPTIONS.K2PLOT));
-    % for i = 1:numel(OPTIONS.K2PLOT)
-    %     [~,MODES(i)] =min(abs(OPTIONS.K2PLOT(i)-k));
-    % end
-
-
-    % plt = @(x,ik) abs(squeeze(x(1,ik,iz,FRAMES)))./max(abs(squeeze(x(1,ik,iz,FRAMES))));
 
     gamma = MODES;
     amp   = MODES;
@@ -89,15 +88,17 @@ for i = 1:2
     mod2plot = [2:min(Nmax,OPTIONS.NMODES+1)];
     clr_ = jet(numel(mod2plot));
     %plot
-    subplot(2,3,1+3*(i-1))
+%     subplot(2+d,3,1+3*(i-1))
+    FIGURE.axes(1+3*(i-1)) = subplot(2+d,3,1+3*(i-1),'parent',FIGURE.fig);
         [YY,XX] = meshgrid(t,fftshift(k));
         pclr = pcolor(XX,YY,abs(plt(fftshift(field,MODES_SELECTOR),1:numel(k))));set(pclr, 'edgecolor','none');  hold on;
         set(gca,'YDir','normal')
     %     xlim([t(1) t(end)]); %ylim([1e-5 1])
         xlabel(['$',kstr,'\rho_s$']); ylabel('$t c_s /\rho_s$');
-        title(MODESTR)  
+        title([MODESTR,', ',zstrcomp])  
 
-    subplot(2,3,2+3*(i-1))
+%     subplot(2+d,3,2+3*(i-1))
+    FIGURE.axes(2+3*(i-1)) = subplot(2+d,3,2+3*(i-1),'parent',FIGURE.fig);
         for i_ = 1:numel(mod2plot)
             semilogy(t,plt(field,MODES(mod2plot(i_))),'color',clr_(i_,:)); hold on;
     %         semilogy(t,exp(gamma(i_).*t+amp(i_)),'--k')
@@ -112,7 +113,8 @@ for i = 1:2
         xlabel('$t c_s /\rho_s$'); ylabel(['$|\phi_{',kstr,'}|$']);
         title('Measure time window')
 
-    subplot(2,3,3+3*(i-1))
+%     subplot(2+d,3,3+3*(i-1))
+    FIGURE.axes(3+3*(i-1)) = subplot(2+d,3,3+3*(i-1),'parent',FIGURE.fig);
         plot(k(MODES),gamma,...
                 'DisplayName',['(',num2str(DATA.Pmaxi-1),',',num2str(DATA.Jmaxi-1),')']); hold on;
         for i_ = 1:numel(mod2plot)
@@ -124,4 +126,60 @@ for i = 1:2
         xlabel(['$',kstr,'\rho_s$']); ylabel('$\gamma$');
         title('Growth rates')
 end
+
+if d
+    [~,ikx] = min(abs(DATA.kx-OPTIONS.fftz.kx));
+    [~,iky] = min(abs(DATA.ky-OPTIONS.fftz.ky));
+    sz_=size(DATA.PHI);nkz = sz_(3)/2;
+    k = [(0:nkz/2), (-nkz/2+1):-1]/DATA.Npol;
+    % Spectral treatment of z-dimension
+    Y = fft(DATA.PHI(iky,ikx,:,:),[],3);
+    phi = squeeze(Y(1,1,2:2:end,:)); 
+    
+    gamma = zeros(nkz);
+    for ikz = 1:nkz
+        to_measure = squeeze(log(abs(phi(ikz,it1:it2))));
+        tmp = polyfit(t(it1:it2),to_measure(:),1);
+        if ~(isnan(tmp(1)) || isinf(tmp(1)))
+            gamma(ikz) = tmp(1);
+        end
+    end
+     %plot
+    MODES    = 1:numel(k);
+    mod2plot = [2:2:min(nkz,OPTIONS.NMODES+1)];
+    clr_     = jet(numel(mod2plot));
+    subplot(3,3,7)
+        [YY,XX] = meshgrid(t,fftshift(k));
+        pclr = pcolor(XX,YY,abs(phi));set(pclr, 'edgecolor','none');  hold on;
+        set(gca,'YDir','normal')
+    %     xlim([t(1) t(end)]); %ylim([1e-5 1])
+        xlabel('$k_\parallel$'); ylabel('$t c_s /\rho_s$');
+        title(['$k_x=$',num2str(DATA.kx(ikx)),', $k_y=$',num2str(DATA.ky(iky))]);  
+
+    subplot(3,3,8)
+        for i_ = 1:numel(mod2plot)
+            im_ = MODES(mod2plot(i_));
+            semilogy(t,abs(phi(im_,:)),'color',clr_(i_,:)); hold on;
+        end
+        %plot the time window where the gr are measured
+        plot(t(it1)*[1 1],[1e-10 1],'--k')
+        plot(t(it2)*[1 1],[1e-10 1],'--k')
+        xlim([t(1) t(end)]); %ylim([1e-5 1])
+        xlabel('$t c_s /\rho_s$'); ylabel(['$|\phi_{',kstr,'}|$']);
+        title('Measure time window')
+
+    subplot(3,3,9)
+        plot(k(MODES),gamma,...
+                'DisplayName',['(',num2str(DATA.Pmaxi-1),',',num2str(DATA.Jmaxi-1),')']); hold on;
+        for i_ = 1:numel(mod2plot)
+            plot(k(MODES(mod2plot(i_))),gamma(mod2plot(i_)),'x','color',clr_(i_,:));
+        end
+        if MODES_SELECTOR == 2
+            plot(k(ikzf),gamma(ikzf),'ok');
+        end
+        xlabel(['$k_\parallel$']); ylabel('$\gamma$');
+        title('Growth rates')   
+    
+end
+
 end
