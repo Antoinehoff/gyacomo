@@ -2,7 +2,7 @@
   nrun   = 100000000              !number of maximal time steps
   dt     = 0.01                   !time step
   tmax   = 500                    !maximal physical time
-  maxruntime = 60 ! 1h 14400 !4h  !maximal run time
+  maxruntime = 60 ! 1h 14400 !4h  !maximal wallclock run time (in seconds)
 /
 &GRID
   pmaxe  = 6                      !maximal degree of Hermite polynomials for e
@@ -22,7 +22,7 @@
   geom   = 's-alpha'              !magnetic equilibrium geometry (Z-pinch,s-alpha,miller)
   q0     = 1.4                    !safety factor (s-alpha,miller only)
   shear  = 0.8                    !shear (s-alpha,miller only)
-  eps    = 0.18                   !aspect ratio (s-alpha,miller only)
+  eps    = 0.18                   !inverse aspect ratio (s-alpha,miller only)
   kappa  = 1                      !elongation (miller only)
   delta  = 0                      !triangularity (miller only)
   zeta   = 0                      !squareness (miller only)
