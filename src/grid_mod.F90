@@ -45,6 +45,8 @@ MODULE grid
   ! local z weights for computing simpson rule
   INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC :: zweights_SR
   REAL(dp), PUBLIC, PROTECTED  ::  deltax,  deltay, deltaz, inv_deltaz
+  REAL(dp), PUBLIC, PROTECTED  ::  diff_pe_coeff, diff_je_coeff
+  REAL(dp), PUBLIC, PROTECTED  ::  diff_pi_coeff, diff_ji_coeff
   REAL(dp), PUBLIC, PROTECTED  ::  diff_kx_coeff, diff_ky_coeff, diff_dz_coeff
   INTEGER,  PUBLIC, PROTECTED  ::  ixs,  ixe,  iys,  iye,  izs,  ize
   INTEGER,  PUBLIC, PROTECTED  ::  izgs, izge ! ghosts
@@ -241,8 +243,10 @@ CONTAINS
     IF(((ips_e .EQ. ip0_e) .OR. (ips_i .EQ. ip0_e)) .AND. ((ipe_e .LT. ip2_e) .OR. (ipe_i .LT. ip2_i)))&
      WRITE(*,*) "Warning : distribution along p may not work with DGGK"
     ! Precomputations
-    pmaxe_dp   = real(pmaxe,dp)
-    pmaxi_dp   = real(pmaxi,dp)
+    pmaxe_dp      = real(pmaxe,dp)
+    pmaxi_dp      = real(pmaxi,dp)
+    diff_pe_coeff = (1._dp/pmaxe_dp)**4
+    diff_pi_coeff = (1._dp/pmaxi_dp)**4
 
     ! Overwrite SOLVE_AMPERE flag if beta is zero
     IF(beta .EQ. 0._dp) THEN
@@ -280,6 +284,9 @@ CONTAINS
     maxj       = MAX(jmaxi, jmaxe)
     jmaxe_dp   = real(jmaxe,dp)
     jmaxi_dp   = real(jmaxi,dp)
+    diff_je_coeff = (1._dp/jmaxe_dp)**4
+    diff_ji_coeff = (1._dp/jmaxi_dp)**4
+
     ! j=0 indices
     DO ij = ijs_e,ije_e; IF(jarray_e(ij) .EQ. 0) ij0_e = ij; END DO
     DO ij = ijs_i,ije_i; IF(jarray_i(ij) .EQ. 0) ij0_i = ij; END DO
@@ -563,7 +570,7 @@ CONTAINS
       contains_zmin = .TRUE.
     IF(abs(zarray(ize,0) - zmax) .LT. EPSILON(zmax)) &
       contains_zmax = .TRUE.
-    ! Weitghs for Simpson rule
+    ! Weights for Simpson rule
     ALLOCATE(zweights_SR(izs:ize))
     DO iz = izs,ize
       IF(MODULO(iz,2) .EQ. 1) THEN ! odd iz
