@@ -12,7 +12,7 @@ SUBROUTINE compute_moments_eq_rhs
   USE prec_const
   USE collision
   USE time_integration
-  USE geometry, ONLY: gradz_coeff, dBdz, Ckxky, hatB_NL, hatB
+  USE geometry, ONLY: gradz_coeff, dBdz, Ckxky, hatB_NL
   USE calculus, ONLY : interp_z, grad_z, grad_z2
   IMPLICIT NONE
 
@@ -25,7 +25,7 @@ SUBROUTINE compute_moments_eq_rhs
                      kernel_i, nadiab_moments_i, ddz_nipj, interp_nipj, Sipj,&
                      moments_i(ipgs_i:ipge_i,ijgs_i:ijge_i,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel),&
                      TColl_i, ddzND_nipj, &
-                     moments_rhs_i(ipgs_i:ipge_i,ijgs_i:ijge_i,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel))
+                     moments_rhs_i(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel))
 
     !compute ion moments_eq_rhs
     IF(KIN_E) &
@@ -37,7 +37,7 @@ SUBROUTINE compute_moments_eq_rhs
                      kernel_e, nadiab_moments_e, ddz_nepj, interp_nepj, Sepj,&
                      moments_e(ipgs_e:ipge_e,ijgs_e:ijge_e,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel),&
                      TColl_e, ddzND_nepj,&
-                     moments_rhs_e(ipgs_e:ipge_e,ijgs_e:ijge_e,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel))
+                     moments_rhs_e(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel))
 
   CONTAINS
   !_____________________________________________________________________________!
@@ -51,7 +51,7 @@ SUBROUTINE compute_moments_eq_rhs
   ! computed in collision_mod.F90 and the nonlinear term Sapj computed in
   ! nonlinear_mod.F90.
   ! All arguments of the subroutines are inputs only except the last one,
-  ! moments_rhs_ that will contain the sum of every terms in the RHS. 
+  ! moments_rhs_ that will contain the sum of every terms in the RHS.
   !_____________________________________________________________________________!
   SUBROUTINE moments_eq_rhs(ips,ipe,ipgs,ipge,ijs,ije,ijgs,ijge,jarray,parray,&
                    xnapj, xnapp2j, xnapm2j, xnapjp1, xnapjm1, xnapp1j, xnapm1j,&
