@@ -33,6 +33,10 @@ SUBROUTINE inital
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy phi'
       CALL init_phi
       CALL update_ghosts_EM
+    CASE ('phi_ppj')
+      IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy phi'
+      CALL init_phi_ppj
+      CALL update_ghosts_EM
     ! set moments_00 (GC density) with noise and compute phi afterwards
     CASE('mom00')
       IF (my_id .EQ. 0) WRITE(*,*) 'Init noisy gyrocenter density'
@@ -326,29 +330,82 @@ END SUBROUTINE init_phi
 !******************************************************************************!
 
 !******************************************************************************!
+!!!!!!! Initialize a ppj ES potential and cancel the moments
+!******************************************************************************!
+SUBROUTINE init_phi_ppj
+  USE basic
+  USE grid
+  USE fields
+  USE prec_const
+  USE initial_par
+  USE model, ONLY: KIN_E, LINEARITY
+  USE geometry, ONLY: Jacobian, iInt_Jacobian
+  IMPLICIT NONE
+  REAL(dp) :: kx, ky, z, amp
+  amp = 1.0_dp
+    !**** ppj initialization *******************************************
+      DO ikx=ikxs,ikxe
+        kx = kxarray(ikx)
+        DO iky=ikys,ikye
+          ky = kyarray(iky)
+          DO iz=izs,ize
+            z = zarray(iz,0)
+            IF (ky .NE. 0) THEN
+              phi(iky,ikx,iz) = 0._dp
+            ELSE
+              phi(iky,ikx,iz) = 0.5_dp*amp*(deltakx/(ABS(kx)+deltakx))
+            ENDIF
+            ! z-dep and noise
+            phi(iky,ikx,iz) = phi(iky,ikx,iz) * &
+            (Jacobian(iz,0)*iInt_Jacobian)**2
+          END DO
+        END DO
+      END DO
+
+    !symmetry at ky = 0 to keep real inverse transform
+    IF ( contains_ky0 ) THEN
+      DO ikx=2,Nkx/2
+        phi(iky_0,ikx,izs:ize) = phi(iky_0,Nkx+2-ikx,izs:ize)
+      END DO
+      phi(iky_0,ikx_0,izs:ize) = REAL(phi(iky_0,ikx_0,izs:ize)) !origin must be real
+    ENDIF
+
+    !**** ensure no previous moments initialization
+    IF(KIN_E) moments_e = 0._dp
+    moments_i = 0._dp
+
+END SUBROUTINE init_phi_ppj
+!******************************************************************************!
+
+!******************************************************************************!
 !******************************************************************************!
 !!!!!!! Initialize an ionic Gaussian blob on top of the preexisting modes
 !******************************************************************************!
 SUBROUTINE initialize_blob
   USE fields
   USE grid
+  USE geometry, ONLY: shear, Jacobian, iInt_Jacobian
   USE model, ONLY: KIN_E, LINEARITY
   IMPLICIT NONE
-  REAL(dp) ::kx, ky, sigma, gain
-  sigma = 0.5_dp
-  gain  = 5e2_dp
+  REAL(dp) ::kx, ky, z, sigma_x, sigma_y, gain
+  sigma_y = 1.0
+  sigma_x = sigma_y
+  gain  = 10.0
 
-  DO ikx=ikxs,ikxe
-    kx = kxarray(ikx)
+
   DO iky=ikys,ikye
     ky = kyarray(iky)
   DO iz=izs,ize
+    z  = zarray(iz,0)
+  DO ikx=ikxs,ikxe
+    kx = kxarray(ikx) + z*shear*ky
     DO ip=ips_i,ipe_i
     DO ij=ijs_i,ije_i
       IF( (iky .NE. iky_0) .AND. (ip .EQ. 1) .AND. (ij .EQ. 1)) THEN
         moments_i( ip,ij,iky,ikx,iz, :) = moments_i( ip,ij,iky,ikx,iz, :) &
-        + gain*sigma/SQRT2 * exp(-(kx**2+ky**2)*sigma**2/4._dp) &
-          * AA_x(ikx)*AA_y(iky)!&
+        + gain * exp(-((kx/sigma_x)**2+(ky/sigma_y)**2)) &
+          * AA_x(ikx)*AA_y(iky)* &
+          (Jacobian(iz,0)*iInt_Jacobian)**2!&
           ! * exp(sigmai2_taui_o2*(kx**2+ky**2))
       ENDIF
     ENDDO
@@ -358,8 +415,9 @@ SUBROUTINE initialize_blob
     DO ij=ijs_e,ije_e
       IF( (iky .NE. iky_0) .AND. (ip .EQ. 1) .AND. (ij .EQ. 1)) THEN
         moments_e( ip,ij,iky,ikx,iz, :) = moments_e( ip,ij,iky,ikx,iz, :) &
-        + gain*sigma/SQRT2 * exp(-(kx**2+ky**2)*sigma**2/4._dp) &
-          * AA_x(ikx)*AA_y(iky)!&
+        + gain * exp(-((kx/sigma_x)**2+(ky/sigma_y)**2)) &
+          * AA_x(ikx)*AA_y(iky)* &
+          (Jacobian(iz,0)*iInt_Jacobian)**2!&
           ! * exp(sigmai2_taui_o2*(kx**2+ky**2))
       ENDIF
     ENDDO
@@ -423,7 +481,7 @@ SUBROUTINE init_ppj
                 (Jacobian(iz,0)*iInt_Jacobian)**2
 
                 ! divide by kernel_0 to adjust to particle density (n = kernel_0 N00)
-                moments_e(ip,ij,iky,ikx,iz,:) = moments_e(ip,ij,iky,ikx,iz,:)/kernel_e(ij,iky,ikx,iz,0)
+                ! moments_e(ip,ij,iky,ikx,iz,:) = moments_e(ip,ij,iky,ikx,iz,:)/kernel_e(ij,iky,ikx,iz,0)
               END DO
             END DO
           END DO
@@ -467,7 +525,7 @@ SUBROUTINE init_ppj
                 moments_i(ip,ij,iky,ikx,iz,:) = moments_i(ip,ij,iky,ikx,iz,:) * &
                 (Jacobian(iz,0)*iInt_Jacobian)**2
                 ! divide by kernel_0 to adjust to particle density (n = kernel_0 N00)
-                moments_i(ip,ij,iky,ikx,iz,:) = moments_i(ip,ij,iky,ikx,iz,:)/kernel_i(ij,iky,ikx,iz,0)
+                ! moments_i(ip,ij,iky,ikx,iz,:) = moments_i(ip,ij,iky,ikx,iz,:)/kernel_i(ij,iky,ikx,iz,0)
               END DO
             END DO
           END DO
