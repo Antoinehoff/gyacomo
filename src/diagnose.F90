@@ -421,10 +421,10 @@ SUBROUTINE diagnose_3d
       Ni00(ikys:ikye,ikxs:ikxe,izs:ize) = moments_i(ip0_i,ij0_i,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel)
     CALL write_field3d_kykxz(Ni00(ikys:ikye,ikxs:ikxe,izs:ize), 'Ni00')
 
-    ! CALL compute_Napjz_spectrum
-    ! IF(KIN_E) &
-    ! CALL write_field3d_pjz_e(Nepjz(ips_e:ipe_e,ijs_e:ije_e,izs:ize), 'Nepjz')
-    ! CALL write_field3d_pjz_i(Nipjz(ips_i:ipe_i,ijs_i:ije_i,izs:ize), 'Nipjz')
+    CALL compute_Napjz_spectrum
+    IF(KIN_E) &
+    CALL write_field3d_pjz_e(Nepjz(ips_e:ipe_e,ijs_e:ije_e,izs:ize), 'Nepjz')
+    CALL write_field3d_pjz_i(Nipjz(ips_i:ipe_i,ijs_i:ije_i,izs:ize), 'Nipjz')
   ENDIF
 
   !! Fuid moments
@@ -482,29 +482,35 @@ SUBROUTINE diagnose_3d
   END SUBROUTINE write_field3d_kykxz
 
   SUBROUTINE write_field3d_pjz_i(field, text)
+    USE parallel, ONLY : gather_pjz_i
     IMPLICIT NONE
-    REAL(dp), DIMENSION(ips_i:ipe_i,ijs_i:ije_i,izs:ize), INTENT(IN) :: field
+    COMPLEX(dp), DIMENSION(ips_i:ipe_i,ijs_i:ije_i,izs:ize), INTENT(IN) :: field
+    COMPLEX(dp), DIMENSION(1:pmaxi+1,1:jmaxi+1,1:Nz) :: field_full
     CHARACTER(*), INTENT(IN) :: text
     CHARACTER(LEN=50) :: dset_name
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
     IF (num_procs .EQ. 1) THEN ! no data distribution
       CALL putarr(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,izs:ize), ionode=0)
     ELSE
-      CALL putarrnd(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,izs:ize),  (/1, 0, 3/))
+      CALL gather_pjz_i(field(ips_i:ipe_i,ijs_i:ije_i,izs:ize),field_full(1:pmaxi+1,1:jmaxi+1,1:Nz))
+      CALL putarr(fidres, dset_name, field(1:pmaxi+1,1:jmaxi+1,1:Nz), ionode=0)
     ENDIF
     CALL attach(fidres, dset_name, "time", time)
   END SUBROUTINE write_field3d_pjz_i
 
   SUBROUTINE write_field3d_pjz_e(field, text)
+    USE parallel, ONLY : gather_pjz_e
     IMPLICIT NONE
-    REAL(dp), DIMENSION(ips_e:ipe_e,ijs_e:ije_e,izs:ize), INTENT(IN) :: field
+    COMPLEX(dp), DIMENSION(ips_e:ipe_e,ijs_e:ije_e,izs:ize), INTENT(IN) :: field
+    COMPLEX(dp), DIMENSION(1:pmaxe+1,1:jmaxe+1,1:Nz) :: field_full
     CHARACTER(*), INTENT(IN) :: text
     CHARACTER(LEN=50) :: dset_name
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
     IF (num_procs .EQ. 1) THEN ! no data distribution
       CALL putarr(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,izs:ize), ionode=0)
     ELSE
-      CALL putarrnd(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,izs:ize),  (/1, 0, 3/))
+      CALL gather_pjz_e(field(ips_e:ipe_e,ijs_e:ije_e,izs:ize),field_full(1:pmaxe+1,1:jmaxe+1,1:Nz))
+      CALL putarr(fidres, dset_name, field(1:pmaxi+1,1:jmaxi+1,1:Nz), ionode=0)
     ENDIF
     CALL attach(fidres, dset_name, "time", time)
   END SUBROUTINE write_field3d_pjz_e
