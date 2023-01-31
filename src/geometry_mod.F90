@@ -167,7 +167,7 @@ CONTAINS
 
         ! Nonlinear term prefactor
         ! (according to my derivations, there should be a metric dependent factor in front of the Poisson bracket)
-        hatB_NL(iz,eo) = 1._dp !Jacobian(iz,eo)*(gxx(iz,eo)*gyy(iz,eo) - gxy(iz,eo)**2)/hatB(iz,eo)
+        hatB_NL(iz,eo) = (gxx(iz,eo)*gyy(iz,eo) - gxy(iz,eo)**2)
 
       ENDDO
     ENDDO
