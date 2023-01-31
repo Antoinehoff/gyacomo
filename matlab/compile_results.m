@@ -13,6 +13,7 @@ DATA.DT_EVOL  = []; %
 % FIELDS
 Nipj_    = []; Nepj_    = [];
 Ni00_    = []; Ne00_    = [];
+Nipjz_   = []; Nepjz_   = [];
 HFLUXI_   = [];
 HFLUXE_   = [];
 GGAMMAI_ = [];
@@ -154,6 +155,18 @@ while(CONTINUE)
             end
             [Ni00, Ts3D, ~] = load_3D_data(filename, 'Ni00');
              Ni00_ = cat(4,Ni00_,Ni00); clear Ni00
+            if KIN_E
+                try
+             Nepjz  = load_3D_data(filename, 'Nepjz');
+             Nepjz_ = cat(4,Nepjz_,Nepjz); clear Nepjz
+                catch
+                end
+            end
+%             try
+            [Nipjz, Ts3D, ~] = load_3D_data(filename, 'Nipjz');
+             Nipjz_ = cat(4,Nipjz_,Nipjz); clear Nipjz        
+%             catch
+%             end
         end
         if W_DENS
             if KIN_E
@@ -195,7 +208,9 @@ while(CONTINUE)
         Ts5D = [];
         if W_NAPJ
         [Nipj, Ts5D, ~] = load_5D_data(filename, 'moments_i');
+        tic
             Nipj_ = cat(6,Nipj_,Nipj); clear Nipj
+        toc
             if KIN_E
                 Nepj  = load_5D_data(filename, 'moments_e');
                 Nepj_ = cat(6,Nepj_,Nepj); clear Nepj
@@ -274,9 +289,11 @@ else
     DATA.scale = 1;%(1/Nx/Ny)^2;
     % Fields
     DATA.GGAMMA_RI = GGAMMAI_; DATA.PGAMMA_RI = PGAMMAI_; DATA.HFLUX_X = HFLUXI_;
-    DATA.Nipj = Nipj_; DATA.Ni00 = Ni00_; DATA.DENS_I = DENS_I_; DATA.TEMP_I = TEMP_I_;
+    DATA.Nipj = Nipj_; DATA.Ni00 = Ni00_; DATA.Nipjz = Nipjz_;
+    DATA.DENS_I = DENS_I_; DATA.TEMP_I = TEMP_I_;
     if(KIN_E)
-    DATA.Nepj = Nepj_; DATA.Ne00 = Ne00_; DATA.DENS_E = DENS_E_; DATA.TEMP_E = TEMP_E_;
+    DATA.Nepj = Nepj_; DATA.Ne00 = Ne00_; DATA.Nepjz = Nepjz_;
+    DATA.DENS_E = DENS_E_; DATA.TEMP_E = TEMP_E_;
     DATA.HFLUX_XE = HFLUXE_;
     end
     DATA.Ts5D = Ts5D_; DATA.Ts3D = Ts3D_; DATA.Ts0D = Ts0D_;
@@ -299,6 +316,8 @@ else
         num2str(DATA.Nx),'$, $(P,J)=(',num2str(DATA.PMAXI),',',...
         num2str(DATA.JMAXI),')$,',' $\mu_{hd}=$(',num2str(DATA.MUx),...
         ',',num2str(DATA.MUy),')'];
+    DATA.paramshort = [num2str(DATA.Pmaxi),'x',num2str(DATA.Jmaxi),'x',...
+        num2str(DATA.Nkx),'x',num2str(DATA.Nky),'x',num2str(DATA.Nz)];
     JOBNUM = LASTJOB;
 
     filename = sprintf([DIRECTORY,'outputs_%.2d.h5'],JOBNUM);

@@ -1,16 +1,25 @@
 function [ FIGURE ] = show_moments_spectrum( DATA, OPTIONS )
 
-
 Pi = DATA.Pi;
 Ji = DATA.Ji;
-Nipj = sum(sum(sum(abs(DATA.Nipj),3),4),5);
+if (isempty(DATA.Nipjz))
+    Time_ = DATA.Ts3D;
+    Nipj = sum(abs(DATA.Nipjz),3);
+else
+    Time_ = DATA.Ts5D;
+    Nipj = sum(sum(sum(abs(DATA.Nipj),3),4),5);
+end
 Nipj = squeeze(Nipj);
 
 if DATA.KIN_E
 Pe = DATA.Pe;
 Je = DATA.Je;
-Nepj = sum(sum(sum(abs(DATA.Nepj),3),4),5);
-Nepj = squeeze(Nepj);
+    if ~(isempty(DATA.Nepjz))
+        Nepj = sum(abs(DATA.Nepjz),3);
+    else
+        Nepj = sum(sum(sum(abs(DATA.Nepj),3),4),5);
+    end
+    Nepj = squeeze(Nepj);
 end
 
 FIGURE.fig = figure; FIGURE.FIGNAME = ['mom_spectrum_',DATA.PARAMS];
@@ -19,8 +28,8 @@ set(gcf, 'Position',  [100 50 1000 400])
 if ~OPTIONS.ST
     t0 = OPTIONS.TIME(1);
     t1 = OPTIONS.TIME(end);
-    [~,it0] = min(abs(t0-DATA.Ts5D));
-    [~,it1] = min(abs(t1-DATA.Ts5D));
+    [~,it0] = min(abs(t0-Time_));
+    [~,it1] = min(abs(t1-Time_));
     Nipj = mean(Nipj(:,:,it0:it1),3);
     if DATA.KIN_E
     Nepj = mean(Nepj(:,:,it0:it1),3);
@@ -87,7 +96,7 @@ else
     % weights to average
     weights = zeros(size(p2ji));
     % space time of moments amplitude wrt to p+2j degree
-    Ni_ST = zeros(numel(p2ji),numel(DATA.Ts5D));
+    Ni_ST = zeros(numel(p2ji),numel(Time_));
     % fill the st diagramm by averaging every p+2j=n moments together
     for ip = 1:numel(Pi)
         for ij = 1:numel(Ji)
@@ -109,7 +118,7 @@ else
     % weights to average
     weights = zeros(size(p2je));
     % space time of moments amplitude wrt to p+2j degree
-    Ne_ST = zeros(numel(p2je),numel(DATA.Ts5D));
+    Ne_ST = zeros(numel(p2je),numel(Time_));
     % fill the st diagramm by averaging every p+2j=n moments together
     for ip = 1:numel(Pe)
         for ij = 1:numel(Je)
@@ -134,7 +143,7 @@ else
     if DATA.KIN_E
     subplot(2,1,1)
     end
-        imagesc(DATA.Ts5D,p2ji,plt(Ni_ST,1:numel(p2ji))); 
+        imagesc(Time_,p2ji,plt(Ni_ST,1:numel(p2ji))); 
         set(gca,'YDir','normal')        
 %         pclr = pcolor(XX,YY,plt(Ni_ST));
 %         set(pclr, 'edgecolor','none'); hold on;
@@ -142,7 +151,7 @@ else
     title('$\langle\sum_k |N_i^{pj}|\rangle_{p+2j=const}$')
     if DATA.KIN_E
     subplot(2,1,2)
-        imagesc(DATA.Ts5D,p2je,plt(Ne_ST,1:numel(p2ji))); 
+        imagesc(Time_,p2je,plt(Ne_ST,1:numel(p2ji))); 
         set(gca,'YDir','normal')
 %         pclr = pcolor(XX,YY,plt(Ne_ST)); 
 %         set(pclr, 'edgecolor','none'); hold on;

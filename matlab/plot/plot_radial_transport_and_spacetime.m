@@ -61,11 +61,16 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, OPTIONS,CODE)
     end
 
 %% Figure    
+clr_ = lines(20);
 mvm = @(x) movmean(x,OPTIONS.NMVA);
     FIGURE.fig = figure; FIGURE.FIGNAME = ['ZF_transport_drphi','_',DATA.PARAMS]; %set(gcf, 'Position',  [500, 1000, 1000, 600])
     FIGURE.ax1 = subplot(3,1,1,'parent',FIGURE.fig);
-        plot(mvm(DATA.Ts0D),mvm(DATA.PGAMMA_RI*SCALE),'DisplayName','$\langle n_i \partial_y\phi \rangle_y$'); hold on;
-        plot(mvm(DATA.Ts0D),mvm(DATA.HFLUX_X*SCALE),'DisplayName','$\langle n_i \partial_y\phi \rangle_y$'); hold on;
+        plot(mvm(DATA.Ts0D),mvm(DATA.PGAMMA_RI*SCALE),'--',...
+            'color',clr_((DATA.Pmaxi-1)/2-1,:),...
+            'DisplayName',['$\Gamma_x$ ',DATA.paramshort]); hold on;
+        plot(mvm(DATA.Ts0D),mvm(DATA.HFLUX_X*SCALE),'-',...
+            'color',clr_((DATA.Pmaxi-1)/2-1,:),...
+            'DisplayName',['$Q_x$ ',DATA.paramshort]); hold on;
         ylabel('Transport')  
         if(~isnan(Qx_infty_avg))
         plot(DATA.Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*Qx_infty_avg, '-k',...

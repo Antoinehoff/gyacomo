@@ -1,5 +1,5 @@
 
-function [ fig, Gx_infty_avg, Gx_infty_std ] = statistical_transport_averaging( data, options )
+function [ fig, res ] = statistical_transport_averaging( data, options )
 scale = data.scale;
 Trange  = options.T;
 [~,it0] = min(abs(Trange(1)-data.Ts0D)); 
@@ -21,7 +21,7 @@ dt_const = numel(unique(round(diff(data.Ts0D(it0:it1))*100)))==1;
         transp_seg_std(Np) = std(gamma(1:Np));
     end
 
-    time_seg = (data.Ts0D(it0:it1)-data.Ts0D(it0)); 
+    time_seg = (data.Ts0D(it0:it1)); 
     
     fig = 0;
 if options.NPLOTS > 0
@@ -43,8 +43,13 @@ if options.NPLOTS > 0
     xlabel('Averaging time'); ylabel('$\langle Q_x\rangle_{\tau}$');
     legend(['$Q_x^\infty=$',sprintf('%2.2e',transp_seg_avg(end))])
 end   
-Gx_infty_avg = mean(gamma);
-Gx_infty_std = std (gamma);
-disp(['G_x=',sprintf('%2.2e',Gx_infty_avg),'+-',sprintf('%2.2e',Gx_infty_std)]);
+res.time_seg = time_seg;
+res.Qx_t     = 
+res.Gx_avg = mean(gamma);
+res.Gx_std = std (gamma);
+disp(['G_x=',sprintf('%2.2e',res.Gx_avg),'+-',sprintf('%2.2e',res.Gx_std)]);
+res.Qx_avg = mean(Qx);
+res.Qx_std = std (Qx);
+disp(['G_x=',sprintf('%2.2e',res.Qx_avg),'+-',sprintf('%2.2e',res.Qx_std)]);
 end
 

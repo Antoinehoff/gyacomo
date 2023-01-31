@@ -15,8 +15,8 @@ Ncols  = ceil(Nframes/Nrows);
 %
 TNAME = [];
 FIGURE.fig = figure; set(gcf, 'Position',  toplot.DIMENSIONS.*[1 1 Ncols Nrows])
-    frame_max = max(max(max(abs(toplot.FIELD(:,:,:)))));
     for i_ = 1:numel(FRAMES)
+    frame_max = max(max(max(abs(toplot.FIELD(:,:,i_)))));
     subplot(Nrows,Ncols,i_); TNAME = [TNAME,'_',sprintf('%.0f',DATA.Ts3D(FRAMES(i_)))];
     if OPTIONS.NORMALIZE
         scale = frame_max; % Scaling to normalize
@@ -43,7 +43,7 @@ FIGURE.fig = figure; set(gcf, 'Position',  toplot.DIMENSIONS.*[1 1 Ncols Nrows])
         end
         xlabel(toplot.XNAME); ylabel(toplot.YNAME);
 %         if i_ > 1; set(gca,'ytick',[]); end; 
-        title([sprintf('$t c_s/R=%.0f$',tshot),', max = ',sprintf('%.1e',scale)]);
+        title([sprintf('$t c_s/R=%.0f$',tshot),', max = ',sprintf('%.1e',frame_max)]);
 
     end
     legend(['$',toplot.FIELDNAME,'$']);

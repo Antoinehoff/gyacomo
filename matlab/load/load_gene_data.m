@@ -1,6 +1,6 @@
 function [ DATA ] = load_gene_data( folder )
 %to load gene data as for HeLaZ results
-namelist      = read_namelist([folder,'parameters.dat']);
+namelist      = read_namelist([folder,'parameters']);
 DATA.namelist = namelist;
 DATA.folder   = folder;
 %% Grid

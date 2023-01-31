@@ -11,12 +11,13 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 %% Load the results
 LOCALDIR  = [gyacomodir,resdir,'/'];
 MISCDIR   = ['/misc/gyacomo_outputs/',resdir,'/']; %For long term storage
+DATADIR   = [PARTITION,resdir,'/'];
 system(['mkdir -p ',MISCDIR]);
 system(['mkdir -p ',LOCALDIR]);
 % CMD = ['rsync ', LOCALDIR,'outputs* ',MISCDIR]; disp(CMD);
 % system(CMD);
 % Load outputs from jobnummin up to jobnummax
-data = compile_results(MISCDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
+data = compile_results(DATADIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
 data.localdir = LOCALDIR;
 data.FIGDIR   = LOCALDIR;
 data.folder   = LOCALDIR;
@@ -46,17 +47,22 @@ end
 
 if 0
 %% statistical transport averaging
-gavg =[]; gstd = [];
+Gavg =[]; Gstd = [];
+Qavg =[]; Qstd = [];
+figure; hold on;
+plot(data.Ts0D,data.Qx);
 for i_ = 1:2:numel(data.TJOB_SE) 
 % i_ = 3; 
 disp([num2str(data.TJOB_SE(i_)),' ',num2str(data.TJOB_SE(i_+1))])
 disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
-options.T = [data.TJOB_SE(i_) data.TJOB_SE(i_+1)];
+options.T = [data.TJOB_SE(i_)*1.2 data.TJOB_SE(i_+1)];
 options.NPLOTS = 0;
-[fig, gavg_, gstd_] = statistical_transport_averaging(data,options);
-gavg = [gavg gavg_]; gstd = [gstd gstd_];
+[fig, res] = statistical_transport_averaging(data,options);
+Gavg = [Gavg res.Gx_avg]; Gstd = [Gstd res.Gx_std];
+Qavg = [Qavg res.Qx_avg]; Qstd = [Qstd res.Qx_std];
 end
-disp(gavg); disp(gstd);
+% disp(Gavg); disp(Gstd);
+disp(Qavg); disp(Qstd);
 end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -66,18 +72,18 @@ options.POLARPLOT = 0;
 options.NAME      = '\phi';
 % options.NAME      = '\omega_z';
 % options.NAME     = 'N_i^{00}';
-% options.NAME      = 'v_x';
+% options.NAME      = 's_{Ey}';
 % options.NAME      = 'n_i^{NZ}';
-% options.NAME      = '\Gamma_x';
+% options.NAME      = 'G_x';
 % options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
 options.PLAN      = 'xy';
-options.NAME      = 'f_i';
-options.PLAN      = 'sx';
+% options.NAME      = 'f_i';
+% options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
-% options.TIME      =  data.Ts3D;
-options.TIME      = [0:10000];
+options.TIME      =  data.Ts3D;
+% options.TIME      = [0:10000];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
@@ -94,7 +100,7 @@ options.NORMALIZE = 0;
 options.NAME      = '\phi';
 % options.NAME      = '\psi';
 % options.NAME      = '\omega_z';
-% options.NAME      = 'n_e';
+% options.NAME     = 'n_i';
 % options.NAME      = 'n_i-n_e';
 % options.NAME      = '\phi^{NZ}';
 % options.NAME      = 'N_i^{00}';
@@ -103,8 +109,8 @@ options.NAME      = '\phi';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'k^2n_e';
 options.PLAN      = 'xy';
-options.COMP      = 'avg';
-options.TIME      = [500];
+options.COMP      = 1;
+options.TIME      = [29.5 30 30.5];
 options.RESOLUTION = 256;
 
 data.a = data.EPS * 2e3;
@@ -150,7 +156,7 @@ if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
 options.P2J        = 0;
-options.ST         = 1;
+options.ST         = 0;
 options.PLOT_TYPE  = 'space-time';
 options.NORMALIZED = 0;
 options.JOBNUM     = 0;

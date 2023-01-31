@@ -1,9 +1,8 @@
 % Directory of the code "mypathtoHeLaZ/HeLaZ/"
 gyacomodir = '/home/ahoffman/gyacomo/';
-% Directory of the simulation (from results)
-% if 1% Local results
-% resdir ='volcokas/64x32x16x5x3_kin_e_npol_1';
-
+% Partition of the computer where the data have to be searched
+PARTITION  = '/misc/gyacomo_outputs/';
+% PARTITION  = gyacomodir;
 %% Dimits
 % resdir ='shearless_cyclone/128x64x16x5x3_Dim_90';
 % resdir ='shearless_cyclone/128x64x16x9x5_Dim_scan/128x64x16x9x5_Dim_60';
@@ -79,6 +78,7 @@ gyacomodir = '/home/ahoffman/gyacomo/';
 % resdir = 'GCM_CBC/daint/Miller_GX_comparison';
 % resdir = 'GCM_CBC/daint/Salpha_GX_comparison';
 %% Paper 2 simulations
+% convergence CBC and Dimits regime
 % resdir = 'paper_2_nonlinear/kT_6.96/CBC_7x4x128x64x24';
 % resdir = 'paper_2_nonlinear/kT_6.96/CBC_3x2x128x64x24_Nexc_5';
 % resdir = 'paper_2_nonlinear/kT_6.96/CBC_5x3x128x64x24_Nexc_5';
@@ -90,9 +90,17 @@ gyacomodir = '/home/ahoffman/gyacomo/';
 % resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_7x4x128x64x24_Nexc_5';
 % resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_9x5x128x64x24_Nexc_5';
 % resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_11x6x128x64x24_Nexc_5';
+% resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_13x7x128x64x24_Nexc_5';
 % resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_15x8x128x64x24_Nexc_5';
-resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_17x9x128x64x24_Nexc_5';
+% resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_17x9x128x64x24_Nexc_5';
+% Scan in kT
+% resdir = 'paper_2_nonlinear/kT_scan_DGGK_0.05/9x5x128x64x24';
+
+% resdir = 'paper_2_nonlinear/CBC_rerun/rerun_CBC_3x2x128x64x16';
+% resdir = 'dev/init_ppj';
+% resdir = 'dev/hatB_NL';
+resdir = 'dev/CBC_wave_study';
 
 resdir = ['results/',resdir];
-JOBNUMMIN = 00; JOBNUMMAX = 10;
+JOBNUMMIN = 04; JOBNUMMAX = 10;
 run analysis_gyacomo
