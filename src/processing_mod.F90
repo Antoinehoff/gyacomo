@@ -406,7 +406,7 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
   USE fields,           ONLY : moments_i, moments_e, phi, psi
   USE array,            ONLY : kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i, &
                                ddz_nepj, ddzND_nepj, interp_nepj,&
-                               ddz_nipj, ddzND_nipj, interp_nipj
+                               ddz_nipj, ddzND_nipj, interp_nipj, ddz_phi
   USE time_integration, ONLY : updatetlevel
   USE model,            ONLY : qe_taue, qi_taui,q_o_sqrt_tau_sigma_e, q_o_sqrt_tau_sigma_i, &
                                KIN_E, CLOS, beta
@@ -514,6 +514,13 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
           CALL interp_z(eo,nadiab_moments_i(ip,ij,iky,ikx,izgs:izge), interp_nipj(ip,ij,iky,ikx,izs:ize))
         ENDDO
       ENDDO
+    ENDDO
+  ENDDO
+
+  ! Phi parallel gradient (experimental, should be negligible)
+  DO ikx = ikxs,ikxe
+    DO iky = ikys,ikye
+      CALL grad_z(0,phi(iky,ikx,izgs:izge), ddz_phi(iky,ikx,izs:ize))
     ENDDO
   ENDDO
 

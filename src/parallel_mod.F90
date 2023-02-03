@@ -152,7 +152,7 @@ CONTAINS
 
         ! send the full line on y contained by root_kyas
         IF(rank_ky .EQ. 0) THEN
-          CALL MPI_GATHERV(buffer_fy_lz, snd_z,        MPI_DOUBLE_COMPLEX, &
+          CALL MPI_GATHERV(buffer_fy_lz, snd_z,          MPI_DOUBLE_COMPLEX, &
                            buffer_fy_fz, rcv_zy, dsp_zy, MPI_DOUBLE_COMPLEX, &
                            root_z, comm_z, ierr)
         ENDIF
@@ -165,22 +165,22 @@ CONTAINS
 
   !!!!! Gather a field in kinetic + z coordinates on rank 0 !!!!!
   SUBROUTINE gather_pjz_i(field_sub,field_full)
-    COMPLEX(dp), DIMENSION(ips_i:ipe_i, ijs_i:ije_i, izs:ize), INTENT(IN)    :: field_sub
+    COMPLEX(dp), DIMENSION(ips_i:ipe_i,   1:jmaxi+1, izs:ize), INTENT(IN)    :: field_sub
     COMPLEX(dp), DIMENSION(   1:pmaxi+1,  1:jmaxi+1,   1:Nz),  INTENT(INOUT) :: field_full
-    COMPLEX(dp), DIMENSION(ips_i:ipe_i)         :: buffer_lp_cz !local p, constant z
-    COMPLEX(dp), DIMENSION(   1:pmaxi+1 )       :: buffer_fp_cz !full  p, constant z
+    COMPLEX(dp), DIMENSION(ips_i:ipe_i)             :: buffer_lp_cz !local p, constant z
+    COMPLEX(dp), DIMENSION(   1:pmaxi+1 )           :: buffer_fp_cz !full  p, constant z
     COMPLEX(dp), DIMENSION(   1:pmaxi+1,  izs:ize ) :: buffer_fp_lz !full  p, local z
     COMPLEX(dp), DIMENSION(   1:pmaxi+1,    1:Nz  ) :: buffer_fp_fz !full  p, full  z
     INTEGER :: snd_p, snd_z, root_p, root_z, root_ky, ij, iz
 
-    snd_p  = local_np_i   ! Number of points to send along y (per z)
-    snd_z  = Np_i*local_nz ! Number of points to send along z (full y)
+    snd_p  = local_np_i    ! Number of points to send along p (per z)
+    snd_z  = Np_i*local_nz ! Number of points to send along z (full p)
 
     root_p = 0; root_z = 0; root_ky = 0
     IF(rank_ky .EQ. root_ky) THEN
       DO ij = 1,jmaxi+1
         DO iz = izs,ize
-          ! fill a buffer to contain a slice of data at constant kx and z
+          ! fill a buffer to contain a slice of data at constant j and z
           buffer_lp_cz(ips_i:ipe_i) = field_sub(ips_i:ipe_i,ij,iz)
           CALL MPI_GATHERV(buffer_lp_cz, snd_p,            MPI_DOUBLE_COMPLEX, &
                            buffer_fp_cz, rcv_p_i, dsp_p_i, MPI_DOUBLE_COMPLEX, &
@@ -202,22 +202,22 @@ CONTAINS
   END SUBROUTINE gather_pjz_i
 
   SUBROUTINE gather_pjz_e(field_sub,field_full)
-    COMPLEX(dp), DIMENSION(ips_e:ipe_e, ijs_e:ije_e, izs:ize), INTENT(IN)    :: field_sub
-    COMPLEX(dp), DIMENSION(   1:pmaxi+1,  1:jmaxi+1,   1:Nz),  INTENT(INOUT) :: field_full
+    COMPLEX(dp), DIMENSION(ips_e:ipe_e,   1:jmaxe+1, izs:ize), INTENT(IN)    :: field_sub
+    COMPLEX(dp), DIMENSION(   1:pmaxe+1,  1:jmaxe+1,   1:Nz),  INTENT(INOUT) :: field_full
     COMPLEX(dp), DIMENSION(ips_e:ipe_e)         :: buffer_lp_cz !local p, constant z
-    COMPLEX(dp), DIMENSION(   1:pmaxi+1 )       :: buffer_fp_cz !full  p, constant z
-    COMPLEX(dp), DIMENSION(   1:pmaxi+1,  izs:ize ) :: buffer_fp_lz !full  p, local z
-    COMPLEX(dp), DIMENSION(   1:pmaxi+1,    1:Nz  ) :: buffer_fp_fz !full  p, full  z
+    COMPLEX(dp), DIMENSION(   1:pmaxe+1 )       :: buffer_fp_cz !full  p, constant z
+    COMPLEX(dp), DIMENSION(   1:pmaxe+1,  izs:ize ) :: buffer_fp_lz !full  p, local z
+    COMPLEX(dp), DIMENSION(   1:pmaxe+1,    1:Nz  ) :: buffer_fp_fz !full  p, full  z
     INTEGER :: snd_p, snd_z, root_p, root_z, root_ky, ij, iz
 
-    snd_p  = local_np_e   ! Number of points to send along y (per z)
-    snd_z  = Np_e*local_nz ! Number of points to send along z (full y)
+    snd_p  = local_np_e    ! Number of points to send along p (per z)
+    snd_z  = Np_e*local_nz ! Number of points to send along z (full p)
 
     root_p = 0; root_z = 0; root_ky = 0
     IF(rank_ky .EQ. root_ky) THEN
       DO ij = 1,jmaxi+1
         DO iz = izs,ize
-          ! fill a buffer to contain a slice of data at constant kx and z
+          ! fill a buffer to contain a slice of data at constant j and z
           buffer_lp_cz(ips_e:ipe_e) = field_sub(ips_e:ipe_e,ij,iz)
           CALL MPI_GATHERV(buffer_lp_cz, snd_p,            MPI_DOUBLE_COMPLEX, &
                            buffer_fp_cz, rcv_p_e, dsp_p_e, MPI_DOUBLE_COMPLEX, &
