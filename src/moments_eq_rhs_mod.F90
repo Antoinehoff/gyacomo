@@ -12,7 +12,7 @@ SUBROUTINE compute_moments_eq_rhs
   USE prec_const
   USE collision
   USE time_integration
-  USE geometry, ONLY: gradz_coeff, dBdz, Ckxky, hatB_NL
+  USE geometry, ONLY: gradz_coeff, dBdz, Ckxky, Gamma_NL, Gamma_phipar
   USE calculus, ONLY : interp_z, grad_z, grad_z2
   IMPLICIT NONE
 
@@ -72,7 +72,9 @@ SUBROUTINE compute_moments_eq_rhs
                                         xphij, xphijp1, xphijm1,&
                                         xpsij, xpsijp1, xpsijm1
     REAL(dp), DIMENSION(ips:ipe), INTENT(IN) :: &
-                          xnapp1j, xnapm1j,   xnapp2j,   xnapm2j, xnapjp1, xnapjm1
+                                        xnapp1j, xnapm1j,   xnapp2j,   xnapm2j
+
+    REAL(dp), DIMENSION(ijs:ije), INTENT(IN) :: xnapjp1, xnapjm1
 
     REAL(dp), DIMENSION(ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge,0:1),INTENT(IN) :: kernel
 
@@ -150,7 +152,7 @@ SUBROUTINE compute_moments_eq_rhs
               IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
                 Tphi = (xphij  (ip,ij)*kernel(ij  ,iky,ikx,iz,eo) &
                       + xphijp1(ip,ij)*kernel(ij+1,iky,ikx,iz,eo) &
-                      + xphijm1(ip,ij)*kernel(ij-1,iky,ikx,iz,eo))*phikykxz
+                      + xphijm1(ip,ij)*kernel(ij-1,iky,ikx,iz,eo))
               ELSE
                 Tphi = 0._dp
               ENDIF
@@ -159,7 +161,7 @@ SUBROUTINE compute_moments_eq_rhs
               IF ( (p_int .LE. 3) .AND. (p_int .GE. 1) ) THEN ! Kronecker p1 or p3
                 Tpsi = (xpsij  (ip,ij)*kernel(ij  ,iky,ikx,iz,eo) &
                       + xpsijp1(ip,ij)*kernel(ij+1,iky,ikx,iz,eo) &
-                      + xpsijm1(ip,ij)*kernel(ij-1,iky,ikx,iz,eo))*psikykxz
+                      + xpsijm1(ip,ij)*kernel(ij-1,iky,ikx,iz,eo))
               ELSE
                 Tpsi = 0._dp
               ENDIF
@@ -175,7 +177,9 @@ SUBROUTINE compute_moments_eq_rhs
                   ! Mirror term (parallel magnetic gradient)
                   -dBdz(iz,eo)*gradz_coeff(iz,eo) * Tmir&
                   ! Drives (density + temperature gradients)
-                  -i_ky * (Tphi - Tpsi) &
+                  -i_ky * (Tphi*phikykxz - Tpsi*psikykxz) &
+                  ! Parallel drive term (should be negligible, test)
+                  ! -Gamma_phipar(iz,eo)*Tphi*ddz_phi(iky,ikx,iz) &
                   ! Numerical Hermite hyperdiffusion (GX version)
                   -mu_p*diff_pe_coeff*p_int**4*moments_(ip,ij,iky,ikx,iz)&
                   ! Numerical Laguerre hyperdiffusion (GX version)
@@ -188,7 +192,7 @@ SUBROUTINE compute_moments_eq_rhs
                   ! Collision term
                   +TColl_(ip,ij,iky,ikx,iz) &
                   ! Nonlinear term
-                  -hatB_NL(iz,eo) * Sapj(ip,ij,iky,ikx,iz)
+                  -Gamma_NL(iz,eo)*Sapj(ip,ij,iky,ikx,iz)
 
                 ! IF( (ip-4 .GT. 0) .AND. (num_procs_p .EQ. 1) ) &
                 ! ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
