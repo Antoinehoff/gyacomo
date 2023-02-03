@@ -535,8 +535,8 @@ SUBROUTINE compute_Napjz_spectrum
   USE array,  ONLY : Nipjz, Nepjz
   USE time_integration, ONLY : updatetlevel
   IMPLICIT NONE
-  COMPLEX(dp), DIMENSION(ips_e:ipe_e,ijs_e:ije_e,izs:ize) :: local_sum_e,global_sum_e, buffer_e
-  COMPLEX(dp), DIMENSION(ips_i:ipe_i,ijs_i:ije_i,izs:ize) :: local_sum_i,global_sum_i, buffer_i
+  REAL(dp), DIMENSION(ips_e:ipe_e,ijs_e:ije_e,izs:ize) :: local_sum_e,global_sum_e, buffer_e
+  REAL(dp), DIMENSION(ips_i:ipe_i,ijs_i:ije_i,izs:ize) :: local_sum_i,global_sum_i, buffer_i
   INTEGER  :: i_, root, count
   root = 0
   ! Electron moments spectrum
@@ -546,8 +546,8 @@ SUBROUTINE compute_Napjz_spectrum
     DO ikx = ikxs,ikxe
       DO iky = ikys,ikye
         local_sum_e(ips_e:ipe_e,ijs_e:ije_e,izs:ize)  = local_sum_e(ips_e:ipe_e,ijs_e:ije_e,izs:ize)  + &
-        (moments_e(ips_e:ips_e,ijs_e:ije_e,iky,ikx,izs:ize,updatetlevel)&
-         * CONJG(moments_e(ips_e:ips_e,ijs_e:ije_e,iky,ikx,izs:ize,updatetlevel)))
+        REAL(REAL(moments_e(ips_e:ipe_e,ijs_e:ije_e,iky,ikx,izs:ize,updatetlevel)&
+         * CONJG(moments_e(ips_e:ipe_e,ijs_e:ije_e,iky,ikx,izs:ize,updatetlevel))))
       ENDDO
     ENDDO
     ! sum reduction
@@ -588,12 +588,12 @@ SUBROUTINE compute_Napjz_spectrum
   IF (num_procs_ky .GT. 1) THEN
       !! Everyone sends its local_sum to root = 0
       IF (rank_ky .NE. root) THEN
-          CALL MPI_SEND(buffer_i, count , MPI_DOUBLE_COMPLEX, root, 1234, comm_ky, ierr)
+          CALL MPI_SEND(buffer_i, count , MPI_DOUBLE_PRECISION, root, 5678, comm_ky, ierr)
       ELSE
           ! Recieve from all the other processes
           DO i_ = 0,num_procs_ky-1
               IF (i_ .NE. rank_ky) &
-                  CALL MPI_RECV(buffer_i, count , MPI_DOUBLE_COMPLEX, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
+                  CALL MPI_RECV(buffer_i, count , MPI_DOUBLE_PRECISION, i_, 5678, comm_ky, MPI_STATUS_IGNORE, ierr)
                   global_sum_i = global_sum_i + buffer_i
           ENDDO
       ENDIF

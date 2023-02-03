@@ -25,7 +25,6 @@ CONTAINS
 
   SUBROUTINE init_parallel_var
     INTEGER :: i_
-
     !!!!!! XYZ gather variables
     !! Y reduction at constant x and z
     ! number of points recieved and displacement for the y reduction
@@ -122,7 +121,6 @@ CONTAINS
     IF(KIN_E) &
     ALLOCATE(buff_pjxy_zBC_e(ipgs_e:ipge_e,ijgs_e:ijge_e,ikys:ikye,ikxs:ikxe,-2:2))
     ALLOCATE(buff_pjxy_zBC_i(ipgs_i:ipge_i,ijgs_i:ijge_i,ikys:ikye,ikxs:ikxe,-2:2))
-
   END SUBROUTINE init_parallel_var
 
   !!!!! Gather a field in spatial coordinates on rank 0 !!!!!
@@ -165,12 +163,12 @@ CONTAINS
 
   !!!!! Gather a field in kinetic + z coordinates on rank 0 !!!!!
   SUBROUTINE gather_pjz_i(field_sub,field_full)
-    COMPLEX(dp), DIMENSION(ips_i:ipe_i,   1:jmaxi+1, izs:ize), INTENT(IN)    :: field_sub
-    COMPLEX(dp), DIMENSION(   1:pmaxi+1,  1:jmaxi+1,   1:Nz),  INTENT(INOUT) :: field_full
-    COMPLEX(dp), DIMENSION(ips_i:ipe_i)             :: buffer_lp_cz !local p, constant z
-    COMPLEX(dp), DIMENSION(   1:pmaxi+1 )           :: buffer_fp_cz !full  p, constant z
-    COMPLEX(dp), DIMENSION(   1:pmaxi+1,  izs:ize ) :: buffer_fp_lz !full  p, local z
-    COMPLEX(dp), DIMENSION(   1:pmaxi+1,    1:Nz  ) :: buffer_fp_fz !full  p, full  z
+    REAL(dp), DIMENSION(ips_i:ipe_i, 1:Nj_i, izs:ize), INTENT(IN)    :: field_sub
+    REAL(dp), DIMENSION(   1:Np_i,   1:Nj_i,   1:Nz),  INTENT(INOUT) :: field_full
+    REAL(dp), DIMENSION(ips_i:ipe_i)          :: buffer_lp_cz !local p, constant z
+    REAL(dp), DIMENSION(   1:Np_i )           :: buffer_fp_cz !full  p, constant z
+    REAL(dp), DIMENSION(   1:Np_i,  izs:ize ) :: buffer_fp_lz !full  p, local z
+    REAL(dp), DIMENSION(   1:Np_i,    1:Nz  ) :: buffer_fp_fz !full  p, full  z
     INTEGER :: snd_p, snd_z, root_p, root_z, root_ky, ij, iz
 
     snd_p  = local_np_i    ! Number of points to send along p (per z)
@@ -178,20 +176,20 @@ CONTAINS
 
     root_p = 0; root_z = 0; root_ky = 0
     IF(rank_ky .EQ. root_ky) THEN
-      DO ij = 1,jmaxi+1
+      DO ij = 1,Nj_i
         DO iz = izs,ize
           ! fill a buffer to contain a slice of data at constant j and z
           buffer_lp_cz(ips_i:ipe_i) = field_sub(ips_i:ipe_i,ij,iz)
-          CALL MPI_GATHERV(buffer_lp_cz, snd_p,            MPI_DOUBLE_COMPLEX, &
-                           buffer_fp_cz, rcv_p_i, dsp_p_i, MPI_DOUBLE_COMPLEX, &
+          CALL MPI_GATHERV(buffer_lp_cz, snd_p,            MPI_DOUBLE_PRECISION, &
+                           buffer_fp_cz, rcv_p_i, dsp_p_i, MPI_DOUBLE_PRECISION, &
                            root_p, comm_p, ierr)
           buffer_fp_lz(1:Np_i,iz) = buffer_fp_cz(1:Np_i)
         ENDDO
 
         ! send the full line on y contained by root_kyas
         IF(rank_p .EQ. 0) THEN
-          CALL MPI_GATHERV(buffer_fp_lz, snd_z,              MPI_DOUBLE_COMPLEX, &
-                           buffer_fp_fz, rcv_zp_i, dsp_zp_i, MPI_DOUBLE_COMPLEX, &
+          CALL MPI_GATHERV(buffer_fp_lz, snd_z,              MPI_DOUBLE_PRECISION, &
+                           buffer_fp_fz, rcv_zp_i, dsp_zp_i, MPI_DOUBLE_PRECISION, &
                            root_z, comm_z, ierr)
         ENDIF
         ! ID 0 (the one who output) rebuild the whole array
@@ -202,12 +200,12 @@ CONTAINS
   END SUBROUTINE gather_pjz_i
 
   SUBROUTINE gather_pjz_e(field_sub,field_full)
-    COMPLEX(dp), DIMENSION(ips_e:ipe_e,   1:jmaxe+1, izs:ize), INTENT(IN)    :: field_sub
-    COMPLEX(dp), DIMENSION(   1:pmaxe+1,  1:jmaxe+1,   1:Nz),  INTENT(INOUT) :: field_full
-    COMPLEX(dp), DIMENSION(ips_e:ipe_e)         :: buffer_lp_cz !local p, constant z
-    COMPLEX(dp), DIMENSION(   1:pmaxe+1 )       :: buffer_fp_cz !full  p, constant z
-    COMPLEX(dp), DIMENSION(   1:pmaxe+1,  izs:ize ) :: buffer_fp_lz !full  p, local z
-    COMPLEX(dp), DIMENSION(   1:pmaxe+1,    1:Nz  ) :: buffer_fp_fz !full  p, full  z
+    REAL(dp), DIMENSION(ips_e:ipe_e,   1:jmaxe+1, izs:ize), INTENT(IN)    :: field_sub
+    REAL(dp), DIMENSION(   1:pmaxe+1,  1:jmaxe+1,   1:Nz),  INTENT(INOUT) :: field_full
+    REAL(dp), DIMENSION(ips_e:ipe_e)         :: buffer_lp_cz !local p, constant z
+    REAL(dp), DIMENSION(   1:pmaxe+1 )       :: buffer_fp_cz !full  p, constant z
+    REAL(dp), DIMENSION(   1:pmaxe+1,  izs:ize ) :: buffer_fp_lz !full  p, local z
+    REAL(dp), DIMENSION(   1:pmaxe+1,    1:Nz  ) :: buffer_fp_fz !full  p, full  z
     INTEGER :: snd_p, snd_z, root_p, root_z, root_ky, ij, iz
 
     snd_p  = local_np_e    ! Number of points to send along p (per z)
@@ -215,20 +213,20 @@ CONTAINS
 
     root_p = 0; root_z = 0; root_ky = 0
     IF(rank_ky .EQ. root_ky) THEN
-      DO ij = 1,jmaxi+1
+      DO ij = 1,Nj_i
         DO iz = izs,ize
           ! fill a buffer to contain a slice of data at constant j and z
           buffer_lp_cz(ips_e:ipe_e) = field_sub(ips_e:ipe_e,ij,iz)
-          CALL MPI_GATHERV(buffer_lp_cz, snd_p,            MPI_DOUBLE_COMPLEX, &
-                           buffer_fp_cz, rcv_p_e, dsp_p_e, MPI_DOUBLE_COMPLEX, &
+          CALL MPI_GATHERV(buffer_lp_cz, snd_p,            MPI_DOUBLE_PRECISION, &
+                           buffer_fp_cz, rcv_p_e, dsp_p_e, MPI_DOUBLE_PRECISION, &
                            root_p, comm_p, ierr)
           buffer_fp_lz(1:Np_e,iz) = buffer_fp_cz(1:Np_e)
         ENDDO
 
         ! send the full line on y contained by root_kyas
         IF(rank_p .EQ. 0) THEN
-          CALL MPI_GATHERV(buffer_fp_lz, snd_z,              MPI_DOUBLE_COMPLEX, &
-                           buffer_fp_fz, rcv_zp_e, dsp_zp_e, MPI_DOUBLE_COMPLEX, &
+          CALL MPI_GATHERV(buffer_fp_lz, snd_z,              MPI_DOUBLE_PRECISION, &
+                           buffer_fp_fz, rcv_zp_e, dsp_zp_e, MPI_DOUBLE_PRECISION, &
                            root_z, comm_z, ierr)
         ENDIF
         ! ID 0 (the one who output) rebuild the whole array

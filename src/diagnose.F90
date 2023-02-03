@@ -1,6 +1,5 @@
 SUBROUTINE diagnose(kstep)
   !   Diagnostics, writing simulation state to disk
-
   USE basic
   USE diagnostics_par
   USE processing, ONLY: gflux_ri, hflux_xi
@@ -29,8 +28,6 @@ SUBROUTINE diagnose(kstep)
   CALL diagnose_full(kstep)
 
   CALL cpu_time(t1_diag); tc_diag = tc_diag + (t1_diag - t0_diag)
-
-
 END SUBROUTINE diagnose
 
 SUBROUTINE init_outfile(comm,file0,file,fid)
@@ -333,7 +330,6 @@ SUBROUTINE diagnose_full(kstep)
      CALL closef(fidres)
 
   END IF
-
 END SUBROUTINE diagnose_full
 
 !!-------------- Auxiliary routines -----------------!!
@@ -388,7 +384,6 @@ SUBROUTINE diagnose_0d
 END SUBROUTINE diagnose_0d
 
 SUBROUTINE diagnose_3d
-
   USE basic
   USE futils, ONLY: append, getatt, attach, putarrnd, putarr
   USE fields
@@ -399,7 +394,6 @@ SUBROUTINE diagnose_3d
   USE prec_const
   USE processing
   USE model, ONLY: KIN_E
-
   IMPLICIT NONE
 
   CALL append(fidres,  "/data/var3d/time",           time,ionode=0)
@@ -484,16 +478,16 @@ SUBROUTINE diagnose_3d
   SUBROUTINE write_field3d_pjz_i(field, text)
     USE parallel, ONLY : gather_pjz_i
     IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(ips_i:ipe_i,ijs_i:ije_i,izs:ize), INTENT(IN) :: field
-    COMPLEX(dp), DIMENSION(1:pmaxi+1,1:jmaxi+1,1:Nz) :: field_full
+    REAL(dp), DIMENSION(ips_i:ipe_i,ijs_i:ije_i,izs:ize), INTENT(IN) :: field
+    REAL(dp), DIMENSION(1:Np_i,1:Nj_i,1:Nz) :: field_full
     CHARACTER(*), INTENT(IN) :: text
     CHARACTER(LEN=50) :: dset_name
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
     IF (num_procs .EQ. 1) THEN ! no data distribution
       CALL putarr(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,izs:ize), ionode=0)
     ELSE
-      CALL gather_pjz_i(field(ips_i:ipe_i,ijs_i:ije_i,izs:ize),field_full(1:pmaxi+1,1:jmaxi+1,1:Nz))
-      CALL putarr(fidres, dset_name, field(1:pmaxi+1,1:jmaxi+1,1:Nz), ionode=0)
+      CALL gather_pjz_i(field(ips_i:ipe_i,ijs_i:ije_i,izs:ize),field_full(1:Np_i,1:Nj_i,1:Nz))
+      CALL putarr(fidres, dset_name, field(1:Np_i,1:Nj_i,1:Nz), ionode=0)
     ENDIF
     CALL attach(fidres, dset_name, "time", time)
   END SUBROUTINE write_field3d_pjz_i
@@ -501,8 +495,8 @@ SUBROUTINE diagnose_3d
   SUBROUTINE write_field3d_pjz_e(field, text)
     USE parallel, ONLY : gather_pjz_e
     IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(ips_e:ipe_e,ijs_e:ije_e,izs:ize), INTENT(IN) :: field
-    COMPLEX(dp), DIMENSION(1:pmaxe+1,1:jmaxe+1,1:Nz) :: field_full
+    REAL(dp), DIMENSION(ips_e:ipe_e,ijs_e:ije_e,izs:ize), INTENT(IN) :: field
+    REAL(dp), DIMENSION(1:pmaxe+1,1:jmaxe+1,1:Nz) :: field_full
     CHARACTER(*), INTENT(IN) :: text
     CHARACTER(LEN=50) :: dset_name
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
@@ -510,7 +504,7 @@ SUBROUTINE diagnose_3d
       CALL putarr(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,izs:ize), ionode=0)
     ELSE
       CALL gather_pjz_e(field(ips_e:ipe_e,ijs_e:ije_e,izs:ize),field_full(1:pmaxe+1,1:jmaxe+1,1:Nz))
-      CALL putarr(fidres, dset_name, field(1:pmaxi+1,1:jmaxi+1,1:Nz), ionode=0)
+      CALL putarr(fidres, dset_name, field(1:Np_i,1:Nj_i,1:Nz), ionode=0)
     ENDIF
     CALL attach(fidres, dset_name, "time", time)
   END SUBROUTINE write_field3d_pjz_e

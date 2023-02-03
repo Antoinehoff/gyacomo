@@ -73,8 +73,8 @@ MODULE array
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Ni00
 
   ! Kinetic spectrum sum_kx,ky(|Napj(z)|^2), (ip,ij,iz) (should be real)
-  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Nepjz
-  COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: Nipjz
+  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: Nepjz
+  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: Nipjz
 
   ! particle density for electron and ions (iky,ikx,iz)
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: dens_e

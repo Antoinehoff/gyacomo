@@ -66,24 +66,26 @@ SUBROUTINE compute_moments_eq_rhs
     INTEGER, INTENT(IN) :: ips, ipe, ipgs, ipge, ijs, ije, ijgs, ijge
     INTEGER,  DIMENSION(ips:ipe), INTENT(IN) :: parray
     INTEGER,  DIMENSION(ijs:ije), INTENT(IN) :: jarray
-    REAL(dp), DIMENSION(ips:ipe,ijs:ije), INTENT(IN) :: xnapj,&
-                                        ynapp1j, ynapm1j,   ynapp1jm1, ynapm1jm1,&
-                                        znapm1j, znapm1jp1, znapm1jm1,&
-                                        xphij, xphijp1, xphijm1,&
-                                        xpsij, xpsijp1, xpsijm1
-    REAL(dp), DIMENSION(ips:ipe), INTENT(IN) :: &
-                                        xnapp1j, xnapm1j,   xnapp2j,   xnapm2j
-
-    REAL(dp), DIMENSION(ijs:ije), INTENT(IN) :: xnapjp1, xnapjm1
+    REAL(dp), DIMENSION(ips:ipe,ijs:ije), INTENT(IN) :: xnapj
+    REAL(dp), DIMENSION(ips:ipe),         INTENT(IN) :: xnapp2j, xnapm2j
+    REAL(dp), DIMENSION(ijs:ije),         INTENT(IN) :: xnapjp1, xnapjm1
+    REAL(dp), DIMENSION(ips:ipe),         INTENT(IN) :: xnapp1j, xnapm1j
+    REAL(dp), DIMENSION(ips:ipe,ijs:ije), INTENT(IN) :: ynapp1j, ynapp1jm1, ynapm1j, ynapm1jm1
+    REAL(dp), DIMENSION(ips:ipe,ijs:ije), INTENT(IN) :: znapm1j, znapm1jp1, znapm1jm1
+    REAL(dp), DIMENSION(ips:ipe,ijs:ije), INTENT(IN) :: xphij, xphijp1, xphijm1
+    REAL(dp), DIMENSION(ips:ipe,ijs:ije), INTENT(IN) :: xpsij, xpsijp1, xpsijm1
 
     REAL(dp), DIMENSION(ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge,0:1),INTENT(IN) :: kernel
 
-    COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) ::&
-        moments_,nadiab_moments, ddz_napj, interp_napj, ddzND_napj
-    COMPLEX(dp), DIMENSION(ips:ipe,ijs:ije,ikys:ikye,ikxs:ikxe,izs:ize),INTENT(IN) :: Sapj, TColl_
-
+    COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: nadiab_moments
+    COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: ddz_napj
+    COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: interp_napj
+    COMPLEX(dp), DIMENSION( ips:ipe,  ijs:ije, ikys:ikye,ikxs:ikxe, izs:ize), INTENT(IN) :: Sapj
+    COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: moments_
+    COMPLEX(dp), DIMENSION( ips:ipe,  ijs:ije, ikys:ikye,ikxs:ikxe, izs:ize), INTENT(IN) :: TColl_
+    COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: ddzND_napj
     !! OUTPUT
-    COMPLEX(dp), DIMENSION(ips:ipe,ijs:ije,ikys:ikye,ikxs:ikxe,izs:ize),INTENT(OUT) :: moments_rhs_
+    COMPLEX(dp), DIMENSION( ips:ipe,  ijs:ije, ikys:ikye,ikxs:ikxe, izs:ize),INTENT(OUT) :: moments_rhs_
 
     INTEGER     :: p_int, j_int ! loops indices and polynom. degrees
     REAL(dp)    :: kx, ky, kperp2
@@ -117,7 +119,7 @@ SUBROUTINE compute_moments_eq_rhs
               eo    = MODULO(p_int,2) ! Indicates if we are on odd or even z grid
               kperp2= kparray(iky,ikx,iz,eo)**2
 
-            IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmaxe)) THEN
+            IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmaxe)) THEN ! for the closure scheme
               !! Compute moments_ mixing terms
               Tperp = 0._dp; Tpar = 0._dp; Tmir = 0._dp
               ! Perpendicular dynamic
