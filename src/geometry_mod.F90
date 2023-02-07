@@ -152,9 +152,9 @@ CONTAINS
       ENDDO
       ! Curvature operator (Frei et al. 2022 eq 2.15)
       DO iz = izgs,izge
-        G1 = gxy(iz,eo)*gxy(iz,eo)-gxx(iz,eo)*gyy(iz,eo)
-        G2 = gxy(iz,eo)*gxz(iz,eo)-gxx(iz,eo)*gyz(iz,eo)
-        G3 = gyy(iz,eo)*gxz(iz,eo)-gxy(iz,eo)*gyz(iz,eo)
+        G1 = gxx(iz,eo)*gyy(iz,eo)-gxy(iz,eo)*gxy(iz,eo)
+        G2 = gxx(iz,eo)*gyz(iz,eo)-gxy(iz,eo)*gxz(iz,eo)
+        G3 = gxy(iz,eo)*gyz(iz,eo)-gyy(iz,eo)*gxz(iz,eo)
         ! Here we divide by hatB because our equation is formulated with grad(lnB) terms (not gradB like in GENE)
         Cx =-(dBdy(iz,eo) + G2/G1*dBdz(iz,eo))/hatB(iz,eo)
         Cy = (dBdx(iz,eo) - G3/G1*dBdz(iz,eo))/hatB(iz,eo)
@@ -170,9 +170,9 @@ CONTAINS
         gradz_coeff(iz,eo) = 1._dp /(jacobian(iz,eo)*hatB(iz,eo))
 
         ! Nonlinear term prefactor
-        Gamma_NL(iz,eo)    = 1._dp ! = G1
+        Gamma_NL(iz,eo)    = G1 !=1._dp
         ! Geometric factor in front to the maxwellian dzphi term (not implemented)
-        ! Gamma_phipar(iz,eo) = -G2/G1
+        ! Gamma_phipar(iz,eo) = G2/G1
       ENDDO
     ENDDO
 
@@ -227,7 +227,7 @@ CONTAINS
       Jacobian(iz,eo) = q0/hatB(iz,eo)
 
     ! Derivative of the magnetic field strenght
-      dBdx(iz,eo) = -COS(z)*hatB(iz,eo) ! LB = 1
+      dBdx(iz,eo) = -COS(z)*hatB(iz,eo)**2 ! LB = 1
       dBdy(iz,eo) =  0._dp
       dBdz(iz,eo) =  eps*SIN(z)*hatB(iz,eo)**2
 
