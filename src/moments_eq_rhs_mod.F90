@@ -12,7 +12,7 @@ SUBROUTINE compute_moments_eq_rhs
   USE prec_const
   USE collision
   USE time_integration
-  USE geometry, ONLY: gradz_coeff, dBdz, Ckxky, Gamma_NL!, Gamma_phipar
+  USE geometry, ONLY: gradz_coeff, dlnBdz, Ckxky, Gamma_NL!, Gamma_phipar
   USE calculus, ONLY : interp_z, grad_z, grad_z2
   IMPLICIT NONE
 
@@ -59,7 +59,7 @@ SUBROUTINE compute_moments_eq_rhs
                    znapm1j, znapm1jp1, znapm1jm1, &
                    xphij, xphijp1, xphijm1, xpsij, xpsijp1, xpsijm1,&
                    kernel, nadiab_moments, ddz_napj, interp_napj, Sapj,&
-                   moments_, TColl_, ddzND_napj, moments_rhs_)
+                   moments, TColl, ddzND_napj, moments_rhs)
 
     IMPLICIT NONE
     !! INPUTS
@@ -81,17 +81,18 @@ SUBROUTINE compute_moments_eq_rhs
     COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: ddz_napj
     COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: interp_napj
     COMPLEX(dp), DIMENSION( ips:ipe,  ijs:ije, ikys:ikye,ikxs:ikxe, izs:ize), INTENT(IN) :: Sapj
-    COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: moments_
-    COMPLEX(dp), DIMENSION( ips:ipe,  ijs:ije, ikys:ikye,ikxs:ikxe, izs:ize), INTENT(IN) :: TColl_
+    COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: moments
+    COMPLEX(dp), DIMENSION( ips:ipe,  ijs:ije, ikys:ikye,ikxs:ikxe, izs:ize), INTENT(IN) :: TColl
     COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: ddzND_napj
     !! OUTPUT
-    COMPLEX(dp), DIMENSION( ips:ipe,  ijs:ije, ikys:ikye,ikxs:ikxe, izs:ize),INTENT(OUT) :: moments_rhs_
+    COMPLEX(dp), DIMENSION( ips:ipe,  ijs:ije, ikys:ikye,ikxs:ikxe, izs:ize),INTENT(OUT) :: moments_rhs
 
     INTEGER     :: p_int, j_int ! loops indices and polynom. degrees
     REAL(dp)    :: kx, ky, kperp2
     COMPLEX(dp) :: Tnapj, Tnapp2j, Tnapm2j, Tnapjp1, Tnapjm1 ! Terms from b x gradB and drives
     COMPLEX(dp) :: Tnapp1j, Tnapm1j, Tnapp1jm1, Tnapm1jm1 ! Terms from mirror force with non adiab moments_
-    COMPLEX(dp) :: Tperp, Tpar, Tmir, Tphi, Tpsi
+    COMPLEX(dp) :: Tpar, Tmir, Tphi, Tpsi
+    COMPLEX(dp) :: Mperp, Mpara, Dphi, Dpsi
     COMPLEX(dp) :: Unapm1j, Unapm1jp1, Unapm1jm1 ! Terms from mirror force with adiab moments_
     COMPLEX(dp) :: i_kx,i_ky,phikykxz, psikykxz
 
@@ -107,7 +108,6 @@ SUBROUTINE compute_moments_eq_rhs
         kyloop : DO iky = ikys,ikye
           ky     = kyarray(iky)   ! binormal wavevector
           i_ky   = imagu * ky     ! binormal derivative
-          phikykxz = phi(iky,ikx,iz)! tmp phi value
           psikykxz = psi(iky,ikx,iz)! tmp psi value
 
           ! Kinetic loops
@@ -121,7 +121,6 @@ SUBROUTINE compute_moments_eq_rhs
 
             IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmaxe)) THEN ! for the closure scheme
               !! Compute moments_ mixing terms
-              Tperp = 0._dp; Tpar = 0._dp; Tmir = 0._dp
               ! Perpendicular dynamic
               ! term propto n^{p,j}
               Tnapj   = xnapj(ip,ij)* nadiab_moments(ip,ij,iky,ikx,iz)
@@ -133,8 +132,9 @@ SUBROUTINE compute_moments_eq_rhs
               Tnapjp1 = xnapjp1(ij) * nadiab_moments(ip,ij+1,iky,ikx,iz)
               ! term propto n^{p,j-1}
               Tnapjm1 = xnapjm1(ij) * nadiab_moments(ip,ij-1,iky,ikx,iz)
-              ! Tperp
-              Tperp   = Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1
+              ! Perpendicular magnetic term (curvature and gradient drifts)
+              Mperp   = imagu*Ckxky(iky,ikx,iz,eo)*(Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)
+
               ! Parallel dynamic
               ! ddz derivative for Landau damping term
               Tpar      = xnapp1j(ip) * ddz_napj(ip+1,ij,iky,ikx,iz) &
@@ -149,52 +149,53 @@ SUBROUTINE compute_moments_eq_rhs
               Unapm1jp1 = znapm1jp1(ip,ij) * interp_napj(ip-1,ij+1,iky,ikx,iz)
               Unapm1jm1 = znapm1jm1(ip,ij) * interp_napj(ip-1,ij-1,iky,ikx,iz)
 
-              Tmir = Tnapp1j + Tnapp1jm1 + Tnapm1j + Tnapm1jm1 + Unapm1j + Unapm1jp1 + Unapm1jm1
+              Tmir = dlnBdz(iz,eo)*(Tnapp1j + Tnapp1jm1 + Tnapm1j + Tnapm1jm1 +&
+                                    Unapm1j + Unapm1jp1 + Unapm1jm1)
+              ! Parallel magnetic term (Landau damping and the mirror force)
+              Mpara = gradz_coeff(iz,eo)*(Tpar + Tmir)
               !! Electrical potential term
               IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
-                Tphi = (xphij  (ip,ij)*kernel(ij  ,iky,ikx,iz,eo) &
-                      + xphijp1(ip,ij)*kernel(ij+1,iky,ikx,iz,eo) &
-                      + xphijm1(ip,ij)*kernel(ij-1,iky,ikx,iz,eo))
+                Dphi =i_ky*( xphij  (ip,ij)*kernel(ij  ,iky,ikx,iz,eo) &
+                            +xphijp1(ip,ij)*kernel(ij+1,iky,ikx,iz,eo) &
+                            +xphijm1(ip,ij)*kernel(ij-1,iky,ikx,iz,eo) )*phi(iky,ikx,iz)
               ELSE
                 Tphi = 0._dp
               ENDIF
 
               !! Vector potential term
               IF ( (p_int .LE. 3) .AND. (p_int .GE. 1) ) THEN ! Kronecker p1 or p3
-                Tpsi = (xpsij  (ip,ij)*kernel(ij  ,iky,ikx,iz,eo) &
-                      + xpsijp1(ip,ij)*kernel(ij+1,iky,ikx,iz,eo) &
-                      + xpsijm1(ip,ij)*kernel(ij-1,iky,ikx,iz,eo))
+                Dpsi =-i_ky*( xpsij  (ip,ij)*kernel(ij  ,iky,ikx,iz,eo) &
+                             +xpsijp1(ip,ij)*kernel(ij+1,iky,ikx,iz,eo) &
+                             +xpsijm1(ip,ij)*kernel(ij-1,iky,ikx,iz,eo))*psi(iky,ikx,iz)
               ELSE
-                Tpsi = 0._dp
+                Dpsi = 0._dp
               ENDIF
 
               !! Sum of all RHS terms
-              moments_rhs_(ip,ij,iky,ikx,iz) = &
-                  ! Perpendicular magnetic gradient/curvature effects
-                  -imagu*Ckxky(iky,ikx,iz,eo) * Tperp&
-                  ! Perpendicular pressure effects
-                  -i_ky*beta*dpdx * Tperp&
-                  ! Parallel coupling (Landau Damping)
-                  -gradz_coeff(iz,eo) * Tpar &
-                  ! Mirror term (parallel magnetic gradient)
-                  -dBdz(iz,eo)*gradz_coeff(iz,eo) * Tmir&
+              moments_rhs(ip,ij,iky,ikx,iz) = &
+                  ! Nonlinear term Sapj = {phi,f}
+                  - Sapj(ip,ij,iky,ikx,iz) &
+                  ! Perpendicular magnetic term
+                  - Mperp &
+                  ! Parallel magnetic term
+                  - Mpara &
                   ! Drives (density + temperature gradients)
-                  -i_ky * (Tphi*phikykxz - Tpsi*psikykxz) &
-                  ! Parallel drive term (should be negligible, test)
+                  - (Dphi + Dpsi) &
+                  ! Collision term
+                  + TColl(ip,ij,iky,ikx,iz) &
+                  ! Perpendicular pressure effects (electromagnetic term) (TO CHECK)
+                  - i_ky*beta*dpdx * (Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)&
+                  ! Parallel drive term (should be negligible, to test)
                   ! -Gamma_phipar(iz,eo)*Tphi*ddz_phi(iky,ikx,iz) &
                   ! Numerical Hermite hyperdiffusion (GX version)
-                  -mu_p*diff_pe_coeff*p_int**4*moments_(ip,ij,iky,ikx,iz)&
+                  -mu_p*diff_pe_coeff*p_int**4*moments(ip,ij,iky,ikx,iz)&
                   ! Numerical Laguerre hyperdiffusion (GX version)
-                  -mu_j*diff_je_coeff*j_int**4*moments_(ip,ij,iky,ikx,iz)&
-                  ! Numerical perpendicular hyperdiffusion (totally artificial, for stability purpose)
-                  -mu_x*diff_kx_coeff*kx**N_HD*moments_(ip,ij,iky,ikx,iz) &
-                  -mu_y*diff_ky_coeff*ky**N_HD*moments_(ip,ij,iky,ikx,iz) &
+                  -mu_j*diff_je_coeff*j_int**4*moments(ip,ij,iky,ikx,iz)&
+                  ! Numerical perpendicular hyperdiffusion
+                  -mu_x*diff_kx_coeff*kx**N_HD*moments(ip,ij,iky,ikx,iz) &
+                  -mu_y*diff_ky_coeff*ky**N_HD*moments(ip,ij,iky,ikx,iz) &
                   ! Numerical parallel hyperdiffusion "mu_z*ddz**4"  see Pueschel 2010 (eq 25)
-                  -mu_z*diff_dz_coeff*ddzND_napj(ip,ij,iky,ikx,iz) &
-                  ! Collision term
-                  +TColl_(ip,ij,iky,ikx,iz) &
-                  ! Nonlinear term
-                  -Gamma_NL(iz,eo)*Sapj(ip,ij,iky,ikx,iz)
+                  -mu_z*diff_dz_coeff*ddzND_napj(ip,ij,iky,ikx,iz)
 
                 ! IF( (ip-4 .GT. 0) .AND. (num_procs_p .EQ. 1) ) &
                 ! ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
@@ -204,7 +205,7 @@ SUBROUTINE compute_moments_eq_rhs
                 !     + mu_p * moments_(ip-4,ij,iky,ikx,iz)
 
             ELSE
-              moments_rhs_(ip,ij,iky,ikx,iz) = 0._dp
+              moments_rhs(ip,ij,iky,ikx,iz) = 0._dp
             ENDIF
             END DO ploop
           END DO jloop
@@ -224,8 +225,8 @@ END SUBROUTINE compute_moments_eq_rhs
 
 SUBROUTINE add_Maxwellian_background_terms
   ! This routine is meant to add the terms rising from the magnetic operator,
-  ! i.e. (B x GradB) Grad, applied on the background Maxwellian distribution
-  ! (x_a + spar^2)(b x GradB) GradFaM
+  ! i.e. (B x k_gB) Grad, applied on the background Maxwellian distribution
+  ! (x_a + spar^2)(b x k_gB) GradFaM
   ! It gives birth to kx=ky=0 sources terms (averages) that hit moments 00, 20,
   ! 40, 01,02, 21 with background gradient dependences.
   USE prec_const
