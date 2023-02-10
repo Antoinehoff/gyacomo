@@ -24,13 +24,13 @@ MODULE model
   REAL(dp), PUBLIC, PROTECTED :: sigma_i =  1._dp     !
   REAL(dp), PUBLIC, PROTECTED ::     q_e = -1._dp     ! Charge
   REAL(dp), PUBLIC, PROTECTED ::     q_i =  1._dp     !
-  REAL(dp), PUBLIC, PROTECTED ::    k_Ni =  0._dp     ! Ion density drive
+  REAL(dp), PUBLIC, PROTECTED ::    k_Ni =  0._dp     ! Ion density drive (L_ref/L_Ni)
   REAL(dp), PUBLIC, PROTECTED ::    k_Ne =  0._dp     ! Ele ''
-  REAL(dp), PUBLIC, PROTECTED ::    k_Ti =  0._dp     ! Ion temperature drive
+  REAL(dp), PUBLIC, PROTECTED ::    k_Ti =  0._dp     ! Ion temperature drive (L_ref/L_Ti)
   REAL(dp), PUBLIC, PROTECTED ::    k_Te =  0._dp     ! Ele ''
-  REAL(dp), PUBLIC, PROTECTED ::     K_E =  0._dp     ! Backg. electric field drive
-  REAL(dp), PUBLIC, PROTECTED ::   GradB =  1._dp     ! Magnetic gradient
-  REAL(dp), PUBLIC, PROTECTED ::   CurvB =  1._dp     ! Magnetic curvature
+  REAL(dp), PUBLIC, PROTECTED ::    K_E  =  0._dp     ! Backg. electric field drive (L_ref/L_E)
+  REAL(dp), PUBLIC, PROTECTED ::    k_gB =  1._dp     ! Magnetic gradient drive (L_ref/L_gB)
+  REAL(dp), PUBLIC, PROTECTED ::    k_cB =  1._dp     ! Magnetic curvature drive (L_ref/L_cB)
   REAL(dp), PUBLIC, PROTECTED :: lambdaD =  0._dp     ! Debye length
   REAL(dp), PUBLIC, PROTECTED ::    beta =  0._dp     ! electron plasma Beta (8piNT_e/B0^2)
 
@@ -66,7 +66,7 @@ CONTAINS
     NAMELIST /MODEL_PAR/ CLOS, NL_CLOS, KERN, LINEARITY, KIN_E, &
                          mu_x, mu_y, N_HD, mu_z, mu_p, mu_j, nu,&
                          tau_e, tau_i, sigma_e, sigma_i, q_e, q_i,&
-                         k_Ne, k_Ni, k_Te, k_Ti, GradB, CurvB, lambdaD, beta
+                         k_Ne, k_Ni, k_Te, k_Ti, k_gB, k_cB, lambdaD, beta
 
     READ(lu_in,model_par)
 
