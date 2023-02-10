@@ -160,13 +160,15 @@ while(CONTINUE)
              Nepjz  = load_3D_data(filename, 'Nepjz');
              Nepjz_ = cat(4,Nepjz_,Nepjz); clear Nepjz
                 catch
-                end
+                 disp('Cannot load Nepjz');
+               end
             end
-%             try
+            try
             [Nipjz, Ts3D, ~] = load_3D_data(filename, 'Nipjz');
              Nipjz_ = cat(4,Nipjz_,Nipjz); clear Nipjz        
-%             catch
-%             end
+            catch
+                disp('Cannot load Nipjz');
+            end
         end
         if W_DENS
             if KIN_E

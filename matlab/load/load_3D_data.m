@@ -6,14 +6,24 @@ function [ data, time, dt ] = load_3D_data( filename, variablename )
     
     % Find array size by loading the first output
     tmp   = h5read(filename,['/data/var3d/',variablename,'/', num2str(cstart+1,'%06d')]);
-    sz    = size(tmp.real);
+    try % check if it is complex or real
+        sz  = size(tmp.real);
+        cmpx = 1;
+    catch
+        sz  = size(tmp);
+        cmpx = 0;
+    end
     % add time dimension
     sz    = [sz numel(time)];
     data     = zeros(sz);
     
     for it = 1:numel(time)
         tmp         = h5read(filename,['/data/var3d/',variablename,'/', num2str(cstart+it,'%06d')]);
-        data(:,:,:,it) = tmp.real + 1i * tmp.imaginary;
+        if cmpx
+            data(:,:,:,it) = tmp.real + 1i * tmp.imaginary;
+        else
+            data(:,:,:,it) = tmp;
+        end
     end
 
 end

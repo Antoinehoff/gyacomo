@@ -10,12 +10,14 @@ addpath(genpath([gyacomodir,'matlab'])) % ... add
 addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
 addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0';
+% SIMID   = 'linear_CBC_benchmark_GX';  % Name of the simulation
 SIMID   = 'dbg';  % Name of the simulation
 RUN     = 1; % To run or just to load
 default_plots_options
 % EXECNAME = 'gyacomo_debug';
+% EXECNAME = 'gyacomo_2jm1';
+% EXECNAME = 'gyacomo_dlnBdz';
 EXECNAME = 'gyacomo_alpha';
-% EXECNAME = 'gyacomo';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
@@ -33,15 +35,15 @@ KIN_E   = 0;         % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 1e-4;     % electron plasma beta
 %% GRID PARAMETERS
 P = 4;
-J = P/2;
+J = 2;%P/2;
 PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
 NX      = 8;     % real space x-gridpoints
-NY      = 2;     %     ''     y-gridpoints
+NY      = 12;     %     ''     y-gridpoints
 LX      = 2*pi/0.1;   % Size of the squared frequency domain
-LY      = 2*pi/0.3;   % Size of the squared frequency domain
+LY      = 2*pi/0.1;   % Size of the squared frequency domain
 NZ      = 24;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
@@ -59,13 +61,13 @@ PARALLEL_BC = 'dirichlet'; %'dirichlet','periodic','shearless','disconnected'
 % PARALLEL_BC = 'periodic'; %'dirichlet','periodic','shearless','disconnected'
 SHIFT_Y = 0.0;
 %% TIME PARMETERS
-TMAX    = 50;  % Maximal time unit
-DT      = 1e-2;   % Time step
+TMAX    = 40;  % Maximal time unit
+DT      = 2e-2;   % Time step
 % DT      = 5e-4;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = -1;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
-SPS5D   = 1/2;    % Sampling per time unit for 5D arrays
+SPS5D   = 1/20;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
 %% OPTIONS
@@ -96,14 +98,14 @@ INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_X    = MU;     %
 MU_Y    = MU;     %
 N_HD    = 4;
-MU_Z    = 0.2;     %
+MU_Z    = 2.0;     %
 MU_P    = 0.0;     %
 MU_J    = 0.0;     %
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5; % Init noise amplitude
 BCKGD0  = 0.0;    % Init background
-GRADB   = 1.0;
-CURVB   = 1.0;
+k_gB   = 1.0;
+k_cB   = 1.0;
 COLL_KCUT = 1000;
 %%-------------------------------------------------------------------------
 %% RUN
@@ -151,24 +153,6 @@ options.normalized  = 1;
 fig = plot_ballooning(data,options);
 end
 
-if 0
-%% Hermite-Laguerre spectrum
-% options.TIME = 'avg';
-options.P2J        = 1;
-options.ST         = 1;
-options.PLOT_TYPE  = 'space-time';
-% options.PLOT_TYPE  =   'Tavg-1D';ls
-
-% options.PLOT_TYPE  = 'Tavg-2D';
-options.NORMALIZED = 1;
-options.JOBNUM     = 0;
-options.TIME       = [0 50];
-options.specie     = 'i';
-options.compz      = 'avg';
-fig = show_moments_spectrum(data,options);
-% fig = show_napjz(data,options);
-save_figure(data,fig)
-end
 
 if 0
 %% linear growth rate for 3D Zpinch (kz fourier transform)
@@ -182,16 +166,16 @@ save_figure(data,fig)
 end
 if 1
 %% Mode evolution
-options.NORMALIZED = 0;
-options.K2PLOT = 1;
-options.TIME   = [0:1000];
-% options.TIME   = [0.5:0.01:1].*data.Ts3D(end);
+options.NORMALIZED = 1;
+options.TIME   = [000:9000];
+options.KX_TW  = [0.5 1]*data.Ts3D(end); %kx Growth rate time window
+options.KY_TW  = [0.5 1]*data.Ts3D(end);  %ky Growth rate time window
 options.NMA    = 1;
-options.NMODES = 32;
-options.iz     = 'avg';
-options.ik     = 1;
+options.NMODES = 800;
+options.iz     = 'avg'; % avg or index
+options.ik     = 1; % sum, max or index
+options.fftz.flag = 0;
 fig = mode_growth_meter(data,options);
-save_figure(data,fig,'.png')
 end
 
 

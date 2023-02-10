@@ -33,7 +33,7 @@ PARTITION  = '/misc/gyacomo_outputs/';
 % resdir = 'CBC/old/128x64x16x5x3';
 % resdir = 'CBC/96x96x16x3x2_Nexc_6';
 % resdir = 'CBC/128x96x16x3x2_Nexc_0';
-% resdir = 'CBC/old/192x96x24x13x7';
+% resdir = 'CBC/192x96x24x13x7'; 
 
 % resdir = 'CBC/128x96x16x3x2_Nexc_0_periodic_chi';
 % resdir = 'CBC/64x32x16x3x2_Nexc_0_periodic_chi';
@@ -77,13 +77,20 @@ PARTITION  = '/misc/gyacomo_outputs/';
 %% CBC Miller
 % resdir = 'GCM_CBC/daint/Miller_GX_comparison';
 % resdir = 'GCM_CBC/daint/Salpha_GX_comparison';
-%% Paper 2 simulations
+% resdir = 'Mandell_benchmark/5x3';
+% resdir = 'Mandell_benchmark/new_5x3';
+% resdir = 'Mandell_benchmark/new_5x3_more_diff';
+% resdir = 'Mandell_benchmark/7x5';
+% resdir = 'Mandell_benchmark/new_7x5';
+% resdir = 'Mandell_benchmark/new_7x5_more_diff';
+% % Paper 2 simulations
 % convergence CBC and Dimits regime
 % resdir = 'paper_2_nonlinear/kT_6.96/CBC_7x4x128x64x24';
 % resdir = 'paper_2_nonlinear/kT_6.96/CBC_3x2x128x64x24_Nexc_5';
 % resdir = 'paper_2_nonlinear/kT_6.96/CBC_5x3x128x64x24_Nexc_5';
 % resdir = 'paper_2_nonlinear/kT_6.96/CBC_7x4x128x64x24_Nexc_5';
 % resdir = 'paper_2_nonlinear/kT_6.96/CBC_9x5x128x64x24_Nexc_5';
+% resdir = 'paper_2_nonlinear/kT_6.96/CBC_21x11x128x64x24_Nexc_5';
 % resdir = 'paper_2_nonlinear/kT_5.3/CBC_11x6x128x64x24_Nexc_5';
 % resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_3x2x128x64x24_Nexc_5';
 % resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_5x3x128x64x24_Nexc_5';
@@ -95,12 +102,28 @@ PARTITION  = '/misc/gyacomo_outputs/';
 % resdir = 'paper_2_nonlinear/kT_5.3/CBC_kT_5.3_17x9x128x64x24_Nexc_5';
 % Scan in kT
 % resdir = 'paper_2_nonlinear/kT_scan_DGGK_0.05/9x5x128x64x24';
-
 % resdir = 'paper_2_nonlinear/CBC_rerun/rerun_CBC_3x2x128x64x16';
-% resdir = 'dev/init_ppj';
-% resdir = 'dev/hatB_NL';
-resdir = 'dev/CBC_wave_study';
+% resdir = 'paper_2_nonlinear/CBC_rerun/rerun_CBC_5x3x128x64x16';
+% resdir = 'dev/Napjz_spectrum';
+% resdir = 'dev/CBC_test';
+
+% Reruns
+%  resdir = 'paper_2_nonlinear/kT_6.96_rerun/5x3x192x96x24';
+%  resdir = 'paper_2_nonlinear/kT_6.96_rerun/7x4x192x96x24';
+%  resdir = 'paper_2_nonlinear/kT_6.96_rerun/9x5x192x96x24';
+% resdir = 'paper_2_nonlinear/kT_6.96/5x3x128x64x24';
+% resdir = 'paper_2_nonlinear/kT_6.96/7x4x128x64x24';
+% resdir = 'paper_2_nonlinear/2jm1_coeff_kT_6.96/5x3x192x96x24';
+% resdir = 'paper_2_nonlinear/2jm1_coeff_kT_6.96/7x4x192x96x24';
+% resdir = 'paper_2_nonlinear/2jm1_coeff_kT_6.96/9x5x192x96x24';
+
+resdir = 'paper_2_nonlinear/kT_6.96/2jm1_version_5x3x128x64x24';
+% resdir = 'paper_2_nonlinear/dbg/CBC_test_Napjmir_3x2x128x64x24';
+% resdir = 'paper_2_nonlinear/dbg/CBC_bench_3x2x128x64x24';
+
+% debug shearless
+% resdir = 'paper_2_nonlinear/shearless_CBC/7x4x192x96x24';
 
 resdir = ['results/',resdir];
-JOBNUMMIN = 04; JOBNUMMAX = 10;
+JOBNUMMIN = 00; JOBNUMMAX = 10;
 run analysis_gyacomo

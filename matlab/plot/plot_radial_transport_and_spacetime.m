@@ -10,8 +10,6 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, OPTIONS,CODE)
     Gx_infty_std = std (DATA.PGAMMA_RI(its0D:ite0D))*SCALE;
     Qx_infty_avg = mean(DATA.HFLUX_X(its0D:ite0D))*SCALE;
     Qx_infty_std = std (DATA.HFLUX_X(its0D:ite0D))*SCALE;
-    disp(['G_x=',sprintf('%2.2e',Gx_infty_avg),'+-',sprintf('%2.2e',Gx_infty_std)]);
-    disp(['Q_x=',sprintf('%2.2e',Qx_infty_avg),'+-',sprintf('%2.2e',Qx_infty_std)]);
 %     disp(['Q_x=',sprintf('%2.2e',Qx_infty_avg),'+-',sprintf('%2.2e',Qx_infty_std)]);
     f_avg_z      = squeeze(mean(DATA.PHI(:,:,:,:),3));
     [~,ikzf] = max(squeeze(mean(abs(f_avg_z(1,:,its3D:ite3D)),3)));
@@ -28,7 +26,7 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, OPTIONS,CODE)
     end
     Qx_avg    = mean(Qx_ee);
     Qx_err    =  std(Qx_ee);
-%     disp(['Q_avg=',sprintf('%2.2e',Qx_avg),'+-',sprintf('%2.2e',Qx_err)]);
+    disp(['Q_avg=',sprintf('%2.2e',Qx_avg),'+-',sprintf('%2.2e',Qx_err)]);
     %% computations
 
     % Compute zonal and non zonal energies
@@ -66,14 +64,14 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
     FIGURE.fig = figure; FIGURE.FIGNAME = ['ZF_transport_drphi','_',DATA.PARAMS]; %set(gcf, 'Position',  [500, 1000, 1000, 600])
     FIGURE.ax1 = subplot(3,1,1,'parent',FIGURE.fig);
         plot(mvm(DATA.Ts0D),mvm(DATA.PGAMMA_RI*SCALE),'--',...
-            'color',clr_((DATA.Pmaxi-1)/2-1,:),...
+            'color',clr_((DATA.Pmaxi-1)/2,:),...
             'DisplayName',['$\Gamma_x$ ',DATA.paramshort]); hold on;
         plot(mvm(DATA.Ts0D),mvm(DATA.HFLUX_X*SCALE),'-',...
-            'color',clr_((DATA.Pmaxi-1)/2-1,:),...
+            'color',clr_((DATA.Pmaxi-1)/2,:),...
             'DisplayName',['$Q_x$ ',DATA.paramshort]); hold on;
         ylabel('Transport')  
         if(~isnan(Qx_infty_avg))
-        plot(DATA.Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*Qx_infty_avg, '-k',...
+        plot(DATA.Ts0D(its0D:ite0D),ones(ite0D-its0D+1,1)*Qx_avg, '-k',...
             'DisplayName',['$Q_{avg}=',sprintf('%2.2f',Qx_avg),'\pm',sprintf('%2.2f',Qx_err),'$']); legend('show');
             ylim([0,5*abs(Qx_infty_avg)]); 
         else

@@ -63,8 +63,8 @@
   K_Ti    = 6.92
   K_Ne    = 0
   K_Te    = 0
-  GradB   = 1
-  CurvB   = 1
+  k_gB   = 1
+  k_cB   = 1
   lambdaD = 0
   beta    = 0
 /

@@ -1,4 +1,4 @@
-%% Heat flux Qi [R/rhos^2/cs]
+%% Heat flux Qi 
 	kN = 2.22;
 	%-------------- GM ---------------
 	%(P,J)=(2,1)

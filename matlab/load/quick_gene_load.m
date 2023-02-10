@@ -73,12 +73,12 @@ path = '/home/ahoffman/gene/linear_CBC_results/';
 %----------Convergence nvpar shearless CBC
 % fname = 'CBC_salpha_nz_24_nv_scan_nw_16_adiabe.txt';
 % fname = 'CBC_miller_nz_24_nv_scan_nw_16_adiabe.txt';
-fname = 'CBC_salpha_nz_24_nv_scan_nw_16_kine.txt';
+% fname = 'CBC_salpha_nz_24_nv_scan_nw_16_kine.txt';
 % fname = 'CBC_miller_nz_24_nv_scan_nw_16_kine.txt';
 %---------- CBC
 % fname = 'CBC_salpha_nx_8_nz_24_nv_36_nw_16_adiabe.txt';
 % fname = 'CBC_salpha_nx_8_nz_24_nv_36_nw_16_kine.txt';
-% fname = 'CBC_miller_nx_20_nz_32_nv_32_nw_12_adiabe.txt';
+fname = 'CBC_miller_nx_20_nz_32_nv_32_nw_12_adiabe.txt';
 % fname = 'CBC_miller_nx_8_nz_24_nv_36_nw_16_adiabe.txt';
 % fname = 'CBC_miller_nx_20_nz_32_nv_32_nw_12_kine.txt';
 % fname = 'CBC_miller_nx_8_nz_24_nv_36_nw_16_kine.txt';

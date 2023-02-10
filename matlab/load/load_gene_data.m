@@ -22,6 +22,8 @@ DATA.Ny  = DATA.Nky*2-1;
 DATA.z   = h5read([folder,coofile],'/coord/z');
 DATA.Nz  = numel(DATA.z);
 
+DATA.paramshort = [num2str(DATA.Nkx),'x',num2str(DATA.Nky),'x',num2str(DATA.Nz),...
+                    'x',num2str(DATA.Nvp),'x',num2str(DATA.Nmu)];
 if numel(DATA.kx)>1
     dkx = DATA.kx(2); 
 else

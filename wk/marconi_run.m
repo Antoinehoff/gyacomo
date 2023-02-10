@@ -66,8 +66,8 @@ W_NAPJ   = 1; W_SAPJ   = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% unused
 KIN_E   = 1;         % Kinetic (1) or adiabatic (2) electron model
-GRADB   = 1.0;       % Magnetic  gradient
-CURVB   = 1.0;       % Magnetic  curvature
+k_gB   = 1.0;       % Magnetic  gradient
+k_cB   = 1.0;       % Magnetic  curvature
 SG      = 0;         % Staggered z grids option
 PMAXE   = P;    % Highest electron Hermite polynomial degree
 JMAXE   = J;     % Highest ''       Laguerre ''

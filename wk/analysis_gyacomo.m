@@ -30,12 +30,14 @@ FMT = '.fig';
 if 1
 %% Space time diagramm (fig 11 Ivanov 2020)
 % data.scale = 1;%/(data.Nx*data.Ny)^2;
-i_ = 1; 
-disp([num2str(data.TJOB_SE(i_)),' ',num2str(data.TJOB_SE(i_+1))])
-disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
-options.TAVG_0   = data.TJOB_SE(i_)+600;%0.4*data.Ts3D(end);
-options.TAVG_1   = data.TJOB_SE(i_+1);%0.9*data.Ts3D(end); % Averaging times duration
-options.NCUT     = 4;              % Number of cuts for averaging and error estimation
+% jid_ = 0; 
+% disp([num2str(data.TJOB_SE(2*jid_+1)),' ',num2str(data.TJOB_SE(2*(jid_+1)))])
+% disp([num2str(data.NU_EVOL(2*jid_+1)),' ',num2str(data.NU_EVOL(2*(jid_+1)))])
+% options.TAVG_0   = data.TJOB_SE(2*jid_+1);%0.4*data.Ts3D(end);
+% options.TAVG_1   = data.TJOB_SE(2*(jid_+1));%0.9*data.Ts3D(end); % Averaging times duration
+options.TAVG_0   = 100;
+options.TAVG_1   = 1000;
+options.NCUT     = 5;              % Number of cuts for averaging and error estimation
 options.NMVA     = 1;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';   % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
@@ -67,23 +69,23 @@ end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-options.INTERP    = 1;
+options.INTERP    = 0;
 options.POLARPLOT = 0;
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = '\omega_z';
 % options.NAME     = 'N_i^{00}';
 % options.NAME      = 's_{Ey}';
 % options.NAME      = 'n_i^{NZ}';
-% options.NAME      = 'G_x';
-% options.NAME      = 'n_i';
+% options.NAME      = 'Q_x';
+options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'yz';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
-options.TIME      =  data.Ts3D;
-% options.TIME      = [0:10000];
+% options.TIME      =  data.Ts3D;
+options.TIME      = [800:1000];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
@@ -100,7 +102,7 @@ options.NORMALIZE = 0;
 options.NAME      = '\phi';
 % options.NAME      = '\psi';
 % options.NAME      = '\omega_z';
-% options.NAME     = 'n_i';
+% options.NAME      = 'T_i';
 % options.NAME      = 'n_i-n_e';
 % options.NAME      = '\phi^{NZ}';
 % options.NAME      = 'N_i^{00}';
@@ -109,8 +111,8 @@ options.NAME      = '\phi';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'k^2n_e';
 options.PLAN      = 'xy';
-options.COMP      = 1;
-options.TIME      = [29.5 30 30.5];
+options.COMP      = 'avg';
+options.TIME      = [50 200 500 1000];
 options.RESOLUTION = 256;
 
 data.a = data.EPS * 2e3;
@@ -140,7 +142,7 @@ options.XPERP     = linspace( 0,sqrt(6),16).^2;
 % options.SPAR      = gene_data.vp';
 % options.XPERP     = gene_data.mu';
 options.iz        = 'avg';
-options.T         = [0.5:0.1:1]*data.Ts3D(end);
+options.T         = [0.9:0.1:1]*data.Ts3D(end);
 % options.PLT_FCT   = 'contour';
 % options.PLT_FCT   = 'contourf';
 options.PLT_FCT   = 'surfvv';
@@ -156,13 +158,9 @@ if 0
 %% Hermite-Laguerre spectrum
 % options.TIME = 'avg';
 options.P2J        = 0;
-options.ST         = 0;
-options.PLOT_TYPE  = 'space-time';
+options.ST         = 1;
 options.NORMALIZED = 0;
-options.JOBNUM     = 0;
-options.TIME       = [200:500];
-options.specie     = 'i';
-options.compz      = 'avg';
+options.TIME       = [180:10000];
 fig = show_moments_spectrum(data,options);
 % fig = show_napjz(data,options);
 % save_figure(data,fig,'.png');
@@ -170,7 +168,7 @@ end
 
 if 0
 %% Time averaged spectrum
-options.TIME   = [5000 9000];
+options.TIME   = [180 9000];
 options.NORM   =1;
 % options.NAME   = '\phi';
 % options.NAME      = 'N_i^{00}';
@@ -206,7 +204,7 @@ if 0
 %% Mode evolution
 options.NORMALIZED = 1;
 options.TIME   = [000:9000];
-options.KX_TW  = [25 55]; %kx Growth rate time window
+options.KX_TW  = [1 20]; %kx Growth rate time window
 options.KY_TW  = [0 20];  %ky Growth rate time window
 options.NMA    = 1;
 options.NMODES = 800;
@@ -229,7 +227,7 @@ if 0
 %% Metric infos
 options.SHOW_FLUXSURF = 0;
 options.SHOW_METRICS  = 1;
-fig = plot_metric(data,options);
+[fig, geo_arrays] = plot_metric(data,options);
 end
 
 if 0

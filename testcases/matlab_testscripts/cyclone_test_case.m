@@ -23,8 +23,8 @@ J       = 2;
 Q0      = 1.4;       % safety factor
 SHEAR   = 0.0;       % magnetic shear
 EPS     = 0.18;      % inverse aspect ratio
-GRADB   = 1.0;       % Magnetic  gradient
-CURVB   = 1.0;       % Magnetic  curvature
+k_gB   = 1.0;       % Magnetic  gradient
+k_cB   = 1.0;       % Magnetic  curvature
 SG      = 1;         % Staggered z grids option
 %% TIME PARAMETERS
 TMAX    = 500;  % Maximal time unit

@@ -1,9 +1,9 @@
-function [ fig ] = plot_metric( data, options )
+function [ fig, arrays ] = plot_metric( data, options )
 
 % names = {'Jacobian','gradxB','gradyB','gradzB','gradz_coeff',...
 %          'gxx','gxy','gxz','gyy','gyz','gzz','hatB','hatR','hatZ'};
 names = {'gxx','gxy','gxz','gyy','gyz','gzz',...
-         'hatB', 'gradxB', 'gradyB', 'gradzB',...
+         'hatB', 'dBdx', 'dBdy', 'dBdz',...
          'Jacobian','hatR','hatZ','gradz_coeff'};
 geo_arrays = zeros(2,data.Nz,numel(names));
 
@@ -40,5 +40,7 @@ if NPLOT > 0
     axis equal
     end
 end
+%outputs
+arrays = squeeze(geo_arrays(1,:,:));
 end
 

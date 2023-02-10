@@ -77,7 +77,7 @@ P = P_a(i); J = J_a(i);
         MU_J    = 0.0; LAMBDAD = 0.0;
         NOISE0  = 1.0e-4; % Init noise amplitude
         BCKGD0  = 0.0;    % Init background
-        GRADB   = 1.0;CURVB   = 1.0;
+        k_gB   = 1.0;k_cB   = 1.0;
 
         %%-------------------------------------------------------------------------
         % RUN

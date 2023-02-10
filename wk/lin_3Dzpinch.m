@@ -99,8 +99,8 @@ MU_J    = 0.0;     %
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5; % Init noise amplitude
 BCKGD0  = 0.0;    % Init background
-GRADB   = 0.1;
-CURVB   = 0.1;
+k_gB   = 0.1;
+k_cB   = 0.1;
 COLL_KCUT = 1.5;
 %%-------------------------------------------------------------------------
 %% RUN

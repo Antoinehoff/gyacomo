@@ -67,8 +67,8 @@ MU_J    = 0.0;     %
 LAMBDAD = 0.0;
 NOISE0  = 0*1.0e-5; % Init noise amplitude
 BCKGD0  = 1.0;    % Init background
-GRADB   = 0.0;
-CURVB   = 0.0;
+k_gB   = 0.0;
+k_cB   = 0.0;
 %% PARAMETER SCANS
 
 if 1

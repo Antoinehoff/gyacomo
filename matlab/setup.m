@@ -52,8 +52,8 @@ MODEL.K_Ni    = K_Ni;
 MODEL.K_Ne    = K_Ne;
 MODEL.K_Ti    = K_Ti;    
 MODEL.K_Te    = K_Te;    
-MODEL.GradB   = GRADB;      % Magnetic gradient
-MODEL.CurvB   = CURVB;      % Magnetic curvature
+MODEL.k_gB   = k_gB;      % Magnetic gradient
+MODEL.k_cB   = k_cB;      % Magnetic curvature
 MODEL.lambdaD = LAMBDAD;
 % Collision parameters
 COLL.collision_model = ['''',CO,''''];

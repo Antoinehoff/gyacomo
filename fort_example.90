@@ -68,8 +68,8 @@
   K_Te    = 6.96                  !electron temperature gradient intensity
   K_Ni    = 2.22                  !ion density gradient intensity
   K_Ti    = 6.96                  !ion density temperature intensity
-  GradB     = 1                   !magnetic field gradient strength
-  CurvB     = 1                   !magnetic curvature strength
+  k_gB     = 1                   !magnetic field gradient strength
+  k_cB     = 1                   !magnetic curvature strength
   lambdaD = 0                     !Debye length (not tested when non zero)
 /
 &COLLISION_PAR

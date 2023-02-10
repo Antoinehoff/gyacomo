@@ -47,7 +47,7 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 %Paper 2
 % folder = '/misc/gene_results/CBC/KT_6.96_64x32x32x24x12_Nexc_5/';
 % folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x8x4_Nexc_5_00/';
-% folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x16x8_Nexc_5_00/';
+folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x16x8_Nexc_5_00/';
 % folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x32x16_Nexc_5_00/';
 % folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x32x16_Nexc_5_01/';
 
@@ -55,9 +55,12 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 % folder = '/misc/gene_results/CBC/KT_5.3_128x64x24x32x16_Nexc_5_01/';
 % folder = '/misc/gene_results/CBC/new_sim/KT_5.3_128x64x24x16x8_Nexc_5/';
 % folder = '/misc/gene_results/CBC/new_sim/KT_5.3_128x64x24x8x4_Nexc_5/';
-folder = '/misc/gene_results/CBC/new_sim/KT_6.96_128x64x24x8x4_Nexc_5_smallvbox/';
+% folder = '/misc/gene_results/CBC/new_sim/KT_6.96_128x64x24x8x4_Nexc_5_smallvbox/';
 % folder = '/misc/gene_results/CBC/new_sim/KT_6.96_128x64x24x16x8_Nexc_5_largexbox/';
 
+% debug ? shearless
+% folder = '/misc/gene_results/CBC/shearless_CBC_128x64x24x24x12_00/';
+% folder = '/misc/gene_results/CBC/shearless_CBC_128x64x24x24x12_01/';
 gene_data = load_gene_data(folder);
 gene_data.FIGDIR = folder;
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
@@ -95,10 +98,10 @@ options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 0;
 options.NORMALIZE = 0;
-% options.NAME      = '\phi';
+options.NAME      = '\phi';
 % options.NAME      = '\psi';
 % options.NAME      = '\omega_z';
-options.NAME      = 'n_i';
+% options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
 % options.NAME      = '\phi^{NZ}';
 % options.NAME      = 'N_i^{00}';
@@ -107,8 +110,8 @@ options.NAME      = 'n_i';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'k^2n_e';
 options.PLAN      = 'xy';
-options.COMP      = 1;
-options.TIME      = [0];
+options.COMP      = 'avg';
+options.TIME      = [50 200 500];
 options.RESOLUTION = 256;
 
 data.a = data.EPS * 2e3;
