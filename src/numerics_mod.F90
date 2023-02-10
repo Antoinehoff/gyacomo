@@ -217,178 +217,145 @@ END SUBROUTINE evaluate_ampere_op
 !******************************************************************************!
 
 SUBROUTINE compute_lin_coeff
-  USE array
-  USE model, ONLY: taue_qe, taui_qi, &
-                   k_Te, k_Ti, k_Ne, k_Ni, CurvB, GradB, KIN_E,&
-                   tau_e, tau_i, sigma_e, sigma_i
+
+  USE array, ONLY:  xnepj, &
+                    ynepp1j, ynepm1j, ynepp1jm1, ynepm1jm1,&
+                    zNepm1j, zNepm1jp1, zNepm1jm1,&
+                    xnepp1j, xnepm1j, xnepp2j, xnepm2j,&
+                    xnepjp1, xnepjm1,&
+                    xphij_e, xphijp1_e, xphijm1_e,&
+                    xpsij_e, xpsijp1_e, xpsijm1_e,&
+                    xnipj, &
+                    ynipp1j, ynipm1j, ynipp1jm1, ynipm1jm1,&
+                    zNipm1j, zNipm1jp1, zNipm1jm1,&
+                    xnipp1j, xnipm1j, xnipp2j, xnipm2j,&
+                    xnipjp1, xnipjm1,&
+                    xphij_i, xphijp1_i, xphijm1_i,&
+                    xpsij_i, xpsijp1_i, xpsijm1_i
+  USE model, ONLY: k_Te, k_Ti, k_Ne, k_Ni, k_cB, k_gB, KIN_E,&
+                   tau_e, tau_i, sigma_e, sigma_i, q_e, q_i
   USE prec_const
   USE grid,  ONLY: parray_e, parray_i, jarray_e, jarray_i, &
                    ip,ij, ips_e,ipe_e, ips_i,ipe_i, ijs_e,ije_e, ijs_i,ije_i
-  IMPLICIT NONE
-  INTEGER     :: p_int, j_int ! polynom. degrees
-  REAL(dp)    :: p_dp, j_dp
-  !! Electrons linear coefficients for moment RHS !!!!!!!!!!
-  IF(KIN_E)THEN
-  DO ip = ips_e, ipe_e
-    p_int= parray_e(ip)   ! Hermite degree
-    p_dp = REAL(p_int,dp) ! REAL of Hermite degree
-    DO ij = ijs_e, ije_e
-      j_int= jarray_e(ij)   ! Laguerre degree
-      j_dp = REAL(j_int,dp) ! REAL of Laguerre degree
-      ! All Napj terms
-      xnepj(ip,ij) = taue_qe*(CurvB*(2._dp*p_dp + 1._dp) &
-                             +GradB*(2._dp*j_dp + 1._dp))
-      ! Mirror force terms
-      ynepp1j  (ip,ij) = -SQRT(tau_e)/sigma_e *          (j_dp+1)*SQRT(p_dp+1._dp)
-      ynepm1j  (ip,ij) = -SQRT(tau_e)/sigma_e *          (j_dp+1)*SQRT(p_dp)
-      ynepp1jm1(ip,ij) = +SQRT(tau_e)/sigma_e *              j_dp*SQRT(p_dp+1._dp)
-      ynepm1jm1(ip,ij) = +SQRT(tau_e)/sigma_e *              j_dp*SQRT(p_dp)
-      zNepm1j  (ip,ij) = +SQRT(tau_e)/sigma_e * (2._dp*j_dp+1_dp)*SQRT(p_dp)
-      zNepm1jp1(ip,ij) = -SQRT(tau_e)/sigma_e *       (j_dp+1_dp)*SQRT(p_dp)
-      zNepm1jm1(ip,ij) = -SQRT(tau_e)/sigma_e *              j_dp*SQRT(p_dp)
-    ENDDO
-  ENDDO
-  DO ip = ips_e, ipe_e
-    p_int= parray_e(ip)   ! Hermite degree
-    p_dp = REAL(p_int,dp) ! REAL of Hermite degree
-    ! Landau damping coefficients (ddz napj term)
-    xnepp1j(ip) = SQRT(tau_e)/sigma_e * SQRT(p_dp + 1_dp)
-    xnepm1j(ip) = SQRT(tau_e)/sigma_e * SQRT(p_dp)
-    ! Magnetic curvature term
-    xnepp2j(ip) = taue_qe * CurvB * SQRT((p_dp + 1._dp) * (p_dp + 2._dp))
-    xnepm2j(ip) = taue_qe * CurvB * SQRT(p_dp * (p_dp - 1._dp))
-  ENDDO
-  DO ij = ijs_e, ije_e
-    j_int= jarray_e(ij)   ! Laguerre degree
-    j_dp = REAL(j_int,dp) ! REAL of Laguerre degree
-    ! Magnetic gradient term
-    xnepjp1(ij) = -taue_qe * GradB * (j_dp + 1._dp)
-    xnepjm1(ij) = -taue_qe * GradB * j_dp
-  ENDDO
+
+  IF(KIN_E) THEN
+  CALL lin_coeff(k_Te,k_Ne,k_cB,k_gB,tau_e,q_e,sigma_e,&
+                 parray_e(ips_e:ipe_e),jarray_e(ijs_e:ije_e),ips_e,ipe_e,ijs_e,ije_e,&
+                 xnepj,xnepp1j,xnepm1j,xnepp2j,xnepm2j,xnepjp1,xnepjm1,&
+                 ynepp1j,ynepm1j,ynepp1jm1,ynepm1jm1,zNepm1j,zNepm1jp1,zNepm1jm1,&
+                 xphij_e,xphijp1_e,xphijm1_e,xpsij_e,xpsijp1_e,xpsijm1_e)
   ENDIF
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !! Ions linear coefficients for moment RHS !!!!!!!!!!
-  DO ip = ips_i, ipe_i
-    p_int= parray_i(ip)   ! Hermite degree
-    p_dp = REAL(p_int,dp) ! REAL of Hermite degree
-    DO ij = ijs_i, ije_i
-      j_int= jarray_i(ij)   ! Laguerre degree
-      j_dp = REAL(j_int,dp) ! REAL of Laguerre degree
-      ! All Napj terms
-      xnipj(ip,ij) = taui_qi*(CurvB*(2._dp*p_dp + 1._dp) &
-                             +GradB*(2._dp*j_dp + 1._dp))
-      ! Mirror force terms
-      ynipp1j  (ip,ij) = -SQRT(tau_i)/sigma_i*          (j_dp+1)*SQRT(p_dp+1._dp)
-      ynipm1j  (ip,ij) = -SQRT(tau_i)/sigma_i*          (j_dp+1)*SQRT(p_dp)
-      ynipp1jm1(ip,ij) = +SQRT(tau_i)/sigma_i*              j_dp*SQRT(p_dp+1._dp)
-      ynipm1jm1(ip,ij) = +SQRT(tau_i)/sigma_i*              j_dp*SQRT(p_dp)
-      ! Trapping terms
-      zNipm1j  (ip,ij) = +SQRT(tau_i)/sigma_i* (2._dp*j_dp+1_dp)*SQRT(p_dp)
-      zNipm1jp1(ip,ij) = -SQRT(tau_i)/sigma_i*       (j_dp+1_dp)*SQRT(p_dp)
-      zNipm1jm1(ip,ij) = -SQRT(tau_i)/sigma_i*              j_dp*SQRT(p_dp)
-    ENDDO
-  ENDDO
-  DO ip = ips_i, ipe_i
-    p_int= parray_i(ip)   ! Hermite degree
-    p_dp = REAL(p_int,dp) ! REAL of Hermite degree
-    ! Landau damping coefficients (ddz napj term)
-    xnipp1j(ip) = SQRT(tau_i)/sigma_i * SQRT(p_dp + 1._dp)
-    xnipm1j(ip) = SQRT(tau_i)/sigma_i * SQRT(p_dp)
-    ! Magnetic curvature term
-    xnipp2j(ip) = taui_qi * CurvB * SQRT((p_dp + 1._dp) * (p_dp + 2._dp))
-    xnipm2j(ip) = taui_qi * CurvB * SQRT(p_dp * (p_dp - 1._dp))
-  ENDDO
-  DO ij = ijs_i, ije_i
-    j_int= jarray_i(ij)   ! Laguerre degree
-    j_dp = REAL(j_int,dp) ! REAL of Laguerre degree
-    ! Magnetic gradient term
-    xnipjp1(ij) = -taui_qi * GradB * (j_dp + 1._dp)
-    xnipjm1(ij) = -taui_qi * GradB * j_dp
-  ENDDO
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !! ES linear coefficients for moment RHS !!!!!!!!!!
-  IF (KIN_E) THEN
-    DO ip = ips_e, ipe_e
-      p_int= parray_e(ip)   ! Hermite degree
-      DO ij = ijs_e, ije_e
-        j_int= jarray_e(ij)   ! REALof Laguerre degree
-        j_dp = REAL(j_int,dp) ! REALof Laguerre degree
-        !! Electrostatic potential pj terms
-        IF (p_int .EQ. 0) THEN ! kronecker p0
-          xphij_e(ip,ij)    = +k_Ne+ 2.*j_dp*k_Te
-          xphijp1_e(ip,ij)  = -k_Te*(j_dp+1._dp)
-          xphijm1_e(ip,ij)  = -k_Te* j_dp
-        ELSE IF (p_int .EQ. 2) THEN ! kronecker p2
-          xphij_e(ip,ij)    = +k_Te/SQRT2
-          xphijp1_e(ip,ij)  = 0._dp; xphijm1_e(ip,ij)  = 0._dp;
-        ELSE
-          xphij_e(ip,ij)    = 0._dp; xphijp1_e(ip,ij)  = 0._dp
-          xphijm1_e(ip,ij)  = 0._dp;
-        ENDIF
+
+  CALL lin_coeff(k_Ti,k_Ni,k_cB,k_gB,tau_i,q_i,sigma_i,&
+             parray_i(ips_i:ipe_i),jarray_i(ijs_i:ije_i),ips_i,ipe_i,ijs_i,ije_i,&
+             xnipj,xnipp1j,xnipm1j,xnipp2j,xnipm2j,xnipjp1,xnipjm1,&
+             ynipp1j,ynipm1j,ynipp1jm1,ynipm1jm1,zNipm1j,zNipm1jp1,zNipm1jm1,&
+             xphij_i,xphijp1_i,xphijm1_i,xpsij_i,xpsijp1_i,xpsijm1_i)
+
+  CONTAINS
+    SUBROUTINE lin_coeff(k_Ta,k_Na,k_cB,k_gB,tau_a,q_a,sigma_a,&
+                         parray_a,jarray_a,ips_a,ipe_a,ijs_a,ije_a,&
+                         xnapj,xnapp1j,xnapm1j,xnapp2j,xnapm2j,xnapjp1,xnapjm1,&
+                         ynapp1j,ynapm1j,ynapp1jm1,ynapm1jm1,zNapm1j,zNapm1jp1,zNapm1jm1,&
+                         xphij_a,xphijp1_a,xphijm1_a,xpsij_a,xpsijp1_a,xpsijm1_a)
+      IMPLICIT NONE
+      ! INPUTS
+      REAL(dp),                         INTENT(IN) :: k_Ta,k_Na,k_cB,k_gB,tau_a,q_a,sigma_a
+      INTEGER,  DIMENSION(ips_a:ipe_a), INTENT(IN) :: parray_a
+      INTEGER,  DIMENSION(ijs_a:ije_a), INTENT(IN) :: jarray_a
+      INTEGER,                          INTENT(IN) :: ips_a,ipe_a,ijs_a,ije_a
+      ! OUTPUTS (linear coefficients used in moment_eq_rhs_mod.F90)
+      REAL(dp), DIMENSION(ips_a:ipe_a,ijs_a:ije_a), INTENT(OUT) :: xnapj
+      REAL(dp), DIMENSION(ips_a:ipe_a),             INTENT(OUT) :: xnapp1j, xnapm1j,   xnapp2j,   xnapm2j
+      REAL(dp), DIMENSION(ijs_a:ije_a),             INTENT(OUT) :: xnapjp1, xnapjm1
+      REAL(dp), DIMENSION(ips_a:ipe_a,ijs_a:ije_a), INTENT(OUT) :: ynapp1j, ynapm1j,   ynapp1jm1, ynapm1jm1
+      REAL(dp), DIMENSION(ips_a:ipe_a,ijs_a:ije_a), INTENT(OUT) :: zNapm1j, zNapm1jp1, zNapm1jm1
+      REAL(dp), DIMENSION(ips_a:ipe_a,ijs_a:ije_a), INTENT(OUT) :: xphij_a, xphijp1_a, xphijm1_a
+      REAL(dp), DIMENSION(ips_a:ipe_a,ijs_a:ije_a), INTENT(OUT) :: xpsij_a, xpsijp1_a, xpsijm1_a
+      INTEGER     :: p_int, j_int ! polynom. dagrees
+      REAL(dp)    :: p_dp, j_dp
+      !! linear coefficients for moment RHS !!!!!!!!!!
+      DO ip = ips_a, ipe_a
+        p_int= parray_a(ip)   ! Hermite degree
+        p_dp = REAL(p_int,dp) ! REAL of Hermite degree
+        DO ij = ijs_a, ije_a
+          j_int= jarray_a(ij)   ! Laguerre degree
+          j_dp = REAL(j_int,dp) ! REAL of Laguerre degree
+          ! All Napj terms
+          xnapj(ip,ij) = tau_a/q_a*(k_cB*(2._dp*p_dp + 1._dp) &
+                                 +k_gB*(2._dp*j_dp + 1._dp))
+          ! Mirror force terms
+          ynapp1j  (ip,ij) = -SQRT(tau_a)/sigma_a *      (j_dp+1._dp)*SQRT(p_dp+1._dp)
+          ynapm1j  (ip,ij) = -SQRT(tau_a)/sigma_a *      (j_dp+1._dp)*SQRT(p_dp)
+          ! ynapp1jm1(ip,ij) = +SQRT(tau_a)/sigma_a *              j_dp*SQRT(p_dp+1._dp) ! Version of BJF
+          ! ynapm1jm1(ip,ij) = +SQRT(tau_a)/sigma_a *              j_dp*SQRT(p_dp)
+          ynapp1jm1(ip,ij) = +SQRT(tau_a)/sigma_a *(2._dp*j_dp-1._dp)*SQRT(p_dp+1._dp)
+          ynapm1jm1(ip,ij) = +SQRT(tau_a)/sigma_a *(2._dp*j_dp-1._dp)*SQRT(p_dp)
+          ! Trapping terms
+          zNapm1j  (ip,ij) = +SQRT(tau_a)/sigma_a *(2._dp*j_dp+1._dp)*SQRT(p_dp)
+          zNapm1jp1(ip,ij) = -SQRT(tau_a)/sigma_a *      (j_dp+1._dp)*SQRT(p_dp)
+          zNapm1jm1(ip,ij) = -SQRT(tau_a)/sigma_a *              j_dp*SQRT(p_dp)
+        ENDDO
       ENDDO
-    ENDDO
-  ENDIF
-  DO ip = ips_i, ipe_i
-    p_int= parray_i(ip)   ! Hermite degree
-    DO ij = ijs_i, ije_i
-      j_int= jarray_i(ij)   ! REALof Laguerre degree
-      j_dp = REAL(j_int,dp) ! REALof Laguerre degree
-      !! Electrostatic potential pj terms
-      IF (p_int .EQ. 0) THEN ! kronecker p0
-        xphij_i(ip,ij)    = +k_Ni + 2._dp*j_dp*k_Ti
-        xphijp1_i(ip,ij)  = -k_Ti*(j_dp+1._dp)
-        xphijm1_i(ip,ij)  = -k_Ti* j_dp
-      ELSE IF (p_int .EQ. 2) THEN ! kronecker p2
-        xphij_i(ip,ij)    = +k_Ti/SQRT2
-        xphijp1_i(ip,ij)  = 0._dp; xphijm1_i(ip,ij)  = 0._dp;
-      ELSE
-        xphij_i(ip,ij)    = 0._dp; xphijp1_i(ip,ij)  = 0._dp
-        xphijm1_i(ip,ij)  = 0._dp;
-      ENDIF
-    ENDDO
-  ENDDO
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !! EM linear coefficients for moment RHS !!!!!!!!!!
-  IF (KIN_E) THEN
-    DO ip = ips_e, ipe_e
-      p_int= parray_e(ip)   ! Hermite degree
-      DO ij = ijs_e, ije_e
-        j_int= jarray_e(ij)   ! REALof Laguerre degree
-        j_dp = REAL(j_int,dp) ! REALof Laguerre degree
-        !! Electrostatic potential pj terms
-        IF (p_int .EQ. 1) THEN ! kronecker p1
-          xpsij_e  (ip,ij)  = +(k_Ne + (2._dp*j_dp+1._dp)*k_Te)* SQRT(tau_e)/sigma_e
-          xpsijp1_e(ip,ij)  = - k_Te*(j_dp+1._dp)              * SQRT(tau_e)/sigma_e
-          xpsijm1_e(ip,ij)  = - k_Te* j_dp                     * SQRT(tau_e)/sigma_e
-        ELSE IF (p_int .EQ. 3) THEN ! kronecker p3
-          xpsij_e  (ip,ij)  = + k_Te*SQRT3/SQRT2               * SQRT(tau_e)/sigma_e
-          xpsijp1_e(ip,ij)  = 0._dp; xpsijm1_e(ip,ij)  = 0._dp;
-        ELSE
-          xpsij_e  (ip,ij)  = 0._dp; xpsijp1_e(ip,ij)  = 0._dp
-          xpsijm1_e(ip,ij)  = 0._dp;
-        ENDIF
+      DO ip = ips_a, ipe_a
+        p_int= parray_a(ip)   ! Hermite degree
+        p_dp = REAL(p_int,dp) ! REAL of Hermite degree
+        ! Landau damping coefficients (ddz napj term)
+        xnapp1j(ip) = SQRT(tau_a)/sigma_a * SQRT(p_dp+1._dp)
+        xnapm1j(ip) = SQRT(tau_a)/sigma_a * SQRT(p_dp)
+        ! Magnetic curvature term
+        xnapp2j(ip) = tau_a/q_a * k_cB * SQRT((p_dp+1._dp)*(p_dp + 2._dp))
+        xnapm2j(ip) = tau_a/q_a * k_cB * SQRT( p_dp       *(p_dp - 1._dp))
       ENDDO
-    ENDDO
-  ENDIF
-  DO ip = ips_i, ipe_i
-    p_int= parray_i(ip)   ! Hermite degree
-    DO ij = ijs_i, ije_i
-      j_int= jarray_i(ij)   ! REALof Laguerre degree
-      j_dp = REAL(j_int,dp) ! REALof Laguerre degree
-      !! Electrostatic potential pj terms
-      IF (p_int .EQ. 1) THEN ! kronecker p1
-        xpsij_i  (ip,ij)  = +(k_Ni + (2._dp*j_dp+1._dp)*k_Ti)* SQRT(tau_i)/sigma_i
-        xpsijp1_i(ip,ij)  = - k_Ti*(j_dp+1._dp)              * SQRT(tau_i)/sigma_i
-        xpsijm1_i(ip,ij)  = - k_Ti* j_dp                     * SQRT(tau_i)/sigma_i
-      ELSE IF (p_int .EQ. 3) THEN ! kronecker p3
-        xpsij_i  (ip,ij)  = + k_Ti*SQRT3/SQRT2               * SQRT(tau_i)/sigma_i
-        xpsijp1_i(ip,ij)  = 0._dp; xpsijm1_i(ip,ij)  = 0._dp;
-      ELSE
-        xpsij_i  (ip,ij)  = 0._dp; xpsijp1_i(ip,ij)  = 0._dp
-        xpsijm1_i(ip,ij)  = 0._dp;
-      ENDIF
-    ENDDO
-  ENDDO
+      DO ij = ijs_a, ije_a
+        j_int= jarray_a(ij)   ! Laguerre degree
+        j_dp = REAL(j_int,dp) ! REAL of Laguerre degree
+        ! Magnetic gradient term
+        xnapjp1(ij) = -tau_a/q_a * k_gB * (j_dp + 1._dp)
+        xnapjm1(ij) = -tau_a/q_a * k_gB *  j_dp
+      ENDDO
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !! ES linear coefficients for moment RHS !!!!!!!!!!
+      DO ip = ips_a, ipe_a
+        p_int= parray_a(ip)   ! Hermite degree
+        DO ij = ijs_a, ije_a
+          j_int= jarray_a(ij)   ! REALof Laguerre degree
+          j_dp = REAL(j_int,dp) ! REALof Laguerre degree
+          !! Electrostatic potential pj terms
+          IF (p_int .EQ. 0) THEN ! kronecker p0
+            xphij_a(ip,ij)    = +k_Na + 2._dp*j_dp*k_Ta
+            xphijp1_a(ip,ij)  = -k_Ta*(j_dp+1._dp)
+            xphijm1_a(ip,ij)  = -k_Ta* j_dp
+          ELSE IF (p_int .EQ. 2) THEN ! kronecker p2
+            xphij_a(ip,ij)    = +k_Ta/SQRT2
+            xphijp1_a(ip,ij)  = 0._dp; xphijm1_a(ip,ij)  = 0._dp;
+          ELSE
+            xphij_a(ip,ij)    = 0._dp; xphijp1_a(ip,ij)  = 0._dp
+            xphijm1_a(ip,ij)  = 0._dp;
+          ENDIF
+        ENDDO
+      ENDDO
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !! Electromagnatic linear coefficients for moment RHS !!!!!!!!!!
+      DO ip = ips_a, ipe_a
+        p_int= parray_a(ip)   ! Hermite degree
+        DO ij = ijs_a, ije_a
+          j_int= jarray_a(ij)   ! REALof Laguerre degree
+          j_dp = REAL(j_int,dp) ! REALof Laguerre degree
+          IF (p_int .EQ. 1) THEN ! kronecker p1
+            xpsij_a  (ip,ij)  = +(k_Na + (2._dp*j_dp+1._dp)*k_Ta)* SQRT(tau_a)/sigma_a
+            xpsijp1_a(ip,ij)  = - k_Ta*(j_dp+1._dp)              * SQRT(tau_a)/sigma_a
+            xpsijm1_a(ip,ij)  = - k_Ta* j_dp                     * SQRT(tau_a)/sigma_a
+          ELSE IF (p_int .EQ. 3) THEN ! kronecker p3
+            xpsij_a  (ip,ij)  = + k_Ta*SQRT3/SQRT2               * SQRT(tau_a)/sigma_a
+            xpsijp1_a(ip,ij)  = 0._dp; xpsijm1_a(ip,ij)  = 0._dp;
+          ELSE
+            xpsij_a  (ip,ij)  = 0._dp; xpsijp1_a(ip,ij)  = 0._dp
+            xpsijm1_a(ip,ij)  = 0._dp;
+          ENDIF
+        ENDDO
+      ENDDO
+    END SUBROUTINE lin_coeff
 END SUBROUTINE compute_lin_coeff
 
 END MODULE numerics
