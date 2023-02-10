@@ -12,7 +12,7 @@ SUBROUTINE compute_moments_eq_rhs
   USE prec_const
   USE collision
   USE time_integration
-  USE geometry, ONLY: gradz_coeff, dlnBdz, Ckxky, Gamma_NL!, Gamma_phipar
+  USE geometry, ONLY: gradz_coeff, dlnBdz, Ckxky!, Gamma_phipar
   USE calculus, ONLY : interp_z, grad_z, grad_z2
   IMPLICIT NONE
 
