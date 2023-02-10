@@ -88,7 +88,7 @@ SUBROUTINE compute_nonlinear
           bracket_sum_r = 0._dp ! initialize sum over real nonlinear term
 
           nloope: DO in = 1,nmax+1 ! Loop over laguerre for the sum
-!-----------!! ELECTROSTATIC CONTRIBUTION {Sum_s dnjs Naps, Kernel phi}
+!-----------!! ELECTROSTATIC CONTRIBUTION {Kernel phi, Sum_s dnjs Neps}
             ! First convolution terms
             F_cmpx(ikys:ikye,ikxs:ikxe) = phi(ikys:ikye,ikxs:ikxe,iz) * kernel_e(in, ikys:ikye,ikxs:ikxe, iz, eo)
             ! Second convolution terms
