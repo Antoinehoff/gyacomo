@@ -55,7 +55,7 @@ implicit none
   REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: gxx, gxy, gxz, gyy, gyz, gzz ! dimensions: z, odd/even p
   REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dxdr, dxdZ, Rc, phic, Zc
   ! derivatives of magnetic field strength
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dBdx, dBdy, dBdz
+  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dBdx, dBdy, dBdz, dlnBdz
   ! Relative magnetic field strength
   REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatB
   ! Relative strength of major radius
@@ -64,8 +64,6 @@ implicit none
   REAL(dp),    PUBLIC, DIMENSION(:,:) , ALLOCATABLE :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
   ! Array to map the index of mode (kx,ky,-pi) to (kx+2pi*s*ky,ky,pi) for sheared periodic boundary condition
   INTEGER,     PUBLIC, DIMENSION(:,:), ALLOCATABLE :: ikx_zBC_L, ikx_zBC_R
-  ! Geometric factor in front of the nonlinear term (gxx gyy - gxy^2)
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: Gamma_NL
   ! Geometric factor in front of the parallel phi derivative (not implemented)
   ! REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: Gamma_phipar
   ! pb_phase, for parallel boundary phase, contains the factor that occurs when taking into account
@@ -168,9 +166,8 @@ CONTAINS
         ENDDO
         ! coefficient in the front of parallel derivative
         gradz_coeff(iz,eo) = 1._dp /(jacobian(iz,eo)*hatB(iz,eo))
-
-        ! Nonlinear term prefactor
-        Gamma_NL(iz,eo)    = G1 !=1._dp
+        ! d/dz(ln B) to correspond to the formulation in paper 2023
+        dlnBdz(iz,eo)      = dBdz(iz,eo)/hatB(iz,eo)
         ! Geometric factor in front to the maxwellian dzphi term (not implemented)
         ! Gamma_phipar(iz,eo) = G2/G1
       ENDDO
@@ -275,7 +272,6 @@ CONTAINS
 
     ! Relative strengh of modulus of B
       hatB   (iz,eo) = 1._dp
-      Gamma_NL(iz,eo) = 1._dp
 
     ! Derivative of the magnetic field strenght
       dBdx(iz,eo) = -hatB(iz,eo) ! LB = 1
@@ -472,11 +468,11 @@ END SUBROUTINE set_ikx_zBC_map
        CALL allocate_array(        gyy,izgs,izge, 0,1)
        CALL allocate_array(        gyz,izgs,izge, 0,1)
        CALL allocate_array(        gzz,izgs,izge, 0,1)
-       CALL allocate_array(     dBdx,izgs,izge, 0,1)
-       CALL allocate_array(     dBdy,izgs,izge, 0,1)
-       CALL allocate_array(     dBdz,izgs,izge, 0,1)
+       CALL allocate_array(       dBdx,izgs,izge, 0,1)
+       CALL allocate_array(       dBdy,izgs,izge, 0,1)
+       CALL allocate_array(       dBdz,izgs,izge, 0,1)
+       CALL allocate_array(     dlnBdz,izgs,izge, 0,1)
        CALL allocate_array(       hatB,izgs,izge, 0,1)
-       CALL allocate_array(    Gamma_NL,izgs,izge, 0,1)
        ! CALL allocate_array(Gamma_phipar,izgs,izge, 0,1) (not implemented)
        CALL allocate_array(       hatR,izgs,izge, 0,1)
        CALL allocate_array(       hatZ,izgs,izge, 0,1)
