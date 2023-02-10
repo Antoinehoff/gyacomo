@@ -49,6 +49,7 @@ CONTAINS
 
     !!!!! PJZ gather variables
     ! IONS
+    !! P reduction at constant j and z is already done in module GRID
     !! Z reduction for full slices of p data but constant j
     ! number of points recieved and displacement for the z reduction
     ALLOCATE(rcv_zp_i(0:num_procs_z-1),dsp_zp_i(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
