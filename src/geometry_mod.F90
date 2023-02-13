@@ -88,6 +88,7 @@ CONTAINS
     SELECT CASE(parallel_bc)
       CASE ('dirichlet')
       CASE ('periodic')
+      CASE ('cyclic')
       CASE ('shearless')
       CASE ('disconnected')
       CASE DEFAULT
