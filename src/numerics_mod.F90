@@ -287,10 +287,8 @@ SUBROUTINE compute_lin_coeff
           ! Mirror force terms
           ynapp1j  (ip,ij) = -SQRT(tau_a)/sigma_a *      (j_dp+1._dp)*SQRT(p_dp+1._dp)
           ynapm1j  (ip,ij) = -SQRT(tau_a)/sigma_a *      (j_dp+1._dp)*SQRT(p_dp)
-          ! ynapp1jm1(ip,ij) = +SQRT(tau_a)/sigma_a *              j_dp*SQRT(p_dp+1._dp) ! Version of BJF
-          ! ynapm1jm1(ip,ij) = +SQRT(tau_a)/sigma_a *              j_dp*SQRT(p_dp)
-          ynapp1jm1(ip,ij) = +SQRT(tau_a)/sigma_a *(2._dp*j_dp-1._dp)*SQRT(p_dp+1._dp)
-          ynapm1jm1(ip,ij) = +SQRT(tau_a)/sigma_a *(2._dp*j_dp-1._dp)*SQRT(p_dp)
+          ynapp1jm1(ip,ij) = +SQRT(tau_a)/sigma_a *              j_dp*SQRT(p_dp+1._dp)
+          ynapm1jm1(ip,ij) = +SQRT(tau_a)/sigma_a *              j_dp*SQRT(p_dp)
           ! Trapping terms
           zNapm1j  (ip,ij) = +SQRT(tau_a)/sigma_a *(2._dp*j_dp+1._dp)*SQRT(p_dp)
           zNapm1jp1(ip,ij) = -SQRT(tau_a)/sigma_a *      (j_dp+1._dp)*SQRT(p_dp)
