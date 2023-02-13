@@ -4,6 +4,7 @@ SUBROUTINE control
   use basic
   use prec_const
   IMPLICIT NONE
+  REAL(dp) :: t_init_diag_0, t_init_diag_1
 
   CALL cpu_time(start)
   !________________________________________________________________________________
@@ -41,9 +42,14 @@ SUBROUTINE control
 
   !                   1.6     Initial diagnostics
   IF (my_id .EQ. 0) WRITE(*,*) 'Initial diagnostics...'
+  CALL cpu_time(t_init_diag_0) ! Measure the time of the init diag
   CALL diagnose(0)
+  CALL cpu_time(t_init_diag_1)
   ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-  IF (my_id .EQ. 0) WRITE(*,'(a/)') '...initial diagnostics done'
+  IF (my_id .EQ. 0) THEN
+    WRITE(*,'(a)') '...initial diagnostics done'
+    WRITE(*,'(a,F6.3,a/)') '(',t_init_diag_1-t_init_diag_0,'[s])'
+  ENDIF
 
   CALL FLUSH(stdout)
   CALL mpi_barrier(MPI_COMM_WORLD, ierr)
