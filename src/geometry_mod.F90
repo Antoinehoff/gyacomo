@@ -435,7 +435,14 @@ CONTAINS
   !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
   !kx =           0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
 
-  ! periodic connection map BC of the LEFT boundary (z=-pi*Npol)
+  ! periodic connection map BC of the RIGHT boundary (z=pi*Npol-dz)
+  !3            | 4    2    3    4    2    3 |  ky = 3 dky
+  !2   ky       | 3    4    3    4    1    2 |  ky = 2 dky
+  !1   A        | 2    3    4    4    6    1 |  ky = 1 dky
+  !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
+  !kx =           0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
+
+  ! cyclic connection map BC of the LEFT boundary (z=-pi*Npol)
   !3            | 4    5    6    1    2    3 |  ky = 3 dky
   !2   ky       | 5    6    1    2    3    4 |  ky = 2 dky
   !1   A        | 6    1    2    3    4    5 |  ky = 1 dky
