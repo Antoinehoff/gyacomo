@@ -369,7 +369,9 @@ CONTAINS
              SELECT CASE(parallel_bc)
                CASE ('dirichlet')! connected to 0
                  ikx_zBC_L(iky,ikx) = -99
-               CASE ('periodic') !reroute it by cycling through modes
+               CASE ('periodic')
+                 ikx_zBC_L(iky,ikx) = ikx
+               CASE ('cyclic')! reroute it by cycling through modes
                  ikx_zBC_L(iky,ikx) = MODULO(ikx_zBC_L(iky,ikx)-1,Nkx)+1
              END SELECT
            ENDIF
@@ -395,8 +397,10 @@ CONTAINS
              SELECT CASE(parallel_bc)
                CASE ('dirichlet') ! connected to 0
                  ikx_zBC_R(iky,ikx) = -99
-               CASE ('periodic') !reroute it by cycling through modes
-                 write(*,*) 'check',ikx,iky, kxarray(ikx) + shift, '>', kx_max
+               CASE ('periodic') ! connected to itself as for shearless
+                 ikx_zBC_R(iky,ikx) = ikx
+               CASE ('cyclic')
+                 ! write(*,*) 'check',ikx,iky, kxarray(ikx) + shift, '>', kx_max
                  ikx_zBC_R(iky,ikx) = MODULO(ikx_zBC_R(iky,ikx)-1,Nkx)+1
              END SELECT
            ENDIF
