@@ -24,7 +24,7 @@ SUBROUTINE compute_moments_eq_rhs
                      xphij_i, xphijp1_i, xphijm1_i, xpsij_i, xpsijp1_i, xpsijm1_i,&
                      kernel_i, nadiab_moments_i, ddz_nipj, interp_nipj, Sipj,&
                      moments_i(ipgs_i:ipge_i,ijgs_i:ijge_i,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel),&
-                     TColl_i, ddzND_nipj, &
+                     TColl_i, ddzND_nipj, diff_pi_coeff, diff_ji_coeff,&
                      moments_rhs_i(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel))
 
     !compute ion moments_eq_rhs
@@ -36,7 +36,7 @@ SUBROUTINE compute_moments_eq_rhs
                      xphij_e, xphijp1_e, xphijm1_e, xpsij_e, xpsijp1_e, xpsijm1_e,&
                      kernel_e, nadiab_moments_e, ddz_nepj, interp_nepj, Sepj,&
                      moments_e(ipgs_e:ipge_e,ijgs_e:ijge_e,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel),&
-                     TColl_e, ddzND_nepj,&
+                     TColl_e, ddzND_nepj, diff_pe_coeff, diff_je_coeff,&
                      moments_rhs_e(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel))
 
   CONTAINS
@@ -47,45 +47,46 @@ SUBROUTINE compute_moments_eq_rhs
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! This routine assemble the RHS of the moment hierarchy equations. It uses
   ! linear coefficients that are stored in arrays (xn*, yn* and zn*) computed in
-  ! numerics_mod.F90. Otherwise it simply adds the collision term TColl that is
-  ! computed in collision_mod.F90 and the nonlinear term Sapj computed in
+  ! numerics_mod.F90. Otherwise it simply adds the collision term TColl_ that is
+  ! computed in collision_mod.F90 and the nonlinear term Sapj_ computed in
   ! nonlinear_mod.F90.
   ! All arguments of the subroutines are inputs only except the last one,
   ! moments_rhs_ that will contain the sum of every terms in the RHS.
   !_____________________________________________________________________________!
-  SUBROUTINE moments_eq_rhs(ips,ipe,ipgs,ipge,ijs,ije,ijgs,ijge,jarray,parray,&
-                   xnapj, xnapp2j, xnapm2j, xnapjp1, xnapjm1, xnapp1j, xnapm1j,&
-                   ynapp1j, ynapp1jm1, ynapm1j, ynapm1jm1, &
-                   znapm1j, znapm1jp1, znapm1jm1, &
-                   xphij, xphijp1, xphijm1, xpsij, xpsijp1, xpsijm1,&
-                   kernel, nadiab_moments, ddz_napj, interp_napj, Sapj,&
-                   moments, TColl, ddzND_napj, moments_rhs)
+  SUBROUTINE moments_eq_rhs(ips_,ipe_,ipgs_,ipge_,ijs_,ije_,ijgs_,ijge_,jarray_,parray_,&
+                   xnapj_, xnapp2j_, xnapm2j_, xnapjp1_, xnapjm1_, xnapp1j_, xnapm1j_,&
+                   ynapp1j_, ynapp1jm1_, ynapm1j_, ynapm1jm1_, &
+                   znapm1j_, znapm1jp1_, znapm1jm1_, &
+                   xphij_, xphijp1_, xphijm1_, xpsij_, xpsijp1_, xpsijm1_,&
+                   kernel_, nadiab_moments_, ddz_napj_, interp_napj_, Sapj_,&
+                   moments_, TColl_, ddzND_napj_, diff_p_coeff_, diff_j_coeff_, moments_rhs_)
 
     IMPLICIT NONE
     !! INPUTS
-    INTEGER, INTENT(IN) :: ips, ipe, ipgs, ipge, ijs, ije, ijgs, ijge
-    INTEGER,  DIMENSION(ips:ipe), INTENT(IN) :: parray
-    INTEGER,  DIMENSION(ijs:ije), INTENT(IN) :: jarray
-    REAL(dp), DIMENSION(ips:ipe,ijs:ije), INTENT(IN) :: xnapj
-    REAL(dp), DIMENSION(ips:ipe),         INTENT(IN) :: xnapp2j, xnapm2j
-    REAL(dp), DIMENSION(ijs:ije),         INTENT(IN) :: xnapjp1, xnapjm1
-    REAL(dp), DIMENSION(ips:ipe),         INTENT(IN) :: xnapp1j, xnapm1j
-    REAL(dp), DIMENSION(ips:ipe,ijs:ije), INTENT(IN) :: ynapp1j, ynapp1jm1, ynapm1j, ynapm1jm1
-    REAL(dp), DIMENSION(ips:ipe,ijs:ije), INTENT(IN) :: znapm1j, znapm1jp1, znapm1jm1
-    REAL(dp), DIMENSION(ips:ipe,ijs:ije), INTENT(IN) :: xphij, xphijp1, xphijm1
-    REAL(dp), DIMENSION(ips:ipe,ijs:ije), INTENT(IN) :: xpsij, xpsijp1, xpsijm1
+    INTEGER, INTENT(IN) :: ips_, ipe_, ipgs_, ipge_, ijs_, ije_, ijgs_, ijge_
+    INTEGER,  DIMENSION(ips_:ipe_), INTENT(IN) :: parray_
+    INTEGER,  DIMENSION(ijs_:ije_), INTENT(IN) :: jarray_
+    REAL(dp), DIMENSION(ips_:ipe_,ijs_:ije_), INTENT(IN) :: xnapj_
+    REAL(dp), DIMENSION(ips_:ipe_),         INTENT(IN) :: xnapp2j_, xnapm2j_
+    REAL(dp), DIMENSION(ijs_:ije_),         INTENT(IN) :: xnapjp1_, xnapjm1_
+    REAL(dp), DIMENSION(ips_:ipe_),         INTENT(IN) :: xnapp1j_, xnapm1j_
+    REAL(dp), DIMENSION(ips_:ipe_,ijs_:ije_), INTENT(IN) :: ynapp1j_, ynapp1jm1_, ynapm1j_, ynapm1jm1_
+    REAL(dp), DIMENSION(ips_:ipe_,ijs_:ije_), INTENT(IN) :: znapm1j_, znapm1jp1_, znapm1jm1_
+    REAL(dp), DIMENSION(ips_:ipe_,ijs_:ije_), INTENT(IN) :: xphij_, xphijp1_, xphijm1_
+    REAL(dp), DIMENSION(ips_:ipe_,ijs_:ije_), INTENT(IN) :: xpsij_, xpsijp1_, xpsijm1_
 
-    REAL(dp), DIMENSION(ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge,0:1),INTENT(IN) :: kernel
+    REAL(dp), DIMENSION(ijgs_:ijge_,ikys:ikye,ikxs:ikxe,izgs:izge,0:1),INTENT(IN) :: kernel_
 
-    COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: nadiab_moments
-    COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: ddz_napj
-    COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: interp_napj
-    COMPLEX(dp), DIMENSION( ips:ipe,  ijs:ije, ikys:ikye,ikxs:ikxe, izs:ize), INTENT(IN) :: Sapj
-    COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: moments
-    COMPLEX(dp), DIMENSION( ips:ipe,  ijs:ije, ikys:ikye,ikxs:ikxe, izs:ize), INTENT(IN) :: TColl
-    COMPLEX(dp), DIMENSION(ipgs:ipge,ijgs:ijge,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: ddzND_napj
+    COMPLEX(dp), DIMENSION(ipgs_:ipge_,ijgs_:ijge_,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: nadiab_moments_
+    COMPLEX(dp), DIMENSION(ipgs_:ipge_,ijgs_:ijge_,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: ddz_napj_
+    COMPLEX(dp), DIMENSION(ipgs_:ipge_,ijgs_:ijge_,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: interp_napj_
+    COMPLEX(dp), DIMENSION( ips_:ipe_,  ijs_:ije_, ikys:ikye,ikxs:ikxe, izs:ize), INTENT(IN) :: Sapj_
+    COMPLEX(dp), DIMENSION(ipgs_:ipge_,ijgs_:ijge_,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: moments_
+    COMPLEX(dp), DIMENSION( ips_:ipe_,  ijs_:ije_, ikys:ikye,ikxs:ikxe, izs:ize), INTENT(IN) :: TColl_
+    COMPLEX(dp), DIMENSION(ipgs_:ipge_,ijgs_:ijge_,ikys:ikye,ikxs:ikxe,izgs:izge),INTENT(IN) :: ddzND_napj_
+    REAL(dp),    INTENT(IN) :: diff_p_coeff_, diff_j_coeff_
     !! OUTPUT
-    COMPLEX(dp), DIMENSION( ips:ipe,  ijs:ije, ikys:ikye,ikxs:ikxe, izs:ize),INTENT(OUT) :: moments_rhs
+    COMPLEX(dp), DIMENSION( ips_:ipe_,  ijs_:ije_, ikys:ikye,ikxs:ikxe, izs:ize),INTENT(OUT) :: moments_rhs_
 
     INTEGER     :: p_int, j_int ! loops indices and polynom. degrees
     REAL(dp)    :: kx, ky, kperp2
@@ -111,11 +112,11 @@ SUBROUTINE compute_moments_eq_rhs
           psikykxz = psi(iky,ikx,iz)! tmp psi value
 
           ! Kinetic loops
-          jloop : DO ij = ijs, ije  ! This loop is from 1 to jmaxi+1
-            j_int = jarray(ij)
+          jloop : DO ij = ijs_, ije_  ! This loop is from 1 to jmaxi+1
+            j_int = jarray_(ij)
 
-            ploop : DO ip = ips, ipe  ! Hermite loop
-              p_int = parray(ip)      ! Hermite degree
+            ploop : DO ip = ips_, ipe_  ! Hermite loop
+              p_int = parray_(ip)      ! Hermite degree
               eo    = MODULO(p_int,2) ! Indicates if we are on odd or even z grid
               kperp2= kparray(iky,ikx,iz,eo)**2
 
@@ -123,31 +124,31 @@ SUBROUTINE compute_moments_eq_rhs
               !! Compute moments_ mixing terms
               ! Perpendicular dynamic
               ! term propto n^{p,j}
-              Tnapj   = xnapj(ip,ij)* nadiab_moments(ip,ij,iky,ikx,iz)
+              Tnapj   = xnapj_(ip,ij)* nadiab_moments_(ip,ij,iky,ikx,iz)
               ! term propto n^{p+2,j}
-              Tnapp2j = xnapp2j(ip) * nadiab_moments(ip+pp2,ij,iky,ikx,iz)
+              Tnapp2j = xnapp2j_(ip) * nadiab_moments_(ip+pp2,ij,iky,ikx,iz)
               ! term propto n^{p-2,j}
-              Tnapm2j = xnapm2j(ip) * nadiab_moments(ip-pp2,ij,iky,ikx,iz)
+              Tnapm2j = xnapm2j_(ip) * nadiab_moments_(ip-pp2,ij,iky,ikx,iz)
               ! term propto n^{p,j+1}
-              Tnapjp1 = xnapjp1(ij) * nadiab_moments(ip,ij+1,iky,ikx,iz)
+              Tnapjp1 = xnapjp1_(ij) * nadiab_moments_(ip,ij+1,iky,ikx,iz)
               ! term propto n^{p,j-1}
-              Tnapjm1 = xnapjm1(ij) * nadiab_moments(ip,ij-1,iky,ikx,iz)
+              Tnapjm1 = xnapjm1_(ij) * nadiab_moments_(ip,ij-1,iky,ikx,iz)
               ! Perpendicular magnetic term (curvature and gradient drifts)
               Mperp   = imagu*Ckxky(iky,ikx,iz,eo)*(Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)
 
               ! Parallel dynamic
               ! ddz derivative for Landau damping term
-              Tpar      = xnapp1j(ip) * ddz_napj(ip+1,ij,iky,ikx,iz) &
-                        + xnapm1j(ip) * ddz_napj(ip-1,ij,iky,ikx,iz)
+              Tpar      = xnapp1j_(ip) * ddz_napj_(ip+1,ij,iky,ikx,iz) &
+                        + xnapm1j_(ip) * ddz_napj_(ip-1,ij,iky,ikx,iz)
               ! Mirror terms
-              Tnapp1j   = ynapp1j  (ip,ij) * interp_napj(ip+1,ij  ,iky,ikx,iz)
-              Tnapp1jm1 = ynapp1jm1(ip,ij) * interp_napj(ip+1,ij-1,iky,ikx,iz)
-              Tnapm1j   = ynapm1j  (ip,ij) * interp_napj(ip-1,ij  ,iky,ikx,iz)
-              Tnapm1jm1 = ynapm1jm1(ip,ij) * interp_napj(ip-1,ij-1,iky,ikx,iz)
+              Tnapp1j   = ynapp1j_  (ip,ij) * interp_napj_(ip+1,ij  ,iky,ikx,iz)
+              Tnapp1jm1 = ynapp1jm1_(ip,ij) * interp_napj_(ip+1,ij-1,iky,ikx,iz)
+              Tnapm1j   = ynapm1j_  (ip,ij) * interp_napj_(ip-1,ij  ,iky,ikx,iz)
+              Tnapm1jm1 = ynapm1jm1_(ip,ij) * interp_napj_(ip-1,ij-1,iky,ikx,iz)
               ! Trapping terms
-              Unapm1j   = znapm1j  (ip,ij) * interp_napj(ip-1,ij  ,iky,ikx,iz)
-              Unapm1jp1 = znapm1jp1(ip,ij) * interp_napj(ip-1,ij+1,iky,ikx,iz)
-              Unapm1jm1 = znapm1jm1(ip,ij) * interp_napj(ip-1,ij-1,iky,ikx,iz)
+              Unapm1j   = znapm1j_  (ip,ij) * interp_napj_(ip-1,ij  ,iky,ikx,iz)
+              Unapm1jp1 = znapm1jp1_(ip,ij) * interp_napj_(ip-1,ij+1,iky,ikx,iz)
+              Unapm1jm1 = znapm1jm1_(ip,ij) * interp_napj_(ip-1,ij-1,iky,ikx,iz)
 
               Tmir = dlnBdz(iz,eo)*(Tnapp1j + Tnapp1jm1 + Tnapm1j + Tnapm1jm1 +&
                                     Unapm1j + Unapm1jp1 + Unapm1jm1)
@@ -155,26 +156,26 @@ SUBROUTINE compute_moments_eq_rhs
               Mpara = gradz_coeff(iz,eo)*(Tpar + Tmir)
               !! Electrical potential term
               IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
-                Dphi =i_ky*( xphij  (ip,ij)*kernel(ij  ,iky,ikx,iz,eo) &
-                            +xphijp1(ip,ij)*kernel(ij+1,iky,ikx,iz,eo) &
-                            +xphijm1(ip,ij)*kernel(ij-1,iky,ikx,iz,eo) )*phi(iky,ikx,iz)
+                Dphi =i_ky*( xphij_  (ip,ij)*kernel_(ij  ,iky,ikx,iz,eo) &
+                            +xphijp1_(ip,ij)*kernel_(ij+1,iky,ikx,iz,eo) &
+                            +xphijm1_(ip,ij)*kernel_(ij-1,iky,ikx,iz,eo) )*phi(iky,ikx,iz)
               ELSE
                 Tphi = 0._dp
               ENDIF
 
               !! Vector potential term
               IF ( (p_int .LE. 3) .AND. (p_int .GE. 1) ) THEN ! Kronecker p1 or p3
-                Dpsi =-i_ky*( xpsij  (ip,ij)*kernel(ij  ,iky,ikx,iz,eo) &
-                             +xpsijp1(ip,ij)*kernel(ij+1,iky,ikx,iz,eo) &
-                             +xpsijm1(ip,ij)*kernel(ij-1,iky,ikx,iz,eo))*psi(iky,ikx,iz)
+                Dpsi =-i_ky*( xpsij_  (ip,ij)*kernel_(ij  ,iky,ikx,iz,eo) &
+                             +xpsijp1_(ip,ij)*kernel_(ij+1,iky,ikx,iz,eo) &
+                             +xpsijm1_(ip,ij)*kernel_(ij-1,iky,ikx,iz,eo))*psi(iky,ikx,iz)
               ELSE
                 Dpsi = 0._dp
               ENDIF
 
               !! Sum of all RHS terms
-              moments_rhs(ip,ij,iky,ikx,iz) = &
-                  ! Nonlinear term Sapj = {phi,f}
-                  - Sapj(ip,ij,iky,ikx,iz) &
+              moments_rhs_(ip,ij,iky,ikx,iz) = &
+                  ! Nonlinear term Sapj_ = {phi,f}
+                  - Sapj_(ip,ij,iky,ikx,iz) &
                   ! Perpendicular magnetic term
                   - Mperp &
                   ! Parallel magnetic term
@@ -182,30 +183,33 @@ SUBROUTINE compute_moments_eq_rhs
                   ! Drives (density + temperature gradients)
                   - (Dphi + Dpsi) &
                   ! Collision term
-                  + TColl(ip,ij,iky,ikx,iz) &
+                  + TColl_(ip,ij,iky,ikx,iz) &
                   ! Perpendicular pressure effects (electromagnetic term) (TO CHECK)
                   - i_ky*beta*dpdx * (Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)&
                   ! Parallel drive term (should be negligible, to test)
                   ! -Gamma_phipar(iz,eo)*Tphi*ddz_phi(iky,ikx,iz) &
-                  ! Numerical Hermite hyperdiffusion (GX version)
-                  -mu_p*diff_pe_coeff*p_int**4*moments(ip,ij,iky,ikx,iz)&
-                  ! Numerical Laguerre hyperdiffusion (GX version)
-                  -mu_j*diff_je_coeff*j_int**4*moments(ip,ij,iky,ikx,iz)&
                   ! Numerical perpendicular hyperdiffusion
-                  -mu_x*diff_kx_coeff*kx**N_HD*moments(ip,ij,iky,ikx,iz) &
-                  -mu_y*diff_ky_coeff*ky**N_HD*moments(ip,ij,iky,ikx,iz) &
+                  -mu_x*diff_kx_coeff*kx**N_HD*moments_(ip,ij,iky,ikx,iz) &
+                  -mu_y*diff_ky_coeff*ky**N_HD*moments_(ip,ij,iky,ikx,iz) &
                   ! Numerical parallel hyperdiffusion "mu_z*ddz**4"  see Pueschel 2010 (eq 25)
-                  -mu_z*diff_dz_coeff*ddzND_napj(ip,ij,iky,ikx,iz)
-
-                ! IF( (ip-4 .GT. 0) .AND. (num_procs_p .EQ. 1) ) &
-                ! ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
-                ! ! (not used often so not parallelized)
-                ! moments_rhs_(ip,ij,iky,ikx,iz) = &
-                !   moments_rhs_(ip,ij,iky,ikx,iz) &
-                !     + mu_p * moments_(ip-4,ij,iky,ikx,iz)
+                  -mu_z*diff_dz_coeff*ddzND_napj_(ip,ij,iky,ikx,iz)
+                  ! GX like Hermite hypercollisions see Mandell et al. 2023 (eq 3.23), unadvised to use it
+                  IF (p_int .GT. 2)  &
+                    moments_rhs_(ip,ij,iky,ikx,iz) = &
+                      moments_rhs_(ip,ij,iky,ikx,iz) - mu_p*diff_pe_coeff*p_int**6*moments_(ip,ij,iky,ikx,iz)
+                  IF (j_int .GT. 1)  &
+                    moments_rhs_(ip,ij,iky,ikx,iz) = &
+                      moments_rhs_(ip,ij,iky,ikx,iz) - mu_j*diff_je_coeff*j_int**6*moments_(ip,ij,iky,ikx,iz)
+                  ! fourth order numerical diffusion in vpar
+                  ! IF( (ip-4 .GT. 0) .AND. (num_procs_p .EQ. 1) ) &
+                  ! ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
+                  ! ! (not used often so not parallelized)
+                  ! moments_rhs_(ip,ij,iky,ikx,iz) = &
+                  !   moments_rhs_(ip,ij,iky,ikx,iz) &
+                  !     + mu_p * moments_(ip-4,ij,iky,ikx,iz)
 
             ELSE
-              moments_rhs(ip,ij,iky,ikx,iz) = 0._dp
+              moments_rhs_(ip,ij,iky,ikx,iz) = 0._dp
             ENDIF
             END DO ploop
           END DO jloop
@@ -227,7 +231,7 @@ SUBROUTINE add_Maxwellian_background_terms
   ! This routine is meant to add the terms rising from the magnetic operator,
   ! i.e. (B x k_gB) Grad, applied on the background Maxwellian distribution
   ! (x_a + spar^2)(b x k_gB) GradFaM
-  ! It gives birth to kx=ky=0 sources terms (averages) that hit moments 00, 20,
+  ! It gives birth to kx=ky=0 sources terms (averages) that hit moments_ 00, 20,
   ! 40, 01,02, 21 with background gradient dependences.
   USE prec_const
   USE time_integration, ONLY : updatetlevel
