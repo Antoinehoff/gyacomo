@@ -29,7 +29,7 @@ SUBROUTINE apply_closure_model
     ! e.g. Dmax = 3 means
     ! only Napj s.t. p+2j <= 3 are evolved
     ! -> (p,j) allowed are (0,0),(1,0),(0,1),(2,0),(1,1),(3,0)
-    ! =>> Dmax = min(Pmax,Jmax+1)
+    ! =>> Dmax = min(Pmax,2*Jmax+1)
     IF(KIN_E) THEN
     DO ip = ipgs_e,ipge_e
       DO ij = ijgs_e,ijge_e
