@@ -76,10 +76,11 @@ MODULE fourier
 
   !!! Compute the poisson bracket of [F,G] to real space
   !   - Compute the convolution using the convolution theorem
-  SUBROUTINE poisson_bracket_and_sum( F_, G_)
+  SUBROUTINE poisson_bracket_and_sum( F_, G_, sum_real_)
     IMPLICIT NONE
     COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(ikys:ikye,ikxs:ikxe),&
-                    INTENT(IN)  :: F_, G_ ! input fields
+                             INTENT(IN)    :: F_, G_ ! input fields
+    real(C_DOUBLE), pointer, INTENT(INOUT) :: sum_real_(:,:)
     ! First term df/dx x dg/dy
     DO ikx = ikxs, ikxe
       DO iky = ikys, ikye
@@ -91,7 +92,7 @@ MODULE fourier
     ENDDO
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
-    bracket_sum_r = bracket_sum_r + real_data_f  * real_data_g*inv_Ny*inv_Nx
+    sum_real_ = sum_real_ + real_data_f  * real_data_g*inv_Ny*inv_Nx
     ! Second term -df/dy x dg/dx
     DO ikx = ikxs, ikxe
       DO iky = ikys, ikye
@@ -103,7 +104,7 @@ MODULE fourier
     ENDDO
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
-    bracket_sum_r = bracket_sum_r - real_data_f  * real_data_g*inv_Ny*inv_Nx
+    sum_real_ = sum_real_ - real_data_f  * real_data_g*inv_Ny*inv_Nx
 END SUBROUTINE poisson_bracket_and_sum
 
 !!! Compute the poisson bracket of [F,G] to real space
