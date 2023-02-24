@@ -98,7 +98,7 @@ SUBROUTINE compute_nonlinear
               G_cmpx(ikys:ikye,ikxs:ikxe)  = G_cmpx(ikys:ikye,ikxs:ikxe) + &
                 dnjs(in,ij,is) * moments_e(ip,is,ikys:ikye,ikxs:ikxe,iz,updatetlevel)
             ENDDO
-            !/!\ this function add its result to bracket_sum_r /!\
+            ! this function add its result to bracket_sum_r
             CALL poisson_bracket_and_sum(F_cmpx,G_cmpx,bracket_sum_r)
 
 !-----------!! ELECTROMAGNETIC CONTRIBUTION -sqrt(tau)/sigma*{Sum_s dnjs [sqrt(p+1)Nap+1s + sqrt(p)Nap-1s], Kernel psi}
@@ -113,7 +113,7 @@ SUBROUTINE compute_nonlinear
                 dnjs(in,ij,is) * (sqrt_pp1*moments_e(ip+1,is,ikys:ikye,ikxs:ikxe,iz,updatetlevel)&
                                  +sqrt_p  *moments_e(ip-1,is,ikys:ikye,ikxs:ikxe,iz,updatetlevel))
             ENDDO
-            !/!\ this function add its result to bracket_sum_r (hard to read sorry) /!\
+            ! this function add its result to bracket_sum_r
             CALL poisson_bracket_and_sum(F_cmpx,G_cmpx,bracket_sum_r)
             ENDIF
           ENDDO nloope
@@ -161,7 +161,7 @@ ENDIF
               G_cmpx(ikys:ikye,ikxs:ikxe) = G_cmpx(ikys:ikye,ikxs:ikxe) + &
                 dnjs(in,ij,is) * moments_i(ip,is,ikys:ikye,ikxs:ikxe,iz,updatetlevel)
             ENDDO
-            !/!\ this function add its result to bracket_sum_r (hard to read sorry) /!\
+            ! this function add its result to bracket_sum_r
             CALL poisson_bracket_and_sum(F_cmpx,G_cmpx,bracket_sum_r)
 !-----------!! ELECTROMAGNETIC CONTRIBUTION -sqrt(tau)/sigma*{Sum_s dnjs [sqrt(p+1)Nap+1s + sqrt(p)Nap-1s], Kernel psi}
             IF(EM) THEN
@@ -175,7 +175,7 @@ ENDIF
                 dnjs(in,ij,is) * (sqrt_pp1*moments_i(ip+1,is,ikys:ikye,ikxs:ikxe,iz,updatetlevel)&
                                  +sqrt_p  *moments_i(ip-1,is,ikys:ikye,ikxs:ikxe,iz,updatetlevel))
             ENDDO
-            !/!\ this function add its result to bracket_sum_r (hard to read sorry) /!\
+            ! this function add its result to bracket_sum_r
             CALL poisson_bracket_and_sum(F_cmpx,G_cmpx,bracket_sum_r)
             ENDIF
           ENDDO nloopi
