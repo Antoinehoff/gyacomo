@@ -21,6 +21,7 @@
   q0     = 0
   shear  = 0
   eps    = 0
+  parallel_bc = 'shearless'
 /
 &OUTPUT_PAR
   nsave_0d = 10
@@ -62,14 +63,11 @@
   K_Te    = 0.4
   K_Ni    = 2.0
   K_Ti    = 0.4
-  k_gB   = 1
-  k_cB   = 1
-  lambdaD = 0
   beta    = 0
 /
 &COLLISION_PAR
   collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
-  gyrokin_CO      = .false.
+  gyrokin_CO      = .true.
   interspecies    = .true.
   !mat_file        = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /
@@ -77,7 +75,7 @@
   INIT_OPT    = 'phi'
   ACT_ON_MODES       = 'donothing'
   init_background  = 0
-  init_noiselvl = 0.00005
+  init_noiselvl = 0.005
   iseed         = 42
 /
 &TIME_INTEGRATION_PAR
