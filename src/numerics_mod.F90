@@ -18,8 +18,9 @@ CONTAINS
 !!!!!!! Build the Laguerre-Laguerre coupling coefficient table for nonlin
 !******************************************************************************!
 SUBROUTINE build_dnjs_table
-  USE array, Only : dnjs
-  USE coeff
+  USE array, ONLY : dnjs
+  USE FMZM,  ONLY : TO_DP
+  USE coeff, ONLY : ALL2L
   IMPLICIT NONE
 
   INTEGER :: in, ij, is, J
