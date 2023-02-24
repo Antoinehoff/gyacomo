@@ -45,6 +45,28 @@ SUBROUTINE build_dnjs_table
     ENDDO
   ENDDO
 END SUBROUTINE build_dnjs_table
+
+!******************************************************************************!
+!!!!!!! Build the fourth derivative Hermite coefficient table
+!******************************************************************************!
+SUBROUTINE build_dv4Hp_table
+  USE array, ONLY: dv4_Hp_coeff
+  USE grid, ONLY: pmaxi, pmaxe
+  IMPLICIT NONE
+  INTEGER :: p_, pmax_
+  pmax_ = MAX(pmaxi,pmaxe)
+  DO p_ = -2,pmax_
+    if (p_ < 4) THEN
+      dv4_Hp_coeff(p_) = 0._dp
+    ELSE
+      dv4_Hp_coeff(p_) = 4_dp*SQRT(REAL((p_-3)*(p_-2)*(p_-1)*p_,dp))
+    ENDIF
+  ENDDO
+   !we scale it w.r.t. to the max degree since
+   !D_4^{v}\sim (\Delta v/2)^4 and \Delta v \sim 2pi/kvpar = pi/\sqrt{2P}
+   ! dv4_Hp_coeff = dv4_Hp_coeff*(1._dp/2._dp/SQRT(REAL(pmax_,dp)))**4
+   dv4_Hp_coeff = dv4_Hp_coeff*(PI/2._dp/SQRT(2._dp*REAL(pmax_,dp)))**4
+END SUBROUTINE build_dv4Hp_table
 !******************************************************************************!
 
 !******************************************************************************!
