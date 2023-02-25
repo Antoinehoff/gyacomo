@@ -1,10 +1,13 @@
 GYACOMO (Gyrokinetic Advanced Collision Moment solver, 2021)
 Copyright (C) 2022  A.C.D. Hoffmann
 
+A better tutorial is present on the code's wiki https://gitlab.epfl.ch/ahoffman/gyacomo/-/wikis/home.
+
+
 Cloning the code :
 
 1. ssh-keygen to generate a public key (press enter to the questions)
-2. copy .ssh/id_rsa.pub in the ssh public key list of c4science with your account
+2. copy .ssh/id_rsa.pub in the ssh public key list of your gitlab account
 3. git clone ssh://git@c4science.ch/source/gyacomo.git
 
 Installing librairies :
