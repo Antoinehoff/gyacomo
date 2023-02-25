@@ -23,8 +23,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # How to compile and run GYACOMO
 
-To compile and run GYACOMO, follow these steps:
+A tutorial is present on the code's wiki https://gitlab.epfl.ch/ahoffman/gyacomo/-/wikis/home.
 
+(older guideline)
+To compile and run GYACOMO, follow these steps:
 
 1. Make sure the correct library paths are set in local/dirs.inc. Refer to INSTALATION.txt for instructions on installing the required libraries.
 2. Go to the /gyacomo directory and run make to compile the code. The resulting binary will be located in /gyacomo/bin. You can also compile a debug version by running make dbg.
