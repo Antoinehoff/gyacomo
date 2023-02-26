@@ -14,10 +14,10 @@ MODULE array
   ! Derivatives and interpolated moments
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz_nepj
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: interp_nepj
-  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddzND_nepj
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddzND_Nepj
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddz_nipj
   COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: interp_nipj
-  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddzND_nipj
+  COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: ddzND_Nipj
 
   ! Arrays to store special initial modes (semi linear simulation)
   ! Zonal ones (ky=0)
@@ -45,6 +45,9 @@ MODULE array
 
   ! dnjs coefficient storage (in, ij, is)
   COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE :: dnjs
+
+  ! Hermite fourth derivative coeff storage 4*sqrt(p!/(p-4)!)
+  COMPLEX(dp), DIMENSION(:), ALLOCATABLE :: dv4_Hp_coeff
 
   ! lin rhs p,j coefficient storage (ip,ij)
   REAL(dp), DIMENSION(:,:), ALLOCATABLE :: xnepj,xnipj
