@@ -1,7 +1,7 @@
 &BASIC
   nrun   = 100000000
   dt     = 0.01
-  tmax   = 200
+  tmax   = 50
   maxruntime = 356400
 /
 &GRID
@@ -33,7 +33,7 @@
   write_gamma = .t.
   write_hf    = .t.
   write_phi   = .t.
-  write_Na00  = .t.
+  write_Na00  = .f.
   write_Napj  = .t.
   write_Sapj  = .f.
   write_dens  = .t.
