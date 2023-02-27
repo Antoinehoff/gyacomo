@@ -14,7 +14,7 @@ implicit none
   PRIVATE
   ! Geometry input parameters
   CHARACTER(len=16), &
-               PUBLIC, PROTECTED :: geom
+               PUBLIC, PROTECTED :: geom      = 's-alpha'
   REAL(dp),    PUBLIC, PROTECTED :: q0        = 1.4_dp  ! safety factor
   REAL(dp),    PUBLIC, PROTECTED :: shear     = 0._dp   ! magnetic field shear
   REAL(dp),    PUBLIC, PROTECTED :: eps       = 0.18_dp ! inverse aspect ratio
@@ -116,7 +116,7 @@ CONTAINS
         CASE('s-alpha')
           IF( my_id .eq. 0 ) WRITE(*,*) 's-alpha geometry'
           call eval_salpha_geometry
-        CASE('Z-pinch')
+        CASE('Z-pinch','z-pinch','Zpinch','zpinch')
           IF( my_id .eq. 0 ) WRITE(*,*) 'Z-pinch geometry'
           call eval_zpinch_geometry
           SHEARED = .FALSE.

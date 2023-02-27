@@ -1,0 +1,83 @@
+&BASIC
+  nrun   = 10
+  dt     = 0.01
+  tmax   = 1
+  maxruntime = 356400
+/
+&GRID
+  pmaxe  = 2
+  jmaxe  = 1
+  pmaxi  = 2
+  jmaxi  = 1
+  Nx     = 2
+  Lx     = 200
+  Ny     = 2
+  Ly     = 60
+  Nz     = 4
+  SG     = .f.
+/
+&GEOMETRY
+  geom   = 's-alpha'
+  q0     = 1.4
+  shear  = 0.8
+  eps    = 0.18
+  parallel_bc = 'dirichlet'
+/
+&OUTPUT_PAR
+  nsave_0d = 1
+  nsave_1d = -1
+  nsave_2d = -1
+  nsave_3d = 1
+  nsave_5d = 1
+  write_doubleprecision = .f.
+  write_gamma = .t.
+  write_hf    = .t.
+  write_phi   = .t.
+  write_Na00  = .f.
+  write_Napj  = .t.
+  write_Sapj  = .f.
+  write_dens  = .t.
+  write_temp  = .t.
+  job2load    = -1
+/
+&MODEL_PAR
+  ! Collisionality
+  CLOS    = 0
+  NL_CLOS = -1
+  LINEARITY = 'nonlinear'
+  KIN_E   = .t.
+  mu_x    = 1.0
+  mu_y    = 1.0
+  N_HD    = 4
+  mu_z    = 0.0
+  mu_p    = 0
+  mu_j    = 0
+  nu      = 0.1
+  tau_e   = 1
+  tau_i   = 1
+  sigma_e = 0.023338
+  sigma_i = 1
+  q_e     = -1
+  q_i     = 1
+  K_Ne    = 2.0
+  K_Te    = 0.4
+  K_Ni    = 2.0
+  K_Ti    = 0.4
+  beta    = 0
+/
+&COLLISION_PAR
+  collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
+  gyrokin_CO      = .true.
+  interspecies    = .true.
+  !mat_file        = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
+/
+&INITIAL_CON
+  INIT_OPT    = 'phi'
+  ACT_ON_MODES       = 'donothing'
+  init_background  = 0
+  init_noiselvl = 0.005
+  iseed         = 42
+/
+&TIME_INTEGRATION_PAR
+  numerical_scheme = 'RK4'
+/

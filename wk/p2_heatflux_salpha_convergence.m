@@ -1,18 +1,26 @@
 %% Heat flux convergence for kt=6.96 and 5.3
 figure
 title('s-$\alpha$ turb. heat flux conv.');
-% KT 6.96, nuDGDK = 0.05, 128x64x24, Nexc 5
-P   = [2    4     12];
-Qx  = [52.4 46.1 0];
-std_= [12.1 4.98 0];
+% KT 6.96, nuDGDK = 0.05, 128x64x24, Nexc 5 (cyclic BC)
+P   = [2    4    6  8];
+Qx  = [47.6 46.1 48.9 51.6];
+std_= [4.19 4.98 2.78 6.25];
     errorbar(P,Qx,std_/2,'s-r',...
     'LineWidth',2.0,'MarkerSize',8,...
     'DisplayName','KT 6.9, nuDGDK 0.05'); hold on
 xlabel('$P$, $J=P/2$'); ylabel('$Q_x$');
-% KT 6.96, nuDGDK = 0.05, 192x96x24, Nexc 5
+% % KT 6.96, nuDGDK = 0.05, 192x96x24, Nexc 5 (dirichlet BC)
+% P   = [4    6    8    10  ];
+% Qx  = [44.1 48.9 45.5 00.0];
+% std_= [9.63 6.13 13.8 0.00];
+%     errorbar(P,Qx,std_/2,'o-r',...
+%     'LineWidth',2.0,'MarkerSize',8,...
+%     'DisplayName','KT 6.9, nuDGDK 0.05'); hold on
+% xlabel('$P$, $J=P/2$'); ylabel('$Q_x$');
+% KT 6.96, nuDGDK = 0.05, 192x96x24, Nexc 5 (dirichlet BC)
 P   = [4    6    8    10  ];
-Qx  = [42.9 44.9 00.0 00.0];
-std_= [9.15 7.12 0.00 0.00];
+Qx  = [36.7 44.4 45.5 00.0];
+std_= [2.67 4.57 13.8 0.00];
     errorbar(P,Qx,std_/2,'o-r',...
     'LineWidth',2.0,'MarkerSize',8,...
     'DisplayName','KT 6.9, nuDGDK 0.05'); hold on

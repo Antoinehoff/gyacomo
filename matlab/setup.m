@@ -34,6 +34,7 @@ MODEL.mu_x    = MU_X;
 MODEL.mu_y    = MU_Y;
 MODEL.N_HD    = N_HD;
 MODEL.mu_z    = MU_Z;
+MODEL.HYP_V   = ['''',HYP_V,''''];
 MODEL.mu_p    = MU_P;
 MODEL.mu_j    = MU_J;
 MODEL.nu      = NU; % hyper diffusive coefficient nu for HW

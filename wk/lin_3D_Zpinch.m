@@ -171,12 +171,15 @@ save_figure(data,fig)
 end
 if 0
 %% Mode evolution
-options.NORMALIZED = 0;
-options.K2PLOT = 1;
-options.TIME   = [0:1000];
+options.NORMALIZED = 1;
+options.TIME   = [000:9000];
+options.KX_TW  = [1 20]; %kx Growth rate time window
+options.KY_TW  = [0 20];  %ky Growth rate time window
 options.NMA    = 1;
 options.NMODES = 1;
-options.iz     = 'avg';
+options.iz     = 'avg'; % avg or index
+options.ik     = 1; % sum, max or index
+options.fftz.flag = 0;
 fig = mode_growth_meter(data,options);
 save_figure(data,fig,'.png')
 end

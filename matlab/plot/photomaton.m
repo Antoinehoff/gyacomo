@@ -14,7 +14,7 @@ Nrows  = ceil(Nframes/4);
 Ncols  = ceil(Nframes/Nrows);
 %
 TNAME = [];
-FIGURE.fig = figure; set(gcf, 'Position',  toplot.DIMENSIONS.*[1 1 Ncols Nrows])
+FIGURE.fig = figure; %set(gcf, 'Position',  toplot.DIMENSIONS.*[1 1 Ncols Nrows])
     for i_ = 1:numel(FRAMES)
     frame_max = max(max(max(abs(toplot.FIELD(:,:,i_)))));
     subplot(Nrows,Ncols,i_); TNAME = [TNAME,'_',sprintf('%.0f',DATA.Ts3D(FRAMES(i_)))];

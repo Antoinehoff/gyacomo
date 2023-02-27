@@ -5,6 +5,7 @@ DT_EVOL  = data.DT_EVOL;
 CO_EVOL  = data.CO_EVOL;
 MUx_EVOL  = data.MUx_EVOL;
 MUy_EVOL  = data.MUy_EVOL;
+MUz_EVOL  = data.MUz_EVOL;
 % K_T_EVOL = data.K_T_EVOL;
 K_N_EVOL = data.K_N_EVOL;
 L_EVOL   = data.L_EVOL;
@@ -31,6 +32,7 @@ subplot(4,1,1);
 subplot(4,1,2);
     plot(TJOB_SE,MUx_EVOL,'DisplayName','$\mu_x$'); hold on;
     plot(TJOB_SE,MUy_EVOL,'DisplayName','$\mu_y$'); hold on;
+    plot(TJOB_SE,MUz_EVOL,'DisplayName','$\mu_z$'); hold on;
     xlim([TJOB_SE(1) TJOB_SE(end)]);legend('show');grid on;
     xticks([]);
     plot_tjob_lines(TJOB_SE,ylim)

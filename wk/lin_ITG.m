@@ -15,18 +15,17 @@ SIMID   = 'dbg';  % Name of the simulation
 RUN     = 1; % To run or just to load
 default_plots_options
 % EXECNAME = 'gyacomo_debug';
-% EXECNAME = 'gyacomo_2jm1';
-% EXECNAME = 'gyacomo_dlnBdz';
-EXECNAME = 'gyacomo_alpha';
+EXECNAME = 'gyacomo';
+% EXECNAME = 'gyacomo_alpha';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Set Up parameters
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.05;           % Collision frequency
+NU      = 0.0000;           % Collision frequency
 TAU     = 1.0;            % e/i temperature ratio
-K_Ne    = 1*2.22;            % ele Density '''
-K_Te    = 1*6.96;            % ele Temperature '''
+K_Ne    = 0*2.22;            % ele Density '''
+K_Te    = 0*6.96;            % ele Temperature '''
 K_Ni    = 1*2.22;            % ion Density gradient drive
 K_Ti    = 6.96;            % ion Temperature '''
 % SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
@@ -34,7 +33,7 @@ SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 0;         % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 1e-4;     % electron plasma beta
 %% GRID PARAMETERS
-P = 4;
+P = 6;
 J = 2;%P/2;
 PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
@@ -49,21 +48,21 @@ NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 NEXC    = 1;     % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 %% GEOMETRY
-% GEOMETRY= 's-alpha';
-GEOMETRY= 'miller';
+GEOMETRY= 's-alpha';
+% GEOMETRY= 'miller';
 EPS     = 0.18;   % inverse aspect ratio
 Q0      = 1.4;    % safety factor
 SHEAR   = 0.8;    % magnetic shear
 KAPPA   = 1.0;    % elongation
 DELTA   = 0.0;    % triangularity
 ZETA    = 0.0;    % squareness
-PARALLEL_BC = 'dirichlet'; %'dirichlet','periodic','shearless','disconnected'
-% PARALLEL_BC = 'periodic'; %'dirichlet','periodic','shearless','disconnected'
+% PARALLEL_BC = 'dirichlet'; %'dirichlet','periodic','shearless','disconnected'
+PARALLEL_BC = 'cyclic'; %'dirichlet','periodic','shearless','disconnected'
 SHIFT_Y = 0.0;
 %% TIME PARMETERS
-TMAX    = 40;  % Maximal time unit
+TMAX    = 25;  % Maximal time unit
+% DT      = 1e-2;   % Time step
 DT      = 2e-2;   % Time step
-% DT      = 5e-4;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = -1;      % Sampling per time unit for 2D arrays
 SPS3D   = 1;      % Sampling per time unit for 2D arrays
@@ -98,8 +97,9 @@ INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_X    = MU;     %
 MU_Y    = MU;     %
 N_HD    = 4;
-MU_Z    = 2.0;     %
-MU_P    = 0.0;     %
+MU_Z    = 1.0;     %
+HYP_V   = 'dvpar4';
+MU_P    = 0.5;     %
 MU_J    = 0.0;     %
 LAMBDAD = 0.0;
 NOISE0  = 1.0e-5; % Init noise amplitude
@@ -113,8 +113,8 @@ setup
 % system(['rm fort*.90']);
 % Run linear simulation
 if RUN
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 2 3 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])

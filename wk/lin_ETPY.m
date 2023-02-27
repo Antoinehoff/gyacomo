@@ -13,33 +13,33 @@ SIMID   = 'dbg';  % Name of the simulation
 RUN     = 1; % To run or just to load
 default_plots_options
 % EXECNAME = 'gyacomo_debug';
-EXECNAME = 'gyacomo_alpha';
 % EXECNAME = 'gyacomo';
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Set Up parameters
+EXECNAME = 'gyacomo_alpha';
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % Set Up parameters
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.01;           % Collision frequency
+NU      = 0.1;           % Collision frequency
 TAU     = 1.0;            % e/i temperature ratio
-K_Ne    = 2.5;            % ele Density '''
+K_Ne    = 2.0;            % ele Density '''
 K_Te    = K_Ne/4;            % ele Temperature '''
 K_Ni    = K_Ne;            % ion Density gradient drive
 K_Ti    = K_Ni/4;            % ion Temperature '''
-SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+SIGMA_E = 1;%0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 1;         % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 0.0;     % electron plasma beta
 %% GRID PARAMETERS
-P = 4;
+P = 6;
 J = P/2;
 PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
-NX      = 2;    % real space x-gridpoints
-NY      = 40;     %     ''     y-gridpoints
-LX      = 2*pi/0.8;   % Size of the squared frequency domain
-LY      = 2*pi/0.05;     % Size of the squared frequency domain
+NX      = 8;    % real space x-gridpoints
+NY      = 20;     %     ''     y-gridpoints
+LX      = 2*pi/0.1;   % Size of the squared frequency domain
+LY      = 2*pi/0.1;     % Size of the squared frequency domain
 NZ      = 1;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
@@ -47,10 +47,10 @@ NEXC    = 1;     % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 %% GEOMETRY
 %% GEOMETRY
 GEOMETRY= 'Z-pinch'; % Z-pinch overwrites q0, shear and eps
-EPS     = 0.18;   % inverse aspect ratio
-Q0      = 1.4;    % safety factor
+EPS     = 0.0;   % inverse aspect ratio
+Q0      = 0.0;    % safety factor
 SHEAR   = 0.0;    % magnetic shear
-KAPPA   = 1.0;    % elongation
+KAPPA   = 0.0;    % elongation
 DELTA   = 0.0;    % triangularity
 ZETA    = 0.0;    % squareness
 PARALLEL_BC = 'dirichlet'; %'dirichlet','periodic','shearless','disconnected'
@@ -71,7 +71,7 @@ LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % Collision operator
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
 CO      = 'DG';
-GKCO    = 0; % gyrokinetic operator
+GKCO    = 1; % gyrokinetic operator
 ABCO    = 1; % interspecies collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: v^Nmax closure (p+2j<=Pmax))s
@@ -80,11 +80,11 @@ KERN    = 0;   % Kernel model (0 : GK)
 INIT_OPT= 'phi';   % Start simulation with a noisy mom00/phi/allmom
 NUMERICAL_SCHEME = 'RK4'; % RK2,SSPx_RK2,RK3,SSP_RK3,SSPx_RK3,IMEX_SSP2,ARK2,RK4,DOPRI5
 %% OUTPUTS
-W_DOUBLE = 1;
+W_DOUBLE = 0;
 W_GAMMA  = 1; W_HF     = 1;
 W_PHI    = 1; W_NA00   = 1;
-W_DENS   = 1; W_TEMP   = 1;
-W_NAPJ   = 1; W_SAPJ   = 0;
+W_DENS   = 0; W_TEMP   = 0;
+W_NAPJ   = 0; W_SAPJ   = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % unused
@@ -94,7 +94,7 @@ INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_X    = MU;     %
 MU_Y    = MU;     %
 N_HD    = 4;
-MU_Z    = 0.2;     %
+MU_Z    = 0.0;     %
 MU_P    = 0.0;     %
 MU_J    = 0.0;     %
 LAMBDAD = 0.0;
@@ -179,14 +179,15 @@ save_figure(data,fig)
 end
 if 1
 %% Mode evolution
-options.NORMALIZED = 0;
-options.K2PLOT = 1;
-options.TIME   = [0:1000];
-% options.TIME   = [0.5:0.01:1].*data.Ts3D(end);
+options.NORMALIZED = 1;
+options.TIME   = [000:9000];
+options.KX_TW  = [20 40]; %kx Growth rate time window
+options.KY_TW  = [20 40];  %ky Growth rate time window
 options.NMA    = 1;
 options.NMODES = 32;
-options.iz     = 'avg';
-options.ik     = 1;
+options.iz     = 1; % avg or index
+options.ik     = 1; % sum, max or index
+options.fftz.flag = 0;
 fig = mode_growth_meter(data,options);
 save_figure(data,fig,'.png')
 end

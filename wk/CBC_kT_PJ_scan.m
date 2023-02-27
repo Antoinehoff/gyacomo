@@ -1,166 +1,278 @@
-addpath(genpath('../matlab')) % ... add
-default_plots_options
-HELAZDIR = '/home/ahoffman/HeLaZ/';
-EXECNAME = 'helaz3';
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-KT_a = [3:0.5:5];
-P_a_6   = [6 6 6 6 6 6 6];
-J_a_6   = [0 1 2 3 4 5 6];
-P_a_10  = 10*ones(1,6);
-J_a_10  = 5:10;
-% P_a_10b = 10*ones(1,7);
-% J_a_10b = 10:17;
-P_a_20  = 20*ones(1,11);
-J_a_20  = 10:20;
-
-P_a = [P_a_20]; J_a = [J_a_20];
-% KT_a = 5.0; P_a = 20; J_a = 20;
-
-g_max= zeros(numel(P_a),numel(KT_a));
-g_avg= g_max*0;
-g_std= g_max*0;
-k_max= g_max*0;
-
-CO    = 'DG'; GKCO = 0;
-NU    = 0.0;
-DT    = 7e-3;
-TMAX  = 40;
-ky_   = 0.15;
-SIMID = 'linear_CBC_kT_threshold';  % Name of the simulation
-RUN   = 0;
-
-
-for i = 1:numel(P_a)
-P = P_a(i); J = J_a(i);
-    j=1;
-    %Set Up parameters
-    for K_Ti = KT_a
-        CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
-        TAU     = 1.0;    % e/i temperature ratio
-        K_Ni = 2.22; K_Ne = K_Ni;
-        K_Te     = K_Ti;            % Temperature '''
-        SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
-        KIN_E   = 0;     % 1: kinetic electrons, 2: adiabatic electrons
-        BETA    = 0e-1;     % electron plasma beta 
-        PMAXE   = P; JMAXE   = J;
-        PMAXI   = P; JMAXI   = J;
-        NX      = 8;    % real space x-gridpoints
-        NY      = 6;     %     ''     y-gridpoints
-        LX      = 2*pi/0.15;   % Size of the squared frequency domain
-        LY      = 2*pi/ky_;
-        NZ      = 24;    % number of perpendicular planes (parallel grid)
-        NPOL    = 1; SG = 0; NEXC = 1;
-        GEOMETRY= 's-alpha';
-        Q0      = 1.4;    % safety factor
-        SHEAR   = 0.8;    % magnetic shear (Not implemented yet)
-        EPS     = 0.18;    % inverse aspect ratio
-        SPS0D = 1; SPS2D = 0; SPS3D = 5;SPS5D= 1/5; SPSCP = 0;
-        JOB2LOAD= -1;
-        LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
-        ABCO    = 1; % interspecies collisions
-        INIT_ZF = 0; ZF_AMP = 0.0;
-        CLOS    = 0;   % Closure model (0: =0 truncation, 1: v^Nmax closure (p+2j<=Pmax))s
-        NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
-        KERN    = 0;   % Kernel model (0 : GK)
-        INIT_OPT= 'phi';   % Start simulation with a noisy mom00/phi/allmom
-        W_DOUBLE = 1;
-        W_GAMMA  = 1; W_HF     = 1;
-        W_PHI    = 1; W_NA00   = 1;
-        W_DENS   = 1; W_TEMP   = 1;
-        W_NAPJ   = 1; W_SAPJ   = 0;
-        HD_CO   = 0.0;    % Hyper diffusivity cutoff ratio
-        MU      = 0.0; % Hyperdiffusivity coefficient
-        INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
-        MU_X    = MU;     %
-        MU_Y    = MU;  N_HD    = 4;
-        MU_Z    = 1.0; MU_P    = 0.0;     %
-        MU_J    = 0.0; LAMBDAD = 0.0;
-        NOISE0  = 1.0e-4; % Init noise amplitude
-        BCKGD0  = 0.0;    % Init background
-        k_gB   = 1.0;k_cB   = 1.0;
-
-        %%-------------------------------------------------------------------------
-        % RUN
-        setup
-        if RUN
-            system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 2 2 1 0; cd ../../../wk'])
-        end
-
-        % Load results
+gyacomodir  = pwd;
+gyacomodir = gyacomodir(1:end-2);
+addpath(genpath([gyacomodir,'matlab'])) % ... add
+addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
+addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
+addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0';
+% EXECNAME = 'gyacomo_debug';
+EXECNAME = 'gyacomo';
+CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
+%%
+SIMID = 'p2_linear';  % Name of the simulation
+RERUN   = 0; % rerun if the data does not exist
+RUN     = 1;
+KT_a = [3:0.5:6.5 6.96];
+% KT_a = [5.5 6];
+% P_a  = [25];
+P_a  = [3:1:29];
+% P_a  = [2:2:40];
+J_a  = floor(P_a/2);
+% collision setting
+CO        = 'DG';
+NU        = 0.05;
+GKCO      = 0; % gyrokinetic operator
+COLL_KCUT = 1.75;
+% model
+KIN_E   = 0;         % 1: kinetic electrons, 2: adiabatic electrons
+BETA    = 1e-4;     % electron plasma beta
+% background gradients setting
+K_N    = 2.22;            % Density '''
+% Geometry
+% GEOMETRY= 'miller';
+GEOMETRY= 's-alpha';
+SHEAR   = 0.8;    % magnetic shear
+% time and numerical grid
+DT0    = 1e-2;
+TMAX   = 30;
+kymin  = 0.3;
+NY     = 2;
+% arrays for the result
+g_ky = zeros(numel(KT_a),numel(P_a),NY/2+1);
+g_avg= g_ky*0;
+g_std= g_ky*0;
+% Naming of the collision operator
+if GKCO
+    CONAME = [CO,'GK'];
+else
+    CONAME = [CO,'DK'];
+end
+    
+j = 1;
+for P = P_a
+i = 1;
+for KT = KT_a
+    %% PHYSICAL PARAMETERS
+    TAU     = 1.0;            % e/i temperature ratio
+    % SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+    SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+    K_Te    = KT;            % ele Temperature '''
+    K_Ti    = KT;            % ion Temperature '''
+    K_Ne    = K_N;            % ele Density '''
+    K_Ni    = K_N;            % ion Density gradient drive
+    %% GRID PARAMETERS
+%     P = 20;
+    J = floor(P/2);
+    DT = DT0/sqrt(J);
+    PMAXE   = P;     % Hermite basis size of electrons
+    JMAXE   = J;     % Laguerre "
+    PMAXI   = P;     % " ions
+    JMAXI   = J;     % "
+    NX      = 8;    % real space x-gridpoints
+    LX      = 2*pi/0.8;   % Size of the squared frequency domain
+    LY      = 2*pi/kymin;     % Size of the squared frequency domain
+    NZ      = 24;    % number of perpendicular planes (parallel grid)
+    NPOL    = 1;
+    SG      = 0;     % Staggered z grids option
+    NEXC    = 1;     % To extend Lx if needed (Lx = Nexc/(kymin*shear))
+    %% GEOMETRY
+    % GEOMETRY= 's-alpha';
+    EPS     = 0.18;   % inverse aspect ratio
+    Q0      = 1.4;    % safety factor
+    KAPPA   = 1.0;    % elongation
+    DELTA   = 0.0;    % triangularity
+    ZETA    = 0.0;    % squareness
+    PARALLEL_BC = 'dirichlet'; %'dirichlet','periodic','shearless','disconnected'
+%     PARALLEL_BC = 'periodic'; %'dirichlet','periodic','shearless','disconnected'
+    SHIFT_Y = 0.0;
+    %% TIME PARMETERS
+    SPS0D   = 1;      % Sampling per time unit for 2D arrays
+    SPS2D   = -1;      % Sampling per time unit for 2D arrays
+    SPS3D   = 1;      % Sampling per time unit for 2D arrays
+    SPS5D   = 1/2;    % Sampling per time unit for 5D arrays
+    SPSCP   = 0;    % Sampling per time unit for checkpoints
+    JOB2LOAD= -1;
+    %% OPTIONS
+    LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
+    % Collision operator
+    ABCO    = 1; % interspecies collisions
+    INIT_ZF = 0; ZF_AMP = 0.0;
+    CLOS    = 0;   % Closure model (0: =0 truncation, 1: v^Nmax closure (p+2j<=Pmax))s
+    NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
+    KERN    = 0;   % Kernel model (0 : GK)
+    INIT_OPT= 'phi';   % Start simulation with a noisy mom00/phi/allmom
+    NUMERICAL_SCHEME = 'RK4'; % RK2,SSPx_RK2,RK3,SSP_RK3,SSPx_RK3,IMEX_SSP2,ARK2,RK4,DOPRI5
+    %% OUTPUTS
+    W_DOUBLE = 0;
+    W_GAMMA  = 1; W_HF     = 1;
+    W_PHI    = 1; W_NA00   = 1;
+    W_DENS   = 0; W_TEMP   = 1;
+    W_NAPJ   = 0; W_SAPJ   = 0;
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % unused
+    HD_CO   = 0.0;    % Hyper diffusivity cutoff ratio
+    MU      = 0.0; % Hyperdiffusivity coefficient
+    INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
+    MU_X    = MU;     %
+    MU_Y    = MU;     %
+    N_HD    = 4;
+    MU_Z    = 1.0;     %
+    MU_P    = 0.0;     %
+    MU_J    = 0.0;     %
+    LAMBDAD = 0.0;
+    NOISE0  = 1.0e-5; % Init noise amplitude
+    BCKGD0  = 0.0;    % Init background
+    k_gB   = 1.0;
+    k_cB   = 1.0;
+    %% RUN
+    setup
+    % naming
+    filename = [SIMID,'/',PARAMS,'/'];
+    LOCALDIR  = [gyacomodir,'results/',filename,'/'];
+    % check if data exist to run if no data
+    data_ = compile_results(LOCALDIR,0,0); %Compile the results from first output found to JOBNUMMAX if existing
+    if RUN && (RERUN || isempty(data_.NU_EVOL) || numel(data_.Ts3D)<10)
+        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
+%         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 3 2 1 0; cd ../../../wk'])
+    end
+    if ~isempty(data_.NU_EVOL)
+        if numel(data_.Ts3D)>10
+        % Load results after trying to run
         filename = [SIMID,'/',PARAMS,'/'];
-        LOCALDIR  = [HELAZDIR,'results/',filename,'/'];
-        data = compile_results(LOCALDIR,0,0); %Compile the results from first output found to JOBNUMMAX if existing
+        LOCALDIR  = [gyacomodir,'results/',filename,'/'];
 
-        %linear growth rate (adapted for 2D zpinch and fluxtube)
-        trange = [0.5 1]*data.Ts3D(end);
-        nplots = 0;
-        lg = compute_fluxtube_growth_rate(data,trange,nplots);
-        [gmax,     kmax] = max(lg.g_ky(:,end));
-        [gmaxok, kmaxok] = max(lg.g_ky(:,end)./lg.ky);
-        msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,lg.ky(kmax)); disp(msg);
-        msg = sprintf('gmax/k = %2.2f, kmax/k = %2.2f',gmaxok,lg.ky(kmaxok)); disp(msg);
+        data_ = compile_results(LOCALDIR,0,0); %Compile the results from first output found to JOBNUMMAX if existing
 
-        g_max(i,j) = gmax;
-        k_max(i,j) = kmax;
-        
-        [g_avg(i,j), ik_] = max(lg.avg_g);
-        g_std(i,j) = max(lg.std_g(ik_));
+        % linear growth rate (adapted for 2D zpinch and fluxtube)
+        options.TRANGE = [0.5 1]*data_.Ts3D(end);
+        options.NPLOTS = 0; % 1 for only growth rate and error, 2 for omega local evolution, 3 for plot according to z
+        options.GOK    = 0; %plot 0: gamma 1: gamma/k 2: gamma^2/k^3
 
-        j = j + 1;
-        if 0
-        %% Verify gamma time trace
-        figure
-        for ik_ = 1:numel(lg.ky)
-            plot(lg.trange(2:end),lg.g_ky(ik_,:)','DisplayName',['$k_y=',num2str(lg.ky(ik_)),'$']); hold on;
+        [~,it1] = min(abs(data_.Ts3D-0.5*data_.Ts3D(end))); % start of the measurement time window
+        [~,it2] = min(abs(data_.Ts3D-1.0*data_.Ts3D(end))); % end of ...
+        field   = 0;
+        field_t = 0;
+        for ik = 2:NY/2+1
+            field   = squeeze(sum(abs(data_.PHI),3)); % take the sum over z
+            field_t = squeeze(field(ik,1,:)); % take the kx =0, ky = ky mode only
+            to_measure  = log(field_t(it1:it2));
+            tw = data_.Ts3D(it1:it2);
+    %         gr = polyfit(tw,to_measure,1);
+            gr = fit(tw,to_measure,'poly1');
+            err= confint(gr);
+            g_ky(i,j,ik)  = gr.p1;
+            g_std(i,j,ik) = abs(err(2,1)-err(1,1))/2;
         end
-        xlabel('$t$'); ylabel('$\gamma$');
-        title(data.param_title); legend('show');
-        drawnow
+        [gmax, ikmax] = max(g_ky(i,j,:));
+
+        msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,data_.ky(ikmax)); disp(msg);
         end
     end
+    
+    i = i + 1;
+end
+j = j + 1;
 end
 
-if 1
-%% PLOTS
-ERR_WEIGHT = 1/3; %weight of the error to compute marginal stability
-%% Superposed 1D plots
-sz_ = size(g_max);
-figure
-for i = 1:sz_(1)
-    y_ = g_avg(i,:); 
-    e_ = g_std(i,:);
-
-    y_ = y_.*(y_-e_*ERR_WEIGHT>0);
-    e_ = e_ .* (y_>0);
-        errorbar(KT_a,y_,e_,...
-            'LineWidth',1.2,...
-            'DisplayName',['(',num2str(P_a(i)),',',num2str(J_a(i)),')']); 
-%     plot(KT_a,y_,...
-%         'LineWidth',1.2,...
-%         'DisplayName',['(',num2str(P_a(i)),',',num2str(J_a(i)),')']); 
-    hold on;
-
-end
-title('Linear CBC $K_T$ threshold');
-legend('show'); xlabel('$K_T$'); ylabel('$\max_{k_y}(\gamma_k)$');
-drawnow
-%% Color map
-[NP__, KT__] = meshgrid(P_a+2*J_a, KT_a);
-% GG_ = g_avg;
-GG_ = g_avg .* (g_avg-g_std*ERR_WEIGHT > 0);
+if 0
+%% Check time evolution
 figure;
-% pclr = pcolor(KT__,NP__,g_max'); set(pclr,'EdgeColor','none');
-pclr = imagesc(KT_a,1:numel(P_a),GG_);
-LABELS = [];
-for i_ = 1:numel(P_a)
-    LABELS = [LABELS; '(',sprintf('%2.0f',P_a(i_)),',',sprintf('%2.0f',J_a(i_)),')'];
-end
-yticks(1:numel(P_a));
-yticklabels(LABELS);
-xlabel('$\kappa_T$'); ylabel('$(P,J)$');
-title('Linear ITG threshold in CBC');
-colormap(bluewhitered);
-%%
-%%
+to_measure  = log(field_t);
+plot(data_.Ts3D,to_measure); hold on
+plot(data_.Ts3D(it1:it2),to_measure(it1:it2),'--');
 end
 
+%% take max growth rate among z coordinate
+y_ = g_ky(:,:,2); 
+e_ = g_std(:,:,2);
+
+if 0
+%% Study of the peak growth rate
+figure
+
+y_ = g_ky; 
+e_ = 0.05;
+
+% filter growth rate with less than 0.05 value
+y_ = y_.*(y_-e_>0);
+e_ = e_ .* (y_>0);
+
+[y_,idx_] = max(g_ky,[],3); 
+for i = 1:numel(idx_)
+    e_ = g_std(:,:,idx_(i));
+end
+
+colors_ = jet(numel(KT_a));
+subplot(121)
+for i = 1:numel(KT_a)
+%     errorbar(P_a,y_(i,:),e_(i,:),...
+%         'LineWidth',1.2,...
+%         'DisplayName',['$\nu=$',num2str(KT_a(i))],...
+%         'color',colors_(i,:)); 
+    plot(P_a,y_(i,:),'s-',...
+        'LineWidth',2.0,...
+        'DisplayName',['$\kappa_T=$',num2str(KT_a(i))],...
+        'color',colors_(i,:)); 
+    hold on;
+end
+title(['$\nu_{',CONAME,'}=$',num2str(NU),', $\kappa_N=$',num2str(K_N),', $k_y=$',num2str(kymin)]);
+legend('show'); xlabel('$P$, $J=P/2$'); ylabel('$\gamma$');
+
+colors_ = jet(numel(P_a));
+subplot(122)
+for j = 1:numel(P_a)
+% errorbar(KT_a,y_(:,j),e_(:,j),...
+%     'LineWidth',1.2,...
+%     'DisplayName',['(',num2str(P_a(j)),',',num2str(J_a(j)),')'],...
+%     'color',colors_(j,:)); 
+    plot(KT_a,y_(:,j),'s-',...
+        'LineWidth',2.0,...
+        'DisplayName',['(',num2str(P_a(j)),',',num2str(J_a(j)),')'],...
+        'color',colors_(j,:)); 
+    hold on;
+end
+title(['$\nu_{',CONAME,'}=$',num2str(NU),', $\kappa_N=$',num2str(K_N),', $k_y=$',num2str(kymin)]);
+legend('show'); xlabel('$\kappa_T$'); ylabel('$\gamma$');
+end
+
+if 0
+%% Pcolor of the peak
+figure;
+[XX_,YY_] = meshgrid(KT_a,P_a);
+% pclr=pcolor(XX_,YY_,y_'); set(pclr,'EdgeColor','none'); axis ij;
+pclr=imagesc_custom(XX_,YY_,y_'.*(y_>0)');
+title(['$\nu_{',data.CO,'}=$',num2str(data.NU),', $\kappa_N=$',num2str(K_N),', $k_y=$',num2str(kymin)]);
+xlabel('$\kappa_T$'); ylabel('$P$, $J=P/2$');
+colormap(bluewhitered)
+clb=colorbar; 
+clb.Label.String = '$\gamma c_s/R$';
+clb.Label.Interpreter = 'latex';
+clb.Label.FontSize= 18;
+end
+%%
+if(numel(KT_a)>1 && numel(P_a)>1)
+%% Save metadata
+ktmin = num2str(min(KT_a)); ktmax = num2str(max(KT_a));
+ pmin = num2str(min(P_a));   pmax = num2str(max(P_a));
+filename = [num2str(NX),'x',num2str(NZ),'_ky_',num2str(kymin),...
+            '_kT_',ktmin,'_',ktmax,...
+            '_P_',pmin,'_',pmax,'_',CONAME,'_',num2str(NU),'.mat'];
+metadata.name   = filename;
+metadata.kymin  = kymin;
+metadata.title  = ['$\nu_{',CONAME,'}=$',num2str(NU),', $\kappa_N=$',num2str(K_N),', $k_y=$',num2str(kymin)];
+metadata.par    = [num2str(NX),'x1x',num2str(NZ)];
+metadata.nscan  = 2;
+metadata.s1name = '$\kappa_T$';
+metadata.s1     = KT_a;
+metadata.s2name = '$P$, $J=\lfloor P/2 \rfloor$';
+metadata.s2     = P_a;
+metadata.dname  = '$\gamma c_s/R$';
+metadata.data   = y_;
+metadata.err    = e_;
+% metadata.input_file = h5read([LOCALDIR,'/outputs_00.h5'],'/files/STDIN.00');
+metadata.date   = date;
+% tosave.data     = metadata;
+save([SIMDIR,filename],'-struct','metadata');
+disp(['saved in ',SIMDIR,filename]);
+clear metadata tosave
+end

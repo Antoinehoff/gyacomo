@@ -4,14 +4,18 @@ NORMALIZED = OPTIONS.NORMALIZED;
 Nma   = OPTIONS.NMA; %Number moving average
 d     = OPTIONS.fftz.flag;  % To add spectral evolution of z (useful for 3d zpinch)
 
-    
-switch OPTIONS.iz
-    case 'avg'
-        field = squeeze(mean(DATA.PHI,3));
-        zstrcomp = 'z-avg';
-    otherwise
-        field = squeeze(DATA.PHI(:,:,OPTIONS.iz,:));
-        zstrcomp = ['z=',DATA.z(OPTIONS.iz)];
+if numel(size(DATA.PHI)) == 3
+        field = squeeze(DATA.PHI);
+        zstrcomp = 'z=0';
+else
+    switch OPTIONS.iz
+        case 'avg'
+            field = squeeze(mean(DATA.PHI,3));
+            zstrcomp = 'z-avg';
+        otherwise
+            field = squeeze(DATA.PHI(:,:,OPTIONS.iz,:));
+            zstrcomp = ['z=',DATA.z(OPTIONS.iz)];
+    end
 end
 
 FRAMES = zeros(size(OPTIONS.TIME));

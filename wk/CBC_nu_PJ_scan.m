@@ -4,44 +4,38 @@ addpath(genpath([gyacomodir,'matlab'])) % ... add
 addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
 addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0';
-% EXECNAME = 'gyacomo_dbg';
-% EXECNAME = 'gyacomo';
-EXECNAME = 'gyacomo_alpha';
+% EXECNAME = 'gyacomo_debug';
+EXECNAME = 'gyacomo';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%
-% SIMID = 'linear_CBC_nu+PJ_scan_kT_6.96_SGGK';  % Name of the simulation
-SIMID = 'convergence_pITG_miller';  % Name of the simulation
-% SIMID = 'linear_CBC_nu_scan_kT_11_ky_0.3_DGGK';  % Name of the simulation
-RUN     = 0; % to make sure it does not try to run
-RERUN   = 0; % rerun if the data does not exist
+SIMID = 'p2_linear';  % Name of the simulation
+RERUN = 0; % If you want to rerun the sim (bypass the check of existing data)
+RUN   = 1;
+% NU_a = [0.05];
+% P_a  = [8];
 
-% NU_a = [0.02];
-% P_a  = [24];
-NU_a = [0.0 0.01 0.02 0.05 0.1];
-P_a  = [2 4:4:28];
-% P_a  = [24:4:28];
+NU_a = [0.01:0.01:0.1 0.2 0.5 1.0];
+P_a  = [2:2:30];
+% P_a  = [32:2:40];
 J_a  = floor(P_a/2);
 % collision setting
 CO        = 'DG';
 GKCO      = 0; % gyrokinetic operator
 COLL_KCUT = 1.75;
 % model
-KIN_E   = 1;         % 1: kinetic electrons, 2: adiabatic electrons
-BETA    = 1e-4;     % electron plasma beta
+KIN_E   = 0;         % 1: kinetic electrons, 2: adiabatic electrons
+BETA    = 0;     % electron plasma beta
 % background gradients setting
-K_Ne    = 1*2.22;            % ele Density '''
-K_Te    = 1*6.96;            % ele Temperature '''
-K_Ni    = 1*2.22;            % ion Density gradient drive
-K_Ti    = 6.96;            % ion Temperature '''
+K_N = 2.22;
+K_T = 5.3;
+% K_T = 5.3;
 % Geometry
-GEOMETRY= 'miller';
-% GEOMETRY= 's-alpha';
+GEOMETRY= 's-alpha';
 SHEAR   = 0.8;    % magnetic shear
 % time and numerical grid
-% DT    = 2e-3;
-DT    = 5e-4;
-TMAX  = 50;
-kymin = 0.4;
+DT0    = 20e-3;
+TMAX  = 60;
+kymin = 0.3;
 NY    = 2;
 % arrays for the result
 g_ky = zeros(numel(NU_a),numel(P_a),NY/2+1);
@@ -59,10 +53,15 @@ for NU = NU_a
     %% GRID PARAMETERS
 %     P = 20;
     J = floor(P/2);
+    DT = DT0/sqrt(J);
     PMAXE   = P;     % Hermite basis size of electrons
     JMAXE   = J;     % Laguerre "
     PMAXI   = P;     % " ions
     JMAXI   = J;     % "
+    K_Ne    = K_N;            % ele Density '''
+    K_Te    = K_T;            % ele Temperature '''
+    K_Ni    = K_N;            % ion Density gradient drive
+    K_Ti    = K_T;            % ion Temperature '''
     NX      = 8;    % real space x-gridpoints
     LX      = 2*pi/0.8;   % Size of the squared frequency domain
     LY      = 2*pi/kymin;     % Size of the squared frequency domain
@@ -77,14 +76,14 @@ for NU = NU_a
     KAPPA   = 1.0;    % elongation
     DELTA   = 0.0;    % triangularity
     ZETA    = 0.0;    % squareness
-    % PARALLEL_BC = 'dirichlet'; %'dirichlet','periodic','shearless','disconnected'
-    PARALLEL_BC = 'periodic'; %'dirichlet','periodic','shearless','disconnected'
+    PARALLEL_BC = 'dirichlet'; %'dirichlet','periodic','shearless','disconnected'
+%     PARALLEL_BC = 'periodic'; %'dirichlet','periodic','shearless','disconnected'
     SHIFT_Y = 0.0;
     %% TIME PARMETERS
     SPS0D   = 1;      % Sampling per time unit for 2D arrays
     SPS2D   = -1;      % Sampling per time unit for 2D arrays
     SPS3D   = 1;      % Sampling per time unit for 2D arrays
-    SPS5D   = 1/2;    % Sampling per time unit for 5D arrays
+    SPS5D   = 0;    % Sampling per time unit for 5D arrays
     SPSCP   = 0;    % Sampling per time unit for checkpoints
     JOB2LOAD= -1;
     %% OPTIONS
@@ -98,11 +97,11 @@ for NU = NU_a
     INIT_OPT= 'phi';   % Start simulation with a noisy mom00/phi/allmom
     NUMERICAL_SCHEME = 'RK4'; % RK2,SSPx_RK2,RK3,SSP_RK3,SSPx_RK3,IMEX_SSP2,ARK2,RK4,DOPRI5
     %% OUTPUTS
-    W_DOUBLE = 1;
+    W_DOUBLE = 0;
     W_GAMMA  = 1; W_HF     = 1;
     W_PHI    = 1; W_NA00   = 1;
     W_DENS   = 1; W_TEMP   = 1;
-    W_NAPJ   = 1; W_SAPJ   = 0;
+    W_NAPJ   = 0; W_SAPJ   = 0;
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % unused
@@ -112,7 +111,7 @@ for NU = NU_a
     MU_X    = MU;     %
     MU_Y    = MU;     %
     N_HD    = 4;
-    MU_Z    = 0.2;     %
+    MU_Z    = 1.0;     %
     MU_P    = 0.0;     %
     MU_J    = 0.0;     %
     LAMBDAD = 0.0;
@@ -126,67 +125,59 @@ for NU = NU_a
     filename = [SIMID,'/',PARAMS,'/'];
     LOCALDIR  = [gyacomodir,'results/',filename,'/'];
     % check if data exist to run if no data
-    data = compile_results(LOCALDIR,0,0); %Compile the results from first output found to JOBNUMMAX if existing
-    if ((RERUN || isempty(data.NU_EVOL)) && RUN)
-        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
+    data_ = compile_results(LOCALDIR,0,0); %Compile the results from first output found to JOBNUMMAX if existing
+    if RUN && (RERUN || isempty(data_.NU_EVOL) || numel(data_.Ts3D)<10)
+        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 2 2 1 0; cd ../../../wk'])
 %         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
     end
+    if ~isempty(data_.NU_EVOL)
+        if numel(data_.Ts3D)>10
+            % Load results after trying to run
+            filename = [SIMID,'/',PARAMS,'/'];
+            LOCALDIR  = [gyacomodir,'results/',filename,'/'];
+            data_ = compile_results(LOCALDIR,0,0); %Compile the results from first output found to JOBNUMMAX if existing
 
-    % Load results after trying to run
-    filename = [SIMID,'/',PARAMS,'/'];
-    LOCALDIR  = [gyacomodir,'results/',filename,'/'];
-    data = compile_results(LOCALDIR,0,0); %Compile the results from first output found to JOBNUMMAX if existing
+            [~,it1] = min(abs(data_.Ts3D-0.7*data_.Ts3D(end))); % start of the measurement time window
+            [~,it2] = min(abs(data_.Ts3D-1.0*data_.Ts3D(end))); % end of ...
+            field   = 0;
+            field_t = 0;
+            for ik = 2:NY/2+1
+                field   = squeeze(sum(abs(data_.PHI),3)); % take the sum over z
+                field_t = squeeze(field(ik,1,:)); % take the kx =0, ky = ky mode only
+                to_measure = log(field_t(it1:it2));
+                tw = data_.Ts3D(it1:it2);
+                gr = fit(tw,to_measure,'poly1');
+                err= confint(gr);
+                g_ky(i,j,ik)  = gr.p1;
+                g_std(i,j,ik) = abs(err(2,1)-err(1,1))/2;
+            end
+            [gmax, ikmax] = max(g_ky(i,j,:));
 
-    % linear growth rate (adapted for 2D zpinch and fluxtube)
-    options.TRANGE = [0.5 1]*data.Ts3D(end);
-    options.NPLOTS = 0; % 1 for only growth rate and error, 2 for omega local evolution, 3 for plot according to z
-    options.GOK    = 0; %plot 0: gamma 1: gamma/k 2: gamma^2/k^3
-%     lg = compute_fluxtube_growth_rate(data,options);
-%     [gmax,     kmax] = max(lg.g_ky(:,end));
-%     [gmaxok, kmaxok] = max(lg.g_ky(:,end)./lg.ky);
-%     g_ky(i,j,:)  = g_ky;
-%     
-%     g_avg(i,j,:) = lg.avg_g;
-%     g_std(i,j,:) = lg.std_g;
-    
-    [~,it1] = min(abs(data.Ts3D-0.5*data.Ts3D(end))); % start of the measurement time window
-    [~,it2] = min(abs(data.Ts3D-1.0*data.Ts3D(end))); % end of ...
-    field   = 0;
-    field_t = 0;
-    for ik = 1:NY/2+1
-        field   = squeeze(sum(abs(data.PHI),3)); % take the sum over z
-        field_t = squeeze(field(ik,1,:)); % take the kx =0, ky = ky mode only
-        to_measure = log(field_t);
-        gr = polyfit(data.Ts3D(it1:it2),to_measure(it1:it2),1);
-        g_ky(i,j,ik) = gr(1);
+            msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,data_.ky(ikmax)); disp(msg);
+        end 
     end
-    [gmax, ikmax] = max(g_ky(i,j,:));
-    
-    msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,data.ky(ikmax)); disp(msg);
-
-    
+        
     i = i + 1;
-end
+    end
 j = j + 1;
 end
 
-if 1
+if 0 
+%% Check time evolution
+figure;
+plot(data_.Ts3D,log(field_t)); hold on
+plot(tw,to_measure,'--');
+end
+
+%% take max growth rate among z coordinate
+[y_,idx_] = max(g_ky,[],3); 
+e_ = g_std(:,:,idx_);
+
+if 1 
 %% Study of the peak growth rate
 figure
 
-y_ = g_ky; 
-e_ = 0.05;
-
-% filter to noisy data
-y_ = y_.*(y_-e_>0);
-e_ = e_ .* (y_>0);
-
-[y_,idx_] = max(g_ky,[],3); 
-for i = 1:numel(idx_)
-    e_ = g_std(:,:,idx_(i));
-end
-
-colors_ = lines(numel(NU_a));
+colors_ = jet(numel(NU_a));
 subplot(121)
 for i = 1:numel(NU_a)
 %     errorbar(P_a,y_(i,:),e_(i,:),...
@@ -199,23 +190,19 @@ for i = 1:numel(NU_a)
         'color',colors_(i,:)); 
     hold on;
 end
-title(['$\kappa_T=$',num2str(K_Ti),' $k_y=k_y^{max}$']);
+title(['$\kappa_T=$',num2str(K_Ti),' $k_y=$',num2str(kymin)]);
 legend('show'); xlabel('$P$, $J=P/2$'); ylabel('$\gamma$');
 
 colors_ = jet(numel(P_a));
 subplot(122)
 for j = 1:numel(P_a)
-% errorbar(NU_a,y_(:,j),e_(:,j),...
-%     'LineWidth',1.2,...
-%     'DisplayName',['(',num2str(P_a(j)),',',num2str(J_a(j)),')'],...
-%     'color',colors_(j,:)); 
     plot(NU_a,y_(:,j),'s-',...
         'LineWidth',2.0,...
         'DisplayName',['(',num2str(P_a(j)),',',num2str(J_a(j)),')'],...
         'color',colors_(j,:)); 
     hold on;
 end
-title(['$\kappa_T=$',num2str(K_Ti),' $k_y=k_y^{max}$']);
+title(['$\kappa_T=$',num2str(K_Ti),' $k_y=$',num2str(kymin)]);
 legend('show'); xlabel(['$\nu_{',CO,'}$']); ylabel('$\gamma$');
 end
 
@@ -223,5 +210,36 @@ if 0
 %% Pcolor of the peak
 figure;
 [XX_,YY_] = meshgrid(NU_a,P_a);
-pclr=pcolor(XX_,YY_,y_'); set(pclr,'EdgeColor','none');
+% pclr=pcolor(XX_,YY_,y_'); set(pclr,'EdgeColor','none'); axis ij;
+pclr=imagesc_custom(XX_,YY_,y_'.*(y_>0)');
+title(['$\kappa_T$',num2str(data_.K_T),', $\kappa_N=$',num2str(K_N),', $k_y=$',num2str(kymin)]);
+xlabel('$\nu$'); ylabel('$P$, $J=P/2$');
+colormap(jet)
+clb=colorbar; 
+clb.Label.String = '$\gamma c_s/R$';
+clb.Label.Interpreter = 'latex';
+clb.Label.FontSize= 18;
 end
+
+%% Save metadata
+numin = num2str(min(NU_a)); numax = num2str(max(NU_a));
+ pmin = num2str(min(P_a));   pmax = num2str(max(P_a));
+filename = [num2str(NX),'x',num2str(NZ),'_ky_',num2str(kymin),...
+            '_nu_',numin,'_',numax,'_',CONAME,...
+            '_P_',pmin,'_',pmax,'_KT_',num2str(K_T),'.mat'];
+metadata.name   = filename;
+metadata.kymin  = kymin;
+metadata.title  = ['$\nu_{',CONAME,'}=$',num2str(NU),', $\kappa_N=$',num2str(K_N),', $k_y=$',num2str(kymin)];
+metadata.par    = [num2str(NX),'x1x',num2str(NZ)];
+metadata.nscan  = 2;
+metadata.s1name = ['$\nu_{',CONAME,'}$'];
+metadata.s1     = NU_a;
+metadata.s2name = '$P$, $J=P/2$';
+metadata.s2     = P_a;
+metadata.dname  = '$\gamma c_s/R$';
+metadata.data   = y_;
+metadata.err    = e_;
+metadata.date   = date;
+save([SIMDIR,filename],'-struct','metadata');
+disp(['saved in ',SIMDIR,filename]);
+clear metadata tosave

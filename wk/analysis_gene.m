@@ -57,6 +57,11 @@ folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x16x8_Nexc_5_00/';
 % folder = '/misc/gene_results/CBC/new_sim/KT_5.3_128x64x24x8x4_Nexc_5/';
 % folder = '/misc/gene_results/CBC/new_sim/KT_6.96_128x64x24x8x4_Nexc_5_smallvbox/';
 % folder = '/misc/gene_results/CBC/new_sim/KT_6.96_128x64x24x16x8_Nexc_5_largexbox/';
+% folder = '/misc/gene_results/CBC/KT_5.3_128x64x24x16x8_Muz_0.02/';
+
+% Miller CBC
+% folder = '/misc/gene_results/CBC/Miller_KT_6.96_128x64x24x16x8/';
+% folder = '/misc/gene_results/CBC/Miller_KT_4.1_128x64x24x16x8/';
 
 % debug ? shearless
 % folder = '/misc/gene_results/CBC/shearless_CBC_128x64x24x24x12_00/';
@@ -74,7 +79,7 @@ dashboard(gene_data);
 %% Separated plot routines
 if 0
 %% Space time diagramm (fig 11 Ivanov 2020)
-options.TAVG_0   = 0.1*gene_data.Ts3D(end);
+options.TAVG_0   = 0.5*gene_data.Ts3D(end);
 options.TAVG_1   = gene_data.Ts3D(end); % Averaging times duration
 options.NMVA     = 1;              % Moving average for time traces
 options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x, Q_x)
@@ -87,7 +92,7 @@ end
 
 if 0
 %% statistical transport averaging
-options.T = [100 500];
+options.T = [200 500];
 fig = statistical_transport_averaging(gene_data,options);
 end
 
@@ -109,7 +114,7 @@ options.NAME      = '\phi';
 % options.NAME      = 's_{Ex}';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'yz';
 options.COMP      = 'avg';
 options.TIME      = [50 200 500];
 options.RESOLUTION = 256;

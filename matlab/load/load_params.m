@@ -48,6 +48,7 @@ DATA.DT_SIM  = h5readatt(filename,'/data/input','dt');
 DATA.MU      = h5readatt(filename,'/data/input','mu');
 DATA.MUx     = h5readatt(filename,'/data/input','mu_x');
 DATA.MUy     = h5readatt(filename,'/data/input','mu_y');
+DATA.MUz     = h5readatt(filename,'/data/input','mu_z');
 try
     DATA.BETA    = h5readatt(filename,'/data/input','beta');
 catch

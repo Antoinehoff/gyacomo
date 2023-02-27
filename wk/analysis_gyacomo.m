@@ -71,48 +71,48 @@ if 0
 % Options
 options.INTERP    = 0;
 options.POLARPLOT = 0;
-% options.NAME      = '\phi';
+options.NAME      = '\phi';
 % options.NAME      = '\omega_z';
 % options.NAME     = 'N_i^{00}';
 % options.NAME      = 's_{Ey}';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = 'Q_x';
-options.NAME      = 'n_i';
+% options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
-options.PLAN      = 'yz';
+options.PLAN      = 'kxz';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
 % options.TIME      =  data.Ts3D;
-options.TIME      = [800:1000];
+options.TIME      = [0:1500];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
 create_film(data,options,'.gif')
 end
 
-if 0
+if 1
 %% fields snapshots
 % Options
 options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 0;
 options.NORMALIZE = 0;
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = '\psi';
 % options.NAME      = '\omega_z';
 % options.NAME      = 'T_i';
-% options.NAME      = 'n_i-n_e';
+% options.NAME      = 'n_i';
 % options.NAME      = '\phi^{NZ}';
-% options.NAME      = 'N_i^{00}';
-% options.NAME      = 'N_i^{00}-N_e^{00}';
+options.NAME      = 'N_i^{00}';
+% options.NAME      = 'N_i^{00}-N_e^{00}';              
 % options.NAME      = 's_{Ex}';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
-options.COMP      = 'avg';
-options.TIME      = [50 200 500 1000];
+options.PLAN      = 'kxky';
+options.COMP      = 24;
+options.TIME      = [600 700 800 1000];
 options.RESOLUTION = 256;
 
 data.a = data.EPS * 2e3;
@@ -160,7 +160,7 @@ if 0
 options.P2J        = 0;
 options.ST         = 1;
 options.NORMALIZED = 0;
-options.TIME       = [180:10000];
+options.TIME       = [500:800];
 fig = show_moments_spectrum(data,options);
 % fig = show_napjz(data,options);
 % save_figure(data,fig,'.png');
@@ -202,7 +202,7 @@ end
 
 if 0
 %% Mode evolution
-options.NORMALIZED = 1;
+options.NORMALIZED = 0;
 options.TIME   = [000:9000];
 options.KX_TW  = [1 20]; %kx Growth rate time window
 options.KY_TW  = [0 20];  %ky Growth rate time window

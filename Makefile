@@ -1,11 +1,11 @@
 include local/dirs.inc
 include local/make.inc
 #Different namings depending on the make input
-EXEC = $(BINDIR)/gyacomo				#all
-EFST = $(BINDIR)/gyacomo_fast		#fast
+EXEC = $(BINDIR)/gyacomo	#all
+EFST = $(BINDIR)/gyacomo_fast   #fast
 EDBG = $(BINDIR)/gyacomo_debug	#debug
 EALP = $(BINDIR)/gyacomo_alpha  #alpha
-
+EGFT = $(BINDIR)/gyacomo_gfort  #gfort version
 # F90 = mpiifort
 F90 = mpif90
 # #F90 = ftn #for piz-daint cluster
@@ -28,13 +28,18 @@ fast: F90FLAGS = -fast
 fast: $(EFST)
 # Debug version with all flags
 debug: dirs src/srcinfo.h
-debug: F90FLAGS = -g -traceback -CB -ftrapuv -warn all -debug all
+debug: F90FLAGS = -g -traceback -ftrapuv -warn all -debug all
+# debug: F90FLAGS = -g -traceback -check all -ftrapuv -warn all -debug all
 debug: $(EDBG)
 # Alpha version, optimized as all but creates another binary
 alpha: dirs src/srcinfo.h
 alpha: F90FLAGS = -O3 -xHOST
 alpha: $(EALP)
-
+# gfortran version, compile with gfortran
+gfort: dirs src/srcinfo.h
+gfort: F90FLAGS = -g -std=legacy -ffree-line-length-0
+gfort: EXTMOD   = -J $(MODDIR)
+gfort: $(EGFT)
 install: dirs src/srcinfo.h $(EXEC) mvmod
 
 run: all
@@ -93,6 +98,8 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
  $(EALP): $(FOBJ)
 	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
 
+ $(EGFT): $(FOBJ)
+	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
 
  $(OBJDIR)/advance_field_mod.o : src/advance_field_mod.F90 \
    $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/initial_par_mod.o \

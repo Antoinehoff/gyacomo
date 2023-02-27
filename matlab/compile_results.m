@@ -7,6 +7,7 @@ DATA.NU_EVOL  = []; % evolution of parameter nu between jobs
 DATA.CO_EVOL  = []; % evolution of CO
 DATA.MUx_EVOL  = []; % evolution of parameter mu between jobs
 DATA.MUy_EVOL  = []; % evolution of parameter mu between jobs
+DATA.MUz_EVOL  = []; % evolution of parameter mu between jobs
 DATA.K_N_EVOL = []; %
 DATA.L_EVOL   = []; % 
 DATA.DT_EVOL  = []; %
@@ -53,7 +54,7 @@ while(CONTINUE)
         try
             openable = ~isempty(h5read(filename,'/data/var3d/time'));
         catch
-            openable = 0
+            openable = 0;
         end
         if openable
         %% load results %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -235,6 +236,7 @@ while(CONTINUE)
         DATA.CO_EVOL   = [DATA.CO_EVOL   DATA.CO     DATA.CO];
         DATA.MUx_EVOL  = [DATA.MUx_EVOL  DATA.MUx    DATA.MUx];
         DATA.MUy_EVOL  = [DATA.MUy_EVOL  DATA.MUy    DATA.MUy];
+        DATA.MUz_EVOL  = [DATA.MUz_EVOL  DATA.MUz    DATA.MUz];
         DATA.K_N_EVOL  = [DATA.K_N_EVOL DATA.K_N   DATA.K_N];
         DATA.L_EVOL    = [DATA.L_EVOL    DATA.L      DATA.L];
         DATA.DT_EVOL   = [DATA.DT_EVOL   DATA.DT_SIM DATA.DT_SIM];

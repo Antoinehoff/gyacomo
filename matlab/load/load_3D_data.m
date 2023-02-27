@@ -20,9 +20,17 @@ function [ data, time, dt ] = load_3D_data( filename, variablename )
     for it = 1:numel(time)
         tmp         = h5read(filename,['/data/var3d/',variablename,'/', num2str(cstart+it,'%06d')]);
         if cmpx
-            data(:,:,:,it) = tmp.real + 1i * tmp.imaginary;
+            if(numel(sz) == 3)
+                data(:,:,it) = tmp.real + 1i * tmp.imaginary;
+            else
+                data(:,:,:,it) = tmp.real + 1i * tmp.imaginary;
+            end
         else
-            data(:,:,:,it) = tmp;
+            if(numel(sz) == 3)
+                data(:,:,it) = tmp;
+            else
+                data(:,:,:,it) = tmp;
+            end
         end
     end
 
