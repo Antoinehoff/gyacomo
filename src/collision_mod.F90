@@ -13,7 +13,7 @@ IMPLICIT NONE
 PRIVATE
 ! Set the collision model to use
 ! (Lenard-Bernstein: 'LB', Dougherty: 'DG', Sugama: 'SG', Lorentz: 'LR', Landau: 'LD')
-CHARACTER(len=2),PUBLIC,PROTECTED :: collision_model
+CHARACTER(len=16),PUBLIC,PROTECTED :: collision_model
 LOGICAL, PUBLIC, PROTECTED :: gyrokin_CO   =.true. ! activates GK effects on CO
 LOGICAL, PUBLIC, PROTECTED :: interspecies =.true. ! activates interpecies collision
 CHARACTER(len=128), PUBLIC :: mat_file    ! COSOlver matrix file names
@@ -23,8 +23,6 @@ LOGICAL, PUBLIC, PROTECTED :: cosolver_coll ! check if cosolver matrices are use
 PUBLIC :: collision_readinputs, coll_outputinputs
 PUBLIC :: compute_TColl
 PUBLIC :: compute_lenard_bernstein, compute_dougherty
-PUBLIC :: LenardBernstein_e, LenardBernstein_i!, LenardBernstein GK
-PUBLIC :: DoughertyGK_ee, DoughertyGK_ii!, Dougherty GK
 PUBLIC :: load_COSOlver_mat, compute_cosolver_coll
 PUBLIC :: apply_COSOlver_mat_e, apply_COSOlver_mat_i
 
@@ -49,7 +47,7 @@ CONTAINS
         interspecies  = .false.
       CASE ('LD') ! Landau
         cosolver_coll = .true.
-      CASE ('none')
+      CASE ('none','hypcoll','dvpar4')
         cosolver_coll = .false.
         interspecies  = .false.
       CASE DEFAULT
@@ -90,7 +88,7 @@ CONTAINS
           CALL compute_dougherty
         CASE ('SG','LR','LD')
           CALL compute_cosolver_coll
-        CASE ('none')
+        CASE ('none','hypcoll','dvpar4')
           IF(KIN_E) &
           TColl_e = 0._dp
           TColl_i = 0._dp
@@ -193,284 +191,187 @@ CONTAINS
   !******************************************************************************!
   SUBROUTINE compute_dougherty
     IMPLICIT NONE
-    COMPLEX(dp) :: TColl_
-    IF (KIN_E) THEN
-      DO iz = izs,ize
-        DO iky = ikys, ikye;
-          DO ikx = ikxs, ikxe;
-            DO ij = ijs_e,ije_e
-              DO ip = ips_e,ipe_e;
-        IF(gyrokin_CO) THEN
-            CALL DoughertyGK_ee(ip,ij,iky,ikx,iz,TColl_)
-        ELSE
-            CALL DoughertyDK_ee(ip,ij,iky,ikx,iz,TColl_)
-        ENDIF
-            TColl_e(ip,ij,iky,ikx,iz) = TColl_
-      ENDDO;ENDDO;ENDDO
-      ENDDO;ENDDO
+    IF(gyrokin_CO) THEN
+      if(KIN_E) &
+      CALL DoughertyGK_aa(ips_e,ipe_e,ijs_e,ije_e,ijgs_e,ijge_e,ip0_e,ip1_e,ip2_e,Jmaxe,&
+                parray_e(ips_e:ipe_e),jarray_e(ijs_e:ije_e),&
+                kernel_e(ijgs_e:ijge_e,ikys:ikye,ikxs:ikxe,izs:ize,0:1),&
+                nadiab_moments_e(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikxs:ikxe,izs:ize),&
+                nu_ee,sigmae2_taue_o2,sqrt_sigmae2_taue_o2,TColl_e)
+      CALL DoughertyGK_aa(ips_i,ipe_i,ijs_i,ije_i,ijgs_i,ijge_i,ip0_i,ip1_i,ip2_i,Jmaxi,&
+                parray_i(ips_i:ipe_i),jarray_i(ijs_i:ije_i),&
+                kernel_i(ijgs_i:ijge_i,ikys:ikye,ikxs:ikxe,izs:ize,0:1),&
+                nadiab_moments_i(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,ikxs:ikxe,izs:ize),&
+                nu_i,sigmai2_taui_o2,sqrt_sigmai2_taui_o2,TColl_i)
+    ELSE
+      if(KIN_E) &
+      CALL DoughertyDK_aa(ips_e,ipe_e,ijs_e,ije_e,ip0_e,ip1_e,ip2_e,&
+                parray_e(ips_e:ipe_e),jarray_e(ijs_e:ije_e),&
+                moments_e(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel),&
+                nu_ee,TColl_e)
+      CALL DoughertyDK_aa(ips_i,ipe_i,ijs_i,ije_i,ip0_i,ip1_i,ip2_i,&
+                parray_i(ips_i:ipe_i),jarray_i(ijs_i:ije_i),&
+                moments_i(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel),&
+                nu_i,TColl_i)
     ENDIF
+  END SUBROUTINE compute_dougherty
+  !******************************************************************************!
+  !! Doughtery driftkinetic collision operator (like-species)
+  !******************************************************************************!
+  SUBROUTINE DoughertyDK_aa(ips_,ipe_,ijs_,ije_,ip0_,ip1_,ip2_,&
+                            parray_,jarray_,moments_,nu_,Tcoll_)
+
+    IMPLICIT NONE
+    !! INPUTS
+    INTEGER, INTENT(IN) :: ips_, ipe_, ijs_, ije_
+    INTEGER, INTENT(IN) :: ip0_, ip1_, ip2_
+    INTEGER,  DIMENSION(ips_:ipe_), INTENT(IN) :: parray_
+    INTEGER,  DIMENSION(ijs_:ije_), INTENT(IN) :: jarray_
+    COMPLEX(dp), DIMENSION(ips_:ipe_,ijs_:ije_,ikys:ikye,ikxs:ikxe,izs:ize),INTENT(IN) :: moments_
+    REAL(dp), INTENT(IN) :: nu_
+    !! OUTPUT
+    COMPLEX(dp), DIMENSION(ips_:ipe_, ijs_:ije_,ikys:ikye,ikxs:ikxe, izs:ize), INTENT(OUT) :: TColl_
+    !! Local variables
+    REAL(dp)    :: j_dp, p_dp
+    COMPLEX(dp) :: Tmp
     DO iz = izs,ize
       DO iky = ikys, ikye;
         DO ikx = ikxs, ikxe;
-          DO ij = ijs_i,ije_i
-            DO ip = ips_i,ipe_i;
-      IF(gyrokin_CO) THEN
-          CALL DoughertyGK_ii(ip,ij,iky,ikx,iz,TColl_)
-      ELSE
-          CALL DoughertyDK_ii(ip,ij,iky,ikx,iz,TColl_)
-      ENDIF
-          TColl_i(ip,ij,iky,ikx,iz) = TColl_
+          DO ij = ijs_,ije_
+            DO ip = ips_,ipe_;
+              !** Auxiliary variables **
+              p_dp      = REAL(parray_(ip),dp)
+              j_dp      = REAL(jarray_(ij),dp)
+              !** Assembling collison operator **
+              Tmp = -(p_dp + 2._dp*j_dp)*moments_(ip,ij,iky,ikx,iz)
+              IF( (p_dp .EQ. 1._dp) .AND. (j_dp .EQ. 0._dp)) THEN !Ce10
+                Tmp = Tmp +  moments_(ip1_,1,iky,ikx,iz)
+              ELSEIF( (p_dp .EQ. 2._dp) .AND. (j_dp .EQ. 0._dp)) THEN ! Ce20
+                Tmp = Tmp +       twothird*moments_(ip2_,1,iky,ikx,iz) &
+                          - SQRT2*twothird*moments_(ip0_,2,iky,ikx,iz)
+              ELSEIF( (p_dp .EQ. 0._dp) .AND. (j_dp .EQ. 1._dp)) THEN ! Ce01
+                Tmp = Tmp +  2._dp*twothird*moments_(ip0_,2,iky,ikx,iz) &
+                           - SQRT2*twothird*moments_(ip2_,1,iky,ikx,iz)
+              ENDIF
+              TColl_(ip,ij,iky,ikx,iz) = nu_ * Tmp
     ENDDO;ENDDO;ENDDO
     ENDDO;ENDDO
-  END SUBROUTINE compute_dougherty
-  !******************************************************************************!
-  !! Doughtery driftkinetic collision operator for electrons
-  !******************************************************************************!
-  SUBROUTINE DoughertyDK_ee(ip_,ij_,iky_,ikx_,iz_,TColl_)
-    IMPLICIT NONE
-    INTEGER,     INTENT(IN)    :: ip_,ij_,iky_,ikx_,iz_
-    COMPLEX(dp), INTENT(OUT)   :: TColl_
-    REAL(dp)    :: j_dp, p_dp
-    !** Auxiliary variables **
-    p_dp      = REAL(parray_e(ip_),dp)
-    j_dp      = REAL(jarray_e(ij_),dp)
-    !** Assembling collison operator **
-    TColl_ = -(p_dp + 2._dp*j_dp)*moments_e(ip_,ij_,iky_,ikx_,iz_,updatetlevel)
-    IF( (p_dp .EQ. 1._dp) .AND. (j_dp .EQ. 0._dp)) THEN !Ce10
-      TColl_ = TColl_ + moments_e(ip1_e,1,iky_,ikx_,iz_,updatetlevel)
-    ELSEIF( (p_dp .EQ. 2._dp) .AND. (j_dp .EQ. 0._dp)) THEN ! Ce20
-      TColl_ = TColl_ + twothird*moments_e(ip2_e,1,iky_,ikx_,iz_,updatetlevel) &
-                - SQRT2*twothird*moments_e(ip0_e,2,iky_,ikx_,iz_,updatetlevel)
-    ELSEIF( (p_dp .EQ. 0._dp) .AND. (j_dp .EQ. 1._dp)) THEN ! Ce01
-      TColl_ = TColl_ + 2._dp*twothird*moments_e(ip0_e,2,iky_,ikx_,iz_,updatetlevel) &
-                 - SQRT2*twothird*moments_e(ip2_e,1,iky_,ikx_,iz_,updatetlevel)
-    ENDIF
-    TColl_ = nu_ee * TColl_
-  END SUBROUTINE DoughertyDK_ee
-  !******************************************************************************!
-  !! Doughtery driftkinetic collision operator for ions
-  !******************************************************************************!
-  SUBROUTINE DoughertyDK_ii(ip_,ij_,iky_,ikx_,iz_,TColl_)
-    IMPLICIT NONE
-    INTEGER,     INTENT(IN)    :: ip_,ij_,iky_,ikx_,iz_
-    COMPLEX(dp), INTENT(OUT)   :: TColl_
-    REAL(dp)    :: j_dp, p_dp
-    !** Auxiliary variables **
-    p_dp      = REAL(parray_i(ip_),dp)
-    j_dp      = REAL(jarray_i(ij_),dp)
-    !** Assembling collison operator **
-    TColl_ = -(p_dp + 2._dp*j_dp)*moments_i(ip_,ij_,iky_,ikx_,iz_,updatetlevel)
-    IF( (p_dp .EQ. 1._dp) .AND. (j_dp .EQ. 0._dp)) THEN ! kronecker p1j0
-      TColl_ = TColl_ + moments_i(ip1_i,1,iky_,ikx_,iz_,updatetlevel)
-    ELSEIF( (p_dp .EQ. 2._dp) .AND. (j_dp .EQ. 0._dp)) THEN ! kronecker p2j0
-      TColl_ = TColl_ + twothird*moments_i(ip2_i,1,iky_,ikx_,iz_,updatetlevel) &
-              - SQRT2*twothird*moments_i(ip0_i,2,iky_,ikx_,iz_,updatetlevel)
-    ELSEIF( (p_dp .EQ. 0._dp) .AND. (j_dp .EQ. 1._dp)) THEN ! kronecker p0j1
-      TColl_ = TColl_ + 2._dp*twothird*moments_i(ip0_i,2,iky_,ikx_,iz_,updatetlevel) &
-                 - SQRT2*twothird*moments_i(ip2_i,1,iky_,ikx_,iz_,updatetlevel)
-    ENDIF
-    TColl_ = nu_i * TColl_
-  END SUBROUTINE DoughertyDK_ii
-  !******************************************************************************!
-  !! Doughtery gyrokinetic collision operator for electrons
-  !******************************************************************************!
-  SUBROUTINE DoughertyGK_ee(ip_,ij_,iky_,ikx_,iz_,TColl_)
-    IMPLICIT NONE
-    INTEGER,     INTENT(IN)    :: ip_,ij_,iky_,ikx_,iz_
-    COMPLEX(dp), INTENT(OUT)   :: TColl_
+  END SUBROUTINE DoughertyDK_aa
 
-    COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_, T_
-    COMPLEX(dp) :: nadiab_moment_0j
+  !******************************************************************************!
+  !! Doughtery gyrokinetic collision operator (species like)
+  !******************************************************************************!
+  SUBROUTINE DoughertyGK_aa(ips_,ipe_,ijs_,ije_,ijgs_,ijge_,ip0_,ip1_,ip2_,jmax_,&
+                            parray_,jarray_,kernel_,nadiab_moments_,&
+                            nu_,sigmaa2_taua_o2, sqrt_sigmaa2_taua_o2,Tcoll_)
+    IMPLICIT NONE
+    !! INPUTS
+    INTEGER,     INTENT(IN) :: ips_, ipe_, ijs_, ije_, ijgs_, ijge_
+    INTEGER,     INTENT(IN) :: ip0_, ip1_, ip2_,jmax_
+    INTEGER,     DIMENSION(ips_:ipe_), INTENT(IN) :: parray_
+    INTEGER,     DIMENSION(ijs_:ije_), INTENT(IN) :: jarray_
+    REAL(dp),    DIMENSION(ijgs_:ijge_,ikys:ikye,ikxs:ikxe,izgs:izge,0:1),  INTENT(IN) :: kernel_
+    COMPLEX(dp), DIMENSION(ips_:ipe_,ijs_:ije_,ikys:ikye,ikxs:ikxe,izs:ize),INTENT(IN) :: nadiab_moments_
+    REAL(dp),    INTENT(IN) :: nu_, sigmaa2_taua_o2, sqrt_sigmaa2_taua_o2
+    !! OUTPUT
+    COMPLEX(dp), DIMENSION(ips_:ipe_,ijs_:ije_,ikys:ikye,ikxs:ikxe,izs:ize), INTENT(OUT) :: TColl_
+    !! Local variables
+    COMPLEX(dp) :: dens,upar,uperp,Tpar, Tperp, Temp
+    COMPLEX(dp) :: nadiab_moment_0j, Tmp
     REAL(dp)    :: Knp0, Knp1, Knm1, kp
-    INTEGER     :: in_, eo_
-    REAL(dp)    :: n_dp, j_dp, p_dp, be_, be_2
-
+    INTEGER     :: in, eo
+    REAL(dp)    :: n_dp, j_dp, p_dp, ba, ba_2
+    DO iz = izs,ize
+    DO iky = ikys, ikye;
+    DO ikx = ikxs, ikxe;
+    DO ij = ijs_,ije_
+    DO ip = ips_,ipe_;
     !** Auxiliary variables **
-    p_dp      = REAL(parray_e(ip_),dp)
-    eo_       = MODULO(parray_e(ip_),2)
-    j_dp      = REAL(jarray_e(ij_),dp)
-    kp        = kparray(iky_,ikx_,iz_,eo_)
-    be_2      = kp**2 * sigmae2_taue_o2 ! this is (be/2)^2
-    be_       = 2_dp*kp * sqrt_sigmae2_taue_o2  ! this is be
+    p_dp      = REAL(parray_(ip),dp)
+    eo        = MODULO(parray_(ip),2)
+    j_dp      = REAL(jarray_(ij),dp)
+    kp        = kparray(iky,ikx,iz,eo)
+    ba_2      = kp**2 * sigmaa2_taua_o2 ! this is (l_a/2)^2
+    ba        = 2_dp*kp * sqrt_sigmaa2_taua_o2  ! this is l_a
 
     !** Assembling collison operator **
     ! Velocity-space diffusion (similar to Lenard Bernstein)
-    ! -nuee (p + 2j + b^2/2) Nepj
-    TColl_ = -(p_dp + 2._dp*j_dp + 2._dp*be_2)*nadiab_moments_e(ip_,ij_,iky_,ikx_,iz_)
+    ! -nu (p + 2j + b^2/2) Napj
+    Tmp = -(p_dp + 2._dp*j_dp + 2._dp*ba_2)*nadiab_moments_(ip,ij,iky,ikx,iz)
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     IF( p_dp .EQ. 0 ) THEN ! Kronecker p0
         !** build required fluid moments **
-        n_     = 0._dp
-        upar_  = 0._dp; uperp_ = 0._dp
-        Tpar_  = 0._dp; Tperp_ = 0._dp
-        DO in_ = 1,jmaxe+1
-          n_dp = REAL(in_-1,dp)
+        dens  = 0._dp
+        upar  = 0._dp; uperp = 0._dp
+        Tpar  = 0._dp; Tperp = 0._dp
+        DO in = 1,jmax_+1
+          n_dp = REAL(in-1,dp)
           ! Store the kernels for sparing readings
-          Knp0 =  Kernel_e(in_  ,iky_,ikx_,iz_,eo_)
-          Knp1 =  Kernel_e(in_+1,iky_,ikx_,iz_,eo_)
-          Knm1 =  Kernel_e(in_-1,iky_,ikx_,iz_,eo_)
+          Knp0 =  Kernel_(in  ,iky,ikx,iz,eo)
+          Knp1 =  Kernel_(in+1,iky,ikx,iz,eo)
+          Knm1 =  Kernel_(in-1,iky,ikx,iz,eo)
           ! Nonadiabatic moments (only different from moments when p=0)
-          nadiab_moment_0j   = nadiab_moments_e(ip0_e,in_,iky_,ikx_,iz_)
+          nadiab_moment_0j   = nadiab_moments_(ip0_,in,iky,ikx,iz)
           ! Density
-          n_     = n_     + Knp0 * nadiab_moment_0j
+          dens  = dens  + Knp0 * nadiab_moment_0j
           ! Perpendicular velocity
-          uperp_ = uperp_ + be_*0.5_dp*(Knp0 - Knm1) * nadiab_moment_0j
+          uperp = uperp + ba*0.5_dp*(Knp0 - Knm1) * nadiab_moment_0j
           ! Parallel temperature
-          Tpar_  = Tpar_  + Knp0 * (SQRT2*nadiab_moments_e(ip2_e,in_,iky_,ikx_,iz_) + nadiab_moment_0j)
+          Tpar  = Tpar  + Knp0 * (SQRT2*nadiab_moments_(ip2_,in,iky,ikx,iz) + nadiab_moment_0j)
           ! Perpendicular temperature
-          Tperp_ = Tperp_ + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1._dp)*Knp1 - n_dp*Knm1)*nadiab_moment_0j
+          Tperp = Tperp + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1._dp)*Knp1 - n_dp*Knm1)*nadiab_moment_0j
         ENDDO
-      T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
+      Temp  = (Tpar + 2._dp*Tperp)/3._dp - dens
       ! Add energy restoring term
-      TColl_ = TColl_ + T_* 4._dp *  j_dp          * Kernel_e(ij_  ,iky_,ikx_,iz_,eo_)
-      TColl_ = TColl_ - T_* 2._dp * (j_dp + 1._dp) * Kernel_e(ij_+1,iky_,ikx_,iz_,eo_)
-      TColl_ = TColl_ - T_* 2._dp *  j_dp          * Kernel_e(ij_-1,iky_,ikx_,iz_,eo_)
-      TColl_ = TColl_ + uperp_*be_* (Kernel_e(ij_,iky_,ikx_,iz_,eo_) - Kernel_e(ij_-1,iky_,ikx_,iz_,eo_))
+      Tmp = Tmp + Temp* 4._dp *  j_dp          * Kernel_(ij  ,iky,ikx,iz,eo)
+      Tmp = Tmp - Temp* 2._dp * (j_dp + 1._dp) * Kernel_(ij+1,iky,ikx,iz,eo)
+      Tmp = Tmp - Temp* 2._dp *  j_dp          * Kernel_(ij-1,iky,ikx,iz,eo)
+      Tmp = Tmp + uperp*ba* (Kernel_(ij,iky,ikx,iz,eo) - Kernel_(ij-1,iky,ikx,iz,eo))
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ELSEIF( p_dp .eq. 1 ) THEN ! kronecker p1
       !** build required fluid moments **
-      upar_  = 0._dp
-      DO in_ = 1,jmaxe+1
+      upar  = 0._dp
+      DO in = 1,jmax_+1
         ! Parallel velocity
-        upar_  = upar_  + Kernel_e(in_,iky_,ikx_,iz_,eo_) * nadiab_moments_e(ip1_e,in_,iky_,ikx_,iz_)
+        upar  = upar  + Kernel_(in,iky,ikx,iz,eo) * nadiab_moments_(ip1_,in,iky,ikx,iz)
       ENDDO
-      TColl_ = TColl_ + upar_*Kernel_e(ij_,iky_,ikx_,iz_,eo_)
+      Tmp = Tmp + upar*Kernel_(ij,iky,ikx,iz,eo)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 2 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ELSEIF( p_dp .eq. 2 ) THEN ! kronecker p2
       !** build required fluid moments **
-      n_     = 0._dp
-      upar_  = 0._dp; uperp_ = 0._dp
-      Tpar_  = 0._dp; Tperp_ = 0._dp
-      DO in_ = 1,jmaxe+1
-        n_dp = REAL(in_-1,dp)
+      dens  = 0._dp
+      upar  = 0._dp; uperp = 0._dp
+      Tpar  = 0._dp; Tperp = 0._dp
+      DO in = 1,jmax_+1
+        n_dp = REAL(in-1,dp)
         ! Store the kernels for sparing readings
-        Knp0 =  Kernel_e(in_  ,iky_,ikx_,iz_,eo_)
-        Knp1 =  Kernel_e(in_+1,iky_,ikx_,iz_,eo_)
-        Knm1 =  Kernel_e(in_-1,iky_,ikx_,iz_,eo_)
+        Knp0 =  Kernel_(in  ,iky,ikx,iz,eo)
+        Knp1 =  Kernel_(in+1,iky,ikx,iz,eo)
+        Knm1 =  Kernel_(in-1,iky,ikx,iz,eo)
         ! Nonadiabatic moments (only different from moments when p=0)
-        nadiab_moment_0j = nadiab_moments_e(ip0_e,in_,iky_,ikx_,iz_)
+        nadiab_moment_0j = nadiab_moments_(ip0_,in,iky,ikx,iz)
         ! Density
-        n_     = n_     + Knp0 * nadiab_moment_0j
+        dens     = dens     + Knp0 * nadiab_moment_0j
         ! Parallel temperature
-        Tpar_  = Tpar_  + Knp0 * (SQRT2*nadiab_moments_e(ip2_e,in_,iky_,ikx_,iz_) + nadiab_moment_0j)
+        Tpar  = Tpar  + Knp0 * (SQRT2*nadiab_moments_(ip2_,in,iky,ikx,iz) + nadiab_moment_0j)
         ! Perpendicular temperature
-        Tperp_ = Tperp_ + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1._dp)*Knp1 - n_dp*Knm1)*nadiab_moment_0j
+        Tperp = Tperp + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1._dp)*Knp1 - n_dp*Knm1)*nadiab_moment_0j
       ENDDO
-      T_  = (Tpar_ + 2._dp*Tperp_)/3._dp - n_
-      TColl_ = TColl_ + T_*SQRT2*Kernel_e(ij_,iky_,ikx_,iz_,eo_)
+      Temp  = (Tpar + 2._dp*Tperp)/3._dp - dens
+      Tmp = Tmp + Temp*SQRT2*Kernel_(ij,iky,ikx,iz,eo)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     ENDIF
-    ! Multiply by electron-electron collision coefficient
-    TColl_ = nu_ee * TColl_
-
-  END SUBROUTINE DoughertyGK_ee
-  !******************************************************************************!
-  !! Doughtery gyrokinetic collision operator for ions
-  !******************************************************************************!
-  SUBROUTINE DoughertyGK_ii(ip_,ij_,iky_,ikx_,iz_,TColl_)
-    IMPLICIT NONE
-    INTEGER,     INTENT(IN)    :: ip_,ij_,iky_,ikx_,iz_
-    COMPLEX(dp), INTENT(OUT)   :: TColl_
-
-    COMPLEX(dp) :: n_,upar_,uperp_,Tpar_, Tperp_, T_
-    COMPLEX(dp) :: bi_, bi_2
-    COMPLEX(dp) :: nadiab_moment_0j
-    REAL(dp)    :: Knp0, Knp1, Knm1, kp
-    INTEGER     :: in_, eo_
-    REAL(dp)    :: n_dp, j_dp, p_dp
-
-    !** Auxiliary variables **
-    p_dp      = REAL(parray_i(ip_),dp)
-    eo_       = MODULO(parray_i(ip_),2)
-    j_dp      = REAL(jarray_i(ij_),dp)
-    kp        = kparray(iky_,ikx_,iz_,eo_)
-    bi_2      = kp**2 *sigmai2_taui_o2 ! this is (bi/2)^2
-    bi_       = 2_dp*kp*sqrt_sigmai2_taui_o2  ! this is bi
-
-    !** Assembling collison operator **
-    ! Velocity-space diffusion (similar to Lenard Bernstein)
-    ! -nui (p + 2j + b^2/2) Nipj
-    TColl_ = -(p_dp + 2._dp*j_dp + 2._dp*bi_2)*nadiab_moments_i(ip_,ij_,iky_,ikx_,iz_)
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    IF( p_dp .EQ. 0 ) THEN ! Kronecker p0
-        !** build required fluid moments **
-        n_     = 0._dp
-        upar_  = 0._dp; uperp_ = 0._dp
-        Tpar_  = 0._dp; Tperp_ = 0._dp
-        DO in_ = 1,jmaxi+1
-          n_dp = REAL(in_-1,dp)
-          ! Store the kernels for sparing readings
-          Knp0 =  Kernel_i(in_  ,iky_,ikx_,iz_,eo_)
-          Knp1 =  Kernel_i(in_+1,iky_,ikx_,iz_,eo_)
-          Knm1 =  Kernel_i(in_-1,iky_,ikx_,iz_,eo_)
-          ! Nonadiabatic moments (only different from moments when p=0)
-          nadiab_moment_0j  = nadiab_moments_i(ip0_i,in_,iky_,ikx_,iz_)
-          ! Density
-          n_     = n_     + Knp0 * nadiab_moment_0j
-          ! Perpendicular velocity
-          uperp_ = uperp_ + bi_*0.5_dp*(Knp0 - Knm1) * nadiab_moment_0j
-          ! Parallel temperature
-          Tpar_  = Tpar_  + Knp0 * (SQRT2*nadiab_moments_i(ip2_i,in_,iky_,ikx_,iz_) + nadiab_moment_0j)
-          ! Perpendicular temperature
-          Tperp_ = Tperp_ + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1._dp)*Knp1 - n_dp*Knm1)*nadiab_moment_0j
-        ENDDO
-        T_  = (Tpar_ + 2._dp*Tperp_)*onethird - n_
-      ! Add energy restoring term
-      TColl_ = TColl_ + T_* 4._dp *  j_dp          * Kernel_i(ij_  ,iky_,ikx_,iz_,eo_)
-      TColl_ = TColl_ - T_* 2._dp * (j_dp + 1._dp) * Kernel_i(ij_+1,iky_,ikx_,iz_,eo_)
-      TColl_ = TColl_ - T_* 2._dp *  j_dp          * Kernel_i(ij_-1,iky_,ikx_,iz_,eo_)
-      TColl_ = TColl_ + uperp_*bi_* (Kernel_i(ij_,iky_,ikx_,iz_,eo_) - Kernel_i(ij_-1,iky_,ikx_,iz_,eo_))
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 1 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ELSEIF( p_dp .eq. 1 ) THEN ! kxonecker p1
-      !** build required fluid moments **
-      upar_  = 0._dp
-      DO in_ = 1,jmaxi+1
-        ! Parallel velocity
-         upar_  = upar_  + Kernel_i(in_,iky_,ikx_,iz_,eo_) * nadiab_moments_i(ip1_i,in_,iky_,ikx_,iz_)
-      ENDDO
-      TColl_ = TColl_ + upar_*Kernel_i(ij_,iky_,ikx_,iz_,eo_)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Non zero term for p = 2 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ELSEIF( p_dp .eq. 2 ) THEN ! kxonecker p2
-      !** build required fluid moments **
-      n_     = 0._dp
-      upar_  = 0._dp; uperp_ = 0._dp
-      Tpar_  = 0._dp; Tperp_ = 0._dp
-      DO in_ = 1,jmaxi+1
-        n_dp = REAL(in_-1,dp)
-        ! Store the kernels for sparing readings
-        Knp0 =  Kernel_i(in_  ,iky_,ikx_,iz_,eo_)
-        Knp1 =  Kernel_i(in_+1,iky_,ikx_,iz_,eo_)
-        Knm1 =  Kernel_i(in_-1,iky_,ikx_,iz_,eo_)
-        ! Nonadiabatic moments (only different from moments when p=0)
-        nadiab_moment_0j = nadiab_moments_i(ip0_i,in_,iky_,ikx_,iz_)
-        ! Density
-        n_     = n_     + Knp0 * nadiab_moment_0j
-        ! Parallel temperature
-        Tpar_  = Tpar_  + Knp0 * (SQRT2*nadiab_moments_i(ip2_i,in_,iky_,ikx_,iz_) + nadiab_moment_0j)
-        ! Perpendicular temperature
-        Tperp_ = Tperp_ + ((2._dp*n_dp+1._dp)*Knp0 - (n_dp+1._dp)*Knp1 - n_dp*Knm1)*nadiab_moment_0j
-      ENDDO
-      T_  = (Tpar_ + 2._dp*Tperp_)*onethird - n_
-      TColl_ = TColl_ + T_*SQRT2*Kernel_i(ij_,iky_,ikx_,iz_,eo_)
-      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    ENDIF
-    ! Multiply by ion-ion collision coefficient
-    TColl_ = nu_i * TColl_
-
-  END SUBROUTINE DoughertyGK_ii
-
+    ! Multiply by collision parameter
+    TColl_(ip,ij,iky,ikx,iz) = nu_ * Tmp
+    ENDDO;ENDDO;ENDDO
+    ENDDO;ENDDO
+  END SUBROUTINE DoughertyGK_aa
   !******************************************************************************!
   !! compute the collision terms in a (Np x Nj x Nkx x Nky) matrix all at once
   !******************************************************************************!

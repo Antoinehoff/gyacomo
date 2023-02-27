@@ -1,6 +1,5 @@
 MODULE model
   ! Module for diagnostic parameters
-
   USE prec_const
   IMPLICIT NONE
   PRIVATE
@@ -11,12 +10,15 @@ MODULE model
   CHARACTER(len=16), &
             PUBLIC, PROTECTED ::LINEARITY= 'linear'   ! To turn on non linear bracket term
   LOGICAL,  PUBLIC, PROTECTED ::   KIN_E =  .true.    ! Simulate kinetic electron (adiabatic otherwise)
+  INTEGER,  PUBLIC, PROTECTED ::    N_HD =  4         ! order of numerical spatial diffusion
   REAL(dp), PUBLIC, PROTECTED ::    mu_x =  0._dp     ! spatial    x-Hyperdiffusivity coefficient (for num. stability)
   REAL(dp), PUBLIC, PROTECTED ::    mu_y =  0._dp     ! spatial    y-Hyperdiffusivity coefficient (for num. stability)
+  LOGICAL,  PUBLIC, PROTECTED ::   HDz_h =  .false.    ! to apply z-hyperdiffusion on non adiab part
   REAL(dp), PUBLIC, PROTECTED ::    mu_z =  0._dp     ! spatial    z-Hyperdiffusivity coefficient (for num. stability)
+  CHARACTER(len=16), &
+            PUBLIC, PROTECTED ::   HYP_V = 'hypcoll'  ! hyperdiffusion model for velocity space ('none','hypcoll','dvpar4')
   REAL(dp), PUBLIC, PROTECTED ::    mu_p =  0._dp     ! kinetic para hyperdiffusivity coefficient (for num. stability)
   REAL(dp), PUBLIC, PROTECTED ::    mu_j =  0._dp     ! kinetic perp hyperdiffusivity coefficient (for num. stability)
-  INTEGER,  PUBLIC, PROTECTED ::    N_HD =  4         ! order of numerical spatial diffusion
   REAL(dp), PUBLIC, PROTECTED ::      nu =  0._dp     ! Collision frequency
   REAL(dp), PUBLIC, PROTECTED ::   tau_e =  1._dp     ! Temperature
   REAL(dp), PUBLIC, PROTECTED ::   tau_i =  1._dp     !
@@ -59,16 +61,20 @@ CONTAINS
 
   SUBROUTINE model_readinputs
     !    Read the input parameters
-    USE basic, ONLY : lu_in, my_id
+    USE basic, ONLY : lu_in, my_id, num_procs_p
     USE prec_const
     IMPLICIT NONE
 
     NAMELIST /MODEL_PAR/ CLOS, NL_CLOS, KERN, LINEARITY, KIN_E, &
-                         mu_x, mu_y, N_HD, mu_z, mu_p, mu_j, nu,&
+                         mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, nu,&
                          tau_e, tau_i, sigma_e, sigma_i, q_e, q_i,&
                          k_Ne, k_Ni, k_Te, k_Ti, k_gB, k_cB, lambdaD, beta
 
     READ(lu_in,model_par)
+
+    IF((HYP_V .EQ. 'dvpar4') .AND. (num_procs_p .GT. 1)) THEN
+      ERROR STOP '>> ERROR << dvpar4 velocity dissipation is not compatible with current p parallelization'
+    ENDIF
 
     IF(.NOT. KIN_E) THEN
       IF(my_id.EQ.0) print*, 'Adiabatic electron model -> beta = 0'

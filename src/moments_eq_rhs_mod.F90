@@ -24,7 +24,7 @@ SUBROUTINE compute_moments_eq_rhs
                      xphij_i, xphijp1_i, xphijm1_i, xpsij_i, xpsijp1_i, xpsijm1_i,&
                      kernel_i, nadiab_moments_i, ddz_nipj, interp_nipj, Sipj,&
                      moments_i(ipgs_i:ipge_i,ijgs_i:ijge_i,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel),&
-                     TColl_i, ddzND_nipj, diff_pi_coeff, diff_ji_coeff,&
+                     TColl_i, ddzND_Nipj, diff_pi_coeff, diff_ji_coeff,&
                      moments_rhs_i(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel))
 
     !compute ion moments_eq_rhs
@@ -36,7 +36,7 @@ SUBROUTINE compute_moments_eq_rhs
                      xphij_e, xphijp1_e, xphijm1_e, xpsij_e, xpsijp1_e, xpsijm1_e,&
                      kernel_e, nadiab_moments_e, ddz_nepj, interp_nepj, Sepj,&
                      moments_e(ipgs_e:ipge_e,ijgs_e:ijge_e,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel),&
-                     TColl_e, ddzND_nepj, diff_pe_coeff, diff_je_coeff,&
+                     TColl_e, ddzND_Nepj, diff_pe_coeff, diff_je_coeff,&
                      moments_rhs_e(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel))
 
   CONTAINS
@@ -193,21 +193,30 @@ SUBROUTINE compute_moments_eq_rhs
                   -mu_y*diff_ky_coeff*ky**N_HD*moments_(ip,ij,iky,ikx,iz) &
                   ! Numerical parallel hyperdiffusion "mu_z*ddz**4"  see Pueschel 2010 (eq 25)
                   -mu_z*diff_dz_coeff*ddzND_napj_(ip,ij,iky,ikx,iz)
-                  ! GX like Hermite hypercollisions see Mandell et al. 2023 (eq 3.23), unadvised to use it
-                  IF (p_int .GT. 2)  &
-                    moments_rhs_(ip,ij,iky,ikx,iz) = &
-                      moments_rhs_(ip,ij,iky,ikx,iz) - mu_p*diff_pe_coeff*p_int**6*moments_(ip,ij,iky,ikx,iz)
-                  IF (j_int .GT. 1)  &
-                    moments_rhs_(ip,ij,iky,ikx,iz) = &
-                      moments_rhs_(ip,ij,iky,ikx,iz) - mu_j*diff_je_coeff*j_int**6*moments_(ip,ij,iky,ikx,iz)
-                  ! fourth order numerical diffusion in vpar
-                  ! IF( (ip-4 .GT. 0) .AND. (num_procs_p .EQ. 1) ) &
-                  ! ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
-                  ! ! (not used often so not parallelized)
-                  ! moments_rhs_(ip,ij,iky,ikx,iz) = &
-                  !   moments_rhs_(ip,ij,iky,ikx,iz) &
-                  !     + mu_p * moments_(ip-4,ij,iky,ikx,iz)
 
+                  !! Velocity space dissipation (should be implemented somewhere else)
+                  SELECT CASE(HYP_V)
+                  CASE('hypcoll') ! GX like Hermite hypercollisions see Mandell et al. 2023 (eq 3.23), unadvised to use it
+                    IF (p_int .GT. 2)  &
+                      moments_rhs_(ip,ij,iky,ikx,iz) = &
+                        moments_rhs_(ip,ij,iky,ikx,iz) - mu_p*diff_pe_coeff*p_int**6*moments_(ip,ij,iky,ikx,iz)
+                    IF (j_int .GT. 1)  &
+                      moments_rhs_(ip,ij,iky,ikx,iz) = &
+                        moments_rhs_(ip,ij,iky,ikx,iz) - mu_j*diff_je_coeff*j_int**6*moments_(ip,ij,iky,ikx,iz)
+                  CASE('dvpar4')
+                    ! fourth order numerical diffusion in vpar
+                    IF(ip-4 .GT. 0) &
+                    ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
+                    ! (not used often so not parallelized)
+                    moments_rhs_(ip,ij,iky,ikx,iz) = &
+                      moments_rhs_(ip,ij,iky,ikx,iz) &
+                        + mu_p*dv4_Hp_coeff(p_int)*moments_(ip-4,ij,iky,ikx,iz)
+                    ! + dummy Laguerre diff
+                    IF (j_int .GT. 1)  &
+                      moments_rhs_(ip,ij,iky,ikx,iz) = &
+                        moments_rhs_(ip,ij,iky,ikx,iz) - mu_j*diff_je_coeff*j_int**6*moments_(ip,ij,iky,ikx,iz)
+                  CASE DEFAULT
+                  END SELECT
             ELSE
               moments_rhs_(ip,ij,iky,ikx,iz) = 0._dp
             ENDIF
@@ -216,7 +225,6 @@ SUBROUTINE compute_moments_eq_rhs
         END DO kyloop
       END DO kxloop
     END DO zloop
-
     ! Execution time end
     CALL cpu_time(t1_rhs)
     tc_rhs = tc_rhs + (t1_rhs-t0_rhs)

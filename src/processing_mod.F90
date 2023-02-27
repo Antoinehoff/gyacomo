@@ -405,11 +405,11 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
   !
   USE fields,           ONLY : moments_i, moments_e, phi, psi
   USE array,            ONLY : kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i, &
-                               ddz_nepj, ddzND_nepj, interp_nepj,&
-                               ddz_nipj, ddzND_nipj, interp_nipj!, ddz_phi
+                               ddz_nepj, ddzND_Nepj, interp_nepj,&
+                               ddz_nipj, ddzND_Nipj, interp_nipj!, ddz_phi
   USE time_integration, ONLY : updatetlevel
   USE model,            ONLY : qe_taue, qi_taui,q_o_sqrt_tau_sigma_e, q_o_sqrt_tau_sigma_i, &
-                               KIN_E, CLOS, beta
+                               KIN_E, CLOS, beta, HDz_h
   USE calculus,         ONLY : grad_z, grad_z2, grad_z4, interp_z
   IMPLICIT NONE
   INTEGER :: eo, p_int, j_int
@@ -489,9 +489,12 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
           ! Compute z derivatives
           CALL   grad_z(eo,nadiab_moments_e(ip,ij,iky,ikx,izgs:izge),    ddz_nepj(ip,ij,iky,ikx,izs:ize))
           ! Parallel hyperdiffusion
-          CALL  grad_z4(moments_e(ip,ij,iky,ikx,izgs:izge,updatetlevel),ddzND_nepj(ip,ij,iky,ikx,izs:ize))
-          ! CALL  grad_z2(nadiab_moments_e(ip,ij,iky,ikx,izgs:izge),ddzND_nepj(ip,ij,iky,ikx,izs:ize))
-          ! Compute even odd grids interpolation
+          IF (HDz_h) THEN
+            CALL  grad_z4(nadiab_moments_e(ip,ij,iky,ikx,izgs:izge),ddzND_Nepj(ip,ij,iky,ikx,izs:ize))
+          ELSE
+            CALL  grad_z4(moments_e(ip,ij,iky,ikx,izgs:izge,updatetlevel),ddzND_Nepj(ip,ij,iky,ikx,izs:ize))
+          ENDIF
+        ! Compute even odd grids interpolation
           CALL interp_z(eo,nadiab_moments_e(ip,ij,iky,ikx,izgs:izge), interp_nepj(ip,ij,iky,ikx,izs:ize))
         ENDDO
       ENDDO
@@ -508,8 +511,11 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
           ! Compute z first derivative
           CALL   grad_z(eo,nadiab_moments_i(ip,ij,iky,ikx,izgs:izge),    ddz_nipj(ip,ij,iky,ikx,izs:ize))
           ! Parallel numerical diffusion
-          CALL  grad_z4(moments_i(ip,ij,iky,ikx,izgs:izge,updatetlevel),ddzND_nipj(ip,ij,iky,ikx,izs:ize))
-          ! CALL  grad_z2(nadiab_moments_i(ip,ij,iky,ikx,izgs:izge),ddzND_nipj(ip,ij,iky,ikx,izs:ize))
+          IF (HDz_h) THEN
+            CALL  grad_z4(nadiab_moments_i(ip,ij,iky,ikx,izgs:izge),ddzND_Nipj(ip,ij,iky,ikx,izs:ize))
+          ELSE
+            CALL  grad_z4(moments_i(ip,ij,iky,ikx,izgs:izge,updatetlevel),ddzND_Nipj(ip,ij,iky,ikx,izs:ize))
+          ENDIF
           ! Compute even odd grids interpolation
           CALL interp_z(eo,nadiab_moments_i(ip,ij,iky,ikx,izgs:izge), interp_nipj(ip,ij,iky,ikx,izs:ize))
         ENDDO

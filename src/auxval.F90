@@ -50,6 +50,8 @@ subroutine auxval
     CALL build_dnjs_table ! precompute the Laguerre nonlin product coeffs
   ENDIF
 
+  CALL build_dv4Hp_table ! precompute the hermite fourth derivative table
+
   !! Display parallel settings
   DO i_ = 0,num_procs-1
     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
