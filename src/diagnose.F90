@@ -460,6 +460,7 @@ SUBROUTINE diagnose_3d
     CHARACTER(*), INTENT(IN) :: text
     COMPLEX(dp), DIMENSION(1:Nky,1:Nkx,1:Nz) :: field_full
     CHARACTER(256) :: dset_name
+    field_full = 0;
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
 
     IF (num_procs .EQ. 1) THEN ! no data distribution
@@ -481,6 +482,7 @@ SUBROUTINE diagnose_3d
     REAL(dp), DIMENSION(1:Np_i,1:Nj_i,1:Nz) :: field_full
     CHARACTER(*), INTENT(IN) :: text
     CHARACTER(LEN=50) :: dset_name
+    field_full = 0;
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
     IF (num_procs .EQ. 1) THEN ! no data distribution
       CALL putarr(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,izs:ize), ionode=0)
@@ -498,6 +500,7 @@ SUBROUTINE diagnose_3d
     REAL(dp), DIMENSION(1:pmaxe+1,1:jmaxe+1,1:Nz) :: field_full
     CHARACTER(*), INTENT(IN) :: text
     CHARACTER(LEN=50) :: dset_name
+    field_full = 0;
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
     IF (num_procs .EQ. 1) THEN ! no data distribution
       CALL putarr(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,izs:ize), ionode=0)
@@ -552,13 +555,11 @@ SUBROUTINE diagnose_5d
     USE grid,   ONLY: ips_e,ipe_e, ijs_e,ije_e, ikxs,ikxe, ikys,ikye, izs,ize
     USE prec_const
     IMPLICIT NONE
-
     COMPLEX(dp), DIMENSION(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikxs:ikxe,izs:ize), INTENT(IN) :: field
     CHARACTER(*), INTENT(IN) :: text
-
     COMPLEX(dp), DIMENSION(1:Np_e,1:Nj_e,1:Nky,1:Nkx,1:Nz) :: field_full
     CHARACTER(LEN=50) :: dset_name
-
+    field_full = 0;
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var5d", TRIM(text), iframe5d
     IF (num_procs .EQ. 1) THEN
      CALL putarr(fidres, dset_name, field(ips_e:ipe_e,ijs_e:ije_e,ikys:ikye,ikxs:ikxe,izs:ize), ionode=0)
@@ -584,13 +585,11 @@ SUBROUTINE diagnose_5d
     USE grid, ONLY: ips_i,ipe_i, ijs_i,ije_i, ikxs,ikxe, ikys,ikye, izs,ize
     USE prec_const
     IMPLICIT NONE
-
     COMPLEX(dp), DIMENSION(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,ikxs:ikxe,izs:ize), INTENT(IN) :: field
     CHARACTER(*), INTENT(IN) :: text
-
     COMPLEX(dp), DIMENSION(1:Np_i,1:Nj_i,1:Nky,1:Nkx,1:Nz) :: field_full
     CHARACTER(LEN=50) :: dset_name
-
+    field_full = 0;
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var5d", TRIM(text), iframe5d
     IF (num_procs .EQ. 1) THEN
       CALL putarr(fidres, dset_name, field(ips_i:ipe_i,ijs_i:ije_i,ikys:ikye,ikxs:ikxe,izs:ize), ionode=0)
