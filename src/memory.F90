@@ -2,7 +2,7 @@ SUBROUTINE memory
   ! Allocate arrays (done dynamically otherwise size is unknown)
 
   USE array
-  USE basic
+  USE basic, ONLY: allocate_array
   USE fields
   USE grid
   USE time_integration
@@ -37,7 +37,7 @@ SUBROUTINE memory
   CALL allocate_array(    moments_rhs_e,  ips_e,ipe_e,   ijs_e,ije_e,  ikys,ikye, ikxs,ikxe,  izs,ize,  1,ntimelevel )
   CALL allocate_array( nadiab_moments_e, ipgs_e,ipge_e, ijgs_e,ijge_e, ikys,ikye, ikxs,ikxe, izgs,izge)
   CALL allocate_array(         ddz_nepj, ipgs_e,ipge_e, ijgs_e,ijge_e, ikys,ikye, ikxs,ikxe, izgs,izge)
-  CALL allocate_array(        ddzND_nepj, ipgs_e,ipge_e, ijgs_e,ijge_e, ikys,ikye, ikxs,ikxe, izgs,izge)
+  CALL allocate_array(        ddzND_Nepj, ipgs_e,ipge_e, ijgs_e,ijge_e, ikys,ikye, ikxs,ikxe, izgs,izge)
   CALL allocate_array(      interp_nepj, ipgs_e,ipge_e, ijgs_e,ijge_e, ikys,ikye, ikxs,ikxe, izgs,izge)
   CALL allocate_array(     moments_e_ZF, ipgs_e,ipge_e, ijgs_e,ijge_e, ikxs,ikxe, izs,ize)
   CALL allocate_array(     moments_e_NZ, ipgs_e,ipge_e, ijgs_e,ijge_e, ikys,ikye, izs,ize)
@@ -73,7 +73,7 @@ SUBROUTINE memory
   CALL allocate_array(    moments_rhs_i,  ips_i,ipe_i,   ijs_i,ije_i,  ikys,ikye, ikxs,ikxe,  izs,ize,  1,ntimelevel )
   CALL allocate_array( nadiab_moments_i, ipgs_i,ipge_i, ijgs_i,ijge_i, ikys,ikye, ikxs,ikxe, izgs,izge)
   CALL allocate_array(         ddz_nipj, ipgs_i,ipge_i, ijgs_i,ijge_i, ikys,ikye, ikxs,ikxe, izgs,izge)
-  CALL allocate_array(        ddzND_nipj, ipgs_i,ipge_i, ijgs_i,ijge_i, ikys,ikye, ikxs,ikxe, izgs,izge)
+  CALL allocate_array(        ddzND_Nipj, ipgs_i,ipge_i, ijgs_i,ijge_i, ikys,ikye, ikxs,ikxe, izgs,izge)
   CALL allocate_array(      interp_nipj, ipgs_i,ipge_i, ijgs_i,ijge_i, ikys,ikye, ikxs,ikxe, izgs,izge)
   CALL allocate_array(     moments_i_ZF, ipgs_i,ipge_i, ijgs_i,ijge_i, ikxs,ikxe, izs,ize)
   CALL allocate_array(     moments_i_NZ, ipgs_i,ipge_i, ijgs_i,ijge_i, ikys,ikye, izs,ize)
@@ -96,6 +96,9 @@ SUBROUTINE memory
 
   ! Non linear terms and dnjs table
   CALL allocate_array( dnjs, 1,maxj+1, 1,maxj+1, 1,maxj+1)
+
+  ! Hermite fourth derivative coeff table 4*sqrt(p!/(p-4)!)
+  CALL allocate_array( dv4_Hp_coeff, -2, MAX(pmaxe,pmaxi))
 
   ! elect. pot. linear terms
   IF (KIN_E) THEN
