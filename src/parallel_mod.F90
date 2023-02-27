@@ -126,8 +126,8 @@ CONTAINS
 
   !!!!! Gather a field in spatial coordinates on rank 0 !!!!!
   SUBROUTINE gather_xyz(field_sub,field_full)
-    COMPLEX(dp), DIMENSION(ikys:ikye, 1:Nkx, izs:ize), INTENT(IN)    :: field_sub
-    COMPLEX(dp), DIMENSION(   1:Nky,  1:Nkx,   1:Nz),  INTENT(INOUT) :: field_full
+    COMPLEX(dp), DIMENSION(ikys:ikye, 1:Nkx, izs:ize), INTENT(IN)  :: field_sub
+    COMPLEX(dp), DIMENSION(   1:Nky,  1:Nkx,   1:Nz),  INTENT(OUT) :: field_full
     COMPLEX(dp), DIMENSION(ikys:ikye)           :: buffer_ly_cz !local y, constant z
     COMPLEX(dp), DIMENSION(   1:Nky )           :: buffer_fy_cz !full  y, constant z
     COMPLEX(dp), DIMENSION(   1:Nky,  izs:ize ) :: buffer_fy_lz !full  y, local z
@@ -164,8 +164,8 @@ CONTAINS
 
   !!!!! Gather a field in kinetic + z coordinates on rank 0 !!!!!
   SUBROUTINE gather_pjz_i(field_sub,field_full)
-    REAL(dp), DIMENSION(ips_i:ipe_i, 1:Nj_i, izs:ize), INTENT(IN)    :: field_sub
-    REAL(dp), DIMENSION(   1:Np_i,   1:Nj_i,   1:Nz),  INTENT(INOUT) :: field_full
+    REAL(dp), DIMENSION(ips_i:ipe_i, 1:Nj_i, izs:ize), INTENT(IN)  :: field_sub
+    REAL(dp), DIMENSION(   1:Np_i,   1:Nj_i,   1:Nz),  INTENT(OUT) :: field_full
     REAL(dp), DIMENSION(ips_i:ipe_i)          :: buffer_lp_cz !local p, constant z
     REAL(dp), DIMENSION(   1:Np_i )           :: buffer_fp_cz !full  p, constant z
     REAL(dp), DIMENSION(   1:Np_i,  izs:ize ) :: buffer_fp_lz !full  p, local z
@@ -202,7 +202,7 @@ CONTAINS
 
   SUBROUTINE gather_pjz_e(field_sub,field_full)
     REAL(dp), DIMENSION(ips_e:ipe_e,   1:jmaxe+1, izs:ize), INTENT(IN)    :: field_sub
-    REAL(dp), DIMENSION(   1:pmaxe+1,  1:jmaxe+1,   1:Nz),  INTENT(INOUT) :: field_full
+    REAL(dp), DIMENSION(   1:pmaxe+1,  1:jmaxe+1,   1:Nz),  INTENT(OUT) :: field_full
     REAL(dp), DIMENSION(ips_e:ipe_e)         :: buffer_lp_cz !local p, constant z
     REAL(dp), DIMENSION(   1:pmaxe+1 )       :: buffer_fp_cz !full  p, constant z
     REAL(dp), DIMENSION(   1:pmaxe+1,  izs:ize ) :: buffer_fp_lz !full  p, local z
@@ -240,8 +240,8 @@ CONTAINS
   !!!!! Gather a field in kinetic + spatial coordinates on rank 0 !!!!!
   !!!!! Gather a field in spatial coordinates on rank 0 !!!!!
   SUBROUTINE gather_pjxyz_i(field_sub,field_full)
-    COMPLEX(dp), DIMENSION( ips_i:ipe_i, 1:Nj_i, ikys:ikye, 1:Nkx, izs:ize), INTENT(IN)    :: field_sub
-    COMPLEX(dp), DIMENSION(     1:Np_i,  1:Nj_i,    1:Nky,  1:Nkx,   1:Nz),  INTENT(INOUT) :: field_full
+    COMPLEX(dp), DIMENSION( ips_i:ipe_i, 1:Nj_i, ikys:ikye, 1:Nkx, izs:ize), INTENT(IN)  :: field_sub
+    COMPLEX(dp), DIMENSION(     1:Np_i,  1:Nj_i,    1:Nky,  1:Nkx,   1:Nz),  INTENT(OUT) :: field_full
     COMPLEX(dp), DIMENSION(ips_i:ipe_i)       :: buffer_lp_cy_cz     !local p, constant y, constant z
     COMPLEX(dp), DIMENSION(1:Np_i)            :: buffer_fp_cy_cz     ! full p, constant y, constant z
     COMPLEX(dp), DIMENSION(1:Np_i, ikys:ikye)    :: buffer_fp_ly_cz     ! full p,    local y, constant z
@@ -291,7 +291,7 @@ CONTAINS
 
   SUBROUTINE gather_pjxyz_e(field_sub,field_full)
     COMPLEX(dp), DIMENSION( ips_e:ipe_e, 1:Nj_e, ikys:ikye, 1:Nkx, izs:ize), INTENT(IN)    :: field_sub
-    COMPLEX(dp), DIMENSION(     1:Np_e,  1:Nj_e,    1:Nky,  1:Nkx,   1:Nz),  INTENT(INOUT) :: field_full
+    COMPLEX(dp), DIMENSION(     1:Np_e,  1:Nj_e,    1:Nky,  1:Nkx,   1:Nz),  INTENT(OUT) :: field_full
     COMPLEX(dp), DIMENSION(ips_e:ipe_e)       :: buffer_lp_cy_cz     !local p, constant y, constant z
     COMPLEX(dp), DIMENSION(1:Np_e)            :: buffer_fp_cy_cz     ! full p, constant y, constant z
     COMPLEX(dp), DIMENSION(1:Np_e, ikys:ikye)    :: buffer_fp_ly_cz     ! full p,    local y, constant z
