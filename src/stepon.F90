@@ -1,14 +1,11 @@
 SUBROUTINE stepon
   !   Advance one time step, (num_step=4 for Runge Kutta 4 scheme)
-  USE advance_field_routine, ONLY: advance_time_level, advance_field, advance_moments
-  USE basic
-  USE closure
-  USE ghosts, ONLY: update_ghosts_moments, update_ghosts_EM
-  USE grid
-  USE model, ONLY : LINEARITY, KIN_E
-  use prec_const
-  USE time_integration
-  USE utility, ONLY: checkfield
+  USE advance_field_routine, ONLY: advance_time_level, advance_moments
+  USE basic,                 ONLY: nlend, ierr
+  USE closure,               ONLY: apply_closure_model
+  USE ghosts,                ONLY: update_ghosts_moments, update_ghosts_EM
+  use mpi,                   ONLY: MPI_COMM_WORLD
+  USE time_integration,      ONLY: ntimelevel
   IMPLICIT NONE
 
   INTEGER :: num_step
@@ -64,8 +61,16 @@ SUBROUTINE stepon
      END SUBROUTINE assemble_RHS
 
       SUBROUTINE checkfield_all ! Check all the fields for inf or nan
+        USE utility,ONLY: checkfield
+        USE basic,  ONLY: t0_checkfield, t1_checkfield, tc_checkfield
         USE fields, ONLY: phi, moments_e, moments_i
+        USE grid,   ONLY: ipgs_e,ipge_e,ijgs_e,ijge_e,ipgs_i,ipge_i,ijgs_i,ijge_i,&
+                          ikys,ikye,ikxs,ikxe,izgs,izge,ij,ip
+        USE MPI
+        USE time_integration, ONLY: updatetlevel
+        USE model,            ONLY: LINEARITY, KIN_E
         IMPLICIT NONE
+        LOGICAL :: checkf_
         ! Execution time start
         CALL cpu_time(t0_checkfield)
 
@@ -74,17 +79,22 @@ SUBROUTINE stepon
 
         mlend=.FALSE.
         IF(.NOT.nlend) THEN
-           mlend=mlend .or. checkfield(phi,' phi')
+           checkf_ = checkfield(phi,' phi')
+           mlend= (mlend .or. checkf_)
            IF(KIN_E) THEN
            DO ij=ijgs_e,ijge_e
              DO ip=ipgs_e,ipge_e
-              mlend=mlend .or. checkfield(moments_e(ip,ij,:,:,:,updatetlevel),' moments_e')
+               checkf_ = checkfield(moments_e(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel),' moments_e')
+               mlend   = (mlend .or. checkf_)
              ENDDO
            ENDDO
            ENDIF
            DO ij=ijgs_i,ijge_i
              DO ip=ipgs_i,ipge_i
-              mlend=mlend .or. checkfield(moments_i(ip,ij,:,:,:,updatetlevel),' moments_i')
+               checkf_ = checkfield(moments_i(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel),' moments_i')
+               mlend   = (mlend .or. checkf_)
+               ! print*, 'should be an error'
+               ! stop
              ENDDO
            ENDDO
            CALL MPI_ALLREDUCE(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierr)
@@ -97,6 +107,9 @@ SUBROUTINE stepon
 
       SUBROUTINE anti_aliasing
         USE fields, ONLY: moments_e, moments_i
+        USE grid,   ONLY: ipgs_i,ipge_i,ijgs_i,ijge_i,ipgs_e,ipge_e,ijgs_e,ijge_e,&
+                          ikys,ikye,ikxs,ikxe,izgs,izge,AA_x,AA_y,iz,ikx,iky,ij,ip
+        USE model,  ONLY: KIN_E
         IMPLICIT NONE
         IF(KIN_E)THEN
         DO iz=izgs,izge
@@ -114,7 +127,7 @@ SUBROUTINE stepon
         DO iz=izgs,izge
           DO ikx=ikxs,ikxe
             DO iky=ikys,ikye
-              DO ij=ijs_i,ije_i
+              DO ij=ijgs_i,ijge_i
                 DO ip=ipgs_i,ipge_i
                   moments_i( ip,ij,iky,ikx,iz,:) = AA_x(ikx)* AA_y(iky) * moments_i( ip,ij,iky,ikx,iz,:)
                 END DO
@@ -126,11 +139,14 @@ SUBROUTINE stepon
 
       SUBROUTINE enforce_symmetry ! Force X(k) = X(N-k)* complex conjugate symmetry
         USE fields, ONLY: phi, psi, moments_e, moments_i
+        USE grid,   ONLY: ipgs_i,ipge_i,ijgs_i,ijge_i,ipgs_e,ipge_e,ijgs_e,ijge_e,&
+                          izgs,izge,iz,ikx,ij,ip,Nkx, iky_0, ikx_0, contains_ky0
+        USE model,  ONLY: KIN_E
         IMPLICIT NONE
         IF ( contains_ky0 ) THEN
           ! Electron moments
           IF(KIN_E) THEN
-            DO iz=izs,ize
+            DO iz=izgs,izge
               DO ij=ijgs_e,ijge_e
                 DO ip=ipgs_e,ipge_e
                   DO ikx=2,Nkx/2 !symmetry at ky = 0
@@ -143,7 +159,7 @@ SUBROUTINE stepon
           END DO
           ENDIF
           ! Ion moments
-          DO iz=izs,ize
+          DO iz=izgs,izge
             DO ij=ijgs_i,ijge_i
               DO ip=ipgs_i,ipge_i
                 DO ikx=2,Nkx/2 !symmetry at ky = 0
@@ -156,16 +172,16 @@ SUBROUTINE stepon
           END DO
           ! Phi
           DO ikx=2,Nkx/2 !symmetry at ky = 0
-            phi(iky_0,ikx,izs:ize) = phi(iky_0,Nkx+2-ikx,izs:ize)
+            phi(iky_0,ikx,izgs:izge) = phi(iky_0,Nkx+2-ikx,izgs:izge)
           END DO
           ! must be real at origin
-          phi(iky_0,ikx_0,izs:ize) = REAL(phi(iky_0,ikx_0,izs:ize))
+          phi(iky_0,ikx_0,izgs:izge) = REAL(phi(iky_0,ikx_0,izgs:izge))
           ! Psi
           DO ikx=2,Nkx/2 !symmetry at ky = 0
-            psi(iky_0,ikx,izs:ize) = psi(iky_0,Nkx+2-ikx,izs:ize)
+            psi(iky_0,ikx,izgs:izge) = psi(iky_0,Nkx+2-ikx,izgs:izge)
           END DO
           ! must be real at origin
-          psi(iky_0,ikx_0,izs:ize) = REAL(psi(iky_0,ikx_0,izs:ize))
+          psi(iky_0,ikx_0,izgs:izge) = REAL(psi(iky_0,ikx_0,izgs:izge))
         ENDIF
       END SUBROUTINE enforce_symmetry
 

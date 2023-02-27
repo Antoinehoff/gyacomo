@@ -1,16 +1,12 @@
 MODULE utility
-
-  USE basic
-  USE grid, ONLY: Nkx,Nky,Nz, ikys,ikye, izs,ize, local_nky, local_nz
-  use prec_const
   IMPLICIT NONE
+  PUBLIC :: checkfield
 CONTAINS
 
   FUNCTION is_nan(x,str) RESULT(isn)
-
-    USE time_integration
-
-    use prec_const
+    USE basic,            ONLY: cstep, stdout
+    USE time_integration, ONLY: updatetlevel
+    USE prec_const,       ONLY: dp
     IMPLICIT NONE
 
     real(dp), INTENT(IN) :: x
@@ -29,10 +25,8 @@ CONTAINS
 
 
   FUNCTION is_inf(x,str) RESULT(isi)
-
-    USE time_integration
-
-    use prec_const
+    USE basic,            ONLY: stdout
+    USE prec_const,       ONLY: dp
     IMPLICIT NONE
 
     real(dp), INTENT(IN) :: x
@@ -51,13 +45,14 @@ CONTAINS
   END FUNCTION is_inf
 
   FUNCTION checkfield(field,str) RESULT(mlend)
-
-    USE grid
-
-    use prec_const
+    USE grid,       ONLY: ikys,ikye,ikxs,ikxe,izgs,izge
+    use prec_const, ONLY: dp
     IMPLICIT NONE
-
-    COMPLEX(dp), DIMENSION(ikys:ikye,ikxs:ikxe), INTENT(IN) :: field
+    !! BUG found (or feature?)
+    ! if one put the commented first line (commented) instead of the second one,
+    ! no error will be risen by the compiler even if the rank of the array is not matching (should be 3D!)
+    ! COMPLEX(dp), DIMENSION(ikys:ikye,ikxs:ikxe), INTENT(IN) :: field
+    COMPLEX(dp), DIMENSION(ikys:ikye,ikxs:ikxe,izgs:izge), INTENT(IN) :: field
     CHARACTER(LEN=*), INTENT(IN) :: str
     LOGICAL :: mlend
     COMPLEX(dp) :: sumfield
