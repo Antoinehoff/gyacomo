@@ -14,18 +14,16 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED :: maxj  = 1      ! The maximal Laguerre-moment
   INTEGER,  PUBLIC, PROTECTED :: dmaxe = 1      ! The maximal full GF set of e-moments v^dmax
   INTEGER,  PUBLIC, PROTECTED :: dmaxi = 1      ! The maximal full GF set of i-moments v^dmax
-  INTEGER,  PUBLIC, PROTECTED :: Nx    = 16     ! Number of total internal grid points in x
-  REAL(dp), PUBLIC, PROTECTED :: Lx    = 1._dp  ! horizontal length of the spatial box
+  INTEGER,  PUBLIC, PROTECTED :: Nx    = 4      ! Number of total internal grid points in x
+  REAL(dp), PUBLIC, PROTECTED :: Lx    = 120_dp ! horizontal length of the spatial box
   INTEGER,  PUBLIC, PROTECTED :: Nexc  = 1      ! factor to increase Lx when shear>0 (Lx = Nexc/kymin/shear)
-  INTEGER,  PUBLIC, PROTECTED :: Ny    = 16     ! Number of total internal grid points in y
-  REAL(dp), PUBLIC, PROTECTED :: Ly    = 1._dp  ! vertical length of the spatial box
-  INTEGER,  PUBLIC, PROTECTED :: Nz    = 1      ! Number of total perpendicular planes
+  INTEGER,  PUBLIC, PROTECTED :: Ny    = 4      ! Number of total internal grid points in y
+  REAL(dp), PUBLIC, PROTECTED :: Ly    = 120_dp ! vertical length of the spatial box
+  INTEGER,  PUBLIC, PROTECTED :: Nz    = 4      ! Number of total perpendicular planes
   INTEGER,  PUBLIC, PROTECTED :: Npol  = 1      ! number of poloidal turns
   INTEGER,  PUBLIC, PROTECTED :: Odz   = 4      ! order of z interp and derivative schemes
-  INTEGER,  PUBLIC, PROTECTED :: Nkx   = 8      ! Number of total internal grid points in kx
-  REAL(dp), PUBLIC, PROTECTED :: Lkx   = 1._dp  ! horizontal length of the fourier box
-  INTEGER,  PUBLIC, PROTECTED :: Nky   = 16     ! Number of total internal grid points in ky
-  REAL(dp), PUBLIC, PROTECTED :: Lky   = 1._dp  ! vertical length of the fourier box
+  INTEGER,  PUBLIC, PROTECTED :: Nkx   = 4      ! Number of total internal grid points in kx
+  INTEGER,  PUBLIC, PROTECTED :: Nky   = 4      ! Number of total internal grid points in ky
   REAL(dp), PUBLIC, PROTECTED :: kpar  = 0_dp   ! parallel wave vector component
   ! For Orszag filter
   REAL(dp), PUBLIC, PROTECTED :: two_third_kxmax
@@ -245,8 +243,8 @@ CONTAINS
     ! Precomputations
     pmaxe_dp      = real(pmaxe,dp)
     pmaxi_dp      = real(pmaxi,dp)
-    diff_pe_coeff = (1._dp/pmaxe_dp)**4
-    diff_pi_coeff = (1._dp/pmaxi_dp)**4
+    diff_pe_coeff = pmaxe_dp*(1._dp/pmaxe_dp)**6
+    diff_pi_coeff = pmaxi_dp*(1._dp/pmaxi_dp)**6
 
     ! Overwrite SOLVE_AMPERE flag if beta is zero
     IF(beta .EQ. 0._dp) THEN
@@ -284,8 +282,8 @@ CONTAINS
     maxj       = MAX(jmaxi, jmaxe)
     jmaxe_dp   = real(jmaxe,dp)
     jmaxi_dp   = real(jmaxi,dp)
-    diff_je_coeff = (1._dp/jmaxe_dp)**4
-    diff_ji_coeff = (1._dp/jmaxi_dp)**4
+    diff_je_coeff = jmaxe_dp*(1._dp/jmaxe_dp)**6
+    diff_ji_coeff = jmaxi_dp*(1._dp/jmaxi_dp)**6
 
     ! j=0 indices
     DO ij = ijs_e,ije_e; IF(jarray_e(ij) .EQ. 0) ij0_e = ij; END DO
@@ -505,9 +503,9 @@ CONTAINS
     inv_deltaz    = 1._dp/deltaz
     ! Parallel hyperdiffusion coefficient
     IF(mu_z .GT. 0) THEN
-      diff_dz_coeff = REAL((imagu*deltaz/2._dp)**4) ! adaptive fourth derivative (~GENE)
+      diff_dz_coeff = (deltaz/2._dp)**4 ! adaptive fourth derivative (~GENE)
     ELSE
-      diff_dz_coeff = 1._dp    ! non adaptive (positive sign to compensate mu_z neg)
+      diff_dz_coeff = -1._dp    ! non adaptive (negative sign to compensate mu_z neg)
     ENDIF
     IF (SG) THEN
       grid_shift = deltaz/2._dp
@@ -602,9 +600,7 @@ CONTAINS
     CALL attach(fidres, TRIM(str),   "Ly",   Ly)
     CALL attach(fidres, TRIM(str),   "Nz",   Nz)
     CALL attach(fidres, TRIM(str),  "Nkx",  Nkx)
-    CALL attach(fidres, TRIM(str),  "Lkx",  Lkx)
     CALL attach(fidres, TRIM(str),  "Nky",  Nky)
-    CALL attach(fidres, TRIM(str),  "Lky",  Lky)
     CALL attach(fidres, TRIM(str),   "SG",   SG)
   END SUBROUTINE grid_outputinputs
 
