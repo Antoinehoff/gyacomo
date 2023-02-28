@@ -49,7 +49,7 @@
   mu_x    = 0.0
   mu_y    = 0.0
   N_HD    = 4
-  mu_z    = 0.0
+  mu_z    = 0.1
   mu_p    = 0
   mu_j    = 0
   nu      = 1
@@ -59,10 +59,10 @@
   sigma_i = 1
   q_e     = -1
   q_i     = 1
-  K_Ne    = 6.96
-  K_Te    = 2.22
-  K_Ni    = 6.96
-  K_Ti    = 2.22
+  K_Ne    = 1!6.96
+  K_Te    = 1!2.22
+  K_Ni    = 1!6.96
+  K_Ti    = 1!2.22
   beta    = 0
 /
 &COLLISION_PAR
@@ -72,7 +72,7 @@
   !mat_file        = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /
 &INITIAL_CON
-  INIT_OPT    = 'blob'
+  INIT_OPT    = 'phi'
   ACT_ON_MODES       = 'donothing'
   init_background  = 0
   init_noiselvl = 0.005
