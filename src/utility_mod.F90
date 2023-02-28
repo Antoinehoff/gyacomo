@@ -1,6 +1,6 @@
 MODULE utility
   IMPLICIT NONE
-  PUBLIC :: checkfield
+  PUBLIC :: checkfield, checkelem
 CONTAINS
 
   FUNCTION is_nan(x,str) RESULT(isn)
@@ -62,4 +62,15 @@ CONTAINS
     mlend= is_nan( REAL(sumfield),str).OR.is_inf( REAL(sumfield),str) &
       .OR. is_nan(AIMAG(sumfield),str).OR.is_inf(AIMAG(sumfield),str)
   END FUNCTION checkfield
+
+  FUNCTION checkelem(elem,str) RESULT(mlend)
+    use prec_const, ONLY: dp
+    IMPLICIT NONE
+    COMPLEX(dp), INTENT(IN) :: elem
+    CHARACTER(LEN=*), INTENT(IN) :: str
+    LOGICAL :: mlend
+
+    mlend= is_nan( REAL(elem),str).OR.is_inf( REAL(elem),str) &
+      .OR. is_nan(AIMAG(elem),str).OR.is_inf(AIMAG(elem),str)
+  END FUNCTION checkelem
 END MODULE utility
