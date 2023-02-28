@@ -1,5 +1,5 @@
 &BASIC
-  nrun   = 10
+  nrun   = 1
   dt     = 0.01
   tmax   = 1
   maxruntime = 356400
@@ -67,7 +67,7 @@
 /
 &COLLISION_PAR
   collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
-  gyrokin_CO      = .f.
+  gyrokin_CO      = .t.
   interspecies    = .true.
   !mat_file        = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /

@@ -9,7 +9,7 @@ PARTITION  = '/misc/gyacomo_outputs/';
 % resdir = 'paper_2_nonlinear/kT_6.96/3x2x128x64x24';
 % resdir = 'paper_2_nonlinear/kT_6.96/5x3x128x64x24'; %+ diff study
 % resdir = 'paper_2_nonlinear/kT_6.96/5x3x128x64x24_dv4_diff';
-resdir = 'paper_2_nonlinear/kT_6.96/optimal_muz_nu_5x3x128x64x24';
+% resdir = 'paper_2_nonlinear/kT_6.96/optimal_muz_nu_5x3x128x64x24';
 % resdir = 'paper_2_nonlinear/kT_6.96/7x4x128x64x24';
 % resdir = 'paper_2_nonlinear/kT_6.96/9x5x128x64x24';
 % low resolution (Cyclic)
@@ -51,9 +51,12 @@ resdir = 'paper_2_nonlinear/kT_6.96/optimal_muz_nu_5x3x128x64x24';
 % resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x24_MUxy_0';
 % resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x24_NL_-1';
 % resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x24_nuDG_0.01';
+% resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x64';
 % resdir = 'paper_2_nonlinear/kT_5.3/7x4x192x96x64';
 % resdir = 'paper_2_nonlinear/kT_5.3/9x5x128x64x24';
+% resdir = 'paper_2_nonlinear/kT_5.3/9x5x128x64x64';
 % resdir = 'paper_2_nonlinear/kT_5.3/11x6x128x64x24';
+resdir = 'paper_2_nonlinear/kT_5.3/11x6x128x64x64';
 
 %% Old stuff
 % resdir = 'CBC/kT_4.5_128x64x16x13x7/';

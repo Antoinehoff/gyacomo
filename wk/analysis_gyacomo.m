@@ -110,9 +110,9 @@ options.NAME      = 'N_i^{00}';
 % options.NAME      = 's_{Ex}';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'kxky';
-options.COMP      = 24;
-options.TIME      = [600 700 800 1000];
+options.PLAN      = 'xz';
+options.COMP      = 'avg';
+options.TIME      = [500 1000 1500];
 options.RESOLUTION = 256;
 
 data.a = data.EPS * 2e3;
