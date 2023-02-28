@@ -13,20 +13,21 @@ SUBROUTINE diagnose(kstep)
     INQUIRE(unit=lu_in, name=input_fname)
     CLOSE(lu_in)
   ENDIF
-  IF (kstep .GE. 0) THEN
-    ! Terminal info
-    IF (MOD(cstep, INT(1.0/dt)) == 0 .AND. (my_id .EQ. 0)) THEN
-      ! WRITE(*,"(F6.0,A,F6.0)") time,"/",tmax
-      WRITE(*,"(A,F6.0,A1,F6.0,A8,G10.2,A8,G10.2,A)")'|t/tmax = ', time,"/",tmax,'| Gxi = ',gflux_ri,'| Qxi = ',hflux_xi,'|'
-    ENDIF
-  ELSEIF (kstep .EQ. -1) THEN
+  !! End diag
+  IF (kstep .EQ. -1) THEN
     CALL cpu_time(finish)
      ! Display computational time cost
      IF (my_id .EQ. 0) CALL display_h_min_s(finish-start)
+     ! Show last state transport values
+     IF (my_id .EQ. 0) &
+      WRITE(*,"(A,G10.2,A8,G10.2,A)") 'Final transport values : | Gxi = ',gflux_ri,'| Qxi = ',hflux_xi,'|'
   END IF
   !! Specific diagnostic calls
   CALL diagnose_full(kstep)
-
+  ! Terminal info
+  IF ((kstep .GT. 0) .AND. (MOD(cstep, INT(1.0/dt)) == 0) .AND. (my_id .EQ. 0)) THEN
+    WRITE(*,"(A,F6.0,A1,F6.0,A8,G10.2,A8,G10.2,A)")'|t/tmax = ', time,"/",tmax,'| Gxi = ',gflux_ri,'| Qxi = ',hflux_xi,'|'
+  ENDIF
   CALL cpu_time(t1_diag); tc_diag = tc_diag + (t1_diag - t0_diag)
 END SUBROUTINE diagnose
 
