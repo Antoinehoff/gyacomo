@@ -12,7 +12,7 @@ MODULE diagnostics_par
   LOGICAL, PUBLIC, PROTECTED :: write_dens, write_fvel, write_temp
 
   INTEGER, PUBLIC, PROTECTED :: nsave_0d, nsave_1d, nsave_2d, nsave_3d, nsave_5d ! save data every n step
-  INTEGER, PUBLIC, PROTECTED :: dtsave_0d, dtsave_1d, dtsave_2d, dtsave_3d, dtsave_5d ! save data every dt time unit
+  REAL,    PUBLIC, PROTECTED :: dtsave_0d, dtsave_1d, dtsave_2d, dtsave_3d, dtsave_5d ! save data every dt time unit
 
   !  HDF5 file
   CHARACTER(len=256), PUBLIC :: resfile,resfile0 = "outputs"            ! Head of main result file name
