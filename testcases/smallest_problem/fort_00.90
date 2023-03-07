@@ -1,7 +1,7 @@
 &BASIC
-  nrun   = 10
+  nrun   = 1
   dt     = 0.01
-  tmax   = 1
+  tmax   = 5
   maxruntime = 356400
 /
 &GRID
@@ -67,15 +67,15 @@
 /
 &COLLISION_PAR
   collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
-  GK_CO      = .f.
-  INTERSPECIES    = .true.
+  gyrokin_CO      = .f.
+  interspecies    = .true.
   !mat_file        = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /
 &INITIAL_CON
   INIT_OPT    = 'phi'
   ACT_ON_MODES       = 'donothing'
-  init_background  = 0
-  init_noiselvl = 0.005
+  init_background  = 1.0
+  init_noiselvl = 0.0
   iseed         = 42
 /
 &TIME_INTEGRATION_PAR
