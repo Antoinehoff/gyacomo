@@ -4,9 +4,9 @@ MODULE utility
 CONTAINS
 
   FUNCTION is_nan(x,str) RESULT(isn)
-    USE basic,            ONLY: cstep, stdout
+    USE basic,            ONLY: cstep
     USE time_integration, ONLY: updatetlevel
-    USE prec_const,       ONLY: dp
+    USE prec_const,       ONLY: dp, stdout
     IMPLICIT NONE
 
     real(dp), INTENT(IN) :: x
@@ -25,8 +25,7 @@ CONTAINS
 
 
   FUNCTION is_inf(x,str) RESULT(isi)
-    USE basic,            ONLY: stdout
-    USE prec_const,       ONLY: dp
+    USE prec_const,       ONLY: dp, stdout
     IMPLICIT NONE
 
     real(dp), INTENT(IN) :: x
@@ -44,15 +43,15 @@ CONTAINS
 
   END FUNCTION is_inf
 
-  FUNCTION checkfield(field,str) RESULT(mlend)
-    USE grid,       ONLY: ikys,ikye,ikxs,ikxe,izgs,izge
+  FUNCTION checkfield(n1,n2,n3,field,str) RESULT(mlend)
     use prec_const, ONLY: dp
     IMPLICIT NONE
     !! BUG found (or feature?)
     ! if one put the commented first line (commented) instead of the second one,
     ! no error will be risen by the compiler even if the rank of the array is not matching (should be 3D!)
     ! COMPLEX(dp), DIMENSION(ikys:ikye,ikxs:ikxe), INTENT(IN) :: field
-    COMPLEX(dp), DIMENSION(ikys:ikye,ikxs:ikxe,izgs:izge), INTENT(IN) :: field
+    INTEGER, INTENT(in) :: n1,n2,n3
+    COMPLEX(dp), DIMENSION(n1,n2,n3), INTENT(IN) :: field
     CHARACTER(LEN=*), INTENT(IN) :: str
     LOGICAL :: mlend
     COMPLEX(dp) :: sumfield

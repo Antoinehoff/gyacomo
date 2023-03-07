@@ -24,41 +24,30 @@ CONTAINS
 
   SUBROUTINE time_integration_readinputs
     ! Read the input parameters
-
     USE prec_const
     USE basic, ONLY : lu_in
     IMPLICIT NONE
-
     NAMELIST /TIME_INTEGRATION_PAR/ numerical_scheme
-
     READ(lu_in,time_integration_par)
-
     CALL set_numerical_scheme
-
   END SUBROUTINE time_integration_readinputs
 
 
-  SUBROUTINE time_integration_outputinputs(fidres, str)
+  SUBROUTINE time_integration_outputinputs(fid)
     ! Write the input parameters to the results_xx.h5 file
-
-    USE prec_const
-    USE futils, ONLY: attach
+    USE futils, ONLY: attach, creatd
     IMPLICIT NONE
-    INTEGER, INTENT(in) :: fidres
-    CHARACTER(len=256), INTENT(in) :: str
-
-    CALL attach(fidres, TRIM(str), "numerical_scheme", numerical_scheme)
-
+    INTEGER, INTENT(in) :: fid
+    CHARACTER(len=256)  :: str
+    WRITE(str,'(a)') '/data/input/time_integration'
+    CALL creatd(fid, 0,(/0/),TRIM(str),'Time Integration Input')
+    CALL attach(fid, TRIM(str), "numerical_scheme", numerical_scheme)
   END SUBROUTINE time_integration_outputinputs
 
-
-
   SUBROUTINE set_numerical_scheme
-    ! Initialize Butcher coefficient of numerical_scheme
-
-    use basic
+    ! Initialize Butcher coefficient of set_numerical_scheme
+    use parallel, ONLY: my_id
     IMPLICIT NONE
-
     SELECT CASE (numerical_scheme)
     ! Order 2 methods
     CASE ('RK2')
@@ -86,7 +75,6 @@ CONTAINS
        IF (my_id .EQ. 0) WRITE(*,*) 'Cannot initialize time integration scheme. Name invalid.'
     END SELECT
     IF (my_id .EQ. 0) WRITE(*,*) " Time integration with ", numerical_scheme
-
   END SUBROUTINE set_numerical_scheme
 
   !!! second order time schemes
@@ -96,9 +84,9 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER,PARAMETER :: nbstep = 2
-    CALL allocate_array_dp1(c_E,1,nbstep)
-    CALL allocate_array_dp1(b_E,1,nbstep)
-    CALL allocate_array_dp2(A_E,1,nbstep,1,nbstep)
+    CALL allocate_array(c_E,1,nbstep)
+    CALL allocate_array(b_E,1,nbstep)
+    CALL allocate_array(A_E,1,nbstep,1,nbstep)
     ntimelevel = 2
     c_E(1) = 0.0_dp
     c_E(2) = 1.0_dp
@@ -118,9 +106,9 @@ CONTAINS
     REAL(dp) :: alpha, beta
     alpha = 1._dp/SQRT(2._dp)
     beta  = SQRT(2._dp) - 1._dp
-    CALL allocate_array_dp1(c_E,1,nbstep)
-    CALL allocate_array_dp1(b_E,1,nbstep)
-    CALL allocate_array_dp2(A_E,1,nbstep,1,nbstep)
+    CALL allocate_array(c_E,1,nbstep)
+    CALL allocate_array(b_E,1,nbstep)
+    CALL allocate_array(A_E,1,nbstep,1,nbstep)
     ntimelevel = 2
     c_E(1)   = 0.0_dp
     c_E(2)   = 1.0_dp/2.0_dp
@@ -139,9 +127,9 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER,PARAMETER :: nbstep = 3
-    CALL allocate_array_dp1(c_E,1,nbstep)
-    CALL allocate_array_dp1(b_E,1,nbstep)
-    CALL allocate_array_dp2(A_E,1,nbstep,1,nbstep)
+    CALL allocate_array(c_E,1,nbstep)
+    CALL allocate_array(b_E,1,nbstep)
+    CALL allocate_array(A_E,1,nbstep,1,nbstep)
     ntimelevel = 3
     c_E(1)   = 0.0_dp
     c_E(2)   = 1.0_dp/2.0_dp
@@ -173,9 +161,9 @@ CONTAINS
     ! w2 = 0.3769892220587804931852815570891834795475_dp ! (6^(2/3)-1-sqrt(9-2*6^(2/3)))/2
     w3 = 1._dp/a1 - w2 * (1._dp + w1)
     ! w3 = 1.3368459739528868457369981115334667265415_dp
-    CALL allocate_array_dp1(c_E,1,nbstep)
-    CALL allocate_array_dp1(b_E,1,nbstep)
-    CALL allocate_array_dp2(A_E,1,nbstep,1,nbstep)
+    CALL allocate_array(c_E,1,nbstep)
+    CALL allocate_array(b_E,1,nbstep)
+    CALL allocate_array(A_E,1,nbstep,1,nbstep)
     ntimelevel = 3
     c_E(1) = 0.0_dp
     c_E(2) = 1.0_dp/2.0_dp
@@ -195,9 +183,9 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER,PARAMETER :: nbstep = 3
-    CALL allocate_array_dp1(c_E,1,nbstep)
-    CALL allocate_array_dp1(b_E,1,nbstep)
-    CALL allocate_array_dp2(A_E,1,nbstep,1,nbstep)
+    CALL allocate_array(c_E,1,nbstep)
+    CALL allocate_array(b_E,1,nbstep)
+    CALL allocate_array(A_E,1,nbstep,1,nbstep)
     ntimelevel = 3
     c_E(1)   = 0._dp
     c_E(2)   = 0.711664700366941_dp
@@ -217,9 +205,9 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER,PARAMETER :: nbstep = 3
-    CALL allocate_array_dp1(c_E,1,nbstep)
-    CALL allocate_array_dp1(b_E,1,nbstep)
-    CALL allocate_array_dp2(A_E,1,nbstep,1,nbstep)
+    CALL allocate_array(c_E,1,nbstep)
+    CALL allocate_array(b_E,1,nbstep)
+    CALL allocate_array(A_E,1,nbstep,1,nbstep)
     ntimelevel = 3
     c_E(1)   = 0._dp
     c_E(2)   = 2._dp*(1._dp - 1._dp/SQRT2)
@@ -238,9 +226,9 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER,PARAMETER :: nbstep = 3
-    CALL allocate_array_dp1(c_E,1,nbstep)
-    CALL allocate_array_dp1(b_E,1,nbstep)
-    CALL allocate_array_dp2(A_E,1,nbstep,1,nbstep)
+    CALL allocate_array(c_E,1,nbstep)
+    CALL allocate_array(b_E,1,nbstep)
+    CALL allocate_array(A_E,1,nbstep,1,nbstep)
     ntimelevel = 3
     c_E(1)   = 0.0_dp
     c_E(2)   = 1.0_dp
@@ -260,9 +248,9 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER,PARAMETER :: nbstep = 4
-    CALL allocate_array_dp1(c_E,1,nbstep)
-    CALL allocate_array_dp1(b_E,1,nbstep)
-    CALL allocate_array_dp2(A_E,1,nbstep,1,nbstep)
+    CALL allocate_array(c_E,1,nbstep)
+    CALL allocate_array(b_E,1,nbstep)
+    CALL allocate_array(A_E,1,nbstep,1,nbstep)
     ntimelevel = 4
     c_E(1)   = 0.0_dp
     c_E(2)   = 1.0_dp/2.0_dp
@@ -285,9 +273,9 @@ CONTAINS
     USE basic
     IMPLICIT NONE
     INTEGER,PARAMETER :: nbstep =7
-    CALL allocate_array_dp1(c_E,1,nbstep)
-    CALL allocate_array_dp1(b_E,1,nbstep)
-    CALL allocate_array_dp2(A_E,1,nbstep,1,nbstep)
+    CALL allocate_array(c_E,1,nbstep)
+    CALL allocate_array(b_E,1,nbstep)
+    CALL allocate_array(A_E,1,nbstep,1,nbstep)
     ntimelevel = 7
     c_E(1) = 0._dp
     c_E(2) = 1.0_dp/5.0_dp

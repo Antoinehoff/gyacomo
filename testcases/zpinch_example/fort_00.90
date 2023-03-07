@@ -67,8 +67,8 @@
 /
 &COLLISION_PAR
   collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
-  gyrokin_CO      = .true.
-  interspecies    = .true.
+  GK_CO      = .true.
+  INTERSPECIES    = .true.
   !mat_file        = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /
 &INITIAL_CON

@@ -9,34 +9,21 @@ subroutine auxval
   use prec_const
   USE numerics
   USE geometry
-  USE parallel, ONLY: init_parallel_var
+  USE parallel, ONLY: init_parallel_var, my_id, num_procs, num_procs_p, num_procs_z, num_procs_ky, rank_p, rank_ky, rank_z
+  USE processing, ONLY: init_process
   IMPLICIT NONE
 
-  INTEGER :: i_
+  INTEGER :: i_, ierr
   IF (my_id .EQ. 0) WRITE(*,*) '=== Set auxiliary values ==='
 
-  IF (LINEARITY .NE. 'linear') THEN
-    IF (my_id .EQ. 0) write(*,*) 'FFTW3 y-grid distribution'
-    CALL init_grid_distr_and_plans(Nx,Ny)
-  ELSE
-    CALL init_1Dgrid_distr
-    IF (my_id .EQ. 0) write(*,*) 'Manual y-grid distribution'
-  ENDIF
   ! Init the grids
-  CALL set_pgrid ! parallel kin (MPI distributed)
-
-  CALL set_jgrid ! perp kin
-
-  CALL set_kxgrid(shear) ! radial modes (MPI distributed by FFTW)
-
-  CALL set_kygrid ! azymuthal modes
-
-  CALL set_zgrid  ! field aligned angle
-  IF ((my_id .EQ. 0) .AND. SG) WRITE(*,*) '--2 staggered z grids--'
+  CALL set_grids(shear,Npol) ! radial modes (MPI distributed by FFTW)
 
   CALL memory ! Allocate memory for global arrays
 
-  CALL init_parallel_var
+  CALL init_parallel_var(local_np,total_np,local_nky,total_nky,local_nz)
+
+  CALL init_process
 
   CALL eval_magnetic_geometry ! precompute coeff for lin equation
 
@@ -64,13 +51,9 @@ subroutine auxval
       WRITE(*,'(A9,I3,A10,I3,A10,I3,A9,I3)')&
        'my_id  = ', my_id, ', rank_p  = ', rank_p, ', rank_ky  = ', rank_ky,', rank_z  = ', rank_z
        WRITE(*,'(A22,I3,A11,I3)')&
-       '              ips_e = ', ips_e, ', ipe_e  = ', ipe_e
+       '              ips = ', ips, ', ipe  = ', ipe
        WRITE(*,'(A22,I3,A11,I3)')&
-       '              ijs_e = ', ijs_e, ', ije_e  = ', ije_e
-       WRITE(*,'(A22,I3,A11,I3)')&
-       '              ips_i = ', ips_i, ', ipe_i  = ', ipe_i
-       WRITE(*,'(A22,I3,A11,I3)')&
-       '              ijs_i = ', ijs_i, ', ije_i  = ', ije_i
+       '              ijs = ', ijs, ', ije  = ', ije
        WRITE(*,'(A22,I3,A11,I3)')&
        '              ikxs  = ', ikxs , ', ikxe   = ', ikxe
        WRITE(*,'(A22,I3,A11,I3)')&
@@ -83,10 +66,7 @@ subroutine auxval
   ENDDO
   CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
-  IF((my_id.EQ.0) .AND. (CLOS .EQ. 1)) THEN
-  IF(KIN_E) &
-  write(*,*) 'Closure = 1 -> Maximal Nepj degree is min(Pmaxe,2*Jmaxe+1): De = ', dmaxi
-  write(*,*) 'Closure = 1 -> Maximal Nipj degree is min(Pmaxi,2*Jmaxi+1): Di = ', dmaxi
-  ENDIF
+  IF((CLOS .EQ. 1)) &
+    CALL speak('Closure = 1 -> Maximal Napj degree is min(Pmax,2*Jmax+1): D = '// str(dmax))
 
 END SUBROUTINE auxval

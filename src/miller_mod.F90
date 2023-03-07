@@ -4,8 +4,9 @@
 MODULE miller
   USE prec_const
   USE basic
+  USE parallel, ONLY: my_id, num_procs_z, nbr_U, nbr_D, comm0
   ! use coordinates,only: gcoor, get_dzprimedz
-  USE grid
+  USE grid, ONLY: local_Nky, local_Nkx, local_Nz, Ngz, kyarray, kxarray, zarray, Nz, local_nz_offset
   ! use discretization
   USE lagrange_interpolation
   ! use par_in, only: beta, sign_Ip_CW, sign_Bt_CW, Npol
@@ -22,7 +23,7 @@ MODULE miller
   real(dp) :: rho, kappa, delta, s_kappa, s_delta, drR, drZ, zeta, s_zeta
   real(dp) :: thetaShift
   real(dp) :: thetak, thetad
-
+  INTEGER  :: ierr
 CONTAINS
 
   !>Set defaults for miller parameters
@@ -44,7 +45,7 @@ CONTAINS
   end subroutine set_miller_parameters
 
   !>Get Miller metric, magnetic field, jacobian etc.
-  subroutine get_miller(trpeps,major_R,major_Z,q0,shat,amhd,edge_opt,&
+  subroutine get_miller(trpeps,major_R,major_Z,q0,shat,Npol,amhd,edge_opt,&
        C_y,C_xy,dpdx_pm_geom,gxx_,gyy_,gzz_,gxy_,gxz_,gyz_,dBdx_,dBdy_,&
        Bfield_,jacobian_,dBdz_,R_hat_,Z_hat_,dxdR_,dxdZ_,Ckxky_,gradz_coeff_)
     !!!!!!!!!!!!!!!! GYACOMO INTERFACE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -53,17 +54,18 @@ CONTAINS
     real(dp), INTENT(INOUT) :: major_Z         ! major Z
     real(dp), INTENT(INOUT) :: q0              ! safetyfactor
     real(dp), INTENT(INOUT) :: shat            ! safetyfactor
+    INTEGER,  INTENT(IN)    :: Npol            ! number of poloidal turns
     real(dp), INTENT(INOUT) :: amhd            ! alpha mhd
     real(dp), INTENT(INOUT) :: edge_opt        ! alpha mhd
     real(dp), INTENT(INOUT) :: dpdx_pm_geom    ! amplitude mag. eq. pressure grad.
     real(dp), INTENT(INOUT) :: C_y, C_xy
-
-    real(dp), dimension(izgs:izge,0:1), INTENT(INOUT) :: &
+    real(dp), dimension(1:local_Nz+Ngz,1:2), INTENT(INOUT) :: &
                                               gxx_,gyy_,gzz_,gxy_,gxz_,gyz_,&
                                               dBdx_,dBdy_,Bfield_,jacobian_,&
                                               dBdz_,R_hat_,Z_hat_,dxdR_,dxdZ_, &
                                               gradz_coeff_
-    real(dp), dimension(ikys:ikye,ikxs:ikxe,izgs:izge,0:1), INTENT(INOUT) :: Ckxky_
+    real(dp), dimension(1:local_Nky,1:local_Nkx,1:local_Nz+Ngz,1:2), INTENT(INOUT) :: Ckxky_
+    INTEGER :: iz, ikx, iky, eo
     ! No parameter in gyacomo yet
     real(dp) :: sign_Ip_CW=1 ! current sign (only normal current)
     real(dp) :: sign_Bt_CW=1 ! current sign (only normal current)
@@ -438,7 +440,7 @@ CONTAINS
        !new parallel coordinate chi_out==zprime
        !see also tracer_aux.F90
        if (Npol>1) ERROR STOP '>> ERROR << Npol>1 has not been implemented for edge_opt=\=0.0'
-       do k=izs,ize
+       do k=1,Nz
           chi_out(k)=sinh((-pi+k*2.*pi/Nz)*log(edge_opt*pi+sqrt(edge_opt**2*pi**2+1))/pi)/edge_opt
        enddo
        !transform metrics according to chain rule
@@ -473,24 +475,25 @@ CONTAINS
     call lag3interp(Z_s,chi_s,np_s,Z_out,chi_out,Nz)
     call lag3interp(dxdR_s,chi_s,np_s,dxdR_out,chi_out,Nz)
     call lag3interp(dxdZ_s,chi_s,np_s,dxdZ_out,chi_out,Nz)
-    ! Fill the geom arrays with the results
-    do eo=0,1
-    gxx_(izs:ize,eo)      =gxx_out(izs:ize)
-    gyy_(izs:ize,eo)      =gyy_out(izs:ize)
-    gxz_(izs:ize,eo)      =gxz_out(izs:ize)
-    gyz_(izs:ize,eo)      =gyz_out(izs:ize)
-    dBdx_(izs:ize,eo)     =dBdx_out(izs:ize)
-    dBdy_(izs:ize,eo)     =0.
-    gxy_(izs:ize,eo)      =gxy_out(izs:ize)
-    gzz_(izs:ize,eo)      =gzz_out(izs:ize)
-    Bfield_(izs:ize,eo)   =Bfield_out(izs:ize)
-    jacobian_(izs:ize,eo) =jacobian_out(izs:ize)
-    dBdz_(izs:ize,eo)     =dBdz_out(izs:ize)
-    R_hat_(izs:ize,eo)    =R_out(izs:ize)
-    Z_hat_(izs:ize,eo)    =Z_out(izs:ize)
-    dxdR_(izs:ize,eo)     = dxdR_out(izs:ize)
-    dxdZ_(izs:ize,eo)     = dxdZ_out(izs:ize)
-
+    ! Fill the interior of the geom arrays with the results
+    do eo=1,2
+      DO iz = 1,local_Nz
+        gxx_(iz+Ngz/2,eo)      = gxx_out(iz-local_nz_offset)
+        gyy_(iz+Ngz/2,eo)      = gyy_out(iz-local_nz_offset)
+        gxz_(iz+Ngz/2,eo)      = gxz_out(iz-local_nz_offset)
+        gyz_(iz+Ngz/2,eo)      = gyz_out(iz-local_nz_offset)
+        dBdx_(iz+Ngz/2,eo)     = dBdx_out(iz-local_nz_offset)
+        dBdy_(iz+Ngz/2,eo)     = 0.
+        gxy_(iz+Ngz/2,eo)      = gxy_out(iz-local_nz_offset)
+        gzz_(iz+Ngz/2,eo)      = gzz_out(iz-local_nz_offset)
+        Bfield_(iz+Ngz/2,eo)   = Bfield_out(iz-local_nz_offset)
+        jacobian_(iz+Ngz/2,eo) = jacobian_out(iz-local_nz_offset)
+        dBdz_(iz+Ngz/2,eo)     = dBdz_out(iz-local_nz_offset)
+        R_hat_(iz+Ngz/2,eo)    = R_out(iz-local_nz_offset)
+        Z_hat_(iz+Ngz/2,eo)    = Z_out(iz-local_nz_offset)
+        dxdR_(iz+Ngz/2,eo)     = dxdR_out(iz-local_nz_offset)
+        dxdZ_(iz+Ngz/2,eo)     = dxdZ_out(iz-local_nz_offset)
+      ENDDO
     !! UPDATE GHOSTS VALUES (since the miller function in GENE does not)
     CALL update_ghosts_z(gxx_(:,eo))
     CALL update_ghosts_z(gyy_(:,eo))
@@ -508,16 +511,16 @@ CONTAINS
     CALL update_ghosts_z(dxdZ_(:,eo))
 
     ! Curvature operator (Frei et al. 2022 eq 2.15)
-    DO iz = izgs,izge
+    DO iz = 1,local_Nz+Ngz
       G1 = gxy_(iz,eo)*gxy_(iz,eo)-gxx_(iz,eo)*gyy_(iz,eo)
       G2 = gxy_(iz,eo)*gxz_(iz,eo)-gxx_(iz,eo)*gyz_(iz,eo)
       G3 = gyy_(iz,eo)*gxz_(iz,eo)-gxy_(iz,eo)*gyz_(iz,eo)
       Cx = (G1*dBdy_(iz,eo) + G2*dBdz_(iz,eo))/Bfield_(iz,eo)
       Cy = (G3*dBdz_(iz,eo) - G1*dBdx_(iz,eo))/Bfield_(iz,eo)
 
-      DO iky = ikys, ikye
+      DO iky = 1,local_Nky
         ky = kyarray(iky)
-         DO ikx= ikxs, ikxe
+         DO ikx= 1,local_Nkx
            kx = kxarray(ikx)
            Ckxky_(iky, ikx, iz,eo) = (Cx*kx + Cy*ky)
          ENDDO
@@ -533,41 +536,42 @@ CONTAINS
     SUBROUTINE update_ghosts_z(fz_)
       IMPLICIT NONE
       ! INTEGER,  INTENT(IN) :: nztot_
-      REAL(dp), DIMENSION(izgs:izge), INTENT(INOUT) :: fz_
+      REAL(dp), DIMENSION(1:local_Nz+Ngz), INTENT(INOUT) :: fz_
       REAL(dp), DIMENSION(-2:2) :: buff
-      INTEGER :: status(MPI_STATUS_SIZE), count
-
+      INTEGER :: status(MPI_STATUS_SIZE), count, last, first
+      last = local_Nz+Ngz/2
+      first= 1 + Ngz/2
       IF(Nz .GT. 1) THEN
         IF (num_procs_z .GT. 1) THEN
           CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
             count = 1 ! one point to exchange
             !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
-            CALL mpi_sendrecv(fz_(ize), count, MPI_DOUBLE, nbr_U, 0, & ! Send to Up the last
-                              buff(-1), count, MPI_DOUBLE, nbr_D, 0, & ! Receive from Down the first-1
+            CALL mpi_sendrecv(fz_(last), count, MPI_DOUBLE, nbr_U, 0, & ! Send to Up the last
+                               buff(-1), count, MPI_DOUBLE, nbr_D, 0, & ! Receive from Down the first-1
                               comm0, status, ierr)
 
-            CALL mpi_sendrecv(fz_(ize-1), count, MPI_DOUBLE, nbr_U, 0, & ! Send to Up the last
-                                buff(-2), count, MPI_DOUBLE, nbr_D, 0, & ! Receive from Down the first-2
+            CALL mpi_sendrecv(fz_(last-1), count, MPI_DOUBLE, nbr_U, 0, & ! Send to Up the last
+                                 buff(-2), count, MPI_DOUBLE, nbr_D, 0, & ! Receive from Down the first-2
                               comm0, status, ierr)
 
             !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
-            CALL mpi_sendrecv(fz_(izs), count, MPI_DOUBLE, nbr_D, 0, & ! Send to Down the first
-                              buff(+1), count, MPI_DOUBLE, nbr_U, 0, & ! Recieve from Up the last+1
+            CALL mpi_sendrecv(fz_(first), count, MPI_DOUBLE, nbr_D, 0, & ! Send to Down the first
+                                buff(+1), count, MPI_DOUBLE, nbr_U, 0, & ! Recieve from Up the last+1
                               comm0, status, ierr)
 
-            CALL mpi_sendrecv(fz_(izs+1), count, MPI_DOUBLE, nbr_D, 0, & ! Send to Down the first
-                                buff(+2), count, MPI_DOUBLE, nbr_U, 0, & ! Recieve from Up the last+2
+            CALL mpi_sendrecv(fz_(first+1), count, MPI_DOUBLE, nbr_D, 0, & ! Send to Down the first
+                                  buff(+2), count, MPI_DOUBLE, nbr_U, 0, & ! Recieve from Up the last+2
                               comm0, status, ierr)
          ELSE
-           buff(-1) = fz_(ize  )
-           buff(-2) = fz_(ize-1)
-           buff(+1) = fz_(izs  )
-           buff(+2) = fz_(izs+1)
+           buff(-1) = fz_(last  )
+           buff(-2) = fz_(last-1)
+           buff(+1) = fz_(first  )
+           buff(+2) = fz_(first+1)
          ENDIF
-         fz_(ize+1) = buff(+1)
-         fz_(ize+2) = buff(+2)
-         fz_(izs-1) = buff(-1)
-         fz_(izs-2) = buff(-2)
+         fz_(last +1) = buff(+1)
+         fz_(last +2) = buff(+2)
+         fz_(first-1) = buff(-1)
+         fz_(first-2) = buff(-2)
       ENDIF
     END SUBROUTINE update_ghosts_z
 

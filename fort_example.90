@@ -74,8 +74,8 @@
 /
 &COLLISION_PAR
   collision_model = 'DG'          !collision model (DG,SG,LD,LR), all need a matrix except DG
-  gyrokin_CO      = .f.           !activate gyrokinetic terms in the CO
-  interspecies    = .t.           !activate interspecies if CO has some
+  GK_CO      = .f.           !activate gyrokinetic terms in the CO
+  INTERSPECIES    = .t.           !activate INTERSPECIES if CO has some
   mat_file        = 'LDGK_P10_J5_dk_5e-2_km_5_NFLR_30.h5' !path to find the collision matrix
   collision_kcut  = 1.8           !maximal wavelength of the CO matrix. For higher kperp, the matrix at collision_kcut will be applied.
 /

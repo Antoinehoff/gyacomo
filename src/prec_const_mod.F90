@@ -6,7 +6,6 @@ MODULE prec_const
                                            stdin=>input_unit, &
                                            stdout=>output_unit, &
                                            stderr=>error_unit
-
   ! Precision for real and complex
   INTEGER, PARAMETER :: sp = REAL32 !Single precision, should not be used
   INTEGER, PARAMETER :: dp = REAL64 !real(dp), enforced through the code

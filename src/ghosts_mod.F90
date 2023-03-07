@@ -1,9 +1,6 @@
 module ghosts
-USE basic
-USE grid
-USE time_integration
-USE model, ONLY : KIN_E, beta
-USE geometry, ONLY : SHEARED, ikx_zBC_L, ikx_zBC_R, pb_phase_L, pb_phase_R
+USE mpi
+USE prec_const, ONLY: dp
 IMPLICIT NONE
 
 INTEGER :: status(MPI_STATUS_SIZE), source, dest, count, ipg
@@ -13,33 +10,33 @@ PUBLIC :: update_ghosts_moments, update_ghosts_EM
 CONTAINS
 
 SUBROUTINE update_ghosts_moments
+  USE grid,     ONLY: total_nz
+  USE parallel, ONLY: num_procs_p
+  USE basic,    ONLY: t0_ghost,t1_ghost,tc_ghost
+  IMPLICIT NONE
   CALL cpu_time(t0_ghost)
-
   IF (num_procs_p .GT. 1) THEN ! Do it only if we share the p
-      IF(KIN_E)&
-      CALL update_ghosts_p_e
-      CALL update_ghosts_p_i
+    CALL update_ghosts_p_mom
   ENDIF
-
-  IF(Nz .GT. 1) THEN
-    IF(KIN_E) &
-    CALL update_ghosts_z_e
-    CALL update_ghosts_z_i
+  IF(total_nz .GT. 1) THEN
+    CALL update_ghosts_z_mom
   ENDIF
-
   CALL cpu_time(t1_ghost)
   tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
 END SUBROUTINE update_ghosts_moments
 
 SUBROUTINE update_ghosts_EM
+  USE model,  ONLY :  beta
+  USE grid,   ONLY: total_nz
+  USE fields, ONLY: phi, psi
+  USE basic,  ONLY: t0_ghost,t1_ghost,tc_ghost
+  IMPLICIT NONE
   CALL cpu_time(t0_ghost)
-
-  IF(Nz .GT. 1) THEN
-    CALL update_ghosts_z_phi
+  IF(total_nz .GT. 1) THEN
+    CALL update_ghosts_z_3D(phi)
     IF(beta .GT. 0._dp) &
-      CALL update_ghosts_z_psi
+      CALL update_ghosts_z_3D(psi)
   ENDIF
-
   CALL cpu_time(t1_ghost)
   tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
 END SUBROUTINE update_ghosts_EM
@@ -57,59 +54,32 @@ END SUBROUTINE update_ghosts_EM
 !proc 3:                        [11 12|13 14 15 16|17 18]
 !                                                   ^  ^
 !Closure by zero truncation :                       0  0
-SUBROUTINE update_ghosts_p_e
-    USE fields, ONLY : moments_e
-    IMPLICIT NONE
-
-    count = (ijge_e-ijgs_e+1)*(ikye-ikys+1)*(ikxe-ikxs+1)*(izge-izgs+1)
-
-    !!!!!!!!!!! Send ghost to right neighbour !!!!!!!!!!!!!!!!!!!!!!
-    ! Send the last local moment to fill the -1 neighbour ghost
-    CALL mpi_sendrecv(moments_e(ipe_e  ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 10, & ! Send to right
-                      moments_e(ips_e-1,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 10, & ! Recieve from left
-                      comm0, status, ierr)
-    IF (deltape .EQ. 1) & ! If we have odd Hermite degrees we need a 2nd order stencil
-    CALL mpi_sendrecv(moments_e(ipe_e-1,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 11, & ! Send to right
-                      moments_e(ips_e-2,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 11, & ! Recieve from left
-                      comm0, status, ierr)
-
-    !!!!!!!!!!! Send ghost to left neighbour !!!!!!!!!!!!!!!!!!!!!!
-    CALL mpi_sendrecv(moments_e(ips_e  ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 12, & ! Send to left
-                      moments_e(ipe_e+1,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 12, & ! Recieve from right
-                      comm0, status, ierr)
-    IF (deltape .EQ. 1) & ! If we have odd Hermite degrees we need a 2nd order stencil
-    CALL mpi_sendrecv(moments_e(ips_e+1,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 13, & ! Send to left
-                      moments_e(ipe_e+2,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 13, & ! Recieve from right
-                      comm0, status, ierr)
-
-END SUBROUTINE update_ghosts_p_e
 
 !Communicate p+1, p+2 moments to left neighboor and p-1, p-2 moments to right one
-SUBROUTINE update_ghosts_p_i
-  USE fields, ONLY : moments_i
-    IMPLICIT NONE
-
-    count = (ijge_i-ijgs_i+1)*(ikye-ikys+1)*(ikxe-ikxs+1)*(izge-izgs+1) ! Number of elements sent
-
-    !!!!!!!!!!! Send ghost to right neighbour !!!!!!!!!!!!!!!!!!!!!!
-    CALL mpi_sendrecv(moments_i(ipe_i  ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 14, &
-                      moments_i(ips_i-1,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 14, &
+SUBROUTINE update_ghosts_p_mom
+  USE time_integration, ONLY: updatetlevel
+  USE fields,   ONLY: moments
+  USE parallel, ONLY: nbr_R,nbr_L,comm0
+  USE grid,     ONLY: local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
+                              ngp,ngj,ngz
+  IMPLICIT NONE
+  INTEGER :: ierr, first, last, ig
+  first = 1 + ngp/2
+  last  = local_np + ngp/2
+  count = local_na*(local_nj+ngj)*local_nky*local_nkx*(local_nz+ngz) ! Number of elements to send
+  !!!!!!!!!!! Send ghost to right neighbour !!!!!!!!!!!!!!!!!!!!!!
+  DO ig = 1,ngp/2
+    CALL mpi_sendrecv(moments(:,last-(ig-1),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 14+ig, &
+                      moments(:,first-ig   ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 14+ig, &
                       comm0, status, ierr)
-    IF (deltapi .EQ. 1) & ! If we have odd Hermite degrees we need a 2nd order stencil
-    CALL mpi_sendrecv(moments_i(ipe_i-1,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 15, &
-                      moments_i(ips_i-2,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 15, &
-                      comm0, status, ierr)
-
-    !!!!!!!!!!! Send ghost to left neighbour !!!!!!!!!!!!!!!!!!!!!!
-    CALL mpi_sendrecv(moments_i(ips_i  ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 16, &
-                      moments_i(ipe_i+1,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 16, &
-                      comm0, status, ierr)
-    IF (deltapi .EQ. 1) & ! If we have odd Hermite degrees we need a 2nd order stencil
-    CALL mpi_sendrecv(moments_i(ips_i+1,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 17, &
-                      moments_i(ipe_i+2,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 17, &
-                      comm0, status, ierr)
-
-END SUBROUTINE update_ghosts_p_i
+  ENDDO
+  !!!!!!!!!!! Send ghost to left neighbour !!!!!!!!!!!!!!!!!!!!!!
+  DO ig = 1,ngp/2
+  CALL mpi_sendrecv(moments(:,first+(ig-1),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 16+ig, &
+                    moments(:,last + ig   ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 16+ig, &
+                    comm0, status, ierr)
+  ENDDO
+END SUBROUTINE update_ghosts_p_mom
 
 !Communicate z+1, z+2 moments to left neighboor and z-1, z-2 moments to right one
 ! [a b|C D|e f] : proc n has moments a to f where a,b,e,f are ghosts
@@ -123,245 +93,130 @@ END SUBROUTINE update_ghosts_p_i
 !proc 3:                        [11 12|13 14 15 16|17 18]
 !                                                   ^  ^
 !Periodic:                                          0  1
-SUBROUTINE update_ghosts_z_e
-  USE parallel, ONLY : buff_pjxy_zBC_e
-  USE fields, ONLY : moments_e
-  IMPLICIT NONE
-  INTEGER :: ikxBC_L, ikxBC_R
-  IF(Nz .GT. 1) THEN
-    IF (num_procs_z .GT. 1) THEN
-      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
-      count = (ipge_e-ipgs_e+1)*(ijge_e-ijgs_e+1)*(ikye-ikys+1)*(ikxe-ikxs+1)
 
+SUBROUTINE update_ghosts_z_mom
+  USE geometry,         ONLY: ikx_zBC_L, ikx_zBC_R, pb_phase_L, pb_phase_R
+  USE time_integration, ONLY: updatetlevel
+  USE parallel, ONLY: comm0,nbr_U,nbr_D,num_procs_z
+  USE fields,   ONLY: moments
+  USE grid,     ONLY: local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
+                      ngp,ngj,ngz
+  IMPLICIT NONE
+  !! buffer for data exchanges
+  COMPLEX(dp),DIMENSION(local_na,local_np+ngp,local_nj+ngj,local_nky,local_nkx,-Ngz/2:Ngz/2) :: buff_pjxy_zBC
+  INTEGER :: ikxBC_L, ikxBC_R, ikx, iky, first, last, ig, ierr
+  first = 1 + ngz/2
+  last  = local_nz + ngz/2
+  count = local_na*(local_np+ngp)*(local_nj+ngj)*local_nky*local_nkx
+  IF (num_procs_z .GT. 1) THEN
+    CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+    !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
+    ! Send the last local moment to fill the -1 neighbour ghost
+    DO ig=1,ngz
+      CALL mpi_sendrecv(moments(:,:,:,:,:,last-(ig-1),updatetlevel),count,MPI_DOUBLE_COMPLEX,nbr_U,24+ig, & ! Send to Up the last
+                                       buff_pjxy_zBC(:,:,:,:,:,-ig),count,MPI_DOUBLE_COMPLEX,nbr_D,24+ig, & ! Recieve from Down the first-1
+                        comm0, status, ierr)
+    ENDDO
+    !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
+    DO ig=1,ngz
+      CALL mpi_sendrecv(moments(:,:,:,:,:,first+(ig-1),updatetlevel),count,MPI_DOUBLE_COMPLEX,nbr_D,26+ig, & ! Send to Up the last
+                                         buff_pjxy_zBC(:,:,:,:,:,ig),count,MPI_DOUBLE_COMPLEX,nbr_U,26+ig, & ! Recieve from Down the first-1
+                        comm0, status, ierr)
+    ENDDO
+  ELSE !No parallel (just copy)
+    DO ig=1,ngz
+      buff_pjxy_zBC(:,:,:,:,:,-ig) = moments(:,:,:,:,:, last-(ig-1),updatetlevel)
+      buff_pjxy_zBC(:,:,:,:,:, ig) = moments(:,:,:,:,:,first+(ig-1),updatetlevel)
+    ENDDO
+  ENDIF
+  DO iky = 1,local_nky
+    DO ikx = 1,local_nkx
+      ikxBC_L = ikx_zBC_L(iky,ikx);
+      ! Exchanging the modes that have a periodic pair (from sheared BC)
+      IF (ikxBC_L .NE. -99) THEN
+        ! Fill the lower ghosts cells with the buffer value (upper cells from LEFT process)
+        DO ig=1,ngz
+          moments(:,:,:,iky,ikx,first-ig,updatetlevel) = pb_phase_L(iky)*buff_pjxy_zBC(:,:,:,iky,ikxBC_L,-ig)
+        ENDDO
+      ELSE
+        DO ig=1,ngz
+          moments(:,:,:,iky,ikx,first-ig,updatetlevel) = 0._dp
+        ENDDO
+      ENDIF
+      ikxBC_R = ikx_zBC_R(iky,ikx);
+      ! Exchanging the modes that have a periodic pair (from sheared BC)
+      IF (ikxBC_R .NE. -99) THEN
+        ! Fill the upper ghosts cells with the buffer value (lower cells from RIGHT process)
+        DO ig=1,ngz
+          moments(:,:,:,iky,ikx,last+ig,updatetlevel) = pb_phase_R(iky)*buff_pjxy_zBC(:,:,:,iky,ikxBC_R,ig)
+        ENDDO
+      ELSE
+        DO ig=1,ngz
+          moments(:,:,:,iky,ikx,last+ig,updatetlevel) = 0._dp
+        ENDDO
+      ENDIF
+    ENDDO
+  ENDDO
+END SUBROUTINE update_ghosts_z_mom
+
+SUBROUTINE update_ghosts_z_3D(field)
+  USE geometry, ONLY: ikx_zBC_L, ikx_zBC_R, pb_phase_L, pb_phase_R
+  USE parallel, ONLY: nbr_U,nbr_D,comm0,num_procs_z
+  USE grid,     ONLY: local_nky,local_nkx,local_nz,ngz
+  IMPLICIT NONE
+  !! buffer for data exchanges
+  COMPLEX(dp),DIMENSION(local_nky,local_nkx,-ngz/2:ngz/2) :: buff_xy_zBC
+  COMPLEX(dp), INTENT(INOUT) :: field(local_nky,local_nkx,local_nz+ngz)
+  INTEGER :: ikxBC_L, ikxBC_R, ikx, iky, first, last, ig, ierr
+  first = 1 + ngz/2
+  last  = local_nz + ngz/2
+  count = local_nky * local_nkx
+  IF (num_procs_z .GT. 1) THEN
+    CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
       !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
-      ! Send the last local moment to fill the -1 neighbour ghost
-      CALL mpi_sendrecv(moments_e(:,:,:,:,ize  ,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 20, & ! Send to Up the last
-                                  buff_pjxy_zBC_e(:,:,:,:,-1), count, MPI_DOUBLE_COMPLEX, nbr_D, 20, & ! Recieve from Down the first-1
+      DO ig = 1,ngz
+      CALL mpi_sendrecv(     field(:,:,last-(ig-1)), count, MPI_DOUBLE_COMPLEX, nbr_U, 30+ig, & ! Send to Up the last
+                       buff_xy_zBC(:,:,-ig),         count, MPI_DOUBLE_COMPLEX, nbr_D, 30+ig, & ! Receive from Down the first-1
                         comm0, status, ierr)
-      CALL mpi_sendrecv(moments_e(:,:,:,:,ize-1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 21, & ! Send to Up the last
-                                  buff_pjxy_zBC_e(:,:,:,:,-2), count, MPI_DOUBLE_COMPLEX, nbr_D, 21, & ! Recieve from Down the first-1
-                        comm0, status, ierr)
+      ENDDO
       !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
-      CALL mpi_sendrecv(moments_e(:,:,:,:,izs  ,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 22, & ! Send to Up the last
-                                  buff_pjxy_zBC_e(:,:,:,:,+1), count, MPI_DOUBLE_COMPLEX, nbr_U, 22, & ! Recieve from Down the first-1
+      DO ig = 1,ngz
+      CALL mpi_sendrecv(     field(:,:,first+(ig-1)), count, MPI_DOUBLE_COMPLEX, nbr_D, 32+ig, & ! Send to Down the first
+                       buff_xy_zBC(:,:,ig),           count, MPI_DOUBLE_COMPLEX, nbr_U, 32+ig, & ! Recieve from Up the last+1
                         comm0, status, ierr)
-      CALL mpi_sendrecv(moments_e(:,:,:,:,izs+1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 23, & ! Send to Up the last
-                                  buff_pjxy_zBC_e(:,:,:,:,+2), count, MPI_DOUBLE_COMPLEX, nbr_U, 23, & ! Recieve from Down the first-1
-                        comm0, status, ierr)
-    ELSE !No parallel (copy)
-      buff_pjxy_zBC_e(:,:,:,:,-1) = moments_e(:,:,:,:,ize  ,updatetlevel)
-      buff_pjxy_zBC_e(:,:,:,:,-2) = moments_e(:,:,:,:,ize-1,updatetlevel)
-      buff_pjxy_zBC_e(:,:,:,:,+1) = moments_e(:,:,:,:,izs  ,updatetlevel)
-      buff_pjxy_zBC_e(:,:,:,:,+2) = moments_e(:,:,:,:,izs+1,updatetlevel)
-    ENDIF
-    DO iky = ikys,ikye
-      DO ikx = ikxs,ikxe
-        ikxBC_L = ikx_zBC_L(iky,ikx);
-        IF (ikxBC_L .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
-          ! first-1 gets last
-          moments_e(:,:,iky,ikx,izs-1,updatetlevel) = pb_phase_L(iky)*buff_pjxy_zBC_e(:,:,iky,ikxBC_L,-1)
-          ! first-2 gets last-1
-          moments_e(:,:,iky,ikx,izs-2,updatetlevel) = pb_phase_L(iky)*buff_pjxy_zBC_e(:,:,iky,ikxBC_L,-2)
-        ELSE
-          moments_e(:,:,iky,ikx,izs-1,updatetlevel) = 0._dp
-          moments_e(:,:,iky,ikx,izs-2,updatetlevel) = 0._dp
-        ENDIF
-        ikxBC_R = ikx_zBC_R(iky,ikx);
-        IF (ikxBC_R .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
-          ! last+1 gets first
-          moments_e(:,:,iky,ikx,ize+1,updatetlevel) = pb_phase_R(iky)*buff_pjxy_zBC_e(:,:,iky,ikxBC_R,+1)
-          ! last+2 gets first+1
-          moments_e(:,:,iky,ikx,ize+2,updatetlevel) = pb_phase_R(iky)*buff_pjxy_zBC_e(:,:,iky,ikxBC_R,+2)
-        ELSE
-          moments_e(:,:,iky,ikx,ize+1,updatetlevel) = 0._dp
-          moments_e(:,:,iky,ikx,ize+2,updatetlevel) = 0._dp
-        ENDIF
       ENDDO
+   ELSE
+     ! no parallelization so just copy last cell into first ghosts and vice versa
+     DO ig = 1,ngz
+       buff_xy_zBC(:,:,-ig) = field(:,:,last-(ig-1))
+       buff_xy_zBC(:,:, ig) = field(:,:,first+(ig-1))
+     ENDDO
+   ENDIF
+  DO iky = 1,local_nky
+    DO ikx = 1,local_nkx
+      ikxBC_L = ikx_zBC_L(iky,ikx);
+      IF (ikxBC_L .GT. 0) THEN ! Exchanging the modes that have a periodic pair (a)
+        DO ig = 1,ngz
+          field(iky,ikx,first-ig) = pb_phase_L(iky)*buff_xy_zBC(iky,ikxBC_L,-ig)
+        ENDDO
+      ELSE
+        DO ig = 1,ngz
+          field(iky,ikx,first-ig) = 0._dp
+        ENDDO
+      ENDIF
+      ikxBC_R = ikx_zBC_R(iky,ikx);
+      IF (ikxBC_R .GT. 0) THEN ! Exchanging the modes that have a periodic pair (a)
+        ! last+1 gets first
+        DO ig = 1,ngz
+          field(iky,ikx,last+ig) = pb_phase_R(iky)*buff_xy_zBC(iky,ikxBC_R,ig)
+        ENDDO
+      ELSE
+        DO ig = 1,ngz
+          field(iky,ikx,last+ig) = 0._dp
+        ENDDO
+      ENDIF
     ENDDO
-  ENDIF
-END SUBROUTINE update_ghosts_z_e
-
-SUBROUTINE update_ghosts_z_i
-  USE parallel, ONLY : buff_pjxy_zBC_i
-  USE fields, ONLY : moments_i
-  IMPLICIT NONE
-  INTEGER :: ikxBC_L, ikxBC_R
-  IF(Nz .GT. 1) THEN
-    IF (num_procs_z .GT. 1) THEN
-      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
-      count = (ipge_i-ipgs_i+1)*(ijge_i-ijgs_i+1)*(ikye-ikys+1)*(ikxe-ikxs+1)
-
-      !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
-      ! Send the last local moment to fill the -1 neighbour ghost
-      CALL mpi_sendrecv(moments_i(:,:,:,:,ize  ,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 24, & ! Send to Up the last
-                                  buff_pjxy_zBC_i(:,:,:,:,-1), count, MPI_DOUBLE_COMPLEX, nbr_D, 24, & ! Recieve from Down the first-1
-                        comm0, status, ierr)
-      CALL mpi_sendrecv(moments_i(:,:,:,:,ize-1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_U, 25, & ! Send to Up the last
-                                  buff_pjxy_zBC_i(:,:,:,:,-2), count, MPI_DOUBLE_COMPLEX, nbr_D, 25, & ! Recieve from Down the first-1
-                        comm0, status, ierr)
-      !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
-      CALL mpi_sendrecv(moments_i(:,:,:,:,izs  ,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 26, & ! Send to Up the last
-                                  buff_pjxy_zBC_i(:,:,:,:,+1), count, MPI_DOUBLE_COMPLEX, nbr_U, 26, & ! Recieve from Down the first-1
-                        comm0, status, ierr)
-      CALL mpi_sendrecv(moments_i(:,:,:,:,izs+1,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_D, 27, & ! Send to Up the last
-                                  buff_pjxy_zBC_i(:,:,:,:,+2), count, MPI_DOUBLE_COMPLEX, nbr_U, 27, & ! Recieve from Down the first-1
-                        comm0, status, ierr)
-    ELSE !No parallel (copy)
-      buff_pjxy_zBC_i(:,:,:,:,-1) = moments_i(:,:,:,:,ize  ,updatetlevel)
-      buff_pjxy_zBC_i(:,:,:,:,-2) = moments_i(:,:,:,:,ize-1,updatetlevel)
-      buff_pjxy_zBC_i(:,:,:,:,+1) = moments_i(:,:,:,:,izs  ,updatetlevel)
-      buff_pjxy_zBC_i(:,:,:,:,+2) = moments_i(:,:,:,:,izs+1,updatetlevel)
-    ENDIF
-    DO iky = ikys,ikye
-      DO ikx = ikxs,ikxe
-        ikxBC_L = ikx_zBC_L(iky,ikx);
-        IF (ikxBC_L .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
-          ! first-1 gets last
-          moments_i(:,:,iky,ikx,izs-1,updatetlevel) = pb_phase_L(iky)*buff_pjxy_zBC_i(:,:,iky,ikxBC_L,-1)
-          ! first-2 gets last-1
-          moments_i(:,:,iky,ikx,izs-2,updatetlevel) = pb_phase_L(iky)*buff_pjxy_zBC_i(:,:,iky,ikxBC_L,-2)
-        ELSE
-          moments_i(:,:,iky,ikx,izs-1,updatetlevel) = 0._dp
-          moments_i(:,:,iky,ikx,izs-2,updatetlevel) = 0._dp
-        ENDIF
-        ikxBC_R = ikx_zBC_R(iky,ikx);
-        IF (ikxBC_R .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
-          ! last+1 gets first
-          moments_i(:,:,iky,ikx,ize+1,updatetlevel) = pb_phase_R(iky)*buff_pjxy_zBC_i(:,:,iky,ikxBC_R,+1)
-          ! last+2 gets first+1
-          moments_i(:,:,iky,ikx,ize+2,updatetlevel) = pb_phase_R(iky)*buff_pjxy_zBC_i(:,:,iky,ikxBC_R,+2)
-        ELSE
-          moments_i(:,:,iky,ikx,ize+1,updatetlevel) = 0._dp
-          moments_i(:,:,iky,ikx,ize+2,updatetlevel) = 0._dp
-        ENDIF
-      ENDDO
-    ENDDO
-  ENDIF
-END SUBROUTINE update_ghosts_z_i
-
-SUBROUTINE update_ghosts_z_phi
-  USE parallel, ONLY : buff_xy_zBC
-  USE fields,   ONLY : phi
-  IMPLICIT NONE
-  INTEGER :: ikxBC_L, ikxBC_R
-  CALL cpu_time(t1_ghost)
-  IF(Nz .GT. 1) THEN
-    IF (num_procs_z .GT. 1) THEN
-      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        count = (ikye-ikys+1) * (ikxe-ikxs+1)
-        !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
-        CALL mpi_sendrecv(     phi(:,:,ize  ), count, MPI_DOUBLE_COMPLEX, nbr_U, 30, & ! Send to Up the last
-                          buff_xy_zBC(:,:,-1), count, MPI_DOUBLE_COMPLEX, nbr_D, 30, & ! Receive from Down the first-1
-                          comm0, status, ierr)
-
-        CALL mpi_sendrecv(     phi(:,:,ize-1), count, MPI_DOUBLE_COMPLEX, nbr_U, 31, & ! Send to Up the last
-                          buff_xy_zBC(:,:,-2), count, MPI_DOUBLE_COMPLEX, nbr_D, 31, & ! Receive from Down the first-2
-                          comm0, status, ierr)
-
-        !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
-        CALL mpi_sendrecv(     phi(:,:,izs  ), count, MPI_DOUBLE_COMPLEX, nbr_D, 32, & ! Send to Down the first
-                          buff_xy_zBC(:,:,+1), count, MPI_DOUBLE_COMPLEX, nbr_U, 32, & ! Recieve from Up the last+1
-                          comm0, status, ierr)
-
-        CALL mpi_sendrecv(     phi(:,:,izs+1), count, MPI_DOUBLE_COMPLEX, nbr_D, 33, & ! Send to Down the first
-                          buff_xy_zBC(:,:,+2), count, MPI_DOUBLE_COMPLEX, nbr_U, 33, & ! Recieve from Up the last+2
-                          comm0, status, ierr)
-     ELSE
-       buff_xy_zBC(:,:,-1) = phi(:,:,ize  )
-       buff_xy_zBC(:,:,-2) = phi(:,:,ize-1)
-       buff_xy_zBC(:,:,+1) = phi(:,:,izs  )
-       buff_xy_zBC(:,:,+2) = phi(:,:,izs+1)
-     ENDIF
-    DO iky = ikys,ikye
-      DO ikx = ikxs,ikxe
-        ikxBC_L = ikx_zBC_L(iky,ikx);
-        IF (ikxBC_L .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
-          ! first-1 gets last
-          phi(iky,ikx,izs-1) = pb_phase_L(iky)*buff_xy_zBC(iky,ikxBC_L,-1)
-          ! first-2 gets last-1
-          phi(iky,ikx,izs-2) = pb_phase_L(iky)*buff_xy_zBC(iky,ikxBC_L,-2)
-        ELSE
-          phi(iky,ikx,izs-1) = 0._dp
-          phi(iky,ikx,izs-2) = 0._dp
-        ENDIF
-        ikxBC_R = ikx_zBC_R(iky,ikx);
-        IF (ikxBC_R .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
-          ! last+1 gets first
-          phi(iky,ikx,ize+1) = pb_phase_R(iky)*buff_xy_zBC(iky,ikxBC_R,+1)
-          ! last+2 gets first+1
-          phi(iky,ikx,ize+2) = pb_phase_R(iky)*buff_xy_zBC(iky,ikxBC_R,+2)
-        ELSE
-          phi(iky,ikx,ize+1) = 0._dp
-          phi(iky,ikx,ize+2) = 0._dp
-        ENDIF
-      ENDDO
-    ENDDO
-  ENDIF
-  CALL cpu_time(t1_ghost)
-  tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
-END SUBROUTINE update_ghosts_z_phi
-
-SUBROUTINE update_ghosts_z_psi
-  USE parallel, ONLY : buff_xy_zBC
-  USE fields, ONLY : psi
-  IMPLICIT NONE
-  INTEGER :: ikxBC_L, ikxBC_R
-  CALL cpu_time(t1_ghost)
-  IF(Nz .GT. 1) THEN
-    IF (num_procs_z .GT. 1) THEN
-      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
-        count = (ikye-ikys+1) * (ikxe-ikxs+1)
-        !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
-        CALL mpi_sendrecv(     psi(:,:,ize  ), count, MPI_DOUBLE_COMPLEX, nbr_U, 40, & ! Send to Up the last
-                          buff_xy_zBC(:,:,-1), count, MPI_DOUBLE_COMPLEX, nbr_D, 40, & ! Receive from Down the first-1
-                          comm0, status, ierr)
-
-        CALL mpi_sendrecv(     psi(:,:,ize-1), count, MPI_DOUBLE_COMPLEX, nbr_U, 41, & ! Send to Up the last
-                          buff_xy_zBC(:,:,-2), count, MPI_DOUBLE_COMPLEX, nbr_D, 41, & ! Receive from Down the first-2
-                          comm0, status, ierr)
-
-        !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
-        CALL mpi_sendrecv(     psi(:,:,izs  ), count, MPI_DOUBLE_COMPLEX, nbr_D, 42, & ! Send to Down the first
-                          buff_xy_zBC(:,:,+1), count, MPI_DOUBLE_COMPLEX, nbr_U, 42, & ! Recieve from Up the last+1
-                          comm0, status, ierr)
-
-        CALL mpi_sendrecv(     psi(:,:,izs+1), count, MPI_DOUBLE_COMPLEX, nbr_D, 43, & ! Send to Down the first
-                          buff_xy_zBC(:,:,+2), count, MPI_DOUBLE_COMPLEX, nbr_U, 43, & ! Recieve from Up the last+2
-                          comm0, status, ierr)
-     ELSE
-       buff_xy_zBC(:,:,-1) = psi(:,:,ize  )
-       buff_xy_zBC(:,:,-2) = psi(:,:,ize-1)
-       buff_xy_zBC(:,:,+1) = psi(:,:,izs  )
-       buff_xy_zBC(:,:,+2) = psi(:,:,izs+1)
-     ENDIF
-    DO iky = ikys,ikye
-      DO ikx = ikxs,ikxe
-        ikxBC_L = ikx_zBC_L(iky,ikx);
-        IF (ikxBC_L .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
-          ! first-1 gets last
-          psi(iky,ikx,izs-1) = pb_phase_L(iky)*buff_xy_zBC(iky,ikxBC_L,-1)
-          ! first-2 gets last-1
-          psi(iky,ikx,izs-2) = pb_phase_L(iky)*buff_xy_zBC(iky,ikxBC_L,-2)
-        ELSE
-          psi(iky,ikx,izs-1) = 0._dp
-          psi(iky,ikx,izs-2) = 0._dp
-        ENDIF
-        ikxBC_R = ikx_zBC_R(iky,ikx);
-        IF (ikxBC_R .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
-          ! last+1 gets first
-          psi(iky,ikx,ize+1) = pb_phase_R(iky)*buff_xy_zBC(iky,ikxBC_R,+1)
-          ! last+2 gets first+1
-          psi(iky,ikx,ize+2) = pb_phase_R(iky)*buff_xy_zBC(iky,ikxBC_R,+2)
-        ELSE
-          psi(iky,ikx,ize+1) = 0._dp
-          psi(iky,ikx,ize+2) = 0._dp
-        ENDIF
-      ENDDO
-    ENDDO
-  ENDIF
-  CALL cpu_time(t1_ghost)
-  tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
-END SUBROUTINE update_ghosts_z_psi
-
+  ENDDO
+END SUBROUTINE update_ghosts_z_3D
 
 END MODULE ghosts

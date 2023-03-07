@@ -1,14 +1,14 @@
 SUBROUTINE stepon
   !   Advance one time step, (num_step=4 for Runge Kutta 4 scheme)
   USE advance_field_routine, ONLY: advance_time_level, advance_moments
-  USE basic,                 ONLY: nlend, ierr
+  USE basic,                 ONLY: nlend
   USE closure,               ONLY: apply_closure_model
   USE ghosts,                ONLY: update_ghosts_moments, update_ghosts_EM
   use mpi,                   ONLY: MPI_COMM_WORLD
   USE time_integration,      ONLY: ntimelevel
   IMPLICIT NONE
 
-  INTEGER :: num_step
+  INTEGER :: num_step, ierr
   LOGICAL :: mlend
 
    DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
@@ -46,7 +46,7 @@ SUBROUTINE stepon
      !!!! Basic structure to simplify stepon
      SUBROUTINE assemble_RHS
        USE moments_eq_rhs, ONLY: compute_moments_eq_rhs
-       USE collision,      ONLY: compute_TColl
+       USE collision,      ONLY: compute_Capj
        USE nonlinear,      ONLY: compute_Sapj
        USE processing,     ONLY: compute_nadiab_moments_z_gradients_and_interp
        IMPLICIT NONE
@@ -55,22 +55,23 @@ SUBROUTINE stepon
          ! compute nonlinear term ("if linear" is included inside)
          CALL compute_Sapj
          ! compute collision term ("if coll, if nu >0" is included inside)
-         CALL compute_TColl
+         CALL compute_Capj
          ! compute the moments equation rhs
          CALL compute_moments_eq_rhs
      END SUBROUTINE assemble_RHS
 
       SUBROUTINE checkfield_all ! Check all the fields for inf or nan
-        USE utility,ONLY: checkfield
+        USE utility,ONLY: checkelem
         USE basic,  ONLY: t0_checkfield, t1_checkfield, tc_checkfield
-        USE fields, ONLY: phi, moments_e, moments_i
-        USE grid,   ONLY: ipgs_e,ipge_e,ijgs_e,ijge_e,ipgs_i,ipge_i,ijgs_i,ijge_i,&
-                          ikys,ikye,ikxs,ikxe,izgs,izge,ij,ip
+        USE fields, ONLY: phi, moments
+        USE grid,   ONLY: local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
+                          ngp,ngj,ngz
         USE MPI
         USE time_integration, ONLY: updatetlevel
-        USE model,            ONLY: LINEARITY, KIN_E
+        USE model,            ONLY: LINEARITY
         IMPLICIT NONE
         LOGICAL :: checkf_
+        INTEGER :: ia, ip, ij, iky, ikx, iz
         ! Execution time start
         CALL cpu_time(t0_checkfield)
 
@@ -79,109 +80,83 @@ SUBROUTINE stepon
 
         mlend=.FALSE.
         IF(.NOT.nlend) THEN
-           checkf_ = checkfield(phi,' phi')
-           mlend= (mlend .or. checkf_)
-           IF(KIN_E) THEN
-           DO ij=ijgs_e,ijge_e
-             DO ip=ipgs_e,ipge_e
-               checkf_ = checkfield(moments_e(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel),' moments_e')
-               mlend   = (mlend .or. checkf_)
-             ENDDO
-           ENDDO
-           ENDIF
-           DO ij=ijgs_i,ijge_i
-             DO ip=ipgs_i,ipge_i
-               checkf_ = checkfield(moments_i(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel),' moments_i')
-               mlend   = (mlend .or. checkf_)
-               ! print*, 'should be an error'
-               ! stop
-             ENDDO
-           ENDDO
+           z: DO iz = 1,local_nz+ngz
+           kx:DO ikx= 1,local_nkx
+           ky:DO iky=1,local_nky
+             checkf_ = checkelem(phi(iky,ikx,iz),' phi')
+             mlend= (mlend .or. checkf_)
+             j: DO ij=1,local_nj+ngj
+             p: DO ip=1,local_np+ngp
+             a: DO ia=1,local_na
+                 checkf_ = checkelem(moments(ia,ip,ij,iky,ikx,iz,updatetlevel),' moments')
+                 mlend   = (mlend .or. checkf_)
+             ENDDO a
+             ENDDO p
+             ENDDO j
+           ENDDO ky
+           ENDDO kx
+           ENDDO z
            CALL MPI_ALLREDUCE(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierr)
         ENDIF
-
         ! Execution time end
         CALL cpu_time(t1_checkfield)
         tc_checkfield = tc_checkfield + (t1_checkfield - t0_checkfield)
       END SUBROUTINE checkfield_all
 
       SUBROUTINE anti_aliasing
-        USE fields, ONLY: moments_e, moments_i
-        USE grid,   ONLY: ipgs_i,ipge_i,ijgs_i,ijge_i,ipgs_e,ipge_e,ijgs_e,ijge_e,&
-                          ikys,ikye,ikxs,ikxe,izgs,izge,AA_x,AA_y,iz,ikx,iky,ij,ip
-        USE model,  ONLY: KIN_E
+        USE fields, ONLY: moments
+        USE grid,   ONLY: local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
+                          ngp,ngj,ngz, AA_x, AA_y
         IMPLICIT NONE
-        IF(KIN_E)THEN
-        DO iz=izgs,izge
-          DO ikx=ikxs,ikxe
-            DO iky=ikys,ikye
-              DO ij=ijgs_e,ijge_e
-                DO ip=ipgs_e,ipge_e
-                  moments_e( ip,ij,iky,ikx,iz,:) = AA_x(ikx)* AA_y(iky) * moments_e( ip,ij,iky,ikx,iz,:)
-                END DO
-              END DO
-            END DO
-          END DO
-        END DO
-        ENDIF
-        DO iz=izgs,izge
-          DO ikx=ikxs,ikxe
-            DO iky=ikys,ikye
-              DO ij=ijgs_i,ijge_i
-                DO ip=ipgs_i,ipge_i
-                  moments_i( ip,ij,iky,ikx,iz,:) = AA_x(ikx)* AA_y(iky) * moments_i( ip,ij,iky,ikx,iz,:)
-                END DO
-              END DO
-            END DO
-          END DO
-        END DO
+        INTEGER :: ia, ip, ij, iky, ikx, iz
+        z: DO iz = 1,local_nz+ngz
+        kx:DO ikx= 1,local_nkx
+        ky:DO iky=1,local_nky
+        j: DO ij=1,local_nj+ngj
+        p: DO ip=1,local_np+ngp
+        a: DO ia=1,local_na
+                  moments(ia,ip,ij,iky,ikx,iz,:) = AA_x(ikx)* AA_y(iky) * moments(ia,ip,ij,iky,ikx,iz,:)
+        ENDDO a
+        ENDDO p
+        ENDDO j
+        ENDDO ky
+        ENDDO kx
+        ENDDO z
       END SUBROUTINE anti_aliasing
 
       SUBROUTINE enforce_symmetry ! Force X(k) = X(N-k)* complex conjugate symmetry
-        USE fields, ONLY: phi, psi, moments_e, moments_i
-        USE grid,   ONLY: ipgs_i,ipge_i,ijgs_i,ijge_i,ipgs_e,ipge_e,ijgs_e,ijge_e,&
-                          izgs,izge,iz,ikx,ij,ip,Nkx, iky_0, ikx_0, contains_ky0
-        USE model,  ONLY: KIN_E
+        USE fields, ONLY: phi, psi, moments
+        USE grid,   ONLY: local_na,local_np,local_nj,total_nkx,local_nz,&
+                          ngp,ngj,ngz, ikx0,iky0, contains_ky0
         IMPLICIT NONE
+        INTEGER :: ia, ip, ij, ikx, iz
         IF ( contains_ky0 ) THEN
-          ! Electron moments
-          IF(KIN_E) THEN
-            DO iz=izgs,izge
-              DO ij=ijgs_e,ijge_e
-                DO ip=ipgs_e,ipge_e
-                  DO ikx=2,Nkx/2 !symmetry at ky = 0
-                    moments_e( ip,ij,iky_0,ikx,iz, :) = CONJG(moments_e( ip,ij,iky_0,Nkx+2-ikx,iz, :))
-                  END DO
-                ! must be real at origin
-                moments_e(ip,ij, iky_0,ikx_0,iz, :) = REAL(moments_e(ip,ij, iky_0,ikx_0,iz, :))
-              END DO
-            END DO
-          END DO
-          ENDIF
-          ! Ion moments
-          DO iz=izgs,izge
-            DO ij=ijgs_i,ijge_i
-              DO ip=ipgs_i,ipge_i
-                DO ikx=2,Nkx/2 !symmetry at ky = 0
-                  moments_i( ip,ij,iky_0,ikx,iz, :) = CONJG(moments_i( ip,ij,iky_0,Nkx+2-ikx,iz, :))
+          ! moments
+          z: DO iz = 1,local_nz+ngz
+          j: DO ij=1,local_nj+ngj
+          p: DO ip=1,local_np+ngp
+          a: DO ia=1,local_na
+                DO ikx=2,total_nkx/2 !symmetry at ky = 0
+                  moments(ia,ip,ij,iky0,ikx,iz,:) = CONJG(moments(ia,ip,ij,iky0,total_nkx+2-ikx,iz,:))
                 END DO
                 ! must be real at origin and top right
-                moments_i(ip,ij, iky_0,ikx_0,iz, :) = REAL(moments_i(ip,ij, iky_0,ikx_0,iz, :))
-              END DO
-            END DO
-          END DO
+                moments(ia,ip,ij, iky0,ikx0,iz,:) = REAL(moments(ia,ip,ij, iky0,ikx0,iz,:))
+          ENDDO a
+          ENDDO p
+          ENDDO j
+          ENDDO z
           ! Phi
-          DO ikx=2,Nkx/2 !symmetry at ky = 0
-            phi(iky_0,ikx,izgs:izge) = phi(iky_0,Nkx+2-ikx,izgs:izge)
+          DO ikx=2,total_nkx/2 !symmetry at ky = 0
+            phi(iky0,ikx,:) = phi(iky0,total_nkx+2-ikx,:)
           END DO
           ! must be real at origin
-          phi(iky_0,ikx_0,izgs:izge) = REAL(phi(iky_0,ikx_0,izgs:izge))
+          phi(iky0,ikx0,:) = REAL(phi(iky0,ikx0,:))
           ! Psi
-          DO ikx=2,Nkx/2 !symmetry at ky = 0
-            psi(iky_0,ikx,izgs:izge) = psi(iky_0,Nkx+2-ikx,izgs:izge)
+          DO ikx=2,total_nkx/2 !symmetry at ky = 0
+            psi(iky0,ikx,:) = psi(iky0,total_nkx+2-ikx,:)
           END DO
           ! must be real at origin
-          psi(iky_0,ikx_0,izgs:izge) = REAL(psi(iky_0,ikx_0,izgs:izge))
+          psi(iky0,ikx0,:) = REAL(psi(iky0,ikx0,:))
         ENDIF
       END SUBROUTINE enforce_symmetry
 

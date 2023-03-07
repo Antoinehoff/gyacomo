@@ -6,7 +6,7 @@ SUBROUTINE ppexit
 
   use prec_const
   IMPLICIT NONE
-
+  INTEGER :: ierr
 
   CALL finalize_plans
   CALL MPI_BARRIER(MPI_COMM_WORLD, ierr)

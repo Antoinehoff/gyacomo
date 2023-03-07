@@ -65,8 +65,8 @@
 /
 &COLLISION_PAR
   collision_model = 'DG'
-  gyrokin_CO      = .false.
-  interspecies    = .true.
+  GK_CO      = .false.
+  INTERSPECIES    = .true.
   mat_file        = 'null'
 /
 &INITIAL_CON
