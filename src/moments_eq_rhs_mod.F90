@@ -51,10 +51,10 @@ SUBROUTINE compute_moments_eq_rhs
             p_int = parray(ipi)                   ! Hermite degree
             eo    = min(nzgrid,MODULO(p_int,2)+1) ! Indicates if we are on odd or even z grid
             kperp2= kparray(iky,ikx,izi,eo)**2
-            Napj = moments(ia,ipi,iji,iky,ikx,izi,updatetlevel)
             RHS  = 0._dp
             ! Species loop
             a:DO ia = 1,local_na
+              Napj = moments(ia,ipi,iji,iky,ikx,izi,updatetlevel)
               IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmax)) THEN ! for the closure scheme
                 !! Compute moments_ mixing terms
                 ! Perpendicular dynamic
@@ -72,17 +72,17 @@ SUBROUTINE compute_moments_eq_rhs
                 Mperp   = imagu*Ckxky(iky,ikx,iz,eo)*(Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)
                 ! Parallel dynamic
                 ! ddz derivative for Landau damping term
-                Ldamp     = xnapp1j(ia,ip) * ddz_napj(ia,ipi+1,ij,iky,ikx,izi) &
-                          + xnapm1j(ia,ip) * ddz_napj(ia,ipi-1,ij,iky,ikx,izi)
+                Ldamp     = xnapp1j(ia,ip) * ddz_napj(ia,ipi+1,iji,iky,ikx,iz) &
+                          + xnapm1j(ia,ip) * ddz_napj(ia,ipi-1,iji,iky,ikx,iz)
                 ! Mirror terms
-                Tnapp1j   = ynapp1j  (ia,ip,ij) * interp_napj(ia,ipi+1,ij  ,iky,ikx,izi)
-                Tnapp1jm1 = ynapp1jm1(ia,ip,ij) * interp_napj(ia,ipi+1,ij-1,iky,ikx,izi)
-                Tnapm1j   = ynapm1j  (ia,ip,ij) * interp_napj(ia,ipi-1,ij  ,iky,ikx,izi)
-                Tnapm1jm1 = ynapm1jm1(ia,ip,ij) * interp_napj(ia,ipi-1,ij-1,iky,ikx,izi)
+                Tnapp1j   = ynapp1j  (ia,ip,ij) * interp_napj(ia,ipi+1,iji  ,iky,ikx,iz)
+                Tnapp1jm1 = ynapp1jm1(ia,ip,ij) * interp_napj(ia,ipi+1,iji-1,iky,ikx,iz)
+                Tnapm1j   = ynapm1j  (ia,ip,ij) * interp_napj(ia,ipi-1,iji  ,iky,ikx,iz)
+                Tnapm1jm1 = ynapm1jm1(ia,ip,ij) * interp_napj(ia,ipi-1,iji-1,iky,ikx,iz)
                 ! Trapping terms
-                Unapm1j   = znapm1j  (ia,ip,ij) * interp_napj(ia,ipi-1,ij  ,iky,ikx,izi)
-                Unapm1jp1 = znapm1jp1(ia,ip,ij) * interp_napj(ia,ipi-1,ij+1,iky,ikx,izi)
-                Unapm1jm1 = znapm1jm1(ia,ip,ij) * interp_napj(ia,ipi-1,ij-1,iky,ikx,izi)
+                Unapm1j   = znapm1j  (ia,ip,ij) * interp_napj(ia,ipi-1,iji  ,iky,ikx,iz)
+                Unapm1jp1 = znapm1jp1(ia,ip,ij) * interp_napj(ia,ipi-1,iji+1,iky,ikx,iz)
+                Unapm1jm1 = znapm1jm1(ia,ip,ij) * interp_napj(ia,ipi-1,iji-1,iky,ikx,iz)
                 ! sum the parallel forces
                 Fmir = dlnBdz(iz,eo)*(Tnapp1j + Tnapp1jm1 + Tnapm1j + Tnapm1jm1 +&
                                       Unapm1j + Unapm1jp1 + Unapm1jm1)
@@ -124,7 +124,7 @@ SUBROUTINE compute_moments_eq_rhs
                     -mu_x*diff_kx_coeff*kx**N_HD*Napj &
                     -mu_y*diff_ky_coeff*ky**N_HD*Napj &
                     ! Numerical parallel hyperdiffusion "mu_z*ddz**4"  see Pueschel 2010 (eq 25)
-                    -mu_z*diff_dz_coeff*ddzND_napj(ia,ipi,iji,iky,ikx,izi)
+                    -mu_z*diff_dz_coeff*ddzND_napj(ia,ipi,iji,iky,ikx,iz)
                 !! Velocity space dissipation (should be implemented somewhere else)
                 SELECT CASE(HYP_V)
                 CASE('hypcoll') ! GX like Hermite hypercollisions see Mandell et al. 2023 (eq 3.23), unadvised to use it

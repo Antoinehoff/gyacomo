@@ -2,7 +2,7 @@ MODULE processing
   USE prec_const,  ONLY: dp, imagu, SQRT2, SQRT3
   USE grid,        ONLY: &
     local_na, local_np, local_nj, local_nky, local_nkx, local_nz, Ngz,Ngj,Ngp, &
-    parray,pmax,ip0,&
+    parray,pmax,ip0, iodd, ieven,&
     CONTAINSp0,ip1,CONTAINSp1,ip2,CONTAINSp2,ip3,CONTAINSp3,&
     jarray,jmax,ij0, dmax,&
     kyarray, AA_y,&
@@ -233,6 +233,8 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
   !
   IMPLICIT NONE
   INTEGER :: eo, p_int, j_int, ia,ip,ij,iky,ikx,iz
+  COMPLEX(dp), DIMENSION(local_nz+ngz) :: f_in
+  COMPLEX(dp), DIMENSION(local_nz)     :: f_out
   CALL cpu_time(t0_process)
 
   !non adiab moments
@@ -281,15 +283,23 @@ SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
               p_int = parray(ip)
               eo    = MODULO(p_int,2)+1 ! Indicates if we are on even or odd z grid
               ! Compute z first derivative
-              CALL   grad_z(eo,local_nz,ngz,inv_deltaz,nadiab_moments(ia,ip,ij,iky,ikx,:),ddz_napj(ia,ip,ij,iky,ikx,:))
+              f_in = nadiab_moments(ia,ip,ij,iky,ikx,:)
+              CALL   grad_z(eo,local_nz,ngz,inv_deltaz,f_in,f_out)
+              ddz_napj(ia,ip,ij,iky,ikx,:) = f_out
               ! Parallel numerical diffusion
               IF (HDz_h) THEN
-                CALL  grad_z4(local_nz,ngz,inv_deltaz,nadiab_moments(ia,ip,ij,iky,ikx,:),ddzND_Napj(ia,ip,ij,iky,ikx,:))
+                f_in = nadiab_moments(ia,ip,ij,iky,ikx,:)
+                CALL  grad_z4(local_nz,ngz,inv_deltaz,f_in,f_out)
+                ddzND_Napj(ia,ip,ij,iky,ikx,:) = f_out
               ELSE
-                CALL  grad_z4(local_nz,ngz,inv_deltaz,moments(ia,ip,ij,iky,ikx,:,updatetlevel),ddzND_Napj(ia,ip,ij,iky,ikx,:))
+                f_in = moments(ia,ip,ij,iky,ikx,:,updatetlevel)
+                CALL  grad_z4(local_nz,ngz,inv_deltaz,f_in,f_out)
+                ddzND_Napj(ia,ip,ij,iky,ikx,:) = f_out
               ENDIF
               ! Compute even odd grids interpolation
-              CALL interp_z(eo,local_nz,ngz,nadiab_moments(ia,ip,ij,iky,ikx,1:local_nz+ngz), interp_napj(ia,ip,ij,iky,ikx,1:local_nz))
+              f_in = nadiab_moments(ia,ip,ij,iky,ikx,1:local_nz+ngz)
+              CALL interp_z(eo,local_nz,ngz,f_in,f_out)
+              interp_napj(ia,ip,ij,iky,ikx,1:local_nz) = f_out
             ENDDO
           ENDDO
         ENDDO
@@ -369,7 +379,7 @@ SUBROUTINE compute_density
           DO ikx = 1,local_nkx
             dens_ = 0._dp
             DO ij = 1, local_nj
-                dens_ = dens_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,0) * moments(ia,ip0,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)
+                dens_ = dens_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven) * moments(ia,ip0,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)
             ENDDO
             dens(ia,iky,ikx,iz) = dens_
           ENDDO
@@ -391,7 +401,7 @@ SUBROUTINE compute_uperp
             DO ikx = 1,local_nkx
               uperp_ = 0._dp
               DO ij = 1, local_nj
-                uperp_ = uperp_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,0) *&
+                uperp_ = uperp_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven) *&
                  0.5_dp*(moments(ia,ip0,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel) - moments(ia,ip0,ij-1+ngj/2,iky,ikx,iz+ngz/2,updatetlevel))
                ENDDO
               uper(ia,iky,ikx,iz) = uperp_
@@ -414,7 +424,7 @@ SUBROUTINE compute_upar
           DO ikx = 1,local_nkx
             upar_ = 0._dp
             DO ij = 1, local_nj
-              upar_ = upar_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,1)*moments(ia,ip1,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)
+              upar_ = upar_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,iodd)*moments(ia,ip1,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)
              ENDDO
             upar(ia,iky,ikx,iz) = upar_
           ENDDO
@@ -440,7 +450,7 @@ SUBROUTINE compute_tperp
               Tperp_ = 0._dp
               DO ij = 1, local_nj
                 j_dp = REAL(ij-1,dp)
-                Tperp_ = Tperp_ + kernel(ia,ij,iky,ikx,iz,0)*&
+                Tperp_ = Tperp_ + kernel(ia,ij,iky,ikx,iz,ieven)*&
                     ((2_dp*j_dp+1)*moments(ia,ip0,ij  +ngj/2,iky,ikx,iz+ngz/2,updatetlevel)&
                     -j_dp         *moments(ia,ip0,ij-1+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)&
                     -j_dp+1       *moments(ia,ip0,ij+1+ngj/2,iky,ikx,iz+ngz/2,updatetlevel))
@@ -470,7 +480,7 @@ SUBROUTINE compute_Tpar
             Tpar_ = 0._dp
             DO ij = 1, local_nj
               j_dp = REAL(ij-1,dp)
-              Tpar_  = Tpar_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,0)*&
+              Tpar_  = Tpar_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven)*&
                (SQRT2 * moments(ia,ip2,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel) &
                       + moments(ia,ip0,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel))
             ENDDO

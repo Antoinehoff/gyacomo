@@ -71,7 +71,7 @@ END SUBROUTINE build_dv4Hp_table
 !******************************************************************************!
 SUBROUTINE evaluate_kernels
   USE basic
-  USE array,   ONLY : kernel, HF_phi_correction_operator
+  USE array,   ONLY : kernel!, HF_phi_correction_operator
   USE grid,    ONLY : local_Na, local_Nj,Ngj, local_nkx, local_nky, local_nz, Ngz, jarray, kparray
   USE species, ONLY : sigma2_tau_o2
   USE prec_const, ONLY: dp
@@ -101,20 +101,20 @@ DO ia  = 1,local_Na
   ENDDO
   ENDDO
   ENDDO
-  !! Correction term for the evaluation of the heat flux
-  HF_phi_correction_operator(:,:,:) = &
-         2._dp * Kernel(ia,1,:,:,:,1) &
-        -1._dp * Kernel(ia,2,:,:,:,1)
-
-  DO ij = 1, local_Nj
-    j_int = jarray(ij)
-    j_dp  = REAL(j_int,dp)
-    HF_phi_correction_operator(:,:,:) = HF_phi_correction_operator(:,:,:) &
-    - Kernel(ia,ij,:,:,:,1) * (&
-        2._dp*(j_dp+1.5_dp) * Kernel(ia,ij  ,:,:,:,1) &
-        -     (j_dp+1.0_dp) * Kernel(ia,ij+1,:,:,:,1) &
-        -              j_dp * Kernel(ia,ij-1,:,:,:,1))
-  ENDDO
+  ! !! Correction term for the evaluation of the heat flux
+  ! HF_phi_correction_operator(:,:,:) = &
+  !        2._dp * Kernel(ia,1,:,:,:,1) &
+  !       -1._dp * Kernel(ia,2,:,:,:,1)
+  !
+  ! DO ij = 1, local_Nj
+  !   j_int = jarray(ij)
+  !   j_dp  = REAL(j_int,dp)
+  !   HF_phi_correction_operator(:,:,:) = HF_phi_correction_operator(:,:,:) &
+  !   - Kernel(ia,ij,:,:,:,1) * (&
+  !       2._dp*(j_dp+1.5_dp) * Kernel(ia,ij  ,:,:,:,1) &
+  !       -     (j_dp+1.0_dp) * Kernel(ia,ij+1,:,:,:,1) &
+  !       -              j_dp * Kernel(ia,ij-1,:,:,:,1))
+  ! ENDDO
 ENDDO
 
 END SUBROUTINE evaluate_kernels
@@ -134,7 +134,7 @@ SUBROUTINE evaluate_poisson_op
   USE basic
   USE array,   ONLY : kernel, inv_poisson_op, inv_pol_ion
   USE grid,    ONLY : local_Na, local_nkx, local_nky, local_nz,&
-                      kxarray, kyarray, jmax
+                      kxarray, kyarray, local_nj, ngj, ngz, ieven
   USE species, ONLY : q2_tau
   USE model,   ONLY : ADIAB_E, tau_e
   USE prec_const, ONLY: dp
@@ -155,12 +155,13 @@ SUBROUTINE evaluate_poisson_op
       pol_tot = 0._dp  ! total polarisation term
       pol_ion = 0._dp  ! sum of ion polarisation term
       ! loop over n only up to the max polynomial degree
-      DO in=1,jmax+1
-        pol_tot = pol_tot  + q2_tau(ia)*kernel(ia,in,iky,ikx,iz,0)**2 ! ... sum recursively ...
-        pol_ion = pol_ion  + q2_tau(ia)*kernel(ia,in,iky,ikx,iz,0)**2 !
+      DO in=1,local_nj
+        pol_tot = pol_tot  + q2_tau(ia)*kernel(ia,in+ngj/2,iky,ikx,iz+ngz/2,ieven)**2 ! ... sum recursively ...
+        pol_ion = pol_ion  + q2_tau(ia)*kernel(ia,in+ngj/2,iky,ikx,iz+ngz/2,ieven)**2 !
       END DO
       operator = operator + q2_tau(ia) - pol_tot
     ENDDO
+    operator_ion = operator
     IF(ADIAB_E) THEN ! Adiabatic model
       pol_tot = pol_tot +  1._dp/tau_e - 1._dp
     ENDIF
@@ -227,17 +228,17 @@ SUBROUTINE compute_lin_coeff
   USE species, ONLY: k_T, k_N, tau, q, sqrtTau_q, tau_q
   USE model,   ONLY: k_cB, k_gB
   USE prec_const, ONLY: dp, SQRT2, SQRT3
-  USE grid,  ONLY: parray, jarray, local_na, local_np, local_nj
+  USE grid,  ONLY: parray, jarray, local_na, local_np, local_nj, ngj, ngp
   INTEGER     :: ia,ip,ij,p_int, j_int ! polynom. dagrees
   REAL(dp)    :: p_dp, j_dp
 
   !! linear coefficients for moment RHS !!!!!!!!!!
   DO ia = 1,local_na
     DO ip = 1, local_np
-      p_int= parray(ip)   ! Hermite degree
+      p_int= parray(ip+ngp/2)   ! Hermite degree
       p_dp = REAL(p_int,dp) ! REAL of Hermite degree
       DO ij = 1, local_nj
-        j_int= jarray(ij)   ! Laguerre degree
+        j_int= jarray(ij+ngj/2)   ! Laguerre degree
         j_dp = REAL(j_int,dp) ! REAL of Laguerre degree
         ! All Napj terms
         xnapj(ia,ip,ij) = tau(ia)/q(ia)*(k_cB*(2._dp*p_dp + 1._dp) &
@@ -254,7 +255,7 @@ SUBROUTINE compute_lin_coeff
       ENDDO
     ENDDO
     DO ip = 1, local_np
-      p_int= parray(ip)   ! Hermite degree
+      p_int= parray(ip+ngp/2)   ! Hermite degree
       p_dp = REAL(p_int,dp) ! REAL of Hermite degree
       ! Landau damping coefficients (ddz napj term)
       xnapp1j(ia,ip) = sqrtTau_q(ia) * SQRT(p_dp+1._dp)
@@ -264,7 +265,7 @@ SUBROUTINE compute_lin_coeff
       xnapm2j(ia,ip) = tau_q(ia) * k_cB * SQRT( p_dp       *(p_dp - 1._dp))
     ENDDO
     DO ij = 1, local_nj
-      j_int= jarray(ij)   ! Laguerre degree
+      j_int= jarray(ij+ngj/2)   ! Laguerre degree
       j_dp = REAL(j_int,dp) ! REAL of Laguerre degree
       ! Magnetic gradient term
       xnapjp1(ia,ij) = -tau_q(ia) * k_gB * (j_dp + 1._dp)
@@ -273,9 +274,9 @@ SUBROUTINE compute_lin_coeff
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! ES linear coefficients for moment RHS !!!!!!!!!!
     DO ip = 1, local_np
-      p_int= parray(ip)   ! Hermite degree
+      p_int= parray(ip+ngp/2)   ! Hermite degree
       DO ij = 1, local_nj
-        j_int= jarray(ij)   ! REALof Laguerre degree
+        j_int= jarray(ij+ngj/2)   ! REALof Laguerre degree
         j_dp = REAL(j_int,dp) ! REALof Laguerre degree
         !! Electrostatic potential pj terms
         IF (p_int .EQ. 0) THEN ! kronecker p0
@@ -294,9 +295,9 @@ SUBROUTINE compute_lin_coeff
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Electromagnatic linear coefficients for moment RHS !!!!!!!!!!
     DO ip = 1, local_np
-      p_int= parray(ip)   ! Hermite degree
+      p_int= parray(ip+ngp/2)   ! Hermite degree
       DO ij = 1, local_nj
-        j_int= jarray(ij)   ! REALof Laguerre degree
+        j_int= jarray(ij+ngj/2)   ! REALof Laguerre degree
         j_dp = REAL(j_int,dp) ! REALof Laguerre degree
         IF (p_int .EQ. 1) THEN ! kronecker p1
           xpsij  (ia,ip,ij)  = +(k_N(ia) + (2._dp*j_dp+1._dp)*k_T(ia))* sqrtTau_q(ia)

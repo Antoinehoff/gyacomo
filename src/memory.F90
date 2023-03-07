@@ -17,7 +17,7 @@ SUBROUTINE memory
   CALL allocate_array(inv_poisson_op, 1,local_nky, 1,local_nkx, 1,local_Nz)
   CALL allocate_array( inv_ampere_op, 1,local_nky, 1,local_nkx, 1,local_Nz)
   CALL allocate_array(   inv_pol_ion, 1,local_nky, 1,local_nkx, 1,local_Nz)
-  CALL allocate_array(HF_phi_correction_operator, 1,local_nky, 1,local_nkx, 1,local_Nz)
+  ! CALL allocate_array(HF_phi_correction_operator, 1,local_nky, 1,local_nkx, 1,local_Nz)
 
   !Moments related arrays
   CALL allocate_array(           Na00, 1,local_Na, 1,local_nky, 1,local_nkx, 1,local_Nz)
@@ -32,9 +32,9 @@ SUBROUTINE memory
   CALL allocate_array(          Napjz, 1,local_Na, 1,local_Np,     1,local_Nj,                               1,local_Nz)
   CALL allocate_array(    moments_rhs, 1,local_Na, 1,local_Np,     1,local_Nj,     1,local_nky, 1,local_nkx, 1,local_Nz,     1,ntimelevel )
   CALL allocate_array( nadiab_moments, 1,local_Na, 1,local_Np+Ngp, 1,local_Nj+Ngj, 1,local_nky, 1,local_nkx, 1,local_Nz+Ngz)
-  CALL allocate_array(       ddz_napj, 1,local_Na, 1,local_Np+Ngp, 1,local_Nj+Ngj, 1,local_nky, 1,local_nkx, 1,local_Nz+Ngz)
-  CALL allocate_array(     ddzND_Napj, 1,local_Na, 1,local_Np+Ngp, 1,local_Nj+Ngj, 1,local_nky, 1,local_nkx, 1,local_Nz+Ngz)
-  CALL allocate_array(    interp_napj, 1,local_Na, 1,local_Np+Ngp, 1,local_Nj+Ngj, 1,local_nky, 1,local_nkx, 1,local_Nz+Ngz)
+  CALL allocate_array(       ddz_napj, 1,local_Na, 1,local_Np+Ngp, 1,local_Nj+Ngj, 1,local_nky, 1,local_nkx, 1,local_Nz)
+  CALL allocate_array(     ddzND_Napj, 1,local_Na, 1,local_Np+Ngp, 1,local_Nj+Ngj, 1,local_nky, 1,local_nkx, 1,local_Nz)
+  CALL allocate_array(    interp_napj, 1,local_Na, 1,local_Np+Ngp, 1,local_Nj+Ngj, 1,local_nky, 1,local_nkx, 1,local_Nz)
   CALL allocate_array(          Capj,  1,local_Na, 1,local_Np,     1,local_Nj,     1,local_nky, 1,local_nkx, 1,local_Nz)
   CALL allocate_array(          Sapj,  1,local_Na, 1,local_Np,     1,local_Nj,     1,local_nky, 1,local_nkx, 1,local_Nz)
   CALL allocate_array(     xnapj, 1,local_Na, 1,local_Np, 1,local_Nj)

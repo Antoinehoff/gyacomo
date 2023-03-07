@@ -48,14 +48,14 @@ MODULE grid
   INTEGER, PUBLIC, PROTECTED :: total_nkx
   INTEGER, PUBLIC, PROTECTED :: total_nz
   ! Local numbers of points (without ghosts)
-  INTEGER, PUBLIC, PROTECTED :: local_Na
-  INTEGER, PUBLIC, PROTECTED :: local_Np
-  INTEGER, PUBLIC, PROTECTED :: local_Nj
-  INTEGER, PUBLIC, PROTECTED :: local_Nky
-  INTEGER, PUBLIC, PROTECTED :: local_Nkx
-  INTEGER, PUBLIC, PROTECTED :: local_Nz
-  INTEGER, PUBLIC, PROTECTED :: local_Nkp
-  INTEGER, PUBLIC, PROTECTED :: Ngp, Ngj, Ngx, Ngy, Ngz ! number of ghosts points
+  INTEGER, PUBLIC, PROTECTED :: local_na
+  INTEGER, PUBLIC, PROTECTED :: local_np
+  INTEGER, PUBLIC, PROTECTED :: local_nj
+  INTEGER, PUBLIC, PROTECTED :: local_nky
+  INTEGER, PUBLIC, PROTECTED :: local_nkx
+  INTEGER, PUBLIC, PROTECTED :: local_nz
+  INTEGER, PUBLIC, PROTECTED :: local_nkp
+  INTEGER, PUBLIC, PROTECTED :: ngp, ngj, ngx, ngy, ngz ! number of ghosts points
   INTEGER, PUBLIC, PROTECTED :: Nzgrid  ! one or two depending on the staggered grid option
   ! Local offsets
   INTEGER, PUBLIC, PROTECTED :: local_na_offset
@@ -70,8 +70,8 @@ MODULE grid
   ! Grid spacing and limits
   REAL(dp), PUBLIC, PROTECTED ::  deltap, pp2, deltaz, inv_deltaz
   REAL(dp), PUBLIC, PROTECTED ::  deltakx, deltaky, kx_max, ky_max, kx_min, ky_min!, kp_max
-  REAL(dp), PUBLIC, PROTECTED ::  local_pmin,  local_pmax
-  REAL(dp), PUBLIC, PROTECTED ::  local_jmin,  local_jmax
+  INTEGER , PUBLIC, PROTECTED ::  local_pmin,  local_pmax
+  INTEGER , PUBLIC, PROTECTED ::  local_jmin,  local_jmax
   REAL(dp), PUBLIC, PROTECTED ::  local_kymin, local_kymax
   REAL(dp), PUBLIC, PROTECTED ::  local_kxmin, local_kxmax
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED ::  local_zmin,  local_zmax
@@ -141,13 +141,17 @@ CONTAINS
   ! The other grids are simply
   ! |_|_|_|_|
   !  1 2 3 4
-  SUBROUTINE set_grids(shear,Npol)
-    USE model,   ONLY: LINEARITY
+  SUBROUTINE set_grids(shear,Npol,LINEARITY,N_HD,EM,Na)
     USE fourier, ONLY: init_grid_distr_and_plans
     REAL(dp), INTENT(IN) :: shear
     INTEGER,  INTENT(IN) :: Npol
-    CALL set_agrid
-    CALL set_pgrid
+    CHARACTER(len=*), INTENT(IN) :: LINEARITY
+    INTEGER, INTENT(IN)  :: N_HD
+    LOGICAL, INTENT(IN)  :: EM
+    INTEGER, INTENT(IN)  :: Na
+    CALL set_agrid(Na)
+    CALL set_pgrid(EM)
+    CALL set_jgrid
     !! Parallel distribution of kx ky grid
     IF (LINEARITY .NE. 'linear') THEN
       IF (my_id .EQ. 0) write(*,*) 'FFTW3 y-grid distribution'
@@ -156,8 +160,8 @@ CONTAINS
       CALL init_1Dgrid_distr
       IF (my_id .EQ. 0) write(*,*) 'Manual y-grid distribution'
     ENDIF
-    CALL set_kygrid
-    CALL set_kxgrid(shear,Npol)
+    CALL set_kygrid(LINEARITY,N_HD)
+    CALL set_kxgrid(shear,Npol,LINEARITY,N_HD)
     CALL set_zgrid (Npol)
   END SUBROUTINE set_grids
 
@@ -170,9 +174,9 @@ CONTAINS
     if (rank_ky .EQ. num_procs_ky-1) local_nky_ptr = (Ny/2+1)-local_nky_ptr_offset
   END SUBROUTINE init_1Dgrid_distr
 
-  SUBROUTINE set_agrid ! you're a sorcerer harry
-    USE model, ONLY: Na
+  SUBROUTINE set_agrid(Na) ! you're a sorcerer harry
     IMPLICIT NONE
+    INTEGER, INTENT(IN) :: Na
     ias = 1
     iae = Na
     total_Na = Na
@@ -180,11 +184,11 @@ CONTAINS
     local_Na_offset = ias - 1
   END SUBROUTINE
 
-  SUBROUTINE set_pgrid
+  SUBROUTINE set_pgrid(EM)
     USE prec_const
-    USE model,    ONLY: beta ! To know if we solve ampere or not and put odd  p moments
     USE parallel, ONLY: num_procs_p, rank_p
     IMPLICIT NONE
+    LOGICAL, INTENT(IN) :: EM
     INTEGER :: ip, ig
     ! If no parallel dim (Nz=1) and no EM effects (beta=0), the moment hierarchy
     !! is separable between odds and even P and since the energy is injected in
@@ -192,7 +196,7 @@ CONTAINS
     !! simulating the odd p which will only be damped.
     !! We define in this case a grid Parray = 0,2,4,...,Pmax i.e. deltap = 2
     !! instead of 1 to spare computation
-    IF((Nz .EQ. 1) .AND. (beta .EQ. 0._dp)) THEN
+    IF((Nz .EQ. 1) .AND. .NOT. EM) THEN
       deltap  = 2
       Ngp     = 2  ! two ghosts cells for p+/-2 only
       pp2     = 1  ! index p+2 is ip+1
@@ -246,7 +250,7 @@ CONTAINS
     pmax_dp       = real(pmax,dp)
     diff_p_coeff  = pmax_dp*(1._dp/pmax_dp)**6
     ! Overwrite SOLVE_AMPERE flag if beta is zero
-    IF(beta .EQ. 0._dp) THEN
+    IF(.NOT. EM) THEN
       SOLVE_AMPERE = .FALSE.
     ENDIF
   END SUBROUTINE set_pgrid
@@ -262,7 +266,7 @@ CONTAINS
     ! Build the full grids on process 0 to diagnose it without comm
     ALLOCATE(jarray_full(total_nj))
     ! J
-    DO ij = 1,jmax+1; jarray_full(ij) = (ij-1); END DO
+    DO ij = 1,total_nj; jarray_full(ij) = (ij-1); END DO
     ! Indices of local data
     ijs = 1; ije = jmax + 1
     ! Local number of J
@@ -272,8 +276,8 @@ CONTAINS
     DO ij = 1+ngj/2,local_nj+ngj/2
       jarray(ij) = ij-1-ngj/2+local_nj_offset
     END DO
-    local_jmax = jarray(local_np+ngp/2)
-    local_jmin = jarray(1+ngp/2)
+    local_jmax = jarray(local_np+ngj/2)
+    local_jmin = jarray(1+ngj/2)
     ! Fill the ghosts
     DO ig = 1,ngj/2
       jarray(ig)          = local_jmin-ngj/2+(ig-1)
@@ -288,10 +292,11 @@ CONTAINS
     END DO
   END SUBROUTINE set_jgrid
 
-  SUBROUTINE set_kygrid
+  SUBROUTINE set_kygrid(LINEARITY,N_HD)
     USE prec_const
-    USE model, ONLY: LINEARITY, N_HD
     IMPLICIT NONE
+    CHARACTER(len=*), INTENT(IN) ::LINEARITY
+    INTEGER, INTENT(IN) :: N_HD
     INTEGER :: iky, ikyo
     Nky = Ny/2+1 ! Defined only on positive kx since fields are real
     ! Grid spacings
@@ -362,12 +367,13 @@ CONTAINS
     ENDIF
   END SUBROUTINE set_kygrid
 
-  SUBROUTINE set_kxgrid(shear,Npol)
+  SUBROUTINE set_kxgrid(shear,Npol,LINEARITY,N_HD)
     USE prec_const
-    USE model, ONLY: LINEARITY, N_HD
     IMPLICIT NONE
     REAL(dp), INTENT(IN) :: shear
     INTEGER,  INTENT(IN) :: Npol
+    CHARACTER(len=*), INTENT(IN) ::LINEARITY
+    INTEGER, INTENT(IN)  :: N_HD
     INTEGER :: ikx, ikxo
     REAL    :: Lx_adapted
     IF(shear .GT. 0) THEN
@@ -489,7 +495,6 @@ CONTAINS
 
   SUBROUTINE set_zgrid(Npol)
     USE prec_const
-    USE model, ONLY: mu_z
     USE parallel, ONLY: num_procs_z, rank_z
     IMPLICIT NONE
     REAL    :: grid_shift, Lz, zmax, zmin
@@ -501,11 +506,7 @@ CONTAINS
     deltaz        = Lz/REAL(Nz,dp)
     inv_deltaz    = 1._dp/deltaz
     ! Parallel hyperdiffusion coefficient
-    IF(mu_z .GT. 0) THEN
-      diff_dz_coeff = (deltaz/2._dp)**4 ! adaptive fourth derivative (~GENE)
-    ELSE
-      diff_dz_coeff = -1._dp    ! non adaptive (negative sign to compensate mu_z neg)
-    ENDIF
+    diff_dz_coeff = (deltaz/2._dp)**4 ! adaptive fourth derivative (~GENE)
     IF (SG) THEN
       CALL speak('--2 staggered z grids--')
       grid_shift = deltaz/2._dp

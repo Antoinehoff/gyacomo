@@ -142,13 +142,13 @@ CONTAINS
   SUBROUTINE find_input_file
     USE parallel, ONLY: my_id
     IMPLICIT NONE
-    CHARACTER(len=32) :: str, input_file
+    CHARACTER(len=32) :: str_, input_file
     INTEGER :: nargs, fileid, l, ierr
     LOGICAL :: mlexist
     nargs = COMMAND_ARGUMENT_COUNT()
     IF((nargs .EQ. 1) .OR. (nargs .EQ. 4)) THEN
-      CALL GET_COMMAND_ARGUMENT(nargs, str, l, ierr)
-      READ(str(1:l),'(i3)')  fileid
+      CALL GET_COMMAND_ARGUMENT(nargs, str_, l, ierr)
+      READ(str_(1:l),'(i3)')  fileid
       WRITE(input_file,'(a,a1,i2.2,a3)') 'fort','_',fileid,'.90'
 
       INQUIRE(file=input_file, exist=mlexist)
@@ -215,20 +215,20 @@ CONTAINS
   END SUBROUTINE display_h_min_s
 !================================================================================
 
-  function str_dp(k) result( str )
+  function str_dp(k) result( str_ )
   !   "Convert an integer to string."
       REAL(dp), intent(in) :: k
-      character(len=20):: str
-      write (str, *) k
-      str = adjustl(str)
+      character(len=10):: str_
+      write (str_, "(G10.2)") k
+      str_ = adjustl(str_)
   end function str_dp
 
-  function str_int(k) result( str )
+  function str_int(k) result( str_ )
   !   "Convert an integer to string."
       integer, intent(in) :: k
-      character(len=20)   :: str
-      write (str, *) k
-      str = adjustl(str)
+      character(len=10)   :: str_
+      write (str_, "(i2.2)") k
+      str_ = adjustl(str_)
   end function str_int
 
 ! To allocate arrays of doubles, integers, etc. at run time

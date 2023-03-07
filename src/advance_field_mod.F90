@@ -16,59 +16,63 @@ CONTAINS
 
   SUBROUTINE advance_moments
 
-    USE basic
-    USE time_integration
-    USE grid
-    use prec_const
+    USE basic,  ONLY: t0_adv_field,t1_adv_field,tc_adv_field, dt
+    USE grid,   ONLY:local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
+                     ngp, ngj, ngz, dmax, parray, jarray, dmax
     USE model,  ONLY: CLOS
     use fields, ONLY: moments
     use array,  ONLY: moments_rhs
+    USE time_integration, ONLY: updatetlevel, A_E, b_E, ntimelevel
     IMPLICIT NONE
-    INTEGER :: p_int, j_int, ia, ip, ij
-
+    INTEGER :: ia, ip, ij, ikx,iky,iz, istage, ipi, iji, izi
     CALL cpu_time(t0_adv_field)
-    DO ia=ias,iae
-      DO ip=ips,ipe
-        p_int = parray(ip)
-        DO ij=ijs,ije
-          j_int = jarray(ij)
-          IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmax))&
-          CALL advance_field(moments(ia,ip,ij,ikys:ikye,ikxs:ikxe,izs:ize,:), moments_rhs(ia,ip,ij,ikys:ikye,ikxs:ikxe,izs:ize,:))
-        ENDDO
-      ENDDO
-    ENDDO
+    SELECT CASE (updatetlevel)
+    CASE(1)
+      DO istage=1,ntimelevel
+      DO iz    =1,local_nz
+        izi = iz+ngz/2
+      DO ikx   =1,local_nkx
+      DO iky   =1,local_nky
+      DO ij    =1,local_nj
+        iji = ij+ngj/2
+      DO ip    =1,local_np
+        ipi = ip+ngp/2
+      DO ia    =1,local_na
+        IF((CLOS .NE. 1) .OR. (parray(ip)+2*jarray(ij) .LE. dmax))&
+        moments(ia,ipi,iji,iky,ikx,izi,1) = moments(ia,ipi,iji,iky,ikx,izi,1) &
+                + dt*b_E(istage)*moments_rhs(ia,ip,ij,iky,ikx,iz,istage)
+      END DO
+      END DO
+      END DO
+      END DO
+      END DO
+      END DO
+      END DO
+    CASE DEFAULT
+      moments(:,:,:,:,:,:,updatetlevel) = moments(:,:,:,:,:,:,1);
+      DO istage=1,ntimelevel-1
+      DO iz    =1,local_nz
+        izi = iz+ngz/2
+      DO ikx   =1,local_nkx
+      DO iky   =1,local_nky
+      DO ij    =1,local_nj
+        iji = ij+ngj/2
+      DO ip    =1,local_np
+        ipi = ip+ngp/2
+      DO ia    =1,local_na
+        IF((CLOS .NE. 1) .OR. (parray(ip)+2*jarray(ij) .LE. dmax))&
+        moments(ia,ipi,iji,iky,ikx,izi,updatetlevel) = moments(ia,ipi,iji,iky,ikx,izi,updatetlevel) + &
+                          dt*A_E(updatetlevel,istage)*moments_rhs(ia,ip,ij,iky,ikx,iz,istage)
+      END DO
+      END DO
+      END DO
+      END DO
+      END DO
+      END DO
+      END DO
+    END SELECT
     ! Execution time end
     CALL cpu_time(t1_adv_field)
     tc_adv_field = tc_adv_field + (t1_adv_field - t0_adv_field)
   END SUBROUTINE advance_moments
-
-
-  SUBROUTINE advance_field( f, f_rhs )
-
-    USE basic
-    USE time_integration
-    USE array
-    USE grid
-    use prec_const
-    IMPLICIT NONE
-
-    COMPLEX(dp), DIMENSION ( ikys:ikye, ikxs:ikxe, izs:ize, ntimelevel ) :: f
-    COMPLEX(dp), DIMENSION ( ikys:ikye, ikxs:ikxe, izs:ize, ntimelevel ) :: f_rhs
-    INTEGER :: istage
-
-    SELECT CASE (updatetlevel)
-    CASE(1)
-        DO istage=1,ntimelevel
-          f(ikys:ikye,ikxs:ikxe,izs:ize,1) = f(ikys:ikye,ikxs:ikxe,izs:ize,1) &
-                   + dt*b_E(istage)*f_rhs(ikys:ikye,ikxs:ikxe,izs:ize,istage)
-        END DO
-    CASE DEFAULT
-        f(ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel) = f(ikys:ikye,ikxs:ikxe,izs:ize,1);
-        DO istage=1,updatetlevel-1
-          f(ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel) = f(ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel) + &
-                            dt*A_E(updatetlevel,istage)*f_rhs(ikys:ikye,ikxs:ikxe,izs:ize,istage)
-        END DO
-    END SELECT
-  END SUBROUTINE advance_field
-
 END MODULE advance_field_routine

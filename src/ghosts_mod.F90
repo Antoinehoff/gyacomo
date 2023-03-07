@@ -112,19 +112,19 @@ SUBROUTINE update_ghosts_z_mom
     CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
     !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
     ! Send the last local moment to fill the -1 neighbour ghost
-    DO ig=1,ngz
+    DO ig=1,ngz/2
       CALL mpi_sendrecv(moments(:,:,:,:,:,last-(ig-1),updatetlevel),count,MPI_DOUBLE_COMPLEX,nbr_U,24+ig, & ! Send to Up the last
                                        buff_pjxy_zBC(:,:,:,:,:,-ig),count,MPI_DOUBLE_COMPLEX,nbr_D,24+ig, & ! Recieve from Down the first-1
                         comm0, status, ierr)
     ENDDO
     !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
-    DO ig=1,ngz
+    DO ig=1,ngz/2
       CALL mpi_sendrecv(moments(:,:,:,:,:,first+(ig-1),updatetlevel),count,MPI_DOUBLE_COMPLEX,nbr_D,26+ig, & ! Send to Up the last
                                          buff_pjxy_zBC(:,:,:,:,:,ig),count,MPI_DOUBLE_COMPLEX,nbr_U,26+ig, & ! Recieve from Down the first-1
                         comm0, status, ierr)
     ENDDO
   ELSE !No parallel (just copy)
-    DO ig=1,ngz
+    DO ig=1,ngz/2
       buff_pjxy_zBC(:,:,:,:,:,-ig) = moments(:,:,:,:,:, last-(ig-1),updatetlevel)
       buff_pjxy_zBC(:,:,:,:,:, ig) = moments(:,:,:,:,:,first+(ig-1),updatetlevel)
     ENDDO
@@ -135,11 +135,11 @@ SUBROUTINE update_ghosts_z_mom
       ! Exchanging the modes that have a periodic pair (from sheared BC)
       IF (ikxBC_L .NE. -99) THEN
         ! Fill the lower ghosts cells with the buffer value (upper cells from LEFT process)
-        DO ig=1,ngz
+        DO ig=1,ngz/2
           moments(:,:,:,iky,ikx,first-ig,updatetlevel) = pb_phase_L(iky)*buff_pjxy_zBC(:,:,:,iky,ikxBC_L,-ig)
         ENDDO
       ELSE
-        DO ig=1,ngz
+        DO ig=1,ngz/2
           moments(:,:,:,iky,ikx,first-ig,updatetlevel) = 0._dp
         ENDDO
       ENDIF
@@ -147,11 +147,11 @@ SUBROUTINE update_ghosts_z_mom
       ! Exchanging the modes that have a periodic pair (from sheared BC)
       IF (ikxBC_R .NE. -99) THEN
         ! Fill the upper ghosts cells with the buffer value (lower cells from RIGHT process)
-        DO ig=1,ngz
+        DO ig=1,ngz/2
           moments(:,:,:,iky,ikx,last+ig,updatetlevel) = pb_phase_R(iky)*buff_pjxy_zBC(:,:,:,iky,ikxBC_R,ig)
         ENDDO
       ELSE
-        DO ig=1,ngz
+        DO ig=1,ngz/2
           moments(:,:,:,iky,ikx,last+ig,updatetlevel) = 0._dp
         ENDDO
       ENDIF
@@ -174,7 +174,7 @@ SUBROUTINE update_ghosts_z_3D(field)
   IF (num_procs_z .GT. 1) THEN
     CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
       !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
-      DO ig = 1,ngz
+      DO ig = 1,ngz/2
       CALL mpi_sendrecv(     field(:,:,last-(ig-1)), count, MPI_DOUBLE_COMPLEX, nbr_U, 30+ig, & ! Send to Up the last
                        buff_xy_zBC(:,:,-ig),         count, MPI_DOUBLE_COMPLEX, nbr_D, 30+ig, & ! Receive from Down the first-1
                         comm0, status, ierr)
@@ -187,7 +187,7 @@ SUBROUTINE update_ghosts_z_3D(field)
       ENDDO
    ELSE
      ! no parallelization so just copy last cell into first ghosts and vice versa
-     DO ig = 1,ngz
+     DO ig = 1,ngz/2
        buff_xy_zBC(:,:,-ig) = field(:,:,last-(ig-1))
        buff_xy_zBC(:,:, ig) = field(:,:,first+(ig-1))
      ENDDO
@@ -196,22 +196,22 @@ SUBROUTINE update_ghosts_z_3D(field)
     DO ikx = 1,local_nkx
       ikxBC_L = ikx_zBC_L(iky,ikx);
       IF (ikxBC_L .GT. 0) THEN ! Exchanging the modes that have a periodic pair (a)
-        DO ig = 1,ngz
+        DO ig = 1,ngz/2
           field(iky,ikx,first-ig) = pb_phase_L(iky)*buff_xy_zBC(iky,ikxBC_L,-ig)
         ENDDO
       ELSE
-        DO ig = 1,ngz
+        DO ig = 1,ngz/2
           field(iky,ikx,first-ig) = 0._dp
         ENDDO
       ENDIF
       ikxBC_R = ikx_zBC_R(iky,ikx);
       IF (ikxBC_R .GT. 0) THEN ! Exchanging the modes that have a periodic pair (a)
         ! last+1 gets first
-        DO ig = 1,ngz
+        DO ig = 1,ngz/2
           field(iky,ikx,last+ig) = pb_phase_R(iky)*buff_xy_zBC(iky,ikxBC_R,ig)
         ENDDO
       ELSE
-        DO ig = 1,ngz
+        DO ig = 1,ngz/2
           field(iky,ikx,last+ig) = 0._dp
         ENDDO
       ENDIF

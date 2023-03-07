@@ -17,7 +17,7 @@ subroutine auxval
   IF (my_id .EQ. 0) WRITE(*,*) '=== Set auxiliary values ==='
 
   ! Init the grids
-  CALL set_grids(shear,Npol) ! radial modes (MPI distributed by FFTW)
+  CALL set_grids(shear,Npol,LINEARITY,N_HD,EM,Na) ! radial modes (MPI distributed by FFTW)
 
   CALL memory ! Allocate memory for global arrays
 

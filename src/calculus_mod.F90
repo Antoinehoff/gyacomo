@@ -38,7 +38,7 @@ SUBROUTINE grad_z(target,local_Nz,Ngz,inv_deltaz,f,ddzf)
     CASE(2)
       CALL grad_z_e2o(local_Nz,Ngz,inv_deltaz,f,ddzf)
     CASE DEFAULT ! No staggered grid -> usual centered finite differences
-      DO iz = Ngz/2+1,Ngz/2+local_Nz
+      DO iz = 1,local_Nz
        ddzf(iz) = dz_usu(-2)*f(iz  ) + dz_usu(-1)*f(iz+1) &
                  +dz_usu( 0)*f(iz+2) &
                  +dz_usu( 1)*f(iz+3) + dz_usu( 2)*f(iz+4)

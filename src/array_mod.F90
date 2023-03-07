@@ -46,7 +46,7 @@ MODULE array
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_poisson_op
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_ampere_op
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_pol_ion
-  REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: HF_phi_correction_operator
+  ! REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: HF_phi_correction_operator
 
   ! Gyrocenter density for electron and ions (ia,iky,ikx,iz)
   COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Na00
