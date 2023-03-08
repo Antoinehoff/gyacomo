@@ -238,12 +238,12 @@ CONTAINS
   SUBROUTINE gather_pjz(field_loc,field_tot,np_loc,np_tot,nj_tot,nz_loc,nz_tot)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: np_loc,np_tot, nj_tot, nz_loc,nz_tot
-    REAL(dp), DIMENSION(np_loc,nj_tot,nz_loc), INTENT(IN)  :: field_loc
-    REAL(dp), DIMENSION(np_tot,nj_tot,nz_tot), INTENT(OUT) :: field_tot
-    REAL(dp), DIMENSION(np_tot,nz_loc) :: buffer_pt_zl !full  p, local z
-    REAL(dp), DIMENSION(np_tot,nz_tot) :: buffer_pt_zt !full  p, full  z
-    REAL(dp), DIMENSION(np_loc) :: buffer_pl_zc !local p, constant z
-    REAL(dp), DIMENSION(np_tot) :: buffer_pt_zc !full  p, constant z
+    COMPLEX(dp), DIMENSION(np_loc,nj_tot,nz_loc), INTENT(IN)  :: field_loc
+    COMPLEX(dp), DIMENSION(np_tot,nj_tot,nz_tot), INTENT(OUT) :: field_tot
+    COMPLEX(dp), DIMENSION(np_tot,nz_loc) :: buffer_pt_zl !full  p, local z
+    COMPLEX(dp), DIMENSION(np_tot,nz_tot) :: buffer_pt_zt !full  p, full  z
+    COMPLEX(dp), DIMENSION(np_loc) :: buffer_pl_zc !local p, constant z
+    COMPLEX(dp), DIMENSION(np_tot) :: buffer_pt_zc !full  p, constant z
     INTEGER :: snd_p, snd_z, root_p, root_z, root_ky, ij, iz
 
     snd_p  = np_loc    ! Number of points to send along p (per z)
@@ -255,16 +255,16 @@ CONTAINS
         DO iz = 1,nz_loc
           ! fill a buffer to contain a slice of data at constant j and z
           buffer_pl_zc(1:np_loc) = field_loc(1:np_loc,ij,iz)
-          CALL MPI_GATHERV(buffer_pl_zc, snd_p,        MPI_DOUBLE_PRECISION, &
-                           buffer_pt_zc, rcv_p, dsp_p, MPI_DOUBLE_PRECISION, &
+          CALL MPI_GATHERV(buffer_pl_zc, snd_p,        MPI_DOUBLE_COMPLEX, &
+                           buffer_pt_zc, rcv_p, dsp_p, MPI_DOUBLE_COMPLEX, &
                            root_p, comm_p, ierr)
           buffer_pt_zl(1:np_tot,iz) = buffer_pt_zc(1:np_tot)
         ENDDO
 
         ! send the full line on y contained by root_kyas
         IF(rank_p .EQ. 0) THEN
-          CALL MPI_GATHERV(buffer_pt_zl, snd_z,          MPI_DOUBLE_PRECISION, &
-                           buffer_pt_zt, rcv_zp, dsp_zp, MPI_DOUBLE_PRECISION, &
+          CALL MPI_GATHERV(buffer_pt_zl, snd_z,          MPI_DOUBLE_COMPLEX, &
+                           buffer_pt_zt, rcv_zp, dsp_zp, MPI_DOUBLE_COMPLEX, &
                            root_z, comm_z, ierr)
         ENDIF
         ! ID 0 (the one who ouptut) rebuild the whole array

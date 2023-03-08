@@ -163,6 +163,12 @@ CONTAINS
     CALL set_kygrid(LINEARITY,N_HD)
     CALL set_kxgrid(shear,Npol,LINEARITY,N_HD)
     CALL set_zgrid (Npol)
+
+    print*, 'p:',parray
+    print*, 'j:',jarray
+    print*, 'ky:',kyarray
+    print*, 'kx:',kxarray
+    print*, 'z:',zarray
   END SUBROUTINE set_grids
 
   SUBROUTINE init_1Dgrid_distr
@@ -237,8 +243,8 @@ CONTAINS
     local_pmin = parray(1+ngp/2)
     ! Fill the ghosts
     DO ig = 1,ngp/2
-      parray(ig)          = local_pmin-ngp/2+(ig-1)
-      parray(local_np+ig) = local_pmax+ig
+      parray(ig)                = local_pmin-ngp/2+(ig-1)
+      parray(local_np+ngp/2+ig) = local_pmax+ig
     ENDDO
     IF(CONTAINSp0) SOLVE_POISSON = .TRUE.
     IF(CONTAINSp1) SOLVE_AMPERE  = .TRUE.
@@ -276,12 +282,12 @@ CONTAINS
     DO ij = 1+ngj/2,local_nj+ngj/2
       jarray(ij) = ij-1-ngj/2+local_nj_offset
     END DO
-    local_jmax = jarray(local_np+ngj/2)
+    local_jmax = jarray(local_nj+ngj/2)
     local_jmin = jarray(1+ngj/2)
     ! Fill the ghosts
     DO ig = 1,ngj/2
-      jarray(ig)          = local_jmin-ngj/2+(ig-1)
-      jarray(local_nj+ig) = local_jmax+ig
+      jarray(ig)                = local_jmin-ngj/2+(ig-1)
+      jarray(local_nj+ngj/2+ig) = local_jmax+ig
     ENDDO
     ! Precomputations
     jmax_dp      = real(jmax,dp)
@@ -511,11 +517,13 @@ CONTAINS
       CALL speak('--2 staggered z grids--')
       grid_shift = deltaz/2._dp
       ! indices for even p and odd p grids (used in kernel, jacobian, gij etc.)
-      ieven  = 1; iodd = 2
+      ieven  = 1
+      iodd   = 2
       Nzgrid = 2
     ELSE
       grid_shift = 0._dp
-      ieven = 1; iodd = 1
+      ieven  = 1
+      iodd   = 1
       Nzgrid = 1
     ENDIF
     ! Build the full grids on process 0 to diagnose it without comm

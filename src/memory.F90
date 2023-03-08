@@ -20,7 +20,6 @@ SUBROUTINE memory
   ! CALL allocate_array(HF_phi_correction_operator, 1,local_nky, 1,local_nkx, 1,local_Nz)
 
   !Moments related arrays
-  CALL allocate_array(           Na00, 1,local_Na, 1,local_nky, 1,local_nkx, 1,local_Nz)
   CALL allocate_array(           dens, 1,local_Na, 1,local_nky, 1,local_nkx, 1,local_Nz)
   CALL allocate_array(           upar, 1,local_Na, 1,local_nky, 1,local_nkx, 1,local_Nz)
   CALL allocate_array(           uper, 1,local_Na, 1,local_nky, 1,local_nkx, 1,local_Nz)

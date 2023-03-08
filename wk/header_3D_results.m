@@ -56,7 +56,7 @@ PARTITION  = '/misc/gyacomo_outputs/';
 % resdir = 'paper_2_nonlinear/kT_5.3/9x5x128x64x24';
 % resdir = 'paper_2_nonlinear/kT_5.3/9x5x128x64x64';
 % resdir = 'paper_2_nonlinear/kT_5.3/11x6x128x64x24';
-resdir = 'paper_2_nonlinear/kT_5.3/11x6x128x64x64';
+% resdir = 'paper_2_nonlinear/kT_5.3/11x6x128x64x64';
 
 %% Old stuff
 % resdir = 'CBC/kT_4.5_128x64x16x13x7/';

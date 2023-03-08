@@ -48,9 +48,6 @@ MODULE array
   REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: inv_pol_ion
   ! REAL(dp), DIMENSION(:,:,:), ALLOCATABLE :: HF_phi_correction_operator
 
-  ! Gyrocenter density for electron and ions (ia,iky,ikx,iz)
-  COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Na00
-
   ! Kinetic spectrum sum_kx,ky(|Napj(z)|^2), (ia,ip,ij,iz) (should be real)
   REAL(dp), DIMENSION(:,:,:,:), ALLOCATABLE :: Napjz
 

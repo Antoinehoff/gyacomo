@@ -172,14 +172,14 @@ SUBROUTINE init_gyrodens
   ! Seed random number generator
   iseedarr(:)=iseed
   CALL RANDOM_SEED(PUT=iseedarr+my_id)
-
+  moments = 0._dp
     !**** Broad noise initialization *******************************************
   DO ia=1,local_na
-    DO ip=1,local_np+ngp
-      DO ij=1,local_nj+ngj
+    DO ip=1+ngp/2,local_np+ngp/2
+      DO ij=1+ngj/2,local_nj+ngj/2
         DO ikx=1,total_nkx
           DO iky=1,local_nky
-            DO iz=1,local_nz+ngz
+            DO iz=1+ngz/2,local_nz+ngz/2
               CALL RANDOM_NUMBER(noise)
               IF ( (parray(ip) .EQ. 1) .AND. (jarray(ij) .EQ. 1) ) THEN
                 moments(ia,ip,ij,iky,ikx,iz,:) = (init_background + init_noiselvl*(noise-0.5_dp))
@@ -196,6 +196,8 @@ SUBROUTINE init_gyrodens
         ENDIF
       END DO
     END DO
+    print*, SUM(moments)
+    stop
     ! Putting to zero modes that are not in the 2/3 Orszag rule
     IF (LINEARITY .NE. 'linear') THEN
       DO ikx=1,total_nkx

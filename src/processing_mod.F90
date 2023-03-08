@@ -47,7 +47,7 @@ SUBROUTINE compute_radial_transport
   IMPLICIT NONE
   COMPLEX(dp) :: pflux_local, gflux_local, integral
   REAL(dp)    :: buffer(2)
-  INTEGER     :: i_, root, iky, ikx, ia, iz, in, iodd, ieven
+  INTEGER     :: i_, root, iky, ikx, ia, iz, in
   COMPLEX(dp), DIMENSION(local_nz+Ngz) :: integrant
   DO ia = 1,local_na
     pflux_local = 0._dp ! particle flux
@@ -330,13 +330,15 @@ SUBROUTINE compute_Napjz_spectrum
     ! z-moment spectrum
     ! build local sum
     local_sum = 0._dp
-    DO ikx = 1,local_nkx
-      DO iky = 1,local_nky
-        DO ij = 1,local_nj
-          DO ip = 1,local_np
-            local_sum(ip,ij,iz)  = local_sum(ip,ij,iz)  + &
-            (moments(ia,ip+Ngp/2,ij+Ngj/2,iky,ikx,iz+Ngz/2,updatetlevel) &
-            * CONJG(moments(ia,ip+Ngp/2,ij+Ngj/2,iky,ikx,iz+Ngz/2,updatetlevel)))
+    DO iz = 1,local_nz
+      DO ikx = 1,local_nkx
+        DO iky = 1,local_nky
+          DO ij = 1,local_nj
+            DO ip = 1,local_np
+              local_sum(ip,ij,iz)  = local_sum(ip,ij,iz)  + &
+              (moments(ia,ip+Ngp/2,ij+Ngj/2,iky,ikx,iz+Ngz/2,updatetlevel) &
+              * CONJG(moments(ia,ip+Ngp/2,ij+Ngj/2,iky,ikx,iz+Ngz/2,updatetlevel)))
+            ENDDO
           ENDDO
         ENDDO
       ENDDO
