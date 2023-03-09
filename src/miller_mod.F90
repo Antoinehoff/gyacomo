@@ -6,7 +6,7 @@ MODULE miller
   USE basic
   USE parallel, ONLY: my_id, num_procs_z, nbr_U, nbr_D, comm0
   ! use coordinates,only: gcoor, get_dzprimedz
-  USE grid, ONLY: local_Nky, local_Nkx, local_Nz, Ngz, kyarray, kxarray, zarray, Nz, local_nz_offset
+  USE grid, ONLY: local_Nky, local_Nkx, local_nz, Ngz, kyarray, kxarray, zarray, Nz, local_nz_offset
   ! use discretization
   USE lagrange_interpolation
   ! use par_in, only: beta, sign_Ip_CW, sign_Bt_CW, Npol
@@ -59,12 +59,12 @@ CONTAINS
     real(dp), INTENT(INOUT) :: edge_opt        ! alpha mhd
     real(dp), INTENT(INOUT) :: dpdx_pm_geom    ! amplitude mag. eq. pressure grad.
     real(dp), INTENT(INOUT) :: C_y, C_xy
-    real(dp), dimension(1:local_Nz+Ngz,1:2), INTENT(INOUT) :: &
+    real(dp), dimension(1:local_nz+Ngz,1:2), INTENT(INOUT) :: &
                                               gxx_,gyy_,gzz_,gxy_,gxz_,gyz_,&
                                               dBdx_,dBdy_,Bfield_,jacobian_,&
                                               dBdz_,R_hat_,Z_hat_,dxdR_,dxdZ_, &
                                               gradz_coeff_
-    real(dp), dimension(1:local_Nky,1:local_Nkx,1:local_Nz+Ngz,1:2), INTENT(INOUT) :: Ckxky_
+    real(dp), dimension(1:local_Nky,1:local_Nkx,1:local_nz+Ngz,1:2), INTENT(INOUT) :: Ckxky_
     INTEGER :: iz, ikx, iky, eo
     ! No parameter in gyacomo yet
     real(dp) :: sign_Ip_CW=1 ! current sign (only normal current)
@@ -477,7 +477,7 @@ CONTAINS
     call lag3interp(dxdZ_s,chi_s,np_s,dxdZ_out,chi_out,Nz)
     ! Fill the interior of the geom arrays with the results
     do eo=1,2
-      DO iz = 1,local_Nz
+      DO iz = 1,local_nz
         gxx_(iz+Ngz/2,eo)      = gxx_out(iz-local_nz_offset)
         gyy_(iz+Ngz/2,eo)      = gyy_out(iz-local_nz_offset)
         gxz_(iz+Ngz/2,eo)      = gxz_out(iz-local_nz_offset)
@@ -511,7 +511,7 @@ CONTAINS
     CALL update_ghosts_z(dxdZ_(:,eo))
 
     ! Curvature operator (Frei et al. 2022 eq 2.15)
-    DO iz = 1,local_Nz+Ngz
+    DO iz = 1,local_nz+Ngz
       G1 = gxy_(iz,eo)*gxy_(iz,eo)-gxx_(iz,eo)*gyy_(iz,eo)
       G2 = gxy_(iz,eo)*gxz_(iz,eo)-gxx_(iz,eo)*gyz_(iz,eo)
       G3 = gyy_(iz,eo)*gxz_(iz,eo)-gxy_(iz,eo)*gyz_(iz,eo)
@@ -536,10 +536,10 @@ CONTAINS
     SUBROUTINE update_ghosts_z(fz_)
       IMPLICIT NONE
       ! INTEGER,  INTENT(IN) :: nztot_
-      REAL(dp), DIMENSION(1:local_Nz+Ngz), INTENT(INOUT) :: fz_
+      REAL(dp), DIMENSION(1:local_nz+Ngz), INTENT(INOUT) :: fz_
       REAL(dp), DIMENSION(-2:2) :: buff
       INTEGER :: status(MPI_STATUS_SIZE), count, last, first
-      last = local_Nz+Ngz/2
+      last = local_nz+Ngz/2
       first= 1 + Ngz/2
       IF(Nz .GT. 1) THEN
         IF (num_procs_z .GT. 1) THEN

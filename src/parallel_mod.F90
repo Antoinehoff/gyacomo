@@ -276,39 +276,39 @@ CONTAINS
 
   !!!!! Gather a field in kinetic + spatial coordinates on rank 0 !!!!!
   !!!!! Gather a field in spatial coordinates on rank 0 !!!!!
-  SUBROUTINE gather_pjxyz(field_loc,field_tot,np_loc,np_tot,nj_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot)
+  SUBROUTINE gather_pjxyz(field_loc,field_tot,na_tot,np_loc,np_tot,nj_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot)
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: np_loc,np_tot,nj_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot
-    COMPLEX(dp), DIMENSION(np_loc,nj_tot,nky_loc,nkx_tot,nz_loc), INTENT(IN)  :: field_loc
-    COMPLEX(dp), DIMENSION(np_tot,nj_tot,nky_tot,nkx_tot,nz_tot), INTENT(OUT) :: field_tot
-    COMPLEX(dp), DIMENSION(np_tot,nky_tot,nz_loc) :: buffer_pt_yt_zl ! full p,     full y, local    z
-    COMPLEX(dp), DIMENSION(np_tot,nky_tot,nz_tot) :: buffer_pt_yt_zt ! full p,     full y, full     z
-    COMPLEX(dp), DIMENSION(np_tot,nky_loc) :: buffer_pt_yl_zc     ! full p,    local y, constant z
-    COMPLEX(dp), DIMENSION(np_tot,nky_tot) :: buffer_pt_yt_zc     ! full p,     full y, constant z
-    COMPLEX(dp), DIMENSION(np_loc) :: buffer_pl_cy_zc     !local p, constant y, constant z
-    COMPLEX(dp), DIMENSION(np_tot)       :: buffer_pt_cy_zc     ! full p, constant y, constant z
+    INTEGER, INTENT(IN) :: na_tot,np_loc,np_tot,nj_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot
+    COMPLEX(dp), DIMENSION(na_tot,np_loc,nj_tot,nky_loc,nkx_tot,nz_loc), INTENT(IN)  :: field_loc
+    COMPLEX(dp), DIMENSION(na_tot,np_tot,nj_tot,nky_tot,nkx_tot,nz_tot), INTENT(OUT) :: field_tot
+    COMPLEX(dp), DIMENSION(na_tot,np_tot,nky_tot,nz_loc) :: buffer_pt_yt_zl ! full p,     full y, local    z
+    COMPLEX(dp), DIMENSION(na_tot,np_tot,nky_tot,nz_tot) :: buffer_pt_yt_zt ! full p,     full y, full     z
+    COMPLEX(dp), DIMENSION(na_tot,np_tot,nky_loc) :: buffer_pt_yl_zc     ! full p,    local y, constant z
+    COMPLEX(dp), DIMENSION(na_tot,np_tot,nky_tot) :: buffer_pt_yt_zc     ! full p,     full y, constant z
+    COMPLEX(dp), DIMENSION(na_tot,np_loc)       :: buffer_pl_cy_zc     !local p, constant y, constant z
+    COMPLEX(dp), DIMENSION(na_tot,np_tot)       :: buffer_pt_cy_zc     ! full p, constant y, constant z
     INTEGER :: snd_p, snd_y, snd_z, root_p, root_z, root_ky, iy, ix, iz, ij
-    snd_p  = np_loc                ! Number of points to send along p (per z,y)
-    snd_y  = np_tot*nky_loc        ! Number of points to send along y (per z, full p)
-    snd_z  = np_tot*nky_tot*nz_loc ! Number of points to send along z (full y, full p)
+    snd_p  = na_tot*np_loc                ! Number of points to send along p (per z,y)
+    snd_y  = na_tot*np_tot*nky_loc        ! Number of points to send along y (per z, full p)
+    snd_z  = na_tot*np_tot*nky_tot*nz_loc ! Number of points to send along z (full y, full p)
     root_p = 0; root_z = 0; root_ky = 0
     j: DO ij = 1,nj_tot
       x: DO ix = 1,nkx_tot
         z: DO iz = 1,nz_loc
           y: DO iy = 1,nky_loc
             ! fill a buffer to contain a slice of p data at constant j, ky, kx and z
-            buffer_pl_cy_zc(1:np_loc) = field_loc(1:np_loc,ij,iy,ix,iz)
+            buffer_pl_cy_zc(1:na_tot,1:np_loc) = field_loc(1:na_tot,1:np_loc,ij,iy,ix,iz)
             CALL MPI_GATHERV(buffer_pl_cy_zc, snd_p,        MPI_DOUBLE_COMPLEX, &
                              buffer_pt_cy_zc, rcv_p, dsp_p, MPI_DOUBLE_COMPLEX, &
                              root_p, comm_p, ierr)
-            buffer_pt_yl_zc(1:np_tot,iy) = buffer_pt_cy_zc(1:np_tot)
+            buffer_pt_yl_zc(1:na_tot,1:np_tot,iy) = buffer_pt_cy_zc(1:na_tot,1:np_tot)
           ENDDO y
           ! send the full line on p contained by root_p
           IF(rank_p .EQ. 0) THEN
             CALL MPI_GATHERV(buffer_pt_yl_zc, snd_y,          MPI_DOUBLE_COMPLEX, &
                              buffer_pt_yt_zc, rcv_yp, dsp_yp, MPI_DOUBLE_COMPLEX, &
                              root_ky, comm_ky, ierr)
-            buffer_pt_yt_zl(1:np_tot,1:nky_tot,iz) = buffer_pt_yt_zc(1:np_tot,1:nky_tot)
+            buffer_pt_yt_zl(1:na_tot,1:np_tot,1:nky_tot,iz) = buffer_pt_yt_zc(1:na_tot,1:np_tot,1:nky_tot)
           ENDIF
         ENDDO z
         ! send the full line on y contained by root_kyas
@@ -319,7 +319,7 @@ CONTAINS
         ENDIF
         ! ID 0 (the one who ouptut) rebuild the whole array
         IF(my_id .EQ. 0) &
-          field_tot(1:np_tot,ij,1:nky_tot,ix,1:nz_tot) = buffer_pt_yt_zt(1:np_tot,1:nky_tot,1:nz_tot)
+          field_tot(1:na_tot,1:np_tot,ij,1:nky_tot,ix,1:nz_tot) = buffer_pt_yt_zt(1:na_tot,1:np_tot,1:nky_tot,1:nz_tot)
       ENDDO x
     ENDDO j
   END SUBROUTINE gather_pjxyz

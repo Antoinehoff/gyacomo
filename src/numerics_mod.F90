@@ -72,7 +72,8 @@ END SUBROUTINE build_dv4Hp_table
 SUBROUTINE evaluate_kernels
   USE basic
   USE array,   ONLY : kernel!, HF_phi_correction_operator
-  USE grid,    ONLY : local_Na, local_Nj,Ngj, local_nkx, local_nky, local_nz, Ngz, jarray, kparray
+  USE grid,    ONLY : local_Na, local_Nj,Ngj, local_nkx, local_nky, local_nz, Ngz, jarray, kparray,&
+                      nzgrid
   USE species, ONLY : sigma2_tau_o2
   USE prec_const, ONLY: dp
   IMPLICIT NONE
@@ -80,26 +81,26 @@ SUBROUTINE evaluate_kernels
   REAL(dp)   :: j_dp, y_, factj
 
 DO ia  = 1,local_Na
-  DO eo  = 1,2
-  DO ikx = 1,local_nkx
-  DO iky = 1,local_nky
-  DO iz  = 1,local_nz + Ngz
-    DO ij = 1, local_Nj + Ngj
-      j_int = jarray(ij)
-      j_dp  = REAL(j_int,dp)
-      y_    =  sigma2_tau_o2(ia) * kparray(iky,ikx,iz,eo)**2
-      IF(j_int .LT. 0) THEN
-        kernel(ia,ij,iky,ikx,iz,eo) = 0._dp
-      ELSE
-        factj = GAMMA(j_dp+1._dp)
-        kernel(ia,ij,iky,ikx,iz,eo) = y_**j_int*EXP(-y_)/factj
-      ENDIF
+  DO eo  = 1,nzgrid
+    DO ikx = 1,local_nkx
+      DO iky = 1,local_nky
+        DO iz  = 1,local_nz + Ngz
+          DO ij = 1, local_nj + Ngj
+            j_int = jarray(ij)
+            j_dp  = REAL(j_int,dp)
+            y_    =  sigma2_tau_o2(ia) * kparray(iky,ikx,iz,eo)**2
+            IF(j_int .LT. 0) THEN
+              kernel(ia,ij,iky,ikx,iz,eo) = 0._dp
+            ELSE
+              factj = GAMMA(j_dp+1._dp)
+              kernel(ia,ij,iky,ikx,iz,eo) = y_**j_int*EXP(-y_)/factj
+            ENDIF
+          ENDDO
+          ! IF (ijs .EQ. 1) & ! if ijs is 1, the ghost kernel has negative index
+            ! kernel(ia,ijgs,iky,ikx,iz,eo) = 0._dp
+        ENDDO
+      ENDDO
     ENDDO
-    ! IF (ijs .EQ. 1) & ! if ijs is 1, the ghost kernel has negative index
-      ! kernel(ia,ijgs,iky,ikx,iz,eo) = 0._dp
-  ENDDO
-  ENDDO
-  ENDDO
   ENDDO
   ! !! Correction term for the evaluation of the heat flux
   ! HF_phi_correction_operator(:,:,:) = &

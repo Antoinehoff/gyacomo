@@ -39,7 +39,7 @@ CONTAINS
         x:DO ikx = 1,local_nky
           y:DO iky = 1,local_nkx
             !!!!!!!!!!!!!!! Compute particle charge density q_a n_a for each evolved species
-            DO iz = 1,local_Nz
+            DO iz = 1,local_nz
               rho(iz) = 0._dp
               DO in=1,total_nj
                 DO ia = 1,local_na
@@ -59,7 +59,7 @@ CONTAINS
               IF(kyarray(iky).EQ.0._dp) THEN ! take ky=0 mode (y-average)
                 ! Prepare integrant for z-average
                 integrant(iz) = Jacobian(iz+ngz/2,ieven)*rho(iz)*inv_pol_ion(iky,ikx,iz)
-                call simpson_rule_z(local_Nz,deltaz,integrant,intf_) ! get the flux averaged phi
+                call simpson_rule_z(local_nz,deltaz,integrant,intf_) ! get the flux averaged phi
                 fsa_phi = intf_ * iInt_Jacobian !Normalize by 1/int(Jxyz)dz
               ENDIF
               rho(iz) = rho(iz) + fsa_phi
@@ -68,7 +68,7 @@ CONTAINS
             ! IF (ADIAB_I) THEN
             ! ENDIF
             !!!!!!!!!!!!!!! Inverting the poisson equation
-            DO iz = 1,local_Nz
+            DO iz = 1,local_nz
               phi(iky,ikx,iz+ngz/2) = inv_poisson_op(iky,ikx,iz)*rho(iz)
             ENDDO
           ENDDO y

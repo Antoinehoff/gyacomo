@@ -1,9 +1,9 @@
 SUBROUTINE diagnose(kstep)
   !   Diagnostics, writing simulation state to disk
-  USE basic, ONLY: t0_diag,t1_diag,tc_diag, lu_in, finish, start, cstep, dt, time, tmax, display_h_min_s
+  USE basic,           ONLY: t0_diag,t1_diag,tc_diag, lu_in, finish, start, cstep, dt, time, tmax, display_h_min_s
   USE diagnostics_par, ONLY: input_fname
-  USE processing, ONLY: pflux_x, hflux_x
-  USE parallel,   ONLY: my_id
+  USE processing,      ONLY: pflux_x, hflux_x
+  USE parallel,        ONLY: my_id
   IMPLICIT NONE
   INTEGER, INTENT(in) :: kstep
   CALL cpu_time(t0_diag) ! Measuring time
@@ -24,7 +24,7 @@ SUBROUTINE diagnose(kstep)
   !! Specific diagnostic calls
   CALL diagnose_full(kstep)
   ! Terminal info
-  IF ((kstep .GT. 0) .AND. (MOD(cstep, INT(1.0/dt)) == 0) .AND. (my_id .EQ. 0)) THEN
+  IF ((kstep .GE. 0) .AND. (MOD(cstep, INT(1.0/dt)) == 0) .AND. (my_id .EQ. 0)) THEN
     WRITE(*,"(A,F6.0,A1,F6.0,A8,G10.2,A8,G10.2,A)")'|t/tmax = ', time,"/",tmax,'| Gxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'|'
   ENDIF
   CALL cpu_time(t1_diag); tc_diag = tc_diag + (t1_diag - t0_diag)
@@ -155,7 +155,7 @@ SUBROUTINE diagnose_full(kstep)
     CALL putarrnd(fidres, "/data/metric/Jacobian",    Jacobian(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
     CALL putarrnd(fidres, "/data/metric/gradz_coeff", gradz_coeff(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
     CALL putarrnd(fidres, "/data/metric/Ckxky",       Ckxky(1:local_nky,1:local_nkx,1+ngz/2:local_nz+ngz/2,:), (/1, 1, 3/))
-    CALL putarrnd(fidres, "/data/metric/kernel",    kernel(1,1+ngj/2:local_nj+ngj/2,1:local_nky,1:local_nkx,1+ngz/2:local_nz+ngz/2,:), (/1, 1, 2, 4/))
+    CALL putarrnd(fidres, "/data/metric/kernel",    kernel(1,1+ngj/2:local_nj+ngj/2,1:local_nky,1:local_nkx,1+ngz/2:local_nz+ngz/2,1), (/1, 1, 2, 4/))
     !  var0d group (gyro transport)
     IF (nsave_0d .GT. 0) THEN
      CALL creatg(fidres, "/data/var0d", "0d profiles")
@@ -225,13 +225,10 @@ SUBROUTINE diagnose_full(kstep)
       CALL attach(fidres,"/data/var5d/" , "frames", iframe5d)
     END IF
   ENDIF
-
-
   !_____________________________________________________________________________
   !                   2.   Periodic diagnostics
   !
   IF (kstep .GE. 0) THEN
-
      !                       2.1   0d history arrays
      IF (nsave_0d .GT. 0) THEN
         IF ( MOD(cstep, nsave_0d) == 0 ) THEN
@@ -248,15 +245,13 @@ SUBROUTINE diagnose_full(kstep)
         ENDIF
      ENDIF
      !                       2.4   5d profiles
-     IF (nsave_5d .GT. 0 .AND. cstep .GT. 0) THEN
+     IF (nsave_5d .GT. 0) THEN
         IF (MOD(cstep, nsave_5d) == 0) THEN
            CALL diagnose_5d
         END IF
      END IF
-
   !_____________________________________________________________________________
   !                   3.   Final diagnostics
-
   ELSEIF (kstep .EQ. -1) THEN
      CALL attach(fidres, "/data/input","cpu_time",finish-start)
 
@@ -446,8 +441,8 @@ SUBROUTINE diagnose_5d
   USE fields, ONLY: moments
   USE grid,   ONLY:total_np, total_nj, total_nky, total_nkx, total_nz, &
                    local_np, local_nj, local_nky, local_nkx, local_nz, &
-                   ngp, ngj, ngz
-  USE time_integration, ONLY: updatetlevel
+                   ngp, ngj, ngz, total_na
+  USE time_integration, ONLY: updatetlevel, ntimelevel
   USE diagnostics_par
   USE prec_const, ONLY: dp
   IMPLICIT NONE
@@ -470,19 +465,19 @@ SUBROUTINE diagnose_5d
     USE parallel, ONLY: gather_pjxyz, num_procs
     USE prec_const, ONLY: dp
     IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(:,:,:,:,:,:,:), INTENT(IN) :: field
+    COMPLEX(dp), DIMENSION(total_na,local_np+ngp,local_nj+ngj,local_nky,local_nkx,local_nz+ngz,ntimelevel), INTENT(IN) :: field
     CHARACTER(*), INTENT(IN) :: text
-    COMPLEX(dp), DIMENSION(local_np,local_nj,local_nky,local_nkx,local_nz) :: field_sub
-    COMPLEX(dp), DIMENSION(total_np,total_nj,total_nky,total_nkx,total_nz) :: field_full
+    COMPLEX(dp), DIMENSION(total_na,local_np,local_nj,local_nky,local_nkx,local_nz) :: field_sub
+    COMPLEX(dp), DIMENSION(total_na,total_np,total_nj,total_nky,total_nkx,total_nz) :: field_full
     CHARACTER(LEN=50) :: dset_name
-    field_sub  = field(1,(1+ngp/2):(local_np+ngp/2),(1+ngj/2):(local_nj+ngj/2),&
+    field_sub  = field(1:total_na,(1+ngp/2):(local_np+ngp/2),(1+ngj/2):(local_nj+ngj/2),&
                           1:local_nky,1:local_nkx,  (1+ngz/2):(local_nz+ngz/2),updatetlevel)
     field_full = 0;
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var5d", TRIM(text), iframe5d
     IF (num_procs .EQ. 1) THEN
       CALL putarr(fidres, dset_name, field_sub, ionode=0)
     ELSEIF(GATHERV_OUTPUT) THEN ! output using one node (gatherv)
-      CALL gather_pjxyz(field_sub,field_full,local_np,total_np,total_nj,local_nky,total_nky,total_nkx,local_nz,total_nz)
+      CALL gather_pjxyz(field_sub,field_full,total_na,local_np,total_np,total_nj,local_nky,total_nky,total_nkx,local_nz,total_nz)
       CALL putarr(fidres, dset_name, field_full, ionode=0)
     ELSE
       CALL putarrnd(fidres, dset_name, field_sub,  (/1,3,5/))

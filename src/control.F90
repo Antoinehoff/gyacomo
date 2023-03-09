@@ -61,6 +61,9 @@ SUBROUTINE control
   !              2.   Main loop
   DO
      CALL cpu_time(t0_step) ! Measuring time
+     
+     CALL tesend
+     IF( nlend ) EXIT ! exit do loop
 
      CALL increase_step
      CALL increase_cstep
@@ -68,8 +71,6 @@ SUBROUTINE control
 
      CALL increase_time
 
-     CALL tesend
-     IF( nlend ) EXIT ! exit do loop
 
      CALL diagnose(step)
 

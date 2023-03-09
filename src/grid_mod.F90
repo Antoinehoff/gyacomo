@@ -76,7 +76,7 @@ MODULE grid
   REAL(dp), PUBLIC, PROTECTED ::  local_kxmin, local_kxmax
   REAL(dp), DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED ::  local_zmin,  local_zmax
   ! local z weights for computing simpson rule
-  INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: zweights_SR
+  REAL(dp),  DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: zweights_SR
   ! Numerical diffusion scaling
   REAL(dp), PUBLIC, PROTECTED  ::  diff_p_coeff, diff_j_coeff
   REAL(dp), PUBLIC, PROTECTED  ::  diff_kx_coeff, diff_ky_coeff, diff_dz_coeff
@@ -381,7 +381,7 @@ CONTAINS
     CHARACTER(len=*), INTENT(IN) ::LINEARITY
     INTEGER, INTENT(IN)  :: N_HD
     INTEGER :: ikx, ikxo
-    REAL    :: Lx_adapted
+    REAL(dp):: Lx_adapted
     IF(shear .GT. 0) THEN
       IF(my_id.EQ.0) write(*,*) 'Magnetic shear detected: set up sheared kx grid..'
       ! mininal size of box in x to respect dkx = 2pi shear dky
@@ -424,7 +424,7 @@ CONTAINS
         local_kxmax = 0._dp
         DO ikx = ikxs,ikxe
           ikxo = ikx - local_nkx_offset
-          kxarray(ikxo) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*real(ikx-1)/real(Nkx)))
+          kxarray(ikxo) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*real(ikx-1,dp)/real(Nkx,dp)))
           if (ikx .EQ. Nx/2+1)     kxarray(ikxo) = -kxarray(ikxo)
           ! Finding kx=0
           IF (kxarray(ikxo) .EQ. 0) THEN
@@ -441,7 +441,7 @@ CONTAINS
         ! Build the full grids on process 0 to diagnose it without comm
         ! kx
         DO ikx = 1,Nkx
-            kxarray_full(ikx) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*real(ikx-1)/real(Nkx)))
+            kxarray_full(ikx) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*real(ikx-1,dp)/real(Nkx,dp)))
             IF (ikx .EQ. Nx/2+1) kxarray_full(ikx) = -kxarray_full(ikx)
         END DO
       ELSE ! Odd number of kx (-2 -1 0 1 2)
@@ -503,8 +503,8 @@ CONTAINS
     USE prec_const
     USE parallel, ONLY: num_procs_z, rank_z
     IMPLICIT NONE
-    REAL    :: grid_shift, Lz, zmax, zmin
-    INTEGER :: istart, iend, in, Npol, iz, ig, eo, izo
+    REAL(dp):: grid_shift, Lz, zmax, zmin
+    INTEGER :: istart, iend, in, Npol, iz, ig, eo
     total_nz = Nz
     ! Length of the flux tube (in ballooning angle)
     Lz         = 2_dp*pi*Npol
@@ -562,10 +562,9 @@ CONTAINS
     ! Local z array
     ALLOCATE(zarray(local_nz+Ngz,Nzgrid))
     !! interior point loop
-    DO iz = izs,ize
-      izo = iz - local_nz_offset
+    DO iz = 1,total_nz
       DO eo = 1,Nzgrid
-        zarray(izo,eo) = zarray_full(iz) + (eo-1)*grid_shift
+        zarray(iz+ngz/2,eo) = zarray_full(iz) + REAL(eo-1,dp)*grid_shift
       ENDDO
     ENDDO
     ALLOCATE(local_zmax(Nzgrid),local_zmin(Nzgrid))
@@ -573,16 +572,17 @@ CONTAINS
       ! Find local extrema
       local_zmax(eo) = zarray(local_nz+ngz/2,eo)
       local_zmin(eo) = zarray(1+ngz/2,eo)
+      print*, zarray
       ! Fill the ghosts
-      DO ig = 1,ngj/2
-        zarray(ig,eo)          = local_zmin(eo)-(ngz/2+(ig-1))*deltaz
-        zarray(local_nz+ig,eo) = local_zmax(eo)+ig*deltaz
+      DO ig = 1,ngz/2
+        zarray(ig,eo)          = local_zmin(eo)-REAL(ngz/2-(ig-1),dp)*deltaz
+        zarray(local_nz+ngz/2+ig,eo) = local_zmax(eo)+REAL(ig,dp)*deltaz
       ENDDO
       ! Set up the flags to know if the process contains the tip and/or the tail
       ! of the z domain (important for z-boundary condition)
-      IF(abs(local_zmin(eo) - (zmin+(eo-1)*grid_shift)) .LT. EPSILON(zmin)) &
+      IF(abs(local_zmin(eo) - (zmin+REAL(eo-1,dp)*grid_shift)) .LT. EPSILON(zmin)) &
         contains_zmin = .TRUE.
-      IF(abs(local_zmax(eo) - (zmax+(eo-1)*grid_shift)) .LT. EPSILON(zmax)) &
+      IF(abs(local_zmax(eo) - (zmax+REAL(eo-1,dp)*grid_shift)) .LT. EPSILON(zmax)) &
         contains_zmax = .TRUE.
     ENDDO
      IF(mod(Nz,2) .NE. 0 ) THEN
@@ -596,7 +596,7 @@ CONTAINS
     REAL(dp)    :: kx, ky
     CALL allocate_array( kparray, 1,local_nky, 1,local_nkx, 1,local_nz+Ngz, 1,2)
     DO eo = 1,Nzgrid
-      DO iz = 1,local_Nz+Ngz
+      DO iz = 1,local_nz+Ngz
         DO iky = 1,local_nky
           ky = kyarray(iky)
           DO ikx = 1,local_nkx

@@ -181,7 +181,7 @@ SUBROUTINE init_gyrodens
           DO iky=1,local_nky
             DO iz=1+ngz/2,local_nz+ngz/2
               CALL RANDOM_NUMBER(noise)
-              IF ( (parray(ip) .EQ. 1) .AND. (jarray(ij) .EQ. 1) ) THEN
+              IF ( (parray(ip) .EQ. 0) .AND. (jarray(ij) .EQ. 0) ) THEN
                 moments(ia,ip,ij,iky,ikx,iz,:) = (init_background + init_noiselvl*(noise-0.5_dp))
               ELSE
                 moments(ia,ip,ij,iky,ikx,iz,:) = 0._dp
@@ -196,8 +196,6 @@ SUBROUTINE init_gyrodens
         ENDIF
       END DO
     END DO
-    print*, SUM(moments)
-    stop
     ! Putting to zero modes that are not in the 2/3 Orszag rule
     IF (LINEARITY .NE. 'linear') THEN
       DO ikx=1,total_nkx
@@ -249,7 +247,7 @@ SUBROUTINE init_phi
       DO ikx=2,total_nkx/2
         phi(iky0,ikx,iz) = phi(iky0,total_nkx+2-ikx,iz)
       ENDDO
-    phi(iky0,ikx0,iz) = REAL(phi(iky0,ikx0,iz)) !origin must be real
+    phi(iky0,ikx0,iz) = REAL(phi(iky0,ikx0,iz),dp) !origin must be real
   END DO
   ENDIF
   !**** ensure no previous moments initialization
@@ -309,7 +307,7 @@ SUBROUTINE init_phi_ppj
         DO ikx=2,total_nkx/2
           phi(iky0,ikx,iz) = phi(iky0,total_nkx+2-ikx,iz)
         ENDDO
-        phi(iky0,ikx0,iz) = REAL(phi(iky0,ikx0,iz)) !origin must be real
+        phi(iky0,ikx0,iz) = REAL(phi(iky0,ikx0,iz),dp) !origin must be real
       END DO
     ENDIF
     !**** ensure no previous moments initialization

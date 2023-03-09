@@ -6,6 +6,7 @@ SUBROUTINE stepon
   USE ghosts,                ONLY: update_ghosts_moments, update_ghosts_EM
   use mpi,                   ONLY: MPI_COMM_WORLD
   USE time_integration,      ONLY: ntimelevel
+  USE prec_const,            ONLY: dp
   IMPLICIT NONE
 
   INTEGER :: num_step, ierr
@@ -140,7 +141,7 @@ SUBROUTINE stepon
                   moments(ia,ip,ij,iky0,ikx,iz,:) = CONJG(moments(ia,ip,ij,iky0,total_nkx+2-ikx,iz,:))
                 END DO
                 ! must be real at origin and top right
-                moments(ia,ip,ij, iky0,ikx0,iz,:) = REAL(moments(ia,ip,ij, iky0,ikx0,iz,:))
+                moments(ia,ip,ij, iky0,ikx0,iz,:) = REAL(moments(ia,ip,ij, iky0,ikx0,iz,:),dp)
           ENDDO a
           ENDDO p
           ENDDO j
@@ -150,13 +151,13 @@ SUBROUTINE stepon
             phi(iky0,ikx,:) = phi(iky0,total_nkx+2-ikx,:)
           END DO
           ! must be real at origin
-          phi(iky0,ikx0,:) = REAL(phi(iky0,ikx0,:))
+          phi(iky0,ikx0,:) = REAL(phi(iky0,ikx0,:),dp)
           ! Psi
           DO ikx=2,total_nkx/2 !symmetry at ky = 0
             psi(iky0,ikx,:) = psi(iky0,total_nkx+2-ikx,:)
           END DO
           ! must be real at origin
-          psi(iky0,ikx0,:) = REAL(psi(iky0,ikx0,:))
+          psi(iky0,ikx0,:) = REAL(psi(iky0,ikx0,:),dp)
         ENDIF
       END SUBROUTINE enforce_symmetry
 

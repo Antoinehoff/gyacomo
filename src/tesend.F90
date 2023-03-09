@@ -24,7 +24,7 @@ SUBROUTINE tesend
 
   !________________________________________________________________________________
   !                   2.  Test on NRUN
-  nlend = step .GT. nrun
+  nlend = step .GE. nrun
   IF ( nlend ) THEN
      CALL speak('NRUN steps done')
      RETURN

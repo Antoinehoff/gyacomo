@@ -20,25 +20,25 @@ MODULE calculus
 
 CONTAINS
 
-SUBROUTINE grad_z(target,local_Nz,Ngz,inv_deltaz,f,ddzf)
+SUBROUTINE grad_z(target,local_nz,Ngz,inv_deltaz,f,ddzf)
   implicit none
   ! Compute the periodic boundary condition 4 points centered finite differences
   ! formula among staggered grid or not.
   ! not staggered : the derivative results must be on the same grid as the field
   !     staggered : the derivative is computed from a grid to the other
-  INTEGER,  INTENT(IN) :: target, local_Nz, Ngz
+  INTEGER,  INTENT(IN) :: target, local_nz, Ngz
   REAL(dp), INTENT(IN) :: inv_deltaz
-  COMPLEX(dp),dimension(local_Nz+Ngz), INTENT(IN)  :: f
-  COMPLEX(dp),dimension(local_Nz),     INTENT(OUT) :: ddzf
+  COMPLEX(dp),dimension(local_nz+Ngz), INTENT(IN)  :: f
+  COMPLEX(dp),dimension(local_nz),     INTENT(OUT) :: ddzf
   INTEGER :: iz
   IF(Ngz .GT. 3) THEN ! Cannot apply four points stencil on less than four points grid
     SELECT CASE(TARGET)
     CASE(1)
-      CALL grad_z_o2e(local_Nz,Ngz,inv_deltaz,f,ddzf)
+      CALL grad_z_o2e(local_nz,Ngz,inv_deltaz,f,ddzf)
     CASE(2)
-      CALL grad_z_e2o(local_Nz,Ngz,inv_deltaz,f,ddzf)
+      CALL grad_z_e2o(local_nz,Ngz,inv_deltaz,f,ddzf)
     CASE DEFAULT ! No staggered grid -> usual centered finite differences
-      DO iz = 1,local_Nz
+      DO iz = 1,local_nz
        ddzf(iz) = dz_usu(-2)*f(iz  ) + dz_usu(-1)*f(iz+1) &
                  +dz_usu( 0)*f(iz+2) &
                  +dz_usu( 1)*f(iz+3) + dz_usu( 2)*f(iz+4)
@@ -49,30 +49,30 @@ SUBROUTINE grad_z(target,local_Nz,Ngz,inv_deltaz,f,ddzf)
     ddzf = 0._dp
   ENDIF
 CONTAINS
-  SUBROUTINE grad_z_o2e(local_Nz,Ngz,inv_deltaz,fo,ddzfe) ! Paruta 2018 eq (27)
+  SUBROUTINE grad_z_o2e(local_nz,Ngz,inv_deltaz,fo,ddzfe) ! Paruta 2018 eq (27)
     ! gives the gradient of a field from the odd grid to the even one
     implicit none
-    INTEGER,  INTENT(IN) :: local_Nz, Ngz
+    INTEGER,  INTENT(IN) :: local_nz, Ngz
     REAL(dp), INTENT(IN) :: inv_deltaz
-    COMPLEX(dp),dimension(local_Nz+Ngz), INTENT(IN)  :: fo
-    COMPLEX(dp),dimension(local_Nz),     INTENT(OUT) :: ddzfe !
+    COMPLEX(dp),dimension(local_nz+Ngz), INTENT(IN)  :: fo
+    COMPLEX(dp),dimension(local_nz),     INTENT(OUT) :: ddzfe !
     INTEGER :: iz
-    DO iz = 1,local_Nz
+    DO iz = 1,local_nz
      ddzfe(iz) = dz_o2e(-2)*fo(iz  ) + dz_o2e(-1)*fo(iz+1) &
                 +dz_o2e( 0)*fo(iz+2) + dz_o2e( 1)*fo(iz+3)
     ENDDO
     ddzfe(:) = ddzfe(:) * inv_deltaz
   END SUBROUTINE grad_z_o2e
 
-  SUBROUTINE grad_z_e2o(local_Nz,Ngz,inv_deltaz,fe,ddzfo) ! n2v for Paruta 2018 eq (28)
+  SUBROUTINE grad_z_e2o(local_nz,Ngz,inv_deltaz,fe,ddzfo) ! n2v for Paruta 2018 eq (28)
     ! gives the gradient of a field from the even grid to the odd one
     implicit none
-    INTEGER,  INTENT(IN) :: local_Nz, Ngz
+    INTEGER,  INTENT(IN) :: local_nz, Ngz
     REAL(dp), INTENT(IN) :: inv_deltaz
-    COMPLEX(dp),dimension(local_Nz+Ngz), INTENT(IN)  :: fe
-    COMPLEX(dp),dimension(local_Nz),     INTENT(OUT) :: ddzfo
+    COMPLEX(dp),dimension(local_nz+Ngz), INTENT(IN)  :: fe
+    COMPLEX(dp),dimension(local_nz),     INTENT(OUT) :: ddzfo
     INTEGER :: iz
-    DO iz = 1,local_Nz
+    DO iz = 1,local_nz
      ddzfo(iz) = dz_e2o(-1)*fe(iz+1) + dz_e2o(0)*fe(iz+2) &
                 +dz_e2o( 1)*fe(iz+3) + dz_e2o(2)*fe(iz+4)
     ENDDO
@@ -80,16 +80,16 @@ CONTAINS
   END SUBROUTINE grad_z_e2o
 END SUBROUTINE grad_z
 
-SUBROUTINE grad_z2(local_Nz,Ngz,inv_deltaz,f,ddz2f)
+SUBROUTINE grad_z2(local_nz,Ngz,inv_deltaz,f,ddz2f)
   ! Compute the second order fourth derivative for periodic boundary condition
   implicit none
-  INTEGER, INTENT(IN)  :: local_Nz, Ngz
+  INTEGER, INTENT(IN)  :: local_nz, Ngz
   REAL(dp), INTENT(IN) :: inv_deltaz
-  COMPLEX(dp),dimension(local_Nz+Ngz), INTENT(IN)  :: f
-  COMPLEX(dp),dimension(local_Nz),     INTENT(OUT) :: ddz2f
+  COMPLEX(dp),dimension(local_nz+Ngz), INTENT(IN)  :: f
+  COMPLEX(dp),dimension(local_nz),     INTENT(OUT) :: ddz2f
   INTEGER :: iz
   IF(Ngz .GT. 3) THEN ! Cannot apply four points stencil on less than four points grid
-      DO iz = 1,local_Nz
+      DO iz = 1,local_nz
        ddz2f(iz) = dz2_usu(-2)*f(iz  ) + dz2_usu(-1)*f(iz+1) &
                   +dz2_usu( 0)*f(iz+2)&
                   +dz2_usu( 1)*f(iz+3) + dz2_usu( 2)*f(iz+4)
@@ -101,16 +101,16 @@ SUBROUTINE grad_z2(local_Nz,Ngz,inv_deltaz,f,ddz2f)
 END SUBROUTINE grad_z2
 
 
-SUBROUTINE grad_z4(local_Nz,Ngz,inv_deltaz,f,ddz4f)
+SUBROUTINE grad_z4(local_nz,Ngz,inv_deltaz,f,ddz4f)
   ! Compute the second order fourth derivative for periodic boundary condition
   implicit none
-  INTEGER,  INTENT(IN) :: local_Nz, Ngz
+  INTEGER,  INTENT(IN) :: local_nz, Ngz
   REAL(dp), INTENT(IN) :: inv_deltaz
-  COMPLEX(dp),dimension(local_Nz+Ngz), INTENT(IN)  :: f
-  COMPLEX(dp),dimension(local_Nz),     INTENT(OUT) :: ddz4f
+  COMPLEX(dp),dimension(local_nz+Ngz), INTENT(IN)  :: f
+  COMPLEX(dp),dimension(local_nz),     INTENT(OUT) :: ddz4f
   INTEGER :: iz
   IF(Ngz .GT. 3) THEN ! Cannot apply four points stencil on less than four points grid
-      DO iz = 1,local_Nz
+      DO iz = 1,local_nz
        ddz4f(iz) = dz4_usu(-2)*f(iz  ) + dz4_usu(-1)*f(iz+1) &
                   +dz4_usu( 0)*f(iz+2)&
                   +dz4_usu( 1)*f(iz+3) + dz4_usu( 2)*f(iz+4)
@@ -122,47 +122,47 @@ SUBROUTINE grad_z4(local_Nz,Ngz,inv_deltaz,f,ddz4f)
 END SUBROUTINE grad_z4
 
 
-SUBROUTINE interp_z(target,local_Nz,Ngz,f_in,f_out)
+SUBROUTINE interp_z(target,local_nz,Ngz,f_in,f_out)
   ! Function meant to interpolate one field defined on a even/odd z into
   !  the other odd/even z grid.
   ! If Staggered Grid flag (SG) is false, returns identity
   implicit none
-  INTEGER, INTENT(IN) :: local_Nz, Ngz
+  INTEGER, INTENT(IN) :: local_nz, Ngz
   INTEGER, intent(in) :: target ! target grid : 0 for even grid, 1 for odd
-  COMPLEX(dp),dimension(local_Nz+Ngz), INTENT(IN)  :: f_in
-  COMPLEX(dp),dimension(local_Nz),     INTENT(OUT) :: f_out
+  COMPLEX(dp),dimension(local_nz+Ngz), INTENT(IN)  :: f_in
+  COMPLEX(dp),dimension(local_nz),     INTENT(OUT) :: f_out
   SELECT CASE(TARGET)
   CASE(1) ! output on even grid
-    CALL interp_o2e_z(local_Nz,Ngz,f_in,f_out)
+    CALL interp_o2e_z(local_nz,Ngz,f_in,f_out)
   CASE(2) ! output on odd grid
-    CALL interp_e2o_z(local_Nz,Ngz,f_in,f_out)
+    CALL interp_e2o_z(local_nz,Ngz,f_in,f_out)
   CASE DEFAULT ! No staggered grid -> usual centered finite differences
     f_out = f_in
   END SELECT
 CONTAINS
-  SUBROUTINE interp_o2e_z(local_Nz, Ngz,fo,fe)
+  SUBROUTINE interp_o2e_z(local_nz, Ngz,fo,fe)
    ! gives the value of a field from the odd grid to the even one
    implicit none
-   INTEGER, INTENT(IN) :: local_Nz, Ngz
-   COMPLEX(dp),dimension(local_Nz+Ngz), INTENT(IN)  :: fo
-   COMPLEX(dp),dimension(local_Nz),     INTENT(OUT) :: fe
+   INTEGER, INTENT(IN) :: local_nz, Ngz
+   COMPLEX(dp),dimension(local_nz+Ngz), INTENT(IN)  :: fo
+   COMPLEX(dp),dimension(local_nz),     INTENT(OUT) :: fe
    INTEGER :: iz
    ! 4th order interp
-   DO iz = 1,local_Nz
+   DO iz = 1,local_nz
      fe(iz) = iz_o2e(-2)*fo(iz )  + iz_o2e(-1)*fo(iz+1) &
             + iz_o2e( 0)*fo(iz+2) + iz_o2e( 1)*fo(iz+3)
    ENDDO
   END SUBROUTINE interp_o2e_z
 
-  SUBROUTINE interp_e2o_z(local_Nz, Ngz,fe,fo)
+  SUBROUTINE interp_e2o_z(local_nz, Ngz,fe,fo)
    ! gives the value of a field from the even grid to the odd one
    implicit none
-   INTEGER, INTENT(IN) :: local_Nz, Ngz
-   COMPLEX(dp),dimension(local_Nz+Ngz), INTENT(IN)  :: fe
-   COMPLEX(dp),dimension(local_Nz),     INTENT(OUT) :: fo
+   INTEGER, INTENT(IN) :: local_nz, Ngz
+   COMPLEX(dp),dimension(local_nz+Ngz), INTENT(IN)  :: fe
+   COMPLEX(dp),dimension(local_nz),     INTENT(OUT) :: fo
    INTEGER :: iz
    ! 4th order interp
-   DO iz = 1,local_Nz
+   DO iz = 1,local_nz
      fo(iz) = iz_e2o(-1)*fe(iz+1) + iz_e2o( 0)*fe(iz+2) &
             + iz_e2o( 1)*fe(iz+3) + iz_e2o( 2)*fe(iz+4)
    ENDDO
@@ -170,23 +170,23 @@ CONTAINS
 
 END SUBROUTINE interp_z
 
-SUBROUTINE simpson_rule_z(local_Nz,dz,f,intf)
+SUBROUTINE simpson_rule_z(local_nz,dz,f,intf)
  ! integrate f(z) over z using the simpon's rule. Assume periodic boundary conditions (f(ize+1) = f(izs))
  !from molix BJ Frei
  USE prec_const, ONLY: dp, onethird
  USE parallel,   ONLY: num_procs_z, rank_z, comm_z, manual_0D_bcast
  USE mpi
  implicit none
- INTEGER, INTENT(IN) :: local_Nz
+ INTEGER, INTENT(IN) :: local_nz
  REAL(dp),INTENT(IN) :: dz
- complex(dp),dimension(local_Nz), intent(in) :: f
+ complex(dp),dimension(local_nz), intent(in) :: f
  COMPLEX(dp), intent(out) :: intf
  COMPLEX(dp)              :: buffer, local_int
  INTEGER :: root, i_, iz, ierr
 
  ! Buil local sum using the weights of composite Simpson's rule
  local_int = 0._dp
- DO iz = 1,local_Nz
+ DO iz = 1,local_nz
    IF(MODULO(iz,2) .EQ. 1) THEN ! odd iz
      local_int = local_int + 2._dp*onethird*dz*f(iz)
    ELSE ! even iz

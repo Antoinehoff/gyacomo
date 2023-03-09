@@ -100,7 +100,7 @@ CONTAINS
     ! evalute metrix, elementwo_third_kpmaxts, jacobian and gradient
     implicit none
     REAL(dp) :: kx,ky
-    COMPLEX(dp), DIMENSION(local_Nz+Ngz) :: integrant
+    COMPLEX(dp), DIMENSION(local_nz) :: integrant
     real(dp) :: G1,G2,G3,Cx,Cy
     INTEGER  :: eo,iz,iky,ikx
 
@@ -138,7 +138,7 @@ CONTAINS
     CALL set_kparray(gxx,gxy,gyy,hatB)
     DO eo = 1,Nzgrid
       ! Curvature operator (Frei et al. 2022 eq 2.15)
-      DO iz = 1,local_Nz+Ngz
+      DO iz = 1,local_nz+Ngz
         G1 = gxx(iz,eo)*gyy(iz,eo)-gxy(iz,eo)*gxy(iz,eo)
         G2 = gxx(iz,eo)*gyz(iz,eo)-gxy(iz,eo)*gxz(iz,eo)
         G3 = gxy(iz,eo)*gyz(iz,eo)-gyy(iz,eo)*gxz(iz,eo)
@@ -166,7 +166,7 @@ CONTAINS
     CALL set_ikx_zBC_map
     !
     ! Compute the inverse z integrated Jacobian (useful for flux averaging)
-    integrant = Jacobian(:,1) ! Convert into complex array
+    integrant = Jacobian(1+ngz/2:local_nz+ngz/2,1) ! Convert into complex array
     CALL simpson_rule_z(local_nz,deltaz,integrant,iInt_Jacobian)
     iInt_Jacobian = 1._dp/iInt_Jacobian ! reverse it
   END SUBROUTINE eval_magnetic_geometry
@@ -175,7 +175,7 @@ CONTAINS
   !
 
   SUBROUTINE eval_salpha_geometry
-    USE grid, ONLY : local_Nz,Ngz,zarray,Nzgrid
+    USE grid, ONLY : local_nz,Ngz,zarray,Nzgrid
   ! evaluate s-alpha geometry model
   implicit none
   REAL(dp) :: z
@@ -183,7 +183,7 @@ CONTAINS
   alpha_MHD = 0._dp
 
   DO eo = 1,Nzgrid
-   DO iz = 1,local_Nz+Ngz
+   DO iz = 1,local_nz+Ngz
     z = zarray(iz,eo)
 
     ! metric
@@ -228,14 +228,14 @@ CONTAINS
   !
 
   SUBROUTINE eval_zpinch_geometry
-  USE grid, ONLY : local_Nz,Ngz,zarray,Nzgrid
+  USE grid, ONLY : local_nz,Ngz,zarray,Nzgrid
   implicit none
   REAL(dp) :: z
   INTEGER  :: iz, eo
   alpha_MHD = 0._dp
 
   DO eo = 1,Nzgrid
-   DO iz = 1,local_Nz+Ngz
+   DO iz = 1,local_nz+Ngz
     z = zarray(iz,eo)
 
     ! metric
@@ -278,7 +278,7 @@ CONTAINS
     !--------------------------------------------------------------------------------
     ! NOT TESTED
   subroutine eval_1D_geometry
-    USE grid, ONLY : local_Nz,Ngz,zarray, Nzgrid
+    USE grid, ONLY : local_nz,Ngz,zarray, Nzgrid
     ! evaluate 1D perp geometry model
     implicit none
     REAL(dp) :: z
@@ -313,7 +313,7 @@ CONTAINS
    USE grid,       ONLY: local_nky,Nkx, contains_zmin,contains_zmax, Nexc
    USE prec_const, ONLY: imagu, pi
    IMPLICIT NONE
-   ! REAL :: shift
+   ! REAL(dp) :: shift
    INTEGER :: ikx,iky
    ALLOCATE(ikx_zBC_L(local_nky,Nkx))
    ALLOCATE(ikx_zBC_R(local_nky,Nkx))

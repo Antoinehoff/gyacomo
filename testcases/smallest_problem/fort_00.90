@@ -73,8 +73,8 @@
 &INITIAL_CON
   INIT_OPT    = 'mom00'
   ACT_ON_MODES       = 'donothing'
-  init_background  = 1.0
-  init_noiselvl = 0.0
+  init_background  = 0.0
+  init_noiselvl = 1.0
   iseed         = 42
 /
 &TIME_INTEGRATION_PAR
