@@ -41,7 +41,7 @@ MODULE grid
   REAL(dp), DIMENSION(:,:), ALLOCATABLE, PUBLIC :: zarray
   REAL(dp), DIMENSION(:),   ALLOCATABLE, PUBLIC :: zarray_full
   ! local z weights for computing simpson rule
-  INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC :: zweights_SR
+  REAL(dp),  DIMENSION(:),   ALLOCATABLE, PUBLIC :: zweights_SR
   REAL(dp), PUBLIC, PROTECTED  ::  deltax,  deltay, deltaz, inv_deltaz
   REAL(dp), PUBLIC, PROTECTED  ::  diff_pe_coeff, diff_je_coeff
   REAL(dp), PUBLIC, PROTECTED  ::  diff_pi_coeff, diff_ji_coeff
@@ -373,7 +373,7 @@ CONTAINS
     USE model, ONLY: LINEARITY, N_HD
     IMPLICIT NONE
     REAL(dp), INTENT(IN) :: shear
-    REAL    :: Lx_adapted
+    REAL(dp):: Lx_adapted
     IF(shear .GT. 0) THEN
       IF(my_id.EQ.0) write(*,*) 'Magnetic shear detected: set up sheared kx grid..'
       ! mininal size of box in x to respect dkx = 2pi shear dky
@@ -412,7 +412,7 @@ CONTAINS
         ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
         local_kxmax = 0._dp
         DO ikx = ikxs,ikxe
-          kxarray(ikx) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*real(ikx-1)/real(Nkx)))
+          kxarray(ikx) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*REAL(ikx-1,dp)/REAL(Nkx,dp)))
           if (ikx .EQ. Nx/2+1)     kxarray(ikx) = -kxarray(ikx)
           ! Finding kx=0
           IF (kxarray(ikx) .EQ. 0) THEN
@@ -429,7 +429,7 @@ CONTAINS
         ! Build the full grids on process 0 to diagnose it without comm
         ! kx
         DO ikx = 1,Nkx
-            kxarray_full(ikx) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*real(ikx-1)/real(Nkx)))
+            kxarray_full(ikx) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*REAL(ikx-1,dp)/REAL(Nkx,dp)))
             IF (ikx .EQ. Nx/2+1) kxarray_full(ikx) = -kxarray_full(ikx)
         END DO
       ELSE ! Odd number of kx (-2 -1 0 1 2)
@@ -493,11 +493,11 @@ CONTAINS
     USE prec_const
     USE model, ONLY: mu_z
     IMPLICIT NONE
-    REAL    :: grid_shift, Lz, zmax, zmin
-    INTEGER :: istart, iend, in
+    REAL(dp) :: grid_shift, Lz, zmax, zmin
+    INTEGER  :: istart, iend, in
     total_nz = Nz
     ! Length of the flux tube (in ballooning angle)
-    Lz         = 2_dp*pi*Npol
+    Lz         = 2_dp*pi*REAL(Npol,dp)
     ! Z stepping (#interval = #points since periodic)
     deltaz        = Lz/REAL(Nz,dp)
     inv_deltaz    = 1._dp/deltaz
@@ -572,11 +572,15 @@ CONTAINS
     ALLOCATE(zweights_SR(izs:ize))
     DO iz = izs,ize
       IF(MODULO(iz,2) .EQ. 1) THEN ! odd iz
-        zweights_SR(iz) = 2._dp
-      ELSE ! even iz
         zweights_SR(iz) = 4._dp
+      ELSE ! even iz
+        zweights_SR(iz) = 2._dp
       ENDIF
     ENDDO
+    ! IF (contains_zmin) &
+    !   zweights_SR(izs) = 1._dp
+    ! IF (contains_zmax) &
+    !   zweights_SR(ize) = 1._dp
   END SUBROUTINE set_zgrid
 
   SUBROUTINE grid_outputinputs(fidres, str)

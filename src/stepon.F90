@@ -6,6 +6,7 @@ SUBROUTINE stepon
   USE ghosts,                ONLY: update_ghosts_moments, update_ghosts_EM
   use mpi,                   ONLY: MPI_COMM_WORLD
   USE time_integration,      ONLY: ntimelevel
+  USE prec_const,            ONLY: dp
   IMPLICIT NONE
 
   INTEGER :: num_step
@@ -153,7 +154,7 @@ SUBROUTINE stepon
                     moments_e( ip,ij,iky_0,ikx,iz, :) = CONJG(moments_e( ip,ij,iky_0,Nkx+2-ikx,iz, :))
                   END DO
                 ! must be real at origin
-                moments_e(ip,ij, iky_0,ikx_0,iz, :) = REAL(moments_e(ip,ij, iky_0,ikx_0,iz, :))
+                moments_e(ip,ij, iky_0,ikx_0,iz, :) = REAL(moments_e(ip,ij, iky_0,ikx_0,iz, :),dp)
               END DO
             END DO
           END DO
@@ -166,7 +167,7 @@ SUBROUTINE stepon
                   moments_i( ip,ij,iky_0,ikx,iz, :) = CONJG(moments_i( ip,ij,iky_0,Nkx+2-ikx,iz, :))
                 END DO
                 ! must be real at origin and top right
-                moments_i(ip,ij, iky_0,ikx_0,iz, :) = REAL(moments_i(ip,ij, iky_0,ikx_0,iz, :))
+                moments_i(ip,ij, iky_0,ikx_0,iz, :) = REAL(moments_i(ip,ij, iky_0,ikx_0,iz, :),dp)
               END DO
             END DO
           END DO
@@ -175,13 +176,13 @@ SUBROUTINE stepon
             phi(iky_0,ikx,izgs:izge) = phi(iky_0,Nkx+2-ikx,izgs:izge)
           END DO
           ! must be real at origin
-          phi(iky_0,ikx_0,izgs:izge) = REAL(phi(iky_0,ikx_0,izgs:izge))
+          phi(iky_0,ikx_0,izgs:izge) = REAL(phi(iky_0,ikx_0,izgs:izge),dp)
           ! Psi
           DO ikx=2,Nkx/2 !symmetry at ky = 0
             psi(iky_0,ikx,izgs:izge) = psi(iky_0,Nkx+2-ikx,izgs:izge)
           END DO
           ! must be real at origin
-          psi(iky_0,ikx_0,izgs:izge) = REAL(psi(iky_0,ikx_0,izgs:izge))
+          psi(iky_0,ikx_0,izgs:izge) = REAL(psi(iky_0,ikx_0,izgs:izge),dp)
         ENDIF
       END SUBROUTINE enforce_symmetry
 

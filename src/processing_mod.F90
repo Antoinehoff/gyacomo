@@ -98,8 +98,8 @@ SUBROUTINE compute_radial_ion_transport
   pflux_local = integral*iInt_Jacobian
 
   !!!!---------- Sum over all processes ----------
-  buffer(1) = 2._dp*REAL(gflux_local)
-  buffer(2) = 2._dp*REAL(pflux_local)
+  buffer(1) = 2._dp*REAL(gflux_local,dp)
+  buffer(2) = 2._dp*REAL(pflux_local,dp)
   root = 0
   !Gather manually among the rank_p=0 processes and perform the sum
   gflux_ri = 0
@@ -206,8 +206,8 @@ SUBROUTINE compute_radial_electron_transport
   pflux_local = integral*iInt_Jacobian
 
   !!!!---------- Sum over all processes ----------
-  buffer(1) = 2._dp*REAL(gflux_local)
-  buffer(2) = 2._dp*REAL(pflux_local)
+  buffer(1) = 2._dp*REAL(gflux_local,dp)
+  buffer(2) = 2._dp*REAL(pflux_local,dp)
   root = 0
   !Gather manually among the rank_p=0 processes and perform the sum
   gflux_re = 0
@@ -292,7 +292,7 @@ SUBROUTINE compute_radial_ion_heatflux
   call simpson_rule_z(integrant,integral)
   hflux_local = hflux_local + integral*iInt_Jacobian
   ! Double it for taking into account the other half plane
-  buffer(2) = 2._dp*REAL(hflux_local)
+  buffer(2) = 2._dp*REAL(hflux_local,dp)
   root = 0
   !Gather manually among the rank_p=0 processes and perform the sum
   hflux_xi = 0
@@ -375,7 +375,7 @@ SUBROUTINE compute_radial_electron_heatflux
   call simpson_rule_z(integrant,integral)
   hflux_local = hflux_local + integral*iInt_Jacobian
   ! Double it for taking into account the other half plane
-  buffer(2) = 2._dp*REAL(hflux_local)
+  buffer(2) = 2._dp*REAL(hflux_local,dp)
   root = 0
   !Gather manually among the rank_p=0 processes and perform the sum
   hflux_xe = 0
@@ -552,8 +552,8 @@ SUBROUTINE compute_Napjz_spectrum
     DO ikx = ikxs,ikxe
       DO iky = ikys,ikye
         local_sum_e(ips_e:ipe_e,ijs_e:ije_e,izs:ize)  = local_sum_e(ips_e:ipe_e,ijs_e:ije_e,izs:ize)  + &
-        REAL(REAL(moments_e(ips_e:ipe_e,ijs_e:ije_e,iky,ikx,izs:ize,updatetlevel)&
-         * CONJG(moments_e(ips_e:ipe_e,ijs_e:ije_e,iky,ikx,izs:ize,updatetlevel))))
+        REAL(moments_e(ips_e:ipe_e,ijs_e:ije_e,iky,ikx,izs:ize,updatetlevel)&
+         * CONJG(moments_e(ips_e:ipe_e,ijs_e:ije_e,iky,ikx,izs:ize,updatetlevel)),dp)
       ENDDO
     ENDDO
     ! sum reduction

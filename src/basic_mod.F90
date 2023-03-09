@@ -53,7 +53,7 @@ MODULE basic
   INTEGER :: lu_stop = 91              ! stop file, see subroutine TESEND
 
   ! To measure computation time
-  real     :: start, finish
+  real(dp) :: start, finish
   real(dp) :: t0_rhs, t0_adv_field, t0_poisson, t0_Sapj, t0_diag, t0_checkfield,&
               t0_step, t0_clos, t0_ghost, t0_coll, t0_process
   real(dp) :: t1_rhs, t1_adv_field, t1_poisson, t1_Sapj, t1_diag, t1_checkfield,&
@@ -165,7 +165,7 @@ CONTAINS
   END SUBROUTINE daytim
   !================================================================================
   SUBROUTINE display_h_min_s(time)
-    real :: time
+    real(dp) :: time
     integer :: days, hours, mins, secs
     days = FLOOR(time/24./3600.);
     hours= FLOOR(time/3600.);

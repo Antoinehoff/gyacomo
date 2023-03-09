@@ -332,7 +332,7 @@ CONTAINS
 
  SUBROUTINE set_ikx_zBC_map
  IMPLICIT NONE
- REAL :: shift
+ REAL(dp) :: shift
 
  ALLOCATE(ikx_zBC_L(ikys:ikye,ikxs:ikxe))
  ALLOCATE(ikx_zBC_R(ikys:ikye,ikxs:ikxe))

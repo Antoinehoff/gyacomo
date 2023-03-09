@@ -306,7 +306,7 @@ SUBROUTINE init_phi
       DO ikx=2,Nkx/2
         phi(iky_0,ikx,izs:ize) = phi(iky_0,Nkx+2-ikx,izs:ize)
       END DO
-      phi(iky_0,ikx_0,izs:ize) = REAL(phi(iky_0,ikx_0,izs:ize)) !origin must be real
+      phi(iky_0,ikx_0,izs:ize) = REAL(phi(iky_0,ikx_0,izs:ize),dp) !origin must be real
     ENDIF
 
     !**** ensure no previous moments initialization
@@ -367,7 +367,7 @@ SUBROUTINE init_phi_ppj
       DO ikx=2,Nkx/2
         phi(iky_0,ikx,izs:ize) = phi(iky_0,Nkx+2-ikx,izs:ize)
       END DO
-      phi(iky_0,ikx_0,izs:ize) = REAL(phi(iky_0,ikx_0,izs:ize)) !origin must be real
+      phi(iky_0,ikx_0,izs:ize) = REAL(phi(iky_0,ikx_0,izs:ize),dp) !origin must be real
     ENDIF
 
     !**** ensure no previous moments initialization

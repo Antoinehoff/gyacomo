@@ -194,7 +194,6 @@ SUBROUTINE simpson_rule_z(f,intf)
    ENDIF
    intf = onethird*deltaz*intf
    ENDIF
-
 END SUBROUTINE simpson_rule_z
 
 END MODULE calculus

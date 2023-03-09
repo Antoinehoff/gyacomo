@@ -6,7 +6,7 @@ SUBROUTINE tesend
   use prec_const
   IMPLICIT NONE
   LOGICAL :: mlend, mlexist
-  REAL    :: tnow
+  REAL(dp):: tnow
   INTEGER :: ncheck_stop = 100
   CHARACTER(len=*), PARAMETER :: stop_file = 'mystop'
 
