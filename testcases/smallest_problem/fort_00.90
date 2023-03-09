@@ -13,7 +13,7 @@
   Lx     = 200
   Ny     = 2
   Ly     = 60
-  Nz     = 4
+  Nz     = 64
   SG     = .f.
 /
 &GEOMETRY
