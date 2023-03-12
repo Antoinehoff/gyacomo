@@ -1,77 +1,79 @@
 include local/dirs.inc
 include local/make.inc
-#Different namings depending on the make input
-EXEC = $(BINDIR)/gyacomo	#all
-EFST = $(BINDIR)/gyacomo_fast   #fast
-EDBG = $(BINDIR)/gyacomo_debug	#debug
-EALP = $(BINDIR)/gyacomo_alpha  #alpha
-EGFT = $(BINDIR)/gyacomo_gfort  #gfort version
-# F90 = mpiifort
-F90 = mpif90
-# #F90 = ftn #for piz-daint cluster
-# # Add Multiple-Precision Library
-# EXTLIBS += -L$(FMDIR)/lib
-# EXTINC += -I$(FMDIR)/mod
-# # Add local fftw dir
-# EXTLIBS += -L$(FFTWDIR)/lib
-# EXTINC += -I$(FFTWDIR)/include
-# # Add lapack
-# EXTLIBS += -L$(LAPACKDIR)/lib
-# EXTINC += -I$(LAPACKDIR)/mod
-# Standard version with optimized compilation
-all: dirs src/srcinfo.h
+
+# Standard version with optimized compilation (ifort compiler)
+all: F90 = mpif90
 all: F90FLAGS = -O3 -xHOST
-all: $(EXEC)
+all: EXEC = $(BINDIR)/gyacomo
+all: dirs src/srcinfo.h
+all: compile
+
 # Fast compilation
-fast: dirs src/srcinfo.h
+fast: F90 = mpif90
 fast: F90FLAGS = -fast
-fast: $(EFST)
+fast: EXEC = $(BINDIR)/gyacomo_fast
+fast: dirs src/srcinfo.h
+fast: compile
+
 # Debug version with all flags
+debug: F90 = mpif90
+debug: F90FLAGS = -C -g -traceback -ftrapuv -warn all -debug all
+debug: EXEC = $(BINDIR)/gyacomo_debug
 debug: dirs src/srcinfo.h
-debug: F90FLAGS = -g -traceback -ftrapuv -warn all -debug all
-# debug: F90FLAGS = -g -traceback -check all -ftrapuv -warn all -debug all
-debug: $(EDBG)
-# Alpha version, optimized as all but creates another binary
-alpha: dirs src/srcinfo.h
-alpha: F90FLAGS = -O3 -xHOST
-alpha: $(EALP)
+debug: compile
+
+# For compiling on marconi
+marconi: F90 = mpiifort
+marconi: F90FLAGS = -O3 -xHOST
+marconi: EXEC = $(BINDIR)/gyacomo
+marconi: dirs src/srcinfo.h
+marconi: compile
+
+# For compiling on daint
+daint: F90 = ftn
+daint: F90FLAGS = -O3
+daint: EXEC = $(BINDIR)/gyacomo
+daint: dirs src/srcinfo.h
+daint: compile
+
+# gfortran opt version, for compilation with gfortran
+gopt: F90 = mpif90
+gopt: F90FLAGS = -O3 -std=legacy -ffree-line-length-0
+gopt: EXTMOD   = -J $(MODDIR)
+gopt: EXEC = $(BINDIR)/gyacomo
+gopt: dirs src/srcinfo.h
+gopt: compile
+
 # gfortran version, compile with gfortran
-gfort: dirs src/srcinfo.h
-gfort: F90FLAGS = -g -std=legacy -ffree-line-length-0
-gfort: EXTMOD   = -J $(MODDIR)
-gfort: $(EGFT)
-install: dirs src/srcinfo.h $(EXEC) mvmod
+gdebug: F90 = mpif90
+gdebug: F90FLAGS = -C -g -std=legacy -ffree-line-length-0
+gdebug: EXTMOD   = -J $(MODDIR)
+gdebug: EXEC = $(BINDIR)/gyacomo_debug
+gdebug: dirs src/srcinfo.h
+gdebug: compile
 
-run: all
-	(cd wk; $(EXEC);)
-
+# subroutines
 dirs:
 	mkdir -p $(BINDIR)
 	mkdir -p $(OBJDIR)
 	mkdir -p $(MODDIR)
-
 src/srcinfo.h:
 	( cd src/srcinfo; $(MAKE);)
-
 clean: cleanobj cleanmod
 	@rm -f src/srcinfo.h
 	@rm -f src/srcinfo/srcinfo.h
-
 cleanobj:
 	@rm -f $(OBJDIR)/*o
-
 cleanmod:
 	@rm -f $(MODDIR)/*mod
 	@rm -f *.mod
-
-cleanbin:
-	@rm -f $(EXEC)
-
 mvmod:
 	mv *.mod mod/.
 
+# attach git info
 $(OBJDIR)/diagnose.o : src/srcinfo.h
 
+# Main source dependencies
 FOBJ=$(OBJDIR)/advance_field_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/auxval.o \
 $(OBJDIR)/basic_mod.o $(OBJDIR)/coeff_mod.o $(OBJDIR)/closure_mod.o \
 $(OBJDIR)/collision_mod.o $(OBJDIR)/nonlinear_mod.o $(OBJDIR)/control.o \
@@ -86,21 +88,11 @@ $(OBJDIR)/processing_mod.o $(OBJDIR)/readinputs.o $(OBJDIR)/restarts_mod.o \
 $(OBJDIR)/solve_EM_fields.o $(OBJDIR)/species_mod.o $(OBJDIR)/stepon.o $(OBJDIR)/tesend.o \
 $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 
- $(EXEC): $(FOBJ)
-	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
+# To compile the executable
+ compile: $(FOBJ)
+	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $(EXEC)
 
- $(EFST): $(FOBJ)
-	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
-
- $(EDBG): $(FOBJ)
-	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
-
- $(EALP): $(FOBJ)
-	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
-
- $(EGFT): $(FOBJ)
-	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
-
+# Modules compilation
  $(OBJDIR)/advance_field_mod.o : src/advance_field_mod.F90 \
    $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/initial_par_mod.o \
 	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)/basic_mod.o \
