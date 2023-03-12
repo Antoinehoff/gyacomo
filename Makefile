@@ -28,7 +28,7 @@ fast: F90FLAGS = -fast
 fast: $(EFST)
 # Debug version with all flags
 debug: dirs src/srcinfo.h
-debug: F90FLAGS = -C -g -traceback -ftrapuv -warn all -debug all
+debug: F90FLAGS = -g -traceback -ftrapuv -warn all -debug all
 # debug: F90FLAGS = -g -traceback -check all -ftrapuv -warn all -debug all
 debug: $(EDBG)
 # Alpha version, optimized as all but creates another binary

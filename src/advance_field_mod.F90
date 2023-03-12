@@ -38,7 +38,7 @@ CONTAINS
       DO ip    =1,local_np
         ipi = ip+ngp/2
       DO ia    =1,local_na
-        IF((CLOS .NE. 1) .OR. (parray(ip)+2*jarray(ij) .LE. dmax))&
+        IF((CLOS .NE. 1) .OR. (parray(ipi)+2*jarray(iji) .LE. dmax))&
         moments(ia,ipi,iji,iky,ikx,izi,1) = moments(ia,ipi,iji,iky,ikx,izi,1) &
                 + dt*b_E(istage)*moments_rhs(ia,ip,ij,iky,ikx,iz,istage)
       END DO
@@ -60,7 +60,7 @@ CONTAINS
       DO ip    =1,local_np
         ipi = ip+ngp/2
       DO ia    =1,local_na
-        IF((CLOS .NE. 1) .OR. (parray(ip)+2*jarray(ij) .LE. dmax))&
+        IF((CLOS .NE. 1) .OR. (parray(ipi)+2*jarray(iji) .LE. dmax))&
         moments(ia,ipi,iji,iky,ikx,izi,updatetlevel) = moments(ia,ipi,iji,iky,ikx,izi,updatetlevel) + &
                           dt*A_E(updatetlevel,istage)*moments_rhs(ia,ip,ij,iky,ikx,iz,istage)
       END DO

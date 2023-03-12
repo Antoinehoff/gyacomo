@@ -93,7 +93,7 @@ CONTAINS
   END SUBROUTINE geometry_readinputs
 
   subroutine eval_magnetic_geometry
-    USE grid,     ONLY: total_nky, total_nz, local_nkx, local_nky, local_nz, Ngz, kxarray, kyarray, set_kparray, Nzgrid, deltaz
+    USE grid,     ONLY: total_nky, total_nz, local_nkx, local_nky, local_nz, Ngz, kxarray, kyarray, set_kparray, nzgrid, deltaz
     USE basic,    ONLY: speak
     USE miller,   ONLY: set_miller_parameters, get_miller
     USE calculus, ONLY: simpson_rule_z
@@ -105,7 +105,7 @@ CONTAINS
     INTEGER  :: eo,iz,iky,ikx
 
     ! Allocate arrays
-    CALL geometry_allocate_mem(local_nky,local_nkx,local_nz,Ngz,Nzgrid)
+    CALL geometry_allocate_mem(local_nky,local_nkx,local_nz,Ngz,nzgrid)
     !
     IF( (total_nky .EQ. 1) .AND. (total_nz .EQ. 1)) THEN !1D perp linear run
       CALL speak('1D perpendicular geometry')
@@ -136,7 +136,7 @@ CONTAINS
     !  k_\perp^2 = g^{xx} k_x^2 + 2 g^{xy}k_x k_y + k_y^2 g^{yy}
     !  normalized to rhos_
     CALL set_kparray(gxx,gxy,gyy,hatB)
-    DO eo = 1,Nzgrid
+    DO eo = 1,nzgrid
       ! Curvature operator (Frei et al. 2022 eq 2.15)
       DO iz = 1,local_nz+Ngz
         G1 = gxx(iz,eo)*gyy(iz,eo)-gxy(iz,eo)*gxy(iz,eo)
@@ -160,8 +160,7 @@ CONTAINS
         ! Gamma_phipar(iz,eo) = G2/G1
       ENDDO
     ENDDO
-
-
+    !
     ! set the mapping for parallel boundary conditions
     CALL set_ikx_zBC_map
     !
@@ -175,14 +174,14 @@ CONTAINS
   !
 
   SUBROUTINE eval_salpha_geometry
-    USE grid, ONLY : local_nz,Ngz,zarray,Nzgrid
+    USE grid, ONLY : local_nz,Ngz,zarray,nzgrid
   ! evaluate s-alpha geometry model
   implicit none
   REAL(dp) :: z
   INTEGER  :: iz, eo
   alpha_MHD = 0._dp
 
-  DO eo = 1,Nzgrid
+  DO eo = 1,nzgrid
    DO iz = 1,local_nz+Ngz
     z = zarray(iz,eo)
 
@@ -228,13 +227,13 @@ CONTAINS
   !
 
   SUBROUTINE eval_zpinch_geometry
-  USE grid, ONLY : local_nz,Ngz,zarray,Nzgrid
+  USE grid, ONLY : local_nz,Ngz,zarray,nzgrid
   implicit none
   REAL(dp) :: z
   INTEGER  :: iz, eo
   alpha_MHD = 0._dp
 
-  DO eo = 1,Nzgrid
+  DO eo = 1,nzgrid
    DO iz = 1,local_nz+Ngz
     z = zarray(iz,eo)
 
@@ -278,12 +277,12 @@ CONTAINS
     !--------------------------------------------------------------------------------
     ! NOT TESTED
   subroutine eval_1D_geometry
-    USE grid, ONLY : local_nz,Ngz,zarray, Nzgrid
+    USE grid, ONLY : local_nz,Ngz,zarray, nzgrid
     ! evaluate 1D perp geometry model
     implicit none
     REAL(dp) :: z
     INTEGER  :: iz, eo
-    DO eo = 1,Nzgrid
+    DO eo = 1,nzgrid
       DO iz = 1,local_nz+Ngz
       z = zarray(iz,eo)
 
@@ -310,13 +309,14 @@ CONTAINS
    !
 
  SUBROUTINE set_ikx_zBC_map
-   USE grid,       ONLY: local_nky,Nkx, contains_zmin,contains_zmax, Nexc
+   USE grid,       ONLY: local_nky,total_nkx,contains_zmin,contains_zmax, Nexc,&
+                         local_nky_offset
    USE prec_const, ONLY: imagu, pi
    IMPLICIT NONE
    ! REAL(dp) :: shift
-   INTEGER :: ikx,iky
-   ALLOCATE(ikx_zBC_L(local_nky,Nkx))
-   ALLOCATE(ikx_zBC_R(local_nky,Nkx))
+   INTEGER :: ikx,iky, mn_y
+   ALLOCATE(ikx_zBC_L(local_nky,total_nkx))
+   ALLOCATE(ikx_zBC_R(local_nky,total_nkx))
    ALLOCATE(pb_phase_L(local_nky))
    ALLOCATE(pb_phase_R(local_nky))
    !! No shear case (simple id mapping) or not at the end of the z domain
@@ -326,7 +326,7 @@ CONTAINS
    !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
    !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=free)
    DO iky = 1,local_nky
-     DO ikx = 1,Nkx
+     DO ikx = 1,total_nkx
        ikx_zBC_L(iky,ikx) = ikx ! connect to itself per default
        ikx_zBC_R(iky,ikx) = ikx
      ENDDO
@@ -340,27 +340,29 @@ CONTAINS
      ! Modify connection map only at border of z (matters for MPI z-parallelization)
      IF(contains_zmin) THEN ! Check if the process is at the start of the fluxtube
        DO iky = 1,local_nky
-         ! Formula for the shift due to shear after Npol turns
-         ! shift = 2._dp*PI*shear*kyarray(iky)*Npol
-           DO ikx = 1,Nkx
-             ! Usual formula for shifting indices using that dkx = 2pi*shear*dky/Nexc
-             ikx_zBC_L(iky,ikx) = ikx-(iky-1)*Nexc
-             ! Check if it points out of the kx domain
-             ! IF( (kxarray(ikx) - shift) .LT. kx_min ) THEN
-             IF( (ikx-(iky-1)*Nexc) .LT. 1 ) THEN ! outside of the frequ domain
-               SELECT CASE(parallel_bc)
-                 CASE ('dirichlet')! connected to 0
-                   ikx_zBC_L(iky,ikx) = -99
-                 CASE ('periodic')
-                   ikx_zBC_L(iky,ikx) = ikx
-                 CASE ('cyclic')! reroute it by cycling through modes
-                   ikx_zBC_L(iky,ikx) = MODULO(ikx_zBC_L(iky,ikx)-1,Nkx)+1
-               END SELECT
-             ENDIF
-           ENDDO
-           ! phase present in GENE from a shift of the x origin by Lx/2 (useless?)
-           ! We also put the user defined shift in the y direction (see Volcokas et al. 2022)
-           pb_phase_L(iky) = (-1._dp)**(Nexc*(iky-1))*EXP(imagu*REAL(iky-1,dp)*2._dp*pi*shift_y)
+        ! get the real mode number (iky starts at 1 and is shifted from paral)
+        mn_y = iky-1+local_nky_offset
+        ! Formula for the shift due to shear after Npol turns
+        ! shift = 2._dp*PI*shear*kyarray(iky)*Npol
+          DO ikx = 1,total_nkx
+            ! Usual formula for shifting indices using that dkx = 2pi*shear*dky/Nexc
+            ikx_zBC_L(iky,ikx) = ikx-mn_y*Nexc
+            ! Check if it points out of the kx domain
+            ! IF( (kxarray(ikx) - shift) .LT. kx_min ) THEN
+            IF( (ikx-mn_y*Nexc) .LT. 1 ) THEN ! outside of the frequ domain
+              SELECT CASE(parallel_bc)
+                CASE ('dirichlet')! connected to 0
+                  ikx_zBC_L(iky,ikx) = -99
+                CASE ('periodic')
+                  ikx_zBC_L(iky,ikx) = ikx
+                CASE ('cyclic')! reroute it by cycling through modes
+                  ikx_zBC_L(iky,ikx) = MODULO(ikx_zBC_L(iky,ikx)-1,total_nkx)+1
+              END SELECT
+            ENDIF
+          ENDDO
+          ! phase present in GENE from a shift of the x origin by Lx/2 (useless?)
+          ! We also put the user defined shift in the y direction (see Volcokas et al. 2022)
+          pb_phase_L(iky) = (-1._dp)**(Nexc*mn_y)*EXP(imagu*REAL(mn_y,dp)*2._dp*pi*shift_y)
        ENDDO
      ENDIF
      ! Option for disconnecting every modes, viz. connecting all boundary to 0
@@ -368,28 +370,30 @@ CONTAINS
      !!!!!!!!!! RIGHT PARALLEL BOUNDARY
      IF(contains_zmax) THEN ! Check if the process is at the end of the flux-tube
        DO iky = 1,local_nky
-         ! Formula for the shift due to shear after Npol
-         ! shift = 2._dp*PI*shear*kyarray(iky)*Npol
-           DO ikx = 1,Nkx
-             ! Usual formula for shifting indices
-             ikx_zBC_R(iky,ikx) = ikx+(iky-1)*Nexc
-             ! Check if it points out of the kx domain
-             ! IF( (kxarray(ikx) + shift) .GT. kx_max ) THEN ! outside of the frequ domain
-             IF( (ikx+(iky-1)*Nexc) .GT. Nkx ) THEN ! outside of the frequ domain
-               SELECT CASE(parallel_bc)
-                 CASE ('dirichlet') ! connected to 0
-                   ikx_zBC_R(iky,ikx) = -99
-                 CASE ('periodic') ! connected to itself as for shearless
-                   ikx_zBC_R(iky,ikx) = ikx
-                 CASE ('cyclic')
-                   ! write(*,*) 'check',ikx,iky, kxarray(ikx) + shift, '>', kx_max
-                   ikx_zBC_R(iky,ikx) = MODULO(ikx_zBC_R(iky,ikx)-1,Nkx)+1
-               END SELECT
-             ENDIF
-           ENDDO
-           ! phase present in GENE from a shift ofthe x origin by Lx/2 (useless?)
-           ! We also put the user defined shift in the y direction (see Volcokas et al. 2022)
-           pb_phase_R(iky) = (-1._dp)**(Nexc*(iky-1))*EXP(-imagu*REAL(iky-1,dp)*2._dp*pi*shift_y)
+        ! get the real mode number (iky starts at 1 and is shifted from paral)
+        mn_y = iky-1+local_nky_offset
+        ! Formula for the shift due to shear after Npol
+        ! shift = 2._dp*PI*shear*kyarray(iky)*Npol
+          DO ikx = 1,total_nkx
+            ! Usual formula for shifting indices
+            ikx_zBC_R(iky,ikx) = ikx+mn_y*Nexc
+            ! Check if it points out of the kx domain
+            ! IF( (kxarray(ikx) + shift) .GT. kx_max ) THEN ! outside of the frequ domain
+            IF( (ikx+mn_y*Nexc) .GT. total_nkx ) THEN ! outside of the frequ domain
+              SELECT CASE(parallel_bc)
+                CASE ('dirichlet') ! connected to 0
+                  ikx_zBC_R(iky,ikx) = -99
+                CASE ('periodic') ! connected to itself as for shearless
+                  ikx_zBC_R(iky,ikx) = ikx
+                CASE ('cyclic')
+                  ! write(*,*) 'check',ikx,iky, kxarray(ikx) + shift, '>', kx_max
+                  ikx_zBC_R(iky,ikx) = MODULO(ikx_zBC_R(iky,ikx)-1,total_nkx)+1
+              END SELECT
+            ENDIF
+          ENDDO
+          ! phase present in GENE from a shift ofthe x origin by Lx/2 (useless?)
+          ! We also put the user defined shift in the y direction (see Volcokas et al. 2022)
+          pb_phase_R(iky) = (-1._dp)**(Nexc*mn_y)*EXP(-imagu*REAL(mn_y,dp)*2._dp*pi*shift_y)
        ENDDO
      ENDIF
      ! Option for disconnecting every modes, viz. connecting all boundary to 0
@@ -450,31 +454,31 @@ END SUBROUTINE set_ikx_zBC_map
 !--------------------------------------------------------------------------------
 !
 
-   SUBROUTINE geometry_allocate_mem(local_nky,local_nkx,local_nz,Ngz,Nzgrid)
-     INTEGER, INTENT(IN) :: local_nky,local_nkx,local_nz,Ngz,Nzgrid
+   SUBROUTINE geometry_allocate_mem(local_nky,local_nkx,local_nz,Ngz,nzgrid)
+     INTEGER, INTENT(IN) :: local_nky,local_nkx,local_nz,Ngz,nzgrid
        ! Curvature and geometry
-       ALLOCATE( Ckxky(local_nky,local_nkx,local_nz+Ngz,Nzgrid))
-       ALLOCATE(   Jacobian(local_nz+Ngz,Nzgrid))
-       ALLOCATE(        gxx(local_nz+Ngz,Nzgrid))
-       ALLOCATE(        gxy(local_nz+Ngz,Nzgrid))
-       ALLOCATE(        gxz(local_nz+Ngz,Nzgrid))
-       ALLOCATE(        gyy(local_nz+Ngz,Nzgrid))
-       ALLOCATE(        gyz(local_nz+Ngz,Nzgrid))
-       ALLOCATE(        gzz(local_nz+Ngz,Nzgrid))
-       ALLOCATE(       dBdx(local_nz+Ngz,Nzgrid))
-       ALLOCATE(       dBdy(local_nz+Ngz,Nzgrid))
-       ALLOCATE(       dBdz(local_nz+Ngz,Nzgrid))
-       ALLOCATE(     dlnBdz(local_nz+Ngz,Nzgrid))
-       ALLOCATE(       hatB(local_nz+Ngz,Nzgrid))
-       ! ALLOCATE(Gamma_phipar,(local_nz+Ngz,Nzgrid)) (not implemented)
-       ALLOCATE(       hatR(local_nz+Ngz,Nzgrid))
-       ALLOCATE(       hatZ(local_nz+Ngz,Nzgrid))
-       ALLOCATE(         Rc(local_nz+Ngz,Nzgrid))
-       ALLOCATE(       phic(local_nz+Ngz,Nzgrid))
-       ALLOCATE(         Zc(local_nz+Ngz,Nzgrid))
-       ALLOCATE(       dxdR(local_nz+Ngz,Nzgrid))
-       ALLOCATE(       dxdZ(local_nz+Ngz,Nzgrid))
-       ALLOCATE(gradz_coeff(local_nz+Ngz,Nzgrid))
+       ALLOCATE( Ckxky(local_nky,local_nkx,local_nz+Ngz,nzgrid))
+       ALLOCATE(   Jacobian(local_nz+Ngz,nzgrid))
+       ALLOCATE(        gxx(local_nz+Ngz,nzgrid))
+       ALLOCATE(        gxy(local_nz+Ngz,nzgrid))
+       ALLOCATE(        gxz(local_nz+Ngz,nzgrid))
+       ALLOCATE(        gyy(local_nz+Ngz,nzgrid))
+       ALLOCATE(        gyz(local_nz+Ngz,nzgrid))
+       ALLOCATE(        gzz(local_nz+Ngz,nzgrid))
+       ALLOCATE(       dBdx(local_nz+Ngz,nzgrid))
+       ALLOCATE(       dBdy(local_nz+Ngz,nzgrid))
+       ALLOCATE(       dBdz(local_nz+Ngz,nzgrid))
+       ALLOCATE(     dlnBdz(local_nz+Ngz,nzgrid))
+       ALLOCATE(       hatB(local_nz+Ngz,nzgrid))
+       ! ALLOCATE(Gamma_phipar,(local_nz+Ngz,nzgrid)) (not implemented)
+       ALLOCATE(       hatR(local_nz+Ngz,nzgrid))
+       ALLOCATE(       hatZ(local_nz+Ngz,nzgrid))
+       ALLOCATE(         Rc(local_nz+Ngz,nzgrid))
+       ALLOCATE(       phic(local_nz+Ngz,nzgrid))
+       ALLOCATE(         Zc(local_nz+Ngz,nzgrid))
+       ALLOCATE(       dxdR(local_nz+Ngz,nzgrid))
+       ALLOCATE(       dxdZ(local_nz+Ngz,nzgrid))
+       ALLOCATE(gradz_coeff(local_nz+Ngz,nzgrid))
 
    END SUBROUTINE geometry_allocate_mem
 

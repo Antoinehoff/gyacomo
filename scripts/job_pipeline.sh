@@ -25,7 +25,7 @@ for i in {1..1}; do
             else if (NR == 12) print "srun --cpu-bind=cores ./gyacomo 2 24 1 "ID;
             else print $0}' submit_$idm1.cmd > submit_$id.cmd
  
-    # Create new fort file from older one
+    # Create new input file from older one
     awk -v "NU=$nu_" -v "TM=$Tm_" -v "J2L=$im1" '{ 
             if (NR == 04) print "  tmax       = "TM;
        else if (NR == 40) print "  job2load   = "J2L;

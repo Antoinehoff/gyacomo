@@ -140,22 +140,22 @@ SUBROUTINE diagnose_full(kstep)
     CALL putarr(fidres, "/data/grid/coordj" ,   jarray_full,   "j", ionode=0)
     ! Metric info
     CALL   creatg(fidres, "/data/metric", "Metric data")
-    CALL putarrnd(fidres, "/data/metric/gxx",            gxx(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/gxy",            gxy(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/gxz",            gxz(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/gyy",            gyy(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/gyz",            gyz(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/gzz",            gzz(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/hatR",          hatR(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/hatZ",          hatZ(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/hatB",          hatB(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/dBdx",      dBdx(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/dBdy",      dBdy(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/dBdz",      dBdz(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/Jacobian",    Jacobian(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/gradz_coeff", gradz_coeff(1+ngz/2:local_nz+ngz/2,:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/Ckxky",       Ckxky(1:local_nky,1:local_nkx,1+ngz/2:local_nz+ngz/2,:), (/1, 1, 3/))
-    CALL putarrnd(fidres, "/data/metric/kernel",    kernel(1,1+ngj/2:local_nj+ngj/2,1:local_nky,1:local_nkx,1+ngz/2:local_nz+ngz/2,1), (/1, 1, 2, 4/))
+    CALL putarrnd(fidres, "/data/metric/gxx",            gxx((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL putarrnd(fidres, "/data/metric/gxy",            gxy((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL putarrnd(fidres, "/data/metric/gxz",            gxz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL putarrnd(fidres, "/data/metric/gyy",            gyy((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL putarrnd(fidres, "/data/metric/gyz",            gyz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL putarrnd(fidres, "/data/metric/gzz",            gzz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL putarrnd(fidres, "/data/metric/hatR",          hatR((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL putarrnd(fidres, "/data/metric/hatZ",          hatZ((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL putarrnd(fidres, "/data/metric/hatB",          hatB((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL putarrnd(fidres, "/data/metric/dBdx",      dBdx((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL putarrnd(fidres, "/data/metric/dBdy",      dBdy((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL putarrnd(fidres, "/data/metric/dBdz",      dBdz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL putarrnd(fidres, "/data/metric/Jacobian",    Jacobian((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL putarrnd(fidres, "/data/metric/gradz_coeff", gradz_coeff((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL putarrnd(fidres, "/data/metric/Ckxky",       Ckxky(1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 3/))
+    CALL putarrnd(fidres, "/data/metric/kernel",    kernel(1,(1+ngj/2):(local_nj+ngj/2),1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),1), (/1, 1, 2, 4/))
     !  var0d group (gyro transport)
     IF (nsave_0d .GT. 0) THEN
      CALL creatg(fidres, "/data/var0d", "0d profiles")
@@ -346,15 +346,15 @@ SUBROUTINE diagnose_3d
   iframe3d=iframe3d+1
   CALL attach(fidres,"/data/var3d/" , "frames", iframe3d)
   ! Write current EM fields
-  IF (write_phi)        CALL write_field3d_kykxz(phi (:,:,1+ngz/2:local_nz+ngz/2), 'phi')
-  IF (write_phi.AND.EM) CALL write_field3d_kykxz(psi (:,:,1+ngz/2:local_nz+ngz/2), 'psi')
+  IF (write_phi)        CALL write_field3d_kykxz(phi (:,:,(1+ngz/2):(local_nz+ngz/2)), 'phi')
+  IF (write_phi.AND.EM) CALL write_field3d_kykxz(psi (:,:,(1+ngz/2):(local_nz+ngz/2)), 'psi')
   IF (write_Na00) THEN
     CALL compute_Napjz_spectrum
     DO ia=1,local_na
       letter_a = name(ia)(1:1)
       IF (CONTAINSp0) THEN
         ! gyrocenter density
-        Na00_    = moments(ia,ip0,ij0,:,:,1+ngz/2:local_nz+ngz/2,updatetlevel)
+        Na00_    = moments(ia,ip0,ij0,:,:,(1+ngz/2):(local_nz+ngz/2),updatetlevel)
         CALL write_field3d_kykxz(Na00_, 'N'//letter_a//'00')
       ENDIF
       ! <<Napj>x>y spectrum
@@ -470,8 +470,8 @@ SUBROUTINE diagnose_5d
     COMPLEX(dp), DIMENSION(total_na,local_np,local_nj,local_nky,local_nkx,local_nz) :: field_sub
     COMPLEX(dp), DIMENSION(total_na,total_np,total_nj,total_nky,total_nkx,total_nz) :: field_full
     CHARACTER(LEN=50) :: dset_name
-    field_sub  = field(1:total_na,(1+ngp/2):(local_np+ngp/2),(1+ngj/2):(local_nj+ngj/2),&
-                          1:local_nky,1:local_nkx,  (1+ngz/2):(local_nz+ngz/2),updatetlevel)
+    field_sub  = field(1:total_na,(1+ngp/2):(local_np+ngp/2),((1+ngj/2)):((local_nj+ngj/2)),&
+                          1:local_nky,1:local_nkx,  ((1+ngz/2)):((local_nz+ngz/2)),updatetlevel)
     field_full = 0;
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var5d", TRIM(text), iframe5d
     IF (num_procs .EQ. 1) THEN
@@ -506,7 +506,7 @@ SUBROUTINE spit_snapshot_check
   INQUIRE(file='check_phi', exist=file_exist)
   IF( file_exist ) THEN
      IF(my_id.EQ. 0) WRITE(*,*) 'Check file found -> gather phi..'
-     CALL gather_xyz(phi(:,:,1+Ngz/2:local_nz+Ngz/2), field_to_check,local_nky,total_nky,total_nkx,local_nz,total_nz)
+     CALL gather_xyz(phi(:,:,(1+Ngz/2):(local_nz+Ngz/2)), field_to_check,local_nky,total_nky,total_nkx,local_nz,total_nz)
      IF(my_id.EQ. 0) THEN
        WRITE(check_filename,'(a16)') 'check_phi.out'
        OPEN(fid_check, file=check_filename, form='formatted')

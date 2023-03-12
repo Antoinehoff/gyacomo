@@ -33,7 +33,7 @@ SUBROUTINE tesend
 
   !________________________________________________________________________________
   !                   3.  Test on TMAX
-  nlend = time .GT. tmax
+  nlend = time .GE. tmax
   IF ( nlend ) THEN
      CALL speak('TMAX reached')
      RETURN

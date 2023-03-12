@@ -8,10 +8,10 @@ MODULE grid
   PRIVATE
 
   !   GRID Input
-  INTEGER,  PUBLIC, PROTECTED :: pmax = 1      ! The maximal Hermite-moment computed
-  INTEGER,  PUBLIC, PROTECTED :: jmax = 1      ! The maximal Laguerre-moment computed
+  INTEGER,  PUBLIC, PROTECTED :: pmax  = 1      ! The maximal Hermite-moment computed
+  INTEGER,  PUBLIC, PROTECTED :: jmax  = 1      ! The maximal Laguerre-moment computed
   INTEGER,  PUBLIC, PROTECTED :: maxj  = 1     ! The maximal Laguerre-moment
-  INTEGER,  PUBLIC, PROTECTED :: dmax = 1      ! The maximal full GF set of i-moments v^dmax
+  INTEGER,  PUBLIC, PROTECTED :: dmax  = 1      ! The maximal full GF set of i-moments v^dmax
   INTEGER,  PUBLIC, PROTECTED :: Nx    = 4      ! Number of total internal grid points in x
   REAL(dp), PUBLIC, PROTECTED :: Lx    = 120_dp ! horizontal length of the spatial box
   INTEGER,  PUBLIC, PROTECTED :: Nexc  = 1      ! factor to increase Lx when shear>0 (Lx = Nexc/kymin/shear)
@@ -19,8 +19,8 @@ MODULE grid
   REAL(dp), PUBLIC, PROTECTED :: Ly    = 120_dp ! vertical length of the spatial box
   INTEGER,  PUBLIC, PROTECTED :: Nz    = 4      ! Number of total perpendicular planes
   INTEGER,  PUBLIC, PROTECTED :: Odz   = 4      ! order of z interp and derivative schemes
-  INTEGER,  PUBLIC, PROTECTED :: Nkx   = 4      ! Number of total internal grid points in kx
-  INTEGER,  PUBLIC, PROTECTED :: Nky   = 4      ! Number of total internal grid points in ky
+  INTEGER,  PUBLIC, PROTECTED :: Nkx            ! Number of total internal grid points in kx
+  INTEGER,  PUBLIC, PROTECTED :: Nky            ! Number of total internal grid points in ky
   REAL(dp), PUBLIC, PROTECTED :: kpar  = 0_dp   ! parallel wave vector component
   ! Grid arrays
   INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: parray,  parray_full
@@ -82,8 +82,8 @@ MODULE grid
   REAL(dp), PUBLIC, PROTECTED  ::  diff_kx_coeff, diff_ky_coeff, diff_dz_coeff
   LOGICAL,  PUBLIC, PROTECTED  ::  SG = .true.! shifted grid flag
   ! Array to know the distribution of data among all processes (for MPI comm)
-  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC,PROTECTED :: counts_nkx, counts_nky, counts_nz
-  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC,PROTECTED :: displs_nkx, displs_nky, displs_nz
+  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC,PROTECTED :: counts_total_nkx, counts_nky, counts_nz
+  INTEGER, DIMENSION(:), ALLOCATABLE, PUBLIC,PROTECTED :: displs_total_nkx, displs_nky, displs_nz
   ! Kperp array depends on kx, ky, z (geometry), eo (even or odd zgrid)
   LOGICAL,  PUBLIC, PROTECTED ::  contains_kx0   = .false. ! flag if the proc contains kx=0 index
   LOGICAL,  PUBLIC, PROTECTED ::  contains_ky0   = .false. ! flag if the proc contains ky=0 index
@@ -164,11 +164,15 @@ CONTAINS
     CALL set_kxgrid(shear,Npol,LINEARITY,N_HD)
     CALL set_zgrid (Npol)
 
-    print*, 'p:',parray
-    print*, 'j:',jarray
-    print*, 'ky:',kyarray
-    print*, 'kx:',kxarray
-    print*, 'z:',zarray
+    ! print*, 'p:',parray
+    ! print*, 'j:',jarray
+    ! print*, 'ky:',kyarray
+    ! print*, 'kx:',kxarray
+    ! print*, 'z:',zarray
+    ! print*, parray(ip0)
+    ! print*, jarray(ij0)
+    ! print*, kyarray(iky0)
+    ! print*, kxarray(ikx0)
   END SUBROUTINE set_grids
 
   SUBROUTINE init_1Dgrid_distr
@@ -303,7 +307,7 @@ CONTAINS
     IMPLICIT NONE
     CHARACTER(len=*), INTENT(IN) ::LINEARITY
     INTEGER, INTENT(IN) :: N_HD
-    INTEGER :: iky, ikyo
+    INTEGER :: iky
     Nky = Ny/2+1 ! Defined only on positive kx since fields are real
     ! Grid spacings
     IF (Ny .EQ. 1) THEN
@@ -329,36 +333,35 @@ CONTAINS
     local_kymax = 0._dp
     ! Creating a grid ordered as dk*(0 1 2 3)
     ! We loop over the natural iky numbers (|1 2 3||4 5 6||... Nky|)
-    DO iky = ikys,ikye
+    DO iky = 1,local_nky
       ! We shift the natural iky index by the offset to obtain the mpi dependent
-      ! indexation (|1 2 3||1 2 3|... local_Nky|)
-      ikyo = iky - local_nky_offset
+      ! indexation (|1 2 3||1 2 3|... local_nky|)
       IF(Ny .EQ. 1) THEN
         kyarray(iky)      = deltaky
         kyarray_full(iky) = deltaky
         SINGLE_KY         = .TRUE.
       ELSE
-        kyarray(ikyo) = REAL(iky,dp) * deltaky
+        kyarray(iky) = kyarray_full(iky-local_nky_offset)
       ENDIF
       ! Finding kx=0
-      IF (kyarray(ikyo) .EQ. 0) THEN
-        iky0 = ikyo
+      IF (kyarray(iky) .EQ. 0) THEN
+        iky0 = iky
         contains_ky0 = .true.
       ENDIF
       ! Finding local kxmax value
-      IF (ABS(kyarray(ikyo)) .GT. local_kymax) THEN
-        local_kymax = ABS(kyarray(ikyo))
+      IF (ABS(kyarray(iky)) .GT. local_kymax) THEN
+        local_kymax = ABS(kyarray(iky))
       ENDIF
       ! Finding kxmax idx
-      IF (kyarray(ikyo) .EQ. ky_max) THEN
-        iky_max = ikyo
+      IF (kyarray(iky) .EQ. ky_max) THEN
+        iky_max = iky
         contains_kymax = .true.
       ENDIF
     END DO
     ! Orszag 2/3 filter
     two_third_kymax = 2._dp/3._dp*deltaky*(Nky-1)
-    ALLOCATE(AA_y(local_Nky))
-    DO iky = 1,local_Nky
+    ALLOCATE(AA_y(local_nky))
+    DO iky = 1,local_nky
       IF ( (kyarray(iky) .LT. two_third_kymax) .OR. (LINEARITY .EQ. 'linear')) THEN
         AA_y(iky) = 1._dp;
       ELSE
@@ -380,7 +383,7 @@ CONTAINS
     INTEGER,  INTENT(IN) :: Npol
     CHARACTER(len=*), INTENT(IN) ::LINEARITY
     INTEGER, INTENT(IN)  :: N_HD
-    INTEGER :: ikx, ikxo
+    INTEGER :: ikx
     REAL(dp):: Lx_adapted
     IF(shear .GT. 0) THEN
       IF(my_id.EQ.0) write(*,*) 'Magnetic shear detected: set up sheared kx grid..'
@@ -394,17 +397,17 @@ CONTAINS
       ! x length is adapted
       Lx = Lx_adapted*Nexc
     ENDIF
-    Nkx       = Nx;
+    Nkx       = Nx
     total_nkx = Nx
     ! Local data
     ! Start and END indices of grid
     ikxs = 1
-    ikxe = Nkx
+    ikxe = total_nkx
     local_nkx_ptr = ikxe - ikxs + 1
     local_nkx     = ikxe - ikxs + 1
     local_nky_offset = ikxs - 1
     ALLOCATE(kxarray(local_nkx))
-    ALLOCATE(kxarray_full(1:total_nkx))
+    ALLOCATE(kxarray_full(total_nkx))
     IF (Nx .EQ. 1) THEN
       deltakx         = 1._dp
       kxarray(1)      = 0._dp
@@ -417,66 +420,31 @@ CONTAINS
       local_kxmax     = 0._dp
     ELSE ! Build apprpopriate grid
       deltakx      = 2._dp*PI/Lx
-      IF(MODULO(Nkx,2) .EQ. 0) THEN ! Even number of Nkx (-2 -1 0 1 2 3)
-        kx_max = (Nkx/2)*deltakx
+      IF(MODULO(total_nkx,2) .EQ. 0) THEN ! Even number of kx (-2 -1 0 1 2 3)
+        kx_max = (total_nkx/2)*deltakx
         kx_min = -kx_max+deltakx
         ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
+        DO ikx = 1,total_nkx
+          kxarray_full(ikx) = deltakx*REAL(MODULO(ikx-1,total_nkx/2)-(total_nkx/2)*FLOOR(2.*real(ikx-1)/real(total_nkx)),dp)
+          IF (ikx .EQ. total_nkx/2+1) kxarray_full(ikx) = -kxarray_full(ikx)
+        END DO
+        ! Set local grid (not parallelized so same as full one)
         local_kxmax = 0._dp
-        DO ikx = ikxs,ikxe
-          ikxo = ikx - local_nkx_offset
-          kxarray(ikxo) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*real(ikx-1,dp)/real(Nkx,dp)))
-          if (ikx .EQ. Nx/2+1)     kxarray(ikxo) = -kxarray(ikxo)
+        DO ikx = 1,local_nkx
+          kxarray(ikx) = kxarray_full(ikx-local_nkx_offset)
           ! Finding kx=0
-          IF (kxarray(ikxo) .EQ. 0) THEN
-            ikx0 = ikxo
+          IF (kxarray(ikx) .EQ. 0) THEN
+            ikx0 = ikx
             contains_kx0 = .true.
           ENDIF
           ! Finding local kxmax
-          IF (ABS(kxarray(ikxo)) .GT. local_kxmax) THEN
-            local_kxmax = ABS(kxarray(ikxo))
+          IF (ABS(kxarray(ikx)) .GT. local_kxmax) THEN
+            local_kxmax = ABS(kxarray(ikx))
+            ikx_max = ikx
           ENDIF
-          ! Finding kxmax
-          IF (kxarray(ikxo) .EQ. kx_max) ikx_max = ikxo
-        END DO
-        ! Build the full grids on process 0 to diagnose it without comm
-        ! kx
-        DO ikx = 1,Nkx
-            kxarray_full(ikx) = deltakx*(MODULO(ikx-1,Nkx/2)-Nkx/2*FLOOR(2.*real(ikx-1,dp)/real(Nkx,dp)))
-            IF (ikx .EQ. Nx/2+1) kxarray_full(ikx) = -kxarray_full(ikx)
         END DO
       ELSE ! Odd number of kx (-2 -1 0 1 2)
-        kx_max = (Nkx-1)/2*deltakx
-        kx_min = -kx_max
-        ! Creating a grid ordered as dk*(0 1 2 -2 -1)
-        local_kxmax = 0._dp
-        DO ikx = ikxs,ikxe
-          ikxo = ikx - local_nkx_offset
-          IF(ikx .LE. (Nkx-1)/2+1) THEN
-            kxarray(ikxo) = deltakx*(ikx-1)
-          ELSE
-            kxarray(ikxo) = deltakx*(ikx-Nkx-1)
-          ENDIF
-          ! Finding kx=0
-          IF (kxarray(ikxo) .EQ. 0) THEN
-            ikx0 = ikxo
-            contains_kx0 = .true.
-          ENDIF
-          ! Finding local kxmax
-          IF (ABS(kxarray(ikxo)) .GT. local_kxmax) THEN
-            local_kxmax = ABS(kxarray(ikxo))
-          ENDIF
-          ! Finding kxmax
-          IF (kxarray(ikxo) .EQ. kx_max) ikx_max = ikxo
-        END DO
-        ! Build the full grids on process 0 to diagnose it without comm
-        ! kx
-        DO ikx = 1,Nkx
-          IF(ikx .LE. (Nkx-1)/2+1) THEN
-            kxarray_full(ikx) = deltakx*(ikx-1)
-          ELSE
-            kxarray_full(ikx) = deltakx*(ikx-Nkx-1)
-          ENDIF
-        END DO
+        kx_max = (total_nkx-1)/2*deltakx
       ENDIF
     ENDIF
     ! Orszag 2/3 filter
@@ -504,7 +472,7 @@ CONTAINS
     USE parallel, ONLY: num_procs_z, rank_z
     IMPLICIT NONE
     REAL(dp):: grid_shift, Lz, zmax, zmin
-    INTEGER :: istart, iend, in, Npol, iz, ig, eo
+    INTEGER :: istart, iend, in, Npol, iz, ig, eo, iglob
     total_nz = Nz
     ! Length of the flux tube (in ballooning angle)
     Lz         = 2_dp*pi*Npol
@@ -572,11 +540,24 @@ CONTAINS
       ! Find local extrema
       local_zmax(eo) = zarray(local_nz+ngz/2,eo)
       local_zmin(eo) = zarray(1+ngz/2,eo)
-      print*, zarray
       ! Fill the ghosts
-      DO ig = 1,ngz/2
-        zarray(ig,eo)          = local_zmin(eo)-REAL(ngz/2-(ig-1),dp)*deltaz
-        zarray(local_nz+ngz/2+ig,eo) = local_zmax(eo)+REAL(ig,dp)*deltaz
+      ! Continue angles
+      ! DO ig = 1,ngz/2
+      !   zarray(ig,eo)          = local_zmin(eo)-REAL(ngz/2-(ig-1),dp)*deltaz
+      !   zarray(local_nz+ngz/2+ig,eo) = local_zmax(eo)+REAL(ig,dp)*deltaz
+      ! ENDDO
+      ! Periodic z \in (-pi pi-dz)
+      DO ig = 1,ngz/2 ! first ghost cells
+        iglob = ig+local_nz_offset-ngz/2
+        IF (iglob .LE. 0) &
+          iglob = iglob + total_nz
+        zarray(ig,eo) = zarray_full(iglob)
+      ENDDO
+      DO ig = local_nz+ngz/2,local_nz+ngz ! last ghost cells
+        iglob = ig+local_nz_offset-ngz/2
+        IF (iglob .GT. total_nz) &
+          iglob = iglob - total_nz
+        zarray(ig,eo) = zarray_full(iglob)
       ENDDO
       ! Set up the flags to know if the process contains the tip and/or the tail
       ! of the z domain (important for z-boundary condition)
@@ -591,12 +572,12 @@ CONTAINS
   END SUBROUTINE set_zgrid
 
   SUBROUTINE set_kparray(gxx, gxy, gyy,hatB)
-    REAL(dp), DIMENSION(:,:), INTENT(IN) :: gxx,gxy,gyy,hatB
+    REAL(dp), DIMENSION(local_nz+ngz,nzgrid), INTENT(IN) :: gxx,gxy,gyy,hatB
     INTEGER     :: eo,iz,iky,ikx
     REAL(dp)    :: kx, ky
-    CALL allocate_array( kparray, 1,local_nky, 1,local_nkx, 1,local_nz+Ngz, 1,2)
-    DO eo = 1,Nzgrid
-      DO iz = 1,local_nz+Ngz
+    CALL allocate_array( kparray, 1,local_nky, 1,local_nkx, 1,local_nz+ngz, 1,nzgrid)
+    DO eo = 1,nzgrid
+      DO iz = 1,local_nz+ngz
         DO iky = 1,local_nky
           ky = kyarray(iky)
           DO ikx = 1,local_nkx
@@ -628,7 +609,7 @@ CONTAINS
     CALL attach(fid, TRIM(str),   "Ny",   Ny)
     CALL attach(fid, TRIM(str),   "Ly",   Ly)
     CALL attach(fid, TRIM(str),   "Nz",   Nz)
-    CALL attach(fid, TRIM(str),  "Nkx",  Nkx)
+    CALL attach(fid, TRIM(str),  "total_nkx",  total_nkx)
     CALL attach(fid, TRIM(str),  "Nky",  Nky)
     CALL attach(fid, TRIM(str),   "SG",   SG)
   END SUBROUTINE grid_outputinputs

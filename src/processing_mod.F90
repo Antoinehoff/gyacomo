@@ -1,7 +1,7 @@
 MODULE processing
    USE prec_const,  ONLY: dp, imagu, SQRT2, SQRT3
    USE grid,        ONLY: &
-      local_na, local_np, local_nj, local_nky, local_nkx, local_nz, Ngz,Ngj,Ngp, &
+      local_na, local_np, local_nj, local_nky, local_nkx, local_nz, Ngz,Ngj,Ngp,nzgrid, &
       parray,pmax,ip0, iodd, ieven,&
       CONTAINSp0,ip1,CONTAINSp1,ip2,CONTAINSp2,ip3,CONTAINSp3,&
       jarray,jmax,ij0, dmax,&
@@ -286,32 +286,43 @@ CONTAINS
             DO ij = 1,local_nj+ngj
                DO ip = 1,local_np+ngp
                   DO ia = 1,local_na
-                     p_int = parray(ip)
-                     eo    = MODULO(p_int,2)+1 ! Indicates if we are on even or odd z grid
+                     IF(nzgrid .GT. 1) THEN
+                        p_int = parray(ip+ngp/2)
+                        eo    = MODULO(p_int,2)+1 ! Indicates if we are on even or odd z grid
+                     ELSE
+                        eo = 0
+                     ENDIF
                      ! Compute z first derivative
                      f_in = nadiab_moments(ia,ip,ij,iky,ikx,:)
                      CALL   grad_z(eo,local_nz,ngz,inv_deltaz,f_in,f_out)
-                     ddz_napj(ia,ip,ij,iky,ikx,:) = f_out
+                     ! get output
+                     DO iz = 1,local_nz
+                        ddz_napj(ia,ip,ij,iky,ikx,iz) = f_out(iz)
+                     ENDDO
                      ! Parallel numerical diffusion
                      IF (HDz_h) THEN
                         f_in = nadiab_moments(ia,ip,ij,iky,ikx,:)
-                        CALL  grad_z4(local_nz,ngz,inv_deltaz,f_in,f_out)
-                        ddzND_Napj(ia,ip,ij,iky,ikx,:) = f_out
                      ELSE
                         f_in = moments(ia,ip,ij,iky,ikx,:,updatetlevel)
-                        CALL  grad_z4(local_nz,ngz,inv_deltaz,f_in,f_out)
-                        ddzND_Napj(ia,ip,ij,iky,ikx,:) = f_out
                      ENDIF
+                     CALL  grad_z4(local_nz,ngz,inv_deltaz,f_in,f_out)
+                     ! get output
+                     DO iz = 1,local_nz
+                        ddzND_Napj(ia,ip,ij,iky,ikx,iz) = f_out(iz)
+                     ENDDO
                      ! Compute even odd grids interpolation
-                     f_in = nadiab_moments(ia,ip,ij,iky,ikx,1:local_nz+ngz)
+                     f_in = nadiab_moments(ia,ip,ij,iky,ikx,:)
                      CALL interp_z(eo,local_nz,ngz,f_in,f_out)
-                     interp_napj(ia,ip,ij,iky,ikx,1:local_nz) = f_out
+                     DO iz = 1,local_nz
+                        interp_napj(ia,ip,ij,iky,ikx,iz) = f_out(iz)
+                     ENDDO
                   ENDDO
                ENDDO
             ENDDO
          ENDDO
       ENDDO
-
+      print*, ddz_napj(1,3,2,:,:,:)
+      stop
       ! Phi parallel gradient (not implemented fully, should be negligible)
       ! DO ikx = 1,local_nkx
       !   DO iky = 1,local_nky

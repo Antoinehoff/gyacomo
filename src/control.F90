@@ -60,19 +60,19 @@ SUBROUTINE control
   !________________________________________________________________________________
   !              2.   Main loop
   DO
-     CALL cpu_time(t0_step) ! Measuring time
-     
-     CALL tesend
-     IF( nlend ) EXIT ! exit do loop
+    CALL cpu_time(t0_step) ! Measuring time
+    
+    CALL tesend
+    IF( nlend ) EXIT ! exit do loop
 
-     CALL increase_step
-     CALL increase_cstep
-     CALL stepon
+    CALL increase_step
+    CALL increase_cstep
 
-     CALL increase_time
+    CALL stepon
 
+    CALL increase_time
 
-     CALL diagnose(step)
+    CALL diagnose(step)
 
     CALL cpu_time(t1_step);
     tc_step = tc_step + (t1_step - t0_step)

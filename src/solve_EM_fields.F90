@@ -36,15 +36,14 @@ CONTAINS
     CALL cpu_time(t0_poisson)
     !! Poisson can be solved only for process containng p=0
     IF ( SOLVE_POISSON ) THEN
-        x:DO ikx = 1,local_nky
-          y:DO iky = 1,local_nkx
+        x:DO ikx = 1,local_nkx
+          y:DO iky = 1,local_nky
             !!!!!!!!!!!!!!! Compute particle charge density q_a n_a for each evolved species
             DO iz = 1,local_nz
               rho(iz) = 0._dp
-              DO in=1,total_nj
+              DO in = 1,total_nj
                 DO ia = 1,local_na
-                  rho(iz) = rho(iz) &
-                   +q(ia)*kernel(ia,in+ngj/2,iky,ikx,iz+ngz/2,ieven)*moments(ia,ip0,in+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)
+                  rho(iz) = rho(iz) + q(ia)*kernel(ia,in+ngj/2,iky,ikx,iz+ngz/2,ieven)*moments(ia,ip0,in+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)
                 END DO
               END DO
             END DO

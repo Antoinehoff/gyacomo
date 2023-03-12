@@ -43,15 +43,14 @@ SUBROUTINE compute_moments_eq_rhs
         ky     = kyarray(iky)                     ! binormal wavevector
         i_ky   = imagu * ky                       ! binormal derivative
         ! Kinetic loops
-        j:DO ij = 1, local_nj               ! This loop is from 1 to jmaxi+1
+        j:DO ij = 1,local_nj               ! This loop is from 1 to jmaxi+1
           iji   = ij+ngj/2
           j_int = jarray(iji)
-          p:DO ip = 1, local_np             ! Hermite loop
+          p:DO ip = 1,local_np             ! Hermite loop
             ipi   = ip+ngp/2
             p_int = parray(ipi)                   ! Hermite degree
             eo    = min(nzgrid,MODULO(p_int,2)+1) ! Indicates if we are on odd or even z grid
             kperp2= kparray(iky,ikx,izi,eo)**2
-            RHS  = 0._dp
             ! Species loop
             a:DO ia = 1,local_na
               Napj = moments(ia,ipi,iji,iky,ikx,izi,updatetlevel)
@@ -87,7 +86,7 @@ SUBROUTINE compute_moments_eq_rhs
                 Fmir = dlnBdz(iz,eo)*(Tnapp1j + Tnapp1jm1 + Tnapm1j + Tnapm1jm1 +&
                                       Unapm1j + Unapm1jp1 + Unapm1jm1)
                 ! Parallel magnetic term (Landau damping and the mirror force)
-                Mpara = gradz_coeff(iz,eo)*(Ldamp + Fmir)
+                Mpara = gradz_coeff(iz,eo)*(Ldamp) !+ Fmir)
                 !! Electrical potential term
                 IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
                   Dphi =i_ky*( xphij  (ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
@@ -111,20 +110,20 @@ SUBROUTINE compute_moments_eq_rhs
                     ! Perpendicular magnetic term
                     - Mperp &
                     ! Parallel magnetic term
-                    - Mpara &
-                    ! Drives (density + temperature gradients)
-                    - (Dphi + Dpsi) &
-                    ! Collision term
-                    + Capj(ia,ip,ij,iky,ikx,iz) &
-                    ! Perpendicular pressure effects (electromagnetic term) (TO CHECK)
-                    - i_ky*beta*dpdx(ia) * (Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)&
-                    ! Parallel drive term (should be negligible, to test)
-                    ! -Gamma_phipar(iz,eo)*Tphi*ddz_phi(iky,ikx,iz) &
-                    ! Numerical perpendicular hyperdiffusion
-                    -mu_x*diff_kx_coeff*kx**N_HD*Napj &
-                    -mu_y*diff_ky_coeff*ky**N_HD*Napj &
-                    ! Numerical parallel hyperdiffusion "mu_z*ddz**4"  see Pueschel 2010 (eq 25)
-                    -mu_z*diff_dz_coeff*ddzND_napj(ia,ipi,iji,iky,ikx,iz)
+                    - Mpara !&
+                    ! ! Drives (density + temperature gradients)
+                    ! - (Dphi + Dpsi) &
+                    ! ! Collision term
+                    ! + Capj(ia,ip,ij,iky,ikx,iz) &
+                    ! ! Perpendicular pressure effects (electromagnetic term) (TO CHECK)
+                    ! - i_ky*beta*dpdx(ia) * (Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)&
+                    ! ! Parallel drive term (should be negligible, to test)
+                    ! ! -Gamma_phipar(iz,eo)*Tphi*ddz_phi(iky,ikx,iz) &
+                    ! ! Numerical perpendicular hyperdiffusion
+                    ! -mu_x*diff_kx_coeff*kx**N_HD*Napj &
+                    ! -mu_y*diff_ky_coeff*ky**N_HD*Napj &
+                    ! ! Numerical parallel hyperdiffusion "mu_z*ddz**4"  see Pueschel 2010 (eq 25)
+                    ! -mu_z*diff_dz_coeff*ddzND_napj(ia,ipi,iji,iky,ikx,iz)
                 !! Velocity space dissipation (should be implemented somewhere else)
                 SELECT CASE(HYP_V)
                 CASE('hypcoll') ! GX like Hermite hypercollisions see Mandell et al. 2023 (eq 3.23), unadvised to use it
@@ -134,7 +133,7 @@ SUBROUTINE compute_moments_eq_rhs
                     RHS = RHS - mu_j*diff_j_coeff*j_int**6*Napj
                 CASE('dvpar4')
                   ! fourth order numerical diffusion in vpar
-                  IF(ip-4 .GT. 0) &
+                  IF(p_int .GE. 4) &
                   ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
                   ! (not used often so not parallelized)
                   RHS = RHS + mu_p*dv4_Hp_coeff(p_int)*moments(ia,ipi-4,iji,iky,ikx,izi,updatetlevel)
@@ -157,6 +156,11 @@ SUBROUTINE compute_moments_eq_rhs
   ! Execution time end
   CALL cpu_time(t1_rhs)
   tc_rhs = tc_rhs + (t1_rhs-t0_rhs)
+  ! print*, moments(1,3,2,2,2,3,updatetlevel)
+  ! print*, moments_rhs(1,3,2,2,2,3,updatetlevel)
+  print*, SUM(REAL(moments_rhs(1,:,:,:,:,:,:)))
+  stop
+
 END SUBROUTINE compute_moments_eq_rhs
 
 ! SUBROUTINE add_Maxwellian_background_terms

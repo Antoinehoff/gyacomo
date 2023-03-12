@@ -47,7 +47,9 @@ PARTITION  = '/misc/gyacomo_outputs/';
 
 %% kT=5.3 results
 % resdir = 'paper_2_nonlinear/kT_5.3/5x3x128x64x64';
-% resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x24';
+% resdir = 'paper_2_nonlinear/kT_5.3/5x3x128x64x24';
+% resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x24_sp';
+% resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x64_dp';
 % resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x24_MUxy_0';
 % resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x24_NL_-1';
 % resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x24_nuDG_0.01';

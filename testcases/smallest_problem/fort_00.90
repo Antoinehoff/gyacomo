@@ -19,7 +19,7 @@
 &GEOMETRY
   geom   = 's-alpha'
   q0     = 1.4
-  shear  = 0.8
+  shear  = 0.0
   eps    = 0.18
   parallel_bc = 'dirichlet'
 /
@@ -44,7 +44,7 @@
   CLOS    = 0
   NL_CLOS = -1
   LINEARITY = 'linear'
-  KIN_E   = .f.
+  KIN_E   = .t.
   mu_x    = 0.0
   mu_y    = 0.0
   N_HD    = 4
@@ -73,8 +73,8 @@
 &INITIAL_CON
   INIT_OPT    = 'mom00'
   ACT_ON_MODES       = 'donothing'
-  init_background  = 0.0
-  init_noiselvl = 1.0
+  init_background  = 1.0
+  init_noiselvl = 0.0
   iseed         = 42
 /
 &TIME_INTEGRATION_PAR
