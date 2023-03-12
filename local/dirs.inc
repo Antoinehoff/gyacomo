@@ -6,6 +6,7 @@ OBJDIR   = $(PREFIX)/obj
 LIBDIR   = $(PREFIX)/lib
 MODDIR   = $(PREFIX)/mod
 
+HDF5_LIB   = /usr/local/hdf5-1.8.22/lib
 FMDIR      = $(HOME)/lib/FM
 FFTW3DIR   = $(HOME)/lib/fftw-3.3.8
 #FFTW3DIR   = $(FFTW_HOME)#for Marconi
