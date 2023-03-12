@@ -19,7 +19,7 @@ CONTAINS
       ikxs,ikxe,ikys,ikye,izs,ize, bar
     USE array,       ONLY: Capj, Caa, Cab_T, Cab_F, nadiab_moments
     USE MPI
-    USE model,       ONLY: GK_CO, Na, CLOS
+    USE model,       ONLY: Na, CLOS
     USE species,     ONLY: nu_ab
     IMPLICIT NONE
     LOGICAL, INTENT(IN) :: GK_CO, INTERSPECIES
@@ -101,7 +101,7 @@ CONTAINS
         izs,ize,bar
       USE array,       ONLY: Caa, Cab_T, Cab_F
       USE MPI
-      USE model,       ONLY: GK_CO, Na, LINEARITY
+      USE model,       ONLY: Na, LINEARITY
       USE species,     ONLY: name
       USE futils
       IMPLICIT NONE
