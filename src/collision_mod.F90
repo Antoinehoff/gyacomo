@@ -270,7 +270,7 @@ CONTAINS
     INTEGER,     INTENT(IN) :: ip0_, ip1_, ip2_,jmax_
     INTEGER,     DIMENSION(ips_:ipe_), INTENT(IN) :: parray_
     INTEGER,     DIMENSION(ijs_:ije_), INTENT(IN) :: jarray_
-    REAL(dp),    DIMENSION(ijgs_:ijge_,ikys:ikye,ikxs:ikxe,izgs:izge,0:1),  INTENT(IN) :: kernel_
+    REAL(dp),    DIMENSION(ijgs_:ijge_,ikys:ikye,ikxs:ikxe,izs:ize,0:1),  INTENT(IN) :: kernel_
     COMPLEX(dp), DIMENSION(ips_:ipe_,ijs_:ije_,ikys:ikye,ikxs:ikxe,izs:ize),INTENT(IN) :: nadiab_moments_
     REAL(dp),    INTENT(IN) :: nu_, sigmaa2_taua_o2, sqrt_sigmaa2_taua_o2
     !! OUTPUT
