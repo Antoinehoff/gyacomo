@@ -321,8 +321,6 @@ CONTAINS
             ENDDO
          ENDDO
       ENDDO
-      print*, ddz_napj(1,3,2,:,:,:)
-      stop
       ! Phi parallel gradient (not implemented fully, should be negligible)
       ! DO ikx = 1,local_nkx
       !   DO iky = 1,local_nky

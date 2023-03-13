@@ -308,7 +308,8 @@ CONTAINS
     CHARACTER(len=*), INTENT(IN) ::LINEARITY
     INTEGER, INTENT(IN) :: N_HD
     INTEGER :: iky
-    Nky = Ny/2+1 ! Defined only on positive kx since fields are real
+    Nky       = Ny/2+1 ! Defined only on positive kx since fields are real
+    total_nky = Nky
     ! Grid spacings
     IF (Ny .EQ. 1) THEN
       deltaky = 2._dp*PI/Ly
@@ -341,7 +342,7 @@ CONTAINS
         kyarray_full(iky) = deltaky
         SINGLE_KY         = .TRUE.
       ELSE
-        kyarray(iky) = kyarray_full(iky-local_nky_offset)
+        kyarray(iky) = kyarray_full(iky+local_nky_offset)
       ENDIF
       ! Finding kx=0
       IF (kyarray(iky) .EQ. 0) THEN
@@ -431,7 +432,7 @@ CONTAINS
         ! Set local grid (not parallelized so same as full one)
         local_kxmax = 0._dp
         DO ikx = 1,local_nkx
-          kxarray(ikx) = kxarray_full(ikx-local_nkx_offset)
+          kxarray(ikx) = kxarray_full(ikx+local_nkx_offset)
           ! Finding kx=0
           IF (kxarray(ikx) .EQ. 0) THEN
             ikx0 = ikx

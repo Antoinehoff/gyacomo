@@ -114,66 +114,72 @@ CONTAINS
     INTEGER, INTENT(IN) :: np_loc,np_tot,nky_loc,nky_tot,nz_loc
     INTEGER :: i_
     !! P reduction at constant x,y,z,j
-    ALLOCATE(rcv_p(0:num_procs_p-1),dsp_p(0:num_procs_p-1)) !Displacement sizes for balance diagnostic
+    ! ALLOCATE(rcv_p(0:num_procs_p-1),dsp_p(0:num_procs_p-1)) !Displacement sizes for balance diagnostic
+    ALLOCATE(rcv_p(num_procs_p),dsp_p(num_procs_p)) !Displacement sizes for balance diagnostic
     ! all processes share their local number of points
     CALL MPI_ALLGATHER(np_loc,1,MPI_INTEGER,rcv_p,1,MPI_INTEGER,comm_p,ierr)
     ! the displacement array can be build from each np_loc as
-    dsp_p(0)=0
-    DO i_=1,num_procs_p-1
+    dsp_p(1)=0
+    DO i_=2,num_procs_p
        dsp_p(i_) =dsp_p(i_-1) + rcv_p(i_-1)
     END DO
     !!!!!! XYZ gather variables
     !! Y reduction at constant x and z
     ! number of points recieved and displacement for the y reduction
-    ALLOCATE(rcv_y(0:num_procs_ky-1),dsp_y(0:num_procs_ky-1)) !Displacement sizes for balance diagnostic
+    ! ALLOCATE(rcv_y(0:num_procs_ky-1),dsp_y(0:num_procs_ky-1)) !Displacement sizes for balance diagnostic
+    ALLOCATE(rcv_y(num_procs_ky),dsp_y(num_procs_ky)) !Displacement sizes for balance diagnostic
     ! all processes share their local number of points
     CALL MPI_ALLGATHER(nky_loc,1,MPI_INTEGER,rcv_y,1,MPI_INTEGER,comm_ky,ierr)
     ! the displacement array can be build from each np_loc as
-    dsp_y(0)=0
-    DO i_=1,num_procs_ky-1
+    dsp_y(1)=0
+    DO i_=2,num_procs_ky-1
        dsp_y(i_) =dsp_y(i_-1) + rcv_y(i_-1)
     END DO
     !! Z reduction for full slices of y data but constant x
     ! number of points recieved and displacement for the z reduction
-    ALLOCATE(rcv_zy(0:num_procs_z-1),dsp_zy(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
+    ! ALLOCATE(rcv_zy(0:num_procs_z-1),dsp_zy(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
+    ALLOCATE(rcv_zy(num_procs_z),dsp_zy(num_procs_z)) !Displacement sizes for balance diagnostic
     ! all processes share their local number of points
     CALL MPI_ALLGATHER(nz_loc*nky_tot,1,MPI_INTEGER,rcv_zy,1,MPI_INTEGER,comm_z,ierr)
     ! the displacement array can be build from each np_loc as
-    dsp_zy(0)=0
-    DO i_=1,num_procs_z-1
+    dsp_zy(1)=0
+    DO i_=2,num_procs_z-1
        dsp_zy(i_) =dsp_zy(i_-1) + rcv_zy(i_-1)
     END DO
     !!!!! PJZ gather variables
     !! P reduction at constant j and z is already done in module GRID
     !! Z reduction for full slices of p data but constant j
     ! number of points recieved and displacement for the z reduction
-    ALLOCATE(rcv_zp(0:num_procs_z-1),dsp_zp(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
+    ! ALLOCATE(rcv_zp(0:num_procs_z-1),dsp_zp(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
+    ALLOCATE(rcv_zp(num_procs_z),dsp_zp(num_procs_z)) !Displacement sizes for balance diagnostic
     ! all processes share their local number of points
     CALL MPI_ALLGATHER(nz_loc*np_tot,1,MPI_INTEGER,rcv_zp,1,MPI_INTEGER,comm_z,ierr)
     ! the displacement array can be build from each np_loc as
-    dsp_zp(0)=0
-    DO i_=1,num_procs_z-1
+    dsp_zp(1)=0
+    DO i_=2,num_procs_z-1
        dsp_zp(i_) =dsp_zp(i_-1) + rcv_zp(i_-1)
     END DO
     !!!!! PJXYZ gather variables
     !! Y reduction for full slices of p data but constant j
     ! number of points recieved and displacement for the y reduction
-    ALLOCATE(rcv_yp(0:num_procs_ky-1),dsp_yp(0:num_procs_ky-1)) !Displacement sizes for balance diagnostic
+    ! ALLOCATE(rcv_yp(0:num_procs_ky-1),dsp_yp(0:num_procs_ky-1)) !Displacement sizes for balance diagnostic
+    ALLOCATE(rcv_yp(num_procs_ky),dsp_yp(num_procs_ky)) !Displacement sizes for balance diagnostic
     ! all processes share their local number of points
     CALL MPI_ALLGATHER(nky_loc*np_tot,1,MPI_INTEGER,rcv_yp,1,MPI_INTEGER,comm_ky,ierr)
     ! the displacement array can be build from each np_loc as
-    dsp_yp(0)=0
-    DO i_=1,num_procs_ky-1
+    dsp_yp(1)=0
+    DO i_=2,num_procs_ky-1
        dsp_yp(i_) =dsp_yp(i_-1) + rcv_yp(i_-1)
     END DO
     !! Z reduction for full slices of py data but constant j
     ! number of points recieved and displacement for the z reduction
-    ALLOCATE(rcv_zyp(0:num_procs_z-1),dsp_zyp(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
+    ! ALLOCATE(rcv_zyp(0:num_procs_z-1),dsp_zyp(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
+    ALLOCATE(rcv_zyp(num_procs_z),dsp_zyp(num_procs_z)) !Displacement sizes for balance diagnostic
     ! all processes share their local number of points
     CALL MPI_ALLGATHER(nz_loc*np_tot*nky_tot,1,MPI_INTEGER,rcv_zyp,1,MPI_INTEGER,comm_z,ierr)
     ! the displacement array can be build from each np_loc as
-    dsp_zyp(0)=0
-    DO i_=1,num_procs_z-1
+    dsp_zyp(1)=0
+    DO i_=2,num_procs_z-1
        dsp_zyp(i_) =dsp_zyp(i_-1) + rcv_zyp(i_-1)
     END DO
   END SUBROUTINE init_parallel_var
@@ -299,14 +305,14 @@ CONTAINS
             ! fill a buffer to contain a slice of p data at constant j, ky, kx and z
             buffer_pl_cy_zc(1:na_tot,1:np_loc) = field_loc(1:na_tot,1:np_loc,ij,iy,ix,iz)
             CALL MPI_GATHERV(buffer_pl_cy_zc, snd_p,        MPI_DOUBLE_COMPLEX, &
-                             buffer_pt_cy_zc, rcv_p, dsp_p, MPI_DOUBLE_COMPLEX, &
+                             buffer_pt_cy_zc, na_tot*rcv_p, na_tot*dsp_p, MPI_DOUBLE_COMPLEX, &
                              root_p, comm_p, ierr)
             buffer_pt_yl_zc(1:na_tot,1:np_tot,iy) = buffer_pt_cy_zc(1:na_tot,1:np_tot)
           ENDDO y
           ! send the full line on p contained by root_p
           IF(rank_p .EQ. 0) THEN
             CALL MPI_GATHERV(buffer_pt_yl_zc, snd_y,          MPI_DOUBLE_COMPLEX, &
-                             buffer_pt_yt_zc, rcv_yp, dsp_yp, MPI_DOUBLE_COMPLEX, &
+                             buffer_pt_yt_zc, na_tot*rcv_yp, na_tot*dsp_yp, MPI_DOUBLE_COMPLEX, &
                              root_ky, comm_ky, ierr)
             buffer_pt_yt_zl(1:na_tot,1:np_tot,1:nky_tot,iz) = buffer_pt_yt_zc(1:na_tot,1:np_tot,1:nky_tot)
           ENDIF
@@ -314,7 +320,7 @@ CONTAINS
         ! send the full line on y contained by root_kyas
         IF(rank_ky .EQ. 0) THEN
           CALL MPI_GATHERV(buffer_pt_yt_zl, snd_z,            MPI_DOUBLE_COMPLEX, &
-                           buffer_pt_yt_zt, rcv_zyp, dsp_zyp, MPI_DOUBLE_COMPLEX, &
+                           buffer_pt_yt_zt, na_tot*rcv_zyp, na_tot*dsp_zyp, MPI_DOUBLE_COMPLEX, &
                            root_z, comm_z, ierr)
         ENDIF
         ! ID 0 (the one who ouptut) rebuild the whole array

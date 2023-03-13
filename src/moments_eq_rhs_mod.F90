@@ -86,7 +86,7 @@ SUBROUTINE compute_moments_eq_rhs
                 Fmir = dlnBdz(iz,eo)*(Tnapp1j + Tnapp1jm1 + Tnapm1j + Tnapm1jm1 +&
                                       Unapm1j + Unapm1jp1 + Unapm1jm1)
                 ! Parallel magnetic term (Landau damping and the mirror force)
-                Mpara = gradz_coeff(iz,eo)*(Ldamp) !+ Fmir)
+                Mpara = gradz_coeff(iz,eo)*(Ldamp + Fmir)
                 !! Electrical potential term
                 IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
                   Dphi =i_ky*( xphij  (ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
@@ -110,20 +110,20 @@ SUBROUTINE compute_moments_eq_rhs
                     ! Perpendicular magnetic term
                     - Mperp &
                     ! Parallel magnetic term
-                    - Mpara !&
+                    - Mpara &
                     ! ! Drives (density + temperature gradients)
-                    ! - (Dphi + Dpsi) &
+                    - (Dphi + Dpsi) &
                     ! ! Collision term
-                    ! + Capj(ia,ip,ij,iky,ikx,iz) &
+                    + Capj(ia,ip,ij,iky,ikx,iz) &
                     ! ! Perpendicular pressure effects (electromagnetic term) (TO CHECK)
-                    ! - i_ky*beta*dpdx(ia) * (Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)&
+                    - i_ky*beta*dpdx(ia) * (Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)&
                     ! ! Parallel drive term (should be negligible, to test)
-                    ! ! -Gamma_phipar(iz,eo)*Tphi*ddz_phi(iky,ikx,iz) &
+                    !! -Gamma_phipar(iz,eo)*Tphi*ddz_phi(iky,ikx,iz) &
                     ! ! Numerical perpendicular hyperdiffusion
-                    ! -mu_x*diff_kx_coeff*kx**N_HD*Napj &
-                    ! -mu_y*diff_ky_coeff*ky**N_HD*Napj &
+                    -mu_x*diff_kx_coeff*kx**N_HD*Napj &
+                    -mu_y*diff_ky_coeff*ky**N_HD*Napj &
                     ! ! Numerical parallel hyperdiffusion "mu_z*ddz**4"  see Pueschel 2010 (eq 25)
-                    ! -mu_z*diff_dz_coeff*ddzND_napj(ia,ipi,iji,iky,ikx,iz)
+                    -mu_z*diff_dz_coeff*ddzND_napj(ia,ipi,iji,iky,ikx,iz)
                 !! Velocity space dissipation (should be implemented somewhere else)
                 SELECT CASE(HYP_V)
                 CASE('hypcoll') ! GX like Hermite hypercollisions see Mandell et al. 2023 (eq 3.23), unadvised to use it
@@ -159,7 +159,9 @@ SUBROUTINE compute_moments_eq_rhs
   ! print*, moments(1,3,2,2,2,3,updatetlevel)
   ! print*, moments_rhs(1,3,2,2,2,3,updatetlevel)
   print*, SUM(REAL(moments_rhs(1,:,:,:,:,:,:)))
-  stop
+  print*, SUM(REAL(moments_rhs(2,:,:,:,:,:,:)))
+  print*, SUM(REAL(phi))
+  ! stop
 
 END SUBROUTINE compute_moments_eq_rhs
 

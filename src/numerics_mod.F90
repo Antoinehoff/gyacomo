@@ -178,8 +178,8 @@ END SUBROUTINE evaluate_poisson_op
 SUBROUTINE evaluate_ampere_op
   USE prec_const,   ONLY : dp
   USE array,    ONLY : kernel, inv_ampere_op
-  USE grid,     ONLY : local_na, local_nkx, local_nky, local_nz, &
-                       jmax, kparray, kxarray, kyarray, SOLVE_AMPERE
+  USE grid,     ONLY : local_na, local_nkx, local_nky, local_nz, ngz, &
+                       jmax, kparray, kxarray, kyarray, SOLVE_AMPERE, iodd
   USE model,    ONLY : beta
   USE species,  ONLY : q, sigma
   USE geometry, ONLY : hatB
@@ -204,7 +204,7 @@ SUBROUTINE evaluate_ampere_op
           pol_tot = pol_tot  + q(ia)**2/(sigma(ia)**2)*kernel(ia,in,iky,ikx,iz,1)**2 ! ... sum recursively ...
         END DO
       END DO
-      inv_ampere_op(iky, ikx, iz) =  1._dp/(2._dp*kperp2*hatB(iz,0)**2 + beta*pol_tot)
+      inv_ampere_op(iky, ikx, iz) =  1._dp/(2._dp*kperp2*hatB(iz+ngz/2,iodd)**2 + beta*pol_tot)
     ENDIF
     END DO
     END DO

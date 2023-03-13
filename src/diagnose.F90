@@ -114,7 +114,6 @@ SUBROUTINE diagnose_full(kstep)
   INTEGER :: dims(1) = (/0/)
   !____________________________________________________________________________
   !                   1.   Initial diagnostics
-
   IF ((kstep .EQ. 0)) THEN
     CALL init_outfile(comm0,   resfile0,resfile,fidres)
     ! Profiler time measurement
@@ -155,7 +154,7 @@ SUBROUTINE diagnose_full(kstep)
     CALL putarrnd(fidres, "/data/metric/Jacobian",    Jacobian((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
     CALL putarrnd(fidres, "/data/metric/gradz_coeff", gradz_coeff((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
     CALL putarrnd(fidres, "/data/metric/Ckxky",       Ckxky(1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 3/))
-    CALL putarrnd(fidres, "/data/metric/kernel",    kernel(1,(1+ngj/2):(local_nj+ngj/2),1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),1), (/1, 1, 2, 4/))
+    CALL putarrnd(fidres, "/data/metric/kernel",    kernel(1,(1+ngj/2):(local_nj+ngj/2),1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),1), (/1, 2, 4/))
     !  var0d group (gyro transport)
     IF (nsave_0d .GT. 0) THEN
      CALL creatg(fidres, "/data/var0d", "0d profiles")
@@ -229,34 +228,34 @@ SUBROUTINE diagnose_full(kstep)
   !                   2.   Periodic diagnostics
   !
   IF (kstep .GE. 0) THEN
-     !                       2.1   0d history arrays
-     IF (nsave_0d .GT. 0) THEN
-        IF ( MOD(cstep, nsave_0d) == 0 ) THEN
-           CALL diagnose_0d
-        END IF
-     END IF
-     !                       2.3   3d profiles
-     IF (nsave_3d .GT. 0) THEN
-        IF (MOD(cstep, nsave_3d) == 0) THEN
+    !                       2.1   0d history arrays
+    IF (nsave_0d .GT. 0) THEN
+      IF ( MOD(cstep, nsave_0d) == 0 ) THEN
+        CALL diagnose_0d
+      END IF
+    END IF
+    !                       2.3   3d profiles
+    IF (nsave_3d .GT. 0) THEN
+      IF (MOD(cstep, nsave_3d) == 0) THEN
           CALL diagnose_3d
-        ! Looks at the folder if the file check_phi exists and spits a snapshot
+          ! Looks at the folder if the file check_phi exists and spits a snapshot
           ! of the current electrostatic potential in a basic text file
           CALL spit_snapshot_check
         ENDIF
-     ENDIF
-     !                       2.4   5d profiles
-     IF (nsave_5d .GT. 0) THEN
+      ENDIF
+      !                       2.4   5d profiles
+      IF (nsave_5d .GT. 0) THEN
         IF (MOD(cstep, nsave_5d) == 0) THEN
-           CALL diagnose_5d
+          CALL diagnose_5d
         END IF
-     END IF
-  !_____________________________________________________________________________
-  !                   3.   Final diagnostics
-  ELSEIF (kstep .EQ. -1) THEN
-     CALL attach(fidres, "/data/input","cpu_time",finish-start)
-
-     ! make a checkpoint at last timestep if not crashed
-     IF(.NOT. crashed) THEN
+      END IF
+      !_____________________________________________________________________________
+      !                   3.   Final diagnostics
+      ELSEIF (kstep .EQ. -1) THEN
+        CALL attach(fidres, "/data/input","cpu_time",finish-start)
+        
+        ! make a checkpoint at last timestep if not crashed
+        IF(.NOT. crashed) THEN
        IF(my_id .EQ. 0) write(*,*) 'Saving last state'
        IF (nsave_5d .GT. 0) &
        CALL diagnose_5d
@@ -476,9 +475,9 @@ SUBROUTINE diagnose_5d
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var5d", TRIM(text), iframe5d
     IF (num_procs .EQ. 1) THEN
       CALL putarr(fidres, dset_name, field_sub, ionode=0)
-    ELSEIF(GATHERV_OUTPUT) THEN ! output using one node (gatherv)
-      CALL gather_pjxyz(field_sub,field_full,total_na,local_np,total_np,total_nj,local_nky,total_nky,total_nkx,local_nz,total_nz)
-      CALL putarr(fidres, dset_name, field_full, ionode=0)
+      ELSEIF(GATHERV_OUTPUT) THEN ! output using one node (gatherv)
+        CALL gather_pjxyz(field_sub,field_full,total_na,local_np,total_np,total_nj,local_nky,total_nky,total_nkx,local_nz,total_nz)
+        CALL putarr(fidres, dset_name, field_full, ionode=0)
     ELSE
       CALL putarrnd(fidres, dset_name, field_sub,  (/1,3,5/))
     ENDIF
