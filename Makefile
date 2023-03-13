@@ -17,7 +17,7 @@ fast: compile
 
 # Debug version with all flags
 debug: F90 = mpif90
-debug: F90FLAGS = -C -g -traceback -ftrapuv -warn all -debug all
+debug: F90FLAGS = -g -traceback -ftrapuv -warn all -debug all
 debug: EXEC = $(BINDIR)/gyacomo_debug
 debug: dirs src/srcinfo.h
 debug: compile
