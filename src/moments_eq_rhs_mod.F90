@@ -64,12 +64,12 @@ SUBROUTINE compute_moments_eq_rhs
     IMPLICIT NONE
     !! INPUTS
     INTEGER, INTENT(IN) :: ips_, ipe_, ipgs_, ipge_, ijs_, ije_, ijgs_, ijge_
-    INTEGER,  DIMENSION(ips_:ipe_), INTENT(IN) :: parray_
-    INTEGER,  DIMENSION(ijs_:ije_), INTENT(IN) :: jarray_
+    INTEGER,  DIMENSION(ipgs_:ipge_), INTENT(IN) :: parray_
+    INTEGER,  DIMENSION(ijgs_:ijge_), INTENT(IN) :: jarray_
     REAL(dp), DIMENSION(ips_:ipe_,ijs_:ije_), INTENT(IN) :: xnapj_
-    REAL(dp), DIMENSION(ips_:ipe_),         INTENT(IN) :: xnapp2j_, xnapm2j_
-    REAL(dp), DIMENSION(ijs_:ije_),         INTENT(IN) :: xnapjp1_, xnapjm1_
-    REAL(dp), DIMENSION(ips_:ipe_),         INTENT(IN) :: xnapp1j_, xnapm1j_
+    REAL(dp), DIMENSION(ips_:ipe_),           INTENT(IN) :: xnapp2j_, xnapm2j_
+    REAL(dp), DIMENSION(ijs_:ije_),           INTENT(IN) :: xnapjp1_, xnapjm1_
+    REAL(dp), DIMENSION(ips_:ipe_),           INTENT(IN) :: xnapp1j_, xnapm1j_
     REAL(dp), DIMENSION(ips_:ipe_,ijs_:ije_), INTENT(IN) :: ynapp1j_, ynapp1jm1_, ynapm1j_, ynapm1jm1_
     REAL(dp), DIMENSION(ips_:ipe_,ijs_:ije_), INTENT(IN) :: znapm1j_, znapm1jp1_, znapm1jm1_
     REAL(dp), DIMENSION(ips_:ipe_,ijs_:ije_), INTENT(IN) :: xphij_, xphijp1_, xphijm1_
@@ -92,7 +92,7 @@ SUBROUTINE compute_moments_eq_rhs
     REAL(dp)    :: kx, ky, kperp2
     COMPLEX(dp) :: Tnapj, Tnapp2j, Tnapm2j, Tnapjp1, Tnapjm1 ! Terms from b x gradB and drives
     COMPLEX(dp) :: Tnapp1j, Tnapm1j, Tnapp1jm1, Tnapm1jm1 ! Terms from mirror force with non adiab moments_
-    COMPLEX(dp) :: Tpar, Tmir, Tphi, Tpsi
+    COMPLEX(dp) :: Tpar, Tmir
     COMPLEX(dp) :: Mperp, Mpara, Dphi, Dpsi
     COMPLEX(dp) :: Unapm1j, Unapm1jp1, Unapm1jm1 ! Terms from mirror force with adiab moments_
     COMPLEX(dp) :: i_kx,i_ky,phikykxz, psikykxz
@@ -160,7 +160,7 @@ SUBROUTINE compute_moments_eq_rhs
                             +xphijp1_(ip,ij)*kernel_(ij+1,iky,ikx,iz,eo) &
                             +xphijm1_(ip,ij)*kernel_(ij-1,iky,ikx,iz,eo) )*phi(iky,ikx,iz)
               ELSE
-                Tphi = 0._dp
+                Dphi = 0._dp
               ENDIF
 
               !! Vector potential term
