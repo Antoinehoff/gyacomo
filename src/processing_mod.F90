@@ -47,7 +47,7 @@ CONTAINS
       IMPLICIT NONE
       COMPLEX(dp) :: pflux_local, gflux_local, integral
       REAL(dp)    :: buffer(2)
-      INTEGER     :: i_, root, iky, ikx, ia, iz, in, izi
+      INTEGER     :: i_, root, iky, ikx, ia, iz, in, izi, ini
       COMPLEX(dp), DIMENSION(local_nz) :: integrant
       DO ia = 1,local_na
          pflux_local = 0._dp ! particle flux
@@ -61,8 +61,8 @@ CONTAINS
                DO ikx = 1,local_nkx
                   DO iky = 1,local_nky
                      integrant(iz) = integrant(iz) &
-                        +Jacobian(izi,ieven)*moments(ia,ip0,ij0,iky,ikx,izi,updatetlevel)&
-                        *imagu*kyarray(iky)*CONJG(phi(iky,ikx,izi))
+                     +Jacobian(izi,ieven)*moments(ia,ip0,ij0,iky,ikx,izi,updatetlevel)&
+                     *imagu*kyarray(iky)*CONJG(phi(iky,ikx,izi))
                   ENDDO
                ENDDO
             ENDDO
@@ -94,10 +94,11 @@ CONTAINS
               izi = iz + ngz/2 !interior index for ghosted arrays
                DO ikx = 1,local_nkx
                   DO iky = 1,local_nky
-                     DO in = 1+ngj/2, local_nj+ngj/2 ! only interior points
+                     DO in = 1, local_nj
+                        ini = in + ngj/2 !interior index for ghosted arrays
                         integrant(iz) = integrant(iz)+ &
-                           Jacobian(izi,ieven)*moments(ia,ip0,in,iky,ikx,izi,updatetlevel)&
-                           *imagu*kyarray(iky)*kernel(ia,in,iky,ikx,izi,ieven)*CONJG(phi(iky,ikx,izi))
+                           Jacobian(izi,ieven)*moments(ia,ip0,ini,iky,ikx,izi,updatetlevel)&
+                           *imagu*kyarray(iky)*kernel(ia,ini,iky,ikx,izi,ieven)*CONJG(phi(iky,ikx,izi))
                      ENDDO
                   ENDDO
                ENDDO
@@ -109,19 +110,24 @@ CONTAINS
               izi = iz + ngz/2 !interior index for ghosted arrays
               DO ikx = 1,local_nkx
                   DO iky = 1,local_nky
-                     DO in = 1+ngj/2, local_nj+ngj/2 ! only interior points
-                        integrant(iz) = integrant(iz) - &
-                           Jacobian(izi,iodd)*sqrt_tau_o_sigma(ia)*moments(ia,ip1,in,iky,ikx,izi,updatetlevel)&
-                           *imagu*kyarray(iky)*kernel(ia,in,iky,ikx,izi,iodd)*CONJG(psi(iky,ikx,izi))
+                     DO in = 1, local_nj
+                        ini = in + ngj/2 !interior index for ghosted arrays
+                           integrant(iz) = integrant(iz) - &
+                           Jacobian(izi,iodd)*sqrt_tau_o_sigma(ia)*moments(ia,ip1,ini,iky,ikx,izi,updatetlevel)&
+                           *imagu*kyarray(iky)*kernel(ia,ini,iky,ikx,izi,iodd)*CONJG(psi(iky,ikx,izi))
                      ENDDO
                   ENDDO
                ENDDO
             ENDDO
          ENDIF
          ! Integrate over z
+         ! print*, integrant
          call simpson_rule_z(local_nz,deltaz,integrant,integral)
+         ! print*, integral
+         ! stop
          ! Get process local particle flux with a factor two to account for the negative ky modes
          pflux_local = 2._dp*integral*iInt_Jacobian
+         print*,REAL(pflux_local,dp)
 
          !!!!---------- Sum over all processes ----------
          buffer(1) = REAL(gflux_local,dp)
@@ -148,7 +154,6 @@ CONTAINS
             pflux_x(ia) = pflux_local
          ENDIF
       ENDDO
-      ! if(my_id .eq. 0) write(*,*) 'pflux_ri = ',pflux_ri
    END SUBROUTINE compute_radial_transport
 
 ! 1D diagnostic to compute the average radial particle transport <T_i v_ExB_x>_xyz
@@ -156,7 +161,7 @@ CONTAINS
       IMPLICIT NONE
       COMPLEX(dp) :: hflux_local, integral
       REAL(dp)    :: buffer(2), n_dp
-      INTEGER     :: i_, root, in, ia, iky, ikx, iz, izi
+      INTEGER     :: i_, root, in, ia, iky, ikx, iz, izi, ini
       COMPLEX(dp), DIMENSION(local_nz) :: integrant        ! charge density q_a n_a
       DO ia = 1,local_na
          hflux_local = 0._dp ! heat flux
@@ -168,15 +173,16 @@ CONTAINS
               izi = iz + ngz/2 !interior index for ghosted arrays
               DO ikx = 1,local_nkx
                   DO iky = 1,local_nky
-                     DO in = 1+ngj/2, local_nj+ngj/2 ! only interior points
-                        n_dp = jarray(in)
+                     DO in = 1, local_nj
+                        ini  = in+ngj/2 !interior index for ghosted arrays
+                        n_dp = jarray(ini)
                         integrant(iz) = integrant(iz) &
-                           +Jacobian(izi,ieven)*tau(ia)*imagu*kyarray(iky)*CONJG(phi(iky,ikx,izi))&
-                           *kernel(ia,in,iky,ikx,izi,ieven)*(&
-                                     0.5_dp*SQRT2*moments(ia,ip2,in  ,iky,ikx,izi,updatetlevel)&
-                           +(2._dp*n_dp + 1.5_dp)*moments(ia,ip0,in  ,iky,ikx,izi,updatetlevel)&
-                                    -(n_dp+1._dp)*moments(ia,ip0,in+1,iky,ikx,izi,updatetlevel)&
-                                            -n_dp*moments(ia,ip0,in-1,iky,ikx,izi,updatetlevel))
+                           -Jacobian(izi,ieven)*tau(ia)*imagu*kyarray(iky)*phi(iky,ikx,izi)&
+                           *kernel(ia,ini,iky,ikx,izi,ieven)*CONJG(&
+                                     0.5_dp*SQRT2*moments(ia,ip2,ini  ,iky,ikx,izi,updatetlevel)&
+                           +(2._dp*n_dp + 1.5_dp)*moments(ia,ip0,ini  ,iky,ikx,izi,updatetlevel)&
+                                    -(n_dp+1._dp)*moments(ia,ip0,ini+1,iky,ikx,izi,updatetlevel)&
+                                            -n_dp*moments(ia,ip0,ini-1,iky,ikx,izi,updatetlevel))
                      ENDDO
                   ENDDO
                ENDDO
@@ -188,16 +194,17 @@ CONTAINS
               izi = iz + ngz/2 !interior index for ghosted arrays
                DO ikx = 1,local_nkx
                   DO iky = 1,local_nky
-                     DO in = 1+ngj/2, local_nj+ngj/2 ! only interior points
+                     DO in = 1, local_nj
+                        ini = in + ngj/2 !interior index for ghosted arrays
                         n_dp = jarray(in)
                         integrant(iz) = integrant(iz) &
                            +Jacobian(izi,iodd)*tau(ia)*sqrt_tau_o_sigma(ia)*imagu*kyarray(iky)*CONJG(psi(iky,ikx,izi))&
-                           *kernel(ia,in,iky,ikx,izi,iodd)*(&
-                           0.5_dp*SQRT2*SQRT3*moments(ia,ip3,in  ,iky,ikx,izi,updatetlevel)&
-                                      +1.5_dp*moments(ia,ip1,in  ,iky,ikx,izi,updatetlevel)&
-                          +(2._dp*n_dp+1._dp)*moments(ia,ip1,in  ,iky,ikx,izi,updatetlevel)&
-                                -(n_dp+1._dp)*moments(ia,ip1,in+1,iky,ikx,izi,updatetlevel)&
-                                        -n_dp*moments(ia,ip1,in-1,iky,ikx,izi,updatetlevel))
+                           *kernel(ia,ini,iky,ikx,izi,iodd)*(&
+                           0.5_dp*SQRT2*SQRT3*moments(ia,ip3,ini  ,iky,ikx,izi,updatetlevel)&
+                                      +1.5_dp*moments(ia,ip1,ini  ,iky,ikx,izi,updatetlevel)&
+                          +(2._dp*n_dp+1._dp)*moments(ia,ip1,ini  ,iky,ikx,izi,updatetlevel)&
+                                -(n_dp+1._dp)*moments(ia,ip1,ini+1,iky,ikx,izi,updatetlevel)&
+                                        -n_dp*moments(ia,ip1,ini-1,iky,ikx,izi,updatetlevel))
                      ENDDO
                   ENDDO
                ENDDO
@@ -252,8 +259,8 @@ CONTAINS
                      DO ia = 1,local_na
                         IF(parray(ip) .EQ. 0) THEN
                            nadiab_moments(ia,ip,ij,iky,ikx,iz) = moments(ia,ip,ij,iky,ikx,iz,updatetlevel) &
-                              + q_tau(ia)*kernel(ia,ij,iky,ikx,iz,ieven)*phi(iky,ikx,iz)
-                        ELSEIF( (parray(ip) .EQ. 1) .AND. (beta .GT. 0) ) THEN
+                           + q_tau(ia)*kernel(ia,ij,iky,ikx,iz,ieven)*phi(iky,ikx,iz)
+                           ELSEIF( (parray(ip) .EQ. 1) .AND. (beta .GT. 0) ) THEN
                            nadiab_moments(ia,ip,ij,iky,ikx,iz) = moments(ia,ip,ij,iky,ikx,iz,updatetlevel) &
                               - q_o_sqrt_tau_sigma(ia)*kernel(ia,ij,iky,ikx,iz,ieven)*psi(iky,ikx,iz)
                         ELSE
@@ -265,7 +272,6 @@ CONTAINS
             ENDDO
          ENDDO
       ENDDO
-
       !! Ensure to kill the moments too high if closue option is set to 1
       IF(CLOS .EQ. 1) THEN
          DO ij=1,local_nj+ngj
@@ -279,7 +285,6 @@ CONTAINS
             ENDDO
          ENDDO
       ENDIF
-
       !------------- INTERP AND GRADIENTS ALONG Z ----------------------------------
       DO ikx = 1,local_nkx
          DO iky = 1,local_nky

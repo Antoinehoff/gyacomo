@@ -28,13 +28,15 @@ MODULE parallel
 
 
   ! recieve and displacement counts for gatherv
-  INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_p, dsp_p, rcv_y, dsp_y, rcv_zy, dsp_zy
+  INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_p, dsp_p
+  INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_y, dsp_y
+  INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_zy, dsp_zy
   INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_zp,  dsp_zp
   INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_yp,  dsp_yp
   INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_zyp, dsp_zyp
 
   PUBLIC :: ppinit, manual_0D_bcast, manual_3D_bcast, init_parallel_var, &
-            gather_xyz, gather_pjz, gather_pjxyz
+            gather_xyz, gather_pjz, gather_pjxyz, exchange_ghosts_1D
 
 CONTAINS
 
@@ -45,6 +47,7 @@ CONTAINS
     INTEGER, PARAMETER :: ndims=3 ! p, kx and z
     INTEGER, DIMENSION(ndims) :: dims=0, coords=0
     LOGICAL :: periods(ndims) = .FALSE., reorder=.FALSE.
+    LOGICAL :: com_log(ndims) = .FALSE.
     CHARACTER(len=32) :: str
     INTEGER :: nargs, i, l
 
@@ -87,16 +90,21 @@ CONTAINS
     !
     !  Partitions 3-dim cartesian topology of comm0 into 1-dim cartesian subgrids
     !
-    CALL MPI_CART_SUB (comm0, (/.TRUE.,.FALSE.,.FALSE./),  comm_p, ierr)
-    CALL MPI_CART_SUB (comm0, (/.FALSE.,.TRUE.,.FALSE./), comm_ky, ierr)
-    CALL MPI_CART_SUB (comm0, (/.FALSE.,.FALSE.,.TRUE./),  comm_z, ierr)
+    com_log = (/.TRUE.,.FALSE.,.FALSE./)
+    CALL MPI_CART_SUB (comm0, com_log,  comm_p, ierr)
+    com_log = (/.FALSE.,.TRUE.,.FALSE./)
+    CALL MPI_CART_SUB (comm0, com_log, comm_ky, ierr)
+    com_log = (/.FALSE.,.FALSE.,.TRUE./)
+    CALL MPI_CART_SUB (comm0, com_log,  comm_z, ierr)
     ! Find id inside the 1d-sub communicators
     CALL MPI_COMM_RANK(comm_p,  rank_p,  ierr)
     CALL MPI_COMM_RANK(comm_ky, rank_ky, ierr)
     CALL MPI_COMM_RANK(comm_z,  rank_z,  ierr)
     ! 2D communicator
-    CALL MPI_CART_SUB (comm0, (/.TRUE.,.FALSE.,.TRUE./),  comm_pz,  ierr)
-    CALL MPI_CART_SUB (comm0, (/.FALSE.,.TRUE.,.TRUE./),  comm_kyz, ierr)
+    com_log = (/.TRUE.,.FALSE.,.TRUE./)
+    CALL MPI_CART_SUB (comm0, com_log,  comm_pz,  ierr)
+    com_log = (/.FALSE.,.TRUE.,.TRUE./)
+    CALL MPI_CART_SUB (comm0, com_log,  comm_kyz, ierr)
     ! Count the number of processes in 2D comms
     CALL MPI_COMM_SIZE(comm_pz, num_procs_pz, ierr)
     CALL MPI_COMM_SIZE(comm_kyz,num_procs_kyz,ierr)
@@ -113,73 +121,110 @@ CONTAINS
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: np_loc,np_tot,nky_loc,nky_tot,nz_loc
     INTEGER :: i_
-    !! P reduction at constant x,y,z,j
+    !     !! P reduction at constant x,y,z,j
     ! ALLOCATE(rcv_p(0:num_procs_p-1),dsp_p(0:num_procs_p-1)) !Displacement sizes for balance diagnostic
+    ! ! all processes share their local number of points
+    ! CALL MPI_ALLGATHER(np_loc,1,MPI_INTEGER,rcv_p,1,MPI_INTEGER,comm_p,ierr)
+    ! ! the displacement array can be build from each np_loc as
+    ! dsp_p(0)=0
+    ! DO i_=1,num_procs_p-1
+    !    dsp_p(i_) =dsp_p(i_-1) + rcv_p(i_-1)
+    ! END DO
+    ! !!!!!! XYZ gather variables
+    ! !! Y reduction at constant x and z
+    ! ! number of points recieved and displacement for the y reduction
+    ! ALLOCATE(rcv_y(0:num_procs_ky-1),dsp_y(0:num_procs_ky-1)) !Displacement sizes for balance diagnostic
+    ! ! all processes share their local number of points
+    ! CALL MPI_ALLGATHER(nky_loc,1,MPI_INTEGER,rcv_y,1,MPI_INTEGER,comm_ky,ierr)
+    ! ! the displacement array can be build from each np_loc as
+    ! dsp_y(0)=0
+    ! DO i_=1,num_procs_ky-1
+    !    dsp_y(i_) =dsp_y(i_-1) + rcv_y(i_-1)
+    ! END DO
+    ! !! Z reduction for full slices of y data but constant x
+    ! ! number of points recieved and displacement for the z reduction
+    ! ALLOCATE(rcv_zy(0:num_procs_z-1),dsp_zy(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
+    ! ! all processes share their local number of points
+    ! CALL MPI_ALLGATHER(nz_loc*nky_tot,1,MPI_INTEGER,rcv_zy,1,MPI_INTEGER,comm_z,ierr)
+    ! ! the displacement array can be build from each np_loc as
+    ! dsp_zy(0)=0
+    ! DO i_=1,num_procs_z-1
+    !    dsp_zy(i_) =dsp_zy(i_-1) + rcv_zy(i_-1)
+    ! END DO
+    ! !!!!! PJZ gather variables
+    ! !! P reduction at constant j and z is already done in module GRID
+    ! !! Z reduction for full slices of p data but constant j
+    ! ! number of points recieved and displacement for the z reduction
+    ! ALLOCATE(rcv_zp(0:num_procs_z-1),dsp_zp(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
+    ! ! all processes share their local number of points
+    ! CALL MPI_ALLGATHER(nz_loc*np_tot,1,MPI_INTEGER,rcv_zp,1,MPI_INTEGER,comm_z,ierr)
+    ! ! the displacement array can be build from each np_loc as
+    ! dsp_zp(0)=0
+    ! DO i_=1,num_procs_z-1
+    !    dsp_zp(i_) =dsp_zp(i_-1) + rcv_zp(i_-1)
+    ! END DO
+    ! !!!!! PJXYZ gather variables
+    ! !! Y reduction for full slices of p data but constant j
+    ! ! number of points recieved and displacement for the y reduction
+    ! ALLOCATE(rcv_yp(0:num_procs_ky-1),dsp_yp(0:num_procs_ky-1)) !Displacement sizes for balance diagnostic
+    ! ! all processes share their local number of points
+    ! CALL MPI_ALLGATHER(nky_loc*np_tot,1,MPI_INTEGER,rcv_yp,1,MPI_INTEGER,comm_ky,ierr)
+    ! ! the displacement array can be build from each np_loc as
+    ! dsp_yp(0)=0
+    ! DO i_=1,num_procs_ky-1
+    !    dsp_yp(i_) =dsp_yp(i_-1) + rcv_yp(i_-1)
+    ! END DO
+    ! !! Z reduction for full slices of py data but constant j
+    ! ! number of points recieved and displacement for the z reduction
+    ! ALLOCATE(rcv_zyp(0:num_procs_z-1),dsp_zyp(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
+    ! ! all processes share their local number of points
+    ! CALL MPI_ALLGATHER(nz_loc*np_tot*nky_tot,1,MPI_INTEGER,rcv_zyp,1,MPI_INTEGER,comm_z,ierr)
+    ! ! the displacement array can be build from each np_loc as
+    ! dsp_zyp(0)=0
+    ! DO i_=1,num_procs_z-1
+    !    dsp_zyp(i_) =dsp_zyp(i_-1) + rcv_zyp(i_-1)
+    ! END DO
+    ! P reduction at constant x,y,z,j
     ALLOCATE(rcv_p(num_procs_p),dsp_p(num_procs_p)) !Displacement sizes for balance diagnostic
-    ! all processes share their local number of points
     CALL MPI_ALLGATHER(np_loc,1,MPI_INTEGER,rcv_p,1,MPI_INTEGER,comm_p,ierr)
-    ! the displacement array can be build from each np_loc as
     dsp_p(1)=0
     DO i_=2,num_procs_p
        dsp_p(i_) =dsp_p(i_-1) + rcv_p(i_-1)
     END DO
     !!!!!! XYZ gather variables
-    !! Y reduction at constant x and z
-    ! number of points recieved and displacement for the y reduction
-    ! ALLOCATE(rcv_y(0:num_procs_ky-1),dsp_y(0:num_procs_ky-1)) !Displacement sizes for balance diagnostic
     ALLOCATE(rcv_y(num_procs_ky),dsp_y(num_procs_ky)) !Displacement sizes for balance diagnostic
-    ! all processes share their local number of points
     CALL MPI_ALLGATHER(nky_loc,1,MPI_INTEGER,rcv_y,1,MPI_INTEGER,comm_ky,ierr)
-    ! the displacement array can be build from each np_loc as
     dsp_y(1)=0
-    DO i_=2,num_procs_ky-1
+    DO i_=2,num_procs_ky
        dsp_y(i_) =dsp_y(i_-1) + rcv_y(i_-1)
     END DO
     !! Z reduction for full slices of y data but constant x
-    ! number of points recieved and displacement for the z reduction
-    ! ALLOCATE(rcv_zy(0:num_procs_z-1),dsp_zy(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
     ALLOCATE(rcv_zy(num_procs_z),dsp_zy(num_procs_z)) !Displacement sizes for balance diagnostic
-    ! all processes share their local number of points
     CALL MPI_ALLGATHER(nz_loc*nky_tot,1,MPI_INTEGER,rcv_zy,1,MPI_INTEGER,comm_z,ierr)
-    ! the displacement array can be build from each np_loc as
     dsp_zy(1)=0
-    DO i_=2,num_procs_z-1
+    DO i_=2,num_procs_z
        dsp_zy(i_) =dsp_zy(i_-1) + rcv_zy(i_-1)
     END DO
     !!!!! PJZ gather variables
-    !! P reduction at constant j and z is already done in module GRID
-    !! Z reduction for full slices of p data but constant j
-    ! number of points recieved and displacement for the z reduction
-    ! ALLOCATE(rcv_zp(0:num_procs_z-1),dsp_zp(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
     ALLOCATE(rcv_zp(num_procs_z),dsp_zp(num_procs_z)) !Displacement sizes for balance diagnostic
-    ! all processes share their local number of points
     CALL MPI_ALLGATHER(nz_loc*np_tot,1,MPI_INTEGER,rcv_zp,1,MPI_INTEGER,comm_z,ierr)
-    ! the displacement array can be build from each np_loc as
     dsp_zp(1)=0
-    DO i_=2,num_procs_z-1
+    DO i_=2,num_procs_z
        dsp_zp(i_) =dsp_zp(i_-1) + rcv_zp(i_-1)
     END DO
     !!!!! PJXYZ gather variables
     !! Y reduction for full slices of p data but constant j
-    ! number of points recieved and displacement for the y reduction
-    ! ALLOCATE(rcv_yp(0:num_procs_ky-1),dsp_yp(0:num_procs_ky-1)) !Displacement sizes for balance diagnostic
     ALLOCATE(rcv_yp(num_procs_ky),dsp_yp(num_procs_ky)) !Displacement sizes for balance diagnostic
-    ! all processes share their local number of points
     CALL MPI_ALLGATHER(nky_loc*np_tot,1,MPI_INTEGER,rcv_yp,1,MPI_INTEGER,comm_ky,ierr)
-    ! the displacement array can be build from each np_loc as
     dsp_yp(1)=0
-    DO i_=2,num_procs_ky-1
+    DO i_=2,num_procs_ky
        dsp_yp(i_) =dsp_yp(i_-1) + rcv_yp(i_-1)
     END DO
     !! Z reduction for full slices of py data but constant j
-    ! number of points recieved and displacement for the z reduction
-    ! ALLOCATE(rcv_zyp(0:num_procs_z-1),dsp_zyp(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
     ALLOCATE(rcv_zyp(num_procs_z),dsp_zyp(num_procs_z)) !Displacement sizes for balance diagnostic
-    ! all processes share their local number of points
     CALL MPI_ALLGATHER(nz_loc*np_tot*nky_tot,1,MPI_INTEGER,rcv_zyp,1,MPI_INTEGER,comm_z,ierr)
-    ! the displacement array can be build from each np_loc as
     dsp_zyp(1)=0
-    DO i_=2,num_procs_z-1
+    DO i_=2,num_procs_z
        dsp_zyp(i_) =dsp_zyp(i_-1) + rcv_zyp(i_-1)
     END DO
   END SUBROUTINE init_parallel_var
@@ -200,7 +245,7 @@ CONTAINS
     CALL attach(fid, TRIM(str),        "Np_z", num_procs_z)
   END SUBROUTINE parallel_ouptutinputs
 
-  !!!!! Gather a field in spatial coordinates on rank 0 !!!!!
+  !!!! Gather a field in spatial coordinates on rank 0 !!!!!
   SUBROUTINE gather_xyz(field_loc,field_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot
@@ -208,13 +253,12 @@ CONTAINS
     COMPLEX(dp), DIMENSION(nky_tot,nkx_tot,nz_tot), INTENT(OUT) :: field_tot
     COMPLEX(dp), DIMENSION(nky_tot,nz_loc) :: buffer_yt_zl !full  y, local z
     COMPLEX(dp), DIMENSION(nky_tot,nz_tot) :: buffer_yt_zt !full  y, full  z
-    COMPLEX(dp), DIMENSION(nz_loc) :: buffer_yl_zc !local y, constant z
+    COMPLEX(dp), DIMENSION(nky_loc):: buffer_yl_zc !local y, constant z
     COMPLEX(dp), DIMENSION(nky_tot):: buffer_yt_zc !full  y, constant z
     INTEGER :: snd_y, snd_z, root_p, root_z, root_ky, ix, iz
 
     snd_y  = nky_loc    ! Number of points to send along y (per z)
     snd_z  = nky_tot*nz_loc ! Number of points to send along z (full y)
-
     root_p = 0; root_z = 0; root_ky = 0
     IF(rank_p .EQ. root_p) THEN
       DO ix = 1,nkx_tot
@@ -226,14 +270,13 @@ CONTAINS
                            root_ky, comm_ky, ierr)
           buffer_yt_zl(1:nky_tot,iz) = buffer_yt_zc(1:nky_tot)
         ENDDO
-
-        ! send the full line on y contained by root_kyas
-        IF(rank_ky .EQ. 0) THEN
+        ! send the full line on y contained by root_ky
+        IF(rank_ky .EQ. root_ky) THEN
           CALL MPI_GATHERV(buffer_yt_zl, snd_z,          MPI_DOUBLE_COMPLEX, &
                            buffer_yt_zt, rcv_zy, dsp_zy, MPI_DOUBLE_COMPLEX, &
                            root_z, comm_z, ierr)
         ENDIF
-        ! ID 0 (the one who ouptut) rebuild the whole array
+        ! ID 0 (the one who output) rebuild the whole array
         IF(my_id .EQ. 0) &
           field_tot(1:nky_tot,ix,1:nz_tot) = buffer_yt_zt(1:nky_tot,1:nz_tot)
       ENDDO
@@ -266,14 +309,13 @@ CONTAINS
                            root_p, comm_p, ierr)
           buffer_pt_zl(1:np_tot,iz) = buffer_pt_zc(1:np_tot)
         ENDDO
-
-        ! send the full line on y contained by root_kyas
-        IF(rank_p .EQ. 0) THEN
+        ! send the full line on y contained by root_p
+        IF(rank_p .EQ. root_p) THEN
           CALL MPI_GATHERV(buffer_pt_zl, snd_z,          MPI_DOUBLE_COMPLEX, &
                            buffer_pt_zt, rcv_zp, dsp_zp, MPI_DOUBLE_COMPLEX, &
                            root_z, comm_z, ierr)
         ENDIF
-        ! ID 0 (the one who ouptut) rebuild the whole array
+        ! ID 0 (the one who output) rebuild the whole array
         IF(my_id .EQ. 0) &
           field_tot(1:np_tot,ij,1:nz_tot) = buffer_pt_zt(1:np_tot,1:nz_tot)
       ENDDO
@@ -285,49 +327,51 @@ CONTAINS
   SUBROUTINE gather_pjxyz(field_loc,field_tot,na_tot,np_loc,np_tot,nj_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: na_tot,np_loc,np_tot,nj_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot
-    COMPLEX(dp), DIMENSION(na_tot,np_loc,nj_tot,nky_loc,nkx_tot,nz_loc), INTENT(IN)  :: field_loc
+    COMPLEX(dp), DIMENSION(np_loc,nj_tot,nky_loc,nkx_tot,nz_loc), INTENT(IN)  :: field_loc
     COMPLEX(dp), DIMENSION(na_tot,np_tot,nj_tot,nky_tot,nkx_tot,nz_tot), INTENT(OUT) :: field_tot
-    COMPLEX(dp), DIMENSION(na_tot,np_tot,nky_tot,nz_loc) :: buffer_pt_yt_zl ! full p,     full y, local    z
-    COMPLEX(dp), DIMENSION(na_tot,np_tot,nky_tot,nz_tot) :: buffer_pt_yt_zt ! full p,     full y, full     z
-    COMPLEX(dp), DIMENSION(na_tot,np_tot,nky_loc) :: buffer_pt_yl_zc     ! full p,    local y, constant z
-    COMPLEX(dp), DIMENSION(na_tot,np_tot,nky_tot) :: buffer_pt_yt_zc     ! full p,     full y, constant z
-    COMPLEX(dp), DIMENSION(na_tot,np_loc)       :: buffer_pl_cy_zc     !local p, constant y, constant z
-    COMPLEX(dp), DIMENSION(na_tot,np_tot)       :: buffer_pt_cy_zc     ! full p, constant y, constant z
-    INTEGER :: snd_p, snd_y, snd_z, root_p, root_z, root_ky, iy, ix, iz, ij
-    snd_p  = na_tot*np_loc                ! Number of points to send along p (per z,y)
-    snd_y  = na_tot*np_tot*nky_loc        ! Number of points to send along y (per z, full p)
-    snd_z  = na_tot*np_tot*nky_tot*nz_loc ! Number of points to send along z (full y, full p)
+    COMPLEX(dp), DIMENSION(np_tot,nky_tot,nz_loc) :: buffer_pt_yt_zl ! full p,     full y, local    z
+    COMPLEX(dp), DIMENSION(np_tot,nky_tot,nz_tot) :: buffer_pt_yt_zt ! full p,     full y, full     z
+    COMPLEX(dp), DIMENSION(np_tot,nky_loc) :: buffer_pt_yl_zc     ! full p,    local y, constant z
+    COMPLEX(dp), DIMENSION(np_tot,nky_tot) :: buffer_pt_yt_zc     ! full p,     full y, constant z
+    COMPLEX(dp), DIMENSION(np_loc)       :: buffer_pl_cy_zc     !local p, constant y, constant z
+    COMPLEX(dp), DIMENSION(np_tot)       :: buffer_pt_cy_zc     ! full p, constant y, constant z
+    INTEGER :: snd_p, snd_y, snd_z, root_p, root_z, root_ky, iy, ix, iz, ij, ia
+    snd_p  = np_loc                ! Number of points to send along p (per z,y)
+    snd_y  = np_tot*nky_loc        ! Number of points to send along y (per z, full p)
+    snd_z  = np_tot*nky_tot*nz_loc ! Number of points to send along z (full y, full p)
     root_p = 0; root_z = 0; root_ky = 0
-    j: DO ij = 1,nj_tot
-      x: DO ix = 1,nkx_tot
-        z: DO iz = 1,nz_loc
-          y: DO iy = 1,nky_loc
-            ! fill a buffer to contain a slice of p data at constant j, ky, kx and z
-            buffer_pl_cy_zc(1:na_tot,1:np_loc) = field_loc(1:na_tot,1:np_loc,ij,iy,ix,iz)
-            CALL MPI_GATHERV(buffer_pl_cy_zc, snd_p,        MPI_DOUBLE_COMPLEX, &
-                             buffer_pt_cy_zc, na_tot*rcv_p, na_tot*dsp_p, MPI_DOUBLE_COMPLEX, &
-                             root_p, comm_p, ierr)
-            buffer_pt_yl_zc(1:na_tot,1:np_tot,iy) = buffer_pt_cy_zc(1:na_tot,1:np_tot)
-          ENDDO y
-          ! send the full line on p contained by root_p
-          IF(rank_p .EQ. 0) THEN
-            CALL MPI_GATHERV(buffer_pt_yl_zc, snd_y,          MPI_DOUBLE_COMPLEX, &
-                             buffer_pt_yt_zc, na_tot*rcv_yp, na_tot*dsp_yp, MPI_DOUBLE_COMPLEX, &
-                             root_ky, comm_ky, ierr)
-            buffer_pt_yt_zl(1:na_tot,1:np_tot,1:nky_tot,iz) = buffer_pt_yt_zc(1:na_tot,1:np_tot,1:nky_tot)
+    a: DO ia= 1,na_tot
+      j: DO ij = 1,nj_tot
+        x: DO ix = 1,nkx_tot
+          z: DO iz = 1,nz_loc
+            y: DO iy = 1,nky_loc
+              ! fill a buffer to contain a slice of p data at constant j, ky, kx and z
+              buffer_pl_cy_zc(1:np_loc) = field_loc(1:np_loc,ij,iy,ix,iz)
+              CALL MPI_GATHERV(buffer_pl_cy_zc, snd_p,        MPI_DOUBLE_COMPLEX, &
+                              buffer_pt_cy_zc, rcv_p, dsp_p, MPI_DOUBLE_COMPLEX, &
+                              root_p, comm_p, ierr)
+              buffer_pt_yl_zc(1:np_tot,iy) = buffer_pt_cy_zc(1:np_tot)
+            ENDDO y
+            ! send the full line on p contained by root_p
+            IF(rank_p .EQ. 0) THEN
+              CALL MPI_GATHERV(buffer_pt_yl_zc, snd_y,          MPI_DOUBLE_COMPLEX, &
+                              buffer_pt_yt_zc, rcv_yp, dsp_yp, MPI_DOUBLE_COMPLEX, &
+                              root_ky, comm_ky, ierr)
+              buffer_pt_yt_zl(1:np_tot,1:nky_tot,iz) = buffer_pt_yt_zc(1:np_tot,1:nky_tot)
+            ENDIF
+          ENDDO z
+          ! send the full line on y contained by root_kyas
+          IF(rank_ky .EQ. 0) THEN
+            CALL MPI_GATHERV(buffer_pt_yt_zl, snd_z,            MPI_DOUBLE_COMPLEX, &
+                            buffer_pt_yt_zt, rcv_zyp, dsp_zyp, MPI_DOUBLE_COMPLEX, &
+                            root_z, comm_z, ierr)
           ENDIF
-        ENDDO z
-        ! send the full line on y contained by root_kyas
-        IF(rank_ky .EQ. 0) THEN
-          CALL MPI_GATHERV(buffer_pt_yt_zl, snd_z,            MPI_DOUBLE_COMPLEX, &
-                           buffer_pt_yt_zt, na_tot*rcv_zyp, na_tot*dsp_zyp, MPI_DOUBLE_COMPLEX, &
-                           root_z, comm_z, ierr)
-        ENDIF
-        ! ID 0 (the one who ouptut) rebuild the whole array
-        IF(my_id .EQ. 0) &
-          field_tot(1:na_tot,1:np_tot,ij,1:nky_tot,ix,1:nz_tot) = buffer_pt_yt_zt(1:na_tot,1:np_tot,1:nky_tot,1:nz_tot)
-      ENDDO x
-    ENDDO j
+          ! ID 0 (the one who ouptut) rebuild the whole array
+          IF(my_id .EQ. 0) &
+            field_tot(ia,1:np_tot,ij,1:nky_tot,ix,1:nz_tot) = buffer_pt_yt_zt(1:np_tot,1:nky_tot,1:nz_tot)
+        ENDDO x
+      ENDDO j
+    ENDDO a
   END SUBROUTINE gather_pjxyz
 
   !!!!! This is a manual way to do MPI_BCAST !!!!!!!!!!!
@@ -403,5 +447,26 @@ CONTAINS
     ENDIF
   END SUBROUTINE manual_0D_bcast
 
+  ! Routine that exchange ghosts on one dimension
+  SUBROUTINE exchange_ghosts_1D(f,nbr_L,nbr_R,np,ng)
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: np,ng, nbr_L, nbr_R
+    COMPLEX(dp), DIMENSION(np+ng), INTENT(INOUT) :: f
+    INTEGER :: ierr, first, last, ig
+    first = 1 + ng/2
+    last  = np + ng/2
+    !!!!!!!!!!! Send ghost to right neighbour !!!!!!!!!!!!!!!!!!!!!!
+    DO ig = 1,ng/2
+      CALL mpi_sendrecv(f(last-(ig-1)), 1, MPI_DOUBLE_COMPLEX, nbr_R, 14+ig, &
+                           f(first-ig), 1, MPI_DOUBLE_COMPLEX, nbr_L, 14+ig, &
+                        comm0, MPI_STATUS_IGNORE, ierr)
+    ENDDO
+    !!!!!!!!!!! Send ghost to left neighbour !!!!!!!!!!!!!!!!!!!!!!
+    DO ig = 1,ng/2
+    CALL mpi_sendrecv(f(first+(ig-1)), 1, MPI_DOUBLE_COMPLEX, nbr_L, 16+ig, &
+                           f(last+ig), 1, MPI_DOUBLE_COMPLEX, nbr_R, 16+ig, &
+                      comm0, MPI_STATUS_IGNORE, ierr)
+    ENDDO
+  END SUBROUTINE exchange_ghosts_1D
 
 END MODULE parallel

@@ -139,6 +139,7 @@ SUBROUTINE evaluate_poisson_op
   IMPLICIT NONE
   REAL(dp)    :: pol_ion, pol_tot, operator, operator_ion     ! (Z^2/tau (1-sum_n kernel_na^2))
   INTEGER     :: in,ikx,iky,iz,ia
+  REAL(dp)    :: pol_i, pol_e, sumker, spol     ! (Z_a^2/tau_a (1-sum_n kernel_na^2))
 
   ! This term has no staggered grid dependence. It is evalued for the
   ! even z grid since poisson uses p=0 moments and phi only.
@@ -147,23 +148,24 @@ SUBROUTINE evaluate_poisson_op
   zloop:  DO iz  = 1,local_nz
   IF( (kxarray(ikx).EQ.0._dp) .AND. (kyarray(iky).EQ.0._dp) ) THEN
       inv_poisson_op(iky, ikx, iz) =  0._dp
-  ELSE
-    operator = 0._dp
-    DO ia = 1,local_na ! sum over species
-      ! loop over n only up to the max polynomial degree
-      pol_tot  = 0._dp  ! total polarisation term
-      pol_ion  = 0._dp  ! sum of ion polarisation term
+      inv_pol_ion   (iky, ikx, iz) =  0._dp
+ELSE
+    ! loop over n only up to the max polynomial degree
+    pol_tot = 0._dp  ! total polarisation term
+    a:DO ia = 1,local_na ! sum over species
+    ! ia = 1
+      sumker  = 0._dp  ! sum of ion polarisation term
       DO in=1,local_nj
-        pol_tot = pol_tot + kernel(ia,in+ngj/2,iky,ikx,iz+ngz/2,ieven)**2 ! ... sum recursively ...
-        pol_ion = pol_ion + kernel(ia,in+ngj/2,iky,ikx,iz+ngz/2,ieven)**2 !
+        sumker = sumker + q2_tau(ia)*kernel(ia,in+ngj/2,iky,ikx,iz+ngz/2,ieven)**2 ! ... sum recursively ...
       END DO
-      operator = operator + q2_tau(ia)*(1._dp - pol_tot)
-    ENDDO
-    operator_ion = operator
-    IF(ADIAB_E) THEN ! Adiabatic model
+      pol_tot = pol_tot + q2_tau(ia) - sumker
+    ENDDO a
+    operator_ion = pol_tot
+    IF(ADIAB_E) THEN ! Adiabatic electron model
       pol_tot = pol_tot +  1._dp/tau_e - 1._dp
     ENDIF
-    inv_poisson_op(iky, ikx, iz) =  1._dp/operator
+    operator = pol_tot
+    inv_poisson_op(iky, ikx, iz) =  1._dp/pol_tot
     inv_pol_ion   (iky, ikx, iz) =  1._dp/operator_ion
   ENDIF
   END DO zloop

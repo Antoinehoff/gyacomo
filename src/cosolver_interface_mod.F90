@@ -9,31 +9,34 @@ CONTAINS
   !******************************************************************************!
   !! compute the collision terms in a (Np x Nj x Nkx x Nky) matrix all at once
   !******************************************************************************!
-  SUBROUTINE compute_cosolver_coll(GK_CO,INTERSPECIES)
+  SUBROUTINE compute_cosolver_coll(GK_CO)
     USE parallel,    ONLY: num_procs_p, comm_p,dsp_p,rcv_p
     USE grid,        ONLY: &
-      ias,iae, &
-      ips,ipe,parray,&
-      local_np,total_np,&
-      ijs,ije,jarray,jmax, dmax,&
-      ikxs,ikxe,ikys,ikye,izs,ize, bar
-    USE array,       ONLY: Capj, Caa, Cab_T, Cab_F, nadiab_moments
+      local_na, &
+      local_np, total_np, parray, ngp,&
+      total_nj,jarray, ngj,&
+      local_nkx, local_nky, local_nz, ngz, bar
+    USE array,       ONLY: Capj
     USE MPI
-    USE model,       ONLY: Na, CLOS
-    USE species,     ONLY: nu_ab
     IMPLICIT NONE
-    LOGICAL, INTENT(IN) :: GK_CO, INTERSPECIES
-    COMPLEX(dp), DIMENSION(1:total_np)   :: local_sum, buffer
-    COMPLEX(dp), DIMENSION(ips:ipe)      :: TColl_distr
+    LOGICAL, INTENT(IN) :: GK_CO
+    COMPLEX(dp), DIMENSION(total_np)    :: local_sum, buffer
+    COMPLEX(dp), DIMENSION(local_np)    :: TColl_distr
     COMPLEX(dp) :: Tmp_
-    INTEGER :: iz,ikx,iky,ij,ip,ia,ib,iq,il,ikx_C,iky_C,iz_C
-    INTEGER :: p_int,q_int,j_int,l_int, ierr
-    z:DO iz = izs,ize
-      x:DO ikx = ikxs,ikxe
-        y:DO iky = ikys,ikye
-          a:DO ia = ias,iae
-            j:DO ij = 1,Jmax+1
+    INTEGER :: iz,ikx,iky,ij,ip,ia,ikx_C,iky_C,iz_C
+    INTEGER :: p_int,j_int, ierr
+    INTEGER :: ipi, iji, izi
+    z:DO iz = 1,local_nz
+    izi = iz+ngz/2
+      x:DO ikx = 1,local_nkx
+        y:DO iky = 1,local_nky
+          a:DO ia = 1,local_na
+            j:DO ij = 1,total_nj
+            iji   = ij+ngj/2
+            j_int = jarray(iji)
               p:DO ip = 1,total_np
+              ipi   = ip + ngp/2
+              p_int = parray(ipi)
                 !! Take GK or DK limit
                 IF (GK_CO) THEN ! GK operator (k-dependant)
                   ikx_C = ikx; iky_C = iky; iz_C = iz;
@@ -41,29 +44,7 @@ CONTAINS
                   ikx_C = 1;   iky_C = 1; iz_C = 1;
                 ENDIF
                 !! Apply the cosolver collision matrix
-                Tmp_ = 0._dp ! Initialization
-                ! self interaction
-                Tmp_ = Tmp_ + nadiab_moments(ia,iq,il,iky,ikx,iz) &
-                       * nu_ab(ia,ia)*Caa(ia,bar(p_int,j_int), bar(q_int,l_int), iky_C, ikx_C, iz_C)
-                ! sum the contribution over the other species
-                IF (INTERSPECIES) THEN
-                  b:DO ib = 1,Na
-                    q:DO iq = ips,ipe
-                      q_int = parray(iq)
-                      l:DO il = ijs,ije
-                        l_int = jarray(il)
-                        IF((CLOS .NE. 1) .OR. (q_int+2*l_int .LE. dmax)) THEN
-                          ! Test contribution
-                          Tmp_ = Tmp_ + nadiab_moments(ia,iq,il,iky,ikx,iz) &
-                              * nu_ab(ia,ib) * Cab_T(ia,ib,bar(p_int,j_int), bar(q_int,l_int), iky_C, ikx_C, iz_C)
-                          ! Field contribution
-                          Tmp_ = Tmp_ + nadiab_moments(ib,iq,il,iky,ikx,iz) &
-                              * nu_ab(ia,ib) * Cab_F(ia,ib,bar(p_int,j_int), bar(q_int,l_int), iky_C, ikx_C, iz_C)
-                        ENDIF
-                      ENDDO l
-                    ENDDO q
-                  ENDDO b
-                ENDIF
+                CALL apply_cosolver_mat(ia,ip,ij,iky,ikx,iz,ikx_C,iky_C,iz_C,Tmp_)
                 local_sum(ip) = Tmp_
               ENDDO p
               IF (num_procs_p .GT. 1) THEN
@@ -78,7 +59,7 @@ CONTAINS
                 TColl_distr = local_sum
               ENDIF
               ! Write in output variable
-              DO ip = ips,ipe
+              DO ip = 1,local_np
                 Capj(ia,ip,ij,iky,ikx,iz) = TColl_distr(ip)
               ENDDO
             ENDDO j
@@ -89,16 +70,64 @@ CONTAINS
   END SUBROUTINE compute_cosolver_coll
 
     !******************************************************************************!
+  !! compute the collision terms in a (Np x Nj x Nkx x Nky) matrix all at once
+  !******************************************************************************!
+  SUBROUTINE apply_cosolver_mat(ia,ip,ij,iky,ikx,iz,ikx_C,iky_C,iz_C,local_sum)
+    USE grid,        ONLY: &
+      local_na, &
+      local_np, parray, ngp,&
+      total_nj, jarray, dmax, ngj, bar, ngz
+    USE array,       ONLY: Caa, Cab_T, Cab_F, nadiab_moments
+    USE model,       ONLY: CLOS
+    USE species,     ONLY: nu_ab
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: ia,ip,ij,iky,ikx,iz,ikx_C,iky_C,iz_C
+    COMPLEX(dp), INTENT(OUT) :: local_sum
+    INTEGER :: ib,iq,il
+    INTEGER :: p_int,q_int,j_int,l_int
+    INTEGER :: ipi, iji, izi, iqi, ili
+    izi = iz+ngz/2
+    iji   = ij+ngj/2
+    j_int = jarray(iji)
+    ipi   = ip + ngp/2
+    p_int = parray(ipi)
+    !! Apply the cosolver collision matrix
+    local_sum = 0._dp ! Initialization
+    q:DO iq = 1,local_np
+      iqi   = iq + ngp/2
+      q_int = parray(iqi)
+      l:DO il = 1,total_nj
+        ili   = il + ngj/2
+        l_int = jarray(ili)
+        ! self interaction
+        local_sum = local_sum + nadiab_moments(ia,iqi,ili,iky,ikx,izi) &
+              * nu_ab(ia,ia)*Caa(ia,bar(p_int,j_int), bar(q_int,l_int), iky_C, ikx_C, iz_C)
+        ! sum the contribution over the other species
+        b:DO ib = 1,local_na
+          IF((CLOS .NE. 1) .OR. (q_int+2*l_int .LE. dmax)) THEN
+            ! Test contribution
+            local_sum = local_sum + nadiab_moments(ia,iqi,ili,iky,ikx,izi) &
+                * nu_ab(ia,ib) * Cab_T(ia,ib,bar(p_int,j_int), bar(q_int,l_int), iky_C, ikx_C, iz_C)
+            ! Field contribution
+            local_sum = local_sum + nadiab_moments(ib,iqi,ili,iky,ikx,izi) &
+                * nu_ab(ia,ib) * Cab_F(ia,ib,bar(p_int,j_int), bar(q_int,l_int), iky_C, ikx_C, iz_C)
+          ENDIF
+        ENDDO b
+      ENDDO l
+    ENDDO q
+  END SUBROUTINE apply_cosolver_mat
+
+    !******************************************************************************!
     !!!!!!! Load the collision matrix coefficient table from COSOlver results
     !******************************************************************************!
     SUBROUTINE load_COSOlver_mat(GK_CO,INTERSPECIES,matfile,collision_kcut) ! Load a sub matrix from iCa files (works for pmax,jmax<=P_full,J_full)
-      USE basic,       ONLY: allocate_array
+      USE basic,       ONLY: allocate_array, speak
       USE parallel,    ONLY: comm_p, my_id
       USE grid,        ONLY: &
-        pmax,jmax,&
-        ikxs,ikxe,&
-        ikys,ikye, kparray,&
-        izs,ize,bar
+        local_na,&
+        local_nkx,local_nky, kparray,&
+        local_nz, ngz, bar,&
+        pmax, jmax, ieven
       USE array,       ONLY: Caa, Cab_T, Cab_F
       USE MPI
       USE model,       ONLY: Na, LINEARITY
@@ -162,12 +191,12 @@ CONTAINS
         ELSE
           write(ikp_string,'(i5.5)') 0
         ENDIF
-        a:DO ia = 1,Na
+        a:DO ia = 1,local_na
           name_a = name(ia); letter_a = name_a(1:1)
           ! get the self colision matrix
           ! Naming of the array to load (kperp dependant)
           ! we look for the data stored at e.g. '00001/Caapj/Ceepj'
-          WRITE(var_name,'(a,a,a,a,a)') TRIM(ADJUSTL(ikp_string)),'/Caapj/',letter_a,letter_a,'pj'
+          WRITE(var_name,'(a,a,a,a,a)') TRIM(ADJUSTL(ikp_string)),'/Caapj/C',letter_a,letter_a,'pj'
           CALL getarr(fid, var_name, Caa_full) ! get array
           ! Fill sub array with the usefull polynmial degrees only
           DO ip = 0,pmax ! Loop over rows
@@ -183,15 +212,15 @@ CONTAINS
               ENDDO
             ENDDO
           ENDDO
-          b: DO ib = 1,Na
-            name_b = name(ib); letter_b = name_b(1:1)
-            IF(INTERSPECIES) THEN ! Pitch angle is only applied on like-species
+          b: DO ib = 1,local_na
+          name_b = name(ib); letter_b = name_b(1:1)
+          IF(INTERSPECIES .AND. (ib .NE. ia)) THEN ! Pitch angle is only applied on like-species
               !!!!!!!!!!!!!!! Test and field matrices !!!!!!!!!!!!!!
               ! we look for the data stored at e.g. '00001/Ceipj/CeipjT'
-              WRITE(var_name,'(a,a,a,a,a,a,a,a)') TRIM(ADJUSTL(ikp_string)),'/C',letter_a,letter_b,'pj/',letter_a,letter_b,'pjT'
+              WRITE(var_name,'(a,a,a,a,a,a,a,a)') TRIM(ADJUSTL(ikp_string)),'/C',letter_a,letter_b,'pj/C',letter_a,letter_b,'pjT'
               CALL getarr(fid, var_name, CabT_full)
               ! we look for the data stored at e.g. '00001/Ceipj/CeipjF'
-              WRITE(var_name,'(a,a,a,a,a,a,a,a)') TRIM(ADJUSTL(ikp_string)),'/C',letter_a,letter_b,'pj/',letter_a,letter_b,'pjF'
+              WRITE(var_name,'(a,a,a,a,a,a,a,a)') TRIM(ADJUSTL(ikp_string)),'/C',letter_a,letter_b,'pj/C',letter_a,letter_b,'pjF'
               CALL getarr(fid, var_name, CabF_full)
               ! Fill sub array with only usefull polynmials degree
               DO ip = 0,pmax ! Loop over rows
@@ -209,7 +238,7 @@ CONTAINS
               ENDDO
               ENDDO
             ELSE
-              CabT_kp = 0._dp; CabF_kp = 0._dp
+              CabT_kp(ia,ib,:,:,:) = 0._dp; CabF_kp(ia,ib,:,:,:) = 0._dp
             ENDIF
           ENDDO b
         ENDDO a
@@ -221,11 +250,11 @@ CONTAINS
 
       IF (GK_CO) THEN ! Interpolation of the kperp matrix values on kx ky grid
         IF (my_id .EQ. 0 ) WRITE(*,*) '...Interpolation from matrices kperp to simulation kx,ky...'
-        DO ikx = ikxs,ikxe
-          DO iky = ikys,ikye
-            DO iz = izs,ize
+        DO ikx = 1,local_nkx
+          DO iky = 1,local_nky
+            DO iz = 1,local_nz
               ! Check for nonlinear case if we are in the anti aliased domain or the filtered one
-              kperp_sim = MIN(kparray(iky,ikx,iz,0),collision_kcut) ! current simulation kperp
+              kperp_sim = MIN(kparray(iky,ikx,iz+ngz/2,ieven),collision_kcut) ! current simulation kperp
               ! Find the interval in kp grid mat where kperp_sim is contained
               ! Loop over the whole kp mat grid to find the smallest kperp that is
               ! larger than the current kperp_sim (brute force...)
@@ -265,12 +294,11 @@ CONTAINS
       DEALLOCATE (Caa__kp); DEALLOCATE (CabT_kp); DEALLOCATE (CabF_kp)
 
       IF( .NOT. INTERSPECIES ) THEN
-        IF(my_id.EQ.0) write(*,*) "--Like Species operator--"
+        CALL speak("--Like Species operator--")
         Cab_F = 0._dp;
         Cab_T = 0._dp;
       ENDIF
-
-      IF (my_id .EQ. 0) WRITE(*,*) '============DONE==========='
+      CALL speak('============DONE===========')
 
     END SUBROUTINE load_COSOlver_mat
     !******************************************************************************!

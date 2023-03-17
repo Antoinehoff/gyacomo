@@ -237,34 +237,30 @@ SUBROUTINE diagnose_full(kstep)
     !                       2.3   3d profiles
     IF (nsave_3d .GT. 0) THEN
       IF (MOD(cstep, nsave_3d) == 0) THEN
-          CALL diagnose_3d
-          ! Looks at the folder if the file check_phi exists and spits a snapshot
-          ! of the current electrostatic potential in a basic text file
-          CALL spit_snapshot_check
-        ENDIF
+        CALL diagnose_3d
+        ! Looks at the folder if the file check_phi exists and spits a snapshot
+        ! of the current electrostatic potential in a basic text file
+        CALL spit_snapshot_check
       ENDIF
-      !                       2.4   5d profiles
-      IF (nsave_5d .GT. 0) THEN
-        IF (MOD(cstep, nsave_5d) == 0) THEN
-          CALL diagnose_5d
-        END IF
+    ENDIF
+    !                       2.4   5d profiles
+    IF (nsave_5d .GT. 0) THEN
+      IF (MOD(cstep, nsave_5d) == 0) THEN
+        CALL diagnose_5d
       END IF
-      !_____________________________________________________________________________
-      !                   3.   Final diagnostics
-      ELSEIF (kstep .EQ. -1) THEN
-        CALL attach(fidres, "/data/input","cpu_time",finish-start)
-        
-        ! make a checkpoint at last timestep if not crashed
-        IF(.NOT. crashed) THEN
-       IF(my_id .EQ. 0) write(*,*) 'Saving last state'
-       IF (nsave_5d .GT. 0) &
-       CALL diagnose_5d
-     ENDIF
-
-     !   Close all diagnostic files
-     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-     CALL closef(fidres)
-
+    END IF
+  !_____________________________________________________________________________
+  !                   3.   Final diagnostics
+  ELSEIF (kstep .EQ. -1) THEN
+    CALL attach(fidres, "/data/input","cpu_time",finish-start)
+    ! make a checkpoint at last timestep if not crashed
+    IF(.NOT. crashed) THEN
+      IF(my_id .EQ. 0) write(*,*) 'Saving last state'
+      IF (nsave_5d .GT. 0) CALL diagnose_5d
+    ENDIF
+    !   Close all diagnostic files
+    CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+    CALL closef(fidres)
   END IF
 END SUBROUTINE diagnose_full
 
@@ -332,6 +328,7 @@ SUBROUTINE diagnose_3d
   USE processing, ONLY: compute_fluid_moments, compute_Napjz_spectrum
   USE model,      ONLY: EM
   USE species,    ONLY: name
+  USE parallel,   ONLY: manual_3D_bcast
   IMPLICIT NONE
   CHARACTER :: letter_a
   INTEGER   :: ia
@@ -354,14 +351,15 @@ SUBROUTINE diagnose_3d
       IF (CONTAINSp0) THEN
         ! gyrocenter density
         Na00_    = moments(ia,ip0,ij0,:,:,(1+ngz/2):(local_nz+ngz/2),updatetlevel)
-        CALL write_field3d_kykxz(Na00_, 'N'//letter_a//'00')
+      ELSE
+        Na00_    = 0._dp
       ENDIF
-      ! <<Napj>x>y spectrum
+      CALL write_field3d_kykxz(Na00_, 'N'//letter_a//'00')
+     ! <<Napj>x>y spectrum
       Napjz_ = Napjz(ia,:,:,:)
       CALL write_field3d_pjz(Napjz_, 'N'//letter_a//'pjz')
     ENDDO
   ENDIF
-
   !! Fuid moments
   IF (write_dens .OR. write_fvel .OR. write_temp) &
   CALL compute_fluid_moments
@@ -391,34 +389,29 @@ SUBROUTINE diagnose_3d
   ENDDO
   CONTAINS
     SUBROUTINE write_field3d_kykxz(field, text)
-      USE basic,    ONLY : GATHERV_OUTPUT
       USE parallel, ONLY : gather_xyz, num_procs
       IMPLICIT NONE
-      COMPLEX(dp), DIMENSION(local_nky,local_nkx,local_nz), INTENT(IN) :: field
+      COMPLEX(dp), DIMENSION(local_nky,total_nkx,local_nz), INTENT(IN) :: field
       CHARACTER(*), INTENT(IN) :: text
       COMPLEX(dp), DIMENSION(total_nky,total_nkx,total_nz) :: field_full
-      CHARACTER(256) :: dset_name
+      CHARACTER(50) :: dset_name
       field_full = 0;
       WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
-
       IF (num_procs .EQ. 1) THEN ! no data distribution
         CALL putarr(fidres, dset_name, field, ionode=0)
-
-      ELSEIF(GATHERV_OUTPUT) THEN ! output using one node (gatherv)
+      ELSE
         CALL gather_xyz(field,field_full,local_nky,total_nky,total_nkx,local_nz,total_nz)
         CALL putarr(fidres, dset_name, field_full, ionode=0)
-      ELSE ! output using putarrnd (very slow on marconi)
-        CALL putarrnd(fidres, dset_name, field,  (/1, 1, 3/))
       ENDIF
-      CALL attach(fidres, dset_name, "time", time)
-    END SUBROUTINE write_field3d_kykxz
+        ! CALL attach(fidres, dset_name, "time", time)
+      END SUBROUTINE write_field3d_kykxz
 
     SUBROUTINE write_field3d_pjz(field, text)
       USE parallel, ONLY : gather_pjz, num_procs
       IMPLICIT NONE
       COMPLEX(dp), DIMENSION(local_np,local_nj,local_nz), INTENT(IN) :: field
-      COMPLEX(dp), DIMENSION(total_np,total_nj,total_nz) :: field_full
       CHARACTER(*), INTENT(IN) :: text
+      COMPLEX(dp), DIMENSION(total_np,total_nj,total_nz) :: field_full
       CHARACTER(LEN=50) :: dset_name
       field_full = 0;
       WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
@@ -475,9 +468,9 @@ SUBROUTINE diagnose_5d
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var5d", TRIM(text), iframe5d
     IF (num_procs .EQ. 1) THEN
       CALL putarr(fidres, dset_name, field_sub, ionode=0)
-      ELSEIF(GATHERV_OUTPUT) THEN ! output using one node (gatherv)
-        CALL gather_pjxyz(field_sub,field_full,total_na,local_np,total_np,total_nj,local_nky,total_nky,total_nkx,local_nz,total_nz)
-        CALL putarr(fidres, dset_name, field_full, ionode=0)
+    ELSEIF(GATHERV_OUTPUT) THEN ! output using one node (gatherv)
+      CALL gather_pjxyz(field_sub,field_full,total_na,local_np,total_np,total_nj,local_nky,total_nky,total_nkx,local_nz,total_nz)
+      CALL putarr(fidres, dset_name, field_full, ionode=0)
     ELSE
       CALL putarrnd(fidres, dset_name, field_sub,  (/1,3,5/))
     ENDIF

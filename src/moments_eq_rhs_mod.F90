@@ -17,7 +17,7 @@ SUBROUTINE compute_moments_eq_rhs
   USE time_integration
   USE geometry, ONLY: gradz_coeff, dlnBdz, Ckxky!, Gamma_phipar
   USE calculus, ONLY: interp_z, grad_z, grad_z2
-  USE species,  ONLY: dpdx
+  ! USE species,  ONLY: dpdx
   IMPLICIT NONE
   INTEGER     :: ia, iz, iky,  ikx, ip ,ij, eo ! counters
   INTEGER     :: izi,ipi,iji ! interior points counters
@@ -32,7 +32,6 @@ SUBROUTINE compute_moments_eq_rhs
   COMPLEX(dp) :: Napj, RHS
    ! Measuring execution time
   CALL cpu_time(t0_rhs)
-
   ! Spatial loops
   z:DO  iz = 1,local_nz
     izi = iz + ngz/2
@@ -68,7 +67,8 @@ SUBROUTINE compute_moments_eq_rhs
                 ! term propto n^{p,j-1}
                 Tnapjm1 = xnapjm1(ia,ij) * nadiab_moments(ia,ipi,    iji-1,iky,ikx,izi)
                 ! Perpendicular magnetic term (curvature and gradient drifts)
-                Mperp   = imagu*Ckxky(iky,ikx,iz,eo)*(Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)
+                Mperp   = imagu*Ckxky(iky,ikx,izi,eo)&
+                          *(Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)
                 ! Parallel dynamic
                 ! ddz derivative for Landau damping term
                 Ldamp     = xnapp1j(ia,ip) * ddz_napj(ia,ipi+1,iji,iky,ikx,iz) &
@@ -83,26 +83,18 @@ SUBROUTINE compute_moments_eq_rhs
                 Unapm1jp1 = znapm1jp1(ia,ip,ij) * interp_napj(ia,ipi-1,iji+1,iky,ikx,iz)
                 Unapm1jm1 = znapm1jm1(ia,ip,ij) * interp_napj(ia,ipi-1,iji-1,iky,ikx,iz)
                 ! sum the parallel forces
-                Fmir = dlnBdz(iz,eo)*(Tnapp1j + Tnapp1jm1 + Tnapm1j + Tnapm1jm1 +&
+                Fmir = dlnBdz(izi,eo)*(Tnapp1j + Tnapp1jm1 + Tnapm1j + Tnapm1jm1 +&
                                       Unapm1j + Unapm1jp1 + Unapm1jm1)
                 ! Parallel magnetic term (Landau damping and the mirror force)
-                Mpara = gradz_coeff(iz,eo)*(Ldamp + Fmir)
+                Mpara = gradz_coeff(izi,eo)*(Ldamp + Fmir)
                 !! Electrical potential term
-                IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
-                  Dphi =i_ky*( xphij  (ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
-                              +xphijp1(ia,ip,ij)*kernel(ia,iji+1,iky,ikx,izi,eo) &
-                              +xphijm1(ia,ip,ij)*kernel(ia,iji-1,iky,ikx,izi,eo) )*phi(iky,ikx,izi)
-                ELSE
-                  Dphi = 0._dp
-                ENDIF
+                Dphi =i_ky*( xphij  (ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
+                            +xphijp1(ia,ip,ij)*kernel(ia,iji+1,iky,ikx,izi,eo) &
+                            +xphijm1(ia,ip,ij)*kernel(ia,iji-1,iky,ikx,izi,eo) )*phi(iky,ikx,izi)
                 !! Vector potential term
-                IF ( (p_int .LE. 3) .AND. (p_int .GE. 1) ) THEN ! Kronecker p1 or p3
-                  Dpsi =-i_ky*( xpsij  (ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
-                               +xpsijp1(ia,ip,ij)*kernel(ia,iji+1,iky,ikx,izi,eo) &
-                               +xpsijm1(ia,ip,ij)*kernel(ia,iji-1,iky,ikx,izi,eo))*psi(iky,ikx,izi)
-                ELSE
-                  Dpsi = 0._dp
-                ENDIF
+                Dpsi =-i_ky*( xpsij  (ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
+                              +xpsijp1(ia,ip,ij)*kernel(ia,iji+1,iky,ikx,izi,eo) &
+                              +xpsijm1(ia,ip,ij)*kernel(ia,iji-1,iky,ikx,izi,eo))*psi(iky,ikx,izi)
                 !! Sum of all RHS terms
                 RHS = &
                     ! Nonlinear term Sapj_ = {phi,f}
@@ -111,18 +103,18 @@ SUBROUTINE compute_moments_eq_rhs
                     - Mperp &
                     ! Parallel magnetic term
                     - Mpara &
-                    ! ! Drives (density + temperature gradients)
+                    ! Drives (density + temperature gradients)
                     - (Dphi + Dpsi) &
-                    ! ! Collision term
+                    ! Collision term
                     + Capj(ia,ip,ij,iky,ikx,iz) &
-                    ! ! Perpendicular pressure effects (electromagnetic term) (TO CHECK)
-                    - i_ky*beta*dpdx(ia) * (Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)&
-                    ! ! Parallel drive term (should be negligible, to test)
-                    !! -Gamma_phipar(iz,eo)*Tphi*ddz_phi(iky,ikx,iz) &
-                    ! ! Numerical perpendicular hyperdiffusion
+                    ! Perpendicular pressure effects (electromagnetic term) (TO CHECK)
+                    ! - i_ky*beta*dpdx(ia) * (Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)&
+                    ! Parallel drive term (should be negligible, to test)
+                    ! !! -Gamma_phipar(iz,eo)*Tphi*ddz_phi(iky,ikx,iz) &
+                    ! Numerical perpendicular hyperdiffusion
                     -mu_x*diff_kx_coeff*kx**N_HD*Napj &
                     -mu_y*diff_ky_coeff*ky**N_HD*Napj &
-                    ! ! Numerical parallel hyperdiffusion "mu_z*ddz**4"  see Pueschel 2010 (eq 25)
+                    ! ! ! Numerical parallel hyperdiffusion "mu_z*ddz**4"  see Pueschel 2010 (eq 25)
                     -mu_z*diff_dz_coeff*ddzND_napj(ia,ipi,iji,iky,ikx,iz)
                 !! Velocity space dissipation (should be implemented somewhere else)
                 SELECT CASE(HYP_V)
@@ -131,15 +123,15 @@ SUBROUTINE compute_moments_eq_rhs
                     RHS = RHS - mu_p*diff_p_coeff*p_int**6*Napj
                   IF (j_int .GT. 1)  &
                     RHS = RHS - mu_j*diff_j_coeff*j_int**6*Napj
-                CASE('dvpar4')
-                  ! fourth order numerical diffusion in vpar
-                  IF(p_int .GE. 4) &
-                  ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
-                  ! (not used often so not parallelized)
-                  RHS = RHS + mu_p*dv4_Hp_coeff(p_int)*moments(ia,ipi-4,iji,iky,ikx,izi,updatetlevel)
-                  ! + dummy Laguerre diff
-                  IF (j_int .GT. 1)  &
-                    RHS = RHS - mu_j*diff_j_coeff*j_int**6*Napj
+                ! CASE('dvpar4')
+                !   ! fourth order numerical diffusion in vpar
+                !   IF(p_int .GE. 4) &
+                !   ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
+                !   ! (not used often so not parallelized)
+                !   RHS = RHS + mu_p*dv4_Hp_coeff(p_int)*moments(ia,ipi-4,iji,iky,ikx,izi,updatetlevel)
+                !   ! + dummy Laguerre diff
+                !   IF (j_int .GE. 2)  &
+                !     RHS = RHS - mu_j*diff_j_coeff*j_int**6*Napj
                 CASE DEFAULT
                 END SELECT
               ELSE
@@ -156,12 +148,24 @@ SUBROUTINE compute_moments_eq_rhs
   ! Execution time end
   CALL cpu_time(t1_rhs)
   tc_rhs = tc_rhs + (t1_rhs-t0_rhs)
-  ! print*, moments(1,3,2,2,2,3,updatetlevel)
-  ! print*, moments_rhs(1,3,2,2,2,3,updatetlevel)
-  print*, SUM(REAL(moments_rhs(1,:,:,:,:,:,:)))
-  print*, SUM(REAL(moments_rhs(2,:,:,:,:,:,:)))
-  print*, SUM(REAL(phi))
-  ! stop
+
+      print*,'sumabs moments i', SUM(ABS(moments(1,:,:,:,:,:,updatetlevel)))
+      print*,'moment rhs i 221', moments_rhs(1,1,1,2,2,1,updatetlevel)
+      print*,'sum real nadiabe', SUM(REAL(nadiab_moments(2,:,:,:,:,:)))
+      print*,'sumreal momrhs i', SUM(REAL(moments_rhs(1,:,:,:,:,:,:)))
+      print*,'sumimag momrhs i', SUM(IMAG(moments_rhs(1,:,:,:,:,:,:)))
+      print*,'sumreal phi     ', SUM(REAL(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
+      print*,'sumimag phi     ', SUM(IMAG(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
+      print*,'phi(2,2,1)      ', phi(2,2,1+ngz/2)
+      print*,'sumreal ddznipj ', SUM(REAL(ddz_napj(1,:,:,:,:,:)))
+      print*,'sumimag ddznipj ', SUM(IMAG(ddz_napj(1,:,:,:,:,:)))
+      print*,'        ddznipj  ',(ddz_napj(1,2+ngp/2,2+ngj/2,2,2,1))
+      print*,'sumreal Capj    ', SUM(REAL(Capj(1,:,:,:,:,:)))
+      print*,'---'
+      IF(updatetlevel .EQ. 4) stop
+  ! print*, xnapjp1(2,:)
+  ! print*, pp2
+  stop
 
 END SUBROUTINE compute_moments_eq_rhs
 

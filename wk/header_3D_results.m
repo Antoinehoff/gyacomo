@@ -50,6 +50,7 @@ PARTITION  = '/misc/gyacomo_outputs/';
 % resdir = 'paper_2_nonlinear/kT_5.3/5x3x128x64x24';
 % resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x24_sp';
 % resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x24_dp';
+% resdir = 'paper_2_nonlinear/kT_5.3/7x4x192x96x32_dp';
 % resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x64';
 % resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x24_MUxy_0';
 % resdir = 'paper_2_nonlinear/kT_5.3/7x4x128x64x24_NL_-1';
@@ -62,10 +63,11 @@ PARTITION  = '/misc/gyacomo_outputs/';
 % resdir = 'paper_2_nonlinear/kT_5.3/11x6x128x64x24';
 % resdir = 'paper_2_nonlinear/kT_5.3/11x6x128x64x24_dp';
 % resdir = 'paper_2_nonlinear/kT_5.3/11x6x128x64x64';
+resdir = 'paper_2_nonlinear/kT_5.3/21x11x128x64x24_dp';
 
-%% Old stuff
-% resdir = 'CBC/kT_4.5_128x64x16x13x7/';
-% resdir = 'CBC/kT_5.3_192x96x24x13x7/';
+%% nu scans kT=5.3
+% resdir = 'paper_2_nonlinear/nu_scan_kT_5.3/DGGK_7x4x128x64x24_dp';
+% resdir = 'paper_2_nonlinear/nu_scan_kT_5.3/SGGK_7x4x128x64x24_dp';
 
 %% Miller
 % resdir = 'paper_2_nonlinear/kT_4.15_miller/7x4x128x64x24';

@@ -41,6 +41,7 @@ SUBROUTINE stepon
 
       CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
    !----- AFTER: All fields are updated for step = n+1
+
    END DO
 
    CONTAINS

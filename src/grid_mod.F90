@@ -38,7 +38,7 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED ::  ikxs,ikxe ! Fourier x mode
   INTEGER,  PUBLIC, PROTECTED ::  izs ,ize  ! z-grid
   INTEGER,  PUBLIC, PROTECTED ::  ieven, iodd ! indices for the staggered grids
-  INTEGER,  PUBLIC, PROTECTED ::  ip0, ip1, ip2, ip3, ij0
+  INTEGER,  PUBLIC, PROTECTED ::  ip0, ip1, ip2, ip3, ij0, ij1, pp2
   INTEGER,  PUBLIC, PROTECTED ::  ikx0, iky0, ikx_max, iky_max ! Indices of k-grid origin and max
   ! Total numbers of points for Hermite and Laguerre
   INTEGER, PUBLIC, PROTECTED :: total_na
@@ -68,7 +68,7 @@ MODULE grid
   integer(C_INTPTR_T), PUBLIC,PROTECTED :: local_nkx_ptr, local_nky_ptr
   integer(C_INTPTR_T), PUBLIC,PROTECTED :: local_nkx_ptr_offset, local_nky_ptr_offset
   ! Grid spacing and limits
-  REAL(dp), PUBLIC, PROTECTED ::  deltap, pp2, deltaz, inv_deltaz
+  REAL(dp), PUBLIC, PROTECTED ::  deltap, deltaz, inv_deltaz
   REAL(dp), PUBLIC, PROTECTED ::  deltakx, deltaky, kx_max, ky_max, kx_min, ky_min!, kp_max
   INTEGER , PUBLIC, PROTECTED ::  local_pmin,  local_pmax
   INTEGER , PUBLIC, PROTECTED ::  local_jmin,  local_jmax
@@ -296,9 +296,10 @@ CONTAINS
     ! Precomputations
     jmax_dp      = real(jmax,dp)
     diff_j_coeff = jmax_dp*(1._dp/jmax_dp)**6
-    ! j=0 indices
-    DO ij = 1,local_nj
+    ! j=0 and j=1 indices
+    DO ij = 1,local_nj+ngj
       IF(jarray(ij) .EQ. 0) ij0 = ij
+      IF(jarray(ij) .EQ. 1) ij1 = ij
     END DO
   END SUBROUTINE set_jgrid
 
@@ -476,7 +477,7 @@ CONTAINS
     INTEGER :: istart, iend, in, Npol, iz, ig, eo, iglob
     total_nz = Nz
     ! Length of the flux tube (in ballooning angle)
-    Lz         = 2_dp*pi*Npol
+    Lz         = 2._dp*pi*REAL(Npol,dp)
     ! Z stepping (#interval = #points since periodic)
     deltaz        = Lz/REAL(Nz,dp)
     inv_deltaz    = 1._dp/deltaz

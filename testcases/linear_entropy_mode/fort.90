@@ -7,17 +7,17 @@
 /
 &GRID
   pmax   = 4
-  jmax   = 1
-  Nx     = 4
+  jmax   = 2
+  Nx     = 2
   Lx     = 200
   Ny     = 2
   Ly     = 60
-  Nz     = 6
+  Nz     = 1
   SG     = .f.
   Nexc   = 1
 /
 &GEOMETRY
-  geom   = 's-alpha'
+  geom   = 'zpinch'
   q0     = 1.4
   shear  = 0.0
   eps    = 0.18
@@ -52,14 +52,13 @@
   NL_CLOS = -1
   LINEARITY = 'linear'
   Na      = 2 ! number of species
-  mu_x    = 0.2
-  mu_y    = 0.4
+  mu_x    = 0
+  mu_y    = 0
   N_HD    = 4
-  mu_z    = 0.6
-  HYP_V   = 'hypcoll'
-  mu_p    = 0.1
-  mu_j    = 0.
-  nu      = 1.0
+  mu_z    = 0
+  mu_p    = 0
+  mu_j    = 0
+  nu      = 0
   beta    = 0
   ADIAB_E = .f.
   tau_e   = 1.0
@@ -70,27 +69,27 @@
  tau_  = 1.0
  sigma_= 1.0
  q_    = 1.0
- k_N_  = 3.0!2.22
- k_T_  = 4.0!6.96
+ k_N_  = 1.0!2.22
+ k_T_  = 0.0!6.96
 /
 &SPECIES
  ! electrons
  name_ = 'electrons'
  tau_  = 1.0
- sigma_= 1!0.023338
- q_    = 1!-1.0
- k_N_  = 1.0!2.22
- k_T_  = 2.0!6.96
+ sigma_= 0.023338
+ q_    = -1.0
+ k_N_  = 0.0!2.22
+ k_T_  = 0.0!6.96
 /
 
 &COLLISION_PAR
-  collision_model = 'SG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
-  GK_CO           = .t.
+  collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
+  GK_CO           = .f.
   INTERSPECIES    = .true.
-  mat_file       = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
+  !mat_file       = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /
 &INITIAL_CON
-  INIT_OPT         = 'allmom'
+  INIT_OPT         = 'mom00'
   ACT_ON_MODES     = 'donothing'
   init_background  = 1.0
   init_noiselvl    = 0.0

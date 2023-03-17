@@ -28,32 +28,35 @@ CONTAINS
     USE geometry,         ONLY: iInt_Jacobian, Jacobian
     IMPLICIT NONE
 
-    INTEGER     :: in, ia, ikx, iky, iz
-    COMPLEX(dp) :: fsa_phi, intf_   ! current flux averaged phi
+    INTEGER     :: in, ia, ikx, iky, iz, izi, ini
+    COMPLEX(dp) :: fsa_phi, intf_, rhtot   ! current flux averaged phi
     COMPLEX(dp), DIMENSION(local_nz) :: rho, integrant  ! charge density q_a n_a and aux var
-
     ! Execution time start
     CALL cpu_time(t0_poisson)
+    rhtot = 0
     !! Poisson can be solved only for process containng p=0
     IF ( SOLVE_POISSON ) THEN
         x:DO ikx = 1,local_nkx
           y:DO iky = 1,local_nky
             !!!!!!!!!!!!!!! Compute particle charge density q_a n_a for each evolved species
             DO iz = 1,local_nz
+              izi = iz+ngz/2
               rho(iz) = 0._dp
               DO in = 1,total_nj
+                ini = in+ngj/2
                 DO ia = 1,local_na
-                  rho(iz) = rho(iz) + q(ia)*kernel(ia,in+ngj/2,iky,ikx,iz+ngz/2,ieven)*moments(ia,ip0,in+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)
+                  rho(iz) = rho(iz) + q(ia)*kernel(ia,ini,iky,ikx,izi,ieven)&
+                              *moments(ia,ip0,ini,iky,ikx,izi,updatetlevel)
                 END DO
               END DO
             END DO
             !!!!!!!!!!!!!!! adiabatic electron contribution if asked
-            IF (ADIAB_E) THEN
             ! Adiabatic charge density (linked to flux surface averaged phi)
             ! We compute the flux surface average solving a flux surface averaged
             ! Poisson equation, i.e.
             ! [qi^2(1-sum_j K_j^2)/tau_i] <phi>_psi = <q_i n_i >_psi
             !       inv_pol_ion^-1         fsa_phi  = simpson(Jacobian rho_i ) * iInt_Jacobian
+            IF (ADIAB_E) THEN
               fsa_phi = 0._dp
               IF(kyarray(iky).EQ.0._dp) THEN ! take ky=0 mode (y-average)
                 ! Prepare integrant for z-average
@@ -70,6 +73,7 @@ CONTAINS
             DO iz = 1,local_nz
               phi(iky,ikx,iz+ngz/2) = inv_poisson_op(iky,ikx,iz)*rho(iz)
             ENDDO
+            rhtot = rhtot + sum(real(rho))
           ENDDO y
         ENDDO x
       ! Cancel origin singularity
@@ -80,6 +84,15 @@ CONTAINS
     ! Execution time end
     CALL cpu_time(t1_poisson)
     tc_poisson = tc_poisson + (t1_poisson - t0_poisson)
+    ! print*, SUM(ABS(moments(1,:,:,:,:,:,updatetlevel)))
+    ! print*, SUM(REAL(moments(1,:,:,:,:,:,updatetlevel)))
+    ! print*, SUM(IMAG(moments(1,:,:,:,:,:,updatetlevel)))
+    ! print*, SUM(REAL(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
+    ! print*, SUM(REAL(phi(:,:,:)))
+    ! print*, SUM(IMAG(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
+    ! print*, SUM(inv_poisson_op(:,:,:))
+    ! print*, rhtot
+    ! stop
   END SUBROUTINE poisson
 
   SUBROUTINE ampere

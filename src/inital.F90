@@ -108,7 +108,7 @@ SUBROUTINE init_moments
 
   REAL(dp) :: noise
   INTEGER, DIMENSION(12) :: iseedarr
-  INTEGER  :: ia,ip,ij,ikx,iky,iz
+  INTEGER  :: ia,ip,ij,ikx,iky,iz, ipi,iji,izi
 
   ! Seed random number generator
   iseedarr(:)=iseed
@@ -116,19 +116,22 @@ SUBROUTINE init_moments
 
     !**** Broad noise initialization *******************************************
   DO ia=1,local_na
-    DO ip=1,local_np + ngp
-      DO ij=1,local_nj + ngj
+    DO ip=1,local_np
+      ipi = ip+ngp/2
+      DO ij=1,local_nj
+        iji = ij+ngj/2
         DO ikx=1,total_nkx
           DO iky=1,local_nky
-            DO iz=1,local_nz +ngz
+            DO iz=1,local_nz
+              izi = iz+ngz/2
               CALL RANDOM_NUMBER(noise)
-              moments(ia,ip,ij,iky,ikx,iz,:) = (init_background + init_noiselvl*(noise-0.5_dp))
+              moments(ia,ipi,iji,iky,ikx,izi,:) = (init_background + init_noiselvl*(noise-0.5_dp))
             END DO
           END DO
         END DO
         IF ( contains_ky0 ) THEN
           DO ikx=2,total_nkx/2 !symmetry at ky = 0 for all z
-            moments(ia,ip,ij,iky0,ikx,:,:) = moments(ia,ip,ij,iky0,total_nkx+2-ikx,:,:)
+            moments(ia,ipi,iji,iky0,ikx,:,:) = moments(ia,ipi,iji,iky0,total_nkx+2-ikx,:,:)
           END DO
         ENDIF
       END DO
@@ -138,9 +141,12 @@ SUBROUTINE init_moments
       DO ikx=1,total_nkx
         DO iky=1,local_nky
           DO iz=1,local_nz + ngz
+            izi = iz+ngz/2
             DO ip=1,local_np + ngp
+              ipi = ip+ngp/2
               DO ij=1,local_nj + ngj
-                moments(ia,ip,ij,iky,ikx,iz, :) = moments(ia, ip,ij,iky,ikx,iz, :)*AA_x(ikx)*AA_y(iky)
+                iji = ij+ngj/2
+                moments(ia,ipi,iji,iky,ikx,izi, :) = moments(ia, ipi,iji,iky,ikx,izi, :)*AA_x(ikx)*AA_y(iky)
               ENDDO
             ENDDO
           ENDDO

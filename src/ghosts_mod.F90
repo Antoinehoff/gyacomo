@@ -59,26 +59,41 @@ END SUBROUTINE update_ghosts_EM
 SUBROUTINE update_ghosts_p_mom
   USE time_integration, ONLY: updatetlevel
   USE fields,   ONLY: moments
-  USE parallel, ONLY: nbr_R,nbr_L,comm0
+  USE parallel, ONLY: nbr_R,nbr_L,comm0, exchange_ghosts_1D
   USE grid,     ONLY: local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
                               ngp,ngj,ngz
   IMPLICIT NONE
-  INTEGER :: ierr, first, last, ig
-  first = 1 + ngp/2
-  last  = local_np + ngp/2
-  count = local_na*(local_nj+ngj)*local_nky*local_nkx*(local_nz+ngz) ! Number of elements to send
-  !!!!!!!!!!! Send ghost to right neighbour !!!!!!!!!!!!!!!!!!!!!!
-  DO ig = 1,ngp/2
-    CALL mpi_sendrecv(moments(:,last-(ig-1),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 14+ig, &
-                      moments(:,first-ig   ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 14+ig, &
-                      comm0, status, ierr)
+  COMPLEX(dp), DIMENSION(local_np+ngp) :: slice_z
+  INTEGER :: ia,iz,ij,iy,ix
+  DO iz = 1,local_nz
+    DO ix = 1,local_nkx
+      DO iy = 1,local_nky
+        DO ij = 1,local_nj
+          DO ia = 1,local_na
+            slice_z = moments(ia,:,ij,iy,ix,iz,updatetlevel)
+            CALL exchange_ghosts_1D(slice_z,nbr_L,nbr_R,local_np,ngp)
+            moments(ia,:,ij,iy,ix,iz,updatetlevel) = slice_z
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDDO
   ENDDO
-  !!!!!!!!!!! Send ghost to left neighbour !!!!!!!!!!!!!!!!!!!!!!
-  DO ig = 1,ngp/2
-  CALL mpi_sendrecv(moments(:,first+(ig-1),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 16+ig, &
-                    moments(:,last + ig   ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 16+ig, &
-                    comm0, status, ierr)
-  ENDDO
+  ! INTEGER :: ierr, first, last, ig, count
+  ! first = 1 + ngp/2
+  ! last  = local_np + ngp/2
+  ! count = local_na*(local_nj+ngj)*local_nky*local_nkx*(local_nz+ngz) ! Number of elements to send
+  ! !!!!!!!!!!! Send ghost to right neighbour !!!!!!!!!!!!!!!!!!!!!!
+  ! DO ig = 1,ngp/2
+  !   CALL mpi_sendrecv(moments(:,last-(ig-1),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 14+ig, &
+  !                     moments(:,first-ig   ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 14+ig, &
+  !                     comm0, status, ierr)
+  ! ENDDO
+  ! !!!!!!!!!!! Send ghost to left neighbour !!!!!!!!!!!!!!!!!!!!!!
+  ! DO ig = 1,ngp/2
+  ! CALL mpi_sendrecv(moments(:,first+(ig-1),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 16+ig, &
+  !                   moments(:,last + ig   ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 16+ig, &
+  !                   comm0, status, ierr)
+  ! ENDDO
 END SUBROUTINE update_ghosts_p_mom
 
 !Communicate z+1, z+2 moments to left neighboor and z-1, z-2 moments to right one
@@ -180,7 +195,7 @@ SUBROUTINE update_ghosts_z_3D(field)
                         comm0, status, ierr)
       ENDDO
       !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
-      DO ig = 1,ngz
+      DO ig = 1,ngz/2
       CALL mpi_sendrecv(     field(:,:,first+(ig-1)), count, MPI_DOUBLE_COMPLEX, nbr_D, 32+ig, & ! Send to Down the first
                        buff_xy_zBC(:,:,ig),           count, MPI_DOUBLE_COMPLEX, nbr_U, 32+ig, & ! Recieve from Up the last+1
                         comm0, status, ierr)

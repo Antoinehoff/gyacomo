@@ -171,49 +171,47 @@ CONTAINS
 END SUBROUTINE interp_z
 
 SUBROUTINE simpson_rule_z(local_nz,dz,f,intf)
- ! integrate f(z) over z using the simpon's rule. Assume periodic boundary conditions (f(ize+1) = f(izs))
- !from molix BJ Frei
- USE prec_const, ONLY: dp, onethird
- USE parallel,   ONLY: num_procs_z, rank_z, comm_z, manual_0D_bcast
- USE mpi
- implicit none
- INTEGER, INTENT(IN) :: local_nz
- REAL(dp),INTENT(IN) :: dz
- complex(dp),dimension(local_nz), intent(in) :: f
- COMPLEX(dp), intent(out) :: intf
- COMPLEX(dp)              :: buffer, local_int
- INTEGER :: root, i_, iz, ierr
-
- ! Buil local sum using the weights of composite Simpson's rule
- local_int = 0._dp
- DO iz = 1,local_nz
-   IF(MODULO(iz,2) .EQ. 1) THEN ! odd iz
-     local_int = local_int + 2._dp*onethird*dz*f(iz)
-   ELSE ! even iz
-     local_int = local_int + 4._dp*onethird*dz*f(iz)
-   ENDIF
- ENDDO
- buffer = local_int
- root = 0
- !Gather manually among the rank_z=0 processes and perform the sum
- intf = 0._dp
- IF (num_procs_z .GT. 1) THEN
-     !! Everyone sends its local_sum to root = 0
-     IF (rank_z .NE. root) THEN
-         CALL MPI_SEND(buffer, 1 , MPI_DOUBLE_COMPLEX, root, 5678, comm_z, ierr)
-     ELSE
-         ! Recieve from all the other processes
-         DO i_ = 0,num_procs_z-1
-             IF (i_ .NE. rank_z) &
-                 CALL MPI_RECV(buffer, 1 , MPI_DOUBLE_COMPLEX, i_, 5678, comm_z, MPI_STATUS_IGNORE, ierr)
-                 intf = intf + buffer
-         ENDDO
-     ENDIF
-     CALL manual_0D_bcast(intf)
- ELSE
-   intf = local_int
- ENDIF
-
+  ! integrate f(z) over z using the simpon's rule. Assume periodic boundary conditions (f(ize+1) = f(izs))
+  !from molix BJ Frei
+  USE prec_const, ONLY: dp, onethird
+  USE parallel,   ONLY: num_procs_z, rank_z, comm_z, manual_0D_bcast
+  USE mpi
+  implicit none
+  INTEGER, INTENT(IN) :: local_nz
+  REAL(dp),INTENT(IN) :: dz
+  complex(dp),dimension(local_nz), intent(in) :: f
+  COMPLEX(dp), intent(out) :: intf
+  COMPLEX(dp)              :: buffer, local_int
+  INTEGER :: root, i_, iz, ierr
+  ! Buil local sum using the weights of composite Simpson's rule
+  local_int = 0._dp
+  DO iz = 1,local_nz
+    IF(MODULO(iz,2) .EQ. 1) THEN ! odd iz
+      local_int = local_int + 2._dp*onethird*dz*f(iz)
+    ELSE ! even iz
+      local_int = local_int + 4._dp*onethird*dz*f(iz)
+    ENDIF
+  ENDDO
+  buffer = local_int
+  root = 0
+  !Gather manually among the rank_z=0 processes and perform the sum
+  intf = 0._dp
+  IF (num_procs_z .GT. 1) THEN
+      !! Everyone sends its local_sum to root = 0
+      IF (rank_z .NE. root) THEN
+          CALL MPI_SEND(buffer, 1 , MPI_DOUBLE_COMPLEX, root, 5678, comm_z, ierr)
+      ELSE
+          ! Recieve from all the other processes
+          DO i_ = 0,num_procs_z-1
+              IF (i_ .NE. rank_z) &
+                  CALL MPI_RECV(buffer, 1 , MPI_DOUBLE_COMPLEX, i_, 5678, comm_z, MPI_STATUS_IGNORE, ierr)
+                  intf = intf + buffer
+          ENDDO
+      ENDIF
+      CALL manual_0D_bcast(intf)
+  ELSE
+    intf = local_int
+  ENDIF
 END SUBROUTINE simpson_rule_z
 
 END MODULE calculus

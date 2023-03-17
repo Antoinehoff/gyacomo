@@ -6,10 +6,7 @@ implicit none
 CONTAINS
 
   SUBROUTINE advance_time_level
-
-    USE basic
-    USE time_integration
-    use prec_const
+    USE time_integration, ONLY :set_updatetlevel, updatetlevel, ntimelevel
     IMPLICIT NONE
     CALL set_updatetlevel(mod(updatetlevel,ntimelevel)+1)
   END SUBROUTINE advance_time_level
@@ -38,9 +35,8 @@ CONTAINS
       DO ip    =1,local_np
         ipi = ip+ngp/2
       DO ia    =1,local_na
-        IF((CLOS .NE. 1) .OR. (parray(ipi)+2*jarray(iji) .LE. dmax))&
         moments(ia,ipi,iji,iky,ikx,izi,1) = moments(ia,ipi,iji,iky,ikx,izi,1) &
-                + dt*b_E(istage)*moments_rhs(ia,ip,ij,iky,ikx,iz,istage)
+               + dt*b_E(istage)*moments_rhs(ia,ip,ij,iky,ikx,iz,istage)
       END DO
       END DO
       END DO
