@@ -123,15 +123,15 @@ SUBROUTINE compute_moments_eq_rhs
                     RHS = RHS - mu_p*diff_p_coeff*p_int**6*Napj
                   IF (j_int .GT. 1)  &
                     RHS = RHS - mu_j*diff_j_coeff*j_int**6*Napj
-                ! CASE('dvpar4')
-                !   ! fourth order numerical diffusion in vpar
-                !   IF(p_int .GE. 4) &
-                !   ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
-                !   ! (not used often so not parallelized)
-                !   RHS = RHS + mu_p*dv4_Hp_coeff(p_int)*moments(ia,ipi-4,iji,iky,ikx,izi,updatetlevel)
-                !   ! + dummy Laguerre diff
-                !   IF (j_int .GE. 2)  &
-                !     RHS = RHS - mu_j*diff_j_coeff*j_int**6*Napj
+                CASE('dvpar4')
+                  ! fourth order numerical diffusion in vpar
+                  IF(p_int .GE. 4) &
+                  ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
+                  ! (not used often so not parallelized)
+                  RHS = RHS + mu_p*dv4_Hp_coeff(p_int)*moments(ia,ipi-4,iji,iky,ikx,izi,updatetlevel)
+                  ! + dummy Laguerre diff
+                  IF (j_int .GE. 2)  &
+                    RHS = RHS - mu_j*diff_j_coeff*j_int**6*Napj
                 CASE DEFAULT
                 END SELECT
               ELSE
@@ -163,8 +163,6 @@ SUBROUTINE compute_moments_eq_rhs
       print*,'sumreal Capj    ', SUM(REAL(Capj(1,:,:,:,:,:)))
       print*,'---'
       IF(updatetlevel .EQ. 4) stop
-  ! print*, xnapjp1(2,:)
-  ! print*, pp2
   stop
 
 END SUBROUTINE compute_moments_eq_rhs

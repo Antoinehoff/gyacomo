@@ -1,5 +1,5 @@
 &BASIC
-  nrun       = 1
+  nrun       = 99999999
   dt         = 0.01
   tmax       = 5
   maxruntime = 356400
@@ -8,9 +8,9 @@
 &GRID
   pmax   = 4
   jmax   = 1
-  Nx     = 4
+  Nx     = 2
   Lx     = 200
-  Ny     = 2
+  Ny     = 4
   Ly     = 60
   Nz     = 6
   SG     = .f.
@@ -31,11 +31,11 @@
   shift_y= 0.0
 /
 &OUTPUT_PAR
-  dtsave_0d = 0.01
+  dtsave_0d = 0.5
   dtsave_1d = -1
   dtsave_2d = -1
-  dtsave_3d = 0.01
-  dtsave_5d = 0.01
+  dtsave_3d = 1
+  dtsave_5d = 5
   write_doubleprecision = .f.
   write_gamma = .t.
   write_hf    = .t.
@@ -58,9 +58,9 @@
   mu_z    = 0.6
   HYP_V   = 'hypcoll'
   mu_p    = 0.1
-  mu_j    = 0.
+  mu_j    = 0.5
   nu      = 1.0
-  beta    = 0
+  beta    = 0.1
   ADIAB_E = .f.
   tau_e   = 1.0
 /
@@ -77,14 +77,14 @@
  ! electrons
  name_ = 'electrons'
  tau_  = 1.0
- sigma_= 1!0.023338
- q_    = 1!-1.0
+ sigma_= 0.023338
+ q_    = -1.0
  k_N_  = 1.0!2.22
  k_T_  = 2.0!6.96
 /
 
 &COLLISION_PAR
-  collision_model = 'SG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
+  collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
   GK_CO           = .t.
   INTERSPECIES    = .true.
   mat_file       = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'

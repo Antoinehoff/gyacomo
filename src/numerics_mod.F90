@@ -137,9 +137,9 @@ SUBROUTINE evaluate_poisson_op
   USE model,   ONLY : ADIAB_E, tau_e
   USE prec_const, ONLY: dp
   IMPLICIT NONE
-  REAL(dp)    :: pol_ion, pol_tot, operator, operator_ion     ! (Z^2/tau (1-sum_n kernel_na^2))
+  REAL(dp)    :: pol_tot, operator, operator_ion     ! (Z^2/tau (1-sum_n kernel_na^2))
   INTEGER     :: in,ikx,iky,iz,ia
-  REAL(dp)    :: pol_i, pol_e, sumker, spol     ! (Z_a^2/tau_a (1-sum_n kernel_na^2))
+  REAL(dp)    :: sumker     ! (Z_a^2/tau_a (1-sum_n kernel_na^2))
 
   ! This term has no staggered grid dependence. It is evalued for the
   ! even z grid since poisson uses p=0 moments and phi only.
@@ -180,37 +180,37 @@ END SUBROUTINE evaluate_poisson_op
 SUBROUTINE evaluate_ampere_op
   USE prec_const,   ONLY : dp
   USE array,    ONLY : kernel, inv_ampere_op
-  USE grid,     ONLY : local_na, local_nkx, local_nky, local_nz, ngz, &
-                       jmax, kparray, kxarray, kyarray, SOLVE_AMPERE, iodd
+  USE grid,     ONLY : local_na, local_nkx, local_nky, local_nz, ngz, total_nj, ngj,&
+                       kparray, kxarray, kyarray, SOLVE_AMPERE, iodd
   USE model,    ONLY : beta
   USE species,  ONLY : q, sigma
   USE geometry, ONLY : hatB
   USE prec_const, ONLY: dp
   IMPLICIT NONE
-  REAL(dp)    :: pol_tot, kperp2     ! (Z^2/tau (1-sum_n kernel_na^2))
+  REAL(dp)    :: sum_jpol, kperp2, operator     ! (Z^2/tau (1-sum_n kernel_na^2))
   INTEGER     :: in,ikx,iky,iz,ia
   ! We do not solve Ampere if beta = 0 to spare waste of ressources
   IF(SOLVE_AMPERE) THEN
-    DO ikx = 1,local_nkx
-    DO iky = 1,local_nky
-    DO iz  = 1,local_nz
-    kperp2 = kparray(iky,ikx,iz,1)**2
+    x:DO ikx = 1,local_nkx
+    y:DO iky = 1,local_nky
+    z:DO iz  = 1,local_nz
+    kperp2 = kparray(iky,ikx,iz+ngz/2,iodd)**2
     IF( (kxarray(ikx).EQ.0._dp) .AND. (kyarray(iky).EQ.0._dp) ) THEN
         inv_ampere_op(iky, ikx, iz) =  0._dp
     ELSE
-      !!!!!!!!!!!!!!!!! Ion contribution
-      pol_tot = 0._dp
-      DO ia  = 1,local_na
+      sum_jpol = 0._dp
+      a:DO ia  = 1,local_na
         ! loop over n only up to the max polynomial degree
-        DO in=1,jmax+1
-          pol_tot = pol_tot  + q(ia)**2/(sigma(ia)**2)*kernel(ia,in,iky,ikx,iz,1)**2 ! ... sum recursively ...
-        END DO
-      END DO
-      inv_ampere_op(iky, ikx, iz) =  1._dp/(2._dp*kperp2*hatB(iz+ngz/2,iodd)**2 + beta*pol_tot)
+        j:DO in=1,total_nj
+          sum_jpol = sum_jpol  + q(ia)**2/(sigma(ia)**2)*kernel(ia,in+ngj/2,iky,ikx,iz+ngz/2,iodd)**2 ! ... sum recursively ...
+        END DO j
+      END DO a
+      operator = 2._dp*kperp2*hatB(iz+ngz/2,iodd)**2 + beta*sum_jpol
+      inv_ampere_op(iky, ikx, iz) =  1._dp/operator
     ENDIF
-    END DO
-    END DO
-    END DO
+    END DO z
+    END DO y
+    END DO x
   ENDIF
 END SUBROUTINE evaluate_ampere_op
 !******************************************************************************!

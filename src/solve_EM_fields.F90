@@ -107,25 +107,27 @@ CONTAINS
     use species,          ONLY: sqrt_tau_o_sigma, q
     use model,            ONLY: beta
     IMPLICIT NONE
-    COMPLEX(dp) :: iota ! current density
-    INTEGER     :: in, ia, ikx, iky, iz
+    COMPLEX(dp) :: j_a ! current density
+    INTEGER     :: in, ia, ikx, iky, iz, ini, izi
     ! Execution time start
     CALL cpu_time(t0_poisson)
     !! Ampere can be solved only with beta > 0 and for process containng p=1 moments
     IF ( SOLVE_AMPERE ) THEN
       z:DO iz = 1,local_nz
-        x:DO ikx = 1,local_nky
-          y:DO iky = 1,local_nkx
-          !!!!!!!!!!!!!!! compute current density contribution "iota = q_a u_a" for each species
-          iota = 0._dp
+      izi = iz+ngz/2
+        x:DO ikx = 1,local_nkx
+          y:DO iky = 1,local_nky
+          !!!!!!!!!!!!!!! compute current density contribution "j_a = q_a u_a" for each species
+          j_a = 0._dp
           n:DO in=1,total_nj
+          ini = in+ngj/2
             a:DO ia = 1,local_na
-              iota = iota &
-              +q(ia)*sqrt_tau_o_sigma(ia)*kernel(ia,in+ngj/2,iky,ikx,iz+ngz/2,iodd)*moments(ia,ip1,in,iky,ikx,iz+ngz/2,updatetlevel)
+            j_a = j_a &
+              +q(ia)*sqrt_tau_o_sigma(ia)*kernel(ia,ini,iky,ikx,izi,iodd)*moments(ia,ip1,ini,iky,ikx,izi,updatetlevel)
             ENDDO a
           ENDDO n
           !!!!!!!!!!!!!!! Inverting the Ampere equation
-          psi(iky,ikx,iz+ngz/2) = beta*inv_ampere_op(iky,ikx,iz)*iota
+          psi(iky,ikx,iz+ngz/2) = beta*inv_ampere_op(iky,ikx,iz)*j_a
           ENDDO y
         ENDDO x
       ENDDO z

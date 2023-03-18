@@ -84,10 +84,9 @@ CONTAINS
          call simpson_rule_z(local_nz,deltaz,integrant,integral)
          ! Get process local gyrocenter flux with a factor two to account for the negative ky modes
          gflux_local = 2._dp*integral*iInt_Jacobian
-
          !
-         integrant   = 0._dp ! reset auxiliary variable
          !!---------- Particle flux (gyrokinetic) ------------
+         integrant   = 0._dp ! reset auxiliary variable
          ! Electrostatic part
          IF(CONTAINSp0) THEN
             DO iz = 1,local_nz ! we take interior points only
@@ -121,14 +120,9 @@ CONTAINS
             ENDDO
          ENDIF
          ! Integrate over z
-         ! print*, integrant
          call simpson_rule_z(local_nz,deltaz,integrant,integral)
-         ! print*, integral
-         ! stop
          ! Get process local particle flux with a factor two to account for the negative ky modes
          pflux_local = 2._dp*integral*iInt_Jacobian
-         print*,REAL(pflux_local,dp)
-
          !!!!---------- Sum over all processes ----------
          buffer(1) = REAL(gflux_local,dp)
          buffer(2) = REAL(pflux_local,dp)
@@ -196,7 +190,7 @@ CONTAINS
                   DO iky = 1,local_nky
                      DO in = 1, local_nj
                         ini = in + ngj/2 !interior index for ghosted arrays
-                        n_dp = jarray(in)
+                        n_dp = jarray(ini)
                         integrant(iz) = integrant(iz) &
                            +Jacobian(izi,iodd)*tau(ia)*sqrt_tau_o_sigma(ia)*imagu*kyarray(iky)*CONJG(psi(iky,ikx,izi))&
                            *kernel(ia,ini,iky,ikx,izi,iodd)*(&

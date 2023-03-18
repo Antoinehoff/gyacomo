@@ -63,16 +63,16 @@ SUBROUTINE update_ghosts_p_mom
   USE grid,     ONLY: local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
                               ngp,ngj,ngz
   IMPLICIT NONE
-  COMPLEX(dp), DIMENSION(local_np+ngp) :: slice_z
+  COMPLEX(dp), DIMENSION(local_np+ngp) :: slice_p
   INTEGER :: ia,iz,ij,iy,ix
-  DO iz = 1,local_nz
+  DO iz = 1+ngz/2,local_nz+ngz/2
     DO ix = 1,local_nkx
       DO iy = 1,local_nky
-        DO ij = 1,local_nj
+        DO ij = 1+ngj/2,local_nj+ngj/2
           DO ia = 1,local_na
-            slice_z = moments(ia,:,ij,iy,ix,iz,updatetlevel)
-            CALL exchange_ghosts_1D(slice_z,nbr_L,nbr_R,local_np,ngp)
-            moments(ia,:,ij,iy,ix,iz,updatetlevel) = slice_z
+            slice_p = moments(ia,:,ij,iy,ix,iz,updatetlevel)
+            CALL exchange_ghosts_1D(slice_p,nbr_L,nbr_R,local_np,ngp)
+            moments(ia,:,ij,iy,ix,iz,updatetlevel) = slice_p
           ENDDO
         ENDDO
       ENDDO
@@ -210,7 +210,7 @@ SUBROUTINE update_ghosts_z_3D(field)
   DO iky = 1,local_nky
     DO ikx = 1,local_nkx
       ikxBC_L = ikx_zBC_L(iky,ikx);
-      IF (ikxBC_L .GT. 0) THEN ! Exchanging the modes that have a periodic pair (a)
+      IF (ikxBC_L .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
         DO ig = 1,ngz/2
           field(iky,ikx,first-ig) = pb_phase_L(iky)*buff_xy_zBC(iky,ikxBC_L,-ig)
         ENDDO
@@ -220,7 +220,7 @@ SUBROUTINE update_ghosts_z_3D(field)
         ENDDO
       ENDIF
       ikxBC_R = ikx_zBC_R(iky,ikx);
-      IF (ikxBC_R .GT. 0) THEN ! Exchanging the modes that have a periodic pair (a)
+      IF (ikxBC_R .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
         ! last+1 gets first
         DO ig = 1,ngz/2
           field(iky,ikx,last+ig) = pb_phase_R(iky)*buff_xy_zBC(iky,ikxBC_R,ig)

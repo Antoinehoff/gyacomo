@@ -13,9 +13,8 @@ CONTAINS
     USE parallel,    ONLY: num_procs_p, comm_p,dsp_p,rcv_p
     USE grid,        ONLY: &
       local_na, &
-      local_np, total_np, parray, ngp,&
-      total_nj,jarray, ngj,&
-      local_nkx, local_nky, local_nz, ngz, bar
+      local_np, total_np, total_nj,&
+      local_nkx, local_nky, local_nz, bar
     USE array,       ONLY: Capj
     USE MPI
     IMPLICIT NONE
@@ -24,19 +23,13 @@ CONTAINS
     COMPLEX(dp), DIMENSION(local_np)    :: TColl_distr
     COMPLEX(dp) :: Tmp_
     INTEGER :: iz,ikx,iky,ij,ip,ia,ikx_C,iky_C,iz_C
-    INTEGER :: p_int,j_int, ierr
-    INTEGER :: ipi, iji, izi
+    INTEGER :: ierr
     z:DO iz = 1,local_nz
-    izi = iz+ngz/2
       x:DO ikx = 1,local_nkx
         y:DO iky = 1,local_nky
           a:DO ia = 1,local_na
             j:DO ij = 1,total_nj
-            iji   = ij+ngj/2
-            j_int = jarray(iji)
               p:DO ip = 1,total_np
-              ipi   = ip + ngp/2
-              p_int = parray(ipi)
                 !! Take GK or DK limit
                 IF (GK_CO) THEN ! GK operator (k-dependant)
                   ikx_C = ikx; iky_C = iky; iz_C = iz;
@@ -75,8 +68,8 @@ CONTAINS
   SUBROUTINE apply_cosolver_mat(ia,ip,ij,iky,ikx,iz,ikx_C,iky_C,iz_C,local_sum)
     USE grid,        ONLY: &
       local_na, &
-      local_np, parray, ngp,&
-      total_nj, jarray, dmax, ngj, bar, ngz
+      local_np, parray,parray_full, ngp,&
+      total_nj, jarray,jarray_full, dmax, ngj, bar, ngz
     USE array,       ONLY: Caa, Cab_T, Cab_F, nadiab_moments
     USE model,       ONLY: CLOS
     USE species,     ONLY: nu_ab
@@ -85,12 +78,10 @@ CONTAINS
     COMPLEX(dp), INTENT(OUT) :: local_sum
     INTEGER :: ib,iq,il
     INTEGER :: p_int,q_int,j_int,l_int
-    INTEGER :: ipi, iji, izi, iqi, ili
+    INTEGER :: izi, iqi, ili
     izi = iz+ngz/2
-    iji   = ij+ngj/2
-    j_int = jarray(iji)
-    ipi   = ip + ngp/2
-    p_int = parray(ipi)
+    p_int = parray_full(ip)
+    j_int = jarray_full(ij)
     !! Apply the cosolver collision matrix
     local_sum = 0._dp ! Initialization
     q:DO iq = 1,local_np
