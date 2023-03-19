@@ -93,7 +93,8 @@ CONTAINS
   END SUBROUTINE geometry_readinputs
 
   subroutine eval_magnetic_geometry
-    USE grid,     ONLY: total_nky, total_nz, local_nkx, local_nky, local_nz, Ngz, kxarray, kyarray, set_kparray, nzgrid, deltaz
+    USE grid,     ONLY: total_nky, total_nz, local_nkx, local_nky, local_nz, Ngz,&
+                        kxarray, kyarray, set_kparray, nzgrid, zweights_SR, ieven
     USE basic,    ONLY: speak
     USE miller,   ONLY: set_miller_parameters, get_miller
     USE calculus, ONLY: simpson_rule_z
@@ -165,8 +166,8 @@ CONTAINS
     CALL set_ikx_zBC_map
     !
     ! Compute the inverse z integrated Jacobian (useful for flux averaging)
-    integrant = Jacobian(1+ngz/2:local_nz+ngz/2,1) ! Convert into complex array
-    CALL simpson_rule_z(local_nz,deltaz,integrant,iInt_Jacobian)
+    integrant = Jacobian((1+ngz/2):(local_nz+ngz/2),ieven) ! Convert into complex array
+    CALL simpson_rule_z(local_nz,zweights_SR,integrant,iInt_Jacobian)
     iInt_Jacobian = 1._dp/iInt_Jacobian ! reverse it
   END SUBROUTINE eval_magnetic_geometry
   !
@@ -220,7 +221,6 @@ CONTAINS
 
    ENDDO
   ENDDO
-
   END SUBROUTINE eval_salpha_geometry
   !
   !--------------------------------------------------------------------------------

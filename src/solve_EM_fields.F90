@@ -18,7 +18,7 @@ CONTAINS
     USE array,            ONLY: kernel, inv_poisson_op, inv_pol_ion
     USE fields,           ONLY: phi, moments
     USE grid,             ONLY: local_na, local_nky, local_nkx, local_nz,ngz, SOLVE_POISSON,&
-                                kyarray, contains_kx0, contains_ky0,ikx0,iky0, deltaz, ieven,&
+                                kyarray, contains_kx0, contains_ky0,ikx0,iky0, zweights_SR, ieven,&
                                 ip0, total_nj, ngj
     USE calculus,         ONLY: simpson_rule_z
     USE parallel,         ONLY: manual_3D_bcast
@@ -61,7 +61,7 @@ CONTAINS
               IF(kyarray(iky).EQ.0._dp) THEN ! take ky=0 mode (y-average)
                 ! Prepare integrant for z-average
                 integrant(iz) = Jacobian(iz+ngz/2,ieven)*rho(iz)*inv_pol_ion(iky,ikx,iz)
-                call simpson_rule_z(local_nz,deltaz,integrant,intf_) ! get the flux averaged phi
+                call simpson_rule_z(local_nz,zweights_SR,integrant,intf_) ! get the flux averaged phi
                 fsa_phi = intf_ * iInt_Jacobian !Normalize by 1/int(Jxyz)dz
               ENDIF
               rho(iz) = rho(iz) + fsa_phi

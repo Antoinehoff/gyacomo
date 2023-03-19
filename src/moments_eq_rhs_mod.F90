@@ -159,21 +159,21 @@ SUBROUTINE compute_moments_eq_rhs
   CALL cpu_time(t1_rhs)
   tc_rhs = tc_rhs + (t1_rhs-t0_rhs)
 
-  !     print*,'sumabs moments i', SUM(ABS(moments(1,:,:,:,:,:,updatetlevel)))
-  !     print*,'moment rhs i 221', moments_rhs(1,1,1,2,2,1,updatetlevel)
-  !     print*,'sum real nadiabe', SUM(REAL(nadiab_moments(2,:,:,:,:,:)))
-  !     print*,'sumreal momrhs i', SUM(REAL(moments_rhs(1,:,:,:,:,:,:)))
-  !     print*,'sumimag momrhs i', SUM(IMAG(moments_rhs(1,:,:,:,:,:,:)))
-  !     print*,'sumreal phi     ', SUM(REAL(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
-  !     print*,'sumimag phi     ', SUM(IMAG(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
-  !     print*,'phi(2,2,1)      ', phi(2,2,1+ngz/2)
-  !     print*,'sumreal ddznipj ', SUM(REAL(ddz_napj(1,:,:,:,:,:)))
-  !     print*,'sumimag ddznipj ', SUM(IMAG(ddz_napj(1,:,:,:,:,:)))
-  !     print*,'        ddznipj  ',(ddz_napj(1,2+ngp/2,2+ngj/2,2,2,1))
-  !     print*,'sumreal Capj    ', SUM(REAL(Capj(1,:,:,:,:,:)))
-  !     print*,'---'
-  !     IF(updatetlevel .EQ. 4) stop
-  ! ! stop
+      ! print*,'sumabs moments i', SUM(ABS(moments(1,:,:,:,:,:,updatetlevel)))
+      ! print*,'moment rhs i 221', moments_rhs(1,1,1,2,2,1,updatetlevel)
+      ! print*,'sum real nadiabe', SUM(REAL(nadiab_moments(2,:,:,:,:,:)))
+      ! print*,'sumreal momrhs i', SUM(REAL(moments_rhs(1,:,:,:,:,:,:)))
+      ! print*,'sumimag momrhs i', SUM(IMAG(moments_rhs(1,:,:,:,:,:,:)))
+      ! print*,'sumreal phi     ', SUM(REAL(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
+      ! print*,'sumimag phi     ', SUM(IMAG(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
+      ! print*,'phi(2,2,1)      ', phi(2,2,1+ngz/2)
+      ! print*,'sumreal ddznipj ', SUM(REAL(ddz_napj(1,:,:,:,:,:)))
+      ! print*,'sumimag ddznipj ', SUM(IMAG(ddz_napj(1,:,:,:,:,:)))
+      ! print*,'        ddznipj  ',(ddz_napj(1,2+ngp/2,2+ngj/2,2,2,1))
+      ! print*,'sumreal Capj    ', SUM(REAL(Capj(1,:,:,:,:,:)))
+      ! print*,'---'
+      ! IF(updatetlevel .EQ. 4) stop
+  ! stop
 
 END SUBROUTINE compute_moments_eq_rhs
 

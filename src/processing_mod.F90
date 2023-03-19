@@ -7,7 +7,7 @@ MODULE processing
       jarray,jmax,ij0, dmax,&
       kyarray, AA_y,&
       kxarray, AA_x,&
-      zarray, deltaz, ieven, iodd, inv_deltaz
+      zarray, zweights_SR, ieven, iodd, inv_deltaz
    USE fields,           ONLY: moments, phi, psi
    USE array,            ONLY : kernel, nadiab_moments, &
       ddz_napj, ddzND_Napj, interp_napj,&
@@ -81,7 +81,7 @@ CONTAINS
             ENDDO
          ENDIF
          ! Integrate over z
-         call simpson_rule_z(local_nz,deltaz,integrant,integral)
+         call simpson_rule_z(local_nz,zweights_SR,integrant,integral)
          ! Get process local gyrocenter flux with a factor two to account for the negative ky modes
          gflux_local = 2._dp*integral*iInt_Jacobian
          !
@@ -120,7 +120,7 @@ CONTAINS
             ENDDO
          ENDIF
          ! Integrate over z
-         call simpson_rule_z(local_nz,deltaz,integrant,integral)
+         call simpson_rule_z(local_nz,zweights_SR,integrant,integral)
          ! Get process local particle flux with a factor two to account for the negative ky modes
          pflux_local = 2._dp*integral*iInt_Jacobian
          !!!!---------- Sum over all processes ----------
@@ -194,7 +194,7 @@ CONTAINS
                         ini = in + ngj/2 !interior index for ghosted arrays
                         n_dp = jarray(ini)
                         integrant(iz) = integrant(iz) &
-                           +Jacobian(izi,iodd)*tau(ia)*sqrt_tau_o_sigma(ia)*imagu*kyarray(iky)*CONJG(psi(iky,ikx,izi))&
+                            +Jacobian(izi,iodd)*tau(ia)*sqrt_tau_o_sigma(ia)*imagu*kyarray(iky)*CONJG(psi(iky,ikx,izi))&
                            *kernel(ia,ini,iky,ikx,izi,iodd)*(&
                            0.5_dp*SQRT2*SQRT3*moments(ia,ip3,ini  ,iky,ikx,izi,updatetlevel)&
                                       +1.5_dp*moments(ia,ip1,ini  ,iky,ikx,izi,updatetlevel)&
@@ -210,7 +210,7 @@ CONTAINS
          ! integrant(iz) = integrant(iz) + tau_i*imagu*ky_&
          ! *CONJG(phi(iky,ikx,iz))*phi(iky,ikx,iz) * HF_phi_correction_operator(iky,ikx,iz)
          ! Integrate over z
-         call simpson_rule_z(local_nz,deltaz,integrant,integral)
+         call simpson_rule_z(local_nz,zweights_SR,integrant,integral)
          ! Double it for taking into account the other half plane
          hflux_local = 2._dp*integral*iInt_Jacobian
          buffer(2)   = REAL(hflux_local,dp)

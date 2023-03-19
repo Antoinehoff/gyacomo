@@ -47,7 +47,6 @@ CONTAINS
     INTEGER, PARAMETER :: ndims=3 ! p, kx and z
     INTEGER, DIMENSION(ndims) :: dims=0, coords=0
     LOGICAL :: periods(ndims) = .FALSE., reorder=.FALSE.
-    LOGICAL :: com_log(ndims) = .FALSE.
     CHARACTER(len=32) :: str
     INTEGER :: nargs, i, l
     CALL MPI_INIT(ierr)

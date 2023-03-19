@@ -170,7 +170,7 @@ CONTAINS
 
 END SUBROUTINE interp_z
 
-SUBROUTINE simpson_rule_z(local_nz,dz,f,intf)
+SUBROUTINE simpson_rule_z(local_nz,zweights_SR,f,intf)
   ! integrate f(z) over z using the simpon's rule. Assume periodic boundary conditions (f(ize+1) = f(izs))
   !from molix BJ Frei
   USE prec_const, ONLY: dp, onethird
@@ -178,7 +178,7 @@ SUBROUTINE simpson_rule_z(local_nz,dz,f,intf)
   USE mpi
   implicit none
   INTEGER, INTENT(IN) :: local_nz
-  REAL(dp),INTENT(IN) :: dz
+  REAL(dp),   dimension(local_nz), intent(in) :: zweights_SR
   complex(dp),dimension(local_nz), intent(in) :: f
   COMPLEX(dp), intent(out) :: intf
   COMPLEX(dp)              :: buffer, local_int
@@ -186,11 +186,7 @@ SUBROUTINE simpson_rule_z(local_nz,dz,f,intf)
   ! Buil local sum using the weights of composite Simpson's rule
   local_int = 0._dp
   DO iz = 1,local_nz
-    IF(MODULO(iz,2) .EQ. 1) THEN ! odd iz
-      local_int = local_int + 2._dp*onethird*dz*f(iz)
-    ELSE ! even iz
-      local_int = local_int + 4._dp*onethird*dz*f(iz)
-    ENDIF
+      local_int = local_int + zweights_SR(iz)*f(iz)
   ENDDO
   buffer = local_int
   root = 0

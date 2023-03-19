@@ -504,10 +504,10 @@ CONTAINS
     local_nz_offset = izs - 1
     ! Ghosts boundaries (depend on the order of z operators)
     IF(Nz .EQ. 1) THEN
-      Ngz              = 0
+      ngz              = 0
       zarray_full(izs) = 0
     ELSEIF(Nz .GE. 4) THEN
-      Ngz =4
+      ngz =4
     ELSE
       ERROR STOP '>> ERROR << Nz is not appropriate!!'
     ENDIF
@@ -520,11 +520,11 @@ CONTAINS
       displs_nz(in+1) = istart-1
     ENDDO
     ! Local z array
-    ALLOCATE(zarray(local_nz+Ngz,nzgrid))
+    ALLOCATE(zarray(local_nz+ngz,nzgrid))
     !! interior point loop
-    DO iz = 1,total_nz
+    DO iz = 1,local_nz
       DO eo = 1,nzgrid
-        zarray(iz+ngz/2,eo) = zarray_full(iz) + REAL(eo-1,dp)*grid_shift
+        zarray(iz+ngz/2,eo) = zarray_full(iz+local_nz_offset) + REAL(eo-1,dp)*grid_shift
       ENDDO
     ENDDO
     CALL allocate_array(local_zmax,1,nzgrid)
@@ -562,6 +562,15 @@ CONTAINS
      IF(mod(Nz,2) .NE. 0 ) THEN
         ERROR STOP '>> ERROR << Nz must be an even number for Simpson integration rule !!!!'
      ENDIF
+    ! local weights for Simpson rule
+    ALLOCATE(zweights_SR(local_nz))
+    DO iz = 1,local_nz
+      IF(MODULO(iz+local_nz_offset,2) .EQ. 1) THEN ! odd iz
+        zweights_SR(iz) = onethird*deltaz*2._dp
+      ELSE ! even iz
+        zweights_SR(iz) = onethird*deltaz*4._dp
+      ENDIF
+    ENDDO
   END SUBROUTINE set_zgrid
 
   SUBROUTINE set_kparray(gxx, gxy, gyy,hatB)
