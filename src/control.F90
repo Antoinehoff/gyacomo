@@ -15,7 +15,7 @@ SUBROUTINE control
   !                   1.1     Initialize the parallel environment
   CALL ppinit
   CALL speak('MPI initialized')
-
+  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
   CALL daytim('Start at ')
   

@@ -181,6 +181,8 @@ CONTAINS
                   ENDDO
                ENDDO
             ENDDO
+         ELSEIF(CONTAINSp0) THEN
+            ERROR STOP "Degrees p=0 and p=2 should be owned by the same process"
          ENDIF
          IF(EM .AND. CONTAINSp1 .AND. CONTAINSp3) THEN
             !!----------------ELECTROMAGNETIC CONTRIBUTION--------------------

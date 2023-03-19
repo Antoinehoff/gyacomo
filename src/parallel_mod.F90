@@ -50,12 +50,9 @@ CONTAINS
     LOGICAL :: com_log(ndims) = .FALSE.
     CHARACTER(len=32) :: str
     INTEGER :: nargs, i, l
-
     CALL MPI_INIT(ierr)
-
     CALL MPI_COMM_RANK (MPI_COMM_WORLD,     my_id, ierr)
     CALL MPI_COMM_SIZE (MPI_COMM_WORLD, num_procs, ierr)
-
     nargs = COMMAND_ARGUMENT_COUNT()
     !
     IF( nargs .GT. 1 ) THEN
@@ -68,7 +65,6 @@ CONTAINS
           CALL MPI_ABORT(MPI_COMM_WORLD, -2, ierr)
        END IF
     ELSE
-      !  CALL MPI_DIMS_CREATE(num_procs, ndims, dims, ierr)
       dims(1) = 1
       dims(2) = num_procs
       dims(3) = 1
@@ -90,21 +86,16 @@ CONTAINS
     !
     !  Partitions 3-dim cartesian topology of comm0 into 1-dim cartesian subgrids
     !
-    com_log = (/.TRUE.,.FALSE.,.FALSE./)
-    CALL MPI_CART_SUB (comm0, com_log,  comm_p, ierr)
-    com_log = (/.FALSE.,.TRUE.,.FALSE./)
-    CALL MPI_CART_SUB (comm0, com_log, comm_ky, ierr)
-    com_log = (/.FALSE.,.FALSE.,.TRUE./)
-    CALL MPI_CART_SUB (comm0, com_log,  comm_z, ierr)
+    CALL MPI_CART_SUB (comm0, (/.TRUE.,.FALSE.,.FALSE./),  comm_p, ierr)
+    CALL MPI_CART_SUB (comm0, (/.FALSE.,.TRUE.,.FALSE./), comm_ky, ierr)
+    CALL MPI_CART_SUB (comm0, (/.FALSE.,.FALSE.,.TRUE./),  comm_z, ierr)
     ! Find id inside the 1d-sub communicators
     CALL MPI_COMM_RANK(comm_p,  rank_p,  ierr)
     CALL MPI_COMM_RANK(comm_ky, rank_ky, ierr)
     CALL MPI_COMM_RANK(comm_z,  rank_z,  ierr)
     ! 2D communicator
-    com_log = (/.TRUE.,.FALSE.,.TRUE./)
-    CALL MPI_CART_SUB (comm0, com_log,  comm_pz,  ierr)
-    com_log = (/.FALSE.,.TRUE.,.TRUE./)
-    CALL MPI_CART_SUB (comm0, com_log,  comm_kyz, ierr)
+    CALL MPI_CART_SUB (comm0, (/.TRUE.,.FALSE.,.TRUE./),  comm_pz,  ierr)
+    CALL MPI_CART_SUB (comm0, (/.FALSE.,.TRUE.,.TRUE./),  comm_kyz, ierr)
     ! Count the number of processes in 2D comms
     CALL MPI_COMM_SIZE(comm_pz, num_procs_pz, ierr)
     CALL MPI_COMM_SIZE(comm_kyz,num_procs_kyz,ierr)

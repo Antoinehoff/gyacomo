@@ -15,6 +15,7 @@ SUBROUTINE compute_moments_eq_rhs
   USE prec_const
   USE collision
   USE time_integration
+  USE species, ONLY: dpdx
   USE geometry, ONLY: gradz_coeff, dlnBdz, Ckxky!, Gamma_phipar
   USE calculus, ONLY: interp_z, grad_z, grad_z2
   ! USE species,  ONLY: dpdx
@@ -53,6 +54,7 @@ SUBROUTINE compute_moments_eq_rhs
             ! Species loop
             a:DO ia = 1,local_na
               Napj = moments(ia,ipi,iji,iky,ikx,izi,updatetlevel)
+              RHS = 0._dp
               IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmax)) THEN ! for the closure scheme
                 !! Compute moments_ mixing terms
                 ! Perpendicular dynamic
@@ -88,13 +90,21 @@ SUBROUTINE compute_moments_eq_rhs
                 ! Parallel magnetic term (Landau damping and the mirror force)
                 Mpara = gradz_coeff(izi,eo)*(Ldamp + Fmir)
                 !! Electrical potential term
-                Dphi =i_ky*( xphij  (ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
+                IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
+                  Dphi =i_ky*( xphij  (ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
                             +xphijp1(ia,ip,ij)*kernel(ia,iji+1,iky,ikx,izi,eo) &
                             +xphijm1(ia,ip,ij)*kernel(ia,iji-1,iky,ikx,izi,eo) )*phi(iky,ikx,izi)
+                ELSE
+                  Dphi = 0._dp
+                ENDIF
                 !! Vector potential term
-                Dpsi =-i_ky*( xpsij  (ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
+                IF ( (p_int .LE. 3) .AND. (p_int .GE. 1) ) THEN ! Kronecker p1 or p3
+                  Dpsi =-i_ky*( xpsij  (ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
                               +xpsijp1(ia,ip,ij)*kernel(ia,iji+1,iky,ikx,izi,eo) &
                               +xpsijm1(ia,ip,ij)*kernel(ia,iji-1,iky,ikx,izi,eo))*psi(iky,ikx,izi)
+                ELSE
+                  Dpsi = 0._dp
+                ENDIF
                 !! Sum of all RHS terms
                 RHS = &
                     ! Nonlinear term Sapj_ = {phi,f}
@@ -149,21 +159,21 @@ SUBROUTINE compute_moments_eq_rhs
   CALL cpu_time(t1_rhs)
   tc_rhs = tc_rhs + (t1_rhs-t0_rhs)
 
-      print*,'sumabs moments i', SUM(ABS(moments(1,:,:,:,:,:,updatetlevel)))
-      print*,'moment rhs i 221', moments_rhs(1,1,1,2,2,1,updatetlevel)
-      print*,'sum real nadiabe', SUM(REAL(nadiab_moments(2,:,:,:,:,:)))
-      print*,'sumreal momrhs i', SUM(REAL(moments_rhs(1,:,:,:,:,:,:)))
-      print*,'sumimag momrhs i', SUM(IMAG(moments_rhs(1,:,:,:,:,:,:)))
-      print*,'sumreal phi     ', SUM(REAL(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
-      print*,'sumimag phi     ', SUM(IMAG(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
-      print*,'phi(2,2,1)      ', phi(2,2,1+ngz/2)
-      print*,'sumreal ddznipj ', SUM(REAL(ddz_napj(1,:,:,:,:,:)))
-      print*,'sumimag ddznipj ', SUM(IMAG(ddz_napj(1,:,:,:,:,:)))
-      print*,'        ddznipj  ',(ddz_napj(1,2+ngp/2,2+ngj/2,2,2,1))
-      print*,'sumreal Capj    ', SUM(REAL(Capj(1,:,:,:,:,:)))
-      print*,'---'
-      IF(updatetlevel .EQ. 4) stop
-  stop
+  !     print*,'sumabs moments i', SUM(ABS(moments(1,:,:,:,:,:,updatetlevel)))
+  !     print*,'moment rhs i 221', moments_rhs(1,1,1,2,2,1,updatetlevel)
+  !     print*,'sum real nadiabe', SUM(REAL(nadiab_moments(2,:,:,:,:,:)))
+  !     print*,'sumreal momrhs i', SUM(REAL(moments_rhs(1,:,:,:,:,:,:)))
+  !     print*,'sumimag momrhs i', SUM(IMAG(moments_rhs(1,:,:,:,:,:,:)))
+  !     print*,'sumreal phi     ', SUM(REAL(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
+  !     print*,'sumimag phi     ', SUM(IMAG(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
+  !     print*,'phi(2,2,1)      ', phi(2,2,1+ngz/2)
+  !     print*,'sumreal ddznipj ', SUM(REAL(ddz_napj(1,:,:,:,:,:)))
+  !     print*,'sumimag ddznipj ', SUM(IMAG(ddz_napj(1,:,:,:,:,:)))
+  !     print*,'        ddznipj  ',(ddz_napj(1,2+ngp/2,2+ngj/2,2,2,1))
+  !     print*,'sumreal Capj    ', SUM(REAL(Capj(1,:,:,:,:,:)))
+  !     print*,'---'
+  !     IF(updatetlevel .EQ. 4) stop
+  ! ! stop
 
 END SUBROUTINE compute_moments_eq_rhs
 

@@ -56,7 +56,7 @@ MODULE grid
   INTEGER, PUBLIC, PROTECTED :: local_nz
   INTEGER, PUBLIC, PROTECTED :: local_nkp
   INTEGER, PUBLIC, PROTECTED :: ngp, ngj, ngx, ngy, ngz ! number of ghosts points
-  INTEGER, PUBLIC, PROTECTED :: Nzgrid  ! one or two depending on the staggered grid option
+  INTEGER, PUBLIC, PROTECTED :: nzgrid  ! one or two depending on the staggered grid option
   ! Local offsets
   INTEGER, PUBLIC, PROTECTED :: local_na_offset
   INTEGER, PUBLIC, PROTECTED :: local_np_offset
@@ -233,7 +233,7 @@ CONTAINS
     SOLVE_POISSON  = .FALSE.; SOLVE_AMPERE   = .FALSE.
     ALLOCATE(parray(local_np+ngp))
     ! Fill the interior (no ghosts)
-    DO ip = 1+ngp/2,local_np+ngp/2
+    DO ip = 1,local_np+ngp
       parray(ip) = (ip-1-ngp/2+local_np_offset)*deltap
       ! Storing indices of particular degrees for fluid moments computations
       SELECT CASE (parray(ip))
@@ -245,11 +245,6 @@ CONTAINS
     END DO
     local_pmax = parray(local_np+ngp/2)
     local_pmin = parray(1+ngp/2)
-    ! Fill the ghosts
-    DO ig = 1,ngp/2
-      parray(ig)                = local_pmin-ngp/2+(ig-1)
-      parray(local_np+ngp/2+ig) = local_pmax+ig
-    ENDDO
     IF(CONTAINSp0) SOLVE_POISSON = .TRUE.
     IF(CONTAINSp1) SOLVE_AMPERE  = .TRUE.
     !DGGK operator uses moments at index p=2 (ip=3) for the p=0 term so the
@@ -283,16 +278,11 @@ CONTAINS
     local_nj        = ije - ijs + 1
     local_nj_offset = ijs - 1
     ALLOCATE(jarray(local_nj+ngj))
-    DO ij = 1+ngj/2,local_nj+ngj/2
+    DO ij = 1,local_nj+ngj
       jarray(ij) = ij-1-ngj/2+local_nj_offset
     END DO
     local_jmax = jarray(local_nj+ngj/2)
     local_jmin = jarray(1+ngj/2)
-    ! Fill the ghosts
-    DO ig = 1,ngj/2
-      jarray(ig)                = local_jmin-ngj/2+(ig-1)
-      jarray(local_nj+ngj/2+ig) = local_jmax+ig
-    ENDDO
     ! Precomputations
     jmax_dp      = real(jmax,dp)
     diff_j_coeff = jmax_dp*(1._dp/jmax_dp)**6
@@ -489,12 +479,12 @@ CONTAINS
       ! indices for even p and odd p grids (used in kernel, jacobian, gij etc.)
       ieven  = 1
       iodd   = 2
-      Nzgrid = 2
+      nzgrid = 2
     ELSE
       grid_shift = 0._dp
       ieven  = 1
       iodd   = 1
-      Nzgrid = 1
+      nzgrid = 1
     ENDIF
     ! Build the full grids on process 0 to diagnose it without comm
     ALLOCATE(zarray_full(total_nz))
@@ -530,15 +520,16 @@ CONTAINS
       displs_nz(in+1) = istart-1
     ENDDO
     ! Local z array
-    ALLOCATE(zarray(local_nz+Ngz,Nzgrid))
+    ALLOCATE(zarray(local_nz+Ngz,nzgrid))
     !! interior point loop
     DO iz = 1,total_nz
-      DO eo = 1,Nzgrid
+      DO eo = 1,nzgrid
         zarray(iz+ngz/2,eo) = zarray_full(iz) + REAL(eo-1,dp)*grid_shift
       ENDDO
     ENDDO
-    ALLOCATE(local_zmax(Nzgrid),local_zmin(Nzgrid))
-    DO eo = 1,Nzgrid
+    CALL allocate_array(local_zmax,1,nzgrid)
+    CALL allocate_array(local_zmin,1,nzgrid)
+    DO eo = 1,nzgrid
       ! Find local extrema
       local_zmax(eo) = zarray(local_nz+ngz/2,eo)
       local_zmin(eo) = zarray(1+ngz/2,eo)

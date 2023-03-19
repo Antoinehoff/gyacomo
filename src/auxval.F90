@@ -40,6 +40,7 @@ subroutine auxval
   CALL build_dv4Hp_table ! precompute the hermite fourth derivative table
 
   !! Display parallel settings
+  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   DO i_ = 0,num_procs-1
     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
     IF (my_id .EQ. i_) THEN
@@ -51,9 +52,9 @@ subroutine auxval
       WRITE(*,'(A9,I3,A10,I3,A10,I3,A9,I3)')&
        'my_id  = ', my_id, ', rank_p  = ', rank_p, ', rank_ky  = ', rank_ky,', rank_z  = ', rank_z
        WRITE(*,'(A22,I3,A11,I3)')&
-       '              ips = ', ips, ', ipe  = ', ipe
+       '              ips   = ', ips  , ', ipe    = ', ipe
        WRITE(*,'(A22,I3,A11,I3)')&
-       '              ijs = ', ijs, ', ije  = ', ije
+       '              ijs   = ', ijs  , ', ije    = ', ije
        WRITE(*,'(A22,I3,A11,I3)')&
        '              ikxs  = ', ikxs , ', ikxe   = ', ikxe
        WRITE(*,'(A22,I3,A11,I3)')&
