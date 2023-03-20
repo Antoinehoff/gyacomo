@@ -61,19 +61,19 @@ while(CONTINUE)
         disp(sprintf('Loading ID %.2d (%s)',JOBNUM,filename));
         % Loading from output file
         CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
-        DT_SIM    = h5readatt(filename,'/data/input','dt');
+        DT_SIM    = h5readatt(filename,'/data/input/basic','dt');
         [Pe, Je, Pi, Ji, kx, ky, z] = load_grid_data(filename);
-        W_GAMMA   = strcmp(h5readatt(filename,'/data/input','write_gamma'),'y');
-        W_HF      = strcmp(h5readatt(filename,'/data/input','write_hf'   ),'y');
-        W_PHI     = strcmp(h5readatt(filename,'/data/input','write_phi'  ),'y');
-        W_NA00    = strcmp(h5readatt(filename,'/data/input','write_Na00' ),'y');
-        W_NAPJ    = strcmp(h5readatt(filename,'/data/input','write_Napj' ),'y');
-        W_SAPJ    = strcmp(h5readatt(filename,'/data/input','write_Sapj' ),'y');
-        W_DENS    = strcmp(h5readatt(filename,'/data/input','write_dens' ),'y');
-        W_TEMP    = strcmp(h5readatt(filename,'/data/input','write_temp' ),'y');
-        KIN_E     = strcmp(h5readatt(filename,'/data/input',     'KIN_E' ),'y');
+        W_GAMMA   = strcmp(h5readatt(filename,'/data/input/diag_par','write_gamma'),'y');
+        W_HF      = strcmp(h5readatt(filename,'/data/input/diag_par','write_hf'   ),'y');
+        W_PHI     = strcmp(h5readatt(filename,'/data/input/diag_par','write_phi'  ),'y');
+        W_NA00    = strcmp(h5readatt(filename,'/data/input/diag_par','write_Na00' ),'y');
+        W_NAPJ    = strcmp(h5readatt(filename,'/data/input/diag_par','write_Napj' ),'y');
+        W_SAPJ    = strcmp(h5readatt(filename,'/data/input/diag_par','write_Sapj' ),'y');
+        W_DENS    = strcmp(h5readatt(filename,'/data/input/diag_par','write_dens' ),'y');
+        W_TEMP    = strcmp(h5readatt(filename,'/data/input/diag_par','write_temp' ),'y');
+        KIN_E     = strcmp(h5readatt(filename,'/data/input/model',     'ADIAB_E' ),'n');
         try
-            BETA      = h5readatt(filename,'/data/input','beta');
+            BETA      = h5readatt(filename,'/data/input/model','beta');
         catch
             BETA = 0;
         end
@@ -126,8 +126,8 @@ while(CONTINUE)
 
 
         if W_GAMMA
-            [ GGAMMA_RI, Ts0D, ~] = load_0D_data(filename, 'gflux_ri');
-            PGAMMA_RI            = load_0D_data(filename, 'pflux_ri');
+            [ GGAMMA_RI, Ts0D, ~] = load_0D_data(filename, 'gflux_xi');
+            PGAMMA_RI            = load_0D_data(filename, 'pflux_xi');
             GGAMMAI_ = cat(1,GGAMMAI_,GGAMMA_RI); clear GGAMMA_RI
             PGAMMAI_ = cat(1,PGAMMAI_,PGAMMA_RI); clear PGAMMA_RI
         end
@@ -210,13 +210,12 @@ while(CONTINUE)
 
         Ts5D = [];
         if W_NAPJ
-        [Nipj, Ts5D, ~] = load_5D_data(filename, 'moments_i');
+        [Napj, Ts5D, ~] = load_5D_data(filename, 'moments');
         tic
-            Nipj_ = cat(6,Nipj_,Nipj); clear Nipj
+            Nipj_ = cat(6,Nipj_,Napj(1,:,:,:,:,:,:)); clear Nipj
         toc
             if KIN_E
-                Nepj  = load_5D_data(filename, 'moments_e');
-                Nepj_ = cat(6,Nepj_,Nepj); clear Nepj
+                Nepj_ = cat(6,Nepj_,Napj(2,:,:,:,:,:,:)); clear Nepj
             end
         end
         if W_SAPJ
@@ -298,7 +297,7 @@ else
     end
     if W_NA00
     DATA.Ni00   = zeros(Nky,Nkx,Nz,numel(Ts3D_));   DATA.Ni00(:,:,1:Nz,:)   = Ni00_;
-    DATA.Nipjz  = zeros(Nky,Nkx,Nz,numel(Ts3D_));  DATA.Nipjz(:,:,1:Nz,:)   = Nipjz_;
+    DATA.Nipjz  = zeros(Pe_new,Je_new,Nz,numel(Ts3D_));  DATA.Nipjz(:,:,1:Nz,:)   = Nipjz_;
     end
     if W_DENS
     DATA.DENS_I = zeros(Nky,Nkx,Nz,numel(Ts3D_)); DATA.DENS_I(:,:,1:Nz,:)   = DENS_I_;
@@ -312,7 +311,7 @@ else
     end
     if W_NA00    
     DATA.Ne00   = zeros(Nky,Nkx,Nz,numel(Ts3D_));   DATA.Ne00(:,:,1:Nz,:)   = Ne00_;
-    DATA.Nepjz  = zeros(Nky,Nkx,Nz,numel(Ts3D_));  DATA.Nepjz(:,:,1:Nz,:)   = Nepjz_;
+    DATA.Nepjz  = zeros(Pe_new,Je_new,Nz,numel(Ts3D_));  DATA.Nepjz(:,:,1:Nz,:)   = Nepjz_;
     end
     if W_DENS    
     DATA.DENS_E = zeros(Nky,Nkx,Nz,numel(Ts3D_)); DATA.DENS_E(:,:,1:Nz,:)   = DENS_E_;
@@ -341,8 +340,8 @@ else
     DATA.param_title=['$\nu_{',DATA.CONAME,'}=$', num2str(DATA.NU), ...
         ', $\kappa_{Ni}=$',num2str(DATA.K_N),', $\kappa_{Ti}=$',num2str(DATA.K_T),...
         ', $L=',num2str(DATA.L),'$, $N=',...
-        num2str(DATA.Nx),'$, $(P,J)=(',num2str(DATA.PMAXI),',',...
-        num2str(DATA.JMAXI),')$,',' $\mu_{hd}=$(',num2str(DATA.MUx),...
+        num2str(DATA.Nx),'$, $(P,J)=(',num2str(DATA.PMAX),',',...
+        num2str(DATA.JMAX),')$,',' $\mu_{hd}=$(',num2str(DATA.MUx),...
         ',',num2str(DATA.MUy),')'];
     DATA.paramshort = [num2str(DATA.Pmaxi),'x',num2str(DATA.Jmaxi),'x',...
         num2str(DATA.Nkx),'x',num2str(DATA.Nky),'x',num2str(DATA.Nz)];

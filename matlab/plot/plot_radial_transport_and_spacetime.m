@@ -38,26 +38,20 @@ function [FIGURE] = plot_radial_transport_and_spacetime(DATA, OPTIONS,CODE)
     end
     % Compute thermodynamic entropy Eq.(5) Navarro et al. 2012 PoP
     % 1/2 sum_p sum_j Napj^2(k=0) (avg z)
-    switch CODE
-        case 'GYACOMO'
-        Nipjz = sum(sum(sum(sum(conj(DATA.Nipj).*DATA.Nipj))));
-        ff = trapz(DATA.z,Nipjz,5);
-        E_TE = 0.5*squeeze(ff);
-        % Compute electrostatic energy
-        E_ES = zeros(size(DATA.Ts5D));
-        bi = sqrt(KX.^2+KY.^2)*DATA.sigma_i*sqrt(2*DATA.tau_i); %argument of the kernel
-        for it5D = 1:numel(DATA.Ts5D)
-            [~,it3D] = min(abs(DATA.Ts3D-DATA.Ts5D(it5D)));
-            for in = 1:DATA.Jmaxi
-                Knphi = kernel(in-1,bi).*squeeze(trapz(DATA.z,DATA.PHI(:,:,:,it3D),3));
-                Ni0n_z= squeeze(trapz(DATA.z,DATA.Nipj(1,in,:,:,:,it5D),5));
-                E_ES(it5D) = 0.5*sum(sum(abs(conj(Knphi).*Ni0n_z)));
-            end
+    Nipjz = sum(sum(sum(sum(conj(DATA.Nipj).*DATA.Nipj))));
+    ff = trapz(DATA.z,Nipjz,5);
+    E_TE = 0.5*squeeze(ff);
+    % Compute electrostatic energy
+    E_ES = zeros(size(DATA.Ts5D));
+    bi = sqrt(KX.^2+KY.^2)*DATA.sigma(1)*sqrt(2*DATA.tau(1)); %argument of the kernel
+    for it5D = 1:numel(DATA.Ts5D)
+        [~,it3D] = min(abs(DATA.Ts3D-DATA.Ts5D(it5D)));
+        for in = 1:DATA.Jmaxi
+            Knphi = kernel(in-1,bi).*squeeze(trapz(DATA.z,DATA.PHI(:,:,:,it3D),3));
+            Ni0n_z= squeeze(trapz(DATA.z,DATA.Nipj(1,in,:,:,:,it5D),5));
+            E_ES(it5D) = 0.5*sum(sum(abs(conj(Knphi).*Ni0n_z)));
         end
-        otherwise
-            E_TE = 0; E_ES =0; DATA.Ts5D =[0 1];
     end
-
 %% Figure    
 clr_ = lines(20);
 mvm = @(x) movmean(x,OPTIONS.NMVA);

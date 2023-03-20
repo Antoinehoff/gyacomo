@@ -3,7 +3,7 @@
 % outfilename = ['/misc/HeLaZ_outputs',filename(3:end)];
 outfilename = data.outfilenames{end};
 CPUTIME   = double(h5readatt(outfilename,'/data/input','cpu_time'));
-DT_SIM    = h5readatt(outfilename,'/data/input','dt');
+DT_SIM    = h5readatt(outfilename,'/data/input/basic','dt');
 
 
 rhs_Tc       = h5read(outfilename,'/profiler/Tc_rhs');
@@ -61,7 +61,12 @@ title(sprintf('Proc. 1, total sim. time  ~%.0f [h]',CPUTIME/3600))
 hold on
 FIGNAME = 'profiler';
 % save_figure
-
+% Re-order Legend
+lbl = fig.Children(1).String;                         % Retrieve legend labels
+numlbl = length(lbl);                               % Determine number of lables
+order = sort(1:1:numlbl,'descend');                 % Create array of label numbers in descending order
+newlbl = lbl(order);                                % Create new labels in descending order
+legend(findobj(fig.Children(2),'Type','area'),newlbl) % Set the legend to follow the new labels
 else
     %% Normalized Area plot
 fig = figure;
