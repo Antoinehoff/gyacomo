@@ -293,16 +293,40 @@ else
     DATA.scale = 1;%(1/Nx/Ny)^2;
     % Fields
     DATA.GGAMMA_RI = GGAMMAI_; DATA.PGAMMA_RI = PGAMMAI_; DATA.HFLUX_X = HFLUXI_;
-    DATA.Nipj = Nipj_; DATA.Ni00 = Ni00_; DATA.Nipjz = Nipjz_;
-    DATA.DENS_I = DENS_I_; DATA.TEMP_I = TEMP_I_;
+    if W_NAPJ
+    DATA.Nipj   = zeros(Pi_new,Ji_new,Nky,Nkx,Nz,numel(Ts5D_)); DATA.Nipj(:,:,:,:,1:Nz,:) = Nipj_;
+    end
+    if W_NA00
+    DATA.Ni00   = zeros(Nky,Nkx,Nz,numel(Ts3D_));   DATA.Ni00(:,:,1:Nz,:)   = Ni00_;
+    DATA.Nipjz  = zeros(Nky,Nkx,Nz,numel(Ts3D_));  DATA.Nipjz(:,:,1:Nz,:)   = Nipjz_;
+    end
+    if W_DENS
+    DATA.DENS_I = zeros(Nky,Nkx,Nz,numel(Ts3D_)); DATA.DENS_I(:,:,1:Nz,:)   = DENS_I_;
+    end
+    if W_TEMP
+    DATA.TEMP_I = zeros(Nky,Nkx,Nz,numel(Ts3D_)); DATA.TEMP_I(:,:,1:Nz,:)   = TEMP_I_;
+    end
     if(KIN_E)
-    DATA.Nepj = Nepj_; DATA.Ne00 = Ne00_; DATA.Nepjz = Nepjz_;
-    DATA.DENS_E = DENS_E_; DATA.TEMP_E = TEMP_E_;
+    if W_NAPJ
+    DATA.Nepj   = zeros(Pe_new,Je_new,Nky,Nkx,Nz,numel(Ts5D_)); DATA.Nepj(:,:,:,:,1:Nz,:) = Nepj_;
+    end
+    if W_NA00    
+    DATA.Ne00   = zeros(Nky,Nkx,Nz,numel(Ts3D_));   DATA.Ne00(:,:,1:Nz,:)   = Ne00_;
+    DATA.Nepjz  = zeros(Nky,Nkx,Nz,numel(Ts3D_));  DATA.Nepjz(:,:,1:Nz,:)   = Nepjz_;
+    end
+    if W_DENS    
+    DATA.DENS_E = zeros(Nky,Nkx,Nz,numel(Ts3D_)); DATA.DENS_E(:,:,1:Nz,:)   = DENS_E_;
+    end
+    if W_TEMP
+    DATA.TEMP_E = zeros(Nky,Nkx,Nz,numel(Ts3D_)); DATA.TEMP_E(:,:,1:Nz,:)   = TEMP_E_;
+    end
     DATA.HFLUX_XE = HFLUXE_;
     end
     DATA.Ts5D = Ts5D_; DATA.Ts3D = Ts3D_; DATA.Ts0D = Ts0D_;
-    DATA.PHI  = PHI_; 
-    DATA.PSI  = PSI_; 
+    DATA.PHI   = zeros(Nky,Nkx,Nz,numel(Ts3D_)); DATA.PHI(:,:,1:Nz,:)   = PHI_;
+    if BETA>0
+    DATA.PSI   = zeros(Nky,Nkx,Nz,numel(Ts3D_)); DATA.PSI(:,:,1:Nz,:)   = PSI_;
+    end
     DATA.KIN_E=KIN_E;
     % grids
     DATA.Pe = Pe; DATA.Pi = Pi; 

@@ -47,14 +47,14 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 %Paper 2
 % folder = '/misc/gene_results/CBC/KT_6.96_64x32x32x24x12_Nexc_5/';
 % folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x8x4_Nexc_5_00/';
-folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x16x8_Nexc_5_00/';
+% folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x16x8_Nexc_5_00/';
 % folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x32x16_Nexc_5_00/';
 % folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x32x16_Nexc_5_01/';
 
 % folder = '/misc/gene_results/CBC/KT_5.3_128x64x24x32x16_Nexc_5_00/';
 % folder = '/misc/gene_results/CBC/KT_5.3_128x64x24x32x16_Nexc_5_01/';
 % folder = '/misc/gene_results/CBC/new_sim/KT_5.3_128x64x24x16x8_Nexc_5/';
-% folder = '/misc/gene_results/CBC/new_sim/KT_5.3_128x64x24x8x4_Nexc_5/';
+folder = '/misc/gene_results/CBC/new_sim/KT_5.3_128x64x24x8x4_Nexc_5/';
 % folder = '/misc/gene_results/CBC/new_sim/KT_6.96_128x64x24x8x4_Nexc_5_smallvbox/';
 % folder = '/misc/gene_results/CBC/new_sim/KT_6.96_128x64x24x16x8_Nexc_5_largexbox/';
 % folder = '/misc/gene_results/CBC/KT_5.3_128x64x24x16x8_Muz_0.02/';

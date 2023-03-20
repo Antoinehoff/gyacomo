@@ -68,22 +68,22 @@ MODULE fourier
 
   !!! Compute the poisson bracket of [F,G] to real space
   !   - Compute the convolution using the convolution theorem
-  SUBROUTINE poisson_bracket_and_sum(kx_, ky_, inv_Nx, inv_Ny, AA_x, AA_y,&
+  SUBROUTINE poisson_bracket_and_sum(ky_, kx_, inv_Ny, inv_Nx, AA_y, AA_x,&
                                      local_nky_ptr, local_nkx_ptr, F_, G_, sum_real_)
     IMPLICIT NONE
-    INTEGER(C_INTPTR_T),      INTENT(IN)    :: local_nkx_ptr,local_nky_ptr
-    REAL(dp),                 INTENT(IN)    :: inv_Nx, inv_Ny
-    REAL(dp), DIMENSION(:),   INTENT(IN)    :: kx_, ky_, AA_x, AA_y
-    COMPLEX(C_DOUBLE_COMPLEX),INTENT(IN)    :: F_(:,:), G_(:,:)
-    real(C_DOUBLE), pointer,  INTENT(INOUT) :: sum_real_(:,:)
+    INTEGER(C_INTPTR_T),                  INTENT(IN) :: local_nkx_ptr,local_nky_ptr
+    REAL(dp),                             INTENT(IN) :: inv_Nx, inv_Ny
+    REAL(dp), DIMENSION(local_nky_ptr),   INTENT(IN) :: ky_, AA_y
+    REAL(dp), DIMENSION(local_nkx_ptr),   INTENT(IN) :: kx_, AA_x
+    COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(local_nky_ptr,local_nkx_ptr), &
+                                          INTENT(IN) :: F_(:,:), G_(:,:)
+    real(C_DOUBLE), pointer,              INTENT(INOUT) :: sum_real_(:,:)
     INTEGER :: ikx,iky
     ! First term df/dx x dg/dy
     DO ikx = 1,local_nkx_ptr
       DO iky = 1,local_nky_ptr
-        cmpx_data_f(ikx,iky) = &
-              imagu*kx_(ikx)*F_(iky,ikx)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
-        cmpx_data_g(ikx,iky) = &
-              imagu*ky_(iky)*G_(iky,ikx)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+        cmpx_data_f(ikx,iky) = imagu*kx_(ikx)*F_(iky,ikx)*AA_x(ikx)*AA_y(iky) 
+        cmpx_data_g(ikx,iky) = imagu*ky_(iky)*G_(iky,ikx)*AA_x(ikx)*AA_y(iky)
       ENDDO
     ENDDO
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
@@ -93,9 +93,9 @@ MODULE fourier
     DO ikx = 1,local_nkx_ptr
       DO iky = 1,local_nky_ptr
         cmpx_data_f(ikx,iky) = &
-              imagu*ky_(iky)*F_(iky,ikx)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+              imagu*ky_(iky)*F_(iky,ikx)*AA_x(ikx)*AA_y(iky)
         cmpx_data_g(ikx,iky) = &
-              imagu*kx_(ikx)*G_(iky,ikx)*AA_x(ikx)*AA_y(iky) !Anti aliasing filter
+              imagu*kx_(ikx)*G_(iky,ikx)*AA_x(ikx)*AA_y(iky)
       ENDDO
     ENDDO
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)

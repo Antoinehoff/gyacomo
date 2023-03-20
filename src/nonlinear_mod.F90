@@ -49,7 +49,6 @@ SUBROUTINE compute_Sapj
   !! In real space Sapj ~ b*(grad(phi) x grad(g)) which in moments in fourier becomes
   !! Sapj = Sum_n (ikx Kn phi)#(iky Sum_s d_njs Naps) - (iky Kn phi)#(ikx Sum_s d_njs Naps)
   !! where # denotes the convolution.
-
   ! Execution time start
   CALL cpu_time(t0_Sapj)
 
@@ -61,21 +60,22 @@ SUBROUTINE compute_Sapj
     CASE DEFAULT
       ERROR STOP '>> ERROR << Linearity not recognized '
   END SELECT
-
   ! Execution time END
   CALL cpu_time(t1_Sapj)
   tc_Sapj = tc_Sapj + (t1_Sapj - t0_Sapj)
-
 END SUBROUTINE compute_Sapj
 
 SUBROUTINE compute_nonlinear
   IMPLICIT NONE
-  INTEGER :: iz,ij,ip,eo,ia,ikx,iky
+  INTEGER :: iz,ij,ip,eo,ia,ikx,iky,izi,ipi,iji,ini,isi
   DO iz = 1,local_nz
+    izi = iz + ngz/2
     DO ij = 1,local_nj ! Loop over Laguerre moments
-      j_int=jarray(ij+ngj/2)
+      iji = ij + ngj/2
+      j_int=jarray(iji)
       DO ip = 1,local_np ! Loop over Hermite moments
-        p_int    = parray(ip+ngp/2)
+        ipi = ip + ngp/2
+        p_int    = parray(ipi)
         sqrt_p   = SQRT(REAL(p_int,dp))
         sqrt_pp1 = SQRT(REAL(p_int,dp) + 1._dp)
         eo       = min(nzgrid,MODULO(parray(ip),2)+1)
@@ -83,38 +83,40 @@ SUBROUTINE compute_nonlinear
           IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmax)) THEN !compute for every moments except for closure 1
             ! Set non linear sum truncation
             IF (NL_CLOS .EQ. -2) THEN
-              nmax = local_nj
+              nmax = Jmax
             ELSEIF (NL_CLOS .EQ. -1) THEN
-              nmax = (Jmax-j_int)+1+ngj/2-local_nj_offset
+              nmax = Jmax-j_int
             ELSE
-              nmax = NL_CLOS+1+ngj/2-local_nj_offset
+              nmax = min(NL_CLOS,Jmax-j_int)
             ENDIF
             bracket_sum_r = 0._dp ! initialize sum over real nonlinear term
-            DO in = 1,nmax ! Loop over laguerre for the sum
-              n_int = parray(in+ngp/2)
+            DO in = 1,nmax+1 ! Loop over laguerre for the sum
+              ini = in+ngj/2
   !-----------!! ELECTROSTATIC CONTRIBUTION
               ! First convolution terms
-              F_cmpx(:,:) = phi(:,:,iz+ngz/2) * kernel(ia,in+ngj/2,:,:,iz+ngz/2,eo)
+              F_cmpx(:,:) = phi(:,:,izi) * kernel(ia,ini,:,:,izi,eo)
               ! Second convolution terms
               G_cmpx = 0._dp ! initialization of the sum
-              smax   = (n_int+j_int)+1+ngj/2-local_nj_offset
-              DO is = 1, MIN(smax,local_nj) ! sum truncation on number of moments
+              smax   = MIN( (in-1)+(ij-1), Jmax );
+              DO is = 1, smax+1 ! sum truncation on number of moments
+                isi = is + ngj/2
                 G_cmpx(:,:) = G_cmpx(:,:) + &
-                  dnjs(in,ij,is) * moments(ia,ip,is+ngj/2,:,:,iz+ngz/2,updatetlevel)
+                  dnjs(in,ij,is) * moments(ia,ipi,isi,:,:,izi,updatetlevel)
               ENDDO
               ! this function add its result to bracket_sum_r
               CALL poisson_bracket_and_sum(kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,local_nky_ptr,local_nkx_ptr,F_cmpx,G_cmpx,bracket_sum_r)
   !-----------!! ELECTROMAGNETIC CONTRIBUTION -sqrt(tau)/sigma*{Sum_s dnjs [sqrt(p+1)Nap+1s + sqrt(p)Nap-1s], Kernel psi}
               IF(EM) THEN
               ! First convolution terms
-              F_cmpx(:,:) = -sqrt_tau_o_sigma(ia) * psi(:,:,iz+ngz/2) * kernel(ia,in+ngj/2,:,:,iz+ngz/2,eo)
+              F_cmpx(:,:) = -sqrt_tau_o_sigma(ia) * psi(:,:,izi) * kernel(ia,ini,:,:,izi,eo)
               ! Second convolution terms
               G_cmpx = 0._dp ! initialization of the sum
-              smax   = (n_int+j_int)+1+ngj/2-local_nj_offset
-              DO is = 1, MIN(smax,local_nj) ! sum truncation on number of moments
+              smax   = MIN( (in-1)+(ij-1), Jmax );
+              DO is = 1, smax+1 ! sum truncation on number of moments
+                isi = is + ngj/2
                 G_cmpx(:,:)  = G_cmpx(:,:) + &
-                  dnjs(in,ij,is) * (sqrt_pp1*moments(ia,ip+1+ngj/2,is,:,:,iz+ngz/2,updatetlevel)&
-                                   +sqrt_p  *moments(ia,ip-1+ngj/2,is,:,:,iz+ngz/2,updatetlevel))
+                  dnjs(in,ij,is) * (sqrt_pp1*moments(ia,ipi+1,isi,:,:,izi,updatetlevel)&
+                                   +sqrt_p  *moments(ia,ipi-1,isi,:,:,izi,updatetlevel))
               ENDDO
               ! this function add its result to bracket_sum_r
               CALL poisson_bracket_and_sum(kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,local_nky_ptr,local_nkx_ptr,F_cmpx,G_cmpx,bracket_sum_r)

@@ -508,6 +508,9 @@ CONTAINS
       zarray_full(izs) = 0
     ELSEIF(Nz .GE. 4) THEN
       ngz =4
+      IF(mod(Nz,2) .NE. 0 ) THEN
+        ERROR STOP '>> ERROR << Nz must be an even number for Simpson integration rule !!!!'
+     ENDIF
     ELSE
       ERROR STOP '>> ERROR << Nz is not appropriate!!'
     ENDIF
@@ -559,18 +562,19 @@ CONTAINS
       IF(abs(local_zmax(eo) - (zmax+REAL(eo-1,dp)*grid_shift)) .LT. EPSILON(zmax)) &
         contains_zmax = .TRUE.
     ENDDO
-     IF(mod(Nz,2) .NE. 0 ) THEN
-        ERROR STOP '>> ERROR << Nz must be an even number for Simpson integration rule !!!!'
-     ENDIF
     ! local weights for Simpson rule
     ALLOCATE(zweights_SR(local_nz))
-    DO iz = 1,local_nz
-      IF(MODULO(iz+local_nz_offset,2) .EQ. 1) THEN ! odd iz
-        zweights_SR(iz) = onethird*deltaz*2._dp
-      ELSE ! even iz
-        zweights_SR(iz) = onethird*deltaz*4._dp
-      ENDIF
-    ENDDO
+    IF(total_nz .EQ. 1) THEN
+      zweights_SR = 1._dp
+    ELSE
+      DO iz = 1,local_nz
+        IF(MODULO(iz+local_nz_offset,2) .EQ. 1) THEN ! odd iz
+          zweights_SR(iz) = onethird*deltaz*2._dp
+        ELSE ! even iz
+          zweights_SR(iz) = onethird*deltaz*4._dp
+        ENDIF
+      ENDDO
+    ENDIF
   END SUBROUTINE set_zgrid
 
   SUBROUTINE set_kparray(gxx, gxy, gyy,hatB)

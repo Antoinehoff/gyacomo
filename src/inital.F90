@@ -327,7 +327,7 @@ END SUBROUTINE init_phi_ppj
 !******************************************************************************!
 SUBROUTINE initialize_blob
   USE grid,       ONLY: local_na, local_np, local_nj, total_nkx, local_nky, local_nz,&
-                        AA_x, AA_y,&
+                        AA_x, AA_y, parray, jarray,&
                         ngp,ngj,ngz, iky0, ieven, kxarray, kyarray, zarray
   USE fields,     ONLY: moments
   USE prec_const, ONLY: dp
@@ -336,20 +336,22 @@ SUBROUTINE initialize_blob
   USE geometry,   ONLY: Jacobian, iInt_Jacobian, shear
   IMPLICIT NONE
   REAL(dp) ::kx, ky, z, sigma_x, sigma_y, gain
-  INTEGER :: ia,iky,ikx,iz,ip,ij
+  INTEGER :: ia,iky,ikx,iz,ip,ij, p, j
   sigma_y = 1.0
   sigma_x = sigma_y
   gain  = 10.0
   DO ia=1,local_na
     DO iky=1,local_nky
       ky = kyarray(iky)
-      DO iz=1,local_nz+ngz
+      DO iz=1+ngz/2,local_nz+ngz/2
         z  = zarray(iz,ieven)
         DO ikx=1,total_nkx
           kx = kxarray(ikx) + z*shear*ky
-          DO ip=1,local_np+ngp
-            DO ij=1,local_nj+ngj
-              IF( (iky .NE. iky0) .AND. (ip .EQ. 1) .AND. (ij .EQ. 1)) THEN
+          DO ip=1+ngp/2,local_np+ngp/2
+            p = parray(ip)
+            DO ij=1+ngj/2,local_nj+ngj/2
+              j = jarray(ij)
+              IF( (iky .NE. iky0) .AND. (p .EQ. 0) .AND. (j .EQ. 0)) THEN
                 moments(ia,ip,ij,iky,ikx,iz, :) = moments(ia,ip,ij,iky,ikx,iz, :) &
                 + gain * exp(-((kx/sigma_x)**2+(ky/sigma_y)**2)) &
                   * AA_x(ikx)*AA_y(iky)* &
