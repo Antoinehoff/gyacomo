@@ -1,6 +1,6 @@
 %% UNCOMMENT FOR TUTORIAL
 gyacomodir = pwd; gyacomodir = gyacomodir(1:end-2); % get code directory
-resdir = '../testcases/zpinch_example_new/'; %Name of the directory where the results are located
+resdir = '../testcases/zpinch_example/'; %Name of the directory where the results are located
 PARTITION ='';
 JOBNUMMIN = 00; JOBNUMMAX = 10;
 %%
