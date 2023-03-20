@@ -1,3 +1,4 @@
+function [] = profiler(data)
 %% load profiling
 % filename = sprintf([BASIC.RESDIR,'outputs_%.2d.h5'],00);
 % outfilename = ['/misc/HeLaZ_outputs',filename(3:end)];
@@ -106,4 +107,5 @@ xlabel('Step Comp. Time [s]'); ylabel('')
 set(gca,'Xscale','log')
 FIGNAME = 'profiler';
 % save_figure
+end
 end
