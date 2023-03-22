@@ -1,6 +1,6 @@
 MODULE utility
   IMPLICIT NONE
-  PUBLIC :: checkfield, checkelem
+  PUBLIC :: is_nan, is_inf!. checkfield, checkelem
 CONTAINS
 
   FUNCTION is_nan(x,str) RESULT(isn)
@@ -9,7 +9,7 @@ CONTAINS
     USE prec_const,       ONLY: dp, stdout
     IMPLICIT NONE
 
-    real(dp), INTENT(IN) :: x
+    real, INTENT(IN) :: x
     CHARACTER(LEN=*), INTENT(IN) :: str
     LOGICAL :: isn
 
@@ -28,7 +28,7 @@ CONTAINS
     USE prec_const,       ONLY: dp, stdout
     IMPLICIT NONE
 
-    real(dp), INTENT(IN) :: x
+    real, INTENT(IN) :: x
     CHARACTER(LEN=*), INTENT(IN) :: str
     LOGICAL :: isi
 
@@ -43,33 +43,33 @@ CONTAINS
 
   END FUNCTION is_inf
 
-  FUNCTION checkfield(n1,n2,n3,field,str) RESULT(mlend)
-    use prec_const, ONLY: dp
-    IMPLICIT NONE
-    !! BUG found (or feature?)
-    ! if one put the commented first line (commented) instead of the second one,
-    ! no error will be risen by the compiler even if the rank of the array is not matching (should be 3D!)
-    ! COMPLEX(dp), DIMENSION(ikys:ikye,ikxs:ikxe), INTENT(IN) :: field
-    INTEGER, INTENT(in) :: n1,n2,n3
-    COMPLEX(dp), DIMENSION(n1,n2,n3), INTENT(IN) :: field
-    CHARACTER(LEN=*), INTENT(IN) :: str
-    LOGICAL :: mlend
-    COMPLEX(dp) :: sumfield
+  ! FUNCTION checkfield(n1,n2,n3,field,str) RESULT(mlend)
+  !   use prec_const, ONLY: dp
+  !   IMPLICIT NONE
+  !   !! BUG found (or feature?)
+  !   ! if one put the commented first line (commented) instead of the second one,
+  !   ! no error will be risen by the compiler even if the rank of the array is not matching (should be 3D!)
+  !   ! COMPLEX(dp), DIMENSION(ikys:ikye,ikxs:ikxe), INTENT(IN) :: field
+  !   INTEGER, INTENT(in) :: n1,n2,n3
+  !   COMPLEX(dp), DIMENSION(n1,n2,n3), INTENT(IN) :: field
+  !   CHARACTER(LEN=*), INTENT(IN) :: str
+  !   LOGICAL :: mlend
+  !   COMPLEX(dp) :: sumfield
 
-    sumfield=SUM(field)
+  !   sumfield=SUM(field)
 
-    mlend= is_nan( REAL(sumfield),str).OR.is_inf( REAL(sumfield),str) &
-      .OR. is_nan(AIMAG(sumfield),str).OR.is_inf(AIMAG(sumfield),str)
-  END FUNCTION checkfield
+  !   mlend= is_nan( REAL(sumfield),str).OR.is_inf( REAL(sumfield),str) &
+  !     .OR. is_nan(AIMAG(sumfield),str).OR.is_inf(AIMAG(sumfield),str)
+  ! END FUNCTION checkfield
 
-  FUNCTION checkelem(elem,str) RESULT(mlend)
-    use prec_const, ONLY: dp
-    IMPLICIT NONE
-    COMPLEX(dp), INTENT(IN) :: elem
-    CHARACTER(LEN=*), INTENT(IN) :: str
-    LOGICAL :: mlend
+  ! FUNCTION checkelem(elem,str) RESULT(mlend)
+  !   use prec_const, ONLY: dp
+  !   IMPLICIT NONE
+  !   COMPLEX(dp), INTENT(IN) :: elem
+  !   CHARACTER(LEN=*), INTENT(IN) :: str
+  !   LOGICAL :: mlend
 
-    mlend= is_nan( REAL(elem),str).OR.is_inf( REAL(elem),str) &
-      .OR. is_nan(AIMAG(elem),str).OR.is_inf(AIMAG(elem),str)
-  END FUNCTION checkelem
+  !   mlend= is_nan( REAL(elem),str).OR.is_inf( REAL(elem),str) &
+  !     .OR. is_nan(AIMAG(elem),str).OR.is_inf(AIMAG(elem),str)
+  ! END FUNCTION checkelem
 END MODULE utility

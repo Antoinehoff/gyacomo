@@ -19,7 +19,7 @@ CONTAINS
     USE MPI
     IMPLICIT NONE
     LOGICAL, INTENT(IN) :: GK_CO
-    COMPLEX(dp), DIMENSION(total_np)    :: local_sum, buffer
+    COMPLEX(dp), DIMENSION(total_np)    :: local_coll, buffer
     COMPLEX(dp), DIMENSION(local_np)    :: TColl_distr
     COMPLEX(dp) :: Tmp_
     INTEGER :: iz,ikx,iky,ij,ip,ia,ikx_C,iky_C,iz_C
@@ -38,18 +38,18 @@ CONTAINS
                 ENDIF
                 !! Apply the cosolver collision matrix
                 CALL apply_cosolver_mat(ia,ip,ij,iky,ikx,iz,ikx_C,iky_C,iz_C,Tmp_)
-                local_sum(ip) = Tmp_
+                local_coll(ip) = Tmp_
               ENDDO p
               IF (num_procs_p .GT. 1) THEN
                 ! Reduce the local_sums to root = 0
-                CALL MPI_REDUCE(local_sum, buffer, total_np, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
+                CALL MPI_REDUCE(local_coll, buffer, total_np, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
                 ! buffer contains the entire collision term along p, we scatter it between
                 ! the other processes (use of scatterv since Pmax/Np is not an integer)
                 CALL MPI_SCATTERV(buffer, rcv_p, dsp_p, MPI_DOUBLE_COMPLEX,&
                                   TColl_distr, local_np, MPI_DOUBLE_COMPLEX, &
                                   0, comm_p, ierr)
               ELSE
-                TColl_distr = local_sum
+                TColl_distr = local_coll
               ENDIF
               ! Write in output variable
               DO ip = 1,local_np
@@ -65,17 +65,17 @@ CONTAINS
     !******************************************************************************!
   !! compute the collision terms in a (Np x Nj x Nkx x Nky) matrix all at once
   !******************************************************************************!
-  SUBROUTINE apply_cosolver_mat(ia,ip,ij,iky,ikx,iz,ikx_C,iky_C,iz_C,local_sum)
+  SUBROUTINE apply_cosolver_mat(ia,ip,ij,iky,ikx,iz,ikx_C,iky_C,iz_C,local_coll)
     USE grid,        ONLY: &
-      local_na, &
+      total_na, &
       local_np, parray,parray_full, ngp,&
       total_nj, jarray,jarray_full, dmax, ngj, bar, ngz
-    USE array,       ONLY: Caa, Cab_T, Cab_F, nadiab_moments
+    USE array,       ONLY: nuCself, Cab_F, nadiab_moments
     USE model,       ONLY: CLOS
     USE species,     ONLY: nu_ab
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: ia,ip,ij,iky,ikx,iz,ikx_C,iky_C,iz_C
-    COMPLEX(dp), INTENT(OUT) :: local_sum
+    COMPLEX(dp), INTENT(OUT) :: local_coll
     INTEGER :: ib,iq,il
     INTEGER :: p_int,q_int,j_int,l_int
     INTEGER :: izi, iqi, ili
@@ -83,24 +83,21 @@ CONTAINS
     p_int = parray_full(ip)
     j_int = jarray_full(ij)
     !! Apply the cosolver collision matrix
-    local_sum = 0._dp ! Initialization
+    local_coll = 0._dp ! Initialization
     q:DO iq = 1,local_np
       iqi   = iq + ngp/2
       q_int = parray(iqi)
       l:DO il = 1,total_nj
         ili   = il + ngj/2
         l_int = jarray(ili)
-        ! self interaction
-        local_sum = local_sum + nadiab_moments(ia,iqi,ili,iky,ikx,izi) &
-              * nu_ab(ia,ia)*Caa(ia,bar(p_int,j_int), bar(q_int,l_int), iky_C, ikx_C, iz_C)
+        ! self interaction + test interaction
+        local_coll = local_coll + nadiab_moments(ia,iqi,ili,iky,ikx,izi) &
+              * nuCself(ia,bar(p_int,j_int), bar(q_int,l_int), iky_C, ikx_C, iz_C)
         ! sum the contribution over the other species
-        b:DO ib = 1,local_na
-          IF((CLOS .NE. 1) .OR. (q_int+2*l_int .LE. dmax)) THEN
-            ! Test contribution
-            local_sum = local_sum + nadiab_moments(ia,iqi,ili,iky,ikx,izi) &
-                * nu_ab(ia,ib) * Cab_T(ia,ib,bar(p_int,j_int), bar(q_int,l_int), iky_C, ikx_C, iz_C)
+        b:DO ib = 1,total_na
+          IF(ib .NE. ia) THEN
             ! Field contribution
-            local_sum = local_sum + nadiab_moments(ib,iqi,ili,iky,ikx,izi) &
+            local_coll = local_coll + nadiab_moments(ib,iqi,ili,iky,ikx,izi) &
                 * nu_ab(ia,ib) * Cab_F(ia,ib,bar(p_int,j_int), bar(q_int,l_int), iky_C, ikx_C, iz_C)
           ENDIF
         ENDDO b
@@ -115,14 +112,14 @@ CONTAINS
       USE basic,       ONLY: allocate_array, speak
       USE parallel,    ONLY: comm_p, my_id
       USE grid,        ONLY: &
-        local_na,&
+        local_na, total_na, &
         local_nkx,local_nky, kparray,&
         local_nz, ngz, bar,&
         pmax, jmax, ieven
-      USE array,       ONLY: Caa, Cab_T, Cab_F
+      USE array,       ONLY: Caa, Cab_T, Cab_F, nuCself
       USE MPI
       USE model,       ONLY: Na, LINEARITY
-      USE species,     ONLY: name
+      USE species,     ONLY: name, nu_ab
       USE futils
       IMPLICIT NONE
       ! Input
@@ -289,6 +286,17 @@ CONTAINS
         Cab_F = 0._dp;
         Cab_T = 0._dp;
       ENDIF
+      ! Build the self matrix   
+      ! nuCself = nuaa*Caa + sum_b_neq_a nu_ab Cab_T
+      DO ia = 1,total_na
+        nuCself(ia,:,:,:,:,:) = nu_ab(ia,ia)*Caa(ia,:,:,:,:,:)
+        DO ib = 1,total_na
+          IF(ib .NE. ia) THEN
+            nuCself(ia,:,:,:,:,:) = nuCself(ia,:,:,:,:,:)&
+                                    +nu_ab(ia,ib)*Cab_T(ia,ib,:,:,:,:,:)
+          ENDIF
+        ENDDO
+      ENDDO
       CALL speak('============DONE===========')
 
     END SUBROUTINE load_COSOlver_mat

@@ -30,7 +30,7 @@ SUBROUTINE compute_moments_eq_rhs
   COMPLEX(dp) :: Mperp, Mpara, Dphi, Dpsi
   COMPLEX(dp) :: Unapm1j, Unapm1jp1, Unapm1jm1 ! Terms from mirror force with adiab moments_
   COMPLEX(dp) :: i_kx,i_ky
-  COMPLEX(dp) :: Napj, RHS
+  COMPLEX(dp) :: Napj, RHS, phikykxz, psikykxz
    ! Measuring execution time
   CALL cpu_time(t0_rhs)
   ! Spatial loops
@@ -40,8 +40,10 @@ SUBROUTINE compute_moments_eq_rhs
       kx       = kxarray(ikx)                     ! radial wavevector
       i_kx     = imagu * kx                       ! radial derivative
       y:DO iky = 1,local_nky
-        ky     = kyarray(iky)                     ! binormal wavevector
-        i_ky   = imagu * ky                       ! binormal derivative
+        ky       = kyarray(iky)                     ! binormal wavevector
+        i_ky     = imagu * ky                       ! binormal derivative
+        phikykxz = phi(iky,ikx,izi)
+        psikykxz = psi(iky,ikx,izi)
         ! Kinetic loops
         j:DO ij = 1,local_nj               ! This loop is from 1 to jmaxi+1
           iji   = ij+ngj/2
@@ -55,7 +57,7 @@ SUBROUTINE compute_moments_eq_rhs
             a:DO ia = 1,local_na
               Napj = moments(ia,ipi,iji,iky,ikx,izi,updatetlevel)
               RHS = 0._dp
-              IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmax)) THEN ! for the closure scheme
+              IF((CLOS .NE. 1) .OR. (p_int +2*j_int .LE. dmax)) THEN ! for the closure scheme
                 !! Compute moments_ mixing terms
                 ! Perpendicular dynamic
                 ! term propto n^{p,j}
@@ -90,18 +92,18 @@ SUBROUTINE compute_moments_eq_rhs
                 ! Parallel magnetic term (Landau damping and the mirror force)
                 Mpara = gradz_coeff(izi,eo)*(Ldamp + Fmir)
                 !! Electrical potential term
-                IF ( p_int .LE. 2 ) THEN ! kronecker p0 p1 p2
+                IF ( p_int  .LE. 2 ) THEN ! kronecker p0 p1 p2
                   Dphi =i_ky*( xphij  (ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
                             +xphijp1(ia,ip,ij)*kernel(ia,iji+1,iky,ikx,izi,eo) &
-                            +xphijm1(ia,ip,ij)*kernel(ia,iji-1,iky,ikx,izi,eo) )*phi(iky,ikx,izi)
+                            +xphijm1(ia,ip,ij)*kernel(ia,iji-1,iky,ikx,izi,eo) )*phikykxz
                 ELSE
                   Dphi = 0._dp
                 ENDIF
                 !! Vector potential term
-                IF ( (p_int .LE. 3) .AND. (p_int .GE. 1) ) THEN ! Kronecker p1 or p3
+                IF ( (p_int  .LE. 3) .AND. (p_int  .GE. 1) ) THEN ! Kronecker p1 or p3
                   Dpsi =-i_ky*( xpsij  (ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
                               +xpsijp1(ia,ip,ij)*kernel(ia,iji+1,iky,ikx,izi,eo) &
-                              +xpsijm1(ia,ip,ij)*kernel(ia,iji-1,iky,ikx,izi,eo))*psi(iky,ikx,izi)
+                              +xpsijm1(ia,ip,ij)*kernel(ia,iji-1,iky,ikx,izi,eo))*psikykxz
                 ELSE
                   Dpsi = 0._dp
                 ENDIF
@@ -129,13 +131,13 @@ SUBROUTINE compute_moments_eq_rhs
                 !! Velocity space dissipation (should be implemented somewhere else)
                 SELECT CASE(HYP_V)
                 CASE('hypcoll') ! GX like Hermite hypercollisions see Mandell et al. 2023 (eq 3.23), unadvised to use it
-                  IF (p_int .GT. 2)  &
+                  IF (p_int  .GT. 2)  &
                     RHS = RHS - mu_p*diff_p_coeff*p_int**6*Napj
                   IF (j_int .GT. 1)  &
                     RHS = RHS - mu_j*diff_j_coeff*j_int**6*Napj
                 CASE('dvpar4')
                   ! fourth order numerical diffusion in vpar
-                  IF(p_int .GE. 4) &
+                  IF(p_int  .GE. 4) &
                   ! Numerical parallel velocity hyperdiffusion "+ dvpar4 g_a" see Pueschel 2010 (eq 33)
                   ! (not used often so not parallelized)
                   RHS = RHS + mu_p*dv4_Hp_coeff(p_int)*moments(ia,ipi-4,iji,iky,ikx,izi,updatetlevel)

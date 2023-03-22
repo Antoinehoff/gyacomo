@@ -101,7 +101,6 @@ SUBROUTINE init_moments
   USE initial_par,ONLY: iseed, init_noiselvl, init_background
   USE fields,     ONLY: moments
   USE prec_const, ONLY: dp
-  USE utility,    ONLY: checkfield
   USE model,      ONLY: LINEARITY
   USE parallel,   ONLY: my_id
   IMPLICIT NONE
@@ -165,7 +164,6 @@ SUBROUTINE init_gyrodens
                         ngp, ngj, ngz, iky0, parray, jarray, contains_ky0, AA_x, AA_y
   USE fields,     ONLY: moments
   USE prec_const, ONLY: dp
-  USE utility,    ONLY: checkfield
   USE initial_par,ONLY: iseed, init_noiselvl, init_background
   USE model,      ONLY: LINEARITY
   USE parallel,   ONLY: my_id

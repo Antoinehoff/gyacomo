@@ -93,7 +93,7 @@ options.RESOLUTION = 256;
 create_film(data,options,'.gif')
 end
 
-if 1
+if 0
 %% fields snapshots
 % Options
 options.INTERP    = 0;

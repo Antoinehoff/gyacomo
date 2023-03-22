@@ -63,9 +63,9 @@ SUBROUTINE stepon
      END SUBROUTINE assemble_RHS
 
       SUBROUTINE checkfield_all ! Check all the fields for inf or nan
-        USE utility,ONLY: checkelem
+        USE utility,ONLY: is_nan, is_inf
         USE basic,  ONLY: t0_checkfield, t1_checkfield, tc_checkfield
-        USE fields, ONLY: phi, moments
+        USE fields, ONLY: phi
         USE grid,   ONLY: local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
                           ngp,ngj,ngz
         USE MPI
@@ -74,6 +74,7 @@ SUBROUTINE stepon
         IMPLICIT NONE
         LOGICAL :: checkf_
         INTEGER :: ia, ip, ij, iky, ikx, iz
+        REAL    :: sum_
         ! Execution time start
         CALL cpu_time(t0_checkfield)
 
@@ -82,23 +83,10 @@ SUBROUTINE stepon
 
         mlend=.FALSE.
         IF(.NOT.nlend) THEN
-           z: DO iz = 1,local_nz+ngz
-           kx:DO ikx= 1,local_nkx
-           ky:DO iky=1,local_nky
-             checkf_ = checkelem(phi(iky,ikx,iz),' phi')
-             mlend= (mlend .or. checkf_)
-             j: DO ij=1,local_nj+ngj
-             p: DO ip=1,local_np+ngp
-             a: DO ia=1,local_na
-                 checkf_ = checkelem(moments(ia,ip,ij,iky,ikx,iz,updatetlevel),' moments')
-                 mlend   = (mlend .or. checkf_)
-             ENDDO a
-             ENDDO p
-             ENDDO j
-           ENDDO ky
-           ENDDO kx
-           ENDDO z
-           CALL MPI_ALLREDUCE(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierr)
+          sum_    = SUM(ABS(phi))
+          checkf_ = (is_nan(sum_,'phi') .OR. is_inf(sum_,'phi'))
+          mlend   = (mlend .or. checkf_)
+          CALL MPI_ALLREDUCE(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierr)
         ENDIF
         ! Execution time end
         CALL cpu_time(t1_checkfield)
@@ -107,6 +95,7 @@ SUBROUTINE stepon
 
       SUBROUTINE anti_aliasing
         USE fields, ONLY: moments
+        USE time_integration, ONLY: updatetlevel
         USE grid,   ONLY: local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
                           ngp,ngj,ngz, AA_x, AA_y
         IMPLICIT NONE
@@ -117,7 +106,8 @@ SUBROUTINE stepon
         j: DO ij=1,local_nj+ngj
         p: DO ip=1,local_np+ngp
         a: DO ia=1,local_na
-                  moments(ia,ip,ij,iky,ikx,iz,:) = AA_x(ikx)* AA_y(iky) * moments(ia,ip,ij,iky,ikx,iz,:)
+                  moments(ia,ip,ij,iky,ikx,iz,updatetlevel) =&
+                   AA_x(ikx)* AA_y(iky) * moments(ia,ip,ij,iky,ikx,iz,updatetlevel)
         ENDDO a
         ENDDO p
         ENDDO j
@@ -128,25 +118,28 @@ SUBROUTINE stepon
 
       SUBROUTINE enforce_symmetry ! Force X(k) = X(N-k)* complex conjugate symmetry
         USE fields, ONLY: phi, psi, moments
+        USE time_integration, ONLY: updatetlevel
         USE grid,   ONLY: local_na,local_np,local_nj,total_nkx,local_nz,&
                           ngp,ngj,ngz, ikx0,iky0, contains_ky0
         IMPLICIT NONE
         INTEGER :: ia, ip, ij, ikx, iz
         IF ( contains_ky0 ) THEN
           ! moments
-          z: DO iz = 1,local_nz+ngz
-          j: DO ij=1,local_nj+ngj
-          p: DO ip=1,local_np+ngp
-          a: DO ia=1,local_na
+          ! z: DO iz = 1,local_nz+ngz
+          ! j: DO ij=1,local_nj+ngj
+          ! p: DO ip=1,local_np+ngp
+          ! a: DO ia=1,local_na
                 DO ikx=2,total_nkx/2 !symmetry at ky = 0
-                  moments(ia,ip,ij,iky0,ikx,iz,:) = CONJG(moments(ia,ip,ij,iky0,total_nkx+2-ikx,iz,:))
+                  moments(:,:,:,iky0,ikx,:,updatetlevel) = &
+                    CONJG(moments(:,:,:,iky0,total_nkx+2-ikx,:,updatetlevel))
                 END DO
                 ! must be real at origin and top right
-                moments(ia,ip,ij, iky0,ikx0,iz,:) = REAL(moments(ia,ip,ij, iky0,ikx0,iz,:),dp)
-          ENDDO a
-          ENDDO p
-          ENDDO j
-          ENDDO z
+                moments(:,:,:, iky0,ikx0,:,updatetlevel) = &
+                  REAL(moments(:,:,:, iky0,ikx0,:,updatetlevel),dp)
+          ! ENDDO a
+          ! ENDDO p
+          ! ENDDO j
+          ! ENDDO z
           ! Phi
           DO ikx=2,total_nkx/2 !symmetry at ky = 0
             phi(iky0,ikx,:) = phi(iky0,total_nkx+2-ikx,:)

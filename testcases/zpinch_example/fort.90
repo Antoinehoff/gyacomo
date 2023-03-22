@@ -1,7 +1,7 @@
 &BASIC
   nrun       = 99999999
   dt         = 0.01
-  tmax       = 50
+  tmax       = 10
   maxruntime = 356400
   job2load   = -1
 /
@@ -60,7 +60,7 @@
   mu_p    = 0.0
   mu_j    = 0.0
   nu      = 0.1
-  beta    = 0.0
+  beta    = 0.01
   ADIAB_E = .f.
   tau_e   = 1.0
 /
@@ -84,7 +84,7 @@
 /
 
 &COLLISION_PAR
-  collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
+  collision_model = 'SG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
   GK_CO           = .t.
   INTERSPECIES    = .true.
   mat_file       = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
@@ -92,8 +92,8 @@
 &INITIAL_CON
   INIT_OPT         = 'phi'
   ACT_ON_MODES     = 'donothing'
-  init_background  = 0.0
-  init_noiselvl    = 0.005
+  init_background  = 0.005
+  init_noiselvl    = 0.00
   iseed            = 42
 /
 &TIME_INTEGRATION_PAR

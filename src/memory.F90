@@ -70,9 +70,11 @@ SUBROUTINE memory
     CALL allocate_array(  Cab_F, 1,na, 1,na, 1,(pmax+1)*(jmax+1), 1,(pmax+1)*(jmax+1), 1,local_nky, 1,local_nkx, 1,local_nz)
     CALL allocate_array(  Cab_T, 1,na, 1,na, 1,(pmax+1)*(jmax+1), 1,(pmax+1)*(jmax+1), 1,local_nky, 1,local_nkx, 1,local_nz)
     CALL allocate_array(  Caa,   1,na,       1,(pmax+1)*(jmax+1), 1,(pmax+1)*(jmax+1), 1,local_nky, 1,local_nkx, 1,local_nz)
+    CALL allocate_array(nuCself, 1,na,       1,(pmax+1)*(jmax+1), 1,(pmax+1)*(jmax+1), 1,local_nky, 1,local_nkx, 1,local_nz)
   ELSE !DK collision matrix (same for every k)
       CALL allocate_array(  Cab_F, 1,na, 1,na, 1,(pmax+1)*(jmax+1), 1,(pmax+1)*(jmax+1), 1,1, 1,1, 1,1)
       CALL allocate_array(  Cab_T, 1,na, 1,na, 1,(pmax+1)*(jmax+1), 1,(pmax+1)*(jmax+1), 1,1, 1,1, 1,1)
       CALL allocate_array(  Caa,    1,na,      1,(pmax+1)*(jmax+1), 1,(pmax+1)*(jmax+1), 1,1, 1,1, 1,1)
+      CALL allocate_array(nuCself,  1,na,      1,(pmax+1)*(jmax+1), 1,(pmax+1)*(jmax+1), 1,1, 1,1, 1,1)
 ENDIF
 END SUBROUTINE memory

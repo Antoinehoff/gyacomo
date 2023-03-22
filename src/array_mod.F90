@@ -17,10 +17,12 @@ MODULE array
   ! Non linear term array (ip,ij,iky,ikx,iz)
   COMPLEX(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: Sapj ! electron
 
-  ! self collision matrix (ia,ip,ij,iky,ikx,iz)
+  ! a-a collision matrix (ia,ip,ij,iky,ikx,iz)
   REAL(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: Caa
   ! Test and field collision matrices (ia,ib,ip,ij,iky,ikx,iz)
   REAL(dp), DIMENSION(:,:,:,:,:,:,:), ALLOCATABLE :: Cab_F, Cab_T
+  ! nu x self collision matrix nuCself = nuaa*Caa + sum_b_neq_a nu_ab Cab_T
+  REAL(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: nuCself
 
   ! Collision term (ip,ij,iky,ikx,iz)
   COMPLEX(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: Capj

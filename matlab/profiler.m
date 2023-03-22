@@ -44,7 +44,23 @@ Sapj_Ta       = mean(diff(Sapj_Tc));
 checkfield_Ta = mean(diff(checkfield_Tc));
 process_Ta    = mean(diff(process_Tc));
 diag_Ta       = mean(diff(diag_Tc));
-
+miss_Ta       = mean(diff(missing_Tc));
+total_Ta      = mean(diff(total_Tc));
+names = {...
+    'Mrhs';
+    'Advf';
+    'Ghst';
+    'Clos';
+    'Coll';
+    'Pois';
+    'Sapj';
+    'Chck';
+    'Diag';
+    'Proc';
+    'Miss';
+};
+Ts_A = [rhs_Tc(end) adv_field_Tc(end) ghost_Tc(end) clos_Tc(end) coll_Tc(end)...
+    poisson_Tc(end) Sapj_Tc(end) checkfield_Tc(end) diag_Tc(end) process_Tc(end) missing_Tc(end)];
 NSTEP_PER_SAMP= mean(diff(Ts0D))/DT_SIM;
 
 %% Plots
@@ -54,8 +70,11 @@ fig = figure;
 % colors = rand(N_T,3);
 colors = lines(N_T);
 p1 = area(Ts0D(2:end),TIME_PER_FCT,'LineStyle','none');
-for i = 1:N_T; p1(i).FaceColor = colors(i,:); end;
-legend('Compute RHS','Adv. fields','ghosts comm', 'closure', 'collision','Poisson','Nonlin','Check+sym', 'Diagnos.', 'Process', 'Missing')
+for i = 1:N_T; p1(i).FaceColor = colors(i,:);
+    LEGEND{i} = sprintf('%s t=%1.1e[s] (%0.1f %s)',names{i},Ts_A(i),Ts_A(i)/total_Tc(end)*100,'\%');
+end;
+legend(LEGEND);
+% legend('Compute RHS','Adv. fields','ghosts comm', 'closure', 'collision','Poisson','Nonlin','Check+sym', 'Diagnos.', 'Process', 'Missing')
 xlabel('Sim. Time [$\rho_s/c_s$]'); ylabel('Step Comp. Time [s]')
 xlim([Ts0D(2),Ts0D(end)]);
 title(sprintf('Proc. 1, total sim. time  ~%.0f [h]',CPUTIME/3600))
