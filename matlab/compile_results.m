@@ -298,7 +298,7 @@ function [DATA] = compile_results(DIRECTORY,JOBNUMMIN,JOBNUMMAX)
         end
         if W_NA00
         DATA.Ni00   = zeros(Nky,Nkx,Nz,numel(Ts3D_));   DATA.Ni00(:,:,1:Nz,:)   = Ni00_;
-        DATA.Nipjz  = zeros(Nky,Nkx,Nz,numel(Ts3D_));  DATA.Nipjz(:,:,1:Nz,:)   = Nipjz_;
+        DATA.Nipjz  = zeros(Pi_new,Ji_new,Nz,numel(Ts3D_));  DATA.Nipjz(:,:,1:Nz,:)   = Nipjz_;
         end
         if W_DENS
         DATA.DENS_I = zeros(Nky,Nkx,Nz,numel(Ts3D_)); DATA.DENS_I(:,:,1:Nz,:)   = DENS_I_;

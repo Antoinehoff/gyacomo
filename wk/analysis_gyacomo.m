@@ -1,8 +1,8 @@
 %% UNCOMMENT FOR TUTORIAL
 gyacomodir = pwd; gyacomodir = gyacomodir(1:end-2); % get code directory
-resdir = '../testcases/zpinch_example'; %Name of the directory where the results are located
-PARTITION = '';
-JOBNUMMIN = 00; JOBNUMMAX = 10;
+% resdir = '../testcases/zpinch_example'; %Name of the directory where the results are located
+% PARTITION = '';
+% JOBNUMMIN = 00; JOBNUMMAX = 10;
 %%
 addpath(genpath([gyacomodir,'matlab'])) % ... add
 addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
