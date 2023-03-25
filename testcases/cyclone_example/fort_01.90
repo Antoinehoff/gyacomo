@@ -1,0 +1,92 @@
+&BASIC
+  nrun       = 99999999
+  dt         = 0.01
+  tmax       = 75
+  maxruntime = 356400
+  job2load   = 0
+/
+&GRID
+  pmax   = 4
+  jmax   = 2
+  Nx     = 128
+  Lx     = 120
+  Ny     = 48
+  Ly     = 120
+  Nz     = 6!16
+  SG     = .f.
+  Nexc   = 0
+/
+&GEOMETRY
+  geom   = 's-alpha'
+  q0     = 1.4
+  shear  = 0.8
+  eps    = 0.18
+  kappa  = 1.0
+  s_kappa= 0.0
+  delta  = 0.0
+  s_delta= 0.0
+  zeta   = 0.0
+  s_zeta = 0.0
+  parallel_bc = 'dirichlet'
+  shift_y= 0.0
+/
+&OUTPUT_PAR
+  dtsave_0d = 0.1
+  dtsave_1d = -1
+  dtsave_2d = -1
+  dtsave_3d = 1
+  dtsave_5d = 10
+  write_doubleprecision = .f.
+  write_gamma = .t.
+  write_hf    = .t.
+  write_phi   = .t.
+  write_Na00  = .t.
+  write_Napj  = .t.
+  write_dens  = .t.
+  write_fvel  = .t.
+  write_temp  = .t.
+/
+&MODEL_PAR
+  ! Collisionality
+  CLOS    = 0
+  NL_CLOS = 0
+  LINEARITY = 'nonlinear'
+  Na      = 1 ! number of species
+  mu_x    = 1.0
+  mu_y    = 1.0
+  N_HD    = 4
+  mu_z    = 2.0
+  HYP_V   = 'hypcoll'
+  mu_p    = 0.0
+  mu_j    = 0.0
+  nu      = 0.001
+  beta    = 0.0
+  ADIAB_E = .t.
+  tau_e   = 1.0
+/
+&SPECIES
+ ! ions
+ name_ = 'ions'
+ tau_  = 1.0
+ sigma_= 1.0
+ q_    = 1.0
+ k_N_  = 2.22
+ k_T_  = 6.96
+/
+
+&COLLISION_PAR
+  collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
+  GK_CO           = .f.
+  INTERSPECIES    = .true.
+  mat_file       = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
+/
+&INITIAL_CON
+  INIT_OPT         = 'blob'
+  ACT_ON_MODES     = 'donothing'
+  init_background  = 0.0
+  init_noiselvl    = 0.005
+  iseed            = 42
+/
+&TIME_INTEGRATION_PAR
+  numerical_scheme = 'RK4'
+/
