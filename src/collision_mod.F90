@@ -83,14 +83,10 @@ CONTAINS
   END SUBROUTINE coll_outputinputs
 
   SUBROUTINE compute_Capj
-    USE basic, ONLY:  tc_coll, t0_coll, t1_coll
     USE array, ONLY: Capj
     USE model, ONLY: nu
     USE cosolver_interface, ONLY: compute_cosolver_coll
     IMPLICIT NONE
-    ! Execution time start
-    CALL cpu_time(t0_coll)
-
     IF (nu .NE. 0) THEN
       SELECT CASE(collision_model)
         CASE ('LB')
@@ -107,10 +103,6 @@ CONTAINS
     ELSE
       Capj = 0._dp
     ENDIF
-
-    ! Execution time end
-    CALL cpu_time(t1_coll)
-    tc_coll = tc_coll + (t1_coll - t0_coll)
   END SUBROUTINE compute_Capj
 
   !******************************************************************************!

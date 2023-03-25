@@ -212,10 +212,10 @@ while(CONTINUE)
         if W_NAPJ
         [Napj, Ts5D, ~] = load_5D_data(filename, 'moments');
         tic
-            Nipj_ = cat(6,Nipj_,Napj(1,:,:,:,:,:,:)); clear Nipj
+            Nipj_ = cat(6,Nipj_,squeeze(Napj(1,:,:,:,:,:,:))); clear Nipj
         toc
             if KIN_E
-                Nepj_ = cat(6,Nepj_,Napj(2,:,:,:,:,:,:)); clear Nepj
+                Nepj_ = cat(6,Nepj_,squeeze(Napj(2,:,:,:,:,:,:))); clear Nepj
             end
         end
         if W_SAPJ

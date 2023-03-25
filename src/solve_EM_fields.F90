@@ -31,8 +31,6 @@ CONTAINS
     INTEGER     :: in, ia, ikx, iky, iz, izi, ini
     COMPLEX(dp) :: fsa_phi, intf_, rhtot   ! current flux averaged phi
     COMPLEX(dp), DIMENSION(local_nz) :: rho, integrant  ! charge density q_a n_a and aux var
-    ! Execution time start
-    CALL cpu_time(t0_poisson)
     rhtot = 0
     !! Poisson can be solved only for process containng p=0
     IF ( SOLVE_POISSON ) THEN
@@ -60,11 +58,14 @@ CONTAINS
               fsa_phi = 0._dp
               IF(kyarray(iky).EQ.0._dp) THEN ! take ky=0 mode (y-average)
                 ! Prepare integrant for z-average
-                integrant(iz) = Jacobian(iz+ngz/2,ieven)*rho(iz)*inv_pol_ion(iky,ikx,iz)
+                DO iz = 1,local_nz
+                  izi = iz+ngz/2
+                  integrant(iz) = Jacobian(izi,ieven)*rho(iz)*inv_pol_ion(iky,ikx,iz)
+                ENDDO
                 call simpson_rule_z(local_nz,zweights_SR,integrant,intf_) ! get the flux averaged phi
                 fsa_phi = intf_ * iInt_Jacobian !Normalize by 1/int(Jxyz)dz
               ENDIF
-              rho(iz) = rho(iz) + fsa_phi
+              rho = rho + fsa_phi
             ENDIF
             !!!!!!!!!!!!!!! adiabatic ions ?
             ! IF (ADIAB_I) THEN
@@ -81,9 +82,6 @@ CONTAINS
     ENDIF
     ! Transfer phi to all the others process along p
     CALL manual_3D_bcast(phi,local_nky,local_nkx,local_nz+ngz)
-    ! Execution time end
-    CALL cpu_time(t1_poisson)
-    tc_poisson = tc_poisson + (t1_poisson - t0_poisson)
     ! print*, SUM(ABS(moments(1,:,:,:,:,:,updatetlevel)))
     ! print*, SUM(REAL(moments(1,:,:,:,:,:,updatetlevel)))
     ! print*, SUM(IMAG(moments(1,:,:,:,:,:,updatetlevel)))
@@ -109,8 +107,6 @@ CONTAINS
     IMPLICIT NONE
     COMPLEX(dp) :: j_a ! current density
     INTEGER     :: in, ia, ikx, iky, iz, ini, izi
-    ! Execution time start
-    CALL cpu_time(t0_poisson)
     !! Ampere can be solved only with beta > 0 and for process containng p=1 moments
     IF ( SOLVE_AMPERE ) THEN
       z:DO iz = 1,local_nz
@@ -136,9 +132,6 @@ CONTAINS
     IF (contains_kx0 .AND. contains_ky0) psi(iky0,ikx0,:) = 0._dp
     ! Transfer phi to all the others process along p
     CALL manual_3D_bcast(psi,local_nky,local_nkx,local_nz+ngz)
-    ! Execution time end
-    CALL cpu_time(t1_poisson)
-    tc_poisson = tc_poisson + (t1_poisson - t0_poisson)
   END SUBROUTINE ampere
 
 END SUBROUTINE solve_EM_fields

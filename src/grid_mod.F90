@@ -199,7 +199,7 @@ CONTAINS
     USE parallel, ONLY: num_procs_p, rank_p
     IMPLICIT NONE
     LOGICAL, INTENT(IN) :: EM
-    INTEGER :: ip, ig
+    INTEGER :: ip
     ! If no parallel dim (Nz=1) and no EM effects (beta=0), the moment hierarchy
     !! is separable between odds and even P and since the energy is injected in
     !! P=0 and P=2 for density/temperature gradients there is no need of
@@ -263,7 +263,7 @@ CONTAINS
   SUBROUTINE set_jgrid
     USE prec_const
     IMPLICIT NONE
-    INTEGER :: ij, ig
+    INTEGER :: ij
     ! Total number of J degrees
     total_nj   = jmax+1
     local_jmax = jmax
@@ -320,7 +320,7 @@ CONTAINS
     ikys = local_nky_ptr_offset + 1
     ikye = ikys + local_nky_ptr - 1
     local_nky = ikye - ikys + 1
-    local_nky_offset = ikys - 1
+    local_nky_offset = local_nky_ptr_offset
     ALLOCATE(kyarray(local_nky))
     local_kymax = 0._dp
     ! Creating a grid ordered as dk*(0 1 2 3)
@@ -397,7 +397,7 @@ CONTAINS
     ikxe = total_nkx
     local_nkx_ptr = ikxe - ikxs + 1
     local_nkx     = ikxe - ikxs + 1
-    local_nky_offset = ikxs - 1
+    local_nkx_offset = ikxs - 1
     ALLOCATE(kxarray(local_nkx))
     ALLOCATE(kxarray_full(total_nkx))
     IF (Nx .EQ. 1) THEN
@@ -607,17 +607,20 @@ CONTAINS
     CHARACTER(len=256)  :: str
     WRITE(str,'(a)') '/data/input/grid'
     CALL creatd(fid, 0,(/0/),TRIM(str),'Grid Input')
-    CALL attach(fid, TRIM(str), "pmax", pmax)
-    CALL attach(fid, TRIM(str), "jmax", jmax)
-    CALL attach(fid, TRIM(str),   "Nx",   Nx)
-    CALL attach(fid, TRIM(str),   "Lx",   Lx)
-    CALL attach(fid, TRIM(str), "Nexc", Nexc)
-    CALL attach(fid, TRIM(str),   "Ny",   Ny)
-    CALL attach(fid, TRIM(str),   "Ly",   Ly)
-    CALL attach(fid, TRIM(str),   "Nz",   Nz)
-    CALL attach(fid, TRIM(str),  "total_nkx",  total_nkx)
-    CALL attach(fid, TRIM(str),  "Nky",  Nky)
-    CALL attach(fid, TRIM(str),   "SG",   SG)
+    CALL attach(fid, TRIM(str),  "pmax", pmax)
+    CALL attach(fid, TRIM(str),"deltap", deltap)
+    CALL attach(fid, TRIM(str),  "jmax", jmax)
+    CALL attach(fid, TRIM(str),   "Nkx",  Nkx)
+    CALL attach(fid, TRIM(str),    "Nx",   Nx)
+    CALL attach(fid, TRIM(str),    "Lx",   Lx)
+    CALL attach(fid, TRIM(str),  "Nexc", Nexc)
+    CALL attach(fid, TRIM(str),    "Ny",   Ny)
+    CALL attach(fid, TRIM(str),   "Nky",  Nky)
+    CALL attach(fid, TRIM(str),    "Ly",   Ly)
+    CALL attach(fid, TRIM(str),    "Nz",   Nz)
+    CALL attach(fid, TRIM(str),   "total_nkx",  total_nkx)
+    CALL attach(fid, TRIM(str),   "Nky",  Nky)
+    CALL attach(fid, TRIM(str),    "SG",   SG)
   END SUBROUTINE grid_outputinputs
 
   FUNCTION bar(p_,j_)

@@ -12,33 +12,25 @@ CONTAINS
 SUBROUTINE update_ghosts_moments
   USE grid,     ONLY: total_nz
   USE parallel, ONLY: num_procs_p
-  USE basic,    ONLY: t0_ghost,t1_ghost,tc_ghost
   IMPLICIT NONE
-  CALL cpu_time(t0_ghost)
   IF (num_procs_p .GT. 1) THEN ! Do it only if we share the p
     CALL update_ghosts_p_mom
   ENDIF
   IF(total_nz .GT. 1) THEN
     CALL update_ghosts_z_mom
   ENDIF
-  CALL cpu_time(t1_ghost)
-  tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
 END SUBROUTINE update_ghosts_moments
 
 SUBROUTINE update_ghosts_EM
   USE model,  ONLY :  beta
   USE grid,   ONLY: total_nz
   USE fields, ONLY: phi, psi
-  USE basic,  ONLY: t0_ghost,t1_ghost,tc_ghost
   IMPLICIT NONE
-  CALL cpu_time(t0_ghost)
   IF(total_nz .GT. 1) THEN
     CALL update_ghosts_z_3D(phi)
     IF(beta .GT. 0._dp) &
       CALL update_ghosts_z_3D(psi)
   ENDIF
-  CALL cpu_time(t1_ghost)
-  tc_ghost = tc_ghost + (t1_ghost - t0_ghost)
 END SUBROUTINE update_ghosts_EM
 
 
@@ -63,23 +55,7 @@ SUBROUTINE update_ghosts_p_mom
   USE grid,     ONLY: local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
                               ngp,ngj,ngz
   IMPLICIT NONE
-  COMPLEX(dp), DIMENSION(local_np+ngp) :: slice_p
-  !! SUPER SLOW
-  ! INTEGER :: ia,iz,ij,iy,ix
-  ! DO iz = 1+ngz/2,local_nz+ngz/2
-  !   DO ix = 1,local_nkx
-  !     DO iy = 1,local_nky
-  !       DO ij = 1+ngj/2,local_nj+ngj/2
-  !         DO ia = 1,local_na
-  !           slice_p = moments(ia,:,ij,iy,ix,iz,updatetlevel)
-  !           CALL exchange_ghosts_1D(slice_p,nbr_L,nbr_R,local_np,ngp)
-  !           moments(ia,:,ij,iy,ix,iz,updatetlevel) = slice_p
-  !         ENDDO
-  !       ENDDO
-  !     ENDDO
-  !   ENDDO
-  ! ENDDO
-  INTEGER :: ierr, first, last, ig, count
+  INTEGER :: ierr, first, last, count
   first = 1 + ngp/2
   last  = local_np + ngp/2
   ! count = local_na*(local_nj+ngj)*local_nky*local_nkx*(local_nz+ngz) ! Number of elements to send
@@ -97,11 +73,11 @@ SUBROUTINE update_ghosts_p_mom
   ! ENDDO
   count = (ngp/2)*local_na*(local_nj+ngj)*local_nky*local_nkx*(local_nz+ngz) ! Number of elements to send
   CALL mpi_sendrecv(moments(:,(last-(ngp/2-1)):(last),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 14, &
-  moments(:,(first-ngp/2):(first-1)   ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 14, &
-  comm0, status, ierr)
+                    moments(:,(first-ngp/2):(first-1),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 14, &
+                    comm0, status, ierr)
   CALL mpi_sendrecv(moments(:,(first):(first+(ngp/2-1)),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 16, &
-  moments(:,(last+1):(last+ngp/2),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 16, &
-  comm0, status, ierr)
+                    moments(:,(last+1):(last+ngp/2)    ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 16, &
+                    comm0, status, ierr)
 END SUBROUTINE update_ghosts_p_mom
 
 !Communicate z+1, z+2 moments to left neighboor and z-1, z-2 moments to right one

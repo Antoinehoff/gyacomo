@@ -52,15 +52,15 @@ subroutine auxval
       WRITE(*,'(A9,I3,A10,I3,A10,I3,A9,I3)')&
        'my_id  = ', my_id, ', rank_p  = ', rank_p, ', rank_ky  = ', rank_ky,', rank_z  = ', rank_z
        WRITE(*,'(A22,I3,A11,I3)')&
-       '              ips   = ', ips  , ', ipe    = ', ipe
+       '         local_np   = ', local_np  , ', offset = ', local_np_offset
        WRITE(*,'(A22,I3,A11,I3)')&
-       '              ijs   = ', ijs  , ', ije    = ', ije
+       '         local_nj   = ', local_nj  , ', offset = ', local_nj_offset
        WRITE(*,'(A22,I3,A11,I3)')&
-       '              ikxs  = ', ikxs , ', ikxe   = ', ikxe
+       '         local_nkx  = ', local_nkx , ', offset = ', local_nkx_offset
        WRITE(*,'(A22,I3,A11,I3)')&
-       '              ikys  = ', ikys , ', ikye   = ', ikye
+       '         local_nky  = ', local_nky , ', offset = ', local_nky_offset
        WRITE(*,'(A22,I3,A11,I3)')&
-       '              izs   = ', izs  , ', ize    = ', ize
+       '         local_nz   = ', local_nz  , ', offset = ', local_nz_offset
       IF (my_id .NE. num_procs-1) WRITE (*,*) ''
       IF (my_id .EQ. num_procs-1) WRITE(*,*) '------------------------------------------'
     ENDIF

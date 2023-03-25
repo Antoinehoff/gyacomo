@@ -16,7 +16,7 @@ MODULE calculus
    (/ -1._dp/16._dp, 9._dp/16._dp, 9._dp/16._dp, -1._dp/16._dp /) ! grid interpolation, 4th order, odd to even
    REAL(dp), dimension(-1:2) :: iz_e2o = &
    (/ -1._dp/16._dp, 9._dp/16._dp, 9._dp/16._dp, -1._dp/16._dp /) ! grid interpolation, 4th order, even to odd
-  PUBLIC :: simpson_rule_z, interp_z, grad_z, grad_z4
+  PUBLIC :: simpson_rule_z, interp_z, grad_z, grad_z4, grad_z_5D, grad_z4_5D
 
 CONTAINS
 
@@ -80,6 +80,30 @@ CONTAINS
   END SUBROUTINE grad_z_e2o
 END SUBROUTINE grad_z
 
+SUBROUTINE grad_z_5D(local_nz,ngz,inv_deltaz,f,ddzf)
+  implicit none
+  ! Compute the periodic boundary condition 4 points centered finite differences
+  ! formula among staggered grid or not.
+  ! not staggered : the derivative results must be on the same grid as the field
+  !     staggered : the derivative is computed from a grid to the other
+  INTEGER,  INTENT(IN) :: local_nz, ngz
+  REAL(dp), INTENT(IN) :: inv_deltaz
+  COMPLEX(dp),dimension(:,:,:,:,:,:), INTENT(IN)  :: f
+  COMPLEX(dp),dimension(:,:,:,:,:,:),     INTENT(OUT) :: ddzf
+  INTEGER :: iz
+  IF(ngz .GT. 3) THEN ! Cannot apply four points stencil on less than four points grid
+    DO iz = 1,local_nz
+      ddzf(:,:,:,:,:,iz) = inv_deltaz*&
+        (dz_usu(-2)*f(:,:,:,:,:,iz  ) + dz_usu(-1)*f(:,:,:,:,:,iz+1) &
+        +dz_usu( 0)*f(:,:,:,:,:,iz+2) &
+        +dz_usu( 1)*f(:,:,:,:,:,iz+3) + dz_usu( 2)*f(:,:,:,:,:,iz+4))
+    ENDDO
+  ELSE
+    ddzf = 0._dp
+  ENDIF
+END SUBROUTINE grad_z_5D
+
+
 SUBROUTINE grad_z2(local_nz,ngz,inv_deltaz,f,ddz2f)
   ! Compute the second order fourth derivative for periodic boundary condition
   implicit none
@@ -100,6 +124,25 @@ SUBROUTINE grad_z2(local_nz,ngz,inv_deltaz,f,ddz2f)
   ddz2f = ddz2f * inv_deltaz**2
 END SUBROUTINE grad_z2
 
+SUBROUTINE grad_z4_5D(local_nz,ngz,inv_deltaz,f,ddz4f)
+  ! Compute the second order fourth derivative for periodic boundary condition
+  implicit none
+  INTEGER,  INTENT(IN) :: local_nz, ngz
+  REAL(dp), INTENT(IN) :: inv_deltaz
+  COMPLEX(dp),dimension(:,:,:,:,:,:), INTENT(IN)  :: f
+  COMPLEX(dp),dimension(:,:,:,:,:,:),     INTENT(OUT) :: ddz4f
+  INTEGER :: iz
+  IF(ngz .GT. 3) THEN ! Cannot apply four points stencil on less than four points grid
+      DO iz = 1,local_nz
+       ddz4f(:,:,:,:,:,iz) = inv_deltaz**4*&
+          (dz4_usu(-2)*f(:,:,:,:,:,iz  ) + dz4_usu(-1)*f(:,:,:,:,:,iz+1) &
+          +dz4_usu( 0)*f(:,:,:,:,:,iz+2)&
+          +dz4_usu( 1)*f(:,:,:,:,:,iz+3) + dz4_usu( 2)*f(:,:,:,:,:,iz+4))
+      ENDDO
+  ELSE
+    ddz4f = 0._dp
+  ENDIF
+END SUBROUTINE grad_z4_5D
 
 SUBROUTINE grad_z4(local_nz,ngz,inv_deltaz,f,ddz4f)
   ! Compute the second order fourth derivative for periodic boundary condition

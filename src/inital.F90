@@ -139,11 +139,11 @@ SUBROUTINE init_moments
     IF (LINEARITY .NE. 'linear') THEN
       DO ikx=1,total_nkx
         DO iky=1,local_nky
-          DO iz=1,local_nz + ngz
+          DO iz=1,local_nz
             izi = iz+ngz/2
-            DO ip=1,local_np + ngp
+            DO ip=1,local_np
               ipi = ip+ngp/2
-              DO ij=1,local_nj + ngj
+              DO ij=1,local_nj
                 iji = ij+ngj/2
                 moments(ia,ipi,iji,iky,ikx,izi, :) = moments(ia, ipi,iji,iky,ikx,izi, :)*AA_x(ikx)*AA_y(iky)
               ENDDO

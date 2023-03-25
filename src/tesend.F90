@@ -44,7 +44,7 @@ SUBROUTINE tesend
   !________________________________________________________________________________
   !                   4.  Test on run time
   CALL cpu_time(tnow)
-  mlend = (1.1*(tnow-start)) .GT. maxruntime
+  mlend = (1.1*(tnow-chrono_runt%tstart)) .GT. maxruntime
 
 
   CALL mpi_allreduce(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierr)

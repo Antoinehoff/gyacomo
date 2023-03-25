@@ -1,8 +1,8 @@
 %% UNCOMMENT FOR TUTORIAL
 gyacomodir = pwd; gyacomodir = gyacomodir(1:end-2); % get code directory
-resdir = '../testcases/zpinch_example/'; %Name of the directory where the results are located
+resdir = '../testcases/cyclone_example/'; %Name of the directory where the results are located
 PARTITION ='';
-JOBNUMMIN = 00; JOBNUMMAX = 10;
+JOBNUMMIN = 03; JOBNUMMAX = 03;
 %%
 addpath(genpath([gyacomodir,'matlab'])) % ... add
 addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
@@ -80,7 +80,7 @@ options.NAME      = '\phi';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -93,27 +93,28 @@ options.RESOLUTION = 256;
 create_film(data,options,'.gif')
 end
 
-if 0
+if 1
 %% fields snapshots
 % Options
 options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 0;
 options.NORMALIZE = 0;
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = '\psi';
 % options.NAME      = '\omega_z';
 % options.NAME      = 'T_i';
 % options.NAME      = 'n_i';
 % options.NAME      = '\phi^{NZ}';
-% options.NAME      = 'N_i^{00}';
+options.NAME      = 'N_i^{00}';
 % options.NAME      = 'N_i^{00}-N_e^{00}';              
 % options.NAME      = 's_{Ex}';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'k^2n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 options.COMP      = 'avg';
-options.TIME      = [15 30 50];
+% options.TIME      = [49 50 51];
+options.TIME      = data.Ts3D(51:55);
 options.RESOLUTION = 256;
 
 data.a = data.EPS * 2e3;

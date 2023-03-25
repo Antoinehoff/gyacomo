@@ -69,9 +69,8 @@ CONTAINS
     USE grid,        ONLY: &
       total_na, &
       local_np, parray,parray_full, ngp,&
-      total_nj, jarray,jarray_full, dmax, ngj, bar, ngz
+      total_nj, jarray,jarray_full, ngj, bar, ngz
     USE array,       ONLY: nuCself, Cab_F, nadiab_moments
-    USE model,       ONLY: CLOS
     USE species,     ONLY: nu_ab
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: ia,ip,ij,iky,ikx,iz,ikx_C,iky_C,iz_C

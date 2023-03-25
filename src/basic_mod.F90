@@ -31,19 +31,20 @@ MODULE basic
   INTEGER, PUBLIC, PROTECTED  :: lu_stop = 91              ! stop file, see subroutine TESEND
 
   ! To measure computation time
-  real(dp), PUBLIC :: start, finish
-  real(dp), PUBLIC :: t0_rhs, t0_adv_field, t0_poisson, t0_Sapj, t0_diag, t0_checkfield,&
-                      t0_step, t0_clos, t0_ghost, t0_coll, t0_process
-  real(dp), PUBLIC :: t1_rhs, t1_adv_field, t1_poisson, t1_Sapj, t1_diag, t1_checkfield,&
-                      t1_step, t1_clos, t1_ghost, t1_coll, t1_process
-  real(dp), PUBLIC :: tc_rhs, tc_adv_field, tc_poisson, tc_Sapj, tc_diag, tc_checkfield,&
-                      tc_step, tc_clos, tc_ghost, tc_coll, tc_process
+  type :: chrono
+    real(dp) :: tstart !start of the chrono
+    real(dp) :: tstop  !stop 
+    real(dp) :: ttot   !cumulative time
+  end type chrono
+
+  type(chrono), PUBLIC, PROTECTED :: chrono_runt, chrono_mrhs, chrono_advf, chrono_pois, chrono_sapj,&
+   chrono_diag, chrono_chck, chrono_step, chrono_clos, chrono_ghst, chrono_coll, chrono_napj, chrono_grad
 
   LOGICAL, PUBLIC, PROTECTED :: GATHERV_OUTPUT = .true.
 
   PUBLIC :: allocate_array, basic_outputinputs,basic_data,&
             speak, str, increase_step, increase_cstep, increase_time, display_h_min_s,&
-            set_basic_cp, daytim
+            set_basic_cp, daytim, start_chrono, stop_chrono
 
   INTERFACE allocate_array
     MODULE PROCEDURE allocate_array_dp1,allocate_array_dp2,allocate_array_dp3, &
@@ -72,18 +73,18 @@ CONTAINS
 
     READ(lu_in,basic)
 
-    !Init cumulative timers
-    tc_rhs        = 0.
-    tc_poisson    = 0.
-    tc_Sapj       = 0.
-    tc_coll       = 0.
-    tc_process    = 0.
-    tc_adv_field  = 0.
-    tc_ghost      = 0.
-    tc_clos       = 0.
-    tc_checkfield = 0.
-    tc_diag       = 0.
-    tc_step       = 0.
+    !Init chronometers
+    chrono_mrhs%ttot = 0
+    chrono_pois%ttot = 0
+    chrono_sapj%ttot = 0
+    chrono_napj%ttot = 0
+    chrono_grad%ttot = 0
+    chrono_advf%ttot = 0
+    chrono_ghst%ttot = 0
+    chrono_clos%ttot = 0
+    chrono_chck%ttot = 0
+    chrono_diag%ttot = 0
+    chrono_step%ttot = 0
   END SUBROUTINE basic_data
 
 
@@ -109,7 +110,7 @@ CONTAINS
     CALL attach(fid, TRIM(str),        "nrun",     nrun)
     CALL attach(fid, TRIM(str),    "cpu_time",       -1)
   END SUBROUTINE basic_outputinputs
-
+  !! Increments private attributes
   SUBROUTINE increase_step
     IMPLICIT NONE
     step  = step  + 1
@@ -129,6 +130,18 @@ CONTAINS
     cstep  = cstep_cp
     time   = time_cp
     jobnum = jobnum_cp+1
+  END SUBROUTINE
+  !! Chrono handling
+  SUBROUTINE start_chrono(timer)
+    IMPLICIT NONE
+    type(chrono) :: timer
+    CALL cpu_time(timer%tstart)
+  END SUBROUTINE
+  SUBROUTINE stop_chrono(timer)
+    IMPLICIT NONE
+    type(chrono) :: timer
+    CALL cpu_time(timer%tstop)
+    timer%ttot = timer%ttot + (timer%tstop-timer%tstart)
   END SUBROUTINE
   !================================================================================
   ! routine to speak in the terminal

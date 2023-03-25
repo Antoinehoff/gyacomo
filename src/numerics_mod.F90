@@ -134,7 +134,7 @@ SUBROUTINE evaluate_poisson_op
   USE grid,    ONLY : local_na, local_nkx, local_nky, local_nz,&
                       kxarray, kyarray, local_nj, ngj, ngz, ieven
   USE species, ONLY : q2_tau
-  USE model,   ONLY : ADIAB_E, tau_e
+  USE model,   ONLY : ADIAB_E
   USE prec_const, ONLY: dp
   IMPLICIT NONE
   REAL(dp)    :: pol_tot, operator, operator_ion     ! (Z^2/tau (1-sum_n kernel_na^2))
@@ -162,7 +162,7 @@ ELSE
     ENDDO a
     operator_ion = pol_tot
     IF(ADIAB_E) THEN ! Adiabatic electron model
-      pol_tot = pol_tot +  1._dp/tau_e - 1._dp
+      pol_tot = pol_tot + 1._dp
     ENDIF
     operator = pol_tot
     inv_poisson_op(iky, ikx, iz) =  1._dp/pol_tot

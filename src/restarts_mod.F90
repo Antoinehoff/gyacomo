@@ -25,6 +25,7 @@ CONTAINS
     INTEGER :: deltap_cp
     INTEGER :: pmax_cp, jmax_cp, n0, Nkx_cp, Nky_cp, Nz_cp, Na_cp, Np_cp, Nj_cp
     INTEGER :: ia,ip,ij,iky,ikx,iz, iacp,ipcp,ijcp,iycp,ixcp,izcp, ierr
+    INTEGER :: ipi,iji,izi
     REAL(dp):: timer_tot_1,timer_tot_2
     COMPLEX(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: moments_cp
     CALL cpu_time(timer_tot_1)
@@ -47,7 +48,7 @@ CONTAINS
     CALL getatt(fidrst,"/data/input/grid" , "jmax", jmax_cp)
     Nj_cp = jmax_cp+1
     CALL getatt(fidrst,"/data/input/model",   "Na",   Na_cp)
-    CALL getatt(fidrst,"/data/input/basic" , "startframe5d", n0)
+    CALL getatt(fidrst,"/data/input/basic" , "start_iframe5d", n0)
     ! Find the last results of the checkpoint file by iteration
     n_ = n0+1
     WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments", n_ ! start with moments/000001
@@ -73,19 +74,22 @@ CONTAINS
 
     moments     = 0._dp;
     z: DO iz = 1,local_nz
-      izcp = iz+local_nz_offset
+      izcp = iz + local_nz_offset
+      izi  = iz + ngz/2
       x: DO ikx=1,local_nkx
         ixcp = ikx+local_nkx_offset
         y: DO iky=1,local_nky
-          iycp = iky + local_nkx_offset
+          iycp = iky + local_nky_offset
           j: DO ij=1,local_nj
             ijcp = ij + local_nj_offset
+            iji  = ij + ngj/2
             p: DO ip=1,local_np
               ipcp = ip + local_np_offset
+              ipi  = ip + ngp/2
               a: DO ia=1,Na_cp
                 iacp = ia + local_na_offset
-                IF((iacp.LE.Na_cp).AND.(ipcp.LE.Np_cp).AND.(ijcp.LE.Nj_cp).AND.(iycp.LE.Nky_cp).AND.(ixcp.LE.Nkx_cp).AND.(izcp.LE.Nz_cp)) &
-                  moments(ia,ip,ij,iky,ikx,iz,1) = moments_cp(ia,ip,ij,iky,ikx,iz)
+                ! IF((iacp.LE.Na_cp).AND.(ipcp.LE.Np_cp).AND.(ijcp.LE.Nj_cp).AND.(iycp.LE.Nky_cp).AND.(ixcp.LE.Nkx_cp).AND.(izcp.LE.Nz_cp)) &
+                  moments(ia,ipi,iji,iky,ikx,izi,1) = moments_cp(iacp,ipcp,ijcp,iycp,ixcp,izcp)
               ENDDO a
             ENDDO p
           ENDDO j

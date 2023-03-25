@@ -1,12 +1,11 @@
 SUBROUTINE diagnose(kstep)
   !   Diagnostics, writing simulation state to disk
-  USE basic,           ONLY: t0_diag,t1_diag,tc_diag, lu_in, finish, start, cstep, dt, time, tmax, display_h_min_s
+  USE basic,           ONLY: lu_in, chrono_runt, cstep, dt, time, tmax, display_h_min_s
   USE diagnostics_par, ONLY: input_fname
   USE processing,      ONLY: pflux_x, hflux_x
   USE parallel,        ONLY: my_id
   IMPLICIT NONE
   INTEGER, INTENT(in) :: kstep
-  CALL cpu_time(t0_diag) ! Measuring time
   !! Basic diagnose loop for reading input file, displaying advancement and ending
   IF ((kstep .EQ. 0)) THEN
     INQUIRE(unit=lu_in, name=input_fname)
@@ -14,9 +13,8 @@ SUBROUTINE diagnose(kstep)
   ENDIF
   !! End diag
   IF (kstep .EQ. -1) THEN
-    CALL cpu_time(finish)
-     ! Display computational time cost
-     CALL display_h_min_s(finish-start)
+     ! Display total run time
+     CALL display_h_min_s(chrono_runt%ttot)
      ! Show last state transport values
      IF (my_id .EQ. 0) &
       WRITE(*,"(A,G10.2,A8,G10.2,A)") 'Final transport values : | Gxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'|'
@@ -27,7 +25,6 @@ SUBROUTINE diagnose(kstep)
   IF ((kstep .GE. 0) .AND. (MOD(cstep, INT(1.0/dt)) == 0) .AND. (my_id .EQ. 0)) THEN
     WRITE(*,"(A,F6.0,A1,F6.0,A8,G10.2,A8,G10.2,A)")'|t/tmax = ', time,"/",tmax,'| Gxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'|'
   ENDIF
-  CALL cpu_time(t1_diag); tc_diag = tc_diag + (t1_diag - t0_diag)
 END SUBROUTINE diagnose
 
 SUBROUTINE init_outfile(comm,file0,file,fid)
@@ -91,9 +88,8 @@ SUBROUTINE init_outfile(comm,file0,file,fid)
 END SUBROUTINE init_outfile
 
 SUBROUTINE diagnose_full(kstep)
-  USE basic,           ONLY: speak,&
-                             cstep,iframe0d,iframe3d,iframe5d,&
-                             start,finish,crashed
+  USE basic,           ONLY: speak,chrono_runt,&
+                             cstep,iframe0d,iframe3d,iframe5d,crashed
   USE grid,            ONLY: &
     local_nj,local_nky,local_nkx,local_nz,ngj,ngz,&
     parray_full,pmax,jarray_full,jmax,&
@@ -122,7 +118,8 @@ SUBROUTINE diagnose_full(kstep)
     CALL creatd(fidres, 0, dims, "/profiler/Tc_poisson",    "cumulative poisson computation time")
     CALL creatd(fidres, 0, dims, "/profiler/Tc_Sapj",       "cumulative Sapj computation time")
     CALL creatd(fidres, 0, dims, "/profiler/Tc_coll",       "cumulative collision computation time")
-    CALL creatd(fidres, 0, dims, "/profiler/Tc_process",    "cumulative process computation time")
+    CALL creatd(fidres, 0, dims, "/profiler/Tc_grad",       "cumulative grad computation time")
+    CALL creatd(fidres, 0, dims, "/profiler/Tc_nadiab",     "cumulative nadiab moments computation time")
     CALL creatd(fidres, 0, dims, "/profiler/Tc_adv_field",  "cumulative adv. fields computation time")
     CALL creatd(fidres, 0, dims, "/profiler/Tc_ghost",       "cumulative communication time")
     CALL creatd(fidres, 0, dims, "/profiler/Tc_clos",       "cumulative closure computation time")
@@ -252,7 +249,7 @@ SUBROUTINE diagnose_full(kstep)
   !_____________________________________________________________________________
   !                   3.   Final diagnostics
   ELSEIF (kstep .EQ. -1) THEN
-    CALL attach(fidres, "/data/input","cpu_time",finish-start)
+    CALL attach(fidres, "/data/input","cpu_time",chrono_runt%ttot)
     ! make a checkpoint at last timestep if not crashed
     IF(.NOT. crashed) THEN
       IF(my_id .EQ. 0) write(*,*) 'Saving last state'
@@ -277,18 +274,19 @@ SUBROUTINE diagnose_0d
   CHARACTER :: letter_a
   INTEGER   :: ia
   ! Time measurement data
-  CALL append(fidres, "/profiler/Tc_rhs",              tc_rhs,ionode=0)
-  CALL append(fidres, "/profiler/Tc_adv_field",  tc_adv_field,ionode=0)
-  CALL append(fidres, "/profiler/Tc_clos",            tc_clos,ionode=0)
-  CALL append(fidres, "/profiler/Tc_ghost",          tc_ghost,ionode=0)
-  CALL append(fidres, "/profiler/Tc_coll",            tc_coll,ionode=0)
-  CALL append(fidres, "/profiler/Tc_poisson",      tc_poisson,ionode=0)
-  CALL append(fidres, "/profiler/Tc_Sapj",            tc_Sapj,ionode=0)
-  CALL append(fidres, "/profiler/Tc_checkfield",tc_checkfield,ionode=0)
-  CALL append(fidres, "/profiler/Tc_diag",            tc_diag,ionode=0)
-  CALL append(fidres, "/profiler/Tc_process",      tc_process,ionode=0)
-  CALL append(fidres, "/profiler/Tc_step",            tc_step,ionode=0)
-  CALL append(fidres, "/profiler/time",                  time,ionode=0)
+  CALL append(fidres, "/profiler/Tc_rhs",       chrono_mrhs%ttot,ionode=0)
+  CALL append(fidres, "/profiler/Tc_adv_field", chrono_advf%ttot,ionode=0)
+  CALL append(fidres, "/profiler/Tc_clos",      chrono_clos%ttot,ionode=0)
+  CALL append(fidres, "/profiler/Tc_ghost",     chrono_ghst%ttot,ionode=0)
+  CALL append(fidres, "/profiler/Tc_coll",      chrono_coll%ttot,ionode=0)
+  CALL append(fidres, "/profiler/Tc_poisson",   chrono_pois%ttot,ionode=0)
+  CALL append(fidres, "/profiler/Tc_Sapj",      chrono_sapj%ttot,ionode=0)
+  CALL append(fidres, "/profiler/Tc_checkfield",chrono_chck%ttot,ionode=0)
+  CALL append(fidres, "/profiler/Tc_diag",      chrono_diag%ttot,ionode=0)
+  CALL append(fidres, "/profiler/Tc_grad",      chrono_grad%ttot,ionode=0)
+  CALL append(fidres, "/profiler/Tc_nadiab",    chrono_napj%ttot,ionode=0)
+  CALL append(fidres, "/profiler/Tc_step",      chrono_step%ttot,ionode=0)
+  CALL append(fidres, "/profiler/time",                time,ionode=0)
   ! Processing data
   CALL append(fidres,  "/data/var0d/time",           time,ionode=0)
   CALL append(fidres, "/data/var0d/cstep", real(cstep,dp),ionode=0)

@@ -15,7 +15,7 @@ SUBROUTINE compute_moments_eq_rhs
   USE prec_const
   USE collision
   USE time_integration
-  USE species, ONLY: dpdx
+  ! USE species, ONLY: dpdx
   USE geometry, ONLY: gradz_coeff, dlnBdz, Ckxky!, Gamma_phipar
   USE calculus, ONLY: interp_z, grad_z, grad_z2
   ! USE species,  ONLY: dpdx
@@ -31,8 +31,6 @@ SUBROUTINE compute_moments_eq_rhs
   COMPLEX(dp) :: Unapm1j, Unapm1jp1, Unapm1jm1 ! Terms from mirror force with adiab moments_
   COMPLEX(dp) :: i_kx,i_ky
   COMPLEX(dp) :: Napj, RHS, phikykxz, psikykxz
-   ! Measuring execution time
-  CALL cpu_time(t0_rhs)
   ! Spatial loops
   z:DO  iz = 1,local_nz
     izi = iz + ngz/2
@@ -157,24 +155,22 @@ SUBROUTINE compute_moments_eq_rhs
       END DO y
     END DO x
   END DO z
-  ! Execution time end
-  CALL cpu_time(t1_rhs)
-  tc_rhs = tc_rhs + (t1_rhs-t0_rhs)
 
-      ! print*,'sumabs moments i', SUM(ABS(moments(1,:,:,:,:,:,updatetlevel)))
-      ! print*,'moment rhs i 221', moments_rhs(1,1,1,2,2,1,updatetlevel)
-      ! print*,'sum real nadiabe', SUM(REAL(nadiab_moments(2,:,:,:,:,:)))
-      ! print*,'sumreal momrhs i', SUM(REAL(moments_rhs(1,:,:,:,:,:,:)))
-      ! print*,'sumimag momrhs i', SUM(IMAG(moments_rhs(1,:,:,:,:,:,:)))
-      ! print*,'sumreal phi     ', SUM(REAL(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
-      ! print*,'sumimag phi     ', SUM(IMAG(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
-      ! print*,'phi(2,2,1)      ', phi(2,2,1+ngz/2)
-      ! print*,'sumreal ddznipj ', SUM(REAL(ddz_napj(1,:,:,:,:,:)))
-      ! print*,'sumimag ddznipj ', SUM(IMAG(ddz_napj(1,:,:,:,:,:)))
-      ! print*,'        ddznipj  ',(ddz_napj(1,2+ngp/2,2+ngj/2,2,2,1))
-      ! print*,'sumreal Capj    ', SUM(REAL(Capj(1,:,:,:,:,:)))
-      ! print*,'---'
-      ! IF(updatetlevel .EQ. 4) stop
+  !     print*,'sumabs moments i', SUM(ABS(moments(1,:,:,:,:,:,updatetlevel)))
+  !     print*,'moment rhs i 221', moments_rhs(1,1,1,2,2,1,updatetlevel)
+  !     ! print*,'sum real nadiabe', SUM(REAL(nadiab_moments(2,:,:,:,:,:)))
+  !     print*,'sumreal momrhs i', SUM(REAL(moments_rhs(1,:,:,:,:,:,:)))
+  !     print*,'sumimag momrhs i', SUM(IMAG(moments_rhs(1,:,:,:,:,:,:)))
+  !     print*,'sumreal phi     ', SUM(REAL(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
+  !     print*,'sumimag phi     ', SUM(IMAG(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
+  !     print*,'phi(2,2,1)      ', phi(2,2,1+ngz/2)
+  !     print*,'sumreal ddznipj ', SUM(REAL(ddz_napj(1,:,:,:,:,:)))
+  !     print*,'sumimag ddznipj ', SUM(IMAG(ddz_napj(1,:,:,:,:,:)))
+  !     print*,'        ddznipj  ',(ddz_napj(1,2+ngp/2,2+ngj/2,2,2,1))
+  !     print*,'      ddzNDnipj  ',SUM(REAL(ddzND_Napj(1,:,:,:,:,:)))
+  !     print*,'sumreal Capj    ', SUM(REAL(Capj(1,:,:,:,:,:)))
+  !     print*,'---'
+  !     IF(updatetlevel .EQ. 4) stop
   ! stop
 
 END SUBROUTINE compute_moments_eq_rhs

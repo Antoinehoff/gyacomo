@@ -1,7 +1,6 @@
 MODULE nonlinear
   USE array,       ONLY : dnjs, Sapj, kernel
   USE initial_par, ONLY : ACT_ON_MODES
-  USE basic,       ONLY : t0_Sapj, t1_Sapj, tc_Sapj
   USE fourier,     ONLY : bracket_sum_r, bracket_sum_c, planf, planb, poisson_bracket_and_sum
   USE fields,      ONLY : phi, psi, moments
   USE grid,        ONLY: local_na, &
@@ -49,9 +48,6 @@ SUBROUTINE compute_Sapj
   !! In real space Sapj ~ b*(grad(phi) x grad(g)) which in moments in fourier becomes
   !! Sapj = Sum_n (ikx Kn phi)#(iky Sum_s d_njs Naps) - (iky Kn phi)#(ikx Sum_s d_njs Naps)
   !! where # denotes the convolution.
-  ! Execution time start
-  CALL cpu_time(t0_Sapj)
-
   SELECT CASE(LINEARITY)
     CASE ('nonlinear')
       CALL compute_nonlinear
@@ -60,9 +56,6 @@ SUBROUTINE compute_Sapj
     CASE DEFAULT
       ERROR STOP '>> ERROR << Linearity not recognized '
   END SELECT
-  ! Execution time END
-  CALL cpu_time(t1_Sapj)
-  tc_Sapj = tc_Sapj + (t1_Sapj - t0_Sapj)
 END SUBROUTINE compute_Sapj
 
 SUBROUTINE compute_nonlinear
