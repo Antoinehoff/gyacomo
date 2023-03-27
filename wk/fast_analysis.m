@@ -8,4 +8,13 @@ resdir = 'paper_2_GYAC23/CBC/7x4x192x96x32';
 
 %%
 JOBNUMMIN = 00; JOBNUMMAX = 10;
-run analysis_gyacomo
+
+%%
+DATADIR = [PARTITION,resdir,'/'];
+data    = {};
+data    = compile_results_low_mem(data,DATADIR,JOBNUMMIN,JOBNUMMAX);
+
+
+%%
+figure;
+plot(data.Ts0D,data.HFLUX_X);

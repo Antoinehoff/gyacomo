@@ -66,8 +66,8 @@ names = {...
     'napj';
     'Miss';
 };
-Ts_A = [RHSTC(end) ADVTC(end) GHOTC(end) CLOTC(end) COLTC(end)...
-    POITC(end) SAPTC(end) CHKTC(end) DIATC(end) GRATC(end) NADTC(end) missing_Tc(end)];
+Ts_A = [rhs_Ta adv_field_Ta ghost_Ta clos_Ta coll_Ta...
+    poisson_Ta Sapj_Ta checkfield_Ta diag_Ta grad_Ta  nadiab_Ta miss_Ta];
 NSTEP_PER_SAMP= mean(diff(TS0TC))/DTSIM;
 
 %% Plots
@@ -89,19 +89,24 @@ for i = 2:numel(x_)
     dx = x_(i) - x_(i-1);
     xx_(2*i-1) = x_(i)-dx/2;
     xx_(2*i  ) = x_(i)+dx/2;
-    yy_(2*i-1,:) = y_(i,:)/dx;
-    yy_(2*i  ,:) = y_(i,:)/dx;
+    yy_(2*i-1,:) = y_(i,:)/(dx/DTSIM);
+    yy_(2*i  ,:) = y_(i,:)/(dx/DTSIM);
 end
 p1 = area(xx_,yy_,'LineStyle','none');
 for i = 1:N_T; p1(i).FaceColor = colors(i,:);
-    LEGEND{i} = sprintf('%s t=%1.1e[s] (%0.1f %s)',names{i},Ts_A(i),Ts_A(i)/total_Tc(end)*100,'\%');
+%     LEGEND{i} = sprintf('%s t=%1.1e[s] (%0.1f %s)',names{i},Ts_A(i),Ts_A(i)/total_Tc(end)*100,'\%');
+    LEGEND{i} = [names{i},' $\hat t=$',sprintf('%1.1e[s] (%0.1f %s)',Ts_A(i),Ts_A(i)/total_Ta*100,'\%')];
 end;
 legend(LEGEND,'Location','bestoutside');
 % legend('Compute RHS','Adv. fields','ghosts comm', 'closure', 'collision','Poisson','Nonlin','Check+sym', 'Diagnos.', 'Process', 'Missing')
-xlabel('Sim. Time [$\rho_s/c_s$]'); ylabel('N Steps Comp. Time [s]')
+xlabel('Sim. Time [$\rho_s/c_s$]'); ylabel('Step Comp. Time [s]')
 xlim([TS0TC(2),TS0TC(end)]);
-title(sprintf('Gyacomo 2, CPU time:  ~%.0f [h] ~%.0f [min] ~%.0f [s]',...
-    CPUTI/3600,CPUTI/60-60*floor(CPUTI/3600),CPUTI-60*floor(CPUTI/60-60*floor(CPUTI/3600))))
+ylim([0, 1.1*CPUTI/(TS0TC(end)/DTSIM)])
+h_ = floor(CPUTI/3600);
+m_ = floor(floor(CPUTI/60)-60*h_);
+s_ = CPUTI - 3600*h_ - 60*m_;
+title(sprintf('Gyacomo 2 (%.0f [h] ~%.0f [min] ~%.0f [s])',...
+    h_,m_,s_))
 hold on
 FIGNAME = 'profiler';
 % save_figure
