@@ -43,7 +43,23 @@ Sapj_Ta       = mean(diff(Sapj_Tc));
 checkfield_Ta = mean(diff(checkfield_Tc));
 process_Ta    = mean(diff(process_Tc));
 diag_Ta       = mean(diff(diag_Tc));
-
+miss_Ta       = mean(diff(missing_Tc));
+total_Ta      = mean(diff(total_Tc));
+names = {...
+    'Mrhs';
+    'Advf';
+    'Ghst';
+    'Clos';
+    'Coll';
+    'Pois';
+    'Sapj';
+    'Chck';
+    'Diag';
+    'Proc';
+    'Miss';
+};
+Ts_A = [rhs_Tc(end) adv_field_Tc(end) ghost_Tc(end) clos_Tc(end) coll_Tc(end)...
+    poisson_Tc(end) Sapj_Tc(end) checkfield_Tc(end) diag_Tc(end) process_Tc(end) missing_Tc(end)];
 NSTEP_PER_SAMP= mean(diff(Ts0D))/DT_SIM;
 
 %% Plots
@@ -51,17 +67,46 @@ if 1
     %% Area plot
 fig = figure;
 % colors = rand(N_T,3);
-colors = lines(N_T);
-p1 = area(Ts0D(2:end),TIME_PER_FCT,'LineStyle','none');
-for i = 1:N_T; p1(i).FaceColor = colors(i,:); end;
-legend('Compute RHS','Adv. fields','ghosts comm', 'closure', 'collision','Poisson','Nonlin','Check+sym', 'Diagnos.', 'Process', 'Missing')
-xlabel('Sim. Time [$\rho_s/c_s$]'); ylabel('Step Comp. Time [s]')
+% colors = lines(N_T);
+colors = distinguishable_colors(N_T);
+x_ = Ts0D(2:end);
+y_ = TIME_PER_FCT;
+xx_= zeros(2*numel(x_),1);
+yy_= zeros(2*numel(x_),numel(names));
+xx_(1) = 0; 
+xx_(2) = x_(1)+x_(1)/2;
+yy_(1,:) = y_(1,:)/x_(1);     
+yy_(2,:) = y_(2,:)/x_(1);
+for i = 2:numel(x_)
+    dx = (x_(i) - x_(i-1));
+    xx_(2*i-1) = x_(i)-dx/2;
+    xx_(2*i  ) = x_(i)+dx/2;
+    yy_(2*i-1,:) = y_(i,:)/(dx/DT_SIM);
+    yy_(2*i  ,:) = y_(i,:)/(dx/DT_SIM);
+end
+p1 = area(xx_,yy_,'LineStyle','none');
+for i = 1:N_T; p1(i).FaceColor = colors(i,:);
+    LEGEND{i} = sprintf('%s t=%1.1e[s] (%0.1f %s)',names{i},Ts_A(i),Ts_A(i)/total_Tc(end)*100,'\%');
+end;
+legend(LEGEND);
+% legend('Compute RHS','Adv. fields','ghosts comm', 'closure', 'collision','Poisson','Nonlin','Check+sym', 'Diagnos.', 'Process', 'Missing')
+xlabel('t. u.'); ylabel('Step Comp. Time [s]')
 xlim([Ts0D(2),Ts0D(end)]);
-title(sprintf('Proc. 1, total sim. time  ~%.0f [h]',CPUTIME/3600))
+ylim([0, 1.1*CPUTIME/(Ts0D(end)/DT_SIM)])
+h_ = floor(CPUTIME/3600);
+m_ = floor(floor(CPUTIME/60)-60*h_);
+s_ = CPUTIME - 3600*h_ - 60*m_;
+title(sprintf('Gyacomo 1 (%.0f [h] ~%.0f [min] ~%.0f [s])',...
+    h_,m_,s_))
 hold on
 FIGNAME = 'profiler';
 % save_figure
-
+% Re-order Legend
+lbl = fig.Children(1).String;                         % Retrieve legend labels
+numlbl = length(lbl);                               % Determine number of lables
+order = sort(1:1:numlbl,'descend');                 % Create array of label numbers in descending order
+newlbl = lbl(order);                                % Create new labels in descending order
+legend(findobj(fig.Children(2),'Type','area'),newlbl) % Set the legend to follow the new labels
 else
     %% Normalized Area plot
 fig = figure;
