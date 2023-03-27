@@ -95,7 +95,7 @@ end
 p1 = area(xx_,yy_,'LineStyle','none');
 for i = 1:N_T; p1(i).FaceColor = colors(i,:);
 %     LEGEND{i} = sprintf('%s t=%1.1e[s] (%0.1f %s)',names{i},Ts_A(i),Ts_A(i)/total_Tc(end)*100,'\%');
-    LEGEND{i} = [names{i},' $\hat t=$',sprintf('%1.1e[s] (%0.1f %s)',Ts_A(i),Ts_A(i)/total_Ta*100,'\%')];
+    LEGEND{i} = [names{i},' $\hat t=$',sprintf('%1.1e[s] (%0.1f %s)',Ts_A(i)/NSTEP_PER_SAMP,Ts_A(i)/total_Ta*100,'\%')];
 end;
 legend(LEGEND,'Location','bestoutside');
 % legend('Compute RHS','Adv. fields','ghosts comm', 'closure', 'collision','Poisson','Nonlin','Check+sym', 'Diagnos.', 'Process', 'Missing')
