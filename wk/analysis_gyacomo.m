@@ -1,8 +1,8 @@
 %% UNCOMMENT FOR TUTORIAL
 gyacomodir = pwd; gyacomodir = gyacomodir(1:end-2); % get code directory
-resdir = '../testcases/cyclone_example/'; %Name of the directory where the results are located
-PARTITION ='';
-JOBNUMMIN = 03; JOBNUMMAX = 03;
+% resdir = '../testcases/cyclone_example/'; %Name of the directory where the results are located
+% PARTITION ='';
+% JOBNUMMIN = 03; JOBNUMMAX = 03;
 %%
 addpath(genpath([gyacomodir,'matlab'])) % ... add
 addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
@@ -80,7 +80,7 @@ options.NAME      = '\phi';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
