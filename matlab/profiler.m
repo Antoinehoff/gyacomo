@@ -58,8 +58,8 @@ names = {...
     'Proc';
     'Miss';
 };
-Ts_A = [rhs_Tc(end) adv_field_Tc(end) ghost_Tc(end) clos_Tc(end) coll_Tc(end)...
-    poisson_Tc(end) Sapj_Tc(end) checkfield_Tc(end) diag_Tc(end) process_Tc(end) missing_Tc(end)];
+Ts_A = [rhs_Ta adv_field_Ta ghost_Ta clos_Ta coll_Ta...
+    poisson_Ta Sapj_Ta checkfield_Ta diag_Ta process_Ta miss_Ta];
 NSTEP_PER_SAMP= mean(diff(Ts0D))/DT_SIM;
 
 %% Plots
@@ -73,12 +73,12 @@ x_ = Ts0D(2:end);
 y_ = TIME_PER_FCT;
 xx_= zeros(2*numel(x_),1);
 yy_= zeros(2*numel(x_),numel(names));
-xx_(1) = 0; 
-xx_(2) = x_(1)+x_(1)/2;
-yy_(1,:) = y_(1,:)/x_(1);     
-yy_(2,:) = y_(2,:)/x_(1);
+dx = (x_(2)-x_(1));
+xx_(1) = x_(1)-dx/2; xx_(2) = x_(1)+dx/2;
+yy_(1,:) = y_(1,:)/dx;     
+yy_(2,:) = y_(2,:)/dx;
 for i = 2:numel(x_)
-    dx = (x_(i) - x_(i-1));
+    dx = x_(i) - x_(i-1);
     xx_(2*i-1) = x_(i)-dx/2;
     xx_(2*i  ) = x_(i)+dx/2;
     yy_(2*i-1,:) = y_(i,:)/(dx/DT_SIM);
@@ -86,7 +86,8 @@ for i = 2:numel(x_)
 end
 p1 = area(xx_,yy_,'LineStyle','none');
 for i = 1:N_T; p1(i).FaceColor = colors(i,:);
-    LEGEND{i} = sprintf('%s t=%1.1e[s] (%0.1f %s)',names{i},Ts_A(i),Ts_A(i)/total_Tc(end)*100,'\%');
+%     LEGEND{i} = sprintf('%s t=%1.1e[s] (%0.1f %s)',names{i},Ts_A(i),Ts_A(i)/total_Tc(end)*100,'\%');
+    LEGEND{i} = [names{i},' $\hat t=$',sprintf('%1.1e[s] (%0.1f %s)',Ts_A(i)/NSTEP_PER_SAMP,Ts_A(i)/total_Ta*100,'\%')];
 end;
 legend(LEGEND);
 % legend('Compute RHS','Adv. fields','ghosts comm', 'closure', 'collision','Poisson','Nonlin','Check+sym', 'Diagnos.', 'Process', 'Missing')
