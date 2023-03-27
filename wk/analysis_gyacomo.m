@@ -37,7 +37,7 @@ if 1
 % options.TAVG_0   = data.TJOB_SE(2*jid_+1);%0.4*data.Ts3D(end);
 % options.TAVG_1   = data.TJOB_SE(2*(jid_+1));%0.9*data.Ts3D(end); % Averaging times duration
 options.TAVG_0   = 100;
-options.TAVG_1   = 1000;
+options.TAVG_1   = 500;
 options.NCUT     = 5;              % Number of cuts for averaging and error estimation
 options.NMVA     = 1;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';   % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
@@ -52,8 +52,8 @@ if 0
 %% statistical transport averaging
 Gavg =[]; Gstd = [];
 Qavg =[]; Qstd = [];
-figure; hold on;
-plot(data.Ts0D,data.Qx);
+% figure; hold on;
+% plot(data.Ts0D,data.HFLUX_X);
 for i_ = 1:2:numel(data.TJOB_SE) 
 % i_ = 3; 
 disp([num2str(data.TJOB_SE(i_)),' ',num2str(data.TJOB_SE(i_+1))])
@@ -66,6 +66,11 @@ Qavg = [Qavg res.Qx_avg]; Qstd = [Qstd res.Qx_std];
 end
 % disp(Gavg); disp(Gstd);
 disp(Qavg); disp(Qstd);
+figure
+% errorbar(data.NU_EVOL(2:2:end),Qavg,Qstd,'--s');
+% xlabel('$\nu$'); ylabel('$Q_x^\infty$');
+errorbar(data.K_T_EVOL(2:2:end),Qavg,Qstd,'--s','DisplayName',data.paramshort);
+xlabel('$\kappa_T$'); ylabel('$Q_x^\infty$');
 end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -93,7 +98,7 @@ options.RESOLUTION = 256;
 create_film(data,options,'.gif')
 end
 
-if 1
+if 0
 %% fields snapshots
 % Options
 options.INTERP    = 0;

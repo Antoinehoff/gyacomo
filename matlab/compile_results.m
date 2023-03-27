@@ -9,6 +9,7 @@ function [DATA] = compile_results(DIRECTORY,JOBNUMMIN,JOBNUMMAX)
     DATA.MUy_EVOL  = []; % evolution of parameter mu between jobs
     DATA.MUz_EVOL  = []; % evolution of parameter mu between jobs
     DATA.K_N_EVOL = []; %
+    DATA.K_T_EVOL = []; %
     DATA.L_EVOL   = []; % 
     DATA.DT_EVOL  = []; %
     % FIELDS
@@ -238,6 +239,7 @@ function [DATA] = compile_results(DIRECTORY,JOBNUMMIN,JOBNUMMAX)
             DATA.MUy_EVOL  = [DATA.MUy_EVOL  DATA.MUy    DATA.MUy];
             DATA.MUz_EVOL  = [DATA.MUz_EVOL  DATA.MUz    DATA.MUz];
             DATA.K_N_EVOL  = [DATA.K_N_EVOL DATA.K_N   DATA.K_N];
+            DATA.K_T_EVOL  = [DATA.K_T_EVOL DATA.K_T   DATA.K_T];
             DATA.L_EVOL    = [DATA.L_EVOL    DATA.L      DATA.L];
             DATA.DT_EVOL   = [DATA.DT_EVOL   DATA.DT_SIM DATA.DT_SIM];
             

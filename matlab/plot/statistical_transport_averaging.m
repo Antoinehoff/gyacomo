@@ -44,7 +44,7 @@ if options.NPLOTS > 0
     legend(['$Q_x^\infty=$',sprintf('%2.2e',transp_seg_avg(end))])
 end   
 res.time_seg = time_seg;
-res.Qx_t     = 
+res.Qx_t     = transp_seg_avg;
 res.Gx_avg = mean(gamma);
 res.Gx_std = std (gamma);
 disp(['G_x=',sprintf('%2.2e',res.Gx_avg),'+-',sprintf('%2.2e',res.Gx_std)]);
