@@ -6,7 +6,7 @@ CONTAINS
   FUNCTION is_nan(x,str) RESULT(isn)
     USE basic,            ONLY: cstep
     USE time_integration, ONLY: updatetlevel
-    USE prec_const,       ONLY: dp, stdout
+    USE prec_const,       ONLY: xp, stdout
     IMPLICIT NONE
 
     real, INTENT(IN) :: x
@@ -25,7 +25,7 @@ CONTAINS
 
 
   FUNCTION is_inf(x,str) RESULT(isi)
-    USE prec_const,       ONLY: dp, stdout
+    USE prec_const,       ONLY: xp, stdout
     IMPLICIT NONE
 
     real, INTENT(IN) :: x
@@ -44,17 +44,17 @@ CONTAINS
   END FUNCTION is_inf
 
   ! FUNCTION checkfield(n1,n2,n3,field,str) RESULT(mlend)
-  !   use prec_const, ONLY: dp
+  !   use prec_const, ONLY: xp
   !   IMPLICIT NONE
   !   !! BUG found (or feature?)
   !   ! if one put the commented first line (commented) instead of the second one,
   !   ! no error will be risen by the compiler even if the rank of the array is not matching (should be 3D!)
-  !   ! COMPLEX(dp), DIMENSION(ikys:ikye,ikxs:ikxe), INTENT(IN) :: field
+  !   ! COMPLEX(xp), DIMENSION(ikys:ikye,ikxs:ikxe), INTENT(IN) :: field
   !   INTEGER, INTENT(in) :: n1,n2,n3
-  !   COMPLEX(dp), DIMENSION(n1,n2,n3), INTENT(IN) :: field
+  !   COMPLEX(xp), DIMENSION(n1,n2,n3), INTENT(IN) :: field
   !   CHARACTER(LEN=*), INTENT(IN) :: str
   !   LOGICAL :: mlend
-  !   COMPLEX(dp) :: sumfield
+  !   COMPLEX(xp) :: sumfield
 
   !   sumfield=SUM(field)
 
@@ -63,9 +63,9 @@ CONTAINS
   ! END FUNCTION checkfield
 
   ! FUNCTION checkelem(elem,str) RESULT(mlend)
-  !   use prec_const, ONLY: dp
+  !   use prec_const, ONLY: xp
   !   IMPLICIT NONE
-  !   COMPLEX(dp), INTENT(IN) :: elem
+  !   COMPLEX(xp), INTENT(IN) :: elem
   !   CHARACTER(LEN=*), INTENT(IN) :: str
   !   LOGICAL :: mlend
 

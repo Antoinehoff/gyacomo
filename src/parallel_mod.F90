@@ -1,5 +1,5 @@
 MODULE parallel
-  use prec_const, ONLY : dp
+  use prec_const, ONLY : xp
   USE mpi
   IMPLICIT NONE
   ! Auxiliary variables
@@ -239,12 +239,12 @@ CONTAINS
   SUBROUTINE gather_xyz(field_loc,field_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot
-    COMPLEX(dp), DIMENSION(nky_loc,nkx_tot,nz_loc), INTENT(IN)  :: field_loc
-    COMPLEX(dp), DIMENSION(nky_tot,nkx_tot,nz_tot), INTENT(OUT) :: field_tot
-    COMPLEX(dp), DIMENSION(nky_tot,nz_loc) :: buffer_yt_zl !full  y, local z
-    COMPLEX(dp), DIMENSION(nky_tot,nz_tot) :: buffer_yt_zt !full  y, full  z
-    COMPLEX(dp), DIMENSION(nky_loc):: buffer_yl_zc !local y, constant z
-    COMPLEX(dp), DIMENSION(nky_tot):: buffer_yt_zc !full  y, constant z
+    COMPLEX(xp), DIMENSION(nky_loc,nkx_tot,nz_loc), INTENT(IN)  :: field_loc
+    COMPLEX(xp), DIMENSION(nky_tot,nkx_tot,nz_tot), INTENT(OUT) :: field_tot
+    COMPLEX(xp), DIMENSION(nky_tot,nz_loc) :: buffer_yt_zl !full  y, local z
+    COMPLEX(xp), DIMENSION(nky_tot,nz_tot) :: buffer_yt_zt !full  y, full  z
+    COMPLEX(xp), DIMENSION(nky_loc):: buffer_yl_zc !local y, constant z
+    COMPLEX(xp), DIMENSION(nky_tot):: buffer_yt_zc !full  y, constant z
     INTEGER :: snd_y, snd_z, root_p, root_z, root_ky, ix, iz
 
     snd_y  = nky_loc    ! Number of points to send along y (per z)
@@ -277,12 +277,12 @@ CONTAINS
   SUBROUTINE gather_pjz(field_loc,field_tot,np_loc,np_tot,nj_tot,nz_loc,nz_tot)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: np_loc,np_tot, nj_tot, nz_loc,nz_tot
-    COMPLEX(dp), DIMENSION(np_loc,nj_tot,nz_loc), INTENT(IN)  :: field_loc
-    COMPLEX(dp), DIMENSION(np_tot,nj_tot,nz_tot), INTENT(OUT) :: field_tot
-    COMPLEX(dp), DIMENSION(np_tot,nz_loc) :: buffer_pt_zl !full  p, local z
-    COMPLEX(dp), DIMENSION(np_tot,nz_tot) :: buffer_pt_zt !full  p, full  z
-    COMPLEX(dp), DIMENSION(np_loc) :: buffer_pl_zc !local p, constant z
-    COMPLEX(dp), DIMENSION(np_tot) :: buffer_pt_zc !full  p, constant z
+    COMPLEX(xp), DIMENSION(np_loc,nj_tot,nz_loc), INTENT(IN)  :: field_loc
+    COMPLEX(xp), DIMENSION(np_tot,nj_tot,nz_tot), INTENT(OUT) :: field_tot
+    COMPLEX(xp), DIMENSION(np_tot,nz_loc) :: buffer_pt_zl !full  p, local z
+    COMPLEX(xp), DIMENSION(np_tot,nz_tot) :: buffer_pt_zt !full  p, full  z
+    COMPLEX(xp), DIMENSION(np_loc) :: buffer_pl_zc !local p, constant z
+    COMPLEX(xp), DIMENSION(np_tot) :: buffer_pt_zc !full  p, constant z
     INTEGER :: snd_p, snd_z, root_p, root_z, root_ky, ij, iz
 
     snd_p  = np_loc    ! Number of points to send along p (per z)
@@ -317,14 +317,14 @@ CONTAINS
   SUBROUTINE gather_pjxyz(field_loc,field_tot,na_tot,np_loc,np_tot,nj_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: na_tot,np_loc,np_tot,nj_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot
-    COMPLEX(dp), DIMENSION(np_loc,nj_tot,nky_loc,nkx_tot,nz_loc), INTENT(IN)  :: field_loc
-    COMPLEX(dp), DIMENSION(na_tot,np_tot,nj_tot,nky_tot,nkx_tot,nz_tot), INTENT(OUT) :: field_tot
-    COMPLEX(dp), DIMENSION(np_tot,nky_tot,nz_loc) :: buffer_pt_yt_zl ! full p,     full y, local    z
-    COMPLEX(dp), DIMENSION(np_tot,nky_tot,nz_tot) :: buffer_pt_yt_zt ! full p,     full y, full     z
-    COMPLEX(dp), DIMENSION(np_tot,nky_loc) :: buffer_pt_yl_zc     ! full p,    local y, constant z
-    COMPLEX(dp), DIMENSION(np_tot,nky_tot) :: buffer_pt_yt_zc     ! full p,     full y, constant z
-    COMPLEX(dp), DIMENSION(np_loc)       :: buffer_pl_cy_zc     !local p, constant y, constant z
-    COMPLEX(dp), DIMENSION(np_tot)       :: buffer_pt_cy_zc     ! full p, constant y, constant z
+    COMPLEX(xp), DIMENSION(np_loc,nj_tot,nky_loc,nkx_tot,nz_loc), INTENT(IN)  :: field_loc
+    COMPLEX(xp), DIMENSION(na_tot,np_tot,nj_tot,nky_tot,nkx_tot,nz_tot), INTENT(OUT) :: field_tot
+    COMPLEX(xp), DIMENSION(np_tot,nky_tot,nz_loc) :: buffer_pt_yt_zl ! full p,     full y, local    z
+    COMPLEX(xp), DIMENSION(np_tot,nky_tot,nz_tot) :: buffer_pt_yt_zt ! full p,     full y, full     z
+    COMPLEX(xp), DIMENSION(np_tot,nky_loc) :: buffer_pt_yl_zc     ! full p,    local y, constant z
+    COMPLEX(xp), DIMENSION(np_tot,nky_tot) :: buffer_pt_yt_zc     ! full p,     full y, constant z
+    COMPLEX(xp), DIMENSION(np_loc)       :: buffer_pl_cy_zc     !local p, constant y, constant z
+    COMPLEX(xp), DIMENSION(np_tot)       :: buffer_pt_cy_zc     ! full p, constant y, constant z
     INTEGER :: snd_p, snd_y, snd_z, root_p, root_z, root_ky, iy, ix, iz, ij, ia
     snd_p  = np_loc                ! Number of points to send along p (per z,y)
     snd_y  = np_tot*nky_loc        ! Number of points to send along y (per z, full p)
@@ -368,8 +368,8 @@ CONTAINS
   SUBROUTINE manual_3D_bcast(field_,n1,n2,n3)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: n1,n2,n3
-    COMPLEX(dp), DIMENSION(n1,n2,n3), INTENT(INOUT) :: field_
-    COMPLEX(dp) :: buffer(n1,n2,n3)
+    COMPLEX(xp), DIMENSION(n1,n2,n3), INTENT(INOUT) :: field_
+    COMPLEX(xp) :: buffer(n1,n2,n3)
     INTEGER     :: i_, root, world_rank, world_size, count, i1,i2,i3
     root = 0;
     count = n1*n2*n3;
@@ -410,8 +410,8 @@ CONTAINS
   !!!!! This is a manual way to do MPI_BCAST !!!!!!!!!!!
   SUBROUTINE manual_0D_bcast(v)
     IMPLICIT NONE
-    COMPLEX(dp), INTENT(INOUT) :: v
-    COMPLEX(dp) :: buffer
+    COMPLEX(xp), INTENT(INOUT) :: v
+    COMPLEX(xp) :: buffer
     INTEGER     :: i_, root, world_rank, world_size, count
     root = 0;
     count = 1;
@@ -441,7 +441,7 @@ CONTAINS
   SUBROUTINE exchange_ghosts_1D(f,nbr_L,nbr_R,np,ng)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: np,ng, nbr_L, nbr_R
-    COMPLEX(dp), DIMENSION(np+ng), INTENT(INOUT) :: f
+    COMPLEX(xp), DIMENSION(np+ng), INTENT(INOUT) :: f
     INTEGER :: ierr, first, last, ig
     first = 1 + ng/2
     last  = np + ng/2

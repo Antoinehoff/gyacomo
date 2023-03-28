@@ -10,7 +10,7 @@ MODULE nonlinear
                          local_nkx_ptr,kxarray, AA_x, inv_Nx,&
                          local_nz,ngz,zarray,nzgrid
   USE model,       ONLY : LINEARITY, CLOS, NL_CLOS, EM
-  USE prec_const,  ONLY : dp
+  USE prec_const,  ONLY : xp
   USE species,     ONLY : sqrt_tau_o_sigma
   USE time_integration, ONLY : updatetlevel
   use, intrinsic :: iso_c_binding
@@ -19,12 +19,12 @@ MODULE nonlinear
 
   INCLUDE 'fftw3-mpi.f03'
 
-  COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: F_cmpx, G_cmpx
-  COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: Fx_cmpx, Gy_cmpx
-  COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE :: Fy_cmpx, Gx_cmpx, F_conv_G
+  COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: F_cmpx, G_cmpx
+  COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: Fx_cmpx, Gy_cmpx
+  COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: Fy_cmpx, Gx_cmpx, F_conv_G
   INTEGER :: in, is, p_int, j_int, n_int
   INTEGER :: nmax, smax
-  REAL(dp):: sqrt_p, sqrt_pp1
+  REAL(xp):: sqrt_p, sqrt_pp1
   PUBLIC  :: compute_Sapj, nonlinear_init
 
 CONTAINS
@@ -52,7 +52,7 @@ SUBROUTINE compute_Sapj
     CASE ('nonlinear')
       CALL compute_nonlinear
     CASE ('linear')
-      Sapj = 0._dp
+      Sapj = 0._xp
     CASE DEFAULT
       ERROR STOP '>> ERROR << Linearity not recognized '
   END SELECT
@@ -69,8 +69,8 @@ SUBROUTINE compute_nonlinear
       DO ip = 1,local_np ! Loop over Hermite moments
         ipi = ip + ngp/2
         p_int    = parray(ipi)
-        sqrt_p   = SQRT(REAL(p_int,dp))
-        sqrt_pp1 = SQRT(REAL(p_int,dp) + 1._dp)
+        sqrt_p   = SQRT(REAL(p_int,xp))
+        sqrt_pp1 = SQRT(REAL(p_int,xp) + 1._xp)
         eo       = min(nzgrid,MODULO(parray(ip),2)+1)
         DO ia = 1,local_na
           IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmax)) THEN !compute for every moments except for closure 1
@@ -82,14 +82,14 @@ SUBROUTINE compute_nonlinear
             ELSE
               nmax = min(NL_CLOS,Jmax-j_int)
             ENDIF
-            bracket_sum_r = 0._dp ! initialize sum over real nonlinear term
+            bracket_sum_r = 0._xp ! initialize sum over real nonlinear term
             DO in = 1,nmax+1 ! Loop over laguerre for the sum
               ini = in+ngj/2
   !-----------!! ELECTROSTATIC CONTRIBUTION
               ! First convolution terms
               F_cmpx(:,:) = phi(:,:,izi) * kernel(ia,ini,:,:,izi,eo)
               ! Second convolution terms
-              G_cmpx = 0._dp ! initialization of the sum
+              G_cmpx = 0._xp ! initialization of the sum
               smax   = MIN( (in-1)+(ij-1), Jmax );
               DO is = 1, smax+1 ! sum truncation on number of moments
                 isi = is + ngj/2
@@ -103,7 +103,7 @@ SUBROUTINE compute_nonlinear
               ! First convolution terms
               F_cmpx(:,:) = -sqrt_tau_o_sigma(ia) * psi(:,:,izi) * kernel(ia,ini,:,:,izi,eo)
               ! Second convolution terms
-              G_cmpx = 0._dp ! initialization of the sum
+              G_cmpx = 0._xp ! initialization of the sum
               smax   = MIN( (in-1)+(ij-1), Jmax );
               DO is = 1, smax+1 ! sum truncation on number of moments
                 isi = is + ngj/2
@@ -124,7 +124,7 @@ SUBROUTINE compute_nonlinear
               ENDDO
             ENDDO
           ELSE
-            Sapj(ia,ip,ij,:,:,iz) = 0._dp
+            Sapj(ia,ip,ij,:,:,iz) = 0._xp
           ENDIF
         ENDDO
       ENDDO

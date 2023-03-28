@@ -5,8 +5,13 @@ PARTITION  = '/misc/gyacomo23_outputs/';
 
 %% CBC 
 % resdir = 'paper_2_GYAC23/CBC/7x4x192x96x32_nu_0.05_muxy_0.5_muz_0.2';
-resdir = 'paper_2_GYAC23/CBC/7x4x192x96x32_nu_0.05_muxy_1.0_muz_1.0;'
+% resdir = 'paper_2_GYAC23/CBC/7x4x192x96x32_nu_0.05_muxy_1.0_muz_1.0';
+% resdir = 'paper_2_GYAC23/CBC/7x4x192x96x32_nu_0.05_muxy_1.0_muz_2.0';
+% resdir = 'paper_2_GYAC23/CBC/Full_NL_7x4x192x96x32_nu_0.05_muxy_1.0_muz_2.0';
 
+%% tests
+resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24';
+% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_Lx_180';
 %%
 J0 = 00; J1 = 10;
 
@@ -28,6 +33,7 @@ options.INTERP   = 0;
 options.RESOLUTION = 256;
 fig = plot_radial_transport_and_spacetime(data,options);
 
+if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
 options.INTERP    = 0;
@@ -40,7 +46,7 @@ options.NAME      = '\phi';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
-options.PLAN      = 'xz';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -51,3 +57,4 @@ data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
 create_film(data,options,'.gif')
+end

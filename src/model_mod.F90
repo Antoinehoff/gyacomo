@@ -9,23 +9,23 @@ MODULE model
   INTEGER,  PUBLIC, PROTECTED ::    KERN =  0         ! Kernel model
   CHARACTER(len=16), &
             PUBLIC, PROTECTED ::LINEARITY= 'linear'   ! To turn on non linear bracket term
-  REAL(dp), PUBLIC, PROTECTED ::    mu_x =  0._dp     ! spatial    x-Hyperdiffusivity coefficient (for num. stability)
-  REAL(dp), PUBLIC, PROTECTED ::    mu_y =  0._dp     ! spatial    y-Hyperdiffusivity coefficient (for num. stability)
+  REAL(xp), PUBLIC, PROTECTED ::    mu_x =  0._xp     ! spatial    x-Hyperdiffusivity coefficient (for num. stability)
+  REAL(xp), PUBLIC, PROTECTED ::    mu_y =  0._xp     ! spatial    y-Hyperdiffusivity coefficient (for num. stability)
   INTEGER,  PUBLIC, PROTECTED ::    N_HD =  4         ! order of numerical spatial diffusion
   LOGICAL,  PUBLIC, PROTECTED ::   HDz_h =  .false.    ! to apply z-hyperdiffusion on non adiab part
-  REAL(dp), PUBLIC, PROTECTED ::    mu_z =  0._dp     ! spatial    z-Hyperdiffusivity coefficient (for num. stability)
-  REAL(dp), PUBLIC, PROTECTED ::    mu_p =  0._dp     ! kinetic para hyperdiffusivity coefficient (for num. stability)
-  REAL(dp), PUBLIC, PROTECTED ::    mu_j =  0._dp     ! kinetic perp hyperdiffusivity coefficient (for num. stability)
+  REAL(xp), PUBLIC, PROTECTED ::    mu_z =  0._xp     ! spatial    z-Hyperdiffusivity coefficient (for num. stability)
+  REAL(xp), PUBLIC, PROTECTED ::    mu_p =  0._xp     ! kinetic para hyperdiffusivity coefficient (for num. stability)
+  REAL(xp), PUBLIC, PROTECTED ::    mu_j =  0._xp     ! kinetic perp hyperdiffusivity coefficient (for num. stability)
   CHARACTER(len=16), &
   PUBLIC, PROTECTED ::   HYP_V = 'hypcoll'  ! hyperdiffusion model for velocity space ('none','hypcoll','dvpar4')
   INTEGER,  PUBLIC, PROTECTED ::      Na =  1         ! number of evolved species
-  REAL(dp), PUBLIC, PROTECTED ::      nu =  0._dp     ! collision frequency parameter
-  REAL(dp), PUBLIC, PROTECTED ::    k_gB =  1._dp     ! Magnetic gradient strength (L_ref/L_gB)
-  REAL(dp), PUBLIC, PROTECTED ::    k_cB =  1._dp     ! Magnetic curvature strength (L_ref/L_cB)
-  REAL(dp), PUBLIC, PROTECTED :: lambdaD =  0._dp     ! Debye length
-  REAL(dp), PUBLIC, PROTECTED ::    beta =  0._dp     ! electron plasma Beta (8piNT_e/B0^2)
+  REAL(xp), PUBLIC, PROTECTED ::      nu =  0._xp     ! collision frequency parameter
+  REAL(xp), PUBLIC, PROTECTED ::    k_gB =  1._xp     ! Magnetic gradient strength (L_ref/L_gB)
+  REAL(xp), PUBLIC, PROTECTED ::    k_cB =  1._xp     ! Magnetic curvature strength (L_ref/L_cB)
+  REAL(xp), PUBLIC, PROTECTED :: lambdaD =  0._xp     ! Debye length
+  REAL(xp), PUBLIC, PROTECTED ::    beta =  0._xp     ! electron plasma Beta (8piNT_e/B0^2)
   LOGICAL,  PUBLIC            :: ADIAB_E =  .false.   ! adiabatic electron model
-  REAL(dp), PUBLIC, PROTECTED ::   tau_e = 1.0        ! electron temperature ratio for adiabatic electrons
+  REAL(xp), PUBLIC, PROTECTED ::   tau_e = 1.0        ! electron temperature ratio for adiabatic electrons
   ! Auxiliary variable
   LOGICAL,  PUBLIC, PROTECTED ::      EM =  .false.   ! Electromagnetic effects flag
   PUBLIC :: model_readinputs, model_outputinputs
@@ -51,7 +51,7 @@ CONTAINS
 
     IF(Na .EQ. 1) THEN
       IF(my_id.EQ.0) print*, 'Adiabatic electron model -> beta = 0'
-      beta = 0._dp
+      beta = 0._xp
     ENDIF
 
     IF(beta .GT. 0) THEN

@@ -1,6 +1,6 @@
 module cosolver_interface
 ! contains the Hermite-Laguerre collision operators solved using COSOlver.
-USE prec_const, ONLY: dp
+USE prec_const, ONLY: xp
 IMPLICIT NONE
 PRIVATE
 PUBLIC :: load_COSOlver_mat, compute_cosolver_coll
@@ -19,9 +19,9 @@ CONTAINS
     USE MPI
     IMPLICIT NONE
     LOGICAL, INTENT(IN) :: GK_CO
-    COMPLEX(dp), DIMENSION(total_np)    :: local_coll, buffer
-    COMPLEX(dp), DIMENSION(local_np)    :: TColl_distr
-    COMPLEX(dp) :: Tmp_
+    COMPLEX(xp), DIMENSION(total_np)    :: local_coll, buffer
+    COMPLEX(xp), DIMENSION(local_np)    :: TColl_distr
+    COMPLEX(xp) :: Tmp_
     INTEGER :: iz,ikx,iky,ij,ip,ia,ikx_C,iky_C,iz_C
     INTEGER :: ierr
     z:DO iz = 1,local_nz
@@ -74,7 +74,7 @@ CONTAINS
     USE species,     ONLY: nu_ab
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: ia,ip,ij,iky,ikx,iz,ikx_C,iky_C,iz_C
-    COMPLEX(dp), INTENT(OUT) :: local_coll
+    COMPLEX(xp), INTENT(OUT) :: local_coll
     INTEGER :: ib,iq,il
     INTEGER :: p_int,q_int,j_int,l_int
     INTEGER :: izi, iqi, ili
@@ -82,7 +82,7 @@ CONTAINS
     p_int = parray_full(ip)
     j_int = jarray_full(ij)
     !! Apply the cosolver collision matrix
-    local_coll = 0._dp ! Initialization
+    local_coll = 0._xp ! Initialization
     q:DO iq = 1,local_np
       iqi   = iq + ngp/2
       q_int = parray(iqi)
@@ -124,20 +124,20 @@ CONTAINS
       ! Input
       LOGICAL,            INTENT(IN) :: GK_CO, INTERSPECIES
       CHARACTER(len=128), INTENT(IN) :: matfile    ! COSOlver matrix file names
-      REAL(dp),           INTENT(IN) :: collision_kcut
+      REAL(xp),           INTENT(IN) :: collision_kcut
       ! Local variables
-      REAL(dp), DIMENSION(:,:),       ALLOCATABLE :: Caa_full,CabT_full, CabF_full  ! To load the self entire matrices
-      REAL(dp), DIMENSION(:,:,:,:),   ALLOCATABLE :: Caa__kp         ! To store the coeff that will be used along kperp
-      REAL(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: CabF_kp,CabT_kp ! ''
-      REAL(dp), DIMENSION(:),         ALLOCATABLE :: kp_grid_mat     ! kperp grid of the matrices
-      REAL(dp), DIMENSION(2) :: dims
+      REAL(xp), DIMENSION(:,:),       ALLOCATABLE :: Caa_full,CabT_full, CabF_full  ! To load the self entire matrices
+      REAL(xp), DIMENSION(:,:,:,:),   ALLOCATABLE :: Caa__kp         ! To store the coeff that will be used along kperp
+      REAL(xp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: CabF_kp,CabT_kp ! ''
+      REAL(xp), DIMENSION(:),         ALLOCATABLE :: kp_grid_mat     ! kperp grid of the matrices
+      REAL(xp), DIMENSION(2) :: dims
       ! Indices for row and columns of the COSOlver matrix (4D compressed 2D matrices)
       INTEGER  :: irow_sub, irow_full, icol_sub, icol_full
       INTEGER  :: fid                                       ! file indexation
       INTEGER  :: ip, ij, il, ikx, iky, iz, ik, ikp, ikps_C,ikpe_C,ia,ib  ! indices for loops
       INTEGER  :: pdim, jdim                                ! dimensions of the COSOlver matrices
       INTEGER  :: ikp_next, ikp_prev, nkp_mat, ikp_mat
-      REAL(dp) :: kp_max,kperp_sim, kperp_mat, zerotoone
+      REAL(xp) :: kp_max,kperp_sim, kperp_mat, zerotoone
       CHARACTER(len=128) :: var_name, ikp_string, name_a, name_b
       CHARACTER(len=1)   :: letter_a, letter_b
       ! Opening the compiled cosolver matrices results
@@ -225,7 +225,7 @@ CONTAINS
               ENDDO
               ENDDO
             ELSE
-              CabT_kp(ia,ib,:,:,:) = 0._dp; CabF_kp(ia,ib,:,:,:) = 0._dp
+              CabT_kp(ia,ib,:,:,:) = 0._xp; CabF_kp(ia,ib,:,:,:) = 0._xp
             ENDIF
           ENDDO b
         ENDDO a
@@ -259,15 +259,15 @@ CONTAINS
                 ! write(*,*) kp_grid_mat(ikp_prev), '<', kperp_sim, '<', kp_grid_mat(ikp_next)
               ENDIF
               ! 0->1 variable for linear interp, i.e. zero2one = (k-k0)/(k1-k0)
-              zerotoone = MIN(1._dp,(kperp_sim - kp_grid_mat(ikp_prev))/(kp_grid_mat(ikp_next) - kp_grid_mat(ikp_prev)))
+              zerotoone = MIN(1._xp,(kperp_sim - kp_grid_mat(ikp_prev))/(kp_grid_mat(ikp_next) - kp_grid_mat(ikp_prev)))
               ! Linear interpolation between previous and next kperp matrix values
               Caa (:,:,:,iky,ikx,iz) = (Caa__kp(:,:,:,ikp_next) - Caa__kp(:,:,:,ikp_prev))*zerotoone + Caa__kp(:,:,:,ikp_prev)
               IF(INTERSPECIES) THEN
                 Cab_T(:,:,:,:,iky,ikx,iz) = (CabT_kp(:,:,:,:,ikp_next) - CabT_kp(:,:,:,:,ikp_prev))*zerotoone + CabT_kp(:,:,:,:,ikp_prev)
                 Cab_F(:,:,:,:,iky,ikx,iz) = (CabF_kp(:,:,:,:,ikp_next) - CabF_kp(:,:,:,:,ikp_prev))*zerotoone + CabF_kp(:,:,:,:,ikp_prev)
               ELSE
-                Cab_T(:,:,:,:,iky,ikx,iz) = 0._dp
-                Cab_F(:,:,:,:,iky,ikx,iz) = 0._dp
+                Cab_T(:,:,:,:,iky,ikx,iz) = 0._xp
+                Cab_F(:,:,:,:,iky,ikx,iz) = 0._xp
               ENDIF
             ENDDO
           ENDDO
@@ -282,8 +282,8 @@ CONTAINS
 
       IF( .NOT. INTERSPECIES ) THEN
         CALL speak("--Like Species operator--")
-        Cab_F = 0._dp;
-        Cab_T = 0._dp;
+        Cab_F = 0._xp;
+        Cab_T = 0._xp;
       ENDIF
       ! Build the self matrix   
       ! nuCself = nuaa*Caa + sum_b_neq_a nu_ab Cab_T

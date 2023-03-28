@@ -1,6 +1,6 @@
 module ghosts
 USE mpi
-USE prec_const, ONLY: dp
+USE prec_const, ONLY: xp
 IMPLICIT NONE
 
 INTEGER :: status(MPI_STATUS_SIZE), source, dest, count, ipg
@@ -28,7 +28,7 @@ SUBROUTINE update_ghosts_EM
   IMPLICIT NONE
   IF(total_nz .GT. 1) THEN
     CALL update_ghosts_z_3D(phi)
-    IF(beta .GT. 0._dp) &
+    IF(beta .GT. 0._xp) &
       CALL update_ghosts_z_3D(psi)
   ENDIF
 END SUBROUTINE update_ghosts_EM
@@ -102,7 +102,7 @@ SUBROUTINE update_ghosts_z_mom
                       ngp,ngj,ngz
   IMPLICIT NONE
   !! buffer for data exchanges
-  COMPLEX(dp),DIMENSION(local_na,local_np+ngp,local_nj+ngj,local_nky,local_nkx,-Ngz/2:Ngz/2) :: buff_pjxy_zBC
+  COMPLEX(xp),DIMENSION(local_na,local_np+ngp,local_nj+ngj,local_nky,local_nkx,-Ngz/2:Ngz/2) :: buff_pjxy_zBC
   INTEGER :: ikxBC_L, ikxBC_R, ikx, iky, first, last, ig, ierr
   first = 1 + ngz/2
   last  = local_nz + ngz/2
@@ -139,7 +139,7 @@ SUBROUTINE update_ghosts_z_mom
         ENDDO
       ELSE
         DO ig=1,ngz/2
-          moments(:,:,:,iky,ikx,first-ig,updatetlevel) = 0._dp
+          moments(:,:,:,iky,ikx,first-ig,updatetlevel) = 0._xp
         ENDDO
       ENDIF
       ikxBC_R = ikx_zBC_R(iky,ikx);
@@ -151,7 +151,7 @@ SUBROUTINE update_ghosts_z_mom
         ENDDO
       ELSE
         DO ig=1,ngz/2
-          moments(:,:,:,iky,ikx,last+ig,updatetlevel) = 0._dp
+          moments(:,:,:,iky,ikx,last+ig,updatetlevel) = 0._xp
         ENDDO
       ENDIF
     ENDDO
@@ -164,8 +164,8 @@ SUBROUTINE update_ghosts_z_3D(field)
   USE grid,     ONLY: local_nky,local_nkx,local_nz,ngz
   IMPLICIT NONE
   !! buffer for data exchanges
-  COMPLEX(dp),DIMENSION(local_nky,local_nkx,-ngz/2:ngz/2) :: buff_xy_zBC
-  COMPLEX(dp), INTENT(INOUT) :: field(local_nky,local_nkx,local_nz+ngz)
+  COMPLEX(xp),DIMENSION(local_nky,local_nkx,-ngz/2:ngz/2) :: buff_xy_zBC
+  COMPLEX(xp), INTENT(INOUT) :: field(local_nky,local_nkx,local_nz+ngz)
   INTEGER :: ikxBC_L, ikxBC_R, ikx, iky, first, last, ig, ierr
   first = 1 + ngz/2
   last  = local_nz + ngz/2
@@ -200,7 +200,7 @@ SUBROUTINE update_ghosts_z_3D(field)
         ENDDO
       ELSE
         DO ig = 1,ngz/2
-          field(iky,ikx,first-ig) = 0._dp
+          field(iky,ikx,first-ig) = 0._xp
         ENDDO
       ENDIF
       ikxBC_R = ikx_zBC_R(iky,ikx);
@@ -211,7 +211,7 @@ SUBROUTINE update_ghosts_z_3D(field)
         ENDDO
       ELSE
         DO ig = 1,ngz/2
-          field(iky,ikx,last+ig) = 0._dp
+          field(iky,ikx,last+ig) = 0._xp
         ENDDO
       ENDIF
     ENDDO

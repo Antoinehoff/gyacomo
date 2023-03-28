@@ -72,9 +72,9 @@ MODULE fourier
                                      local_nky_ptr, local_nkx_ptr, F_, G_, sum_real_)
     IMPLICIT NONE
     INTEGER(C_INTPTR_T),                  INTENT(IN) :: local_nkx_ptr,local_nky_ptr
-    REAL(dp),                             INTENT(IN) :: inv_Nx, inv_Ny
-    REAL(dp), DIMENSION(local_nky_ptr),   INTENT(IN) :: ky_, AA_y
-    REAL(dp), DIMENSION(local_nkx_ptr),   INTENT(IN) :: kx_, AA_x
+    REAL(xp),                             INTENT(IN) :: inv_Nx, inv_Ny
+    REAL(xp), DIMENSION(local_nky_ptr),   INTENT(IN) :: ky_, AA_y
+    REAL(xp), DIMENSION(local_nkx_ptr),   INTENT(IN) :: kx_, AA_x
     COMPLEX(C_DOUBLE_COMPLEX), DIMENSION(local_nky_ptr,local_nkx_ptr), &
                                           INTENT(IN) :: F_(:,:), G_(:,:)
     real(C_DOUBLE), pointer,              INTENT(INOUT) :: sum_real_(:,:)

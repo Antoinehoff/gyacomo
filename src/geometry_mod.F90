@@ -1,25 +1,25 @@
 module geometry
 ! computes geometrical quantities
 ! Adapted from B.J.Frei MOLIX code (2021)
-  use prec_const, ONLY: dp
+  use prec_const, ONLY: xp
 implicit none
   PRIVATE
   ! Geometry input parameters
   CHARACTER(len=16), &
                PUBLIC, PROTECTED :: geom      = 's-alpha'
-  REAL(dp),    PUBLIC, PROTECTED :: q0        = 1.4_dp  ! safety factor
-  REAL(dp),    PUBLIC, PROTECTED :: shear     = 0._dp   ! magnetic field shear
-  REAL(dp),    PUBLIC, PROTECTED :: eps       = 0.18_dp ! inverse aspect ratio
-  REAL(dp),    PUBLIC, PROTECTED :: alpha_MHD = 0 ! shafranov shift effect alpha = -q2 R dbeta/dr
+  REAL(xp),    PUBLIC, PROTECTED :: q0        = 1.4_xp  ! safety factor
+  REAL(xp),    PUBLIC, PROTECTED :: shear     = 0._xp   ! magnetic field shear
+  REAL(xp),    PUBLIC, PROTECTED :: eps       = 0.18_xp ! inverse aspect ratio
+  REAL(xp),    PUBLIC, PROTECTED :: alpha_MHD = 0 ! shafranov shift effect alpha = -q2 R dbeta/dr
   ! parameters for Miller geometry
-  REAL(dp),    PUBLIC, PROTECTED :: kappa     = 1._dp ! elongation (1 for circular)
-  REAL(dp),    PUBLIC, PROTECTED :: s_kappa   = 0._dp ! r normalized derivative skappa = r/kappa dkappa/dr
-  REAL(dp),    PUBLIC, PROTECTED :: delta     = 0._dp ! triangularity
-  REAL(dp),    PUBLIC, PROTECTED :: s_delta   = 0._dp ! '' sdelta = r/sqrt(1-delta2) ddelta/dr
-  REAL(dp),    PUBLIC, PROTECTED :: zeta      = 0._dp ! squareness
-  REAL(dp),    PUBLIC, PROTECTED :: s_zeta    = 0._dp ! '' szeta = r dzeta/dr
+  REAL(xp),    PUBLIC, PROTECTED :: kappa     = 1._xp ! elongation (1 for circular)
+  REAL(xp),    PUBLIC, PROTECTED :: s_kappa   = 0._xp ! r normalized derivative skappa = r/kappa dkappa/dr
+  REAL(xp),    PUBLIC, PROTECTED :: delta     = 0._xp ! triangularity
+  REAL(xp),    PUBLIC, PROTECTED :: s_delta   = 0._xp ! '' sdelta = r/sqrt(1-delta2) ddelta/dr
+  REAL(xp),    PUBLIC, PROTECTED :: zeta      = 0._xp ! squareness
+  REAL(xp),    PUBLIC, PROTECTED :: s_zeta    = 0._xp ! '' szeta = r dzeta/dr
   ! to apply shift in the parallel z-BC if shearless
-  REAL(dp),    PUBLIC, PROTECTED :: shift_y   = 0._dp ! for Arno <3
+  REAL(xp),    PUBLIC, PROTECTED :: shift_y   = 0._xp ! for Arno <3
   INTEGER,     PUBLIC, PROTECTED :: Npol      = 1         ! number of poloidal turns
   ! Chooses the type of parallel BC we use for the unconnected kx modes (active for non-zero shear only)
   !  'periodic'     : Connect a disconnected kx to a mode on the other cadran
@@ -30,39 +30,39 @@ implicit none
                PUBLIC, PROTECTED :: parallel_bc
 
   ! GENE unused additional parameters for miller_mod
-  REAL(dp), PUBLIC, PROTECTED :: edge_opt      = 0._dp ! meant to redistribute the points in z
-  REAL(dp), PUBLIC, PROTECTED :: major_R       = 1._dp ! major radius
-  REAL(dp), PUBLIC, PROTECTED :: major_Z       = 0._dp ! vertical elevation
-  REAL(dp), PUBLIC, PROTECTED :: dpdx_pm_geom  = 0._dp ! amplitude mag. eq. pressure grad.
-  REAL(dp), PUBLIC, PROTECTED ::          C_y  = 0._dp ! defines y coordinate : Cy (q theta - phi)
-  REAL(dp), PUBLIC, PROTECTED ::         C_xy  = 1._dp ! defines x coordinate : B = Cxy Vx x Vy
+  REAL(xp), PUBLIC, PROTECTED :: edge_opt      = 0._xp ! meant to redistribute the points in z
+  REAL(xp), PUBLIC, PROTECTED :: major_R       = 1._xp ! major radius
+  REAL(xp), PUBLIC, PROTECTED :: major_Z       = 0._xp ! vertical elevation
+  REAL(xp), PUBLIC, PROTECTED :: xpdx_pm_geom  = 0._xp ! amplitude mag. eq. pressure grad.
+  REAL(xp), PUBLIC, PROTECTED ::          C_y  = 0._xp ! defines y coordinate : Cy (q theta - phi)
+  REAL(xp), PUBLIC, PROTECTED ::         C_xy  = 1._xp ! defines x coordinate : B = Cxy Vx x Vy
 
   ! Geometrical auxiliary variables
   LOGICAL,     PUBLIC, PROTECTED :: SHEARED  = .false. ! flag for shear magn. geom or not
   ! Curvature
-  REAL(dp),    PUBLIC, DIMENSION(:,:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z, odd/even p
+  REAL(xp),    PUBLIC, DIMENSION(:,:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z, odd/even p
   ! Jacobian
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: Jacobian ! dimensions: z, odd/even p
-  COMPLEX(dp), PUBLIC, PROTECTED        :: iInt_Jacobian ! Inverse integrated Jacobian
+  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: Jacobian ! dimensions: z, odd/even p
+  COMPLEX(xp), PUBLIC, PROTECTED        :: iInt_Jacobian ! Inverse integrated Jacobian
   ! Metric
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: gxx, gxy, gxz, gyy, gyz, gzz ! dimensions: z, odd/even p
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dxdr, dxdZ, Rc, phic, Zc
+  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: gxx, gxy, gxz, gyy, gyz, gzz ! dimensions: z, odd/even p
+  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dxdr, dxdZ, Rc, phic, Zc
   ! derivatives of magnetic field strength
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dBdx, dBdy, dBdz, dlnBdz
+  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dBdx, dBdy, dBdz, dlnBdz
   ! Relative magnetic field strength
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatB
+  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatB
   ! Relative strength of major radius
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatR, hatZ
+  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatR, hatZ
   ! Some geometrical coefficients
-  REAL(dp),    PUBLIC, DIMENSION(:,:) , ALLOCATABLE :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
+  REAL(xp),    PUBLIC, DIMENSION(:,:) , ALLOCATABLE :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
   ! Array to map the index of mode (kx,ky,-pi) to (kx+2pi*s*ky,ky,pi) for sheared periodic boundary condition
   INTEGER,     PUBLIC, DIMENSION(:,:), ALLOCATABLE :: ikx_zBC_L, ikx_zBC_R
   ! Geometric factor in front of the parallel phi derivative (not implemented)
-  ! REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: Gamma_phipar
+  ! REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: Gamma_phipar
   ! pb_phase, for parallel boundary phase, contains the factor that occurs when taking into account
   !   that q0 is defined in the middle of the fluxtube whereas the radial position spans in [0,Lx)
   !   This shift introduces a (-1)^(Nexc*iky) phase change that is included in GENE
-  COMPLEX(dp), PUBLIC, DIMENSION(:),   ALLOCATABLE :: pb_phase_L, pb_phase_R
+  COMPLEX(xp), PUBLIC, DIMENSION(:),   ALLOCATABLE :: pb_phase_L, pb_phase_R
 
   ! Functions
   PUBLIC :: geometry_readinputs, geometry_outputinputs,&
@@ -78,7 +78,7 @@ CONTAINS
       kappa, s_kappa,delta, s_delta, zeta, s_zeta,& ! For miller
       parallel_bc, shift_y, Npol
     READ(lu_in,geometry)
-    IF(shear .NE. 0._dp) SHEARED = .true.
+    IF(shear .NE. 0._xp) SHEARED = .true.
     SELECT CASE(parallel_bc)
       CASE ('dirichlet')
       CASE ('periodic')
@@ -100,9 +100,9 @@ CONTAINS
     USE calculus, ONLY: simpson_rule_z
     ! evalute metrix, elementwo_third_kpmaxts, jacobian and gradient
     implicit none
-    REAL(dp) :: kx,ky
-    COMPLEX(dp), DIMENSION(local_nz) :: integrant
-    real(dp) :: G1,G2,G3,Cx,Cy
+    REAL(xp) :: kx,ky
+    COMPLEX(xp), DIMENSION(local_nz) :: integrant
+    real(xp) :: G1,G2,G3,Cx,Cy
     INTEGER  :: eo,iz,iky,ikx
 
     ! Allocate arrays
@@ -120,12 +120,12 @@ CONTAINS
           CALL speak('Z-pinch geometry')
           call eval_zpinch_geometry
           SHEARED = .FALSE.
-          shear   = 0._dp
+          shear   = 0._xp
         CASE('miller')
           CALL speak('Miller geometry')
           call set_miller_parameters(kappa,s_kappa,delta,s_delta,zeta,s_zeta)
           call get_miller(eps,major_R,major_Z,q0,shear,Npol,alpha_MHD,edge_opt,&
-                          C_y,C_xy,dpdx_pm_geom,gxx,gyy,gzz,gxy,gxz,gyz,&
+                          C_y,C_xy,xpdx_pm_geom,gxx,gyy,gzz,gxy,gxz,gyz,&
                           dBdx,dBdy,hatB,jacobian,dBdz,hatR,hatZ,dxdR,dxdZ,&
                           Ckxky,gradz_coeff)
         CASE DEFAULT
@@ -154,7 +154,7 @@ CONTAINS
            ENDDO
         ENDDO
         ! coefficient in the front of parallel derivative
-        gradz_coeff(iz,eo) = 1._dp /(jacobian(iz,eo)*hatB(iz,eo))
+        gradz_coeff(iz,eo) = 1._xp /(jacobian(iz,eo)*hatB(iz,eo))
         ! d/dz(ln B) to correspond to the formulation in paper 2023
         dlnBdz(iz,eo)      = dBdz(iz,eo)/hatB(iz,eo)
         ! Geometric factor in front to the maxwellian dzphi term (not implemented)
@@ -168,7 +168,7 @@ CONTAINS
     ! Compute the inverse z integrated Jacobian (useful for flux averaging)
     integrant = Jacobian((1+ngz/2):(local_nz+ngz/2),ieven) ! Convert into complex array
     CALL simpson_rule_z(local_nz,zweights_SR,integrant,iInt_Jacobian)
-    iInt_Jacobian = 1._dp/iInt_Jacobian ! reverse it
+    iInt_Jacobian = 1._xp/iInt_Jacobian ! reverse it
   END SUBROUTINE eval_magnetic_geometry
   !
   !--------------------------------------------------------------------------------
@@ -178,27 +178,27 @@ CONTAINS
     USE grid, ONLY : local_nz,Ngz,zarray,nzgrid
   ! evaluate s-alpha geometry model
   implicit none
-  REAL(dp) :: z
+  REAL(xp) :: z
   INTEGER  :: iz, eo
-  alpha_MHD = 0._dp
+  alpha_MHD = 0._xp
 
   DO eo = 1,nzgrid
    DO iz = 1,local_nz+Ngz
     z = zarray(iz,eo)
 
     ! metric
-      gxx(iz,eo) = 1._dp
+      gxx(iz,eo) = 1._xp
       gxy(iz,eo) = shear*z - alpha_MHD*SIN(z)
-      gxz(iz,eo) = 0._dp
-      gyy(iz,eo) = 1._dp + (shear*z - alpha_MHD*SIN(z))**2
-      gyz(iz,eo) = 1._dp/eps
-      gzz(iz,eo) = 1._dp/eps**2
+      gxz(iz,eo) = 0._xp
+      gyy(iz,eo) = 1._xp + (shear*z - alpha_MHD*SIN(z))**2
+      gyz(iz,eo) = 1._xp/eps
+      gzz(iz,eo) = 1._xp/eps**2
       dxdR(iz,eo)= COS(z)
       dxdZ(iz,eo)= SIN(z)
 
     ! Poloidal plane coordinates
-      hatR(iz,eo) = 1._dp + eps*COS(z)
-      hatZ(iz,eo) = 1._dp + eps*SIN(z)
+      hatR(iz,eo) = 1._xp + eps*COS(z)
+      hatZ(iz,eo) = 1._xp + eps*SIN(z)
 
     ! toroidal coordinates
       Rc  (iz,eo) = hatR(iz,eo)
@@ -206,18 +206,18 @@ CONTAINS
       Zc  (iz,eo) = hatZ(iz,eo)
 
     ! Relative strengh of modulus of B
-      hatB(iz,eo) = 1._dp/(1._dp + eps*COS(z))
+      hatB(iz,eo) = 1._xp/(1._xp + eps*COS(z))
 
     ! Jacobian
       Jacobian(iz,eo) = q0/hatB(iz,eo)
 
     ! Derivative of the magnetic field strenght
       dBdx(iz,eo) = -COS(z)*hatB(iz,eo)**2 ! LB = 1
-      dBdy(iz,eo) =  0._dp
+      dBdy(iz,eo) =  0._xp
       dBdz(iz,eo) =  eps*SIN(z)*hatB(iz,eo)**2
 
     ! Curvature factor
-      C_xy = 1._dp
+      C_xy = 1._xp
 
    ENDDO
   ENDDO
@@ -229,27 +229,27 @@ CONTAINS
   SUBROUTINE eval_zpinch_geometry
   USE grid, ONLY : local_nz,Ngz,zarray,nzgrid
   implicit none
-  REAL(dp) :: z
+  REAL(xp) :: z
   INTEGER  :: iz, eo
-  alpha_MHD = 0._dp
+  alpha_MHD = 0._xp
 
   DO eo = 1,nzgrid
    DO iz = 1,local_nz+Ngz
     z = zarray(iz,eo)
 
     ! metric
-      gxx(iz,eo) = 1._dp
-      gxy(iz,eo) = 0._dp
-      gxz(iz,eo) = 0._dp
-      gyy(iz,eo) = 1._dp ! 1/R but R is the normalization length
-      gyz(iz,eo) = 0._dp
-      gzz(iz,eo) = 1._dp
+      gxx(iz,eo) = 1._xp
+      gxy(iz,eo) = 0._xp
+      gxz(iz,eo) = 0._xp
+      gyy(iz,eo) = 1._xp ! 1/R but R is the normalization length
+      gyz(iz,eo) = 0._xp
+      gzz(iz,eo) = 1._xp
       dxdR(iz,eo)= COS(z)
       dxdZ(iz,eo)= SIN(z)
 
     ! Relative strengh of radius
-      hatR(iz,eo) = 1._dp ! R but R is the normalization length
-      hatZ(iz,eo) = 1._dp
+      hatR(iz,eo) = 1._xp ! R but R is the normalization length
+      hatZ(iz,eo) = 1._xp
 
     ! toroidal coordinates
       Rc  (iz,eo) = hatR(iz,eo)
@@ -257,21 +257,21 @@ CONTAINS
       Zc  (iz,eo) = hatZ(iz,eo)
 
     ! Jacobian
-      Jacobian(iz,eo) = 1._dp ! R but R is the normalization length
+      Jacobian(iz,eo) = 1._xp ! R but R is the normalization length
 
     ! Relative strengh of modulus of B
-      hatB   (iz,eo) = 1._dp
+      hatB   (iz,eo) = 1._xp
 
     ! Derivative of the magnetic field strenght
       dBdx(iz,eo) = -hatB(iz,eo) ! LB = 1
-      dBdy(iz,eo) = 0._dp
-      dBdz(iz,eo) = 0._dp ! Gene put a factor hatB or 1/hatR in this
+      dBdy(iz,eo) = 0._xp
+      dBdz(iz,eo) = 0._xp ! Gene put a factor hatB or 1/hatR in this
 
   ENDDO
   ENDDO
 
   ! Curvature factor
-    C_xy = 1._dp
+    C_xy = 1._xp
   END SUBROUTINE eval_zpinch_geometry
     !
     !--------------------------------------------------------------------------------
@@ -280,25 +280,25 @@ CONTAINS
     USE grid, ONLY : local_nz,Ngz,zarray, nzgrid
     ! evaluate 1D perp geometry model
     implicit none
-    REAL(dp) :: z
+    REAL(xp) :: z
     INTEGER  :: iz, eo
     DO eo = 1,nzgrid
       DO iz = 1,local_nz+Ngz
       z = zarray(iz,eo)
 
       ! metric
-      gxx(iz,eo) = 1._dp
-      gxy(iz,eo) = 0._dp
-      gyy(iz,eo) = 1._dp
+      gxx(iz,eo) = 1._xp
+      gxy(iz,eo) = 0._xp
+      gyy(iz,eo) = 1._xp
 
       ! Relative strengh of radius
-      hatR(iz,eo) = 1._dp
+      hatR(iz,eo) = 1._xp
 
       ! Jacobian
-      Jacobian(iz,eo) = 1._dp
+      Jacobian(iz,eo) = 1._xp
 
       ! Relative strengh of modulus of B
-      hatB(iz,eo) = 1._dp
+      hatB(iz,eo) = 1._xp
 
       ENDDO
     ENDDO
@@ -313,7 +313,7 @@ CONTAINS
                          local_nky_offset
    USE prec_const, ONLY: imagu, pi
    IMPLICIT NONE
-   ! REAL(dp) :: shift
+   ! REAL(xp) :: shift
    INTEGER :: ikx,iky, mn_y
    ALLOCATE(ikx_zBC_L(local_nky,total_nkx))
    ALLOCATE(ikx_zBC_R(local_nky,total_nkx))
@@ -330,8 +330,8 @@ CONTAINS
        ikx_zBC_L(iky,ikx) = ikx ! connect to itself per default
        ikx_zBC_R(iky,ikx) = ikx
      ENDDO
-     pb_phase_L(iky) = 1._dp ! no phase change per default
-     pb_phase_R(iky) = 1._dp
+     pb_phase_L(iky) = 1._xp ! no phase change per default
+     pb_phase_R(iky) = 1._xp
    ENDDO
    ! Parallel boundary are not trivial for sheared case and if
    !  the user does not ask explicitly for shearless bc
@@ -343,7 +343,7 @@ CONTAINS
         ! get the real mode number (iky starts at 1 and is shifted from paral)
         mn_y = iky-1+local_nky_offset
         ! Formula for the shift due to shear after Npol turns
-        ! shift = 2._dp*PI*shear*kyarray(iky)*Npol
+        ! shift = 2._xp*PI*shear*kyarray(iky)*Npol
           DO ikx = 1,total_nkx
             ! Usual formula for shifting indices using that dkx = 2pi*shear*dky/Nexc
             ikx_zBC_L(iky,ikx) = ikx-mn_y*Nexc
@@ -362,7 +362,7 @@ CONTAINS
           ENDDO
           ! phase present in GENE from a shift of the x origin by Lx/2 (useless?)
           ! We also put the user defined shift in the y direction (see Volcokas et al. 2022)
-          pb_phase_L(iky) = (-1._dp)**(Nexc*mn_y)*EXP(imagu*REAL(mn_y,dp)*2._dp*pi*shift_y)
+          pb_phase_L(iky) = (-1._xp)**(Nexc*mn_y)*EXP(imagu*REAL(mn_y,xp)*2._xp*pi*shift_y)
        ENDDO
      ENDIF
      ! Option for disconnecting every modes, viz. connecting all boundary to 0
@@ -373,7 +373,7 @@ CONTAINS
         ! get the real mode number (iky starts at 1 and is shifted from paral)
         mn_y = iky-1+local_nky_offset
         ! Formula for the shift due to shear after Npol
-        ! shift = 2._dp*PI*shear*kyarray(iky)*Npol
+        ! shift = 2._xp*PI*shear*kyarray(iky)*Npol
           DO ikx = 1,total_nkx
             ! Usual formula for shifting indices
             ikx_zBC_R(iky,ikx) = ikx+mn_y*Nexc
@@ -393,7 +393,7 @@ CONTAINS
           ENDDO
           ! phase present in GENE from a shift ofthe x origin by Lx/2 (useless?)
           ! We also put the user defined shift in the y direction (see Volcokas et al. 2022)
-          pb_phase_R(iky) = (-1._dp)**(Nexc*mn_y)*EXP(-imagu*REAL(mn_y,dp)*2._dp*pi*shift_y)
+          pb_phase_R(iky) = (-1._xp)**(Nexc*mn_y)*EXP(-imagu*REAL(mn_y,xp)*2._xp*pi*shift_y)
        ENDDO
      ENDIF
      ! Option for disconnecting every modes, viz. connecting all boundary to 0

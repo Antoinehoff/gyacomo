@@ -100,12 +100,12 @@ SUBROUTINE init_moments
                         ngp, ngj, ngz, iky0, contains_ky0, AA_x, AA_y
   USE initial_par,ONLY: iseed, init_noiselvl, init_background
   USE fields,     ONLY: moments
-  USE prec_const, ONLY: dp
+  USE prec_const, ONLY: xp
   USE model,      ONLY: LINEARITY
   USE parallel,   ONLY: my_id
   IMPLICIT NONE
 
-  REAL(dp) :: noise
+  REAL(xp) :: noise
   INTEGER, DIMENSION(12) :: iseedarr
   INTEGER  :: ia,ip,ij,ikx,iky,iz, ipi,iji,izi
 
@@ -124,7 +124,7 @@ SUBROUTINE init_moments
             DO iz=1,local_nz
               izi = iz+ngz/2
               CALL RANDOM_NUMBER(noise)
-              moments(ia,ipi,iji,iky,ikx,izi,:) = (init_background + init_noiselvl*(noise-0.5_dp))
+              moments(ia,ipi,iji,iky,ikx,izi,:) = (init_background + init_noiselvl*(noise-0.5_xp))
             END DO
           END DO
         END DO
@@ -163,20 +163,20 @@ SUBROUTINE init_gyrodens
   USE grid,       ONLY: local_na, local_np, local_nj, total_nkx, local_nky, local_nz,&
                         ngp, ngj, ngz, iky0, parray, jarray, contains_ky0, AA_x, AA_y
   USE fields,     ONLY: moments
-  USE prec_const, ONLY: dp
+  USE prec_const, ONLY: xp
   USE initial_par,ONLY: iseed, init_noiselvl, init_background
   USE model,      ONLY: LINEARITY
   USE parallel,   ONLY: my_id
   IMPLICIT NONE
 
-  REAL(dp) :: noise
+  REAL(xp) :: noise
   INTEGER  :: ia,ip,ij,ikx,iky,iz
   INTEGER, DIMENSION(12) :: iseedarr
 
   ! Seed random number generator
   iseedarr(:)=iseed
   CALL RANDOM_SEED(PUT=iseedarr+my_id)
-  moments = 0._dp
+  moments = 0._xp
     !**** Broad noise initialization *******************************************
   DO ia=1,local_na
     DO ip=1+ngp/2,local_np+ngp/2
@@ -186,9 +186,9 @@ SUBROUTINE init_gyrodens
             DO iz=1+ngz/2,local_nz+ngz/2
               CALL RANDOM_NUMBER(noise)
               IF ( (parray(ip) .EQ. 0) .AND. (jarray(ij) .EQ. 0) ) THEN
-                moments(ia,ip,ij,iky,ikx,iz,:) = (init_background + init_noiselvl*(noise-0.5_dp))
+                moments(ia,ip,ij,iky,ikx,iz,:) = (init_background + init_noiselvl*(noise-0.5_xp))
               ELSE
-                moments(ia,ip,ij,iky,ikx,iz,:) = 0._dp
+                moments(ia,ip,ij,iky,ikx,iz,:) = 0._xp
               ENDIF
             END DO
           END DO
@@ -225,12 +225,12 @@ SUBROUTINE init_phi
   USE grid,       ONLY: total_nkx, local_nky, local_nz,&
                         ngz, iky0, ikx0, contains_ky0
   USE fields,     ONLY: phi, moments
-  USE prec_const, ONLY: dp
+  USE prec_const, ONLY: xp
   USE initial_par,ONLY: iseed, init_noiselvl, init_background
   USE model,      ONLY: LINEARITY
   USE parallel,   ONLY: my_id
   IMPLICIT NONE
-  REAL(dp) :: noise
+  REAL(xp) :: noise
   INTEGER, DIMENSION(12) :: iseedarr
   INTEGER :: iky,ikx,iz
   ! Seed random number generator
@@ -241,7 +241,7 @@ SUBROUTINE init_phi
     DO iky=1,local_nky
       DO iz=1,local_nz+ngz
         CALL RANDOM_NUMBER(noise)
-        phi(iky,ikx,iz) = (init_background + init_noiselvl*(noise-0.5_dp))!*AA_x(ikx)*AA_y(iky)
+        phi(iky,ikx,iz) = (init_background + init_noiselvl*(noise-0.5_xp))!*AA_x(ikx)*AA_y(iky)
       ENDDO
     END DO
   END DO
@@ -251,11 +251,11 @@ SUBROUTINE init_phi
       DO ikx=2,total_nkx/2
         phi(iky0,ikx,iz) = phi(iky0,total_nkx+2-ikx,iz)
       ENDDO
-    phi(iky0,ikx0,iz) = REAL(phi(iky0,ikx0,iz),dp) !origin must be real
+    phi(iky0,ikx0,iz) = REAL(phi(iky0,ikx0,iz),xp) !origin must be real
   END DO
   ENDIF
   !**** ensure no previous moments initialization
-  moments = 0._dp
+  moments = 0._xp
   !**** Zonal Flow initialization *******************************************
   ! put a mode at ikx = mode number + 1, symmetry is already included since kx>=0
   ! IF(INIT_ZF .GT. 0) THEN
@@ -263,8 +263,8 @@ SUBROUTINE init_phi
   !   IF( (INIT_ZF+1 .GT. ikxs) .AND. (INIT_ZF+1 .LT. ikxe) ) THEN
   !     DO ia=1,local_na
   !       DO iz = 1,local_nz+ngz
-  !         phi(iky0,INIT_ZF+1,iz) = ZF_AMP*(2._dp*PI)**2/deltakx/deltaky/2._dp * COS((iz-1)/Nz*2._dp*PI)
-  !         moments(ia,ip0,ij0,iky0,INIT_ZF+1,iz,:) = kxarray(INIT_ZF+1)**2*phi(iky0,INIT_ZF+1,iz)* COS((iz-1)/Nz*2._dp*PI)
+  !         phi(iky0,INIT_ZF+1,iz) = ZF_AMP*(2._xp*PI)**2/deltakx/deltaky/2._xp * COS((iz-1)/Nz*2._xp*PI)
+  !         moments(ia,ip0,ij0,iky0,INIT_ZF+1,iz,:) = kxarray(INIT_ZF+1)**2*phi(iky0,INIT_ZF+1,iz)* COS((iz-1)/Nz*2._xp*PI)
   !       ENDDO
   !     ENDDO
   !   ENDIF
@@ -279,14 +279,14 @@ SUBROUTINE init_phi_ppj
   USE grid,       ONLY: total_nkx, local_nky, local_nz,&
                         ngz, iky0, ikx0, contains_ky0, ieven, kxarray, kyarray, zarray, deltakx
   USE fields,     ONLY: phi, moments
-  USE prec_const, ONLY: dp
+  USE prec_const, ONLY: xp
   USE initial_par,ONLY: iseed, init_noiselvl, init_background
   USE model,      ONLY: LINEARITY
   USE geometry,   ONLY: Jacobian, iInt_Jacobian
   IMPLICIT NONE
-  REAL(dp) :: kx, ky, z, amp
+  REAL(xp) :: kx, ky, z, amp
   INTEGER  :: ikx, iky, iz
-  amp = 1.0_dp
+  amp = 1.0_xp
     !**** ppj initialization *******************************************
       DO ikx=1,total_nkx
         kx = kxarray(ikx)
@@ -295,9 +295,9 @@ SUBROUTINE init_phi_ppj
           DO iz=1,local_nz+ngz
             z = zarray(iz,ieven)
             IF (ky .NE. 0) THEN
-              phi(iky,ikx,iz) = 0._dp
+              phi(iky,ikx,iz) = 0._xp
             ELSE
-              phi(iky,ikx,iz) = 0.5_dp*amp*(deltakx/(ABS(kx)+deltakx))
+              phi(iky,ikx,iz) = 0.5_xp*amp*(deltakx/(ABS(kx)+deltakx))
             ENDIF
             ! z-dep and noise
             phi(iky,ikx,iz) = phi(iky,ikx,iz) * &
@@ -311,11 +311,11 @@ SUBROUTINE init_phi_ppj
         DO ikx=2,total_nkx/2
           phi(iky0,ikx,iz) = phi(iky0,total_nkx+2-ikx,iz)
         ENDDO
-        phi(iky0,ikx0,iz) = REAL(phi(iky0,ikx0,iz),dp) !origin must be real
+        phi(iky0,ikx0,iz) = REAL(phi(iky0,ikx0,iz),xp) !origin must be real
       END DO
     ENDIF
     !**** ensure no previous moments initialization
-    moments = 0._dp
+    moments = 0._xp
 END SUBROUTINE init_phi_ppj
 !******************************************************************************!
 
@@ -328,12 +328,12 @@ SUBROUTINE initialize_blob
                         AA_x, AA_y, parray, jarray,&
                         ngp,ngj,ngz, iky0, ieven, kxarray, kyarray, zarray
   USE fields,     ONLY: moments
-  USE prec_const, ONLY: dp
+  USE prec_const, ONLY: xp
   USE initial_par,ONLY: iseed, init_noiselvl, init_background
   USE model,      ONLY: LINEARITY
   USE geometry,   ONLY: Jacobian, iInt_Jacobian, shear
   IMPLICIT NONE
-  REAL(dp) ::kx, ky, z, sigma_x, sigma_y, gain
+  REAL(xp) ::kx, ky, z, sigma_x, sigma_y, gain
   INTEGER :: ia,iky,ikx,iz,ip,ij, p, j
   sigma_y = 1.0
   sigma_x = sigma_y
@@ -372,15 +372,15 @@ SUBROUTINE init_ppj
                         AA_x, AA_y, deltakx, deltaky,contains_ky0,&
                         ngp,ngj,ngz, iky0, ieven, kxarray, kyarray, zarray
   USE fields,     ONLY: moments
-  USE prec_const, ONLY: dp, pi
+  USE prec_const, ONLY: xp, pi
   USE initial_par,ONLY: iseed, init_noiselvl, init_background
   USE model,      ONLY: LINEARITY
   USE geometry,   ONLY: Jacobian, iInt_Jacobian, shear
   IMPLICIT NONE
-  REAL(dp) :: kx, ky, sigma_z, amp, z
+  REAL(xp) :: kx, ky, sigma_z, amp, z
   INTEGER :: ia,iky,ikx,iz,ip,ij
-  sigma_z = pi/4._dp
-  amp = 1.0_dp
+  sigma_z = pi/4._xp
+  amp = 1.0_xp
     !**** Broad noise initialization *******************************************
     DO ia=1,local_na
       DO ip=1,local_np+ngp
@@ -394,15 +394,15 @@ SUBROUTINE init_ppj
                   z = zarray(iz,ieven)
                   IF (kx .EQ. 0) THEN
                     IF(ky .EQ. 0) THEN
-                      moments(ia,ip,ij,iky,ikx,iz,:) = 0._dp
+                      moments(ia,ip,ij,iky,ikx,iz,:) = 0._xp
                     ELSE
-                      moments(ia,ip,ij,iky,ikx,iz,:) = 0.5_dp * deltaky/(ABS(ky)+deltaky)
+                      moments(ia,ip,ij,iky,ikx,iz,:) = 0.5_xp * deltaky/(ABS(ky)+deltaky)
                     ENDIF
                   ELSE
                     IF(ky .GT. 0) THEN
                       moments(ia,ip,ij,iky,ikx,iz,:) = (deltakx/(ABS(kx)+deltakx))*(deltaky/(ABS(ky)+deltaky))
                     ELSE
-                      moments(ia,ip,ij,iky,ikx,iz,:) = 0.5_dp*amp*(deltakx/(ABS(kx)+deltakx))
+                      moments(ia,ip,ij,iky,ikx,iz,:) = 0.5_xp*amp*(deltakx/(ABS(kx)+deltakx))
                     ENDIF
                   ENDIF
                   ! z-dep and noise
@@ -419,7 +419,7 @@ SUBROUTINE init_ppj
               END DO
             ENDIF
         ELSE
-          moments(ia,ip,ij,:,:,:,:) = 0._dp
+          moments(ia,ip,ij,:,:,:,:) = 0._xp
         ENDIF
       END DO
     END DO

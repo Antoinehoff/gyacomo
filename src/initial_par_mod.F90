@@ -9,13 +9,13 @@ MODULE initial_par
   CHARACTER(len=32), PUBLIC, PROTECTED :: INIT_OPT = 'phi'
   ! Initialization through a zonal flow phi
   INTEGER,  PUBLIC, PROTECTED :: INIT_ZF    = 0
-  REAL(DP), PUBLIC, PROTECTED :: ZF_AMP     = 1E+3_dp
+  REAL(xp), PUBLIC, PROTECTED :: ZF_AMP     = 1E+3_xp
   ! Act on modes artificially (keep/wipe, zonal, non zonal, entropy mode etc.)
   CHARACTER(len=32),  PUBLIC, PROTECTED :: ACT_ON_MODES = 'nothing'
   ! Initial background level
-  REAL(dp), PUBLIC, PROTECTED :: init_background=0._dp
+  REAL(xp), PUBLIC, PROTECTED :: init_background=0._xp
   ! Initial noise amplitude
-  REAL(dp), PUBLIC, PROTECTED :: init_noiselvl=1E-6_dp
+  REAL(xp), PUBLIC, PROTECTED :: init_noiselvl=1E-6_xp
   ! Initialization for random number generator
   INTEGER,  PUBLIC, PROTECTED :: iseed=42
 

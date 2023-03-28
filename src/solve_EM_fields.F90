@@ -7,7 +7,7 @@ SUBROUTINE solve_EM_fields
 
   CALL poisson
 
-  IF(beta .GT. 0._dp) &
+  IF(beta .GT. 0._xp) &
   CALL ampere
 
 CONTAINS
@@ -29,8 +29,8 @@ CONTAINS
     IMPLICIT NONE
 
     INTEGER     :: in, ia, ikx, iky, iz, izi, ini
-    COMPLEX(dp) :: fsa_phi, intf_, rhtot   ! current flux averaged phi
-    COMPLEX(dp), DIMENSION(local_nz) :: rho, integrant  ! charge density q_a n_a and aux var
+    COMPLEX(xp) :: fsa_phi, intf_, rhtot   ! current flux averaged phi
+    COMPLEX(xp), DIMENSION(local_nz) :: rho, integrant  ! charge density q_a n_a and aux var
     rhtot = 0
     !! Poisson can be solved only for process containng p=0
     IF ( SOLVE_POISSON ) THEN
@@ -39,7 +39,7 @@ CONTAINS
             !!!!!!!!!!!!!!! Compute particle charge density q_a n_a for each evolved species
             DO iz = 1,local_nz
               izi = iz+ngz/2
-              rho(iz) = 0._dp
+              rho(iz) = 0._xp
               DO in = 1,total_nj
                 ini = in+ngj/2
                 DO ia = 1,local_na
@@ -55,8 +55,8 @@ CONTAINS
             ! [qi^2(1-sum_j K_j^2)/tau_i] <phi>_psi = <q_i n_i >_psi
             !       inv_pol_ion^-1         fsa_phi  = simpson(Jacobian rho_i ) * iInt_Jacobian
             IF (ADIAB_E) THEN
-              fsa_phi = 0._dp
-              IF(kyarray(iky).EQ.0._dp) THEN ! take ky=0 mode (y-average)
+              fsa_phi = 0._xp
+              IF(kyarray(iky).EQ.0._xp) THEN ! take ky=0 mode (y-average)
                 ! Prepare integrant for z-average
                 DO iz = 1,local_nz
                   izi = iz+ngz/2
@@ -78,7 +78,7 @@ CONTAINS
           ENDDO y
         ENDDO x
       ! Cancel origin singularity
-      IF (contains_kx0 .AND. contains_ky0) phi(iky0,ikx0,:) = 0._dp
+      IF (contains_kx0 .AND. contains_ky0) phi(iky0,ikx0,:) = 0._xp
     ENDIF
     ! Transfer phi to all the others process along p
     CALL manual_3D_bcast(phi,local_nky,local_nkx,local_nz+ngz)
@@ -105,7 +105,7 @@ CONTAINS
     use species,          ONLY: sqrt_tau_o_sigma, q
     use model,            ONLY: beta
     IMPLICIT NONE
-    COMPLEX(dp) :: j_a ! current density
+    COMPLEX(xp) :: j_a ! current density
     INTEGER     :: in, ia, ikx, iky, iz, ini, izi
     !! Ampere can be solved only with beta > 0 and for process containng p=1 moments
     IF ( SOLVE_AMPERE ) THEN
@@ -114,7 +114,7 @@ CONTAINS
         x:DO ikx = 1,local_nkx
           y:DO iky = 1,local_nky
           !!!!!!!!!!!!!!! compute current density contribution "j_a = q_a u_a" for each species
-          j_a = 0._dp
+          j_a = 0._xp
           n:DO in=1,total_nj
           ini = in+ngj/2
             a:DO ia = 1,local_na
@@ -129,7 +129,7 @@ CONTAINS
       ENDDO z
     ENDIF
     ! Cancel origin singularity
-    IF (contains_kx0 .AND. contains_ky0) psi(iky0,ikx0,:) = 0._dp
+    IF (contains_kx0 .AND. contains_ky0) psi(iky0,ikx0,:) = 0._xp
     ! Transfer phi to all the others process along p
     CALL manual_3D_bcast(psi,local_nky,local_nkx,local_nz+ngz)
   END SUBROUTINE ampere

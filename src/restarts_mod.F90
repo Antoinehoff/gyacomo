@@ -19,15 +19,15 @@ CONTAINS
     USE parallel, ONLY: comm0
     IMPLICIT NONE
     CHARACTER(LEN=50) :: dset_name
-    REAL(dp):: time_cp
+    REAL(xp):: time_cp
     INTEGER :: cstep_cp, jobnum_cp
     INTEGER :: n_
     INTEGER :: deltap_cp
     INTEGER :: pmax_cp, jmax_cp, n0, Nkx_cp, Nky_cp, Nz_cp, Na_cp, Np_cp, Nj_cp
     INTEGER :: ia,ip,ij,iky,ikx,iz, iacp,ipcp,ijcp,iycp,ixcp,izcp, ierr
     INTEGER :: ipi,iji,izi
-    REAL(dp):: timer_tot_1,timer_tot_2
-    COMPLEX(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: moments_cp
+    REAL(xp):: timer_tot_1,timer_tot_2
+    COMPLEX(xp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: moments_cp
     CALL cpu_time(timer_tot_1)
     ! Checkpoint filename
     WRITE(rstfile,'(a,a1,i2.2,a3)') TRIM(resfile0),'_',job2load,'.h5'
@@ -72,7 +72,7 @@ CONTAINS
     WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments", n_
     CALL getarr(fidrst, dset_name, moments_cp(:,:,:,:,:,:))
 
-    moments     = 0._dp;
+    moments     = 0._xp;
     z: DO iz = 1,local_nz
       izcp = iz + local_nz_offset
       izi  = iz + ngz/2

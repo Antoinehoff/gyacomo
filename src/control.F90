@@ -4,11 +4,11 @@ SUBROUTINE control
   use basic,      ONLY: str,daytim,speak,basic_data,&
                         nlend,step,increase_step,increase_time,increase_cstep,&
                         chrono_runt,chrono_step, chrono_diag, start_chrono, stop_chrono
-  use prec_const, ONLY: dp, stdout
+  use prec_const, ONLY: xp, stdout
   USE parallel,   ONLY: ppinit
   USE mpi
   IMPLICIT NONE
-  REAL(dp) :: t_init_diag_0, t_init_diag_1
+  REAL(xp) :: t_init_diag_0, t_init_diag_1
   INTEGER  :: ierr
   ! start the chronometer for the total runtime
   CALL start_chrono(chrono_runt)

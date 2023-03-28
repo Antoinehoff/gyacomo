@@ -1,18 +1,18 @@
 MODULE basic
   !   Basic module for time dependent problems
   use, intrinsic :: iso_c_binding
-  use prec_const, ONLY : dp
+  use prec_const, ONLY : xp
   IMPLICIT none
   PRIVATE
   ! INCLUDE 'fftw3-mpi.f03'
   ! INPUT PARAMETERS
   INTEGER,  PUBLIC, PROTECTED :: nrun       = 1        ! Number of time steps to run
-  real(dp), PUBLIC, PROTECTED :: tmax       = 100000.0 ! Maximum simulation time
-  real(dp), PUBLIC, PROTECTED :: dt         = 1.0      ! Time step
-  real(dp), PUBLIC, PROTECTED :: maxruntime = 1e9      ! Maximum simulation CPU time
+  real(xp), PUBLIC, PROTECTED :: tmax       = 100000.0 ! Maximum simulation time
+  real(xp), PUBLIC, PROTECTED :: dt         = 1.0      ! Time step
+  real(xp), PUBLIC, PROTECTED :: maxruntime = 1e9      ! Maximum simulation CPU time
   INTEGER,  PUBLIC, PROTECTED :: job2load   = 99       ! jobnum of the checkpoint to load
   ! Auxiliary variables
-  real(dp), PUBLIC, PROTECTED :: time   = 0            ! Current simulation time (Init from restart file)
+  real(xp), PUBLIC, PROTECTED :: time   = 0            ! Current simulation time (Init from restart file)
 
   INTEGER, PUBLIC, PROTECTED  :: jobnum  = 0           ! Job number
   INTEGER, PUBLIC, PROTECTED  :: step    = 0           ! Calculation step of this run
@@ -32,9 +32,9 @@ MODULE basic
 
   ! To measure computation time
   type :: chrono
-    real(dp) :: tstart !start of the chrono
-    real(dp) :: tstop  !stop 
-    real(dp) :: ttot   !cumulative time
+    real(xp) :: tstart !start of the chrono
+    real(xp) :: tstop  !stop 
+    real(xp) :: ttot   !cumulative time
   end type chrono
 
   type(chrono), PUBLIC, PROTECTED :: chrono_runt, chrono_mrhs, chrono_advf, chrono_pois, chrono_sapj,&
@@ -47,8 +47,8 @@ MODULE basic
             set_basic_cp, daytim, start_chrono, stop_chrono
 
   INTERFACE allocate_array
-    MODULE PROCEDURE allocate_array_dp1,allocate_array_dp2,allocate_array_dp3, &
-                     allocate_array_dp4, allocate_array_dp5, allocate_array_dp6, allocate_array_dp7
+    MODULE PROCEDURE allocate_array_xp1,allocate_array_xp2,allocate_array_xp3, &
+                     allocate_array_xp4, allocate_array_xp5, allocate_array_xp6, allocate_array_xp7
     MODULE PROCEDURE allocate_array_dc1,allocate_array_dc2,allocate_array_dc3, &
                      allocate_array_dc4, allocate_array_dc5, allocate_array_dc6, allocate_array_dc7
     MODULE PROCEDURE allocate_array_i1,allocate_array_i2,allocate_array_i3,allocate_array_i4
@@ -56,7 +56,7 @@ MODULE basic
   END INTERFACE allocate_array
 
   INTERFACE str
-    MODULE PROCEDURE str_dp, str_int
+    MODULE PROCEDURE str_xp, str_int
   END INTERFACE
 
 CONTAINS
@@ -125,7 +125,7 @@ CONTAINS
   END SUBROUTINE
   SUBROUTINE set_basic_cp(cstep_cp,time_cp,jobnum_cp)
     IMPLICIT NONE
-    REAL(dp), INTENT(IN) :: time_cp
+    REAL(xp), INTENT(IN) :: time_cp
     INTEGER,  INTENT(IN) :: cstep_cp, jobnum_cp
     cstep  = cstep_cp
     time   = time_cp
@@ -196,7 +196,7 @@ CONTAINS
   SUBROUTINE display_h_min_s(time)
     USE parallel, ONLY: my_id
     IMPLICIT NONE
-    real(dp) :: time
+    real(xp) :: time
     integer  :: days, hours, mins, secs
     days = FLOOR(time/24./3600.);
     hours= FLOOR(time/3600.);
@@ -228,13 +228,13 @@ CONTAINS
   END SUBROUTINE display_h_min_s
 !================================================================================
 
-  function str_dp(k) result( str_ )
+  function str_xp(k) result( str_ )
   !   "Convert an integer to string."
-      REAL(dp), intent(in) :: k
+      REAL(xp), intent(in) :: k
       character(len=10):: str_
       write (str_, "(G10.2)") k
       str_ = adjustl(str_)
-  end function str_dp
+  end function str_xp
 
   function str_int(k) result( str_ )
   !   "Convert an integer to string."
@@ -245,117 +245,117 @@ CONTAINS
   end function str_int
 
 ! To allocate arrays of doubles, integers, etc. at run time
-  SUBROUTINE allocate_array_dp1(a,is1,ie1)
+  SUBROUTINE allocate_array_xp1(a,is1,ie1)
     IMPLICIT NONE
-    real(dp), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a
+    real(xp), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1
     ALLOCATE(a(is1:ie1))
-    a=0.0_dp
-  END SUBROUTINE allocate_array_dp1
+    a=0.0_xp
+  END SUBROUTINE allocate_array_xp1
 
-  SUBROUTINE allocate_array_dp2(a,is1,ie1,is2,ie2)
+  SUBROUTINE allocate_array_xp2(a,is1,ie1,is2,ie2)
     IMPLICIT NONE
-    real(dp), DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    real(xp), DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2
     ALLOCATE(a(is1:ie1,is2:ie2))
-    a=0.0_dp
-  END SUBROUTINE allocate_array_dp2
+    a=0.0_xp
+  END SUBROUTINE allocate_array_xp2
 
-  SUBROUTINE allocate_array_dp3(a,is1,ie1,is2,ie2,is3,ie3)
+  SUBROUTINE allocate_array_xp3(a,is1,ie1,is2,ie2,is3,ie3)
     IMPLICIT NONE
-    real(dp), DIMENSION(:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    real(xp), DIMENSION(:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3))
-    a=0.0_dp
-  END SUBROUTINE allocate_array_dp3
+    a=0.0_xp
+  END SUBROUTINE allocate_array_xp3
 
-  SUBROUTINE allocate_array_dp4(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4)
+  SUBROUTINE allocate_array_xp4(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4)
     IMPLICIT NONE
-    real(dp), DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    real(xp), DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4))
-    a=0.0_dp
-  END SUBROUTINE allocate_array_dp4
+    a=0.0_xp
+  END SUBROUTINE allocate_array_xp4
 
-  SUBROUTINE allocate_array_dp5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
+  SUBROUTINE allocate_array_xp5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
     IMPLICIT NONE
-    real(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    real(xp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
-    a=0.0_dp
-  END SUBROUTINE allocate_array_dp5
+    a=0.0_xp
+  END SUBROUTINE allocate_array_xp5
 
-  SUBROUTINE allocate_array_dp6(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6)
+  SUBROUTINE allocate_array_xp6(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6)
     IMPLICIT NONE
-    real(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    real(xp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5,is6:ie6))
-    a=0.0_dp
-  END SUBROUTINE allocate_array_dp6
+    a=0.0_xp
+  END SUBROUTINE allocate_array_xp6
 
-  SUBROUTINE allocate_array_dp7(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6,is7,ie7)
+  SUBROUTINE allocate_array_xp7(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6,is7,ie7)
     IMPLICIT NONE
-    REAL(dp), DIMENSION(:,:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    REAL(xp), DIMENSION(:,:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6,is7,ie7
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5,is6:ie6,is7:ie7))
-    a=0.0_dp
-  END SUBROUTINE allocate_array_dp7
+    a=0.0_xp
+  END SUBROUTINE allocate_array_xp7
   !========================================
 
   SUBROUTINE allocate_array_dc1(a,is1,ie1)
     IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a
+    COMPLEX(xp), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1
     ALLOCATE(a(is1:ie1))
-    a=CMPLX(0.0_dp,0.0_dp)
+    a=CMPLX(0.0_xp,0.0_xp)
   END SUBROUTINE allocate_array_dc1
 
   SUBROUTINE allocate_array_dc2(a,is1,ie1,is2,ie2)
     IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2
     ALLOCATE(a(is1:ie1,is2:ie2))
-    a=CMPLX(0.0_dp,0.0_dp)
+    a=CMPLX(0.0_xp,0.0_xp)
   END SUBROUTINE allocate_array_dc2
 
   SUBROUTINE allocate_array_dc3(a,is1,ie1,is2,ie2,is3,ie3)
     IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    COMPLEX(xp), DIMENSION(:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3))
-    a=CMPLX(0.0_dp,0.0_dp)
+    a=CMPLX(0.0_xp,0.0_xp)
   END SUBROUTINE allocate_array_dc3
 
   SUBROUTINE allocate_array_dc4(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4)
     IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    COMPLEX(xp), DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4))
-    a=CMPLX(0.0_dp,0.0_dp)
+    a=CMPLX(0.0_xp,0.0_xp)
   END SUBROUTINE allocate_array_dc4
 
   SUBROUTINE allocate_array_dc5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
     IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    COMPLEX(xp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
-    a=CMPLX(0.0_dp,0.0_dp)
+    a=CMPLX(0.0_xp,0.0_xp)
   END SUBROUTINE allocate_array_dc5
 
   SUBROUTINE allocate_array_dc6(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6)
     IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    COMPLEX(xp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5,is6:ie6))
-    a=CMPLX(0.0_dp,0.0_dp)
+    a=CMPLX(0.0_xp,0.0_xp)
   END SUBROUTINE allocate_array_dc6
 
   SUBROUTINE allocate_array_dc7(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6,is7,ie7)
     IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(:,:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    COMPLEX(xp), DIMENSION(:,:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6,is7,ie7
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5,is6:ie6,is7:ie7))
-    a=CMPLX(0.0_dp,0.0_dp)
+    a=CMPLX(0.0_xp,0.0_xp)
   END SUBROUTINE allocate_array_dc7
   !========================================
 
@@ -393,7 +393,7 @@ CONTAINS
 
   SUBROUTINE allocate_array_i5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
     IMPLICIT NONE
-    real(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    INTEGER, DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
     a=0

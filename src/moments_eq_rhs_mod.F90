@@ -15,22 +15,22 @@ SUBROUTINE compute_moments_eq_rhs
   USE prec_const
   USE collision
   USE time_integration
-  ! USE species, ONLY: dpdx
+  ! USE species, ONLY: xpdx
   USE geometry, ONLY: gradz_coeff, dlnBdz, Ckxky!, Gamma_phipar
   USE calculus, ONLY: interp_z, grad_z, grad_z2
-  ! USE species,  ONLY: dpdx
+  ! USE species,  ONLY: xpdx
   IMPLICIT NONE
   INTEGER     :: ia, iz, iky,  ikx, ip ,ij, eo ! counters
   INTEGER     :: izi,ipi,iji ! interior points counters
   INTEGER     :: p_int, j_int ! loops indices and polynom. degrees
-  REAL(dp)    :: kx, ky, kperp2
-  COMPLEX(dp) :: Tnapj, Tnapp2j, Tnapm2j, Tnapjp1, Tnapjm1 ! Terms from b x gradB and drives
-  COMPLEX(dp) :: Tnapp1j, Tnapm1j, Tnapp1jm1, Tnapm1jm1 ! Terms from mirror force with non adiab moments_
-  COMPLEX(dp) :: Ldamp, Fmir
-  COMPLEX(dp) :: Mperp, Mpara, Dphi, Dpsi
-  COMPLEX(dp) :: Unapm1j, Unapm1jp1, Unapm1jm1 ! Terms from mirror force with adiab moments_
-  COMPLEX(dp) :: i_kx,i_ky
-  COMPLEX(dp) :: Napj, RHS, phikykxz, psikykxz
+  REAL(xp)    :: kx, ky, kperp2
+  COMPLEX(xp) :: Tnapj, Tnapp2j, Tnapm2j, Tnapjp1, Tnapjm1 ! Terms from b x gradB and drives
+  COMPLEX(xp) :: Tnapp1j, Tnapm1j, Tnapp1jm1, Tnapm1jm1 ! Terms from mirror force with non adiab moments_
+  COMPLEX(xp) :: Ldamp, Fmir
+  COMPLEX(xp) :: Mperp, Mpara, Dphi, Dpsi
+  COMPLEX(xp) :: Unapm1j, Unapm1jp1, Unapm1jm1 ! Terms from mirror force with adiab moments_
+  COMPLEX(xp) :: i_kx,i_ky
+  COMPLEX(xp) :: Napj, RHS, phikykxz, psikykxz
   ! Spatial loops
   z:DO  iz = 1,local_nz
     izi = iz + ngz/2
@@ -54,7 +54,7 @@ SUBROUTINE compute_moments_eq_rhs
             ! Species loop
             a:DO ia = 1,local_na
               Napj = moments(ia,ipi,iji,iky,ikx,izi,updatetlevel)
-              RHS = 0._dp
+              RHS = 0._xp
               IF((CLOS .NE. 1) .OR. (p_int +2*j_int .LE. dmax)) THEN ! for the closure scheme
                 !! Compute moments_ mixing terms
                 ! Perpendicular dynamic
@@ -95,7 +95,7 @@ SUBROUTINE compute_moments_eq_rhs
                             +xphijp1(ia,ip,ij)*kernel(ia,iji+1,iky,ikx,izi,eo) &
                             +xphijm1(ia,ip,ij)*kernel(ia,iji-1,iky,ikx,izi,eo) )*phikykxz
                 ELSE
-                  Dphi = 0._dp
+                  Dphi = 0._xp
                 ENDIF
                 !! Vector potential term
                 IF ( (p_int  .LE. 3) .AND. (p_int  .GE. 1) ) THEN ! Kronecker p1 or p3
@@ -103,7 +103,7 @@ SUBROUTINE compute_moments_eq_rhs
                               +xpsijp1(ia,ip,ij)*kernel(ia,iji+1,iky,ikx,izi,eo) &
                               +xpsijm1(ia,ip,ij)*kernel(ia,iji-1,iky,ikx,izi,eo))*psikykxz
                 ELSE
-                  Dpsi = 0._dp
+                  Dpsi = 0._xp
                 ENDIF
                 !! Sum of all RHS terms
                 RHS = &
@@ -118,7 +118,7 @@ SUBROUTINE compute_moments_eq_rhs
                     ! Collision term
                     + Capj(ia,ip,ij,iky,ikx,iz) &
                     ! Perpendicular pressure effects (electromagnetic term) (TO CHECK)
-                    ! - i_ky*beta*dpdx(ia) * (Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)&
+                    ! - i_ky*beta*xpdx(ia) * (Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)&
                     ! Parallel drive term (should be negligible, to test)
                     ! !! -Gamma_phipar(iz,eo)*Tphi*ddz_phi(iky,ikx,iz) &
                     ! Numerical perpendicular hyperdiffusion
@@ -145,7 +145,7 @@ SUBROUTINE compute_moments_eq_rhs
                 CASE DEFAULT
                 END SELECT
               ELSE
-                RHS = 0._dp
+                RHS = 0._xp
               ENDIF
               !! Put RHS in the array
               moments_rhs(ia,ip,ij,iky,ikx,iz,updatetlevel) = RHS
@@ -188,7 +188,7 @@ END SUBROUTINE compute_moments_eq_rhs
 !   USE grid,             ONLY: contains_kx0, contains_ky0, ikx0, iky0,&
 !                               ia,ias,iae,ip,ips,ipe, ij,ijs,ije, zarray,izs,ize
 !   IMPLICIT NONE
-!   real(dp), DIMENSION(izs:ize) :: sinz
+!   real(xp), DIMENSION(izs:ize) :: sinz
 !
 !   sinz(izs:ize) = SIN(zarray(izs:ize,0))
 !
@@ -201,19 +201,19 @@ END SUBROUTINE compute_moments_eq_rhs
 !             SELECT CASE (ip-1)
 !             CASE(0) ! Na00 term
 !                 moments_rhs(ia,ip,ij,iky0,ikx0,izs:ize,updatetlevel) = moments_rhs(ia,ip,ij,iky0,ikx0,izs:ize,updatetlevel)&
-!                   +tau_q(ia) * sinz(izs:ize) * (1.5_dp*k_N(ia) - 1.125_dp*k_T(ia))
+!                   +tau_q(ia) * sinz(izs:ize) * (1.5_xp*k_N(ia) - 1.125_xp*k_T(ia))
 !             CASE(2) ! Na20 term
 !                 moments_rhs(ia,ip,ij,iky0,ikx0,izs:ize,updatetlevel) = moments_rhs(ia,ip,ij,iky0,ikx0,izs:ize,updatetlevel)&
-!                   +tau_q(ia) * sinz(izs:ize) * (SQRT2*0.5_dp*k_N(ia) - 2.75_dp*k_T(ia))
+!                   +tau_q(ia) * sinz(izs:ize) * (SQRT2*0.5_xp*k_N(ia) - 2.75_xp*k_T(ia))
 !             CASE(4) ! Na40 term
 !                 moments_rhs(ia,ip,ij,iky0,ikx0,izs:ize,updatetlevel) = moments_rhs(ia,ip,ij,iky0,ikx0,izs:ize,updatetlevel)&
-!                   +tau_q(ia) * sinz(izs:ize) * SQRT6*0.75_dp*k_T(ia)
+!                   +tau_q(ia) * sinz(izs:ize) * SQRT6*0.75_xp*k_T(ia)
 !             END SELECT
 !           CASE(1) ! j = 1
 !             SELECT CASE (ip-1)
 !             CASE(0) ! Na01 term
 !                 moments_rhs(ia,ip,ij,iky0,ikx0,izs:ize,updatetlevel) = moments_rhs(ia,ip,ij,iky0,ikx0,izs:ize,updatetlevel)&
-!                   -tau_q(ia) * sinz(izs:ize) * (k_N(ia) + 3.5_dp*k_T(ia))
+!                   -tau_q(ia) * sinz(izs:ize) * (k_N(ia) + 3.5_xp*k_T(ia))
 !             CASE(2) ! Na21 term
 !                 moments_rhs(ia,ip,ij,iky0,ikx0,izs:ize,updatetlevel) = moments_rhs(ia,ip,ij,iky0,ikx0,izs:ize,updatetlevel)&
 !                   -tau_q(ia) * sinz(izs:ize) * SQRT2*k_T(ia)
@@ -222,7 +222,7 @@ END SUBROUTINE compute_moments_eq_rhs
 !             SELECT CASE (ip-1)
 !             CASE(0) ! Na02 term
 !                 moments_rhs(ia,ip,ij,iky0,ikx0,izs:ize,updatetlevel) = moments_rhs(ia,ip,ij,iky0,ikx0,izs:ize,updatetlevel)&
-!                   +tau_q(ia) * sinz(izs:ize) * 2._dp*k_T(ia)
+!                   +tau_q(ia) * sinz(izs:ize) * 2._xp*k_T(ia)
 !             END SELECT
 !           END SELECT
 !         ENDDO

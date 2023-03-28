@@ -5,31 +5,31 @@ MODULE species
   PRIVATE
   !! Input parameters
   CHARACTER(len=32) :: name_               ! name of the species
-  REAL(dp)          :: tau_                ! Temperature
-  REAL(dp)          :: sigma_              ! sqrt mass ratio
-  REAL(dp)          :: q_                  ! Charge
-  REAL(dp)          :: k_N_                ! density drive (L_ref/L_Ni)
-  REAL(dp)          :: k_T_                ! temperature drive (L_ref/L_Ti)
+  REAL(xp)          :: tau_                ! Temperature
+  REAL(xp)          :: sigma_              ! sqrt mass ratio
+  REAL(xp)          :: q_                  ! Charge
+  REAL(xp)          :: k_N_                ! density drive (L_ref/L_Ni)
+  REAL(xp)          :: k_T_                ! temperature drive (L_ref/L_Ti)
   !! Arrays to store all species features
   CHARACTER(len=32),&
             ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: name               ! name of the species
-  REAL(dp), ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: tau                ! Temperature
-  REAL(dp), ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: sigma              ! sqrt mass ratio
-  REAL(dp), ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: q                  ! Charge
-  REAL(dp), ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: k_N                ! density drive (L_ref/L_Ni)
-  REAL(dp), ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: k_T                ! temperature drive (L_ref/L_Ti)
-  REAL(dp), ALLOCATABLE, DIMENSION(:,:),PUBLIC, PROTECTED :: nu_ab              ! Collision frequency tensor
+  REAL(xp), ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: tau                ! Temperature
+  REAL(xp), ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: sigma              ! sqrt mass ratio
+  REAL(xp), ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: q                  ! Charge
+  REAL(xp), ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: k_N                ! density drive (L_ref/L_Ni)
+  REAL(xp), ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: k_T                ! temperature drive (L_ref/L_Ti)
+  REAL(xp), ALLOCATABLE, DIMENSION(:,:),PUBLIC, PROTECTED :: nu_ab              ! Collision frequency tensor
   !! Auxiliary variables to store precomputation
-  REAL(dp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: tau_q              ! factor of the magnetic moment coupling
-  REAL(dp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q_tau              !
-  REAL(dp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: sqrtTau_q          ! factor of parallel moment term
-  REAL(dp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q_sigma_sqrtTau    ! factor of parallel phi term
-  REAL(dp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: sigma2_tau_o2      ! factor of the Kernel argument
-  REAL(dp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: sqrt_sigma2_tau_o2 ! to avoid multiple SQRT eval
-  REAL(dp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q2_tau             ! factor of the gammaD sum
-  REAL(dp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q_o_sqrt_tau_sigma ! For psi field terms
-  REAL(dp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: sqrt_tau_o_sigma   ! For Ampere eq
-  REAL(dp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: dpdx               ! radial pressure gradient
+  REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: tau_q              ! factor of the magnetic moment coupling
+  REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q_tau              !
+  REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: sqrtTau_q          ! factor of parallel moment term
+  REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q_sigma_sqrtTau    ! factor of parallel phi term
+  REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: sigma2_tau_o2      ! factor of the Kernel argument
+  REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: sqrt_sigma2_tau_o2 ! to avoid multiple SQRT eval
+  REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q2_tau             ! factor of the gammaD sum
+  REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q_o_sqrt_tau_sigma ! For psi field terms
+  REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: sqrt_tau_o_sigma   ! For Ampere eq
+  REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: xpdx               ! radial pressure gradient
   !! Accessible routines
   PUBLIC :: species_readinputs, species_outputinputs
 CONTAINS
@@ -50,11 +50,11 @@ CONTAINS
     DO ia = 1,Na
       ! default parameters
       name_  = 'ions'
-      tau_   = 1._dp
-      sigma_ = 1._dp
-      q_     = 1._dp
-      k_N_   = 2.22_dp
-      k_T_   = 6.96_dp
+      tau_   = 1._xp
+      sigma_ = 1._xp
+      q_     = 1._xp
+      k_N_   = 2.22_xp
+      k_T_   = 6.96_xp
       ! read input
       READ(lu_in,species)
       ! place values found in the arrays
@@ -69,12 +69,12 @@ CONTAINS
       q_tau(ia)              = q_/tau_
       sqrtTau_q(ia)          = sqrt(tau_)/q_
       q_sigma_sqrtTau(ia)    = q_/sigma_/SQRT(tau_)
-      sigma2_tau_o2(ia)      = sigma_**2 * tau_/2._dp
-      sqrt_sigma2_tau_o2(ia) = SQRT(sigma_**2 * tau_/2._dp)
+      sigma2_tau_o2(ia)      = sigma_**2 * tau_/2._xp
+      sqrt_sigma2_tau_o2(ia) = SQRT(sigma_**2 * tau_/2._xp)
       q2_tau(ia)             = (q_**2)/tau_
       q_o_sqrt_tau_sigma(ia) = q_/SQRT(tau_)/sigma_
       sqrt_tau_o_sigma(ia)   = SQRT(tau_)/sigma_
-      dpdx(ia)               = 0._dp !not implemented yet
+      xpdx(ia)               = 0._xp !not implemented yet
       ! We remove the adiabatic electron flag if electrons are included
       SELECT CASE (name_)
       CASE ('electrons','e','electron')
@@ -91,18 +91,18 @@ CONTAINS
           !   nu_ii = 4 sqrt(pi)/3 T_i^(-3/2) m_i^(-1/2) q^4 n_i0 ln(Lambda)
           SELECT CASE (name(ia))
           CASE ('electrons','e','electron') ! e-e and e-i collision
-            nu_ab(ia,ib) = nu/sigma(ia) * (tau(ia))**(3._dp/2._dp)  ! (where already multiplied by 0.532)
+            nu_ab(ia,ib) = nu/sigma(ia) * (tau(ia))**(3._xp/2._xp)  ! (where already multiplied by 0.532)
           CASE ('ions','ion','i') ! i-e and i-i collision
             nu_ab(ia,ib) = nu
           CASE DEFAULT
             ERROR STOP "!! No collision model for these species interactions"
           END SELECT
           ! I think we can just write
-          ! nu_ab(ia,ib) = nu/sigma(ia) * (tau(ia))**(3._dp/2._dp)
+          ! nu_ab(ia,ib) = nu/sigma(ia) * (tau(ia))**(3._xp/2._xp)
         ENDDO
       ENDDO
     ENDIF
-    ! nu_e            = nu/sigma_e * (tau_e)**(3._dp/2._dp)  ! electron-ion collision frequency (where already multiplied by 0.532)
+    ! nu_e            = nu/sigma_e * (tau_e)**(3._xp/2._xp)  ! electron-ion collision frequency (where already multiplied by 0.532)
     ! nu_i            = nu ! ion-ion collision frequ.
     ! nu_ee           = nu_e ! e-e coll. frequ.
     ! nu_ie           = nu_i ! i-e coll. frequ.
@@ -150,7 +150,7 @@ CONTAINS
       ALLOCATE(            q2_tau(1:Na))
       ALLOCATE(q_o_sqrt_tau_sigma(1:Na))
       ALLOCATE(  sqrt_tau_o_sigma(1:Na))
-      ALLOCATE(              dpdx(1:Na))
+      ALLOCATE(              xpdx(1:Na))
   END SUBROUTINE species_allocate
 
 END MODULE species

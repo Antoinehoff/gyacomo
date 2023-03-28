@@ -1,5 +1,5 @@
 MODULE processing
-   USE prec_const,  ONLY: dp, imagu, SQRT2, SQRT3, onetwelfth, twothird
+   USE prec_const,  ONLY: xp, imagu, SQRT2, SQRT3, onetwelfth, twothird
    USE grid,        ONLY: &
       local_na, local_np, local_nj, local_nky, local_nkx, local_nz, Ngz,Ngj,Ngp,nzgrid, &
       parray,pmax,ip0, iodd, ieven,&
@@ -21,8 +21,8 @@ MODULE processing
    USE mpi
    implicit none
 
-   REAL(dp), PUBLIC, ALLOCATABLE, DIMENSION(:), PROTECTED :: pflux_x, gflux_x
-   REAL(dp), PUBLIC, ALLOCATABLE, DIMENSION(:), PROTECTED :: hflux_x
+   REAL(xp), PUBLIC, ALLOCATABLE, DIMENSION(:), PROTECTED :: pflux_x, gflux_x
+   REAL(xp), PUBLIC, ALLOCATABLE, DIMENSION(:), PROTECTED :: hflux_x
    INTEGER :: ierr
    PUBLIC :: init_process
    PUBLIC :: compute_nadiab_moments, compute_gradients_z, compute_interp_z
@@ -83,7 +83,7 @@ CONTAINS
          p_int = parray(ip)
             DO ia = 1,local_na
             IF(p_int+2*j_int .GT. dmax) &
-               nadiab_moments(ia,ip,ij,iky,ikx,iz) = 0._dp
+               nadiab_moments(ia,ip,ij,iky,ikx,iz) = 0._xp
          ENDDO
          ENDDO
          ENDDO
@@ -97,8 +97,8 @@ CONTAINS
    ! SUBROUTINE compute_gradients_z
    !    IMPLICIT NONE
    !    INTEGER :: eo, p_int, j_int, ia,ip,ij,iky,ikx,iz,izi
-   !    COMPLEX(dp), DIMENSION(local_nz+ngz) :: f_in
-   !    COMPLEX(dp), DIMENSION(local_nz)     :: f_out
+   !    COMPLEX(xp), DIMENSION(local_nz+ngz) :: f_in
+   !    COMPLEX(xp), DIMENSION(local_nz)     :: f_out
    !       ! Compute z first derivative
    !       DO iz=1,local_nz+ngz
    !          izi = iz+ngz/2
@@ -114,11 +114,11 @@ CONTAINS
    !             -onetwelfth*nadiab_moments(ia,ip,ij,iky,ikx,izi-2)&
    !             )
    !          ddzND_Napj(ia,ip,ij,iky,ikx,iz) = inv_deltaz**4 *(&
-   !             +1._dp*moments(ia,ip,ij,iky,ikx,izi-2,updatetlevel)&
-   !             -4._dp*moments(ia,ip,ij,iky,ikx,izi-1,updatetlevel)&
-   !             +6._dp*moments(ia,ip,ij,iky,ikx,izi  ,updatetlevel)&
-   !             -4._dp*moments(ia,ip,ij,iky,ikx,izi+1,updatetlevel)&
-   !             +1._dp*moments(ia,ip,ij,iky,ikx,izi-2,updatetlevel)&
+   !             +1._xp*moments(ia,ip,ij,iky,ikx,izi-2,updatetlevel)&
+   !             -4._xp*moments(ia,ip,ij,iky,ikx,izi-1,updatetlevel)&
+   !             +6._xp*moments(ia,ip,ij,iky,ikx,izi  ,updatetlevel)&
+   !             -4._xp*moments(ia,ip,ij,iky,ikx,izi+1,updatetlevel)&
+   !             +1._xp*moments(ia,ip,ij,iky,ikx,izi-2,updatetlevel)&
    !          )
    !       ENDDO
    !       ENDDO
@@ -131,9 +131,9 @@ CONTAINS
    ! ! z grid gradients
    SUBROUTINE compute_gradients_z
       IMPLICIT NONE
-      INTEGER :: eo, p_int, j_int, ia,ip,ij,iky,ikx,iz
-      COMPLEX(dp), DIMENSION(local_nz+ngz) :: f_in
-      COMPLEX(dp), DIMENSION(local_nz)     :: f_out
+      INTEGER :: eo, p_int, ia,ip,ij,iky,ikx,iz
+      COMPLEX(xp), DIMENSION(local_nz+ngz) :: f_in
+      COMPLEX(xp), DIMENSION(local_nz)     :: f_out
       DO ikx = 1,local_nkx
       DO iky = 1,local_nky
       DO ij = 1,local_nj+ngj
@@ -170,9 +170,9 @@ CONTAINS
       ! z grid interpolation
    SUBROUTINE compute_interp_z
       IMPLICIT NONE
-      INTEGER :: eo, p_int, j_int, ia,ip,ij,iky,ikx,iz
-      COMPLEX(dp), DIMENSION(local_nz+ngz) :: f_in
-      COMPLEX(dp), DIMENSION(local_nz)     :: f_out
+      INTEGER :: eo, ia,ip,ij,iky,ikx,iz
+      COMPLEX(xp), DIMENSION(local_nz+ngz) :: f_in
+      COMPLEX(xp), DIMENSION(local_nz)     :: f_out
       IF(nzgrid .GT. 1) THEN
          DO ikx = 1,local_nkx
          DO iky = 1,local_nky
@@ -201,14 +201,14 @@ CONTAINS
    ! 1D diagnostic to compute the average radial particle transport <n_a v_ExB_x>_xyz
    SUBROUTINE compute_radial_transport
       IMPLICIT NONE
-      COMPLEX(dp) :: pflux_local, gflux_local, integral
-      REAL(dp)    :: buffer(2)
+      COMPLEX(xp) :: pflux_local, gflux_local, integral
+      REAL(xp)    :: buffer(2)
       INTEGER     :: i_, root, iky, ikx, ia, iz, in, izi, ini
-      COMPLEX(dp), DIMENSION(local_nz) :: integrant
+      COMPLEX(xp), DIMENSION(local_nz) :: integrant
       DO ia = 1,local_na
-         pflux_local = 0._dp ! particle flux
-         gflux_local = 0._dp ! gyrocenter flux
-         integrant   = 0._dp ! auxiliary variable for z integration
+         pflux_local = 0._xp ! particle flux
+         gflux_local = 0._xp ! gyrocenter flux
+         integrant   = 0._xp ! auxiliary variable for z integration
          !!---------- Gyro center flux (drift kinetic) ------------
          ! Electrostatic part
          IF(CONTAINSp0) THEN
@@ -239,10 +239,10 @@ CONTAINS
          ! Integrate over z
          call simpson_rule_z(local_nz,zweights_SR,integrant,integral)
          ! Get process local gyrocenter flux with a factor two to account for the negative ky modes
-         gflux_local = 2._dp*integral*iInt_Jacobian
+         gflux_local = 2._xp*integral*iInt_Jacobian
          !
          !!---------- Particle flux (gyrokinetic) ------------
-         integrant   = 0._dp ! reset auxiliary variable
+         integrant   = 0._xp ! reset auxiliary variable
          ! Electrostatic part
          IF(CONTAINSp0) THEN
             DO iz = 1,local_nz ! we take interior points only
@@ -278,10 +278,10 @@ CONTAINS
          ! Integrate over z
          call simpson_rule_z(local_nz,zweights_SR,integrant,integral)
          ! Get process local particle flux with a factor two to account for the negative ky modes
-         pflux_local = 2._dp*integral*iInt_Jacobian
+         pflux_local = 2._xp*integral*iInt_Jacobian
          !!!!---------- Sum over all processes ----------
-         buffer(1) = REAL(gflux_local,dp)
-         buffer(2) = REAL(pflux_local,dp)
+         buffer(1) = REAL(gflux_local,xp)
+         buffer(2) = REAL(pflux_local,xp)
          root = 0
          !Gather manually among the rank_p=0 processes and perform the sum
          gflux_x(ia) = 0
@@ -309,13 +309,13 @@ CONTAINS
 ! 1D diagnostic to compute the average radial particle heatflux <T_i v_ExB_x>_xyz
    SUBROUTINE compute_radial_heatflux
       IMPLICIT NONE
-      COMPLEX(dp) :: hflux_local, integral
-      REAL(dp)    :: buffer(2), n_dp
+      COMPLEX(xp) :: hflux_local, integral
+      REAL(xp)    :: buffer(2), n_xp
       INTEGER     :: i_, root, in, ia, iky, ikx, iz, izi, ini
-      COMPLEX(dp), DIMENSION(local_nz) :: integrant        ! charge density q_a n_a
+      COMPLEX(xp), DIMENSION(local_nz) :: integrant        ! charge density q_a n_a
       DO ia = 1,local_na
-         hflux_local = 0._dp ! heat flux
-         integrant   = 0._dp ! z integration auxiliary variable
+         hflux_local = 0._xp ! heat flux
+         integrant   = 0._xp ! z integration auxiliary variable
          !!----------------ELECTROSTATIC CONTRIBUTION---------------------------
          IF(CONTAINSp0 .AND. CONTAINSp2) THEN
             ! Loop to compute gamma_kx = sum_ky sum_j -i k_z Kernel_j Na00 * phi
@@ -325,14 +325,14 @@ CONTAINS
             DO iky = 1,local_nky
             DO in = 1, local_nj
             ini  = in+ngj/2 !interior index for ghosted arrays
-            n_dp = jarray(ini)
+            n_xp = jarray(ini)
                integrant(iz) = integrant(iz) &
                   -Jacobian(izi,ieven)*tau(ia)*imagu*kyarray(iky)*phi(iky,ikx,izi)&
                   *kernel(ia,ini,iky,ikx,izi,ieven)*CONJG(&
-                              0.5_dp*SQRT2*moments(ia,ip2,ini  ,iky,ikx,izi,updatetlevel)&
-                  +(2._dp*n_dp + 1.5_dp)*moments(ia,ip0,ini  ,iky,ikx,izi,updatetlevel)&
-                           -(n_dp+1._dp)*moments(ia,ip0,ini+1,iky,ikx,izi,updatetlevel)&
-                                    -n_dp*moments(ia,ip0,ini-1,iky,ikx,izi,updatetlevel))
+                              0.5_xp*SQRT2*moments(ia,ip2,ini  ,iky,ikx,izi,updatetlevel)&
+                  +(2._xp*n_xp + 1.5_xp)*moments(ia,ip0,ini  ,iky,ikx,izi,updatetlevel)&
+                           -(n_xp+1._xp)*moments(ia,ip0,ini+1,iky,ikx,izi,updatetlevel)&
+                                    -n_xp*moments(ia,ip0,ini-1,iky,ikx,izi,updatetlevel))
             ENDDO
             ENDDO
             ENDDO
@@ -348,15 +348,15 @@ CONTAINS
             DO iky = 1,local_nky
             DO in = 1, local_nj
             ini = in + ngj/2 !interior index for ghosted arrays
-            n_dp = jarray(ini)
+            n_xp = jarray(ini)
                integrant(iz) = integrant(iz) &
                      +Jacobian(izi,iodd)*tau(ia)*sqrt_tau_o_sigma(ia)*imagu*kyarray(iky)*CONJG(psi(iky,ikx,izi))&
                   *kernel(ia,ini,iky,ikx,izi,iodd)*(&
-                  0.5_dp*SQRT2*SQRT3*moments(ia,ip3,ini  ,iky,ikx,izi,updatetlevel)&
-                              +1.5_dp*moments(ia,ip1,ini  ,iky,ikx,izi,updatetlevel)&
-                  +(2._dp*n_dp+1._dp)*moments(ia,ip1,ini  ,iky,ikx,izi,updatetlevel)&
-                        -(n_dp+1._dp)*moments(ia,ip1,ini+1,iky,ikx,izi,updatetlevel)&
-                                 -n_dp*moments(ia,ip1,ini-1,iky,ikx,izi,updatetlevel))
+                  0.5_xp*SQRT2*SQRT3*moments(ia,ip3,ini  ,iky,ikx,izi,updatetlevel)&
+                              +1.5_xp*moments(ia,ip1,ini  ,iky,ikx,izi,updatetlevel)&
+                  +(2._xp*n_xp+1._xp)*moments(ia,ip1,ini  ,iky,ikx,izi,updatetlevel)&
+                        -(n_xp+1._xp)*moments(ia,ip1,ini+1,iky,ikx,izi,updatetlevel)&
+                                 -n_xp*moments(ia,ip1,ini-1,iky,ikx,izi,updatetlevel))
             ENDDO
             ENDDO
             ENDDO
@@ -368,8 +368,8 @@ CONTAINS
          ! Integrate over z
          call simpson_rule_z(local_nz,zweights_SR,integrant,integral)
          ! Double it for taking into account the other half plane
-         hflux_local = 2._dp*integral*iInt_Jacobian
-         buffer(2)   = REAL(hflux_local,dp)
+         hflux_local = 2._xp*integral*iInt_Jacobian
+         buffer(2)   = REAL(hflux_local,xp)
          root = 0
          !Gather manually among the rank_p=0 processes and perform the sum
          hflux_x(ia) = 0
@@ -396,13 +396,13 @@ CONTAINS
       USE array,  ONLY : Napjz
       USE time_integration, ONLY : updatetlevel
       IMPLICIT NONE
-      REAL(dp), DIMENSION(local_np,local_nj,local_nz) :: local_sum,global_sum, buffer
+      REAL(xp), DIMENSION(local_np,local_nj,local_nz) :: local_sum,global_sum, buffer
       INTEGER  :: i_, root, count, ia, ip, ij, iky, ikx, iz
       root = 0
       DO ia=1,local_na
          ! z-moment spectrum
          ! build local sum
-         local_sum = 0._dp
+         local_sum = 0._xp
          DO iz = 1,local_nz
          DO ikx = 1,local_nkx
          DO iky = 1,local_nky
@@ -418,7 +418,7 @@ CONTAINS
          ENDDO
          ! sum reduction
          buffer     = local_sum
-         global_sum = 0._dp
+         global_sum = 0._xp
          count = local_np*local_nj*local_nz
          IF (num_procs_ky .GT. 1) THEN
             !! Everyone sends its local_sum to root = 0
@@ -444,7 +444,7 @@ CONTAINS
 ! Compute the 2D particle density for electron and ions (sum over Laguerre)
    SUBROUTINE compute_density
    IMPLICIT NONE
-   COMPLEX(dp) :: dens_
+   COMPLEX(xp) :: dens_
    INTEGER :: ia, iz, iky, ikx, ij
    DO ia=1,local_na
    IF ( CONTAINSp0 ) THEN
@@ -452,7 +452,7 @@ CONTAINS
    DO iz = 1,local_nz
    DO iky = 1,local_nky
    DO ikx = 1,local_nkx
-      dens_ = 0._dp
+      dens_ = 0._xp
       DO ij = 1, local_nj
          dens_ = dens_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven) * moments(ia,ip0,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)
       ENDDO
@@ -467,17 +467,17 @@ CONTAINS
 ! Compute the 2D particle fluid perp velocity for electron and ions (sum over Laguerre)
    SUBROUTINE compute_uperp
       IMPLICIT NONE
-      COMPLEX(dp) :: uperp_
+      COMPLEX(xp) :: uperp_
       INTEGER :: ia, iz, iky, ikx, ij
       DO ia=1,local_na
       IF ( CONTAINSp0 ) THEN
       DO iz = 1,local_nz
       DO iky = 1,local_nky
       DO ikx = 1,local_nkx
-      uperp_ = 0._dp
+      uperp_ = 0._xp
       DO ij = 1, local_nj
          uperp_ = uperp_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven) *&
-            0.5_dp*(moments(ia,ip0,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)&
+            0.5_xp*(moments(ia,ip0,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)&
                      -moments(ia,ip0,ij-1+ngj/2,iky,ikx,iz+ngz/2,updatetlevel))
       ENDDO
       uper(ia,iky,ikx,iz) = uperp_
@@ -492,13 +492,13 @@ CONTAINS
    SUBROUTINE compute_upar
       IMPLICIT NONE
       INTEGER :: ia, iz, iky, ikx, ij
-      COMPLEX(dp) :: upar_
+      COMPLEX(xp) :: upar_
       DO ia=1,local_na
       IF ( CONTAINSp1 ) THEN
       DO iz = 1,local_nz
       DO iky = 1,local_nky
       DO ikx = 1,local_nkx
-         upar_ = 0._dp
+         upar_ = 0._xp
          DO ij = 1, local_nj
             upar_ = upar_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,iodd)*moments(ia,ip1,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)
          ENDDO
@@ -514,8 +514,8 @@ CONTAINS
    SUBROUTINE compute_tperp
       USE time_integration, ONLY : updatetlevel
       IMPLICIT NONE
-      REAL(dp)    :: j_dp
-      COMPLEX(dp) :: Tperp_
+      REAL(xp)    :: j_xp
+      COMPLEX(xp) :: Tperp_
       INTEGER     :: ia, iz, iky, ikx, ij
       DO ia=1,local_na
       IF ( CONTAINSp0 .AND. CONTAINSp2 ) THEN
@@ -523,13 +523,13 @@ CONTAINS
       DO iz = 1,local_nz
       DO iky = 1,local_nky
       DO ikx = 1,local_nkx
-      Tperp_ = 0._dp
+      Tperp_ = 0._xp
       DO ij = 1, local_nj
-         j_dp = jarray(ij+ngj/2)
+         j_xp = jarray(ij+ngj/2)
          Tperp_ = Tperp_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven)*&
-            ((2_dp*j_dp+1)*moments(ia,ip0,ij  +ngj/2,iky,ikx,iz+ngz/2,updatetlevel)&
-                     -j_dp*moments(ia,ip0,ij-1+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)&
-                  -(j_dp+1)*moments(ia,ip0,ij+1+ngj/2,iky,ikx,iz+ngz/2,updatetlevel))
+            ((2_xp*j_xp+1)*moments(ia,ip0,ij  +ngj/2,iky,ikx,iz+ngz/2,updatetlevel)&
+                     -j_xp*moments(ia,ip0,ij-1+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)&
+                  -(j_xp+1)*moments(ia,ip0,ij+1+ngj/2,iky,ikx,iz+ngz/2,updatetlevel))
       ENDDO
       Tper(ia,iky,ikx,iz) = Tperp_
       ENDDO
@@ -543,8 +543,8 @@ CONTAINS
    SUBROUTINE compute_Tpar
       USE time_integration, ONLY : updatetlevel
       IMPLICIT NONE
-      REAL(dp)    :: j_dp
-      COMPLEX(dp) :: Tpar_
+      REAL(xp)    :: j_xp
+      COMPLEX(xp) :: Tpar_
       INTEGER     :: ia, iz, iky, ikx, ij
       DO ia=1,local_na
       IF ( CONTAINSp0 .AND. CONTAINSp0 ) THEN
@@ -552,9 +552,9 @@ CONTAINS
       DO iz = 1,local_nz
       DO iky = 1,local_nky
       DO ikx = 1,local_nkx
-      Tpar_ = 0._dp
+      Tpar_ = 0._xp
       DO ij = 1, local_nj
-         j_dp = REAL(ij-1,dp)
+         j_xp = REAL(ij-1,xp)
          Tpar_  = Tpar_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven)*&
             (SQRT2 * moments(ia,ip2,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel) &
                      + moments(ia,ip0,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel))
@@ -576,7 +576,7 @@ CONTAINS
       CALL compute_Tpar
       CALL compute_Tperp
       ! Temperature
-      temp = (Tpar - 2._dp * Tper)/3._dp - dens
+      temp = (Tpar - 2._xp * Tper)/3._xp - dens
    END SUBROUTINE compute_fluid_moments
 
 END MODULE processing

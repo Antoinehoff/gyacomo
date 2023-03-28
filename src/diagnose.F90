@@ -132,7 +132,7 @@ SUBROUTINE diagnose_full(kstep)
     CALL putarr(fidres, "/data/grid/coordkx",   kxarray_full,  "kx*rho_s0", ionode=0)
     CALL putarr(fidres, "/data/grid/coordky",   kyarray_full,  "ky*rho_s0", ionode=0)
     CALL putarr(fidres, "/data/grid/coordz",    zarray_full,   "z/R", ionode=0)
-    CALL putarr(fidres, "/data/grid/coordp" ,   parray_full,   "p", ionode=0)
+    CALL putarr(fidres, "/data/grid/coorxp" ,   parray_full,   "p", ionode=0)
     CALL putarr(fidres, "/data/grid/coordj" ,   jarray_full,   "j", ionode=0)
     ! Metric info
     CALL   creatg(fidres, "/data/metric", "Metric data")
@@ -289,7 +289,7 @@ SUBROUTINE diagnose_0d
   CALL append(fidres, "/profiler/time",                time,ionode=0)
   ! Processing data
   CALL append(fidres,  "/data/var0d/time",           time,ionode=0)
-  CALL append(fidres, "/data/var0d/cstep", real(cstep,dp),ionode=0)
+  CALL append(fidres, "/data/var0d/cstep", real(cstep,xp),ionode=0)
   CALL getatt(fidres,      "/data/var0d/",       "frames",iframe0d)
   iframe0d=iframe0d+1
   CALL attach(fidres,"/data/var0d/" , "frames", iframe0d)
@@ -330,12 +330,12 @@ SUBROUTINE diagnose_3d
   IMPLICIT NONE
   CHARACTER :: letter_a
   INTEGER   :: ia
-  COMPLEX(dp), DIMENSION(local_nky,local_nkx,local_nz) :: Na00_
-  COMPLEX(dp), DIMENSION(local_nky,local_nkx,local_nz) :: fmom
-  COMPLEX(dp), DIMENSION(local_np, local_nj, local_nz) :: Napjz_
+  COMPLEX(xp), DIMENSION(local_nky,local_nkx,local_nz) :: Na00_
+  COMPLEX(xp), DIMENSION(local_nky,local_nkx,local_nz) :: fmom
+  COMPLEX(xp), DIMENSION(local_np, local_nj, local_nz) :: Napjz_
   ! add current time, cstep and frame
   CALL append(fidres,  "/data/var3d/time",           time,ionode=0)
-  CALL append(fidres, "/data/var3d/cstep", real(cstep,dp),ionode=0)
+  CALL append(fidres, "/data/var3d/cstep", real(cstep,xp),ionode=0)
   CALL getatt(fidres,      "/data/var3d/",       "frames",iframe3d)
   iframe3d=iframe3d+1
   CALL attach(fidres,"/data/var3d/" , "frames", iframe3d)
@@ -350,7 +350,7 @@ SUBROUTINE diagnose_3d
         ! gyrocenter density
         Na00_    = moments(ia,ip0,ij0,:,:,(1+ngz/2):(local_nz+ngz/2),updatetlevel)
       ELSE
-        Na00_    = 0._dp
+        Na00_    = 0._xp
       ENDIF
       CALL write_field3d_kykxz(Na00_, 'N'//letter_a//'00')
      ! <<Napj>x>y spectrum
@@ -389,9 +389,9 @@ SUBROUTINE diagnose_3d
     SUBROUTINE write_field3d_kykxz(field, text)
       USE parallel, ONLY : gather_xyz, num_procs
       IMPLICIT NONE
-      COMPLEX(dp), DIMENSION(local_nky,total_nkx,local_nz), INTENT(IN) :: field
+      COMPLEX(xp), DIMENSION(local_nky,total_nkx,local_nz), INTENT(IN) :: field
       CHARACTER(*), INTENT(IN) :: text
-      COMPLEX(dp), DIMENSION(total_nky,total_nkx,total_nz) :: field_full
+      COMPLEX(xp), DIMENSION(total_nky,total_nkx,total_nz) :: field_full
       CHARACTER(50) :: dset_name
       field_full = 0;
       WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
@@ -407,9 +407,9 @@ SUBROUTINE diagnose_3d
     SUBROUTINE write_field3d_pjz(field, text)
       USE parallel, ONLY : gather_pjz, num_procs
       IMPLICIT NONE
-      COMPLEX(dp), DIMENSION(local_np,local_nj,local_nz), INTENT(IN) :: field
+      COMPLEX(xp), DIMENSION(local_np,local_nj,local_nz), INTENT(IN) :: field
       CHARACTER(*), INTENT(IN) :: text
-      COMPLEX(dp), DIMENSION(total_np,total_nj,total_nz) :: field_full
+      COMPLEX(xp), DIMENSION(total_np,total_nj,total_nz) :: field_full
       CHARACTER(LEN=50) :: dset_name
       field_full = 0;
       WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
@@ -434,11 +434,11 @@ SUBROUTINE diagnose_5d
                    ngp, ngj, ngz, total_na
   USE time_integration, ONLY: updatetlevel, ntimelevel
   USE diagnostics_par
-  USE prec_const, ONLY: dp
+  USE prec_const, ONLY: xp
   IMPLICIT NONE
 
   CALL append(fidres,  "/data/var5d/time",           time,ionode=0)
-  CALL append(fidres, "/data/var5d/cstep", real(cstep,dp),ionode=0)
+  CALL append(fidres, "/data/var5d/cstep", real(cstep,xp),ionode=0)
   CALL getatt(fidres,      "/data/var5d/",       "frames",iframe5d)
   iframe5d=iframe5d+1
   CALL attach(fidres,"/data/var5d/" , "frames", iframe5d)
@@ -453,12 +453,12 @@ SUBROUTINE diagnose_5d
     USE basic,    ONLY: GATHERV_OUTPUT, jobnum, dt
     USE futils,   ONLY: attach, putarr, putarrnd
     USE parallel, ONLY: gather_pjxyz, num_procs
-    USE prec_const, ONLY: dp
+    USE prec_const, ONLY: xp
     IMPLICIT NONE
-    COMPLEX(dp), DIMENSION(total_na,local_np+ngp,local_nj+ngj,local_nky,local_nkx,local_nz+ngz,ntimelevel), INTENT(IN) :: field
+    COMPLEX(xp), DIMENSION(total_na,local_np+ngp,local_nj+ngj,local_nky,local_nkx,local_nz+ngz,ntimelevel), INTENT(IN) :: field
     CHARACTER(*), INTENT(IN) :: text
-    COMPLEX(dp), DIMENSION(total_na,local_np,local_nj,local_nky,local_nkx,local_nz) :: field_sub
-    COMPLEX(dp), DIMENSION(total_na,total_np,total_nj,total_nky,total_nkx,total_nz) :: field_full
+    COMPLEX(xp), DIMENSION(total_na,local_np,local_nj,local_nky,local_nkx,local_nz) :: field_sub
+    COMPLEX(xp), DIMENSION(total_na,total_np,total_nj,total_nky,total_nkx,total_nz) :: field_full
     CHARACTER(LEN=50) :: dset_name
     field_sub  = field(1:total_na,(1+ngp/2):(local_np+ngp/2),((1+ngj/2)):((local_nj+ngj/2)),&
                           1:local_nky,1:local_nkx,  ((1+ngz/2)):((local_nz+ngz/2)),updatetlevel)
@@ -486,12 +486,12 @@ SUBROUTINE spit_snapshot_check
                   local_nky,local_nz, ngz
   USE parallel, ONLY: gather_xyz, my_id
   USE basic
-  USE prec_const, ONLY: dp
+  USE prec_const, ONLY: xp
   IMPLICIT NONE
   LOGICAL :: file_exist
   INTEGER :: fid_check, ikx, iky, iz
   CHARACTER(256) :: check_filename
-  COMPLEX(dp), DIMENSION(total_nky,total_nkx,total_nz) :: field_to_check
+  COMPLEX(xp), DIMENSION(total_nky,total_nkx,total_nz) :: field_to_check
   !! Spit a snapshot of PHI if requested (triggered by creating a file named "check_phi")
   INQUIRE(file='check_phi', exist=file_exist)
   IF( file_exist ) THEN
