@@ -86,12 +86,12 @@ SUBROUTINE compute_moments_eq_rhs
                 Unapm1jm1 = znapm1jm1(ia,ip,ij) * interp_napj(ia,ipi-1,iji-1,iky,ikx,iz)
                 ! sum the parallel forces
                 Fmir = dlnBdz(izi,eo)*(Tnapp1j + Tnapp1jm1 + Tnapm1j + Tnapm1jm1 +&
-                                      Unapm1j + Unapm1jp1 + Unapm1jm1)
+                                       Unapm1j + Unapm1jp1 + Unapm1jm1)
                 ! Parallel magnetic term (Landau damping and the mirror force)
                 Mpara = gradz_coeff(izi,eo)*(Ldamp + Fmir)
                 !! Electrical potential term
                 IF ( p_int  .LE. 2 ) THEN ! kronecker p0 p1 p2
-                  Dphi =i_ky*( xphij  (ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
+                  Dphi =i_ky*( xphij(ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
                             +xphijp1(ia,ip,ij)*kernel(ia,iji+1,iky,ikx,izi,eo) &
                             +xphijm1(ia,ip,ij)*kernel(ia,iji-1,iky,ikx,izi,eo) )*phikykxz
                 ELSE
@@ -169,6 +169,7 @@ SUBROUTINE compute_moments_eq_rhs
   !     print*,'        ddznipj  ',(ddz_napj(1,2+ngp/2,2+ngj/2,2,2,1))
   !     print*,'      ddzNDnipj  ',SUM(REAL(ddzND_Napj(1,:,:,:,:,:)))
   !     print*,'sumreal Capj    ', SUM(REAL(Capj(1,:,:,:,:,:)))
+  !     print*,'sum phi coeff', SUM(xphij(1,:,:)) + SUM(xphijp1(1,:,:)) + SUM(xphijm1(1,:,:))
   !     print*,'---'
   !     IF(updatetlevel .EQ. 4) stop
   ! stop
