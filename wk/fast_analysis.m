@@ -10,10 +10,11 @@ PARTITION  = '/misc/gyacomo23_outputs/';
 % resdir = 'paper_2_GYAC23/CBC/Full_NL_7x4x192x96x32_nu_0.05_muxy_1.0_muz_2.0';
 
 %% tests
-% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_xp';
-resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_sp';
+% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24';
+resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_xp';
+% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_sp';
 % resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_Lx_180';
-%%
+ %%
 J0 = 00; J1 = 10;
 
 % Load basic info (grids and time traces)
@@ -21,6 +22,7 @@ DATADIR = [PARTITION,resdir,'/'];
 data    = {};
 data    = compile_results_low_mem(data,DATADIR,J0,J1);
 
+if 0
 %% Plot transport and phi radial profile
 [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 
@@ -33,6 +35,7 @@ options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag
 options.INTERP   = 0;
 options.RESOLUTION = 256;
 fig = plot_radial_transport_and_spacetime(data,options);
+end
 
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -58,4 +61,35 @@ data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
 create_film(data,options,'.gif')
+end
+
+if 0
+%% Hermite-Laguerre spectrum
+[data.Nipjz, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'Nipjz');
+data.Nipjz = log(data.Nipjz);
+% options.TIME = 'avg';
+options.P2J        = 0;
+options.ST         = 1;
+options.NORMALIZED = 0;
+options.TIME       = [500:800];
+fig = show_moments_spectrum(data,options);
+% fig = show_napjz(data,options);
+% save_figure(data,fig,'.png');
+end
+
+if 0
+%% Mode evolution
+[data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
+
+options.NORMALIZED = 0;
+options.TIME   = [000:9000];
+options.KX_TW  = [1 20]; %kx Growth rate time window
+options.KY_TW  = [0 20];  %ky Growth rate time window
+options.NMA    = 1;
+options.NMODES = 800;
+options.iz     = 'avg'; % avg or index
+options.ik     = 1; % sum, max or index
+options.fftz.flag = 0;
+fig = mode_growth_meter(data,options);
+% save_figure(data,fig,'.png')
 end
