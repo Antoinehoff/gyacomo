@@ -1,8 +1,8 @@
 &BASIC
   nrun       = 99999999
   dt         = 0.01
-  tmax       = 50
-  maxruntime = 356400
+  tmax       = 500
+  maxruntime = 72000
   job2load   = -1
 /
 &GRID
@@ -10,9 +10,9 @@
   jmax   = 2
   Nx     = 128
   Lx     = 120
-  Ny     = 48
+  Ny     = 64
   Ly     = 120
-  Nz     = 16
+  Nz     = 24
   SG     = .f.
   Nexc   = 0
 /
@@ -31,11 +31,11 @@
   shift_y= 0.0
 /
 &OUTPUT_PAR
-  dtsave_0d = 0.1
+  dtsave_0d = 1
   dtsave_1d = -1
   dtsave_2d = -1
-  dtsave_3d = 1
-  dtsave_5d = 10
+  dtsave_3d = 5
+  dtsave_5d = 20
   write_doubleprecision = .f.
   write_gamma = .t.
   write_hf    = .t.
