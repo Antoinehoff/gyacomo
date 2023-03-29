@@ -132,7 +132,7 @@ SUBROUTINE diagnose_full(kstep)
     CALL putarr(fidres, "/data/grid/coordkx",   kxarray_full,  "kx*rho_s0", ionode=0)
     CALL putarr(fidres, "/data/grid/coordky",   kyarray_full,  "ky*rho_s0", ionode=0)
     CALL putarr(fidres, "/data/grid/coordz",    zarray_full,   "z/R", ionode=0)
-    CALL putarr(fidres, "/data/grid/coorxp" ,   parray_full,   "p", ionode=0)
+    CALL putarr(fidres, "/data/grid/coordp" ,   parray_full,   "p", ionode=0)
     CALL putarr(fidres, "/data/grid/coordj" ,   jarray_full,   "j", ionode=0)
     ! Metric info
     CALL   creatg(fidres, "/data/metric", "Metric data")
@@ -274,22 +274,22 @@ SUBROUTINE diagnose_0d
   CHARACTER :: letter_a
   INTEGER   :: ia
   ! Time measurement data
-  CALL append(fidres, "/profiler/Tc_rhs",       chrono_mrhs%ttot,ionode=0)
-  CALL append(fidres, "/profiler/Tc_adv_field", chrono_advf%ttot,ionode=0)
-  CALL append(fidres, "/profiler/Tc_clos",      chrono_clos%ttot,ionode=0)
-  CALL append(fidres, "/profiler/Tc_ghost",     chrono_ghst%ttot,ionode=0)
-  CALL append(fidres, "/profiler/Tc_coll",      chrono_coll%ttot,ionode=0)
-  CALL append(fidres, "/profiler/Tc_poisson",   chrono_pois%ttot,ionode=0)
-  CALL append(fidres, "/profiler/Tc_Sapj",      chrono_sapj%ttot,ionode=0)
-  CALL append(fidres, "/profiler/Tc_checkfield",chrono_chck%ttot,ionode=0)
-  CALL append(fidres, "/profiler/Tc_diag",      chrono_diag%ttot,ionode=0)
-  CALL append(fidres, "/profiler/Tc_grad",      chrono_grad%ttot,ionode=0)
-  CALL append(fidres, "/profiler/Tc_nadiab",    chrono_napj%ttot,ionode=0)
-  CALL append(fidres, "/profiler/Tc_step",      chrono_step%ttot,ionode=0)
-  CALL append(fidres, "/profiler/time",                time,ionode=0)
+  CALL append(fidres, "/profiler/Tc_rhs",       REAL(chrono_mrhs%ttot,dp),ionode=0)
+  CALL append(fidres, "/profiler/Tc_adv_field", REAL(chrono_advf%ttot,dp),ionode=0)
+  CALL append(fidres, "/profiler/Tc_clos",      REAL(chrono_clos%ttot,dp),ionode=0)
+  CALL append(fidres, "/profiler/Tc_ghost",     REAL(chrono_ghst%ttot,dp),ionode=0)
+  CALL append(fidres, "/profiler/Tc_coll",      REAL(chrono_coll%ttot,dp),ionode=0)
+  CALL append(fidres, "/profiler/Tc_poisson",   REAL(chrono_pois%ttot,dp),ionode=0)
+  CALL append(fidres, "/profiler/Tc_Sapj",      REAL(chrono_sapj%ttot,dp),ionode=0)
+  CALL append(fidres, "/profiler/Tc_checkfield",REAL(chrono_chck%ttot,dp),ionode=0)
+  CALL append(fidres, "/profiler/Tc_diag",      REAL(chrono_diag%ttot,dp),ionode=0)
+  CALL append(fidres, "/profiler/Tc_grad",      REAL(chrono_grad%ttot,dp),ionode=0)
+  CALL append(fidres, "/profiler/Tc_nadiab",    REAL(chrono_napj%ttot,dp),ionode=0)
+  CALL append(fidres, "/profiler/Tc_step",      REAL(chrono_step%ttot,dp),ionode=0)
+  CALL append(fidres, "/profiler/time",                REAL(time,dp),ionode=0)
   ! Processing data
-  CALL append(fidres,  "/data/var0d/time",           time,ionode=0)
-  CALL append(fidres, "/data/var0d/cstep", real(cstep,xp),ionode=0)
+  CALL append(fidres,  "/data/var0d/time",      REAL(time,dp),ionode=0)
+  CALL append(fidres, "/data/var0d/cstep", real(cstep,dp),ionode=0)
   CALL getatt(fidres,      "/data/var0d/",       "frames",iframe0d)
   iframe0d=iframe0d+1
   CALL attach(fidres,"/data/var0d/" , "frames", iframe0d)
@@ -298,15 +298,15 @@ SUBROUTINE diagnose_0d
     CALL compute_radial_transport
     DO ia=1,Na
       letter_a = name(ia)(1:1)
-      CALL append(fidres, "/data/var0d/gflux_x"//letter_a,gflux_x(ia),ionode=0)
-      CALL append(fidres, "/data/var0d/pflux_x"//letter_a,pflux_x(ia),ionode=0)
+      CALL append(fidres, "/data/var0d/gflux_x"//letter_a,REAL(gflux_x(ia),dp),ionode=0)
+      CALL append(fidres, "/data/var0d/pflux_x"//letter_a,REAL(pflux_x(ia),dp),ionode=0)
     ENDDO
   ENDIF
   IF (write_hf) THEN
     CALL compute_radial_heatflux
     DO ia=1,Na
       letter_a = name(ia)(1:1)
-      CALL append(fidres, "/data/var0d/hflux_x"//letter_a,hflux_x(ia),ionode=0)
+      CALL append(fidres, "/data/var0d/hflux_x"//letter_a,REAL(hflux_x(ia),dp),ionode=0)
     ENDDO
   ENDIF
 END SUBROUTINE diagnose_0d
@@ -334,8 +334,8 @@ SUBROUTINE diagnose_3d
   COMPLEX(xp), DIMENSION(local_nky,local_nkx,local_nz) :: fmom
   COMPLEX(xp), DIMENSION(local_np, local_nj, local_nz) :: Napjz_
   ! add current time, cstep and frame
-  CALL append(fidres,  "/data/var3d/time",           time,ionode=0)
-  CALL append(fidres, "/data/var3d/cstep", real(cstep,xp),ionode=0)
+  CALL append(fidres,  "/data/var3d/time",           REAL(time,dp),ionode=0)
+  CALL append(fidres, "/data/var3d/cstep", real(cstep,dp),ionode=0)
   CALL getatt(fidres,      "/data/var3d/",       "frames",iframe3d)
   iframe3d=iframe3d+1
   CALL attach(fidres,"/data/var3d/" , "frames", iframe3d)
@@ -434,11 +434,11 @@ SUBROUTINE diagnose_5d
                    ngp, ngj, ngz, total_na
   USE time_integration, ONLY: updatetlevel, ntimelevel
   USE diagnostics_par
-  USE prec_const, ONLY: xp
+  USE prec_const, ONLY: xp,dp
   IMPLICIT NONE
 
-  CALL append(fidres,  "/data/var5d/time",           time,ionode=0)
-  CALL append(fidres, "/data/var5d/cstep", real(cstep,xp),ionode=0)
+  CALL append(fidres,  "/data/var5d/time",  REAL(time,dp),ionode=0)
+  CALL append(fidres, "/data/var5d/cstep", REAL(cstep,dp),ionode=0)
   CALL getatt(fidres,      "/data/var5d/",       "frames",iframe5d)
   iframe5d=iframe5d+1
   CALL attach(fidres,"/data/var5d/" , "frames", iframe5d)

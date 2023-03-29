@@ -10,7 +10,8 @@ PARTITION  = '/misc/gyacomo23_outputs/';
 % resdir = 'paper_2_GYAC23/CBC/Full_NL_7x4x192x96x32_nu_0.05_muxy_1.0_muz_2.0';
 
 %% tests
-resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24';
+% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_xp';
+resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_sp';
 % resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_Lx_180';
 %%
 J0 = 00; J1 = 10;

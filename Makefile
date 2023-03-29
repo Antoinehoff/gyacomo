@@ -4,35 +4,42 @@ include local/make.inc
 # Standard version with optimized compilation (ifort compiler)
 all: F90 = mpif90
 all: F90FLAGS = -O3 -xHOST
-all: EXEC = $(BINDIR)/gyacomo
+all: EXEC = $(BINDIR)/gyacomo23_dp
 all: dirs src/srcinfo.h
 all: compile
+
+# Single precision version
+sp: F90 = mpif90
+sp: F90FLAGS = -DSINGLE_PRECISION -O3 -xHOST
+sp: EXEC = $(BINDIR)/gyacomo23_sp
+sp: dirs src/srcinfo.h
+sp: compile
 
 # Fast compilation
 fast: F90 = mpif90
 fast: F90FLAGS = -fast
-fast: EXEC = $(BINDIR)/gyacomo_fast
+fast: EXEC = $(BINDIR)/gyacomo23_fast
 fast: dirs src/srcinfo.h
 fast: compile
 
 # Debug version with all flags
 debug: F90 = mpif90
 debug: F90FLAGS = -C -g -traceback -ftrapuv -warn all -debug all
-debug: EXEC = $(BINDIR)/gyacomo_debug
+debug: EXEC = $(BINDIR)/gyacomo23_debug
 debug: dirs src/srcinfo.h
 debug: compile
 
 # For compiling on marconi
 marconi: F90 = mpiifort
 marconi: F90FLAGS = -O3 -xHOST
-marconi: EXEC = $(BINDIR)/gyacomo
+marconi: EXEC = $(BINDIR)/gyacomo23_dp
 marconi: dirs src/srcinfo.h
 marconi: compile
 
 # For compiling on daint
 daint: F90 = ftn
 daint: F90FLAGS = -O3
-daint: EXEC = $(BINDIR)/gyacomo
+daint: EXEC = $(BINDIR)/gyacomo23_dp
 daint: dirs src/srcinfo.h
 daint: compile
 
@@ -40,7 +47,7 @@ daint: compile
 gopt: F90 = mpif90
 gopt: F90FLAGS = -O3 -std=legacy -ffree-line-length-0
 gopt: EXTMOD   = -J $(MODDIR)
-gopt: EXEC = $(BINDIR)/gyacomo
+gopt: EXEC = $(BINDIR)/gyacomo23_dp
 gopt: dirs src/srcinfo.h
 gopt: compile
 
@@ -48,7 +55,7 @@ gopt: compile
 gdebug: F90 = mpif90
 gdebug: F90FLAGS = -C -g -std=legacy -ffree-line-length-0
 gdebug: EXTMOD   = -J $(MODDIR)
-gdebug: EXEC = $(BINDIR)/gyacomo_debug
+gdebug: EXEC = $(BINDIR)/gyacomo23_debug
 gdebug: dirs src/srcinfo.h
 gdebug: compile
 

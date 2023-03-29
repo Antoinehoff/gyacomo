@@ -116,7 +116,11 @@ SUBROUTINE compute_nonlinear
               ENDIF
             ENDDO
             ! Put the real nonlinear product into k-space
+#ifdef SINGLE_PRECISION
+            call fftwf_mpi_execute_dft_r2c(planf, bracket_sum_r, bracket_sum_c)
+#else
             call fftw_mpi_execute_dft_r2c(planf, bracket_sum_r, bracket_sum_c)
+#endif
             ! Retrieve convolution in input format and apply anti aliasing
             DO ikx = 1,local_nkx_ptr
               DO iky = 1,local_nky_ptr

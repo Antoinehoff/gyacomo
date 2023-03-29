@@ -1,6 +1,6 @@
 module ghosts
 USE mpi
-USE prec_const, ONLY: xp
+USE prec_const, ONLY: xp, mpi_xp_c
 IMPLICIT NONE
 
 INTEGER :: status(MPI_STATUS_SIZE), source, dest, count, ipg
@@ -61,22 +61,22 @@ SUBROUTINE update_ghosts_p_mom
   ! count = local_na*(local_nj+ngj)*local_nky*local_nkx*(local_nz+ngz) ! Number of elements to send
   !!!!!!!!!!! Send ghost to right neighbour !!!!!!!!!!!!!!!!!!!!!!
   ! DO ig = 1,ngp/2
-  !   CALL mpi_sendrecv(moments(:,last-(ig-1),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 14+ig, &
-  !                     moments(:,first-ig   ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 14+ig, &
+  !   CALL mpi_sendrecv(moments(:,last-(ig-1),:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_R, 14+ig, &
+  !                     moments(:,first-ig   ,:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_L, 14+ig, &
   !                     comm0, status, ierr)
   ! ENDDO
   !!!!!!!!!!! Send ghost to left neighbour !!!!!!!!!!!!!!!!!!!!!!
   ! DO ig = 1,ngp/2
-  ! CALL mpi_sendrecv(moments(:,first+(ig-1),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 16+ig, &
-  !                   moments(:,last + ig   ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 16+ig, &
+  ! CALL mpi_sendrecv(moments(:,first+(ig-1),:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_L, 16+ig, &
+  !                   moments(:,last + ig   ,:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_R, 16+ig, &
   !                   comm0, status, ierr)
   ! ENDDO
   count = (ngp/2)*local_na*(local_nj+ngj)*local_nky*local_nkx*(local_nz+ngz) ! Number of elements to send
-  CALL mpi_sendrecv(moments(:,(last-(ngp/2-1)):(last),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 14, &
-                    moments(:,(first-ngp/2):(first-1),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 14, &
+  CALL mpi_sendrecv(moments(:,(last-(ngp/2-1)):(last),:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_R, 14, &
+                    moments(:,(first-ngp/2):(first-1),:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_L, 14, &
                     comm0, status, ierr)
-  CALL mpi_sendrecv(moments(:,(first):(first+(ngp/2-1)),:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_L, 16, &
-                    moments(:,(last+1):(last+ngp/2)    ,:,:,:,:,updatetlevel), count, MPI_DOUBLE_COMPLEX, nbr_R, 16, &
+  CALL mpi_sendrecv(moments(:,(first):(first+(ngp/2-1)),:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_L, 16, &
+                    moments(:,(last+1):(last+ngp/2)    ,:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_R, 16, &
                     comm0, status, ierr)
 END SUBROUTINE update_ghosts_p_mom
 
@@ -112,14 +112,14 @@ SUBROUTINE update_ghosts_z_mom
     !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
     ! Send the last local moment to fill the -1 neighbour ghost
     DO ig=1,ngz/2
-      CALL mpi_sendrecv(moments(:,:,:,:,:,last-(ig-1),updatetlevel),count,MPI_DOUBLE_COMPLEX,nbr_U,24+ig, & ! Send to Up the last
-                                       buff_pjxy_zBC(:,:,:,:,:,-ig),count,MPI_DOUBLE_COMPLEX,nbr_D,24+ig, & ! Recieve from Down the first-1
+      CALL mpi_sendrecv(moments(:,:,:,:,:,last-(ig-1),updatetlevel),count,mpi_xp_c,nbr_U,24+ig, & ! Send to Up the last
+                                       buff_pjxy_zBC(:,:,:,:,:,-ig),count,mpi_xp_c,nbr_D,24+ig, & ! Recieve from Down the first-1
                         comm0, status, ierr)
     ENDDO
     !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
     DO ig=1,ngz/2
-      CALL mpi_sendrecv(moments(:,:,:,:,:,first+(ig-1),updatetlevel),count,MPI_DOUBLE_COMPLEX,nbr_D,26+ig, & ! Send to Up the last
-                                         buff_pjxy_zBC(:,:,:,:,:,ig),count,MPI_DOUBLE_COMPLEX,nbr_U,26+ig, & ! Recieve from Down the first-1
+      CALL mpi_sendrecv(moments(:,:,:,:,:,first+(ig-1),updatetlevel),count,mpi_xp_c,nbr_D,26+ig, & ! Send to Up the last
+                                         buff_pjxy_zBC(:,:,:,:,:,ig),count,mpi_xp_c,nbr_U,26+ig, & ! Recieve from Down the first-1
                         comm0, status, ierr)
     ENDDO
   ELSE !No parallel (just copy)
@@ -174,14 +174,14 @@ SUBROUTINE update_ghosts_z_3D(field)
     CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
       !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
       DO ig = 1,ngz/2
-      CALL mpi_sendrecv(     field(:,:,last-(ig-1)), count, MPI_DOUBLE_COMPLEX, nbr_U, 30+ig, & ! Send to Up the last
-                       buff_xy_zBC(:,:,-ig),         count, MPI_DOUBLE_COMPLEX, nbr_D, 30+ig, & ! Receive from Down the first-1
+      CALL mpi_sendrecv(     field(:,:,last-(ig-1)), count, mpi_xp_c, nbr_U, 30+ig, & ! Send to Up the last
+                       buff_xy_zBC(:,:,-ig),         count, mpi_xp_c, nbr_D, 30+ig, & ! Receive from Down the first-1
                         comm0, status, ierr)
       ENDDO
       !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
       DO ig = 1,ngz/2
-      CALL mpi_sendrecv(     field(:,:,first+(ig-1)), count, MPI_DOUBLE_COMPLEX, nbr_D, 32+ig, & ! Send to Down the first
-                       buff_xy_zBC(:,:,ig),           count, MPI_DOUBLE_COMPLEX, nbr_U, 32+ig, & ! Recieve from Up the last+1
+      CALL mpi_sendrecv(     field(:,:,first+(ig-1)), count, mpi_xp_c, nbr_D, 32+ig, & ! Send to Down the first
+                       buff_xy_zBC(:,:,ig),           count, mpi_xp_c, nbr_U, 32+ig, & ! Recieve from Up the last+1
                         comm0, status, ierr)
       ENDDO
    ELSE

@@ -1,5 +1,5 @@
 MODULE parallel
-  use prec_const, ONLY : xp
+  use prec_const, ONLY : xp, mpi_xp_c
   USE mpi
   IMPLICIT NONE
   ! Auxiliary variables
@@ -255,15 +255,15 @@ CONTAINS
         DO iz = 1,nz_loc
           ! fill a buffer to contain a slice of data at constant kx and z
           buffer_yl_zc(1:nky_loc) = field_loc(1:nky_loc,ix,iz)
-          CALL MPI_GATHERV(buffer_yl_zc, snd_y,        MPI_DOUBLE_COMPLEX, &
-                           buffer_yt_zc, rcv_y, dsp_y, MPI_DOUBLE_COMPLEX, &
+          CALL MPI_GATHERV(buffer_yl_zc, snd_y,        mpi_xp_c, &
+                           buffer_yt_zc, rcv_y, dsp_y, mpi_xp_c, &
                            root_ky, comm_ky, ierr)
           buffer_yt_zl(1:nky_tot,iz) = buffer_yt_zc(1:nky_tot)
         ENDDO
         ! send the full line on y contained by root_ky
         IF(rank_ky .EQ. root_ky) THEN
-          CALL MPI_GATHERV(buffer_yt_zl, snd_z,          MPI_DOUBLE_COMPLEX, &
-                           buffer_yt_zt, rcv_zy, dsp_zy, MPI_DOUBLE_COMPLEX, &
+          CALL MPI_GATHERV(buffer_yt_zl, snd_z,          mpi_xp_c, &
+                           buffer_yt_zt, rcv_zy, dsp_zy, mpi_xp_c, &
                            root_z, comm_z, ierr)
         ENDIF
         ! ID 0 (the one who output) rebuild the whole array
@@ -294,15 +294,15 @@ CONTAINS
         DO iz = 1,nz_loc
           ! fill a buffer to contain a slice of data at constant j and z
           buffer_pl_zc(1:np_loc) = field_loc(1:np_loc,ij,iz)
-          CALL MPI_GATHERV(buffer_pl_zc, snd_p,        MPI_DOUBLE_COMPLEX, &
-                           buffer_pt_zc, rcv_p, dsp_p, MPI_DOUBLE_COMPLEX, &
+          CALL MPI_GATHERV(buffer_pl_zc, snd_p,        mpi_xp_c, &
+                           buffer_pt_zc, rcv_p, dsp_p, mpi_xp_c, &
                            root_p, comm_p, ierr)
           buffer_pt_zl(1:np_tot,iz) = buffer_pt_zc(1:np_tot)
         ENDDO
         ! send the full line on y contained by root_p
         IF(rank_p .EQ. root_p) THEN
-          CALL MPI_GATHERV(buffer_pt_zl, snd_z,          MPI_DOUBLE_COMPLEX, &
-                           buffer_pt_zt, rcv_zp, dsp_zp, MPI_DOUBLE_COMPLEX, &
+          CALL MPI_GATHERV(buffer_pt_zl, snd_z,          mpi_xp_c, &
+                           buffer_pt_zt, rcv_zp, dsp_zp, mpi_xp_c, &
                            root_z, comm_z, ierr)
         ENDIF
         ! ID 0 (the one who output) rebuild the whole array
@@ -337,23 +337,23 @@ CONTAINS
             y: DO iy = 1,nky_loc
               ! fill a buffer to contain a slice of p data at constant j, ky, kx and z
               buffer_pl_cy_zc(1:np_loc) = field_loc(1:np_loc,ij,iy,ix,iz)
-              CALL MPI_GATHERV(buffer_pl_cy_zc, snd_p,        MPI_DOUBLE_COMPLEX, &
-                              buffer_pt_cy_zc, rcv_p, dsp_p, MPI_DOUBLE_COMPLEX, &
+              CALL MPI_GATHERV(buffer_pl_cy_zc, snd_p,       mpi_xp_c, &
+                              buffer_pt_cy_zc, rcv_p, dsp_p, mpi_xp_c, &
                               root_p, comm_p, ierr)
               buffer_pt_yl_zc(1:np_tot,iy) = buffer_pt_cy_zc(1:np_tot)
             ENDDO y
             ! send the full line on p contained by root_p
             IF(rank_p .EQ. 0) THEN
-              CALL MPI_GATHERV(buffer_pt_yl_zc, snd_y,          MPI_DOUBLE_COMPLEX, &
-                              buffer_pt_yt_zc, rcv_yp, dsp_yp, MPI_DOUBLE_COMPLEX, &
+              CALL MPI_GATHERV(buffer_pt_yl_zc, snd_y,         mpi_xp_c, &
+                              buffer_pt_yt_zc, rcv_yp, dsp_yp, mpi_xp_c, &
                               root_ky, comm_ky, ierr)
               buffer_pt_yt_zl(1:np_tot,1:nky_tot,iz) = buffer_pt_yt_zc(1:np_tot,1:nky_tot)
             ENDIF
           ENDDO z
           ! send the full line on y contained by root_kyas
           IF(rank_ky .EQ. 0) THEN
-            CALL MPI_GATHERV(buffer_pt_yt_zl, snd_z,            MPI_DOUBLE_COMPLEX, &
-                            buffer_pt_yt_zt, rcv_zyp, dsp_zyp, MPI_DOUBLE_COMPLEX, &
+            CALL MPI_GATHERV(buffer_pt_yt_zl, snd_z,           mpi_xp_c, &
+                            buffer_pt_yt_zt, rcv_zyp, dsp_zyp, mpi_xp_c, &
                             root_z, comm_z, ierr)
           ENDIF
           ! ID 0 (the one who ouptut) rebuild the whole array
@@ -390,11 +390,11 @@ CONTAINS
         ! Send it to all the other processes
         DO i_ = 0,num_procs_p-1
           IF (i_ .NE. world_rank) &
-          CALL MPI_SEND(buffer, count, MPI_DOUBLE_COMPLEX, i_, 0, comm_p, ierr)
+          CALL MPI_SEND(buffer, count, mpi_xp_c, i_, 0, comm_p, ierr)
         ENDDO
       ELSE
         ! Recieve buffer from root
-        CALL MPI_RECV(buffer, count, MPI_DOUBLE_COMPLEX, root, 0, comm_p, MPI_STATUS_IGNORE, ierr)
+        CALL MPI_RECV(buffer, count, mpi_xp_c, root, 0, comm_p, MPI_STATUS_IGNORE, ierr)
         ! Write it in phi
         DO i3 = 1,n3
           DO i2 = 1,n2
@@ -426,11 +426,11 @@ CONTAINS
         ! Send it to all the other processes
         DO i_ = 0,num_procs_z-1
           IF (i_ .NE. world_rank) &
-          CALL MPI_SEND(buffer, count, MPI_DOUBLE_COMPLEX, i_, 0, comm_z, ierr)
+          CALL MPI_SEND(buffer, count, mpi_xp_c, i_, 0, comm_z, ierr)
         ENDDO
       ELSE
         ! Recieve buffer from root
-        CALL MPI_RECV(buffer, count, MPI_DOUBLE_COMPLEX, root, 0, comm_z, MPI_STATUS_IGNORE, ierr)
+        CALL MPI_RECV(buffer, count, mpi_xp_c, root, 0, comm_z, MPI_STATUS_IGNORE, ierr)
         ! Write it in phi
         v = buffer
       ENDIF
@@ -447,14 +447,14 @@ CONTAINS
     last  = np + ng/2
     !!!!!!!!!!! Send ghost to right neighbour !!!!!!!!!!!!!!!!!!!!!!
     DO ig = 1,ng/2
-      CALL mpi_sendrecv(f(last-(ig-1)), 1, MPI_DOUBLE_COMPLEX, nbr_R, 14+ig, &
-                           f(first-ig), 1, MPI_DOUBLE_COMPLEX, nbr_L, 14+ig, &
+      CALL mpi_sendrecv(f(last-(ig-1)), 1, mpi_xp_c, nbr_R, 14+ig, &
+                           f(first-ig), 1, mpi_xp_c, nbr_L, 14+ig, &
                         comm0, MPI_STATUS_IGNORE, ierr)
     ENDDO
     !!!!!!!!!!! Send ghost to left neighbour !!!!!!!!!!!!!!!!!!!!!!
     DO ig = 1,ng/2
-    CALL mpi_sendrecv(f(first+(ig-1)), 1, MPI_DOUBLE_COMPLEX, nbr_L, 16+ig, &
-                           f(last+ig), 1, MPI_DOUBLE_COMPLEX, nbr_R, 16+ig, &
+    CALL mpi_sendrecv(f(first+(ig-1)), 1, mpi_xp_c, nbr_L, 16+ig, &
+                           f(last+ig), 1, mpi_xp_c, nbr_R, 16+ig, &
                       comm0, MPI_STATUS_IGNORE, ierr)
     ENDDO
   END SUBROUTINE exchange_ghosts_1D

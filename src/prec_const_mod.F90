@@ -9,18 +9,30 @@ MODULE prec_const
   use, intrinsic :: iso_c_binding
 
   ! Define single and double precision
-  ! INTEGER, PARAMETER :: sp = REAL32 !Single precision
-  ! INTEGER, PARAMETER :: dp = REAL64 !Double precision  
-  ! INTEGER, private :: dp_r, dp_p !Range and Aprecision of doubles
-  ! INTEGER, private :: sp_r, sp_p !Range and precision of singles
-  ! INTEGER, private :: MPI_SP !Single precision for MPI
-  ! INTEGER, private :: MPI_DP !Double precision in MPI
-  ! INTEGER, private :: MPI_SUM_DP !Sum reduction operation for DP datatype
-  ! INTEGER, private :: MPI_MAX_DP !Max reduction operation for DP datatype
-  ! INTEGER, private :: MPI_MIN_DP !Min reduction operation for DP datatype
+  INTEGER, PARAMETER :: sp = REAL32 !Single precision
+  INTEGER, PARAMETER :: dp = REAL64 !Double precision  
+  INTEGER, private :: dp_r, dp_p !Range and Aprecision of doubles
+  INTEGER, private :: sp_r, sp_p !Range and precision of singles
+  INTEGER, private :: MPI_SP !Single precision for MPI
+  INTEGER, private :: MPI_DP !Double precision in MPI
+  INTEGER, private :: MPI_SUM_DP !Sum reduction operation for DP datatype
+  INTEGER, private :: MPI_MAX_DP !Max reduction operation for DP datatype
+  INTEGER, private :: MPI_MIN_DP !Min reduction operation for DP datatype
 
   ! Define a generic precision parameter for the entire program
-  INTEGER, PARAMETER :: xp = REAL64!real(xp), enforced through the code
+#ifdef SINGLE_PRECISION
+    INTEGER, PARAMETER :: xp       = REAL32
+    INTEGER, PARAMETER :: c_xp_c   = C_FLOAT_COMPLEX
+    INTEGER, PARAMETER :: c_xp_r   = C_FLOAT
+    INTEGER, PARAMETER :: mpi_xp_c = MPI_COMPLEX
+#else
+    INTEGER, PARAMETER :: xp       = REAL64
+    INTEGER, PARAMETER :: c_xp_c   = C_DOUBLE_COMPLEX
+    INTEGER, PARAMETER :: c_xp_r   = C_DOUBLE
+    INTEGER, PARAMETER :: mpi_xp_c = MPI_DOUBLE_COMPLEX
+
+#endif
+  ! Auxiliary variables (unused)
   INTEGER, private   :: xp_r, xp_p !Range and precision of single
   INTEGER, private   :: MPI_XP     !Double precision in MPI
   INTEGER, private   :: MPI_SUM_XP !Sum reduction operation for xp datatype
