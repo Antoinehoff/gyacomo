@@ -191,7 +191,7 @@ CONTAINS
          ENDDO
          ENDDO
       ELSE
-         interp_napj(:,:,:,:,:,1:local_nz) = nadiab_moments(:,:,:,:,:,1:local_nz)
+         interp_napj(:,:,:,:,:,1:local_nz) = nadiab_moments(:,:,:,:,:,(1+ngz/2):(local_nz+ngz/2))
       ENDIF
    END SUBROUTINE compute_interp_z
 
