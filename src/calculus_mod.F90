@@ -180,7 +180,7 @@ SUBROUTINE interp_z(target,local_nz,ngz,f_in,f_out)
   CASE(2) ! output on odd grid
     CALL interp_e2o_z(local_nz,ngz,f_in,f_out)
   CASE DEFAULT ! No staggered grid -> usual centered finite differences
-    f_out = f_in(1+ngz/2:local_nz+ngz/2)
+    f_out = f_in((1+ngz/2):(local_nz+ngz/2))
   END SELECT
 CONTAINS
   SUBROUTINE interp_o2e_z(local_nz, ngz,fo,fe)
