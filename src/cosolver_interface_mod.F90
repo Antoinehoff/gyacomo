@@ -30,15 +30,19 @@ CONTAINS
           a:DO ia = 1,local_na
             j:DO ij = 1,total_nj
               p:DO ip = 1,total_np
-                !! Take GK or DK limit
-                IF (GK_CO) THEN ! GK operator (k-dependant)
-                  ikx_C = ikx; iky_C = iky; iz_C = iz;
-                ELSE ! DK operator (only one mat for every k)
-                  ikx_C = 1;   iky_C = 1; iz_C = 1;
+                IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmax)) THEN !compute for every moments except for closure 1
+                  !! Take GK or DK limit
+                  IF (GK_CO) THEN ! GK operator (k-dependant)
+                    ikx_C = ikx; iky_C = iky; iz_C = iz;
+                  ELSE ! DK operator (only one mat for every k)
+                    ikx_C = 1;   iky_C = 1; iz_C = 1;
+                  ENDIF
+                  !! Apply the cosolver collision matrix
+                  CALL apply_cosolver_mat(ia,ip,ij,iky,ikx,iz,ikx_C,iky_C,iz_C,Tmp_)
+                  local_coll(ip) = Tmp_
+                ELSE
+                  local_coll(ip) = 0._xp
                 ENDIF
-                !! Apply the cosolver collision matrix
-                CALL apply_cosolver_mat(ia,ip,ij,iky,ikx,iz,ikx_C,iky_C,iz_C,Tmp_)
-                local_coll(ip) = Tmp_
               ENDDO p
               IF (num_procs_p .GT. 1) THEN
                 ! Reduce the local_sums to root = 0
