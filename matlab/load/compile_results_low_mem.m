@@ -40,6 +40,7 @@ while(CONTINUE)
             W_GAMMA   = strcmp(h5readatt(filename,'/data/input/diag_par','write_gamma'),'y');
             W_HF      = strcmp(h5readatt(filename,'/data/input/diag_par','write_hf'   ),'y');
             KIN_E     = strcmp(h5readatt(filename,'/data/input/model',     'ADIAB_E' ),'n');
+            BETA      = h5readatt(filename,'/data/input/model','beta');
 
             if W_GAMMA
                 [ GGAMMA_RI, Ts0D, ~] = load_0D_data(filename, 'gflux_xi');

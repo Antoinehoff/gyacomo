@@ -1,824 +1,563 @@
 MODULE processing
-    USE basic
-    USE prec_const
-    USE grid
-    implicit none
+   USE prec_const,  ONLY: xp, imagu, SQRT2, SQRT3, onetwelfth, twothird
+   USE grid,        ONLY: &
+      local_na, local_np, local_nj, local_nky, local_nkx, local_nz, Ngz,Ngj,Ngp,nzgrid, &
+      parray,pmax,ip0, iodd, ieven,&
+      CONTAINSp0,ip1,CONTAINSp1,ip2,CONTAINSp2,ip3,CONTAINSp3,&
+      jarray,jmax,ij0, dmax,&
+      kyarray, AA_y,&
+      kxarray, AA_x,&
+      zarray, zweights_SR, ieven, iodd, inv_deltaz
+   USE fields,           ONLY: moments, phi, psi
+   USE array,            ONLY : kernel, nadiab_moments, &
+      ddz_napj, ddzND_Napj, interp_napj,&
+      dens, upar, uper, Tpar, Tper, temp
+   USE geometry,         ONLY: Jacobian, iInt_Jacobian
+   USE time_integration, ONLY: updatetlevel
+   USE calculus,         ONLY: simpson_rule_z, grad_z, grad_z_5D, grad_z2, grad_z4, grad_z4_5D, interp_z
+   USE model,            ONLY: EM, beta, HDz_h
+   USE species,          ONLY: tau,q_tau,q_o_sqrt_tau_sigma,sqrt_tau_o_sigma
+   USE parallel,         ONLY: num_procs_ky, rank_ky, comm_ky
+   USE mpi
+   implicit none
 
-    REAL(dp), PUBLIC, PROTECTED :: pflux_ri, gflux_ri, pflux_re, gflux_re
-    REAL(dp), PUBLIC, PROTECTED :: hflux_xi, hflux_xe
-
-    PUBLIC :: compute_nadiab_moments_z_gradients_and_interp
-    PUBLIC :: compute_density, compute_upar, compute_uperp
-    PUBLIC :: compute_Tpar, compute_Tperp, compute_fluid_moments
-    PUBLIC :: compute_radial_ion_transport, compute_radial_electron_transport
-    PUBLIC :: compute_radial_ion_heatflux, compute_radial_electron_heatflux
-    PUBLIC :: compute_Napjz_spectrum
+   REAL(xp), PUBLIC, ALLOCATABLE, DIMENSION(:), PROTECTED :: pflux_x, gflux_x
+   REAL(xp), PUBLIC, ALLOCATABLE, DIMENSION(:), PROTECTED :: hflux_x
+   INTEGER :: ierr
+   PUBLIC :: init_process
+   PUBLIC :: compute_nadiab_moments, compute_gradients_z, compute_interp_z
+   PUBLIC :: compute_density, compute_upar, compute_uperp
+   PUBLIC :: compute_Tpar, compute_Tperp, compute_fluid_moments
+   PUBLIC :: compute_radial_transport
+   PUBLIC :: compute_radial_heatflux
+   PUBLIC :: compute_Napjz_spectrum
 CONTAINS
 
-! 1D diagnostic to compute the average radial particle transport <n_i v_ExB_x>_xyz
-SUBROUTINE compute_radial_ion_transport
-  USE fields,           ONLY : moments_i, phi, psi
-  USE array,            ONLY : kernel_i
-  USE geometry,         ONLY : Jacobian, iInt_Jacobian
-  USE time_integration, ONLY : updatetlevel
-  USE calculus,         ONLY : simpson_rule_z
-  USE model,            ONLY : sqrt_tau_o_sigma_i, EM
-  IMPLICIT NONE
-  COMPLEX(dp) :: pflux_local, gflux_local, integral
-  REAL(dp)    :: ky_, buffer(1:2)
-  INTEGER     :: i_, root
-  COMPLEX(dp), DIMENSION(izgs:izge) :: integrant
-
-  pflux_local = 0._dp ! particle flux
-  gflux_local = 0._dp ! gyrocenter flux
-  integrant   = 0._dp ! auxiliary variable for z integration
-  !!---------- Gyro center flux (drift kinetic) ------------
-  ! Electrostatic part
-  IF(CONTAINS_ip0_i) THEN
-    DO iky = ikys,ikye
-        ky_ = kyarray(iky)
-        DO ikx = ikxs,ikxe
-          integrant(izgs:izge) = integrant(izgs:izge) &
-           +moments_i(ip0_i,ij0_i,iky,ikx,izgs:izge,updatetlevel)&
-            *imagu*ky_*CONJG(phi(iky,ikx,izgs:izge))
+   SUBROUTINE init_process
+      USE grid,       ONLY: local_na
+      IMPLICIT NONE
+      ALLOCATE( pflux_x(local_na))
+      ALLOCATE( gflux_x(local_na))
+      ALLOCATE( hflux_x(local_na))
+   END SUBROUTINE init_process
+!------------------------------ HIGH FREQUENCY ROUTINES -------------
+! The following routines (nadiab computing, interp and grads) must be
+! as fast as possible since they are called every RK substep.
+   ! evaluate the non-adiabatique ion moments
+   !
+   ! n_{pi} = N^{pj} + kernel(j) /tau_i phi delta_p0
+   !
+   SUBROUTINE compute_nadiab_moments
+      IMPLICIT NONE
+      INTEGER :: ia,ip,ij,iky,ikx,iz
+      !non adiab moments
+      DO iz=1,local_nz+ngz
+      DO ikx=1,local_nkx
+      DO iky=1,local_nky
+      DO ij=1,local_nj+ngj
+      DO ip=1,local_np+ngp
+      DO ia = 1,local_na
+         IF(parray(ip) .EQ. 0) THEN
+            nadiab_moments(ia,ip,ij,iky,ikx,iz) = moments(ia,ip,ij,iky,ikx,iz,updatetlevel) &
+            + q_tau(ia)*kernel(ia,ij,iky,ikx,iz,ieven)*phi(iky,ikx,iz)
+            ELSEIF( (parray(ip) .EQ. 1) .AND. (beta .GT. 0) ) THEN
+            nadiab_moments(ia,ip,ij,iky,ikx,iz) = moments(ia,ip,ij,iky,ikx,iz,updatetlevel) &
+               - q_o_sqrt_tau_sigma(ia)*kernel(ia,ij,iky,ikx,iz,ieven)*psi(iky,ikx,iz)
+         ELSE
+            nadiab_moments(ia,ip,ij,iky,ikx,iz) = moments(ia,ip,ij,iky,ikx,iz,updatetlevel)
+         ENDIF
       ENDDO
-    ENDDO
-  ENDIF
-  ! Electromagnetic part
-  IF( EM .AND. CONTAINS_ip1_i ) THEN
-    DO iky = ikys,ikye
-        ky_ = kyarray(iky)
-        DO ikx = ikxs,ikxe
-          integrant(izgs:izge) = integrant(izgs:izge)&
-            -sqrt_tau_o_sigma_i*moments_i(ip1_i,ij0_i,iky,ikx,izgs:izge,updatetlevel)&
-             *imagu*ky_*CONJG(psi(iky,ikx,izgs:izge))
       ENDDO
-    ENDDO
-  ENDIF
-  ! Integrate over z
-  integrant(izgs:izge) = Jacobian(izgs:izge,0)*integrant(izgs:izge)
-  call simpson_rule_z(integrant,integral)
-  ! Get process local gyrocenter flux
-  gflux_local = integral*iInt_Jacobian
-
-  !
-  integrant   = 0._dp ! reset auxiliary variable
-  !!---------- Particle flux (gyrokinetic) ------------
-  ! Electrostatic part
-  IF(CONTAINS_ip0_i) THEN
-    DO iky = ikys,ikye
-        ky_ = kyarray(iky)
-        DO ikx = ikxs,ikxe
-          DO ij = ijs_i, ije_i
-            integrant(izgs:izge) = integrant(izgs:izge)&
-              +moments_i(ip0_i,ij,iky,ikx,izgs:izge,updatetlevel)&
-              *imagu*ky_*kernel_i(ij,iky,ikx,izgs:izge,0)*CONJG(phi(iky,ikx,izgs:izge))
-          ENDDO
       ENDDO
-    ENDDO
-  ENDIF
-  ! Electromagnetic part
-  IF( EM .AND. CONTAINS_ip1_i ) THEN
-    DO iky = ikys,ikye
-      ky_ = kyarray(iky)
-      DO ikx = ikxs,ikxe
-        integrant   = 0._dp ! auxiliary variable for z integration
-        DO ij = ijs_i, ije_i
-          integrant(izgs:izge) = integrant(izgs:izge)&
-            -sqrt_tau_o_sigma_i*moments_i(ip1_i,ij,iky,ikx,izgs:izge,updatetlevel)&
-            *imagu*ky_*kernel_i(ij,iky,ikx,izgs:izge,0)*CONJG(psi(iky,ikx,izgs:izge))
-        ENDDO
       ENDDO
-    ENDDO
-  ENDIF
-  ! Integrate over z
-  integrant(izgs:izge) = Jacobian(izgs:izge,0)*integrant(izgs:izge)
-  call simpson_rule_z(integrant,integral)
-  ! Get process local particle flux
-  pflux_local = integral*iInt_Jacobian
-
-  !!!!---------- Sum over all processes ----------
-  buffer(1) = 2._dp*REAL(gflux_local,dp)
-  buffer(2) = 2._dp*REAL(pflux_local,dp)
-  root = 0
-  !Gather manually among the rank_p=0 processes and perform the sum
-  gflux_ri = 0
-  pflux_ri = 0
-  IF (num_procs_ky .GT. 1) THEN
-      !! Everyone sends its local_sum to root = 0
-      IF (rank_ky .NE. root) THEN
-          CALL MPI_SEND(buffer, 2 , MPI_DOUBLE_PRECISION, root, 1234, comm_ky, ierr)
-      ELSE
-          ! Recieve from all the other processes
-          DO i_ = 0,num_procs_ky-1
-              IF (i_ .NE. rank_ky) &
-                  CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
-                  gflux_ri = gflux_ri + buffer(1)
-                  pflux_ri = pflux_ri + buffer(2)
-          ENDDO
-      ENDIF
-  ELSE
-    gflux_ri = gflux_local
-    pflux_ri = pflux_local
-  ENDIF
-  ! if(my_id .eq. 0) write(*,*) 'pflux_ri = ',pflux_ri
-END SUBROUTINE compute_radial_ion_transport
-
-! 1D diagnostic to compute the average radial particle transport <n_e v_ExB_x>_xyz
-SUBROUTINE compute_radial_electron_transport
-  USE fields,           ONLY : moments_e, phi, psi
-  USE array,            ONLY : kernel_e
-  USE geometry,         ONLY : Jacobian, iInt_Jacobian
-  USE time_integration, ONLY : updatetlevel
-  USE calculus,         ONLY : simpson_rule_z
-  USE model,            ONLY : sqrt_tau_o_sigma_e, EM
-  IMPLICIT NONE
-  COMPLEX(dp) :: pflux_local, gflux_local, integral
-  REAL(dp)    :: ky_, buffer(1:2)
-  INTEGER     :: i_, root
-  COMPLEX(dp), DIMENSION(izgs:izge) :: integrant
-
-  pflux_local = 0._dp ! particle flux
-  gflux_local = 0._dp ! gyrocenter flux
-  integrant   = 0._dp ! auxiliary variable for z integration
-  !!---------- Gyro center flux (drift kinetic) ------------
-  ! Electrostatic part
-  IF(CONTAINS_ip0_e) THEN
-    DO iky = ikys,ikye
-        ky_ = kyarray(iky)
-        DO ikx = ikxs,ikxe
-          integrant(izgs:izge) = integrant(izgs:izge) &
-           +moments_e(ip0_e,ij0_e,iky,ikx,izgs:izge,updatetlevel)&
-            *imagu*ky_*CONJG(phi(iky,ikx,izgs:izge))
       ENDDO
-    ENDDO
-  ENDIF
-  ! Electromagnetic part
-  IF( EM .AND. CONTAINS_ip1_e ) THEN
-    DO iky = ikys,ikye
-        ky_ = kyarray(iky)
-        DO ikx = ikxs,ikxe
-          integrant(izgs:izge) = integrant(izgs:izge)&
-            -sqrt_tau_o_sigma_e*moments_e(ip1_e,ij0_e,iky,ikx,izgs:izge,updatetlevel)&
-             *imagu*ky_*CONJG(psi(iky,ikx,izgs:izge))
       ENDDO
-    ENDDO
-  ENDIF
-  ! Integrate over z
-  integrant(izgs:izge) = Jacobian(izgs:izge,0)*integrant(izgs:izge)
-  call simpson_rule_z(integrant,integral)
-  ! Get process local gyrocenter flux
-  gflux_local = integral*iInt_Jacobian
-  !
-  integrant   = 0._dp ! reset auxiliary variable
-  !!---------- Particle flux (gyrokinetic) ------------
-  ! Electrostatic part
-  IF(CONTAINS_ip0_e) THEN
-    DO iky = ikys,ikye
-        ky_ = kyarray(iky)
-        DO ikx = ikxs,ikxe
-          DO ij = ijs_e, ije_e
-            integrant(izgs:izge) = integrant(izgs:izge)&
-              +moments_e(ip0_e,ij,iky,ikx,izgs:izge,updatetlevel)&
-              *imagu*ky_*kernel_e(ij,iky,ikx,izgs:izge,0)*CONJG(phi(iky,ikx,izgs:izge))
-          ENDDO
+   END SUBROUTINE compute_nadiab_moments
+
+   ! z grid gradients
+   ! SUBROUTINE compute_gradients_z
+   !    IMPLICIT NONE
+   !    INTEGER :: eo, p_int, j_int, ia,ip,ij,iky,ikx,iz,izi
+   !    COMPLEX(xp), DIMENSION(local_nz+ngz) :: f_in
+   !    COMPLEX(xp), DIMENSION(local_nz)     :: f_out
+   !       ! Compute z first derivative
+   !       DO iz=1,local_nz+ngz
+   !          izi = iz+ngz/2
+   !       DO ikx=1,local_nkx
+   !       DO iky=1,local_nky
+   !       DO ij=1,local_nj+ngj
+   !       DO ip=1,local_np+ngp
+   !       DO ia = 1,local_na
+   !          ddz_napj(ia,ip,ij,iky,ikx,iz) = inv_deltaz *(&
+   !             +onetwelfth*nadiab_moments(ia,ip,ij,iky,ikx,izi-2)&
+   !               -twothird*nadiab_moments(ia,ip,ij,iky,ikx,izi-1)&
+   !               +twothird*nadiab_moments(ia,ip,ij,iky,ikx,izi+1)&
+   !             -onetwelfth*nadiab_moments(ia,ip,ij,iky,ikx,izi-2)&
+   !             )
+   !          ddzND_Napj(ia,ip,ij,iky,ikx,iz) = inv_deltaz**4 *(&
+   !             +1._xp*moments(ia,ip,ij,iky,ikx,izi-2,updatetlevel)&
+   !             -4._xp*moments(ia,ip,ij,iky,ikx,izi-1,updatetlevel)&
+   !             +6._xp*moments(ia,ip,ij,iky,ikx,izi  ,updatetlevel)&
+   !             -4._xp*moments(ia,ip,ij,iky,ikx,izi+1,updatetlevel)&
+   !             +1._xp*moments(ia,ip,ij,iky,ikx,izi-2,updatetlevel)&
+   !          )
+   !       ENDDO
+   !       ENDDO
+   !       ENDDO
+   !       ENDDO
+   !       ENDDO
+   !       ENDDO
+   ! END SUBROUTINE compute_gradients_z
+
+   ! ! z grid gradients
+   SUBROUTINE compute_gradients_z
+      IMPLICIT NONE
+      INTEGER :: eo, p_int, ia,ip,ij,iky,ikx,iz
+      COMPLEX(xp), DIMENSION(local_nz+ngz) :: f_in
+      COMPLEX(xp), DIMENSION(local_nz)     :: f_out
+      DO ikx = 1,local_nkx
+      DO iky = 1,local_nky
+      DO ij = 1,local_nj+ngj
+      DO ip = 1,local_np+ngp
+      DO ia = 1,local_na
+         IF(nzgrid .GT. 1) THEN
+            p_int = parray(ip+ngp/2)
+            eo    = MODULO(p_int,2)+1 ! Indicates if we are on even or odd z grid
+         ELSE
+            eo = 0
+         ENDIF
+         ! Compute z first derivative
+         f_in = nadiab_moments(ia,ip,ij,iky,ikx,:)
+         CALL   grad_z(eo,local_nz,ngz,inv_deltaz,f_in,f_out)
+         ddz_napj(ia,ip,ij,iky,ikx,:) = f_out(:)
+         ! Parallel numerical diffusion
+         IF (HDz_h) THEN
+            f_in = nadiab_moments(ia,ip,ij,iky,ikx,:)
+         ELSE
+            f_in = moments(ia,ip,ij,iky,ikx,:,updatetlevel)
+         ENDIF
+         CALL  grad_z4(local_nz,ngz,inv_deltaz,f_in,f_out)
+         ! get output
+         DO iz = 1,local_nz
+            ddzND_Napj(ia,ip,ij,iky,ikx,iz) = f_out(iz)
+         ENDDO
       ENDDO
-    ENDDO
-  ENDIF
-  ! Electromagnetic part
-  IF( EM .AND. CONTAINS_ip1_e ) THEN
-    DO iky = ikys,ikye
-      ky_ = kyarray(iky)
-      DO ikx = ikxs,ikxe
-        integrant   = 0._dp ! auxiliary variable for z integration
-        DO ij = ijs_e, ije_e
-          integrant(izgs:izge) = integrant(izgs:izge)&
-            -sqrt_tau_o_sigma_e*moments_e(ip1_e,ij,iky,ikx,izgs:izge,updatetlevel)&
-            *imagu*ky_*kernel_e(ij,iky,ikx,izgs:izge,0)*CONJG(psi(iky,ikx,izgs:izge))
-        ENDDO
       ENDDO
-    ENDDO
-  ENDIF
-  ! Integrate over z
-  integrant(izgs:izge) = Jacobian(izgs:izge,0)*integrant(izgs:izge)
-  call simpson_rule_z(integrant,integral)
-  ! Get process local particle flux
-  pflux_local = integral*iInt_Jacobian
-
-  !!!!---------- Sum over all processes ----------
-  buffer(1) = 2._dp*REAL(gflux_local,dp)
-  buffer(2) = 2._dp*REAL(pflux_local,dp)
-  root = 0
-  !Gather manually among the rank_p=0 processes and perform the sum
-  gflux_re = 0
-  pflux_re = 0
-  IF (num_procs_ky .GT. 1) THEN
-      !! Everyone sends its local_sum to root = 0
-      IF (rank_ky .NE. root) THEN
-          CALL MPI_SEND(buffer, 2 , MPI_DOUBLE_PRECISION, root, 1234, comm_ky, ierr)
-      ELSE
-          ! Recieve from all the other processes
-          DO i_ = 0,num_procs_ky-1
-              IF (i_ .NE. rank_ky) &
-                  CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
-                  gflux_re = gflux_re + buffer(1)
-                  pflux_re = pflux_re + buffer(2)
-          ENDDO
-      ENDIF
-  ELSE
-    gflux_re = gflux_local
-    pflux_re = pflux_local
-  ENDIF
-END SUBROUTINE compute_radial_electron_transport
-
-! 1D diagnostic to compute the average radial particle transport <T_i v_ExB_x>_xyz
-SUBROUTINE compute_radial_ion_heatflux
-  USE fields,           ONLY : moments_i, phi, psi
-  USE array,            ONLY : kernel_i!, HF_phi_correction_operator
-  USE geometry,         ONLY : Jacobian, iInt_Jacobian
-  USE time_integration, ONLY : updatetlevel
-  USE calculus,         ONLY : simpson_rule_z
-  USE model,            ONLY : tau_i, sqrt_tau_o_sigma_i, EM
-  IMPLICIT NONE
-  COMPLEX(dp) :: hflux_local, integral
-  REAL(dp)    :: ky_, buffer(1:2), n_dp
-  INTEGER     :: i_, root, in
-  COMPLEX(dp), DIMENSION(izgs:izge) :: integrant        ! charge density q_a n_a
-
-  hflux_local = 0._dp ! heat flux
-  integrant   = 0._dp ! z integration auxiliary variable
-  !!----------------ELECTROSTATIC CONTRIBUTION---------------------------
-  IF(CONTAINS_ip0_i .AND. CONTAINS_ip2_i) THEN
-    ! Loop to compute gamma_kx = sum_ky sum_j -i k_z Kernel_j Ni00 * phi
-    DO iky = ikys,ikye
-    ky_ = kyarray(iky)
-    DO ikx = ikxs,ikxe
-      DO in = ijs_i, ije_i
-        n_dp = jarray_i(in)
-        integrant(izgs:izge) = integrant(izgs:izge) + tau_i*imagu*ky_*CONJG(phi(iky,ikx,izgs:izge))&
-         *kernel_i(in,iky,ikx,izgs:izge,0)*(&
-                       0.5_dp*SQRT2*moments_i(ip2_i,in  ,iky,ikx,izgs:izge,updatetlevel)&
-             +(2._dp*n_dp + 1.5_dp)*moments_i(ip0_i,in  ,iky,ikx,izgs:izge,updatetlevel)&
-                      -(n_dp+1._dp)*moments_i(ip0_i,in+1,iky,ikx,izgs:izge,updatetlevel)&
-                              -n_dp*moments_i(ip0_i,in-1,iky,ikx,izgs:izge,updatetlevel))
       ENDDO
-    ENDDO
-    ENDDO
-  ENDIF
-  IF(EM .AND. CONTAINS_ip1_i .AND. CONTAINS_ip3_i) THEN
-    !!----------------ELECTROMAGNETIC CONTRIBUTION--------------------
-    DO iky = ikys,ikye
-    ky_ = kyarray(iky)
-    DO ikx = ikxs,ikxe
-      DO in = ijs_i, ije_i
-        n_dp = jarray_i(in)
-        integrant(izgs:izge) = integrant(izgs:izge) &
-         +tau_i*sqrt_tau_o_sigma_i*imagu*ky_*CONJG(psi(iky,ikx,izgs:izge))&
-           *kernel_i(in,iky,ikx,izgs:izge,0)*(&
-                   0.5_dp*SQRT2*SQRT3*moments_i(ip3_i,in  ,iky,ikx,izgs:izge,updatetlevel)&
-                              +1.5_dp*moments_i(ip1_i,in  ,iky,ikx,izgs:izge,updatetlevel)&
-                  +(2._dp*n_dp+1._dp)*moments_i(ip1_i,in  ,iky,ikx,izgs:izge,updatetlevel)&
-                        -(n_dp+1._dp)*moments_i(ip1_i,in+1,iky,ikx,izgs:izge,updatetlevel)&
-                                -n_dp*moments_i(ip1_i,in-1,iky,ikx,izgs:izge,updatetlevel))
       ENDDO
-    ENDDO
-    ENDDO
-  ENDIF
-  ! Add polarisation contribution
-  ! integrant(izgs:izge) = integrant(izgs:izge) + tau_i*imagu*ky_&
-  ! *CONJG(phi(iky,ikx,izgs:izge))*phi(iky,ikx,izgs:izge) * HF_phi_correction_operator(iky,ikx,izgs:izge)
-  ! Integrate over z
-  integrant(izgs:izge) = Jacobian(izgs:izge,0)*integrant(izgs:izge)
-  call simpson_rule_z(integrant,integral)
-  hflux_local = hflux_local + integral*iInt_Jacobian
-  ! Double it for taking into account the other half plane
-  buffer(2) = 2._dp*REAL(hflux_local,dp)
-  root = 0
-  !Gather manually among the rank_p=0 processes and perform the sum
-  hflux_xi = 0
-  IF (num_procs_ky .GT. 1) THEN
-      !! Everyone sends its local_sum to root = 0
-      IF (rank_ky .NE. root) THEN
-          CALL MPI_SEND(buffer, 2 , MPI_DOUBLE_PRECISION, root, 1234, comm_ky, ierr)
-      ELSE
-          ! Recieve from all the other processes
-          DO i_ = 0,num_procs_ky-1
-              IF (i_ .NE. rank_ky) &
-                  CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
-                  hflux_xi = hflux_xi + buffer(2)
-          ENDDO
-      ENDIF
-  ELSE
-    hflux_xi = hflux_local
-  ENDIF
-END SUBROUTINE compute_radial_ion_heatflux
-
-
-! 1D diagnostic to compute the average radial particle transport <T_e v_ExB_x>_xyz
-SUBROUTINE compute_radial_electron_heatflux
-  USE fields,           ONLY : moments_e, phi, psi
-  USE array,            ONLY : kernel_e!, HF_phi_correction_operator
-  USE geometry,         ONLY : Jacobian, iInt_Jacobian
-  USE time_integration, ONLY : updatetlevel
-  USE calculus,         ONLY : simpson_rule_z
-  USE model,            ONLY : tau_e, sqrt_tau_o_sigma_e, EM
-  IMPLICIT NONE
-  COMPLEX(dp) :: hflux_local, integral
-  REAL(dp)    :: ky_, buffer(1:2), n_dp
-  INTEGER     :: i_, root, in
-  COMPLEX(dp), DIMENSION(izgs:izge) :: integrant        ! charge density q_a n_a
-
-  hflux_local = 0._dp ! heat flux
-  integrant   = 0._dp ! z integration auxiliary variable
-  !!----------------ELECTROSTATIC CONTRIBUTION---------------------------
-  IF(CONTAINS_ip0_e .AND. CONTAINS_ip2_e) THEN
-    ! Loop to compute gamma_kx = sum_ky sum_j -i k_z Kernel_j Ni00 * phi
-    DO iky = ikys,ikye
-    ky_ = kyarray(iky)
-    DO ikx = ikxs,ikxe
-      DO in = ijs_e, ije_e
-        n_dp = jarray_e(in)
-        integrant(izgs:izge) = integrant(izgs:izge) + tau_e*imagu*ky_*CONJG(phi(iky,ikx,izgs:izge))&
-         *kernel_e(in,iky,ikx,izgs:izge,0)*(&
-                       0.5_dp*SQRT2*moments_e(ip2_e,in  ,iky,ikx,izgs:izge,updatetlevel)&
-             +(2._dp*n_dp + 1.5_dp)*moments_e(ip0_e,in  ,iky,ikx,izgs:izge,updatetlevel)&
-                      -(n_dp+1._dp)*moments_e(ip0_e,in+1,iky,ikx,izgs:izge,updatetlevel)&
-                              -n_dp*moments_e(ip0_e,in-1,iky,ikx,izgs:izge,updatetlevel))
       ENDDO
-    ENDDO
-    ENDDO
-  ENDIF
-  IF(EM .AND. CONTAINS_ip1_e .AND. CONTAINS_ip3_e) THEN
-    !!----------------ELECTROMAGNETIC CONTRIBUTION--------------------
-    DO iky = ikys,ikye
-    ky_ = kyarray(iky)
-    DO ikx = ikxs,ikxe
-      DO in = ijs_e, ije_e
-        n_dp = jarray_e(in)
-        integrant(izgs:izge) = integrant(izgs:izge) &
-         +tau_e*sqrt_tau_o_sigma_e*imagu*ky_*CONJG(psi(iky,ikx,izgs:izge))&
-           *kernel_e(in,iky,ikx,izgs:izge,0)*(&
-                   0.5_dp*SQRT2*SQRT3*moments_e(ip3_e,in  ,iky,ikx,izgs:izge,updatetlevel)&
-                        +1.5_dp*CONJG(moments_e(ip1_e,in  ,iky,ikx,izgs:izge,updatetlevel))& !?????
-                  +(2._dp*n_dp+1._dp)*moments_e(ip1_e,in  ,iky,ikx,izgs:izge,updatetlevel)&
-                        -(n_dp+1._dp)*moments_e(ip1_e,in+1,iky,ikx,izgs:izge,updatetlevel)&
-                                -n_dp*moments_e(ip1_e,in-1,iky,ikx,izgs:izge,updatetlevel))
-      ENDDO
-    ENDDO
-    ENDDO
-  ENDIF
-  ! Add polarisation contribution
-  ! integrant(izs:ize) = integrant(izs:ize) + tau_e*imagu*ky_&
-  ! *CONJG(phi(iky,ikx,izs:ize))*phi(iky,ikx,izs:ize) * HF_phi_correction_operator(iky,ikx,izs:ize)
-  ! Integrate over z
-  integrant(izgs:izge) = Jacobian(izgs:izge,0)*integrant(izgs:izge)
-  call simpson_rule_z(integrant,integral)
-  hflux_local = hflux_local + integral*iInt_Jacobian
-  ! Double it for taking into account the other half plane
-  buffer(2) = 2._dp*REAL(hflux_local,dp)
-  root = 0
-  !Gather manually among the rank_p=0 processes and perform the sum
-  hflux_xe = 0
-  IF (num_procs_ky .GT. 1) THEN
-      !! Everyone sends its local_sum to root = 0
-      IF (rank_ky .NE. root) THEN
-          CALL MPI_SEND(buffer, 2 , MPI_DOUBLE_PRECISION, root, 1234, comm_ky, ierr)
-      ELSE
-          ! Recieve from all the other processes
-          DO i_ = 0,num_procs_ky-1
-              IF (i_ .NE. rank_ky) &
-                  CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
-                  hflux_xe = hflux_xe + buffer(2)
-          ENDDO
-      ENDIF
-  ELSE
-    hflux_xe = hflux_local
-  ENDIF
-END SUBROUTINE compute_radial_electron_heatflux
+   END SUBROUTINE compute_gradients_z
 
-
-
-SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
-  ! evaluate the non-adiabatique ion moments
-  !
-  ! n_{pi} = N^{pj} + kernel(j) /tau_i phi delta_p0
-  !
-  USE fields,           ONLY : moments_i, moments_e, phi, psi
-  USE array,            ONLY : kernel_e, kernel_i, nadiab_moments_e, nadiab_moments_i, &
-                               ddz_nepj, ddzND_Nepj, interp_nepj,&
-                               ddz_nipj, ddzND_Nipj, interp_nipj!, ddz_phi
-  USE time_integration, ONLY : updatetlevel
-  USE model,            ONLY : qe_taue, qi_taui,q_o_sqrt_tau_sigma_e, q_o_sqrt_tau_sigma_i, &
-                               KIN_E, CLOS, beta, HDz_h
-  USE calculus,         ONLY : grad_z, grad_z2, grad_z4, interp_z
-  IMPLICIT NONE
-  INTEGER :: eo, p_int, j_int
-  CALL cpu_time(t0_process)
-
-  ! Electron non adiab moments
-
-    IF(KIN_E) THEN
-      DO ip=ipgs_e,ipge_e
-        IF(parray_e(ip) .EQ. 0) THEN
-          DO ij=ijgs_e,ijge_e
-            nadiab_moments_e(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge) = moments_e(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) &
-                                      + qe_taue*kernel_e(ij,ikys:ikye,ikxs:ikxe,izgs:izge,0)*phi(ikys:ikye,ikxs:ikxe,izgs:izge)
-          ENDDO
-        ELSEIF( (parray_e(ip) .EQ. 1) .AND. (beta .GT. 0) ) THEN
-          DO ij=ijgs_e,ijge_e
-            nadiab_moments_e(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge) = moments_e(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) &
-                                      - q_o_sqrt_tau_sigma_e*kernel_e(ij,ikys:ikye,ikxs:ikxe,izgs:izge,0)*psi(ikys:ikye,ikxs:ikxe,izgs:izge)
-          ENDDO
-        ELSE
-          DO ij=ijgs_e,ijge_e
-            nadiab_moments_e(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge) = moments_e(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel)
-          ENDDO
-        ENDIF
-      ENDDO
-    ENDIF
-    ! Ions non adiab moments
-    DO ip=ipgs_i,ipge_i
-      IF(parray_i(ip) .EQ. 0) THEN
-        DO ij=ijgs_i,ijge_i
-          nadiab_moments_i(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge) = moments_i(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) &
-                                    + qi_taui*kernel_i(ij,ikys:ikye,ikxs:ikxe,izgs:izge,0)*phi(ikys:ikye,ikxs:ikxe,izgs:izge)
-        ENDDO
-      ELSEIF( (parray_i(ip) .EQ. 1) .AND. (beta .GT. 0) ) THEN
-        DO ij=ijgs_i,ijge_i
-          nadiab_moments_i(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge) = moments_i(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel) &
-                                    - q_o_sqrt_tau_sigma_i*kernel_i(ij,ikys:ikye,ikxs:ikxe,izgs:izge,0)*psi(ikys:ikye,ikxs:ikxe,izgs:izge)
-        ENDDO
-      ELSE
-        DO ij=ijgs_i,ijge_i
-          nadiab_moments_i(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge) = moments_i(ip,ij,ikys:ikye,ikxs:ikxe,izgs:izge,updatetlevel)
-        ENDDO
-      ENDIF
-    ENDDO
-
-    !! Ensure to kill the moments too high if closue option is set to 1
-    IF(CLOS .EQ. 1) THEN
-      IF(KIN_E) THEN
-        DO ip=ipgs_e,ipge_e
-          p_int = parray_e(ip)
-            DO ij=ijgs_e,ijge_e
-              j_int = jarray_e(ij)
-              IF(p_int+2*j_int .GT. dmaxe) &
-              nadiab_moments_e(ip,ij,:,:,:) = 0._dp
+      ! z grid interpolation
+   SUBROUTINE compute_interp_z
+      IMPLICIT NONE
+      INTEGER :: eo, ia,ip,ij,iky,ikx,iz
+      COMPLEX(xp), DIMENSION(local_nz+ngz) :: f_in
+      COMPLEX(xp), DIMENSION(local_nz)     :: f_out
+      IF(nzgrid .GT. 1) THEN
+         DO ikx = 1,local_nkx
+         DO iky = 1,local_nky
+         DO ij = 1,local_nj+ngj
+         DO ip = 1,local_np+ngp
+         DO ia = 1,local_na
+            ! Compute even odd grids interpolation
+            f_in = nadiab_moments(ia,ip,ij,iky,ikx,:)
+            CALL interp_z(eo,local_nz,ngz,f_in,f_out)
+            DO iz = 1,local_nz
+               interp_napj(ia,ip,ij,iky,ikx,iz) = f_out(iz)
             ENDDO
-        ENDDO
-      ENDIF
-      DO ip=ipgs_i,ipge_i
-        p_int = parray_i(ip)
-          DO ij=ijgs_i,ijge_i
-            j_int = jarray_i(ij)
-            IF(p_int+2*j_int .GT. dmaxi) &
-            nadiab_moments_i(ip,ij,:,:,:) = 0._dp
-          ENDDO
-      ENDDO
-    ENDIF
-
- !------------- INTERP AND GRADIENTS ALONG Z ----------------------------------
-
-  IF (KIN_E) THEN
-  DO ikx = ikxs,ikxe
-    DO iky = ikys,ikye
-      DO ij = ijgs_e,ijge_e
-        DO ip = ipgs_e,ipge_e
-          p_int = parray_e(ip)
-          eo    = MODULO(p_int,2) ! Indicates if we are on even or odd z grid
-          ! Compute z derivatives
-          CALL   grad_z(eo,nadiab_moments_e(ip,ij,iky,ikx,izgs:izge),    ddz_nepj(ip,ij,iky,ikx,izs:ize))
-          ! Parallel hyperdiffusion
-          IF (HDz_h) THEN
-            CALL  grad_z4(nadiab_moments_e(ip,ij,iky,ikx,izgs:izge),ddzND_Nepj(ip,ij,iky,ikx,izs:ize))
-          ELSE
-            CALL  grad_z4(moments_e(ip,ij,iky,ikx,izgs:izge,updatetlevel),ddzND_Nepj(ip,ij,iky,ikx,izs:ize))
-          ENDIF
-        ! Compute even odd grids interpolation
-          CALL interp_z(eo,nadiab_moments_e(ip,ij,iky,ikx,izgs:izge), interp_nepj(ip,ij,iky,ikx,izs:ize))
-        ENDDO
-      ENDDO
-    ENDDO
-  ENDDO
-  ENDIF
-
-  DO ikx = ikxs,ikxe
-    DO iky = ikys,ikye
-      DO ij = ijgs_i,ijge_i
-        DO ip = ipgs_i,ipge_i
-          p_int = parray_i(ip)
-          eo    = MODULO(p_int,2) ! Indicates if we are on even or odd z grid
-          ! Compute z first derivative
-          CALL   grad_z(eo,nadiab_moments_i(ip,ij,iky,ikx,izgs:izge),    ddz_nipj(ip,ij,iky,ikx,izs:ize))
-          ! Parallel numerical diffusion
-          IF (HDz_h) THEN
-            CALL  grad_z4(nadiab_moments_i(ip,ij,iky,ikx,izgs:izge),ddzND_Nipj(ip,ij,iky,ikx,izs:ize))
-          ELSE
-            CALL  grad_z4(moments_i(ip,ij,iky,ikx,izgs:izge,updatetlevel),ddzND_Nipj(ip,ij,iky,ikx,izs:ize))
-          ENDIF
-          ! Compute even odd grids interpolation
-          CALL interp_z(eo,nadiab_moments_i(ip,ij,iky,ikx,izgs:izge), interp_nipj(ip,ij,iky,ikx,izs:ize))
-        ENDDO
-      ENDDO
-    ENDDO
-  ENDDO
-
-  ! Phi parallel gradient (not implemented fully, should be negligible)
-  ! DO ikx = ikxs,ikxe
-  !   DO iky = ikys,ikye
-  !     CALL grad_z(0,phi(iky,ikx,izgs:izge), ddz_phi(iky,ikx,izs:ize))
-  !   ENDDO
-  ! ENDDO
-
-  ! Execution time end
-  CALL cpu_time(t1_process)
-  tc_process = tc_process + (t1_process - t0_process)
-END SUBROUTINE compute_nadiab_moments_z_gradients_and_interp
-
-SUBROUTINE compute_Napjz_spectrum
-  USE fields, ONLY : moments_e, moments_i
-  USE model,  ONLY : KIN_E
-  USE array,  ONLY : Nipjz, Nepjz
-  USE time_integration, ONLY : updatetlevel
-  IMPLICIT NONE
-  REAL(dp), DIMENSION(ips_e:ipe_e,ijs_e:ije_e,izs:ize) :: local_sum_e,global_sum_e, buffer_e
-  REAL(dp), DIMENSION(ips_i:ipe_i,ijs_i:ije_i,izs:ize) :: local_sum_i,global_sum_i, buffer_i
-  INTEGER  :: i_, root, count
-  root = 0
-  ! Electron moments spectrum
-  IF (KIN_E) THEN
-    ! build local sum
-    local_sum_e = 0._dp
-    DO ikx = ikxs,ikxe
-      DO iky = ikys,ikye
-        local_sum_e(ips_e:ipe_e,ijs_e:ije_e,izs:ize)  = local_sum_e(ips_e:ipe_e,ijs_e:ije_e,izs:ize)  + &
-        REAL(moments_e(ips_e:ipe_e,ijs_e:ije_e,iky,ikx,izs:ize,updatetlevel)&
-         * CONJG(moments_e(ips_e:ipe_e,ijs_e:ije_e,iky,ikx,izs:ize,updatetlevel)),dp)
-      ENDDO
-    ENDDO
-    ! sum reduction
-    buffer_e     = local_sum_e
-    global_sum_e = 0._dp
-    count = (ipe_e-ips_e+1)*(ije_e-ijs_e+1)*(ize-izs+1)
-    IF (num_procs_ky .GT. 1) THEN
-        !! Everyone sends its local_sum to root = 0
-        IF (rank_ky .NE. root) THEN
-            CALL MPI_SEND(buffer_e, count , MPI_DOUBLE_COMPLEX, root, 1234, comm_ky, ierr)
-        ELSE
-            ! Recieve from all the other processes
-            DO i_ = 0,num_procs_ky-1
-                IF (i_ .NE. rank_ky) &
-                    CALL MPI_RECV(buffer_e, count , MPI_DOUBLE_COMPLEX, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
-                    global_sum_e = global_sum_e + buffer_e
-            ENDDO
-        ENDIF
-    ELSE
-      global_sum_e = local_sum_e
-    ENDIF
-    Nepjz = global_sum_e
-  ENDIF
-  ! Ion moment spectrum
-  ! build local sum
-  local_sum_i = 0._dp
-  DO ikx = ikxs,ikxe
-    DO iky = ikys,ikye
-      local_sum_i(ips_i:ipe_i,ijs_i:ije_i,izs:ize)  = local_sum_i(ips_i:ipe_i,ijs_i:ije_i,izs:ize)  + &
-      (moments_i(ips_i:ipe_i,ijs_i:ije_i,iky,ikx,izs:ize,updatetlevel) &
-      * CONJG(moments_i(ips_i:ipe_i,ijs_i:ije_i,iky,ikx,izs:ize,updatetlevel)))
-    ENDDO
-  ENDDO
-  ! sum reduction
-  buffer_i     = local_sum_i
-  global_sum_i = 0._dp
-  count = (ipe_i-ips_i+1)*(ije_i-ijs_i+1)*(ize-izs+1)
-  IF (num_procs_ky .GT. 1) THEN
-      !! Everyone sends its local_sum to root = 0
-      IF (rank_ky .NE. root) THEN
-          CALL MPI_SEND(buffer_i, count , MPI_DOUBLE_PRECISION, root, 5678, comm_ky, ierr)
+         ENDDO
+         ENDDO
+         ENDDO
+         ENDDO
+         ENDDO
       ELSE
-          ! Recieve from all the other processes
-          DO i_ = 0,num_procs_ky-1
-              IF (i_ .NE. rank_ky) &
-                  CALL MPI_RECV(buffer_i, count , MPI_DOUBLE_PRECISION, i_, 5678, comm_ky, MPI_STATUS_IGNORE, ierr)
-                  global_sum_i = global_sum_i + buffer_i
-          ENDDO
+         interp_napj(:,:,:,:,:,1:local_nz) = nadiab_moments(:,:,:,:,:,(1+ngz/2):(local_nz+ngz/2))
       ENDIF
-  ELSE
-    global_sum_i = local_sum_i
-  ENDIF
-  Nipjz = global_sum_i
-END SUBROUTINE compute_Napjz_spectrum
+   END SUBROUTINE compute_interp_z
+
+   !--------------------- LOW FREQUENCY PROCESSING ROUTINES -------------------!
+   ! The following routines are called by the diagnose routine every nsave3D steps 
+   ! (does not need to be optimized)
+   ! 1D diagnostic to compute the average radial particle transport <n_a v_ExB_x>_xyz
+   SUBROUTINE compute_radial_transport
+      IMPLICIT NONE
+      COMPLEX(xp) :: pflux_local, gflux_local, integral
+      REAL(xp)    :: buffer(2)
+      INTEGER     :: i_, root, iky, ikx, ia, iz, in, izi, ini
+      COMPLEX(xp), DIMENSION(local_nz) :: integrant
+      DO ia = 1,local_na
+         pflux_local = 0._xp ! particle flux
+         gflux_local = 0._xp ! gyrocenter flux
+         integrant   = 0._xp ! auxiliary variable for z integration
+         !!---------- Gyro center flux (drift kinetic) ------------
+         ! Electrostatic part
+         IF(CONTAINSp0) THEN
+            DO iz = 1,local_nz
+            izi = iz + ngz/2 !interior index for ghosted arrays
+            DO ikx = 1,local_nkx
+            DO iky = 1,local_nky
+               integrant(iz) = integrant(iz) &
+               +Jacobian(izi,ieven)*moments(ia,ip0,ij0,iky,ikx,izi,updatetlevel)&
+               *imagu*kyarray(iky)*CONJG(phi(iky,ikx,izi))
+            ENDDO
+            ENDDO
+            ENDDO
+         ENDIF
+         ! Electromagnetic part
+         IF( EM .AND. CONTAINSp1 ) THEN
+            DO iz = 1,local_nz ! we take interior points only
+            izi = iz + ngz/2 !interior index for ghosted arrays
+            DO ikx = 1,local_nkx
+            DO iky = 1,local_nky
+               integrant(iz) = integrant(iz)&
+                  -Jacobian(izi,iodd)*sqrt_tau_o_sigma(ia)*moments(ia,ip1,ij0,iky,ikx,izi,updatetlevel)&
+                  *imagu*kyarray(iky)*CONJG(psi(iky,ikx,izi))
+            ENDDO
+            ENDDO
+            ENDDO
+         ENDIF
+         ! Integrate over z
+         call simpson_rule_z(local_nz,zweights_SR,integrant,integral)
+         ! Get process local gyrocenter flux with a factor two to account for the negative ky modes
+         gflux_local = 2._xp*integral*iInt_Jacobian
+         !
+         !!---------- Particle flux (gyrokinetic) ------------
+         integrant   = 0._xp ! reset auxiliary variable
+         ! Electrostatic part
+         IF(CONTAINSp0) THEN
+            DO iz = 1,local_nz ! we take interior points only
+            izi = iz + ngz/2 !interior index for ghosted arrays
+            DO ikx = 1,local_nkx
+            DO iky = 1,local_nky
+            DO in = 1, local_nj
+            ini = in + ngj/2 !interior index for ghosted arrays
+               integrant(iz) = integrant(iz)+ &
+                  Jacobian(izi,ieven)*moments(ia,ip0,ini,iky,ikx,izi,updatetlevel)&
+                  *imagu*kyarray(iky)*kernel(ia,ini,iky,ikx,izi,ieven)*CONJG(phi(iky,ikx,izi))
+            ENDDO
+            ENDDO
+            ENDDO
+            ENDDO
+         ENDIF
+         ! Electromagnetic part
+         IF( EM .AND. CONTAINSp1 ) THEN
+            DO iz = 1,local_nz ! we take interior points only
+            izi = iz + ngz/2 !interior index for ghosted arrays
+            DO ikx = 1,local_nkx
+            DO iky = 1,local_nky
+            DO in = 1, local_nj
+            ini = in + ngj/2 !interior index for ghosted arrays
+                  integrant(iz) = integrant(iz) - &
+                  Jacobian(izi,iodd)*sqrt_tau_o_sigma(ia)*moments(ia,ip1,ini,iky,ikx,izi,updatetlevel)&
+                  *imagu*kyarray(iky)*kernel(ia,ini,iky,ikx,izi,iodd)*CONJG(psi(iky,ikx,izi))
+            ENDDO
+            ENDDO
+            ENDDO
+            ENDDO
+         ENDIF
+         ! Integrate over z
+         call simpson_rule_z(local_nz,zweights_SR,integrant,integral)
+         ! Get process local particle flux with a factor two to account for the negative ky modes
+         pflux_local = 2._xp*integral*iInt_Jacobian
+         !!!!---------- Sum over all processes ----------
+         buffer(1) = REAL(gflux_local,xp)
+         buffer(2) = REAL(pflux_local,xp)
+         root = 0
+         !Gather manually among the rank_p=0 processes and perform the sum
+         gflux_x(ia) = 0
+         pflux_x(ia) = 0
+         IF (num_procs_ky .GT. 1) THEN
+            !! Everyone sends its local_sum to root = 0
+            IF (rank_ky .NE. root) THEN
+               CALL MPI_SEND(buffer, 2 , MPI_DOUBLE_PRECISION, root, 1234, comm_ky, ierr)
+            ELSE
+               ! Recieve from all the other processes
+               DO i_ = 0,num_procs_ky-1
+                  IF (i_ .NE. rank_ky) &
+                     CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
+                  gflux_x(ia) = gflux_x(ia) + buffer(1)
+                  pflux_x(ia) = pflux_x(ia) + buffer(2)
+               ENDDO
+            ENDIF
+         ELSE
+            gflux_x(ia) = gflux_local
+            pflux_x(ia) = pflux_local
+         ENDIF
+      ENDDO
+   END SUBROUTINE compute_radial_transport
+
+! 1D diagnostic to compute the average radial particle heatflux <T_i v_ExB_x>_xyz
+   SUBROUTINE compute_radial_heatflux
+      IMPLICIT NONE
+      COMPLEX(xp) :: hflux_local, integral
+      REAL(xp)    :: buffer(2), n_xp
+      INTEGER     :: i_, root, in, ia, iky, ikx, iz, izi, ini
+      COMPLEX(xp), DIMENSION(local_nz) :: integrant        ! charge density q_a n_a
+      DO ia = 1,local_na
+         hflux_local = 0._xp ! heat flux
+         integrant   = 0._xp ! z integration auxiliary variable
+         !!----------------ELECTROSTATIC CONTRIBUTION---------------------------
+         IF(CONTAINSp0 .AND. CONTAINSp2) THEN
+            ! Loop to compute gamma_kx = sum_ky sum_j -i k_z Kernel_j Na00 * phi
+            DO iz = 1,local_nz ! we take interior points only
+            izi = iz + ngz/2 !interior index for ghosted arrays
+            DO ikx = 1,local_nkx
+            DO iky = 1,local_nky
+            DO in = 1, local_nj
+            ini  = in+ngj/2 !interior index for ghosted arrays
+            n_xp = jarray(ini)
+               integrant(iz) = integrant(iz) &
+                  -Jacobian(izi,ieven)*tau(ia)*imagu*kyarray(iky)*phi(iky,ikx,izi)&
+                  *kernel(ia,ini,iky,ikx,izi,ieven)*CONJG(&
+                              0.5_xp*SQRT2*moments(ia,ip2,ini  ,iky,ikx,izi,updatetlevel)&
+                  +(2._xp*n_xp + 1.5_xp)*moments(ia,ip0,ini  ,iky,ikx,izi,updatetlevel)&
+                           -(n_xp+1._xp)*moments(ia,ip0,ini+1,iky,ikx,izi,updatetlevel)&
+                                    -n_xp*moments(ia,ip0,ini-1,iky,ikx,izi,updatetlevel))
+            ENDDO
+            ENDDO
+            ENDDO
+            ENDDO
+         ELSEIF(CONTAINSp0) THEN
+            ERROR STOP "Degrees p=0 and p=2 should be owned by the same process"
+         ENDIF
+         IF(EM .AND. CONTAINSp1 .AND. CONTAINSp3) THEN
+            !!----------------ELECTROMAGNETIC CONTRIBUTION--------------------
+            DO iz  = 1,local_nz
+            izi = iz + ngz/2 !interior index for ghosted arrays
+            DO ikx = 1,local_nkx
+            DO iky = 1,local_nky
+            DO in = 1, local_nj
+            ini = in + ngj/2 !interior index for ghosted arrays
+            n_xp = jarray(ini)
+               integrant(iz) = integrant(iz) &
+                     +Jacobian(izi,iodd)*tau(ia)*sqrt_tau_o_sigma(ia)*imagu*kyarray(iky)*CONJG(psi(iky,ikx,izi))&
+                  *kernel(ia,ini,iky,ikx,izi,iodd)*(&
+                  0.5_xp*SQRT2*SQRT3*moments(ia,ip3,ini  ,iky,ikx,izi,updatetlevel)&
+                              +1.5_xp*moments(ia,ip1,ini  ,iky,ikx,izi,updatetlevel)&
+                  +(2._xp*n_xp+1._xp)*moments(ia,ip1,ini  ,iky,ikx,izi,updatetlevel)&
+                        -(n_xp+1._xp)*moments(ia,ip1,ini+1,iky,ikx,izi,updatetlevel)&
+                                 -n_xp*moments(ia,ip1,ini-1,iky,ikx,izi,updatetlevel))
+            ENDDO
+            ENDDO
+            ENDDO
+            ENDDO
+         ENDIF
+         ! Add polarisation contribution
+         ! integrant(iz) = integrant(iz) + tau_i*imagu*ky_&
+         ! *CONJG(phi(iky,ikx,iz))*phi(iky,ikx,iz) * HF_phi_correction_operator(iky,ikx,iz)
+         ! Integrate over z
+         call simpson_rule_z(local_nz,zweights_SR,integrant,integral)
+         ! Double it for taking into account the other half plane
+         hflux_local = 2._xp*integral*iInt_Jacobian
+         buffer(2)   = REAL(hflux_local,xp)
+         root = 0
+         !Gather manually among the rank_p=0 processes and perform the sum
+         hflux_x(ia) = 0
+         IF (num_procs_ky .GT. 1) THEN
+            !! Everyone sends its local_sum to root = 0
+            IF (rank_ky .NE. root) THEN
+               CALL MPI_SEND(buffer, 2 , MPI_DOUBLE_PRECISION, root, 1234, comm_ky, ierr)
+            ELSE
+               ! Recieve from all the other processes
+               DO i_ = 0,num_procs_ky-1
+                  IF (i_ .NE. rank_ky) &
+                     CALL MPI_RECV(buffer, 2 , MPI_DOUBLE_PRECISION, i_, 1234, comm_ky, MPI_STATUS_IGNORE, ierr)
+                  hflux_x(ia) = hflux_x(ia) + buffer(2)
+               ENDDO
+            ENDIF
+         ELSE
+            hflux_x(ia) = hflux_local
+         ENDIF
+      ENDDO
+   END SUBROUTINE compute_radial_heatflux
+
+   SUBROUTINE compute_Napjz_spectrum
+      USE fields, ONLY : moments
+      USE array,  ONLY : Napjz
+      USE time_integration, ONLY : updatetlevel
+      IMPLICIT NONE
+      REAL(xp), DIMENSION(local_np,local_nj,local_nz) :: local_sum,global_sum, buffer
+      INTEGER  :: i_, root, count, ia, ip, ij, iky, ikx, iz
+      root = 0
+      DO ia=1,local_na
+         ! z-moment spectrum
+         ! build local sum
+         local_sum = 0._xp
+         DO iz = 1,local_nz
+         DO ikx = 1,local_nkx
+         DO iky = 1,local_nky
+         DO ij = 1,local_nj
+         DO ip = 1,local_np
+            local_sum(ip,ij,iz)  = local_sum(ip,ij,iz)  + &
+               (moments(ia,ip+Ngp/2,ij+Ngj/2,iky,ikx,iz+Ngz/2,updatetlevel) &
+               * CONJG(moments(ia,ip+Ngp/2,ij+Ngj/2,iky,ikx,iz+Ngz/2,updatetlevel)))
+         ENDDO
+         ENDDO
+         ENDDO
+         ENDDO
+         ENDDO
+         ! sum reduction
+         buffer     = local_sum
+         global_sum = 0._xp
+         count = local_np*local_nj*local_nz
+         IF (num_procs_ky .GT. 1) THEN
+            !! Everyone sends its local_sum to root = 0
+            IF (rank_ky .NE. root) THEN
+               CALL MPI_SEND(buffer, count , MPI_DOUBLE_PRECISION, root, 5678, comm_ky, ierr)
+            ELSE
+               ! Recieve from all the other processes
+               DO i_ = 0,num_procs_ky-1
+                  IF (i_ .NE. rank_ky) &
+                     CALL MPI_RECV(buffer, count , MPI_DOUBLE_PRECISION, i_, 5678, comm_ky, MPI_STATUS_IGNORE, ierr)
+                  global_sum = global_sum + buffer
+               ENDDO
+            ENDIF
+         ELSE
+            global_sum = local_sum
+         ENDIF
+         Napjz(ia,:,:,:) = global_sum
+      ENDDO
+   END SUBROUTINE compute_Napjz_spectrum
 
 !_____________________________________________________________________________!
 !!!!! FLUID MOMENTS COMPUTATIONS !!!!!
 ! Compute the 2D particle density for electron and ions (sum over Laguerre)
-SUBROUTINE compute_density
-  USE array,  ONLY : dens_e, dens_i, kernel_e, kernel_i
-  USE model,  ONLY : KIN_E
-  USE fields, ONLY : moments_e, moments_i
-  USE time_integration, ONLY : updatetlevel
-  IMPLICIT NONE
-  COMPLEX(dp) :: dens
-
-  IF ( CONTAINS_ip0_e .AND. CONTAINS_ip0_i ) THEN
-      ! Loop to compute dens_i = sum_j kernel_j Ni0j at each k
-      DO iz = izs,ize
-        DO iky = ikys,ikye
-          DO ikx = ikxs,ikxe
-
-            IF(KIN_E) THEN
-            ! electron density
-            dens = 0._dp
-            DO ij = ijs_e, ije_e
-                dens = dens + kernel_e(ij,iky,ikx,iz,0) * moments_e(ip0_e,ij,iky,ikx,iz,updatetlevel)
-            ENDDO
-            dens_e(iky,ikx,iz) = dens
-            ENDIF
-            ! ion density
-            dens = 0._dp
-            DO ij = ijs_i, ije_i
-                dens = dens + kernel_i(ij,iky,ikx,iz,0) * moments_i(ip0_e,ij,iky,ikx,iz,updatetlevel)
-            ENDDO
-            dens_i(iky,ikx,iz) = dens
-          ENDDO
-        ENDDO
+   SUBROUTINE compute_density
+   IMPLICIT NONE
+   COMPLEX(xp) :: dens_
+   INTEGER :: ia, iz, iky, ikx, ij
+   DO ia=1,local_na
+   IF ( CONTAINSp0 ) THEN
+   ! Loop to compute dens_i = sum_j kernel_j Ni0j at each k
+   DO iz = 1,local_nz
+   DO iky = 1,local_nky
+   DO ikx = 1,local_nkx
+      dens_ = 0._xp
+      DO ij = 1, local_nj
+         dens_ = dens_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven) * moments(ia,ip0,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)
       ENDDO
-  ENDIF
-END SUBROUTINE compute_density
+      dens(ia,iky,ikx,iz) = dens_
+   ENDDO
+   ENDDO
+   ENDDO
+   ENDIF
+   ENDDO
+   END SUBROUTINE compute_density
 
 ! Compute the 2D particle fluid perp velocity for electron and ions (sum over Laguerre)
-SUBROUTINE compute_uperp
-  USE array,  ONLY : uper_e, uper_i, kernel_e, kernel_i
-  USE model,  ONLY : KIN_E
-  USE fields, ONLY : moments_e, moments_i
-  USE time_integration, ONLY : updatetlevel
-  IMPLICIT NONE
-  COMPLEX(dp) :: uperp
-
-  IF ( CONTAINS_ip0_e .AND. CONTAINS_ip0_i ) THEN
-      DO iz = izs,ize
-        DO iky = ikys,ikye
-          DO ikx = ikxs,ikxe
-
-            IF(KIN_E) THEN
-            ! electron
-            uperp = 0._dp
-            DO ij = ijs_e, ije_e
-                uperp = uperp + kernel_e(ij,iky,ikx,iz,0) *&
-                 0.5_dp*(moments_e(ip0_e,ij,iky,ikx,iz,updatetlevel) - moments_e(ip0_e,ij-1,iky,ikx,iz,updatetlevel))
-            ENDDO
-            uper_e(iky,ikx,iz) = uperp
-            ENDIF
-            ! ion
-            uperp = 0._dp
-            DO ij = ijs_i, ije_i
-              uperp = uperp + kernel_i(ij,iky,ikx,iz,0) *&
-               0.5_dp*(moments_i(ip0_i,ij,iky,ikx,iz,updatetlevel) - moments_i(ip0_i,ij-1,iky,ikx,iz,updatetlevel))
-             ENDDO
-            uper_i(iky,ikx,iz) = uperp
-          ENDDO
-        ENDDO
+   SUBROUTINE compute_uperp
+      IMPLICIT NONE
+      COMPLEX(xp) :: uperp_
+      INTEGER :: ia, iz, iky, ikx, ij
+      DO ia=1,local_na
+      IF ( CONTAINSp0 ) THEN
+      DO iz = 1,local_nz
+      DO iky = 1,local_nky
+      DO ikx = 1,local_nkx
+      uperp_ = 0._xp
+      DO ij = 1, local_nj
+         uperp_ = uperp_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven) *&
+            0.5_xp*(moments(ia,ip0,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)&
+                     -moments(ia,ip0,ij-1+ngj/2,iky,ikx,iz+ngz/2,updatetlevel))
       ENDDO
-  ENDIF
-END SUBROUTINE compute_uperp
+      uper(ia,iky,ikx,iz) = uperp_
+      ENDDO
+      ENDDO
+      ENDDO
+      ENDIF
+      ENDDO
+   END SUBROUTINE compute_uperp
 
 ! Compute the 2D particle fluid par velocity for electron and ions (sum over Laguerre)
-SUBROUTINE compute_upar
-  USE array,  ONLY : upar_e, upar_i, kernel_e, kernel_i
-  USE model,  ONLY : KIN_E
-  USE fields, ONLY : moments_e, moments_i
-  USE time_integration, ONLY : updatetlevel
-  IMPLICIT NONE
-  COMPLEX(dp) :: upar
-
-  IF ( CONTAINS_ip1_e .AND. CONTAINS_ip1_i ) THEN
-    DO iz = izs,ize
-      DO iky = ikys,ikye
-        DO ikx = ikxs,ikxe
-          IF(KIN_E) THEN
-          ! electron
-          upar = 0._dp
-          DO ij = ijs_e, ije_e
-            upar = upar + kernel_e(ij,iky,ikx,iz,1)*moments_e(ip1_e,ij,iky,ikx,iz,updatetlevel)
-          ENDDO
-          upar_e(iky,ikx,iz) = upar
-          ENDIF
-          ! ion
-          upar = 0._dp
-          DO ij = ijs_i, ije_i
-            upar = upar + kernel_i(ij,iky,ikx,iz,1)*moments_i(ip1_i,ij,iky,ikx,iz,updatetlevel)
-           ENDDO
-          upar_i(iky,ikx,iz) = upar
-        ENDDO
+   SUBROUTINE compute_upar
+      IMPLICIT NONE
+      INTEGER :: ia, iz, iky, ikx, ij
+      COMPLEX(xp) :: upar_
+      DO ia=1,local_na
+      IF ( CONTAINSp1 ) THEN
+      DO iz = 1,local_nz
+      DO iky = 1,local_nky
+      DO ikx = 1,local_nkx
+         upar_ = 0._xp
+         DO ij = 1, local_nj
+            upar_ = upar_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,iodd)*moments(ia,ip1,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)
+         ENDDO
+         upar(ia,iky,ikx,iz) = upar_
       ENDDO
-    ENDDO
-  ELSE
-    IF(KIN_E)&
-    upar_e = 0
-    upar_i = 0
-  ENDIF
-END SUBROUTINE compute_upar
+      ENDDO
+      ENDDO
+      ENDIF
+      ENDDO
+   END SUBROUTINE compute_upar
 
 ! Compute the 2D particle temperature for electron and ions (sum over Laguerre)
-SUBROUTINE compute_tperp
-  USE array,  ONLY : Tper_e, Tper_i, kernel_e, kernel_i
-  USE model,  ONLY : KIN_E
-  USE fields, ONLY : moments_e, moments_i
-  USE time_integration, ONLY : updatetlevel
-  IMPLICIT NONE
-  REAL(dp)    :: j_dp
-  COMPLEX(dp) :: Tperp
-
-  IF ( CONTAINS_ip0_e .AND. CONTAINS_ip0_i .AND. &
-       CONTAINS_ip2_e .AND. CONTAINS_ip2_i ) THEN
+   SUBROUTINE compute_tperp
+      USE time_integration, ONLY : updatetlevel
+      IMPLICIT NONE
+      REAL(xp)    :: j_xp
+      COMPLEX(xp) :: Tperp_
+      INTEGER     :: ia, iz, iky, ikx, ij
+      DO ia=1,local_na
+      IF ( CONTAINSp0 .AND. CONTAINSp2 ) THEN
       ! Loop to compute T = 1/3*(Tpar + 2Tperp)
-      DO iz = izs,ize
-        DO iky = ikys,ikye
-          DO ikx = ikxs,ikxe
-            ! electron temperature
-            IF(KIN_E) THEN
-            Tperp  = 0._dp
-            DO ij = ijs_e, ije_e
-              j_dp = REAL(ij-1,dp)
-              Tperp = Tperp + kernel_e(ij,iky,ikx,iz,0)*&
-                  ((2_dp*j_dp+1)*moments_e(ip0_e,ij  ,iky,ikx,iz,updatetlevel)&
-                  -j_dp         *moments_e(ip0_e,ij-1,iky,ikx,iz,updatetlevel)&
-                  -j_dp+1       *moments_e(ip0_e,ij+1,iky,ikx,iz,updatetlevel))
-            ENDDO
-            Tper_e(iky,ikx,iz) = Tperp
-            ENDIF
-            ! ion temperature
-            Tperp = 0._dp
-            DO ij = ijs_i, ije_i
-              j_dp = REAL(ij-1,dp)
-              Tperp = Tperp + kernel_i(ij,iky,ikx,iz,0)*&
-                  ((2_dp*j_dp+1)*moments_i(ip0_i,ij  ,iky,ikx,iz,updatetlevel)&
-                  -j_dp         *moments_i(ip0_i,ij-1,iky,ikx,iz,updatetlevel)&
-                  -j_dp+1       *moments_i(ip0_i,ij+1,iky,ikx,iz,updatetlevel))
-            ENDDO
-            Tper_i(iky,ikx,iz) = Tperp
-          ENDDO
-        ENDDO
+      DO iz = 1,local_nz
+      DO iky = 1,local_nky
+      DO ikx = 1,local_nkx
+      Tperp_ = 0._xp
+      DO ij = 1, local_nj
+         j_xp = jarray(ij+ngj/2)
+         Tperp_ = Tperp_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven)*&
+            ((2_xp*j_xp+1)*moments(ia,ip0,ij  +ngj/2,iky,ikx,iz+ngz/2,updatetlevel)&
+                     -j_xp*moments(ia,ip0,ij-1+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)&
+                  -(j_xp+1)*moments(ia,ip0,ij+1+ngj/2,iky,ikx,iz+ngz/2,updatetlevel))
       ENDDO
-  ENDIF
-END SUBROUTINE compute_Tperp
+      Tper(ia,iky,ikx,iz) = Tperp_
+      ENDDO
+      ENDDO
+      ENDDO
+      ENDIF
+      ENDDO
+   END SUBROUTINE compute_Tperp
 
 ! Compute the 2D particle temperature for electron and ions (sum over Laguerre)
-SUBROUTINE compute_Tpar
-  USE array,  ONLY : Tpar_e, Tpar_i, kernel_e, kernel_i
-  USE model,  ONLY : KIN_E
-  USE fields, ONLY : moments_e, moments_i
-  USE time_integration, ONLY : updatetlevel
-  IMPLICIT NONE
-  REAL(dp)    :: j_dp
-  COMPLEX(dp) :: tpar
-
-  IF ( CONTAINS_ip0_e .AND. CONTAINS_ip0_i .AND. &
-       CONTAINS_ip2_e .AND. CONTAINS_ip2_i ) THEN
+   SUBROUTINE compute_Tpar
+      USE time_integration, ONLY : updatetlevel
+      IMPLICIT NONE
+      REAL(xp)    :: j_xp
+      COMPLEX(xp) :: Tpar_
+      INTEGER     :: ia, iz, iky, ikx, ij
+      DO ia=1,local_na
+      IF ( CONTAINSp0 .AND. CONTAINSp0 ) THEN
       ! Loop to compute T = 1/3*(Tpar + 2Tperp)
-      DO iz = izs,ize
-        DO iky = ikys,ikye
-          DO ikx = ikxs,ikxe
-            ! electron temperature
-            IF(KIN_E) THEN
-            Tpar  = 0._dp
-            DO ij = ijs_e, ije_e
-              j_dp = REAL(ij-1,dp)
-              Tpar  = Tpar + kernel_e(ij,iky,ikx,iz,0)*&
-               (SQRT2 * moments_e(ip2_e,ij,iky,ikx,iz,updatetlevel) &
-                      + moments_e(ip0_e,ij,iky,ikx,iz,updatetlevel))
-            ENDDO
-            Tpar_e(iky,ikx,iz) = Tpar
-            ENDIF
-            ! ion temperature
-            Tpar  = 0._dp
-            DO ij = ijs_i, ije_i
-              j_dp = REAL(ij-1,dp)
-              Tpar  = Tpar + kernel_i(ij,iky,ikx,iz,0)*&
-               (SQRT2 * moments_i(ip2_i,ij,iky,ikx,iz,updatetlevel) &
-                      + moments_i(ip0_i,ij,iky,ikx,iz,updatetlevel))
-            ENDDO
-            Tpar_i(iky,ikx,iz) = Tpar
-          ENDDO
-        ENDDO
+      DO iz = 1,local_nz
+      DO iky = 1,local_nky
+      DO ikx = 1,local_nkx
+      Tpar_ = 0._xp
+      DO ij = 1, local_nj
+         j_xp = REAL(ij-1,xp)
+         Tpar_  = Tpar_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven)*&
+            (SQRT2 * moments(ia,ip2,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel) &
+                     + moments(ia,ip0,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel))
       ENDDO
-  ENDIF
-END SUBROUTINE compute_Tpar
+      Tpar(ia,iky,ikx,iz) = Tpar_
+      ENDDO
+      ENDDO
+      ENDDO
+      ENDIF
+      ENDDO
+   END SUBROUTINE compute_Tpar
 
 ! Compute the 2D particle fluid moments for electron and ions (sum over Laguerre)
-SUBROUTINE compute_fluid_moments
-  USE array, ONLY : dens_e, Tpar_e, Tper_e, dens_i, Tpar_i, Tper_i, temp_e, temp_i
-  USE model, ONLY : KIN_E
-  IMPLICIT NONE
-  CALL compute_density
-  CALL compute_upar
-  CALL compute_uperp
-  CALL compute_Tpar
-  CALL compute_Tperp
-  ! Temperature
-  IF(KIN_E)&
-  temp_e = (Tpar_e - 2._dp * Tper_e)/3._dp - dens_e
-  temp_i = (Tpar_i - 2._dp * Tper_i)/3._dp - dens_i
-END SUBROUTINE compute_fluid_moments
+   SUBROUTINE compute_fluid_moments
+      IMPLICIT NONE
+      CALL compute_density
+      CALL compute_upar
+      CALL compute_uperp
+      CALL compute_Tpar
+      CALL compute_Tperp
+      ! Temperature
+      temp = (Tpar - 2._xp * Tper)/3._xp - dens
+   END SUBROUTINE compute_fluid_moments
 
 END MODULE processing

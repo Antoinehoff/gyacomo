@@ -3,72 +3,43 @@ MODULE model
   USE prec_const
   IMPLICIT NONE
   PRIVATE
-
-  INTEGER,  PUBLIC, PROTECTED ::    CLOS =  0         ! linear truncation method
-  INTEGER,  PUBLIC, PROTECTED :: NL_CLOS =  0         ! nonlinear truncation method
+  ! INPUTS
   INTEGER,  PUBLIC, PROTECTED ::    KERN =  0         ! Kernel model
   CHARACTER(len=16), &
             PUBLIC, PROTECTED ::LINEARITY= 'linear'   ! To turn on non linear bracket term
-  LOGICAL,  PUBLIC, PROTECTED ::   KIN_E =  .true.    ! Simulate kinetic electron (adiabatic otherwise)
+  REAL(xp), PUBLIC, PROTECTED ::    mu_x =  0._xp     ! spatial    x-Hyperdiffusivity coefficient (for num. stability)
+  REAL(xp), PUBLIC, PROTECTED ::    mu_y =  0._xp     ! spatial    y-Hyperdiffusivity coefficient (for num. stability)
   INTEGER,  PUBLIC, PROTECTED ::    N_HD =  4         ! order of numerical spatial diffusion
-  REAL(dp), PUBLIC, PROTECTED ::    mu_x =  0._dp     ! spatial    x-Hyperdiffusivity coefficient (for num. stability)
-  REAL(dp), PUBLIC, PROTECTED ::    mu_y =  0._dp     ! spatial    y-Hyperdiffusivity coefficient (for num. stability)
   LOGICAL,  PUBLIC, PROTECTED ::   HDz_h =  .false.    ! to apply z-hyperdiffusion on non adiab part
-  REAL(dp), PUBLIC, PROTECTED ::    mu_z =  0._dp     ! spatial    z-Hyperdiffusivity coefficient (for num. stability)
+  REAL(xp), PUBLIC, PROTECTED ::    mu_z =  0._xp     ! spatial    z-Hyperdiffusivity coefficient (for num. stability)
+  REAL(xp), PUBLIC, PROTECTED ::    mu_p =  0._xp     ! kinetic para hyperdiffusivity coefficient (for num. stability)
+  REAL(xp), PUBLIC, PROTECTED ::    mu_j =  0._xp     ! kinetic perp hyperdiffusivity coefficient (for num. stability)
   CHARACTER(len=16), &
-            PUBLIC, PROTECTED ::   HYP_V = 'hypcoll'  ! hyperdiffusion model for velocity space ('none','hypcoll','dvpar4')
-  REAL(dp), PUBLIC, PROTECTED ::    mu_p =  0._dp     ! kinetic para hyperdiffusivity coefficient (for num. stability)
-  REAL(dp), PUBLIC, PROTECTED ::    mu_j =  0._dp     ! kinetic perp hyperdiffusivity coefficient (for num. stability)
-  REAL(dp), PUBLIC, PROTECTED ::      nu =  0._dp     ! Collision frequency
-  REAL(dp), PUBLIC, PROTECTED ::   tau_e =  1._dp     ! Temperature
-  REAL(dp), PUBLIC, PROTECTED ::   tau_i =  1._dp     !
-  REAL(dp), PUBLIC, PROTECTED :: sigma_e =  0.023338_dp! sqrt of electron ion mass ratio
-  REAL(dp), PUBLIC, PROTECTED :: sigma_i =  1._dp     !
-  REAL(dp), PUBLIC, PROTECTED ::     q_e = -1._dp     ! Charge
-  REAL(dp), PUBLIC, PROTECTED ::     q_i =  1._dp     !
-  REAL(dp), PUBLIC, PROTECTED ::    k_Ni =  0._dp     ! Ion density drive (L_ref/L_Ni)
-  REAL(dp), PUBLIC, PROTECTED ::    k_Ne =  0._dp     ! Ele ''
-  REAL(dp), PUBLIC, PROTECTED ::    k_Ti =  0._dp     ! Ion temperature drive (L_ref/L_Ti)
-  REAL(dp), PUBLIC, PROTECTED ::    k_Te =  0._dp     ! Ele ''
-  REAL(dp), PUBLIC, PROTECTED ::    K_E  =  0._dp     ! Backg. electric field drive (L_ref/L_E)
-  REAL(dp), PUBLIC, PROTECTED ::    k_gB =  1._dp     ! Magnetic gradient drive (L_ref/L_gB)
-  REAL(dp), PUBLIC, PROTECTED ::    k_cB =  1._dp     ! Magnetic curvature drive (L_ref/L_cB)
-  REAL(dp), PUBLIC, PROTECTED :: lambdaD =  0._dp     ! Debye length
-  REAL(dp), PUBLIC, PROTECTED ::    beta =  0._dp     ! electron plasma Beta (8piNT_e/B0^2)
-
+  PUBLIC, PROTECTED ::   HYP_V = 'hypcoll'  ! hyperdiffusion model for velocity space ('none','hypcoll','dvpar4')
+  INTEGER,  PUBLIC, PROTECTED ::      Na =  1         ! number of evolved species
+  REAL(xp), PUBLIC, PROTECTED ::      nu =  0._xp     ! collision frequency parameter
+  REAL(xp), PUBLIC, PROTECTED ::    k_gB =  1._xp     ! Magnetic gradient strength (L_ref/L_gB)
+  REAL(xp), PUBLIC, PROTECTED ::    k_cB =  1._xp     ! Magnetic curvature strength (L_ref/L_cB)
+  REAL(xp), PUBLIC, PROTECTED :: lambdaD =  0._xp     ! Debye length
+  REAL(xp), PUBLIC, PROTECTED ::    beta =  0._xp     ! electron plasma Beta (8piNT_e/B0^2)
+  LOGICAL,  PUBLIC            :: ADIAB_E =  .false.   ! adiabatic electron model
+  REAL(xp), PUBLIC, PROTECTED ::   tau_e = 1.0        ! electron temperature ratio for adiabatic electrons
+  ! Auxiliary variable
   LOGICAL,  PUBLIC, PROTECTED ::      EM =  .false.   ! Electromagnetic effects flag
-  REAL(dp), PUBLIC, PROTECTED :: taue_qe         ! factor of the magnetic moment coupling
-  REAL(dp), PUBLIC, PROTECTED :: taui_qi         !
-  REAL(dp), PUBLIC, PROTECTED :: qi_taui         !
-  REAL(dp), PUBLIC, PROTECTED :: qe_taue         !
-  REAL(dp), PUBLIC, PROTECTED :: sqrtTaue_qe          ! factor of parallel moment term
-  REAL(dp), PUBLIC, PROTECTED :: sqrtTaui_qi          !
-  REAL(dp), PUBLIC, PROTECTED :: qe_sigmae_sqrtTaue   ! factor of parallel phi term
-  REAL(dp), PUBLIC, PROTECTED :: qi_sigmai_sqrtTaui   !
-  REAL(dp), PUBLIC, PROTECTED :: sigmae2_taue_o2      ! factor of the Kernel argument
-  REAL(dp), PUBLIC, PROTECTED :: sigmai2_taui_o2      !
-  REAL(dp), PUBLIC, PROTECTED :: sqrt_sigmae2_taue_o2      ! factor of the Kernel argument
-  REAL(dp), PUBLIC, PROTECTED :: sqrt_sigmai2_taui_o2
-  REAL(dp), PUBLIC, PROTECTED :: nu_e,  nu_i          ! electron-ion, ion-ion collision frequency
-  REAL(dp), PUBLIC, PROTECTED :: nu_ee, nu_ie         ! e-e, i-e coll. frequ.
-  REAL(dp), PUBLIC, PROTECTED :: qe2_taue, qi2_taui   ! factor of the gammaD sum
-  REAL(dp), PUBLIC, PROTECTED :: q_o_sqrt_tau_sigma_e, q_o_sqrt_tau_sigma_i
-  REAL(dp), PUBLIC, PROTECTED :: sqrt_tau_o_sigma_e, sqrt_tau_o_sigma_i
-  REAL(dp), PUBLIC, PROTECTED :: dpdx = 0             ! radial pressure gradient
   PUBLIC :: model_readinputs, model_outputinputs
 
 CONTAINS
 
   SUBROUTINE model_readinputs
     !    Read the input parameters
-    USE basic, ONLY : lu_in, my_id, num_procs_p
+    USE basic,    ONLY: lu_in
+    USE parallel, ONLY: my_id,num_procs_p
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /MODEL_PAR/ CLOS, NL_CLOS, KERN, LINEARITY, KIN_E, &
-                         mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, nu,&
-                         tau_e, tau_i, sigma_e, sigma_i, q_e, q_i,&
-                         k_Ne, k_Ni, k_Te, k_Ti, k_gB, k_cB, lambdaD, beta
+    NAMELIST /MODEL_PAR/ KERN, LINEARITY, &
+                         mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, Na,&
+                         nu, k_gB, k_cB, lambdaD, beta, ADIAB_E, tau_e
 
     READ(lu_in,model_par)
 
@@ -76,85 +47,45 @@ CONTAINS
       ERROR STOP '>> ERROR << dvpar4 velocity dissipation is not compatible with current p parallelization'
     ENDIF
 
-    IF(.NOT. KIN_E) THEN
+    IF(Na .EQ. 1) THEN
       IF(my_id.EQ.0) print*, 'Adiabatic electron model -> beta = 0'
-      beta = 0._dp
+      beta = 0._xp
     ENDIF
 
     IF(beta .GT. 0) THEN
       IF(my_id.EQ.0) print*, 'Electromagnetic effects are included'
       EM   = .TRUE.
-      dpdx = -(tau_i*(k_Ni + k_Ti) + tau_e*(k_Ne + k_Te))
     ENDIF
-
-    taue_qe    = tau_e/q_e ! factor of the magnetic moment coupling
-    taui_qi    = tau_i/q_i ! factor of the magnetic moment coupling
-    qe_taue    = q_e/tau_e
-    qi_taui    = q_i/tau_i
-    sqrtTaue_qe     = sqrt(tau_e)/q_e   ! factor of parallel moment term
-    sqrtTaui_qi     = sqrt(tau_i)/q_i   ! factor of parallel moment term
-    qe_sigmae_sqrtTaue = q_e/sigma_e/SQRT(tau_e) ! factor of parallel phi term
-    qi_sigmai_sqrtTaui = q_i/sigma_i/SQRT(tau_i)
-    qe2_taue        = (q_e**2)/tau_e ! factor of the gammaD sum
-    qi2_taui        = (q_i**2)/tau_i
-    sigmae2_taue_o2 = sigma_e**2 * tau_e/2._dp ! factor of the Kernel argument
-    sigmai2_taui_o2 = sigma_i**2 * tau_i/2._dp
-    sqrt_sigmae2_taue_o2 = SQRT(sigma_e**2 * tau_e/2._dp) ! to avoid multiple SQRT eval
-    sqrt_sigmai2_taui_o2 = SQRT(sigma_i**2 * tau_i/2._dp)
-    q_o_sqrt_tau_sigma_e = q_e/SQRT(tau_e)/sigma_e ! For psi field terms
-    q_o_sqrt_tau_sigma_i = q_i/SQRT(tau_i)/sigma_i ! For psi field terms
-    sqrt_tau_o_sigma_e   = SQRT(tau_e)/sigma_e     ! For Ampere eq
-    sqrt_tau_o_sigma_i   = SQRT(tau_i)/sigma_i
-    !! We use the ion-ion collision as normalization with definition
-    !   nu_ii = 4 sqrt(pi)/3 T_i^(-3/2) m_i^(-1/2) q^4 n_i0 ln(Lambda)
-    !
-    nu_e            = nu/sigma_e * (tau_e)**(3._dp/2._dp)  ! electron-ion collision frequency (where already multiplied by 0.532)
-    nu_i            = nu ! ion-ion collision frequ.
-    nu_ee           = nu_e ! e-e coll. frequ.
-    nu_ie           = nu_i ! i-e coll. frequ.
-
-    ! Old normalization (MOLI Jorge/Frei)
-    ! nu_e            = 0.532_dp*nu ! electron-ion collision frequency (where already multiplied by 0.532)
-    ! nu_i            = 0.532_dp*nu*sigma_e*tau_e**(-3._dp/2._dp)/SQRT2 ! ion-ion collision frequ.
-    ! nu_ee           = nu_e/SQRT2 ! e-e coll. frequ.
-    ! nu_ie           = 0.532_dp*nu*sigma_e**2 ! i-e coll. frequ.
 
   END SUBROUTINE model_readinputs
 
 
-  SUBROUTINE model_outputinputs(fidres, str)
-    !    Write the input parameters to the results_xx.h5 file
-
-    USE futils, ONLY: attach
-    USE prec_const
+  SUBROUTINE model_outputinputs(fid)
+    ! Write the input parameters to the results_xx.h5 file
+    USE futils, ONLY: attach, creatd
     IMPLICIT NONE
-
-    INTEGER, INTENT(in) :: fidres
-    CHARACTER(len=256), INTENT(in) :: str
-    CALL attach(fidres, TRIM(str),      "CLOS",    CLOS)
-    CALL attach(fidres, TRIM(str),      "KERN",    KERN)
-    CALL attach(fidres, TRIM(str), "LINEARITY", LINEARITY)
-    CALL attach(fidres, TRIM(str),     "KIN_E",   KIN_E)
-    CALL attach(fidres, TRIM(str),        "nu",      nu)
-    CALL attach(fidres, TRIM(str),        "mu",       0)
-    CALL attach(fidres, TRIM(str),      "mu_x",    mu_x)
-    CALL attach(fidres, TRIM(str),      "mu_y",    mu_y)
-    CALL attach(fidres, TRIM(str),      "mu_z",    mu_z)
-    CALL attach(fidres, TRIM(str),      "mu_p",    mu_p)
-    CALL attach(fidres, TRIM(str),      "mu_j",    mu_j)
-    CALL attach(fidres, TRIM(str),     "tau_e",   tau_e)
-    CALL attach(fidres, TRIM(str),     "tau_i",   tau_i)
-    CALL attach(fidres, TRIM(str),   "sigma_e", sigma_e)
-    CALL attach(fidres, TRIM(str),   "sigma_i", sigma_i)
-    CALL attach(fidres, TRIM(str),       "q_e",     q_e)
-    CALL attach(fidres, TRIM(str),       "q_i",     q_i)
-    CALL attach(fidres, TRIM(str),      "k_Ne",    k_Ne)
-    CALL attach(fidres, TRIM(str),      "k_Ni",    k_Ni)
-    CALL attach(fidres, TRIM(str),      "k_Te",    k_Te)
-    CALL attach(fidres, TRIM(str),      "k_Ti",    k_Ti)
-    CALL attach(fidres, TRIM(str),       "K_E",     K_E)
-    CALL attach(fidres, TRIM(str),   "lambdaD", lambdaD)
-    CALL attach(fidres, TRIM(str),      "beta",    beta)
+    INTEGER, INTENT(in) :: fid
+    CHARACTER(len=256)  :: str
+    WRITE(str,'(a)') '/data/input/model'
+    CALL creatd(fid, 0,(/0/),TRIM(str),'Model Input')
+    CALL attach(fid, TRIM(str),      "KERN",    KERN)
+    CALL attach(fid, TRIM(str), "LINEARITY", LINEARITY)
+    CALL attach(fid, TRIM(str),      "mu_x",    mu_x)
+    CALL attach(fid, TRIM(str),      "mu_y",    mu_y)
+    CALL attach(fid, TRIM(str),      "N_HD",    N_HD)
+    CALL attach(fid, TRIM(str),      "mu_z",    mu_z)
+    CALL attach(fid, TRIM(str),     "HDz_h",   HDz_h)
+    CALL attach(fid, TRIM(str),      "mu_p",    mu_p)
+    CALL attach(fid, TRIM(str),      "mu_j",    mu_j)
+    CALL attach(fid, TRIM(str),     "HYP_V",   HYP_V)
+    CALL attach(fid, TRIM(str),        "Na",      Na)
+    CALL attach(fid, TRIM(str),        "nu",      nu)
+    CALL attach(fid, TRIM(str),      "k_gB",    k_gB)
+    CALL attach(fid, TRIM(str),      "k_cB",    k_cB)
+    CALL attach(fid, TRIM(str),   "lambdaD", lambdaD)
+    CALL attach(fid, TRIM(str),      "beta",    beta)
+    CALL attach(fid, TRIM(str),   "ADIAB_E", ADIAB_E)
+    CALL attach(fid, TRIM(str),     "tau_e",   tau_e)
   END SUBROUTINE model_outputinputs
 
 END MODULE model

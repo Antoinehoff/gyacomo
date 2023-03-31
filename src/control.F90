@@ -1,91 +1,104 @@
 SUBROUTINE control
   !   Control the run
 
-  use basic
-  use prec_const
+  use basic,      ONLY: str,daytim,speak,basic_data,&
+                        nlend,step,increase_step,increase_time,increase_cstep,&
+                        chrono_runt,chrono_step, chrono_diag, start_chrono, stop_chrono
+  use prec_const, ONLY: xp, stdout
+  USE parallel,   ONLY: ppinit
+  USE mpi
   IMPLICIT NONE
-  REAL(dp) :: t_init_diag_0, t_init_diag_1
-
-  CALL cpu_time(start)
+  REAL(xp) :: t_init_diag_0, t_init_diag_1
+  INTEGER  :: ierr
+  ! start the chronometer for the total runtime
+  CALL start_chrono(chrono_runt)
   !________________________________________________________________________________
   !              1.   Prologue
   !                   1.1     Initialize the parallel environment
   CALL ppinit
-  IF (my_id .EQ. 0) WRITE(*,'(a/)') 'MPI initialized'
-
+  CALL speak('MPI initialized')
+  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
   CALL daytim('Start at ')
-
+  
   !                   1.2     Define data specific to run
-  IF (my_id .EQ. 0) WRITE(*,*) 'Load basic data...'
+  CALL speak( 'Load basic data...')
   CALL basic_data
   ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-  IF (my_id .EQ. 0) WRITE(*,'(a/)') '...basic data loaded.'
-
+  CALL speak('...basic data loaded.')
+  
   !                   1.3   Read input parameters from input file
-  IF (my_id .EQ. 0) WRITE(*,*) 'Read input parameters...'
+  CALL speak('Read input parameters...')
   CALL readinputs
   ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-  IF (my_id .EQ. 0) WRITE(*,'(a/)') '...input parameters read'
+  CALL speak('...input parameters read')
 
   !                   1.4     Set auxiliary values (allocate arrays, set grid, ...)
-  IF (my_id .EQ. 0) WRITE(*,*) 'Calculate auxval...'
+  CALL speak('Calculate auxval...')
   CALL auxval
   ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-  IF (my_id .EQ. 0) WRITE(*,'(a/)') '...auxval calculated'
-
+  CALL speak('...auxval calculated')
+  
   !                   1.5     Initial conditions
-  IF (my_id .EQ. 0) WRITE(*,*) 'Create initial state...'
+  CALL speak( 'Create initial state...')
   CALL inital
   ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-  IF (my_id .EQ. 0) WRITE(*,'(a/)') '...initial state created'
-
+  CALL speak('...initial state created')
+  
   !                   1.6     Initial diagnostics
-  IF (my_id .EQ. 0) WRITE(*,*) 'Initial diagnostics...'
+  CALL speak( 'Initial diagnostics...')
   CALL cpu_time(t_init_diag_0) ! Measure the time of the init diag
   CALL diagnose(0)
   CALL cpu_time(t_init_diag_1)
   ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-  IF (my_id .EQ. 0) THEN
-    WRITE(*,'(a)') '...initial diagnostics done'
-    WRITE(*,'(a,F6.3,a/)') '(',t_init_diag_1-t_init_diag_0,'[s])'
-  ENDIF
+  CALL speak('...initial diagnostics done')
+  CALL speak('('//str(t_init_diag_1-t_init_diag_0)//'[s])')
 
   CALL FLUSH(stdout)
   CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   !________________________________________________________________________________
 
-  IF (my_id .EQ. 0) WRITE(*,*) 'Time integration loop..'
+  CALL speak( 'Time integration loop..')
   !________________________________________________________________________________
   !              2.   Main loop
   DO
-     CALL cpu_time(t0_step) ! Measuring time
+    CALL start_chrono(chrono_step) ! Measuring time per step
+    
+    ! Test if the stopping requirements are met (update nlend)
+    CALL tesend
+    IF( nlend ) EXIT ! exit do loop
 
-     step  = step  + 1
-     cstep = cstep + 1
-     CALL stepon
+    ! Increment steps and csteps (private in basic module)
+    CALL increase_step
+    CALL increase_cstep
 
-     time  = time  + dt
+    ! Do a full RK step (e.g. 4 substeps for ERK4)
+    CALL stepon
 
-     CALL tesend
-     IF( nlend ) EXIT ! exit do loop
+    ! Increment time (private in basic module)
+    CALL increase_time
 
-     CALL diagnose(step)
+    ! Periodic diagnostics
+    CALL start_chrono(chrono_diag)
+      CALL diagnose(step)
+    CALL stop_chrono(chrono_diag)
 
-    CALL cpu_time(t1_step);
-    tc_step = tc_step + (t1_step - t0_step)
+    CALL stop_chrono(chrono_step)
 
   END DO
 
-  IF (my_id .EQ. 0) WRITE(*,'(a/)') '...time integration done'
+  CALL speak('...time integration done')
   !________________________________________________________________________________
   !              9.   Epilogue
-
+  ! Stop total run chronometer (must be done before the last diagnostic)
+  CALL stop_chrono(chrono_runt)
+  ! last diagnostic
   CALL diagnose(-1)
+  ! end the run
   CALL endrun
-
-  IF (my_id .EQ. 0) CALL daytim('Done at ')
-
+  ! display final time
+  CALL daytim('Done at ')
+  ! close mpi environement
   CALL ppexit
 
 END SUBROUTINE control

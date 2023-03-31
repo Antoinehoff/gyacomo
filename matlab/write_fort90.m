@@ -86,8 +86,8 @@ fprintf(fid,'/\n');
 
 fprintf(fid,'&COLLISION_PAR\n');
 fprintf(fid,['  collision_model = ', COLL.collision_model,'\n']);
-fprintf(fid,['  gyrokin_CO      = ', COLL.gyrokin_CO,'\n']);
-fprintf(fid,['  interspecies    = ', COLL.interspecies,'\n']);
+fprintf(fid,['  GK_CO      = ', COLL.GK_CO,'\n']);
+fprintf(fid,['  INTERSPECIES    = ', COLL.INTERSPECIES,'\n']);
 fprintf(fid,['  mat_file        = ', COLL.mat_file,'\n']);
 fprintf(fid,['  collision_kcut  = ', num2str(COLL.coll_kcut),'\n']);
 fprintf(fid,'/\n');

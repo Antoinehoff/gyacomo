@@ -44,11 +44,11 @@ CONTAINS
       XOUT = TO_FM('0.0')
       !
       DO n1=0,n 
-         AUXN =Lpjl(REAL(m,dp)-0.5_dp,REAL(n,dp),REAL(n1,dp))
+         AUXN =Lpjl(REAL(m,xp)-0.5_xp,REAL(n,xp),REAL(n1,xp))
          DO k1=0,k
-            AUXK =Lpjl(-0.5_dp,REAL(k,dp),REAL(k1,dp))
+            AUXK =Lpjl(-0.5_xp,REAL(k,xp),REAL(k1,xp))
             DO s1=0,s
-               AUXS = Lpjl(-0.5_dp,REAL(s,dp),REAL(s1,dp))
+               AUXS = Lpjl(-0.5_xp,REAL(s,xp),REAL(s1,xp))
                XOUT = XOUT + FACTORIAL(TO_FM(n1 + k1 + s1 ))*AUXN*AUXK*AUXS 
             ENDDO
          ENDDO
@@ -75,7 +75,7 @@ CONTAINS
       IMPLICIT NONE
 
       !
-      REAL(dp), intent(in) :: p,j,l
+      REAL(xp), intent(in) :: p,j,l
       TYPE(FM) :: XOUT
       !
       CALL FM_ENTER_USER_FUNCTION(XOUT)

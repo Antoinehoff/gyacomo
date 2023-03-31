@@ -5,7 +5,7 @@
 %
 % SIMID   = 'test_circular_geom';  % Name of the simulation
 % SIMID   = 'linear_CBC';  % Name of the simulation
-SIMID   = 'lin_KBM';  % Name of the simulation
+SIMID   = 'lin_MTM';  % Name of the simulation
 RUN     = 1 ; % To run or just to load
 addpath(genpath('../matlab')) % ... add
 default_plots_options
@@ -17,44 +17,44 @@ EXECNAME = 'helaz3';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PHYSICAL PARAMETERS
-NU      = 0.0;          % Collision frequency
-TAU     = 1.0;          % e/i temperature ratio
+NU      = 0.05;           % Collision frequency
+TAU     = 1.0;            % e/i temperature ratio
 K_Ne    = 3;            % ele Density '''
-K_Te    = 4.5;          % ele Temperature '''
+K_Te    = 8;            % ele Temperature '''
 K_Ni    = 3;            % ion Density gradient drive
-K_Ti    = 8;            % ion Temperature '''
+K_Ti    = 0;            % ion Temperature '''
 SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 % SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 KIN_E   = 1;     % 1: kinetic electrons, 2: adiabatic electrons
-BETA    = 0.03;     % electron plasma beta
+BETA    = 0.02;     % electron plasma beta
 %% GRID PARAMETERS
-P = 4;
+P = 16;
 J = P/2;
 PMAXE   = P;     % Hermite basis size of electrons
 JMAXE   = J;     % Laguerre "
 PMAXI   = P;     % " ions
 JMAXI   = J;     % "
-NX      = 9;    % real space x-gridpoints
+NX      = 16;    % real space x-gridpoints
 NY      = 2;     %     ''     y-gridpoints
 LX      = 2*pi/0.1;   % Size of the squared frequency domain
-LY      = 2*pi/0.25;     % Size of the squared frequency domain
-NZ      = 16;    % number of perpendicular planes (parallel grid)
+LY      = 2*pi/0.3;     % Size of the squared frequency domain
+NZ      = 32;    % number of perpendicular planes (parallel grid)
 NPOL    = 1;
 SG      = 0;     % Staggered z grids option
 %% GEOMETRY
 % GEOMETRY= 'Z-pinch'; % Z-pinch overwrites q0, shear and eps
 GEOMETRY= 's-alpha';
 % GEOMETRY= 'circular';
-Q0      = 1.4;    % safety factor
-SHEAR   = 0.8;    % magnetic shear
+Q0      = 4;    % safety factor
+SHEAR   = 2.4;    % magnetic shear
 NEXC    = 1;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 EPS     = 0.18;   % inverse aspect ratio
 %% TIME PARMETERS
-TMAX    = 15.1;  % Maximal time unit
-DT      = 5e-3;   % Time step
+TMAX    = 15;  % Maximal time unit
+DT      = 5e-4;   % Time step
 SPS0D   = 1;      % Sampling per time unit for 2D arrays
 SPS2D   = 0;      % Sampling per time unit for 2D arrays
-SPS3D   = 10;      % Sampling per time unit for 2D arrays
+SPS3D   = 1;      % Sampling per time unit for 2D arrays
 SPS5D   = 1/5;    % Sampling per time unit for 5D arrays
 SPSCP   = 0;    % Sampling per time unit for checkpoints
 JOB2LOAD= -1;
@@ -64,7 +64,7 @@ LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
 CO      = 'DG';
 GKCO    = 0; % gyrokinetic operator
-ABCO    = 1; % interspecies collisions
+ABCO    = 1; % INTERSPECIES collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: v^Nmax closure (p+2j<=Pmax))s
 NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
@@ -85,7 +85,7 @@ INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
 MU_X    = MU;     %
 MU_Y    = MU;     %
 N_HD    = 4;
-MU_Z    = 10; %
+MU_Z    = 2.0*2^2   ; %
 MU_P    = 0.0;     %
 MU_J    = 0.0;     %
 LAMBDAD = 0.0;
@@ -101,8 +101,8 @@ setup
 if RUN
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',HELAZDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 2 3 0; cd ../../../wk'])
+%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',HELAZDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
+    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 2 3 0; cd ../../../wk'])
 %     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
 end
 

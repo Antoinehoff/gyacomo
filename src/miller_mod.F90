@@ -4,8 +4,9 @@
 MODULE miller
   USE prec_const
   USE basic
+  USE parallel, ONLY: my_id, num_procs_z, nbr_U, nbr_D, comm0
   ! use coordinates,only: gcoor, get_dzprimedz
-  USE grid
+  USE grid, ONLY: local_Nky, local_Nkx, local_nz, Ngz, kyarray, kxarray, zarray, Nz, local_nz_offset
   ! use discretization
   USE lagrange_interpolation
   ! use par_in, only: beta, sign_Ip_CW, sign_Bt_CW, Npol
@@ -19,15 +20,15 @@ MODULE miller
 
   private
 
-  real(dp) :: rho, kappa, delta, s_kappa, s_delta, drR, drZ, zeta, s_zeta
-  real(dp) :: thetaShift
-  real(dp) :: thetak, thetad
-
+  real(xp) :: rho, kappa, delta, s_kappa, s_delta, drR, drZ, zeta, s_zeta
+  real(xp) :: thetaShift
+  real(xp) :: thetak, thetad
+  INTEGER  :: ierr
 CONTAINS
 
   !>Set defaults for miller parameters
   subroutine set_miller_parameters(kappa_,s_kappa_,delta_,s_delta_,zeta_,s_zeta_)
-    real(dp), INTENT(IN) :: kappa_,s_kappa_,delta_,s_delta_,zeta_,s_zeta_
+    real(xp), INTENT(IN) :: kappa_,s_kappa_,delta_,s_delta_,zeta_,s_zeta_
     rho     = -1.0
     kappa   = kappa_
     s_kappa = s_kappa_
@@ -44,62 +45,63 @@ CONTAINS
   end subroutine set_miller_parameters
 
   !>Get Miller metric, magnetic field, jacobian etc.
-  subroutine get_miller(trpeps,major_R,major_Z,q0,shat,amhd,edge_opt,&
-       C_y,C_xy,dpdx_pm_geom,gxx_,gyy_,gzz_,gxy_,gxz_,gyz_,dBdx_,dBdy_,&
+  subroutine get_miller(trpeps,major_R,major_Z,q0,shat,Npol,amhd,edge_opt,&
+       C_y,C_xy,xpdx_pm_geom,gxx_,gyy_,gzz_,gxy_,gxz_,gyz_,dBdx_,dBdy_,&
        Bfield_,jacobian_,dBdz_,R_hat_,Z_hat_,dxdR_,dxdZ_,Ckxky_,gradz_coeff_)
     !!!!!!!!!!!!!!!! GYACOMO INTERFACE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    real(dp), INTENT(INOUT) :: trpeps          ! eps in gyacomo (inverse aspect ratio)
-    real(dp), INTENT(INOUT) :: major_R         ! major radius
-    real(dp), INTENT(INOUT) :: major_Z         ! major Z
-    real(dp), INTENT(INOUT) :: q0              ! safetyfactor
-    real(dp), INTENT(INOUT) :: shat            ! safetyfactor
-    real(dp), INTENT(INOUT) :: amhd            ! alpha mhd
-    real(dp), INTENT(INOUT) :: edge_opt        ! alpha mhd
-    real(dp), INTENT(INOUT) :: dpdx_pm_geom    ! amplitude mag. eq. pressure grad.
-    real(dp), INTENT(INOUT) :: C_y, C_xy
-
-    real(dp), dimension(izgs:izge,0:1), INTENT(INOUT) :: &
+    real(xp), INTENT(INOUT) :: trpeps          ! eps in gyacomo (inverse aspect ratio)
+    real(xp), INTENT(INOUT) :: major_R         ! major radius
+    real(xp), INTENT(INOUT) :: major_Z         ! major Z
+    real(xp), INTENT(INOUT) :: q0              ! safetyfactor
+    real(xp), INTENT(INOUT) :: shat            ! safetyfactor
+    INTEGER,  INTENT(IN)    :: Npol            ! number of poloidal turns
+    real(xp), INTENT(INOUT) :: amhd            ! alpha mhd
+    real(xp), INTENT(INOUT) :: edge_opt        ! alpha mhd
+    real(xp), INTENT(INOUT) :: xpdx_pm_geom    ! amplitude mag. eq. pressure grad.
+    real(xp), INTENT(INOUT) :: C_y, C_xy
+    real(xp), dimension(1:local_nz+Ngz,1:2), INTENT(INOUT) :: &
                                               gxx_,gyy_,gzz_,gxy_,gxz_,gyz_,&
                                               dBdx_,dBdy_,Bfield_,jacobian_,&
                                               dBdz_,R_hat_,Z_hat_,dxdR_,dxdZ_, &
                                               gradz_coeff_
-    real(dp), dimension(ikys:ikye,ikxs:ikxe,izgs:izge,0:1), INTENT(INOUT) :: Ckxky_
+    real(xp), dimension(1:local_Nky,1:local_Nkx,1:local_nz+Ngz,1:2), INTENT(INOUT) :: Ckxky_
+    INTEGER :: iz, ikx, iky, eo
     ! No parameter in gyacomo yet
-    real(dp) :: sign_Ip_CW=1 ! current sign (only normal current)
-    real(dp) :: sign_Bt_CW=1 ! current sign (only normal current)
+    real(xp) :: sign_Ip_CW=1 ! current sign (only normal current)
+    real(xp) :: sign_Bt_CW=1 ! current sign (only normal current)
     !!!!!!!!!!!!!! END GYACOMO INTERFACE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Auxiliary variables for curvature computation
-    real(dp) :: G1,G2,G3,Cx,Cy,ky,kx
+    real(xp) :: G1,G2,G3,Cx,Cy,ky,kx
 
     integer:: np, np_s, Npol_ext, Npol_s
 
-    real(dp), dimension(500*(Npol+2)):: R,Z,R_rho,Z_rho,R_theta,Z_theta,R_theta_theta,Z_theta_theta,dlp,Rc,cosu,sinu,Bphi
-    real(dp), dimension(500*(Npol+2)):: drRcirc, drRelong, drRelongTilt, drRtri, drRtriTilt, drZcirc, drZelong, drZelongTilt
-    real(dp), dimension(500*(Npol+2)):: drZtri, drZtriTilt, dtdtRcirc, dtdtRelong, dtdtRelongTilt, dtdtRtri, dtdtRtriTilt
-    real(dp), dimension(500*(Npol+2)):: dtdtZcirc, dtdtZelong, dtdtZelongTilt, dtdtZtri, dtdtZtriTilt, dtRcirc, dtRelong
-    real(dp), dimension(500*(Npol+2)):: dtRelongTilt, dtRtri, dtRtriTilt, dtZcirc, dtZelong, dtZelongTilt, dtZtri, dtZtriTilt
-    real(dp), dimension(500*(Npol+2)):: Rcirc, Relong, RelongTilt, Rtri, RtriTilt, Zcirc, Zelong, ZelongTilt, Ztri, ZtriTilt
-    ! real(dp), dimension(500*(Npol+2)):: drrShape, drrAng, drxAng, dryAng, dtdtrShape, dtdtrAng, dtdtxAng
-    ! real(dp), dimension(500*(Npol+2)):: dtdtyAng, dtrShape, dtrAng, dtxAng, dtyAng, rShape, rAng, xAng, yAng
-    real(dp), dimension(500*(Npol+2)):: theta, thAdj, J_r, B, Bp, D0, D1, D2, D3, nu, chi, psi1, nu1
-    real(dp), dimension(500*(Npol+2)):: tmp_reverse, theta_reverse, tmp_arr
+    real(xp), dimension(500*(Npol+2)):: R,Z,R_rho,Z_rho,R_theta,Z_theta,R_theta_theta,Z_theta_theta,dlp,Rc,cosu,sinu,Bphi
+    real(xp), dimension(500*(Npol+2)):: drRcirc, drRelong, drRelongTilt, drRtri, drRtriTilt, drZcirc, drZelong, drZelongTilt
+    real(xp), dimension(500*(Npol+2)):: drZtri, drZtriTilt, dtdtRcirc, dtdtRelong, dtdtRelongTilt, dtdtRtri, dtdtRtriTilt
+    real(xp), dimension(500*(Npol+2)):: dtdtZcirc, dtdtZelong, dtdtZelongTilt, dtdtZtri, dtdtZtriTilt, dtRcirc, dtRelong
+    real(xp), dimension(500*(Npol+2)):: dtRelongTilt, dtRtri, dtRtriTilt, dtZcirc, dtZelong, dtZelongTilt, dtZtri, dtZtriTilt
+    real(xp), dimension(500*(Npol+2)):: Rcirc, Relong, RelongTilt, Rtri, RtriTilt, Zcirc, Zelong, ZelongTilt, Ztri, ZtriTilt
+    ! real(xp), dimension(500*(Npol+2)):: drrShape, drrAng, drxAng, dryAng, dtdtrShape, dtdtrAng, dtdtxAng
+    ! real(xp), dimension(500*(Npol+2)):: dtdtyAng, dtrShape, dtrAng, dtxAng, dtyAng, rShape, rAng, xAng, yAng
+    real(xp), dimension(500*(Npol+2)):: theta, thAdj, J_r, B, Bp, D0, D1, D2, D3, nu, chi, psi1, nu1
+    real(xp), dimension(500*(Npol+2)):: tmp_reverse, theta_reverse, tmp_arr
 
-    real(dp), dimension(500*(Npol+1)):: theta_s, thAdj_s, chi_s, theta_s_reverse
-    real(dp), dimension(500*(Npol+1)):: R_s, Z_s, R_theta_s, Z_theta_s, Rc_s, cosu_s, sinu_s, Bphi_s, B_s, Bp_s, dlp_s
-    real(dp), dimension(500*(Npol+1)):: dtRcirc_s, dtRelong_s, dtRelongTilt_s, dtRtri_s, dtRtriTilt_s, dtZcirc_s
-    real(dp), dimension(500*(Npol+1)):: dtZelong_s, dtZelongTilt_s, dtZtri_s, dtZtriTilt_s, Rcirc_s, Relong_s, RelongTilt_s
-    real(dp), dimension(500*(Npol+1)):: Rtri_s, RtriTilt_s, Zcirc_s, Zelong_s, ZelongTilt_s, Ztri_s, ZtriTilt_s!, dtrShape_s
-    ! real(dp), dimension(500*(Npol+1)):: dtrAng_s, dtxAng_s, dtyAng_s, rShape_s, rAng_s, xAng_s, yAng_s
-    real(dp), dimension(500*(Npol+1)):: psi1_s, nu1_s, dchidx_s, dB_drho_s, dB_dl_s, dnu_drho_s, dnu_dl_s, grad_nu_s
-    real(dp), dimension(500*(Npol+1)):: gxx, gxy, gxz, gyy, gyz, gzz, dtheta_dchi_s, dBp_dchi_s, jacobian, dBdx, dBdz
-    real(dp), dimension(500*(Npol+1)):: g_xx, g_xy, g_xz, g_yy, g_yz, g_zz, tmp_arr_s, dxdR_s, dxdZ_s, K_x, K_y !tmp_arr2
+    real(xp), dimension(500*(Npol+1)):: theta_s, thAdj_s, chi_s, theta_s_reverse
+    real(xp), dimension(500*(Npol+1)):: R_s, Z_s, R_theta_s, Z_theta_s, Rc_s, cosu_s, sinu_s, Bphi_s, B_s, Bp_s, dlp_s
+    real(xp), dimension(500*(Npol+1)):: dtRcirc_s, dtRelong_s, dtRelongTilt_s, dtRtri_s, dtRtriTilt_s, dtZcirc_s
+    real(xp), dimension(500*(Npol+1)):: dtZelong_s, dtZelongTilt_s, dtZtri_s, dtZtriTilt_s, Rcirc_s, Relong_s, RelongTilt_s
+    real(xp), dimension(500*(Npol+1)):: Rtri_s, RtriTilt_s, Zcirc_s, Zelong_s, ZelongTilt_s, Ztri_s, ZtriTilt_s!, dtrShape_s
+    ! real(xp), dimension(500*(Npol+1)):: dtrAng_s, dtxAng_s, dtyAng_s, rShape_s, rAng_s, xAng_s, yAng_s
+    real(xp), dimension(500*(Npol+1)):: psi1_s, nu1_s, dchidx_s, dB_drho_s, dB_dl_s, dnu_drho_s, dnu_dl_s, grad_nu_s
+    real(xp), dimension(500*(Npol+1)):: gxx, gxy, gxz, gyy, gyz, gzz, dtheta_dchi_s, dBp_dchi_s, jacobian, dBdx, dBdz
+    real(xp), dimension(500*(Npol+1)):: g_xx, g_xy, g_xz, g_yy, g_yz, g_zz, tmp_arr_s, dxdR_s, dxdZ_s, K_x, K_y !tmp_arr2
 
-    real(dp), dimension(1:Nz):: gxx_out,gxy_out,gxz_out,gyy_out,gyz_out,gzz_out,Bfield_out,jacobian_out, dBdx_out, dBdz_out, chi_out
-    real(dp), dimension(1:Nz):: R_out, Z_out, dxdR_out, dxdZ_out
-    real(dp):: d_inv, drPsi, dxPsi, dq_dx, dq_dpsi, R0, Z0, B0, F, D0_full, D1_full, D2_full, D3_full
-    !real(dp) :: Lnorm, Psi0 ! currently module-wide defined anyway
-    real(dp):: pprime, ffprime, D0_mid, D1_mid, D2_mid, D3_mid, dx_drho, pi, mu_0, dzprimedz
-    ! real(dp):: rho_a, psiN, drpsiN, CN2, CN3, Rcenter, Zcenter, drRcenter, drZcenter
+    real(xp), dimension(1:Nz):: gxx_out,gxy_out,gxz_out,gyy_out,gyz_out,gzz_out,Bfield_out,jacobian_out, dBdx_out, dBdz_out, chi_out
+    real(xp), dimension(1:Nz):: R_out, Z_out, dxdR_out, dxdZ_out
+    real(xp):: d_inv, drPsi, dxPsi, dq_dx, dq_xpsi, R0, Z0, B0, F, D0_full, D1_full, D2_full, D3_full
+    !real(xp) :: Lnorm, Psi0 ! currently module-wide defined anyway
+    real(xp):: pprime, ffprime, D0_mid, D1_mid, D2_mid, D3_mid, dx_drho, pi, mu_0, dzprimedz
+    ! real(xp):: rho_a, psiN, drpsiN, CN2, CN3, Rcenter, Zcenter, drRcenter, drZcenter
     logical:: bMaxShift
     integer:: i, k, iBmax
 
@@ -121,7 +123,7 @@ CONTAINS
     pi = acos(-1.0)
     mu_0=4.0*pi
 
-    theta=linspace(-pi*Npol_ext,pi*Npol_ext-2._dp*pi*Npol_ext/np,np)
+    theta=linspace(-pi*Npol_ext,pi*Npol_ext-2._xp*pi*Npol_ext/np,np)
     d_inv=asin(delta)
 
     thetaShift = 0.0
@@ -261,11 +263,11 @@ CONTAINS
 
     !--------shear is expected to be defined as rho/q*dq/drho--------!
     dq_dx=shat*q0/rho/dx_drho
-    dq_dpsi=dq_dx/dxPsi
+    dq_xpsi=dq_dx/dxPsi
     pprime=-amhd/q0**2/R0/(2*mu_0)*B0**2/drPsi
 
-    !neg. dpdx normalized to magnetic pressure for pressure term
-    dpdx_pm_geom=amhd/q0**2/R0/dx_drho
+    !neg. xpdx normalized to magnetic pressure for pressure term
+    xpdx_pm_geom=amhd/q0**2/R0/dx_drho
 
     !first coefficient of psi in varrho expansion
     psi1 = R*Bp*sign_Ip_CW
@@ -294,7 +296,7 @@ CONTAINS
     D2_mid=D2(np/2+1)
     D3_mid=D3(np/2+1)
 
-    ffprime=-(sign_Ip_CW*dq_dpsi*2.*pi*Npol_ext+D0_full+D2_full*pprime)/D1_full
+    ffprime=-(sign_Ip_CW*dq_xpsi*2.*pi*Npol_ext+D0_full+D2_full*pprime)/D1_full
 
     if (my_id==0) then
        write(*,'(A,ES12.4)') "ffprime = ", ffprime
@@ -403,10 +405,10 @@ CONTAINS
     !contravariant metric coefficients (varrho,l,fz)->(x,y,z)
     gxx=(psi1_s/dxPsi)**2
     gxy=-psi1_s/dxPsi*C_y*sign_Ip_CW*nu1_s
-    gxz=-psi1_s/dxPsi*(nu1_s+psi1_s*dq_dpsi*chi_s)/q0
+    gxz=-psi1_s/dxPsi*(nu1_s+psi1_s*dq_xpsi*chi_s)/q0
     gyy=C_y**2*(grad_nu_s**2+1/R_s**2)
-    gyz=sign_Ip_CW*C_y/q0*(grad_nu_s**2+dq_dpsi*nu1_s*psi1_s*chi_s)
-    gzz=1./q0**2*(grad_nu_s**2+2.*dq_dpsi*nu1_s*psi1_s*chi_s+(dq_dpsi*psi1_s*chi_s)**2)
+    gyz=sign_Ip_CW*C_y/q0*(grad_nu_s**2+dq_xpsi*nu1_s*psi1_s*chi_s)
+    gzz=1./q0**2*(grad_nu_s**2+2.*dq_xpsi*nu1_s*psi1_s*chi_s+(dq_xpsi*psi1_s*chi_s)**2)
 
     jacobian=1./sqrt(gxx*gyy*gzz + 2.*gxy*gyz*gxz - gxz**2*gyy - gyz**2*gxx - gzz*gxy**2)
 
@@ -420,7 +422,7 @@ CONTAINS
 
     !Bfield derivatives
     !dBdx = e_x * nabla B = J (nabla y x nabla z) * nabla B
-    dBdx=jacobian*C_y/(q0*R_s)*(F/(R_s*psi1_s)*dB_drho_s+(nu1_s+dq_dpsi*chi_s*psi1_s)*dB_dl_s)
+    dBdx=jacobian*C_y/(q0*R_s)*(F/(R_s*psi1_s)*dB_drho_s+(nu1_s+dq_xpsi*chi_s*psi1_s)*dB_dl_s)
     dBdz=1./B_s*(Bp_s*dBp_dchi_s-F**2/R_s**3*R_theta_s)
 
     !curvature terms (these are just local and will be recalculated in geometry.F90)
@@ -438,7 +440,7 @@ CONTAINS
        !new parallel coordinate chi_out==zprime
        !see also tracer_aux.F90
        if (Npol>1) ERROR STOP '>> ERROR << Npol>1 has not been implemented for edge_opt=\=0.0'
-       do k=izs,ize
+       do k=1,Nz
           chi_out(k)=sinh((-pi+k*2.*pi/Nz)*log(edge_opt*pi+sqrt(edge_opt**2*pi**2+1))/pi)/edge_opt
        enddo
        !transform metrics according to chain rule
@@ -473,24 +475,25 @@ CONTAINS
     call lag3interp(Z_s,chi_s,np_s,Z_out,chi_out,Nz)
     call lag3interp(dxdR_s,chi_s,np_s,dxdR_out,chi_out,Nz)
     call lag3interp(dxdZ_s,chi_s,np_s,dxdZ_out,chi_out,Nz)
-    ! Fill the geom arrays with the results
-    do eo=0,1
-    gxx_(izs:ize,eo)      =gxx_out(izs:ize)
-    gyy_(izs:ize,eo)      =gyy_out(izs:ize)
-    gxz_(izs:ize,eo)      =gxz_out(izs:ize)
-    gyz_(izs:ize,eo)      =gyz_out(izs:ize)
-    dBdx_(izs:ize,eo)     =dBdx_out(izs:ize)
-    dBdy_(izs:ize,eo)     =0.
-    gxy_(izs:ize,eo)      =gxy_out(izs:ize)
-    gzz_(izs:ize,eo)      =gzz_out(izs:ize)
-    Bfield_(izs:ize,eo)   =Bfield_out(izs:ize)
-    jacobian_(izs:ize,eo) =jacobian_out(izs:ize)
-    dBdz_(izs:ize,eo)     =dBdz_out(izs:ize)
-    R_hat_(izs:ize,eo)    =R_out(izs:ize)
-    Z_hat_(izs:ize,eo)    =Z_out(izs:ize)
-    dxdR_(izs:ize,eo)     = dxdR_out(izs:ize)
-    dxdZ_(izs:ize,eo)     = dxdZ_out(izs:ize)
-
+    ! Fill the interior of the geom arrays with the results
+    do eo=1,2
+      DO iz = 1,local_nz
+        gxx_(iz+Ngz/2,eo)      = gxx_out(iz-local_nz_offset)
+        gyy_(iz+Ngz/2,eo)      = gyy_out(iz-local_nz_offset)
+        gxz_(iz+Ngz/2,eo)      = gxz_out(iz-local_nz_offset)
+        gyz_(iz+Ngz/2,eo)      = gyz_out(iz-local_nz_offset)
+        dBdx_(iz+Ngz/2,eo)     = dBdx_out(iz-local_nz_offset)
+        dBdy_(iz+Ngz/2,eo)     = 0.
+        gxy_(iz+Ngz/2,eo)      = gxy_out(iz-local_nz_offset)
+        gzz_(iz+Ngz/2,eo)      = gzz_out(iz-local_nz_offset)
+        Bfield_(iz+Ngz/2,eo)   = Bfield_out(iz-local_nz_offset)
+        jacobian_(iz+Ngz/2,eo) = jacobian_out(iz-local_nz_offset)
+        dBdz_(iz+Ngz/2,eo)     = dBdz_out(iz-local_nz_offset)
+        R_hat_(iz+Ngz/2,eo)    = R_out(iz-local_nz_offset)
+        Z_hat_(iz+Ngz/2,eo)    = Z_out(iz-local_nz_offset)
+        dxdR_(iz+Ngz/2,eo)     = dxdR_out(iz-local_nz_offset)
+        dxdZ_(iz+Ngz/2,eo)     = dxdZ_out(iz-local_nz_offset)
+      ENDDO
     !! UPDATE GHOSTS VALUES (since the miller function in GENE does not)
     CALL update_ghosts_z(gxx_(:,eo))
     CALL update_ghosts_z(gyy_(:,eo))
@@ -508,22 +511,22 @@ CONTAINS
     CALL update_ghosts_z(dxdZ_(:,eo))
 
     ! Curvature operator (Frei et al. 2022 eq 2.15)
-    DO iz = izgs,izge
+    DO iz = 1,local_nz+Ngz
       G1 = gxy_(iz,eo)*gxy_(iz,eo)-gxx_(iz,eo)*gyy_(iz,eo)
       G2 = gxy_(iz,eo)*gxz_(iz,eo)-gxx_(iz,eo)*gyz_(iz,eo)
       G3 = gyy_(iz,eo)*gxz_(iz,eo)-gxy_(iz,eo)*gyz_(iz,eo)
       Cx = (G1*dBdy_(iz,eo) + G2*dBdz_(iz,eo))/Bfield_(iz,eo)
       Cy = (G3*dBdz_(iz,eo) - G1*dBdx_(iz,eo))/Bfield_(iz,eo)
 
-      DO iky = ikys, ikye
+      DO iky = 1,local_Nky
         ky = kyarray(iky)
-         DO ikx= ikxs, ikxe
+         DO ikx= 1,local_Nkx
            kx = kxarray(ikx)
            Ckxky_(iky, ikx, iz,eo) = (Cx*kx + Cy*ky)
          ENDDO
       ENDDO
       ! coefficient in the front of parallel derivative
-      gradz_coeff_(iz,eo) = 1._dp / jacobian_(iz,eo) / Bfield_(iz,eo)
+      gradz_coeff_(iz,eo) = 1._xp / jacobian_(iz,eo) / Bfield_(iz,eo)
     ENDDO
   ENDDO
 
@@ -533,50 +536,51 @@ CONTAINS
     SUBROUTINE update_ghosts_z(fz_)
       IMPLICIT NONE
       ! INTEGER,  INTENT(IN) :: nztot_
-      REAL(dp), DIMENSION(izgs:izge), INTENT(INOUT) :: fz_
-      REAL(dp), DIMENSION(-2:2) :: buff
-      INTEGER :: status(MPI_STATUS_SIZE), count
-
+      REAL(xp), DIMENSION(1:local_nz+Ngz), INTENT(INOUT) :: fz_
+      REAL(xp), DIMENSION(-2:2) :: buff
+      INTEGER :: status(MPI_STATUS_SIZE), count, last, first
+      last = local_nz+Ngz/2
+      first= 1 + Ngz/2
       IF(Nz .GT. 1) THEN
         IF (num_procs_z .GT. 1) THEN
           CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
             count = 1 ! one point to exchange
             !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
-            CALL mpi_sendrecv(fz_(ize), count, MPI_DOUBLE, nbr_U, 0, & ! Send to Up the last
-                              buff(-1), count, MPI_DOUBLE, nbr_D, 0, & ! Receive from Down the first-1
+            CALL mpi_sendrecv(fz_(last), count, MPI_DOUBLE, nbr_U, 0, & ! Send to Up the last
+                               buff(-1), count, MPI_DOUBLE, nbr_D, 0, & ! Receive from Down the first-1
                               comm0, status, ierr)
 
-            CALL mpi_sendrecv(fz_(ize-1), count, MPI_DOUBLE, nbr_U, 0, & ! Send to Up the last
-                                buff(-2), count, MPI_DOUBLE, nbr_D, 0, & ! Receive from Down the first-2
+            CALL mpi_sendrecv(fz_(last-1), count, MPI_DOUBLE, nbr_U, 0, & ! Send to Up the last
+                                 buff(-2), count, MPI_DOUBLE, nbr_D, 0, & ! Receive from Down the first-2
                               comm0, status, ierr)
 
             !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
-            CALL mpi_sendrecv(fz_(izs), count, MPI_DOUBLE, nbr_D, 0, & ! Send to Down the first
-                              buff(+1), count, MPI_DOUBLE, nbr_U, 0, & ! Recieve from Up the last+1
+            CALL mpi_sendrecv(fz_(first), count, MPI_DOUBLE, nbr_D, 0, & ! Send to Down the first
+                                buff(+1), count, MPI_DOUBLE, nbr_U, 0, & ! Recieve from Up the last+1
                               comm0, status, ierr)
 
-            CALL mpi_sendrecv(fz_(izs+1), count, MPI_DOUBLE, nbr_D, 0, & ! Send to Down the first
-                                buff(+2), count, MPI_DOUBLE, nbr_U, 0, & ! Recieve from Up the last+2
+            CALL mpi_sendrecv(fz_(first+1), count, MPI_DOUBLE, nbr_D, 0, & ! Send to Down the first
+                                  buff(+2), count, MPI_DOUBLE, nbr_U, 0, & ! Recieve from Up the last+2
                               comm0, status, ierr)
          ELSE
-           buff(-1) = fz_(ize  )
-           buff(-2) = fz_(ize-1)
-           buff(+1) = fz_(izs  )
-           buff(+2) = fz_(izs+1)
+           buff(-1) = fz_(last  )
+           buff(-2) = fz_(last-1)
+           buff(+1) = fz_(first  )
+           buff(+2) = fz_(first+1)
          ENDIF
-         fz_(ize+1) = buff(+1)
-         fz_(ize+2) = buff(+2)
-         fz_(izs-1) = buff(-1)
-         fz_(izs-2) = buff(-2)
+         fz_(last +1) = buff(+1)
+         fz_(last +2) = buff(+2)
+         fz_(first-1) = buff(-1)
+         fz_(first-2) = buff(-2)
       ENDIF
     END SUBROUTINE update_ghosts_z
 
 
     !> Generate an equidistant array from min to max with n points
     function linspace(min,max,n) result(out)
-      real(dp), INTENT(IN):: min, max
+      real(xp), INTENT(IN):: min, max
       integer,  INTENT(IN):: n
-      real(dp), dimension(n):: out
+      real(xp), dimension(n):: out
 
       do i=1,n
          out(i)=min+(i-1)*(max-min)/(n-1)
@@ -584,20 +588,20 @@ CONTAINS
     end function linspace
 
     !> Weighted average
-    real(dp) function average(var,weight)
-      real(dp), dimension(np), INTENT(IN):: var, weight
+    real(xp) function average(var,weight)
+      real(xp), dimension(np), INTENT(IN):: var, weight
       average=sum(var*weight)/sum(weight)
     end function average
 
     !> full theta integral with weight function dlp
-    real(dp) function dlp_int(var,dlp)
-      real(dp), dimension(np), INTENT(IN):: var, dlp
+    real(xp) function dlp_int(var,dlp)
+      real(xp), dimension(np), INTENT(IN):: var, dlp
       dlp_int=sum(var*dlp)*2*pi*Npol_ext/np
     end function dlp_int
 
     !> theta integral with weight function dlp, up to index 'ind'
-    real(dp) function dlp_int_ind(var,dlp,ind)
-      real(dp), dimension(np), INTENT(IN):: var, dlp
+    real(xp) function dlp_int_ind(var,dlp,ind)
+      real(xp), dimension(np), INTENT(IN):: var, dlp
       integer, INTENT(IN):: ind
 
       dlp_int_ind=0.
@@ -611,8 +615,8 @@ CONTAINS
     !> 1st derivative with 2nd order finite differences
     function deriv_fd(y,x,n) result(out)
       integer,                INTENT(IN) :: n
-      real(dp), dimension(n), INTENT(IN):: x,y
-      real(dp), dimension(n) :: out,dx
+      real(xp), dimension(n), INTENT(IN):: x,y
+      real(xp), dimension(n) :: out,dx
 
       !call lag3deriv(y,x,n,out,x,n)
 

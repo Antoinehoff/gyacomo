@@ -2,12 +2,13 @@ SUBROUTINE tesend
   !   Test for run completion
 
   USE basic
-
+  USE mpi
   use prec_const
+  USE parallel, ONLY: my_id
   IMPLICIT NONE
   LOGICAL :: mlend, mlexist
-  REAL(dp):: tnow
-  INTEGER :: ncheck_stop = 100
+  REAL    :: tnow
+  INTEGER :: ncheck_stop = 100, ierr
   CHARACTER(len=*), PARAMETER :: stop_file = 'mystop'
 
   !________________________________________________________________________________
@@ -16,25 +17,25 @@ SUBROUTINE tesend
   IF( mlend ) THEN
     nlend   = .TRUE.
     crashed = .TRUE.
-    IF (my_id .EQ. 0) WRITE(*,'(/a)') 'rhs are NaN/Inf'
-    IF (my_id .EQ. 0) WRITE(*,*) 'Run terminated at cstep=',cstep
+    CALL speak('rhs are NaN/Inf')
+    CALL speak('Run terminated at cstep='//str(cstep))
     RETURN
   END IF
 
   !________________________________________________________________________________
   !                   2.  Test on NRUN
-  nlend = step .GT. nrun
+  nlend = step .GE. nrun
   IF ( nlend ) THEN
-     WRITE(*,'(/a)') 'NRUN steps done'
+     CALL speak('NRUN steps done')
      RETURN
   END IF
 
 
   !________________________________________________________________________________
   !                   3.  Test on TMAX
-  nlend = time .GT. tmax
+  nlend = time .GE. tmax
   IF ( nlend ) THEN
-     IF (my_id .EQ. 0) WRITE(*,'(/a)') 'TMAX reached'
+     CALL speak('TMAX reached')
      RETURN
   END IF
   !
@@ -43,12 +44,12 @@ SUBROUTINE tesend
   !________________________________________________________________________________
   !                   4.  Test on run time
   CALL cpu_time(tnow)
-  mlend = (1.1*(tnow-start)) .GT. maxruntime
+  mlend = (1.1*(tnow-chrono_runt%tstart)) .GT. maxruntime
 
 
   CALL mpi_allreduce(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierr)
   IF ( nlend ) THEN
-     IF(my_id.EQ.0) WRITE(*,'(/a)') 'Max run time reached'
+     CALL speak('Max run time reached')
      RETURN
   END IF
   !________________________________________________________________________________
@@ -59,7 +60,7 @@ SUBROUTINE tesend
      IF( mlexist ) THEN
         OPEN(lu_stop, file=stop_file)
         mlend = mlexist ! Send stop status asa the file exists
-        WRITE(*,'(/a,i4,a)') 'Stop file found -> finishing..'
+        CALL speak('Stop file found -> finishing..')
         CLOSE(lu_stop, status='delete')
      END IF
   END IF

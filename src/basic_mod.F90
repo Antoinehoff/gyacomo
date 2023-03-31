@@ -1,75 +1,63 @@
 MODULE basic
   !   Basic module for time dependent problems
   use, intrinsic :: iso_c_binding
-  use prec_const
+  use prec_const, ONLY : xp
   IMPLICIT none
-
+  PRIVATE
   ! INCLUDE 'fftw3-mpi.f03'
+  ! INPUT PARAMETERS
+  INTEGER,  PUBLIC, PROTECTED :: nrun       = 1        ! Number of time steps to run
+  real(xp), PUBLIC, PROTECTED :: tmax       = 100000.0 ! Maximum simulation time
+  real(xp), PUBLIC, PROTECTED :: dt         = 1.0      ! Time step
+  real(xp), PUBLIC, PROTECTED :: maxruntime = 1e9      ! Maximum simulation CPU time
+  INTEGER,  PUBLIC, PROTECTED :: job2load   = 99       ! jobnum of the checkpoint to load
+  ! Auxiliary variables
+  real(xp), PUBLIC, PROTECTED :: time   = 0            ! Current simulation time (Init from restart file)
 
-  INTEGER  :: nrun   = 1           ! Number of time steps to run
-  real(dp) :: tmax   = 100000.0    ! Maximum simulation time
-  real(dp) :: dt     = 1.0         ! Time step
-  real(dp) :: time   = 0           ! Current simulation time (Init from restart file)
+  INTEGER, PUBLIC, PROTECTED  :: jobnum  = 0           ! Job number
+  INTEGER, PUBLIC, PROTECTED  :: step    = 0           ! Calculation step of this run
+  INTEGER, PUBLIC, PROTECTED  :: cstep   = 0           ! Current step number (Init from restart file)
+  LOGICAL, PUBLIC             :: nlend   = .FALSE.     ! Signal end of run
+  LOGICAL, PUBLIC             :: crashed = .FALSE.     ! Signal end of crashed run
 
-  INTEGER :: comm0                 ! Default communicator with a topology
-  INTEGER :: group0                ! Default group with a topology
-  INTEGER :: rank_0                ! Ranks in comm0
-  ! Communicators for 1-dim cartesian subgrids of comm0
-  INTEGER :: comm_p, comm_ky, comm_z
-  INTEGER :: rank_p, rank_ky, rank_z! Ranks
-  INTEGER :: comm_pz,  rank_pz      ! 2D comm for N_a(p,j,z) output (mspfile)
-  INTEGER :: comm_kyz, rank_kyz     ! 2D comm for N_a(p,j,z) output (mspfile)
-  INTEGER :: comm_ky0, rank_ky0     ! comm along ky with p=0
-  INTEGER :: comm_z0,  rank_z0      ! comm along z  with p=0
-
-  INTEGER :: group_ky0, group_z0
-
-  INTEGER :: jobnum  = 0           ! Job number
-  INTEGER :: step    = 0           ! Calculation step of this run
-  INTEGER :: cstep   = 0           ! Current step number (Init from restart file)
-  LOGICAL :: nlend   = .FALSE.     ! Signal end of run
-  LOGICAL :: crashed = .FALSE.     ! Signal end of crashed run
-
-  INTEGER :: ierr                  ! flag for MPI error
-  INTEGER :: my_id                 ! Rank in COMM_WORLD
-  INTEGER :: num_procs             ! number of MPI processes
-  INTEGER :: num_procs_p           ! Number of processes in p
-  INTEGER :: num_procs_ky          ! Number of processes in r
-  INTEGER :: num_procs_z           ! Number of processes in z
-  INTEGER :: num_procs_pz          ! Number of processes in pz comm
-  INTEGER :: num_procs_kyz         ! Number of processes in kyz comm
-  INTEGER :: nbr_L, nbr_R          ! Left and right neighbours (along p)
-  INTEGER :: nbr_T, nbr_B          ! Top and bottom neighbours (along kx)
-  INTEGER :: nbr_U, nbr_D          ! Upstream and downstream neighbours (along z)
-
-  INTEGER :: iframe0d              ! counting the number of times 0d datasets are outputed (for diagnose)
-  INTEGER :: iframe1d              ! counting the number of times 1d datasets are outputed (for diagnose)
-  INTEGER :: iframe2d              ! counting the number of times 2d datasets are outputed (for diagnose)
-  INTEGER :: iframe3d              ! counting the number of times 3d datasets are outputed (for diagnose)
-  INTEGER :: iframe5d              ! counting the number of times 5d datasets are outputed (for diagnose)
+  INTEGER, PUBLIC :: iframe0d ! counting the number of times 0d datasets are outputed (for diagnose)
+  INTEGER, PUBLIC :: iframe1d ! counting the number of times 1d datasets are outputed (for diagnose)
+  INTEGER, PUBLIC :: iframe2d ! counting the number of times 2d datasets are outputed (for diagnose)
+  INTEGER, PUBLIC :: iframe3d ! counting the number of times 3d datasets are outputed (for diagnose)
+  INTEGER, PUBLIC :: iframe5d ! counting the number of times 5d datasets are outputed (for diagnose)
 
   !  List of logical file units
-  INTEGER :: lu_in   = 90              ! File duplicated from STDIN
-  INTEGER :: lu_stop = 91              ! stop file, see subroutine TESEND
+  INTEGER, PUBLIC, PROTECTED  :: lu_in   = 90              ! File duplicated from STDIN
+  INTEGER, PUBLIC, PROTECTED  :: lu_stop = 91              ! stop file, see subroutine TESEND
 
   ! To measure computation time
-  real(dp) :: start, finish
-  real(dp) :: t0_rhs, t0_adv_field, t0_poisson, t0_Sapj, t0_diag, t0_checkfield,&
-              t0_step, t0_clos, t0_ghost, t0_coll, t0_process
-  real(dp) :: t1_rhs, t1_adv_field, t1_poisson, t1_Sapj, t1_diag, t1_checkfield,&
-              t1_step, t1_clos, t1_ghost, t1_coll, t1_process
-  real(dp) :: tc_rhs, tc_adv_field, tc_poisson, tc_Sapj, tc_diag, tc_checkfield,&
-              tc_step, tc_clos, tc_ghost, tc_coll, tc_process
-  real(dp) :: maxruntime = 1e9 ! Maximum simulation CPU time
+  type :: chrono
+    real(xp) :: tstart !start of the chrono
+    real(xp) :: tstop  !stop 
+    real(xp) :: ttot   !cumulative time
+  end type chrono
 
-  LOGICAL :: GATHERV_OUTPUT = .true.
+  type(chrono), PUBLIC, PROTECTED :: chrono_runt, chrono_mrhs, chrono_advf, chrono_pois, chrono_sapj,&
+   chrono_diag, chrono_chck, chrono_step, chrono_clos, chrono_ghst, chrono_coll, chrono_napj, chrono_grad
+
+  LOGICAL, PUBLIC, PROTECTED :: GATHERV_OUTPUT = .true.
+
+  PUBLIC :: allocate_array, basic_outputinputs,basic_data,&
+            speak, str, increase_step, increase_cstep, increase_time, display_h_min_s,&
+            set_basic_cp, daytim, start_chrono, stop_chrono
 
   INTERFACE allocate_array
-    MODULE PROCEDURE allocate_array_dp1,allocate_array_dp2,allocate_array_dp3,allocate_array_dp4, allocate_array_dp5, allocate_array_dp6
-    MODULE PROCEDURE allocate_array_dc1,allocate_array_dc2,allocate_array_dc3,allocate_array_dc4, allocate_array_dc5, allocate_array_dc6
+    MODULE PROCEDURE allocate_array_xp1,allocate_array_xp2,allocate_array_xp3, &
+                     allocate_array_xp4, allocate_array_xp5, allocate_array_xp6, allocate_array_xp7
+    MODULE PROCEDURE allocate_array_dc1,allocate_array_dc2,allocate_array_dc3, &
+                     allocate_array_dc4, allocate_array_dc5, allocate_array_dc6, allocate_array_dc7
     MODULE PROCEDURE allocate_array_i1,allocate_array_i2,allocate_array_i3,allocate_array_i4
     MODULE PROCEDURE allocate_array_l1,allocate_array_l2,allocate_array_l3,allocate_array_l4
   END INTERFACE allocate_array
+
+  INTERFACE str
+    MODULE PROCEDURE str_xp, str_int
+  END INTERFACE
 
 CONTAINS
   !================================================================================
@@ -79,36 +67,38 @@ CONTAINS
     use prec_const
     IMPLICIT NONE
 
-    NAMELIST /BASIC/  nrun, dt, tmax, maxruntime
+    NAMELIST /BASIC/  nrun, dt, tmax, maxruntime, job2load
 
     CALL find_input_file
 
     READ(lu_in,basic)
 
-    !Init cumulative timers
-    tc_rhs        = 0.
-    tc_poisson    = 0.
-    tc_Sapj       = 0.
-    tc_coll       = 0.
-    tc_process    = 0.
-    tc_adv_field  = 0.
-    tc_ghost      = 0.
-    tc_clos       = 0.
-    tc_checkfield = 0.
-    tc_diag       = 0.
-    tc_step       = 0.
+    !Init chronometers
+    chrono_mrhs%ttot = 0
+    chrono_pois%ttot = 0
+    chrono_sapj%ttot = 0
+    chrono_napj%ttot = 0
+    chrono_grad%ttot = 0
+    chrono_advf%ttot = 0
+    chrono_ghst%ttot = 0
+    chrono_clos%ttot = 0
+    chrono_chck%ttot = 0
+    chrono_diag%ttot = 0
+    chrono_step%ttot = 0
   END SUBROUTINE basic_data
 
 
-  SUBROUTINE basic_outputinputs(fid, str)
+  SUBROUTINE basic_outputinputs(fid)
     !
     !    Write the input parameters to the results_xx.h5 file
     !
     USE prec_const
-    USE futils, ONLY: attach
+    USE futils, ONLY: attach, creatd
     IMPLICIT NONE
     INTEGER, INTENT(in) :: fid
-    CHARACTER(len=256), INTENT(in) :: str
+    CHARACTER(len=256)  :: str
+    WRITE(str,'(a)') '/data/input/basic'
+    CALL creatd(fid, 0,(/0/),TRIM(str),'Basic Input')
     CALL attach(fid, TRIM(str), "start_iframe0d", iframe0d)
     CALL attach(fid, TRIM(str), "start_iframe2d", iframe2d)
     CALL attach(fid, TRIM(str), "start_iframe3d", iframe3d)
@@ -119,21 +109,59 @@ CONTAINS
     CALL attach(fid, TRIM(str),        "tmax",     tmax)
     CALL attach(fid, TRIM(str),        "nrun",     nrun)
     CALL attach(fid, TRIM(str),    "cpu_time",       -1)
-    CALL attach(fid, TRIM(str),       "Nproc",   num_procs)
-    CALL attach(fid, TRIM(str),       "Np_p" , num_procs_p)
-    CALL attach(fid, TRIM(str),       "Np_kx",num_procs_ky)
-    CALL attach(fid, TRIM(str),        "Np_z", num_procs_z)
   END SUBROUTINE basic_outputinputs
+  !! Increments private attributes
+  SUBROUTINE increase_step
+    IMPLICIT NONE
+    step  = step  + 1
+  END SUBROUTINE
+  SUBROUTINE increase_cstep
+    IMPLICIT NONE
+    cstep  = cstep  + 1
+  END SUBROUTINE
+  SUBROUTINE increase_time
+    IMPLICIT NONE
+    time  = time  + dt
+  END SUBROUTINE
+  SUBROUTINE set_basic_cp(cstep_cp,time_cp,jobnum_cp)
+    IMPLICIT NONE
+    REAL(xp), INTENT(IN) :: time_cp
+    INTEGER,  INTENT(IN) :: cstep_cp, jobnum_cp
+    cstep  = cstep_cp
+    time   = time_cp
+    jobnum = jobnum_cp+1
+  END SUBROUTINE
+  !! Chrono handling
+  SUBROUTINE start_chrono(timer)
+    IMPLICIT NONE
+    type(chrono) :: timer
+    CALL cpu_time(timer%tstart)
+  END SUBROUTINE
+  SUBROUTINE stop_chrono(timer)
+    IMPLICIT NONE
+    type(chrono) :: timer
+    CALL cpu_time(timer%tstop)
+    timer%ttot = timer%ttot + (timer%tstop-timer%tstart)
+  END SUBROUTINE
+  !================================================================================
+  ! routine to speak in the terminal
+  SUBROUTINE speak(message)
+    USE parallel, ONLY: my_id
+    IMPLICIT NONE
+    CHARACTER(len=*), INTENT(in) :: message
+    IF(my_id .EQ. 0) write(*,*) message
+  END SUBROUTINE
   !================================================================================
   SUBROUTINE find_input_file
+    USE parallel, ONLY: my_id
     IMPLICIT NONE
-    CHARACTER(len=32) :: str, input_file
-    INTEGER :: nargs, fileid, l
+    CHARACTER(len=32) :: str_, input_file
+    INTEGER :: nargs, fileid, l, ierr
     LOGICAL :: mlexist
     nargs = COMMAND_ARGUMENT_COUNT()
     IF((nargs .EQ. 1) .OR. (nargs .EQ. 4)) THEN
-      CALL GET_COMMAND_ARGUMENT(nargs, str, l, ierr)
-      READ(str(1:l),'(i3)')  fileid
+      CALL GET_COMMAND_ARGUMENT(nargs, str_, l, ierr)
+      READ(str_(1:l),'(i3)')  fileid
       WRITE(input_file,'(a,a1,i2.2,a3)') 'fort','_',fileid,'.90'
 
       INQUIRE(file=input_file, exist=mlexist)
@@ -149,7 +177,7 @@ CONTAINS
   !================================================================================
   SUBROUTINE daytim(str)
     !   Print date and time
-
+    USE parallel, ONLY: my_id
     use prec_const
     IMPLICIT NONE
 
@@ -160,13 +188,16 @@ CONTAINS
     CALL DATE_AND_TIME(d,t)
     dat=d(7:8) // '/' // d(5:6) // '/' // d(1:4)
     time=t(1:2) // ':' // t(3:4) // ':' // t(5:10)
-    WRITE(*,'(a,1x,a,1x,a)') str, dat(1:10), time(1:12)
+    IF (my_id .EQ. 0) &
+      WRITE(*,'(a,1x,a,1x,a)') str, dat(1:10), time(1:12)
     !
   END SUBROUTINE daytim
   !================================================================================
   SUBROUTINE display_h_min_s(time)
-    real(dp) :: time
-    integer :: days, hours, mins, secs
+    USE parallel, ONLY: my_id
+    IMPLICIT NONE
+    real(xp) :: time
+    integer  :: days, hours, mins, secs
     days = FLOOR(time/24./3600.);
     hours= FLOOR(time/3600.);
     mins = FLOOR(time/60.);
@@ -197,103 +228,135 @@ CONTAINS
   END SUBROUTINE display_h_min_s
 !================================================================================
 
+  function str_xp(k) result( str_ )
+  !   "Convert an integer to string."
+      REAL(xp), intent(in) :: k
+      character(len=10):: str_
+      write (str_, "(G10.2)") k
+      str_ = adjustl(str_)
+  end function str_xp
+
+  function str_int(k) result( str_ )
+  !   "Convert an integer to string."
+      integer, intent(in) :: k
+      character(len=10)   :: str_
+      write (str_, "(i2.2)") k
+      str_ = adjustl(str_)
+  end function str_int
+
 ! To allocate arrays of doubles, integers, etc. at run time
-  SUBROUTINE allocate_array_dp1(a,is1,ie1)
+  SUBROUTINE allocate_array_xp1(a,is1,ie1)
     IMPLICIT NONE
-    real(dp), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a
+    real(xp), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1
     ALLOCATE(a(is1:ie1))
-    a=0.0_dp
-  END SUBROUTINE allocate_array_dp1
+    a=0.0_xp
+  END SUBROUTINE allocate_array_xp1
 
-  SUBROUTINE allocate_array_dp2(a,is1,ie1,is2,ie2)
+  SUBROUTINE allocate_array_xp2(a,is1,ie1,is2,ie2)
     IMPLICIT NONE
-    real(dp), DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    real(xp), DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2
     ALLOCATE(a(is1:ie1,is2:ie2))
-    a=0.0_dp
-  END SUBROUTINE allocate_array_dp2
+    a=0.0_xp
+  END SUBROUTINE allocate_array_xp2
 
-  SUBROUTINE allocate_array_dp3(a,is1,ie1,is2,ie2,is3,ie3)
+  SUBROUTINE allocate_array_xp3(a,is1,ie1,is2,ie2,is3,ie3)
     IMPLICIT NONE
-    real(dp), DIMENSION(:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    real(xp), DIMENSION(:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3))
-    a=0.0_dp
-  END SUBROUTINE allocate_array_dp3
+    a=0.0_xp
+  END SUBROUTINE allocate_array_xp3
 
-  SUBROUTINE allocate_array_dp4(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4)
+  SUBROUTINE allocate_array_xp4(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4)
     IMPLICIT NONE
-    real(dp), DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    real(xp), DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4))
-    a=0.0_dp
-  END SUBROUTINE allocate_array_dp4
+    a=0.0_xp
+  END SUBROUTINE allocate_array_xp4
 
-  SUBROUTINE allocate_array_dp5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
+  SUBROUTINE allocate_array_xp5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
     IMPLICIT NONE
-    real(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    real(xp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
-    a=0.0_dp
-  END SUBROUTINE allocate_array_dp5
+    a=0.0_xp
+  END SUBROUTINE allocate_array_xp5
 
-  SUBROUTINE allocate_array_dp6(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6)
+  SUBROUTINE allocate_array_xp6(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6)
     IMPLICIT NONE
-    real(dp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    real(xp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5,is6:ie6))
-    a=0.0_dp
-  END SUBROUTINE allocate_array_dp6
+    a=0.0_xp
+  END SUBROUTINE allocate_array_xp6
+
+  SUBROUTINE allocate_array_xp7(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6,is7,ie7)
+    IMPLICIT NONE
+    REAL(xp), DIMENSION(:,:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6,is7,ie7
+    ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5,is6:ie6,is7:ie7))
+    a=0.0_xp
+  END SUBROUTINE allocate_array_xp7
   !========================================
 
   SUBROUTINE allocate_array_dc1(a,is1,ie1)
     IMPLICIT NONE
-    DOUBLE COMPLEX, DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a
+    COMPLEX(xp), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1
     ALLOCATE(a(is1:ie1))
-    a=CMPLX(0.0_dp,0.0_dp)
+    a=CMPLX(0.0_xp,0.0_xp)
   END SUBROUTINE allocate_array_dc1
 
   SUBROUTINE allocate_array_dc2(a,is1,ie1,is2,ie2)
     IMPLICIT NONE
-    DOUBLE COMPLEX, DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2
     ALLOCATE(a(is1:ie1,is2:ie2))
-    a=CMPLX(0.0_dp,0.0_dp)
+    a=CMPLX(0.0_xp,0.0_xp)
   END SUBROUTINE allocate_array_dc2
 
   SUBROUTINE allocate_array_dc3(a,is1,ie1,is2,ie2,is3,ie3)
     IMPLICIT NONE
-    DOUBLE COMPLEX, DIMENSION(:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    COMPLEX(xp), DIMENSION(:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3))
-    a=CMPLX(0.0_dp,0.0_dp)
+    a=CMPLX(0.0_xp,0.0_xp)
   END SUBROUTINE allocate_array_dc3
 
   SUBROUTINE allocate_array_dc4(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4)
     IMPLICIT NONE
-    DOUBLE COMPLEX, DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    COMPLEX(xp), DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4))
-    a=CMPLX(0.0_dp,0.0_dp)
+    a=CMPLX(0.0_xp,0.0_xp)
   END SUBROUTINE allocate_array_dc4
 
   SUBROUTINE allocate_array_dc5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
     IMPLICIT NONE
-    DOUBLE COMPLEX, DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    COMPLEX(xp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
-    a=CMPLX(0.0_dp,0.0_dp)
+    a=CMPLX(0.0_xp,0.0_xp)
   END SUBROUTINE allocate_array_dc5
 
   SUBROUTINE allocate_array_dc6(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6)
     IMPLICIT NONE
-    DOUBLE COMPLEX, DIMENSION(:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    COMPLEX(xp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5,is6:ie6))
-    a=CMPLX(0.0_dp,0.0_dp)
+    a=CMPLX(0.0_xp,0.0_xp)
   END SUBROUTINE allocate_array_dc6
+
+  SUBROUTINE allocate_array_dc7(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6,is7,ie7)
+    IMPLICIT NONE
+    COMPLEX(xp), DIMENSION(:,:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6,is7,ie7
+    ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5,is6:ie6,is7:ie7))
+    a=CMPLX(0.0_xp,0.0_xp)
+  END SUBROUTINE allocate_array_dc7
   !========================================
 
   SUBROUTINE allocate_array_i1(a,is1,ie1)
@@ -330,7 +393,7 @@ CONTAINS
 
   SUBROUTINE allocate_array_i5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
     IMPLICIT NONE
-    real(dp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
+    INTEGER, DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
     a=0

@@ -1,59 +1,39 @@
 % Directory of the code "mypathtogyacomo/gyacomo/"
 % Partition of the computer where the data have to be searched
-PARTITION  = '/misc/gyacomo_outputs/';
+% PARTITION  = '/misc/gyacomo23_outputs/';
+% PARTITION  = gyacomodir;
+PARTITION = '/home/ahoffman/gyacomo/';
+%% CBC 
+% resdir = 'paper_2_GYAC23/CBC/7x4x192x96x32_nu_0.05_muxy_0.5_muz_0.2';
+% resdir = 'paper_2_GYAC23/CBC/7x4x192x96x32_nu_0.05_muxy_1.0_muz_1.0';
+% resdir = 'paper_2_GYAC23/CBC/7x4x192x96x32_nu_0.05_muxy_1.0_muz_2.0';
+% resdir = 'paper_2_GYAC23/CBC/Full_NL_7x4x192x96x32_nu_0.05_muxy_1.0_muz_2.0';
 
-%% Scan kT
-resdirs = {...
-'paper_2_nonlinear/kT_scan_nu_1e-3/5x3x128x64x24_dp', ...
-'paper_2_nonlinear/kT_scan_nu_1e-3/5x3x192x96x32_dp', ...
-'paper_2_nonlinear/kT_scan_nu_1e-3/7x4x128x64x24_dp', ...
-'paper_2_nonlinear/kT_scan_nu_1e-3/7x4x192x96x32_dp', ...
-};
+%% tests single vs double precision
+% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24';
+% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_dp';
+% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_sp';
+% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_sp_clos_1';
+% resdir = 'paper_2_GYAC23/precision_study/3x2x128x64x24_sp_muz_2.0';
+% resdir = 'paper_2_GYAC23/precision_study/test_3x2x128x64x24_sp_muz_2.0';
+% resdir = 'paper_2_GYAC23/precision_study/3x2x128x64x24_sp_clos_1';
 
-%% Scan nu, kT = 5.3
-% resdirs = {...
-% 'paper_2_nonlinear/nu_scan_kT_5.3/FCGK_5x3x128x64x24_dp', ...
-% 'paper_2_nonlinear/nu_scan_kT_5.3/DGGK_7x4x128x64x24_dp', ...
-% 'paper_2_nonlinear/nu_scan_kT_5.3/SGGK_7x4x128x64x24_dp', ...
-% };
+%% 
+% resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0';
+% resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0_full_NL';
+% resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0_muxy_0';
 
+resdir = 'testcases/zpinch_example';
 
-%%
-figure
-hold on
-for i = 1:numel(resdirs)
-    J0 = 00; J1 = 10;
+ %%
+J0 = 00; J1 = 10;
 
-    % Load basic info (grids and time traces)
-    DATADIR = [PARTITION,resdirs{i},'/'];
-    data    = {};
-    data    = compile_results_low_mem(data,DATADIR,J0,J1);
-    
-    % plot heat flux
-    subplot(1,2,1)
-    hold on
-    plot(data.Ts0D,data.HFLUX_X,'DisplayName',data.paramshort);
-    
-    % statistical transport averaging
-    Gavg =[]; Gstd = [];
-    Qavg =[]; Qstd = [];
-    for i_ = 1:2:numel(data.TJOB_SE) 
-    disp([num2str(data.TJOB_SE(i_)),' ',num2str(data.TJOB_SE(i_+1))])
-    disp([num2str(data.NU_EVOL(i_)),' ',num2str(data.NU_EVOL(i_+1))])
-    options.T = [data.TJOB_SE(i_)*1.2 data.TJOB_SE(i_+1)];
-    options.NPLOTS = 0;
-    [fig, res] = statistical_transport_averaging(data,options);
-    Gavg = [Gavg res.Gx_avg]; Gstd = [Gstd res.Gx_std];
-    Qavg = [Qavg res.Qx_avg]; Qstd = [Qstd res.Qx_std];
-    end
-    subplot(1,2,2)
-    hold on
-    errorbar(data.K_T_EVOL(2:2:end),Qavg,Qstd,'--s','DisplayName',data.paramshort);xlabel('$\kappa_T$'); 
-%     errorbar(data.NU_EVOL(2:2:end),Qavg,Qstd,'--s','DisplayName',data.paramshort);xlabel('$\nu$'); 
-    ylabel('$Q_x^\infty$');
-end
+% Load basic info (grids and time traces)
+DATADIR = [PARTITION,resdir,'/'];
+data    = {};
+data    = compile_results_low_mem(data,DATADIR,J0,J1);
 
-if 0
+if 1
 %% Plot transport and phi radial profile
 [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 
@@ -91,4 +71,40 @@ data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
 create_film(data,options,'.gif')
+end
+
+if 0
+%% Performance profiler
+profiler(data)
+end
+
+if 0
+%% Hermite-Laguerre spectrum
+[data.Nipjz, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'Nipjz');
+data.Nipjz = log(data.Nipjz);
+% options.TIME = 'avg';
+options.P2J        = 0;
+options.ST         = 1;
+options.NORMALIZED = 0;
+options.TIME       = [500:800];
+fig = show_moments_spectrum(data,options);
+% fig = show_napjz(data,options);
+% save_figure(data,fig,'.png');
+end
+
+if 0
+%% Mode evolution
+[data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
+
+options.NORMALIZED = 0;
+options.TIME   = [000:9000];
+options.KX_TW  = [1 20]; %kx Growth rate time window
+options.KY_TW  = [0 20];  %ky Growth rate time window
+options.NMA    = 1;
+options.NMODES = 800;
+options.iz     = 'avg'; % avg or index
+options.ik     = 1; % sum, max or index
+options.fftz.flag = 0;
+fig = mode_growth_meter(data,options);
+% save_figure(data,fig,'.png')
 end

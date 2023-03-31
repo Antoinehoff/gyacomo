@@ -1,41 +1,40 @@
 &BASIC
-  nrun   = 1
+  nrun   = 99999999
   dt     = 0.01
   tmax   = 5
   maxruntime = 356400
 /
 &GRID
-  pmaxe  = 2
+  pmaxe  = 4
   jmaxe  = 1
-  pmaxi  = 2
+  pmaxi  = 4
   jmaxi  = 1
-  Nx     = 2
+  Nx     = 16
   Lx     = 200
-  Ny     = 2
+  Ny     = 12
   Ly     = 60
-  Nz     = 64
+  Nz     = 6
   SG     = .f.
 /
 &GEOMETRY
   geom   = 's-alpha'
   q0     = 1.4
-  shear  = 0.8
+  shear  = 0.0
   eps    = 0.18
   parallel_bc = 'dirichlet'
 /
 &OUTPUT_PAR
-  nsave_0d = 1
+  nsave_0d = 50
   nsave_1d = -1
   nsave_2d = -1
-  nsave_3d = 1
-  nsave_5d = 1
+  nsave_3d = 100
+  nsave_5d = 500
   write_doubleprecision = .f.
   write_gamma = .t.
   write_hf    = .t.
   write_phi   = .t.
-  write_Na00  = .f.
+  write_Na00  = .t.
   write_Napj  = .t.
-  write_Sapj  = .f.
   write_dens  = .t.
   write_temp  = .t.
   job2load    = -1
@@ -44,15 +43,16 @@
   ! Collisionality
   CLOS    = 0
   NL_CLOS = -1
-  LINEARITY = 'linear'
-  KIN_E   = .f.
-  mu_x    = 0.0
-  mu_y    = 0.0
+  LINEARITY = 'nonlinear'
+  KIN_E   = .t.
+  mu_x    = 0.2
+  mu_y    = 0.4
   N_HD    = 4
-  mu_z    = 0.1
-  mu_p    = 0
-  mu_j    = 0
-  nu      = 1
+  mu_z    = 0.6
+  HYP_V   = 'hypcoll'
+  mu_p    = 0.1
+  mu_j    = 0.5
+  nu      = 1.0
   tau_e   = 1
   tau_i   = 1
   sigma_e = 0.023338
@@ -60,19 +60,19 @@
   q_e     = -1
   q_i     = 1
   K_Ne    = 1!6.96
-  K_Te    = 1!2.22
-  K_Ni    = 1!6.96
-  K_Ti    = 1!2.22
-  beta    = 0
+  K_Te    = 2!2.22
+  K_Ni    = 3!6.96
+  K_Ti    = 4!2.22
+  beta    = 0.1
 /
 &COLLISION_PAR
   collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
-  gyrokin_CO      = .f.
+  gyrokin_CO      = .t.
   interspecies    = .true.
-  !mat_file        = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
+  mat_file        = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /
 &INITIAL_CON
-  INIT_OPT    = 'phi'
+  INIT_OPT    = 'blob'
   ACT_ON_MODES       = 'donothing'
   init_background  = 1.0
   init_noiselvl = 0.0

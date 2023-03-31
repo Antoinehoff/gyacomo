@@ -40,7 +40,7 @@ JOB2LOAD= -1;
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
 CO      = 'SG';
 GKCO    = 1; % gyrokinetic operator
-ABCO    = 1; % interspecies collisions
+ABCO    = 1; % INTERSPECIES collisions
 NL_CLOS = 0;   % nonlinear closure model (-2: nmax = jmax, -1: nmax = jmax-j, >=0 : nmax = NL_CLOS)
 SIMID   = 'kobayashi_2015_fig1';  % Name of the simulation
 % SIMID   = 'debug';  % Name of the simulation

@@ -58,8 +58,8 @@ MODEL.k_cB   = k_cB;      % Magnetic curvature
 MODEL.lambdaD = LAMBDAD;
 % Collision parameters
 COLL.collision_model = ['''',CO,''''];
-if (GKCO); COLL.gyrokin_CO = '.true.'; else; COLL.gyrokin_CO = '.false.';end;
-if (ABCO); COLL.interspecies = '.true.'; else; COLL.interspecies = '.false.';end;
+if (GKCO); COLL.GK_CO = '.true.'; else; COLL.GK_CO = '.false.';end;
+if (ABCO); COLL.INTERSPECIES = '.true.'; else; COLL.INTERSPECIES = '.false.';end;
 COLL.mat_file   = '''null''';
 switch CO
     case 'SG'

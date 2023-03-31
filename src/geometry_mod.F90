@@ -1,33 +1,26 @@
 module geometry
 ! computes geometrical quantities
 ! Adapted from B.J.Frei MOLIX code (2021)
-
-  use prec_const
-  use model
-  use grid
-  use array
-  use fields
-  use basic
-  use calculus, ONLY: simpson_rule_z
-  use miller, ONLY: set_miller_parameters, get_miller
+  use prec_const, ONLY: xp
 implicit none
   PRIVATE
   ! Geometry input parameters
   CHARACTER(len=16), &
                PUBLIC, PROTECTED :: geom      = 's-alpha'
-  REAL(dp),    PUBLIC, PROTECTED :: q0        = 1.4_dp  ! safety factor
-  REAL(dp),    PUBLIC, PROTECTED :: shear     = 0._dp   ! magnetic field shear
-  REAL(dp),    PUBLIC, PROTECTED :: eps       = 0.18_dp ! inverse aspect ratio
-  REAL(dp),    PUBLIC, PROTECTED :: alpha_MHD = 0 ! shafranov shift effect alpha = -q2 R dbeta/dr
+  REAL(xp),    PUBLIC, PROTECTED :: q0        = 1.4_xp  ! safety factor
+  REAL(xp),    PUBLIC, PROTECTED :: shear     = 0._xp   ! magnetic field shear
+  REAL(xp),    PUBLIC, PROTECTED :: eps       = 0.18_xp ! inverse aspect ratio
+  REAL(xp),    PUBLIC, PROTECTED :: alpha_MHD = 0 ! shafranov shift effect alpha = -q2 R dbeta/dr
   ! parameters for Miller geometry
-  REAL(dp),    PUBLIC, PROTECTED :: kappa     = 1._dp ! elongation (1 for circular)
-  REAL(dp),    PUBLIC, PROTECTED :: s_kappa   = 0._dp ! r normalized derivative skappa = r/kappa dkappa/dr
-  REAL(dp),    PUBLIC, PROTECTED :: delta     = 0._dp ! triangularity
-  REAL(dp),    PUBLIC, PROTECTED :: s_delta   = 0._dp ! '' sdelta = r/sqrt(1-delta2) ddelta/dr
-  REAL(dp),    PUBLIC, PROTECTED :: zeta      = 0._dp ! squareness
-  REAL(dp),    PUBLIC, PROTECTED :: s_zeta    = 0._dp ! '' szeta = r dzeta/dr
+  REAL(xp),    PUBLIC, PROTECTED :: kappa     = 1._xp ! elongation (1 for circular)
+  REAL(xp),    PUBLIC, PROTECTED :: s_kappa   = 0._xp ! r normalized derivative skappa = r/kappa dkappa/dr
+  REAL(xp),    PUBLIC, PROTECTED :: delta     = 0._xp ! triangularity
+  REAL(xp),    PUBLIC, PROTECTED :: s_delta   = 0._xp ! '' sdelta = r/sqrt(1-delta2) ddelta/dr
+  REAL(xp),    PUBLIC, PROTECTED :: zeta      = 0._xp ! squareness
+  REAL(xp),    PUBLIC, PROTECTED :: s_zeta    = 0._xp ! '' szeta = r dzeta/dr
   ! to apply shift in the parallel z-BC if shearless
-  REAL(dp),    PUBLIC, PROTECTED :: shift_y   = 0._dp ! for Arno
+  REAL(xp),    PUBLIC, PROTECTED :: shift_y   = 0._xp ! for Arno <3
+  INTEGER,     PUBLIC, PROTECTED :: Npol      = 1         ! number of poloidal turns
   ! Chooses the type of parallel BC we use for the unconnected kx modes (active for non-zero shear only)
   !  'periodic'     : Connect a disconnected kx to a mode on the other cadran
   !  'dirichlet'    : Connect a disconnected kx to 0
@@ -37,39 +30,39 @@ implicit none
                PUBLIC, PROTECTED :: parallel_bc
 
   ! GENE unused additional parameters for miller_mod
-  REAL(dp), PUBLIC, PROTECTED :: edge_opt      = 0._dp ! meant to redistribute the points in z
-  REAL(dp), PUBLIC, PROTECTED :: major_R       = 1._dp ! major radius
-  REAL(dp), PUBLIC, PROTECTED :: major_Z       = 0._dp ! vertical elevation
-  REAL(dp), PUBLIC, PROTECTED :: dpdx_pm_geom  = 0._dp ! amplitude mag. eq. pressure grad.
-  REAL(dp), PUBLIC, PROTECTED ::          C_y  = 0._dp ! defines y coordinate : Cy (q theta - phi)
-  REAL(dp), PUBLIC, PROTECTED ::         C_xy  = 1._dp ! defines x coordinate : B = Cxy Vx x Vy
+  REAL(xp), PUBLIC, PROTECTED :: edge_opt      = 0._xp ! meant to redistribute the points in z
+  REAL(xp), PUBLIC, PROTECTED :: major_R       = 1._xp ! major radius
+  REAL(xp), PUBLIC, PROTECTED :: major_Z       = 0._xp ! vertical elevation
+  REAL(xp), PUBLIC, PROTECTED :: xpdx_pm_geom  = 0._xp ! amplitude mag. eq. pressure grad.
+  REAL(xp), PUBLIC, PROTECTED ::          C_y  = 0._xp ! defines y coordinate : Cy (q theta - phi)
+  REAL(xp), PUBLIC, PROTECTED ::         C_xy  = 1._xp ! defines x coordinate : B = Cxy Vx x Vy
 
   ! Geometrical auxiliary variables
   LOGICAL,     PUBLIC, PROTECTED :: SHEARED  = .false. ! flag for shear magn. geom or not
   ! Curvature
-  REAL(dp),    PUBLIC, DIMENSION(:,:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z, odd/even p
+  REAL(xp),    PUBLIC, DIMENSION(:,:,:,:), ALLOCATABLE :: Ckxky  ! dimensions: kx, ky, z, odd/even p
   ! Jacobian
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: Jacobian ! dimensions: z, odd/even p
-  COMPLEX(dp), PUBLIC, PROTECTED        :: iInt_Jacobian ! Inverse integrated Jacobian
+  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: Jacobian ! dimensions: z, odd/even p
+  COMPLEX(xp), PUBLIC, PROTECTED        :: iInt_Jacobian ! Inverse integrated Jacobian
   ! Metric
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: gxx, gxy, gxz, gyy, gyz, gzz ! dimensions: z, odd/even p
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dxdr, dxdZ, Rc, phic, Zc
+  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: gxx, gxy, gxz, gyy, gyz, gzz ! dimensions: z, odd/even p
+  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dxdr, dxdZ, Rc, phic, Zc
   ! derivatives of magnetic field strength
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dBdx, dBdy, dBdz, dlnBdz
+  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dBdx, dBdy, dBdz, dlnBdz
   ! Relative magnetic field strength
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatB
+  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatB
   ! Relative strength of major radius
-  REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatR, hatZ
+  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatR, hatZ
   ! Some geometrical coefficients
-  REAL(dp),    PUBLIC, DIMENSION(:,:) , ALLOCATABLE :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
+  REAL(xp),    PUBLIC, DIMENSION(:,:) , ALLOCATABLE :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
   ! Array to map the index of mode (kx,ky,-pi) to (kx+2pi*s*ky,ky,pi) for sheared periodic boundary condition
   INTEGER,     PUBLIC, DIMENSION(:,:), ALLOCATABLE :: ikx_zBC_L, ikx_zBC_R
   ! Geometric factor in front of the parallel phi derivative (not implemented)
-  ! REAL(dp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: Gamma_phipar
+  ! REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: Gamma_phipar
   ! pb_phase, for parallel boundary phase, contains the factor that occurs when taking into account
   !   that q0 is defined in the middle of the fluxtube whereas the radial position spans in [0,Lx)
   !   This shift introduces a (-1)^(Nexc*iky) phase change that is included in GENE
-  COMPLEX(dp), PUBLIC, DIMENSION(:),   ALLOCATABLE :: pb_phase_L, pb_phase_R
+  COMPLEX(xp), PUBLIC, DIMENSION(:),   ALLOCATABLE :: pb_phase_L, pb_phase_R
 
   ! Functions
   PUBLIC :: geometry_readinputs, geometry_outputinputs,&
@@ -78,13 +71,14 @@ CONTAINS
 
 
   SUBROUTINE geometry_readinputs
+    USE basic, ONLY: lu_in, speak
     ! Read the input parameters
     IMPLICIT NONE
     NAMELIST /GEOMETRY/ geom, q0, shear, eps,&
       kappa, s_kappa,delta, s_delta, zeta, s_zeta,& ! For miller
-      parallel_bc, shift_y
+      parallel_bc, shift_y, Npol
     READ(lu_in,geometry)
-    IF(shear .NE. 0._dp) SHEARED = .true.
+    IF(shear .NE. 0._xp) SHEARED = .true.
     SELECT CASE(parallel_bc)
       CASE ('dirichlet')
       CASE ('periodic')
@@ -94,40 +88,49 @@ CONTAINS
       CASE DEFAULT
         ERROR STOP '>> ERROR << Parallel BC not recognized'
     END SELECT
-    IF(my_id .EQ. 0) print*, 'Parallel BC : ', parallel_bc
+    CALL speak('Parallel BC : '//parallel_bc)
 
   END SUBROUTINE geometry_readinputs
 
   subroutine eval_magnetic_geometry
+    USE grid,     ONLY: total_nky, total_nz, local_nkx, local_nky, local_nz, Ngz,&
+                        kxarray, kyarray, set_kparray, nzgrid, zweights_SR, ieven
+    USE basic,    ONLY: speak
+    USE miller,   ONLY: set_miller_parameters, get_miller
+    USE calculus, ONLY: simpson_rule_z
     ! evalute metrix, elementwo_third_kpmaxts, jacobian and gradient
     implicit none
-    REAL(dp) :: kx,ky
-    COMPLEX(dp), DIMENSION(izs:ize) :: integrant
-    real(dp) :: G1,G2,G3,Cx,Cy
+    REAL(xp) :: kx,ky
+    COMPLEX(xp), DIMENSION(local_nz) :: integrant
+    real(xp) :: G1,G2,G3,Cx,Cy
+    INTEGER  :: eo,iz,iky,ikx
 
     ! Allocate arrays
-    CALL geometry_allocate_mem
+    CALL geometry_allocate_mem(local_nky,local_nkx,local_nz,Ngz,nzgrid)
     !
-    IF( (Ny .EQ. 1) .AND. (Nz .EQ. 1)) THEN !1D perp linear run
-      IF( my_id .eq. 0 ) WRITE(*,*) '1D perpendicular geometry'
+    IF( (total_nky .EQ. 1) .AND. (total_nz .EQ. 1)) THEN !1D perp linear run
+      CALL speak('1D perpendicular geometry')
       call eval_1D_geometry
     ELSE
       SELECT CASE(geom)
         CASE('s-alpha')
-          IF( my_id .eq. 0 ) WRITE(*,*) 's-alpha geometry'
+          CALL speak('s-alpha geometry')
           call eval_salpha_geometry
         CASE('Z-pinch','z-pinch','Zpinch','zpinch')
-          IF( my_id .eq. 0 ) WRITE(*,*) 'Z-pinch geometry'
+          CALL speak('Z-pinch geometry')
           call eval_zpinch_geometry
           SHEARED = .FALSE.
-          shear   = 0._dp
+          shear   = 0._xp
+          q0      = 0._xp
+          eps     = 0._xp
+          kappa   = 1._xp
         CASE('miller')
-          IF( my_id .eq. 0 ) WRITE(*,*) 'Miller geometry'
+          CALL speak('Miller geometry')
           call set_miller_parameters(kappa,s_kappa,delta,s_delta,zeta,s_zeta)
-          call get_miller(eps,major_R,major_Z,q0,shear,alpha_MHD,edge_opt,&
-               C_y,C_xy,dpdx_pm_geom,gxx,gyy,gzz,gxy,gxz,gyz,&
-               dBdx,dBdy,hatB,jacobian,dBdz,hatR,hatZ,dxdR,dxdZ,&
-               Ckxky,gradz_coeff)
+          call get_miller(eps,major_R,major_Z,q0,shear,Npol,alpha_MHD,edge_opt,&
+                          C_y,C_xy,xpdx_pm_geom,gxx,gyy,gzz,gxy,gxz,gyz,&
+                          dBdx,dBdy,hatB,jacobian,dBdz,hatR,hatZ,dxdR,dxdZ,&
+                          Ckxky,gradz_coeff)
         CASE DEFAULT
           ERROR STOP '>> ERROR << geometry not recognized!!'
         END SELECT
@@ -136,82 +139,69 @@ CONTAINS
     ! Evaluate perpendicular wavenumber
     !  k_\perp^2 = g^{xx} k_x^2 + 2 g^{xy}k_x k_y + k_y^2 g^{yy}
     !  normalized to rhos_
-    DO eo = 0,1
-      DO iz = izgs,izge
-        DO iky = ikys, ikye
-          ky = kyarray(iky)
-          DO ikx = ikxs, ikxe
-            kx = kxarray(ikx)
-            ! there is a factor 1/B from the normalization; important to match GENE
-            ! this factor comes from $b_a$ argument in the Bessel. Kperp is not used otherwise.
-            kparray(iky, ikx, iz, eo) = &
-            SQRT( gxx(iz,eo)*kx**2 + 2._dp*gxy(iz,eo)*kx*ky + gyy(iz,eo)*ky**2)/ hatB(iz,eo)
-          ENDDO
-        ENDDO
-      ENDDO
+    CALL set_kparray(gxx,gxy,gyy,hatB)
+    DO eo = 1,nzgrid
       ! Curvature operator (Frei et al. 2022 eq 2.15)
-      DO iz = izgs,izge
+      DO iz = 1,local_nz+Ngz
         G1 = gxx(iz,eo)*gyy(iz,eo)-gxy(iz,eo)*gxy(iz,eo)
         G2 = gxx(iz,eo)*gyz(iz,eo)-gxy(iz,eo)*gxz(iz,eo)
         G3 = gxy(iz,eo)*gyz(iz,eo)-gyy(iz,eo)*gxz(iz,eo)
         ! Here we divide by hatB because our equation is formulated with grad(lnB) terms (not gradB like in GENE)
         Cx =-(dBdy(iz,eo) + G2/G1*dBdz(iz,eo))/hatB(iz,eo)
         Cy = (dBdx(iz,eo) - G3/G1*dBdz(iz,eo))/hatB(iz,eo)
-
-        DO iky = ikys, ikye
+        DO iky = 1,local_nky
           ky = kyarray(iky)
-           DO ikx= ikxs, ikxe
+           DO ikx= 1,local_nkx
              kx = kxarray(ikx)
              Ckxky(iky, ikx, iz,eo) = (Cx*kx + Cy*ky)/C_xy
            ENDDO
         ENDDO
         ! coefficient in the front of parallel derivative
-        gradz_coeff(iz,eo) = 1._dp /(jacobian(iz,eo)*hatB(iz,eo))
+        gradz_coeff(iz,eo) = 1._xp /(jacobian(iz,eo)*hatB(iz,eo))
         ! d/dz(ln B) to correspond to the formulation in paper 2023
         dlnBdz(iz,eo)      = dBdz(iz,eo)/hatB(iz,eo)
         ! Geometric factor in front to the maxwellian dzphi term (not implemented)
         ! Gamma_phipar(iz,eo) = G2/G1
       ENDDO
     ENDDO
-
-
+    !
     ! set the mapping for parallel boundary conditions
     CALL set_ikx_zBC_map
-
-    two_third_kpmax = 2._dp/3._dp * MAXVAL(kparray)
     !
     ! Compute the inverse z integrated Jacobian (useful for flux averaging)
-    integrant = Jacobian(izs:ize,0) ! Convert into complex array
-    CALL simpson_rule_z(integrant,iInt_Jacobian)
-    iInt_Jacobian = 1._dp/iInt_Jacobian ! reverse it
+    integrant = Jacobian((1+ngz/2):(local_nz+ngz/2),ieven) ! Convert into complex array
+    CALL simpson_rule_z(local_nz,zweights_SR,integrant,iInt_Jacobian)
+    iInt_Jacobian = 1._xp/iInt_Jacobian ! reverse it
   END SUBROUTINE eval_magnetic_geometry
   !
   !--------------------------------------------------------------------------------
   !
 
   SUBROUTINE eval_salpha_geometry
+    USE grid, ONLY : local_nz,Ngz,zarray,nzgrid
   ! evaluate s-alpha geometry model
   implicit none
-  REAL(dp) :: z
-  alpha_MHD = 0._dp
+  REAL(xp) :: z
+  INTEGER  :: iz, eo
+  alpha_MHD = 0._xp
 
-  parity: DO eo = 0,1
-  zloop: DO iz = izgs,izge
+  DO eo = 1,nzgrid
+   DO iz = 1,local_nz+Ngz
     z = zarray(iz,eo)
 
     ! metric
-      gxx(iz,eo) = 1._dp
+      gxx(iz,eo) = 1._xp
       gxy(iz,eo) = shear*z - alpha_MHD*SIN(z)
-      gxz(iz,eo) = 0._dp
-      gyy(iz,eo) = 1._dp + (shear*z - alpha_MHD*SIN(z))**2
-      gyz(iz,eo) = 1._dp/eps
-      gzz(iz,eo) = 1._dp/eps**2
+      gxz(iz,eo) = 0._xp
+      gyy(iz,eo) = 1._xp + (shear*z - alpha_MHD*SIN(z))**2
+      gyz(iz,eo) = 1._xp/eps
+      gzz(iz,eo) = 1._xp/eps**2
       dxdR(iz,eo)= COS(z)
       dxdZ(iz,eo)= SIN(z)
 
     ! Poloidal plane coordinates
-      hatR(iz,eo) = 1._dp + eps*COS(z)
-      hatZ(iz,eo) = 1._dp + eps*SIN(z)
+      hatR(iz,eo) = 1._xp + eps*COS(z)
+      hatZ(iz,eo) = 1._xp + eps*SIN(z)
 
     ! toroidal coordinates
       Rc  (iz,eo) = hatR(iz,eo)
@@ -219,49 +209,50 @@ CONTAINS
       Zc  (iz,eo) = hatZ(iz,eo)
 
     ! Relative strengh of modulus of B
-      hatB(iz,eo) = 1._dp/(1._dp + eps*COS(z))
+      hatB(iz,eo) = 1._xp/(1._xp + eps*COS(z))
 
     ! Jacobian
       Jacobian(iz,eo) = q0/hatB(iz,eo)
 
     ! Derivative of the magnetic field strenght
       dBdx(iz,eo) = -COS(z)*hatB(iz,eo)**2 ! LB = 1
-      dBdy(iz,eo) =  0._dp
+      dBdy(iz,eo) =  0._xp
       dBdz(iz,eo) =  eps*SIN(z)*hatB(iz,eo)**2
 
     ! Curvature factor
-      C_xy = 1._dp
+      C_xy = 1._xp
 
-  ENDDO zloop
-  ENDDO parity
-
+   ENDDO
+  ENDDO
   END SUBROUTINE eval_salpha_geometry
   !
   !--------------------------------------------------------------------------------
   !
 
   SUBROUTINE eval_zpinch_geometry
+  USE grid, ONLY : local_nz,Ngz,zarray,nzgrid
   implicit none
-  REAL(dp) :: z
-  alpha_MHD = 0._dp
+  REAL(xp) :: z
+  INTEGER  :: iz, eo
+  alpha_MHD = 0._xp
 
-  parity: DO eo = 0,1
-  zloop: DO iz = izgs,izge
+  DO eo = 1,nzgrid
+   DO iz = 1,local_nz+Ngz
     z = zarray(iz,eo)
 
     ! metric
-      gxx(iz,eo) = 1._dp
-      gxy(iz,eo) = 0._dp
-      gxz(iz,eo) = 0._dp
-      gyy(iz,eo) = 1._dp ! 1/R but R is the normalization length
-      gyz(iz,eo) = 0._dp
-      gzz(iz,eo) = 1._dp
+      gxx(iz,eo) = 1._xp
+      gxy(iz,eo) = 0._xp
+      gxz(iz,eo) = 0._xp
+      gyy(iz,eo) = 1._xp ! 1/R but R is the normalization length
+      gyz(iz,eo) = 0._xp
+      gzz(iz,eo) = 1._xp
       dxdR(iz,eo)= COS(z)
       dxdZ(iz,eo)= SIN(z)
 
     ! Relative strengh of radius
-      hatR(iz,eo) = 1._dp ! R but R is the normalization length
-      hatZ(iz,eo) = 1._dp
+      hatR(iz,eo) = 1._xp ! R but R is the normalization length
+      hatZ(iz,eo) = 1._xp
 
     ! toroidal coordinates
       Rc  (iz,eo) = hatR(iz,eo)
@@ -269,61 +260,51 @@ CONTAINS
       Zc  (iz,eo) = hatZ(iz,eo)
 
     ! Jacobian
-      Jacobian(iz,eo) = 1._dp ! R but R is the normalization length
+      Jacobian(iz,eo) = 1._xp ! R but R is the normalization length
 
     ! Relative strengh of modulus of B
-      hatB   (iz,eo) = 1._dp
+      hatB   (iz,eo) = 1._xp
 
     ! Derivative of the magnetic field strenght
       dBdx(iz,eo) = -hatB(iz,eo) ! LB = 1
-      dBdy(iz,eo) = 0._dp
-      dBdz(iz,eo) = 0._dp ! Gene put a factor hatB or 1/hatR in this
+      dBdy(iz,eo) = 0._xp
+      dBdz(iz,eo) = 0._xp ! Gene put a factor hatB or 1/hatR in this
 
-  ENDDO zloop
-  ENDDO parity
+  ENDDO
+  ENDDO
 
   ! Curvature factor
-    C_xy = 1._dp
+    C_xy = 1._xp
   END SUBROUTINE eval_zpinch_geometry
     !
     !--------------------------------------------------------------------------------
-    !
+    ! NOT TESTED
   subroutine eval_1D_geometry
+    USE grid, ONLY : local_nz,Ngz,zarray, nzgrid
     ! evaluate 1D perp geometry model
     implicit none
-    REAL(dp) :: z, kx, ky
+    REAL(xp) :: z
+    INTEGER  :: iz, eo
+    DO eo = 1,nzgrid
+      DO iz = 1,local_nz+Ngz
+      z = zarray(iz,eo)
 
-    parity: DO eo = 0,1
-    zloop: DO iz = izs,ize
-     z = zarray(iz,eo)
+      ! metric
+      gxx(iz,eo) = 1._xp
+      gxy(iz,eo) = 0._xp
+      gyy(iz,eo) = 1._xp
 
-    ! metric
-       gxx(iz,eo) = 1._dp
-       gxy(iz,eo) = 0._dp
-       gyy(iz,eo) = 1._dp
+      ! Relative strengh of radius
+      hatR(iz,eo) = 1._xp
 
-    ! Relative strengh of radius
-       hatR(iz,eo) = 1._dp
+      ! Jacobian
+      Jacobian(iz,eo) = 1._xp
 
-    ! Jacobian
-       Jacobian(iz,eo) = 1._dp
+      ! Relative strengh of modulus of B
+      hatB(iz,eo) = 1._xp
 
-    ! Relative strengh of modulus of B
-       hatB(iz,eo) = 1._dp
-
-    ! Curvature operator
-       DO iky = ikys, ikye
-         ky = kyarray(iky)
-          DO ikx= ikxs, ikxe
-            kx = kxarray(ikx)
-            Ckxky(ikx, iky, iz,eo) = -kx ! .. multiply by hatB to cancel the 1/ hatB factor in moments_eqs_rhs.f90 routine
-          ENDDO
-       ENDDO
-    ! coefficient in the front of parallel derivative
-       gradz_coeff(iz,eo) = 1._dp
-  ENDDO zloop
-  ENDDO parity
-
+      ENDDO
+    ENDDO
    END SUBROUTINE eval_1D_geometry
 
    !
@@ -331,186 +312,190 @@ CONTAINS
    !
 
  SUBROUTINE set_ikx_zBC_map
- IMPLICIT NONE
- REAL(dp) :: shift
-
- ALLOCATE(ikx_zBC_L(ikys:ikye,ikxs:ikxe))
- ALLOCATE(ikx_zBC_R(ikys:ikye,ikxs:ikxe))
- ALLOCATE(pb_phase_L(ikys:ikye))
- ALLOCATE(pb_phase_R(ikys:ikye))
- !! No shear case (simple id mapping) or not at the end of the z domain
- !3            | 1    2    3    4    5    6 |  ky = 3 dky
- !2   ky       | 1    2    3    4    5    6 |  ky = 2 dky
- !1   A        | 1    2    3    4    5    6 |  ky = 1 dky
- !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
- !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=free)
- DO iky = ikys,ikye
-   DO ikx = ikxs,ikxe
-     ikx_zBC_L(iky,ikx) = ikx ! connect to itself per default
-     ikx_zBC_R(iky,ikx) = ikx
+   USE grid,       ONLY: local_nky,total_nkx,contains_zmin,contains_zmax, Nexc,&
+                         local_nky_offset
+   USE prec_const, ONLY: imagu, pi
+   IMPLICIT NONE
+   ! REAL(xp) :: shift
+   INTEGER :: ikx,iky, mn_y
+   ALLOCATE(ikx_zBC_L(local_nky,total_nkx))
+   ALLOCATE(ikx_zBC_R(local_nky,total_nkx))
+   ALLOCATE(pb_phase_L(local_nky))
+   ALLOCATE(pb_phase_R(local_nky))
+   !! No shear case (simple id mapping) or not at the end of the z domain
+   !3            | 1    2    3    4    5    6 |  ky = 3 dky
+   !2   ky       | 1    2    3    4    5    6 |  ky = 2 dky
+   !1   A        | 1    2    3    4    5    6 |  ky = 1 dky
+   !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
+   !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=free)
+   DO iky = 1,local_nky
+     DO ikx = 1,total_nkx
+       ikx_zBC_L(iky,ikx) = ikx ! connect to itself per default
+       ikx_zBC_R(iky,ikx) = ikx
+     ENDDO
+     pb_phase_L(iky) = 1._xp ! no phase change per default
+     pb_phase_R(iky) = 1._xp
    ENDDO
-   pb_phase_L(iky) = 1._dp ! no phase change per default
-   pb_phase_R(iky) = 1._dp
- ENDDO
- ! Parallel boundary are not trivial for sheared case and if
- !  the user does not ask explicitly for shearless bc
- IF(SHEARED .AND. (parallel_bc .NE. 'shearless')) THEN
-   !!!!!!!!!! LEFT PARALLEL BOUNDARY
-   ! Modify connection map only at border of z (matters for MPI z-parallelization)
-   IF(contains_zmin) THEN ! Check if the process is at the start of the fluxtube
-     DO iky = ikys,ikye
-       ! Formula for the shift due to shear after Npol turns
-       shift = 2._dp*PI*shear*kyarray(iky)*Npol
-         DO ikx = ikxs,ikxe
-           ! Usual formula for shifting indices using that dkx = 2pi*shear*dky/Nexc
-           ikx_zBC_L(iky,ikx) = ikx-(iky-1)*Nexc
-           ! Check if it points out of the kx domain
-           ! IF( (kxarray(ikx) - shift) .LT. kx_min ) THEN
-           IF( (ikx-(iky-1)*Nexc) .LT. 1 ) THEN ! outside of the frequ domain
-             SELECT CASE(parallel_bc)
-               CASE ('dirichlet')! connected to 0
-                 ikx_zBC_L(iky,ikx) = -99
-               CASE ('periodic')
-                 ikx_zBC_L(iky,ikx) = ikx
-               CASE ('cyclic')! reroute it by cycling through modes
-                 ikx_zBC_L(iky,ikx) = MODULO(ikx_zBC_L(iky,ikx)-1,Nkx)+1
-             END SELECT
-           ENDIF
-         ENDDO
-         ! phase present in GENE from a shift of the x origin by Lx/2 (useless?)
-         ! We also put the user defined shift in the y direction (see Volcokas et al. 2022)
-         pb_phase_L(iky) = (-1._dp)**(Nexc*(iky-1))*EXP(imagu*REAL(iky-1,dp)*2._dp*pi*shift_y)
-     ENDDO
-   ENDIF
-   ! Option for disconnecting every modes, viz. connecting all boundary to 0
-   IF(parallel_bc .EQ. 'disconnected') ikx_zBC_L = -99
-   !!!!!!!!!! RIGHT PARALLEL BOUNDARY
-   IF(contains_zmax) THEN ! Check if the process is at the end of the flux-tube
-     DO iky = ikys,ikye
-       ! Formula for the shift due to shear after Npol
-       shift = 2._dp*PI*shear*kyarray(iky)*Npol
-         DO ikx = ikxs,ikxe
-           ! Usual formula for shifting indices
-           ikx_zBC_R(iky,ikx) = ikx+(iky-1)*Nexc
-           ! Check if it points out of the kx domain
-           ! IF( (kxarray(ikx) + shift) .GT. kx_max ) THEN ! outside of the frequ domain
-           IF( (ikx+(iky-1)*Nexc) .GT. Nkx ) THEN ! outside of the frequ domain
-             SELECT CASE(parallel_bc)
-               CASE ('dirichlet') ! connected to 0
-                 ikx_zBC_R(iky,ikx) = -99
-               CASE ('periodic') ! connected to itself as for shearless
-                 ikx_zBC_R(iky,ikx) = ikx
-               CASE ('cyclic')
-                 ! write(*,*) 'check',ikx,iky, kxarray(ikx) + shift, '>', kx_max
-                 ikx_zBC_R(iky,ikx) = MODULO(ikx_zBC_R(iky,ikx)-1,Nkx)+1
-             END SELECT
-           ENDIF
-         ENDDO
-         ! phase present in GENE from a shift ofthe x origin by Lx/2 (useless?)
-         ! We also put the user defined shift in the y direction (see Volcokas et al. 2022)
-         pb_phase_R(iky) = (-1._dp)**(Nexc*(iky-1))*EXP(-imagu*REAL(iky-1,dp)*2._dp*pi*shift_y)
-     ENDDO
-   ENDIF
-   ! Option for disconnecting every modes, viz. connecting all boundary to 0
-   IF(parallel_bc .EQ. 'disconnected') ikx_zBC_R = -99
-  ENDIF
-  ! write(*,*) kxarray
-  ! write(*,*) kyarray
-  ! write(*,*) 'ikx_zBC_L :-----------'
-  ! DO iky = ikys,ikye
-  !   print*, ikx_zBC_L(iky,:)
-  ! enddo
-  ! print*, pb_phase_L
-  ! write(*,*) 'ikx_zBC_R :-----------'
-  ! DO iky = ikys,ikye
-  !   print*, ikx_zBC_R(iky,:)
-  ! enddo
-  ! print*, pb_phase_R
-  ! print*, shift_y
-  ! stop
-  !!!!!!! Example of maps ('x' means connected to 0 value, in the table it is -99)
-  ! dirichlet connection map BC of the RIGHT boundary (z=pi*Npol-dz)
-  !3            | 4    x    x    x    2    3 |  ky = 3 dky
-  !2   ky       | 3    4    x    x    1    2 |  ky = 2 dky
-  !1   A        | 2    3    4    x    6    1 |  ky = 1 dky
-  !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
-  !kx =           0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
+   ! Parallel boundary are not trivial for sheared case and if
+   !  the user does not ask explicitly for shearless bc
+   IF(SHEARED .AND. (parallel_bc .NE. 'shearless')) THEN
+     !!!!!!!!!! LEFT PARALLEL BOUNDARY
+     ! Modify connection map only at border of z (matters for MPI z-parallelization)
+     IF(contains_zmin) THEN ! Check if the process is at the start of the fluxtube
+       DO iky = 1,local_nky
+        ! get the real mode number (iky starts at 1 and is shifted from paral)
+        mn_y = iky-1+local_nky_offset
+        ! Formula for the shift due to shear after Npol turns
+        ! shift = 2._xp*PI*shear*kyarray(iky)*Npol
+          DO ikx = 1,total_nkx
+            ! Usual formula for shifting indices using that dkx = 2pi*shear*dky/Nexc
+            ikx_zBC_L(iky,ikx) = ikx-mn_y*Nexc
+            ! Check if it points out of the kx domain
+            ! IF( (kxarray(ikx) - shift) .LT. kx_min ) THEN
+            IF( (ikx-mn_y*Nexc) .LT. 1 ) THEN ! outside of the frequ domain
+              SELECT CASE(parallel_bc)
+                CASE ('dirichlet')! connected to 0
+                  ikx_zBC_L(iky,ikx) = -99
+                CASE ('periodic')
+                  ikx_zBC_L(iky,ikx) = ikx
+                CASE ('cyclic')! reroute it by cycling through modes
+                  ikx_zBC_L(iky,ikx) = MODULO(ikx_zBC_L(iky,ikx)-1,total_nkx)+1
+              END SELECT
+            ENDIF
+          ENDDO
+          ! phase present in GENE from a shift of the x origin by Lx/2 (useless?)
+          ! We also put the user defined shift in the y direction (see Volcokas et al. 2022)
+          pb_phase_L(iky) = (-1._xp)**(Nexc*mn_y)*EXP(imagu*REAL(mn_y,xp)*2._xp*pi*shift_y)
+       ENDDO
+     ENDIF
+     ! Option for disconnecting every modes, viz. connecting all boundary to 0
+     IF(parallel_bc .EQ. 'disconnected') ikx_zBC_L = -99
+     !!!!!!!!!! RIGHT PARALLEL BOUNDARY
+     IF(contains_zmax) THEN ! Check if the process is at the end of the flux-tube
+       DO iky = 1,local_nky
+        ! get the real mode number (iky starts at 1 and is shifted from paral)
+        mn_y = iky-1+local_nky_offset
+        ! Formula for the shift due to shear after Npol
+        ! shift = 2._xp*PI*shear*kyarray(iky)*Npol
+          DO ikx = 1,total_nkx
+            ! Usual formula for shifting indices
+            ikx_zBC_R(iky,ikx) = ikx+mn_y*Nexc
+            ! Check if it points out of the kx domain
+            ! IF( (kxarray(ikx) + shift) .GT. kx_max ) THEN ! outside of the frequ domain
+            IF( (ikx+mn_y*Nexc) .GT. total_nkx ) THEN ! outside of the frequ domain
+              SELECT CASE(parallel_bc)
+                CASE ('dirichlet') ! connected to 0
+                  ikx_zBC_R(iky,ikx) = -99
+                CASE ('periodic') ! connected to itself as for shearless
+                  ikx_zBC_R(iky,ikx) = ikx
+                CASE ('cyclic')
+                  ! write(*,*) 'check',ikx,iky, kxarray(ikx) + shift, '>', kx_max
+                  ikx_zBC_R(iky,ikx) = MODULO(ikx_zBC_R(iky,ikx)-1,total_nkx)+1
+              END SELECT
+            ENDIF
+          ENDDO
+          ! phase present in GENE from a shift ofthe x origin by Lx/2 (useless?)
+          ! We also put the user defined shift in the y direction (see Volcokas et al. 2022)
+          pb_phase_R(iky) = (-1._xp)**(Nexc*mn_y)*EXP(-imagu*REAL(mn_y,xp)*2._xp*pi*shift_y)
+       ENDDO
+     ENDIF
+     ! Option for disconnecting every modes, viz. connecting all boundary to 0
+     IF(parallel_bc .EQ. 'disconnected') ikx_zBC_R = -99
+    ENDIF
+    ! write(*,*) kxarray
+    ! write(*,*) kyarray
+    ! write(*,*) 'ikx_zBC_L :-----------'
+    ! DO iky = ikys,ikye
+    !   print*, ikx_zBC_L(iky,:)
+    ! enddo
+    ! print*, pb_phase_L
+    ! write(*,*) 'ikx_zBC_R :-----------'
+    ! DO iky = ikys,ikye
+    !   print*, ikx_zBC_R(iky,:)
+    ! enddo
+    ! print*, pb_phase_R
+    ! print*, shift_y
+    ! stop
+    !!!!!!! Example of maps ('x' means connected to 0 value, in the table it is -99)
+    ! dirichlet connection map BC of the RIGHT boundary (z=pi*Npol-dz)
+    !3            | 4    x    x    x    2    3 |  ky = 3 dky
+    !2   ky       | 3    4    x    x    1    2 |  ky = 2 dky
+    !1   A        | 2    3    4    x    6    1 |  ky = 1 dky
+    !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
+    !kx =           0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
 
-  ! periodic connection map BC of the RIGHT boundary (z=pi*Npol-dz)
-  !3            | 4    2    3    4    2    3 |  ky = 3 dky
-  !2   ky       | 3    4    3    4    1    2 |  ky = 2 dky
-  !1   A        | 2    3    4    4    6    1 |  ky = 1 dky
-  !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
-  !kx =           0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
+    ! periodic connection map BC of the RIGHT boundary (z=pi*Npol-dz)
+    !3            | 4    2    3    4    2    3 |  ky = 3 dky
+    !2   ky       | 3    4    3    4    1    2 |  ky = 2 dky
+    !1   A        | 2    3    4    4    6    1 |  ky = 1 dky
+    !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
+    !kx =           0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
 
-  ! cyclic connection map BC of the LEFT boundary (z=-pi*Npol)
-  !3            | 4    5    6    1    2    3 |  ky = 3 dky
-  !2   ky       | 5    6    1    2    3    4 |  ky = 2 dky
-  !1   A        | 6    1    2    3    4    5 |  ky = 1 dky
-  !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
-  !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
+    ! cyclic connection map BC of the LEFT boundary (z=-pi*Npol)
+    !3            | 4    5    6    1    2    3 |  ky = 3 dky
+    !2   ky       | 5    6    1    2    3    4 |  ky = 2 dky
+    !1   A        | 6    1    2    3    4    5 |  ky = 1 dky
+    !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
+    !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
 
-  ! shearless connection map BC of the LEFT/RIGHT boundary (z=+/-pi*Npol)
-  !3            | 1    2    3    4    5    6 |  ky = 3 dky
-  !2   ky       | 1    2    3    4    5    6 |  ky = 2 dky
-  !1   A        | 1    2    3    4    5    6 |  ky = 1 dky
-  !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
-  !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
+    ! shearless connection map BC of the LEFT/RIGHT boundary (z=+/-pi*Npol)
+    !3            | 1    2    3    4    5    6 |  ky = 3 dky
+    !2   ky       | 1    2    3    4    5    6 |  ky = 2 dky
+    !1   A        | 1    2    3    4    5    6 |  ky = 1 dky
+    !0   | -> kx  | 1____2____3____4____5____6 |  ky = 0 dky
+    !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
 
-  ! disconnected connection map BC of the LEFT/RIGHT boundary (z=+/-pi*Npol)
-  !3            | x    x    x    x    x    x |  ky = 3 dky
-  !2   ky       | x    x    x    x    x    x |  ky = 2 dky
-  !1   A        | x    x    x    x    x    x |  ky = 1 dky
-  !0   | -> kx  | x____x____x____x____x____x |  ky = 0 dky
-  !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
+    ! disconnected connection map BC of the LEFT/RIGHT boundary (z=+/-pi*Npol)
+    !3            | x    x    x    x    x    x |  ky = 3 dky
+    !2   ky       | x    x    x    x    x    x |  ky = 2 dky
+    !1   A        | x    x    x    x    x    x |  ky = 1 dky
+    !0   | -> kx  | x____x____x____x____x____x |  ky = 0 dky
+    !(e.g.) kx =    0   0.1  0.2  0.3 -0.2 -0.1  (dkx=2pi*shear*npol*dky)
 END SUBROUTINE set_ikx_zBC_map
 
 !
 !--------------------------------------------------------------------------------
 !
 
-   SUBROUTINE geometry_allocate_mem
-
+   SUBROUTINE geometry_allocate_mem(local_nky,local_nkx,local_nz,Ngz,nzgrid)
+     INTEGER, INTENT(IN) :: local_nky,local_nkx,local_nz,Ngz,nzgrid
        ! Curvature and geometry
-       CALL allocate_array( Ckxky,   ikys,ikye, ikxs,ikxe,izgs,izge,0,1)
-       CALL allocate_array(   Jacobian,izgs,izge, 0,1)
-       CALL allocate_array(        gxx,izgs,izge, 0,1)
-       CALL allocate_array(        gxy,izgs,izge, 0,1)
-       CALL allocate_array(        gxz,izgs,izge, 0,1)
-       CALL allocate_array(        gyy,izgs,izge, 0,1)
-       CALL allocate_array(        gyz,izgs,izge, 0,1)
-       CALL allocate_array(        gzz,izgs,izge, 0,1)
-       CALL allocate_array(       dBdx,izgs,izge, 0,1)
-       CALL allocate_array(       dBdy,izgs,izge, 0,1)
-       CALL allocate_array(       dBdz,izgs,izge, 0,1)
-       CALL allocate_array(     dlnBdz,izgs,izge, 0,1)
-       CALL allocate_array(       hatB,izgs,izge, 0,1)
-       ! CALL allocate_array(Gamma_phipar,izgs,izge, 0,1) (not implemented)
-       CALL allocate_array(       hatR,izgs,izge, 0,1)
-       CALL allocate_array(       hatZ,izgs,izge, 0,1)
-       CALL allocate_array(         Rc,izgs,izge, 0,1)
-       CALL allocate_array(       phic,izgs,izge, 0,1)
-       CALL allocate_array(         Zc,izgs,izge, 0,1)
-       CALL allocate_array(       dxdR,izgs,izge, 0,1)
-       CALL allocate_array(       dxdZ,izgs,izge, 0,1)
-       call allocate_array(gradz_coeff,izgs,izge, 0,1)
-       CALL allocate_array( kparray, ikys,ikye, ikxs,ikxe,izgs,izge,0,1)
+       ALLOCATE( Ckxky(local_nky,local_nkx,local_nz+Ngz,nzgrid))
+       ALLOCATE(   Jacobian(local_nz+Ngz,nzgrid))
+       ALLOCATE(        gxx(local_nz+Ngz,nzgrid))
+       ALLOCATE(        gxy(local_nz+Ngz,nzgrid))
+       ALLOCATE(        gxz(local_nz+Ngz,nzgrid))
+       ALLOCATE(        gyy(local_nz+Ngz,nzgrid))
+       ALLOCATE(        gyz(local_nz+Ngz,nzgrid))
+       ALLOCATE(        gzz(local_nz+Ngz,nzgrid))
+       ALLOCATE(       dBdx(local_nz+Ngz,nzgrid))
+       ALLOCATE(       dBdy(local_nz+Ngz,nzgrid))
+       ALLOCATE(       dBdz(local_nz+Ngz,nzgrid))
+       ALLOCATE(     dlnBdz(local_nz+Ngz,nzgrid))
+       ALLOCATE(       hatB(local_nz+Ngz,nzgrid))
+       ! ALLOCATE(Gamma_phipar,(local_nz+Ngz,nzgrid)) (not implemented)
+       ALLOCATE(       hatR(local_nz+Ngz,nzgrid))
+       ALLOCATE(       hatZ(local_nz+Ngz,nzgrid))
+       ALLOCATE(         Rc(local_nz+Ngz,nzgrid))
+       ALLOCATE(       phic(local_nz+Ngz,nzgrid))
+       ALLOCATE(         Zc(local_nz+Ngz,nzgrid))
+       ALLOCATE(       dxdR(local_nz+Ngz,nzgrid))
+       ALLOCATE(       dxdZ(local_nz+Ngz,nzgrid))
+       ALLOCATE(gradz_coeff(local_nz+Ngz,nzgrid))
 
    END SUBROUTINE geometry_allocate_mem
 
-   SUBROUTINE geometry_outputinputs(fidres, str)
+   SUBROUTINE geometry_outputinputs(fid)
      ! Write the input parameters to the results_xx.h5 file
-
-     USE futils, ONLY: attach
-
-     USE prec_const
+     USE futils, ONLY: attach, creatd
      IMPLICIT NONE
-
-     INTEGER, INTENT(in) :: fidres
-     CHARACTER(len=256), INTENT(in) :: str
-     CALL attach(fidres, TRIM(str),"geometry",  geom)
-     CALL attach(fidres, TRIM(str),      "q0",    q0)
-     CALL attach(fidres, TRIM(str),   "shear", shear)
-     CALL attach(fidres, TRIM(str),     "eps",   eps)
+     INTEGER, INTENT(in) :: fid
+     CHARACTER(len=256)  :: str
+     WRITE(str,'(a)') '/data/input/geometry'
+     CALL creatd(fid, 0,(/0/),TRIM(str),'Geometry Input')
+     CALL attach(fid, TRIM(str),"geometry",  geom)
+     CALL attach(fid, TRIM(str),      "q0",    q0)
+     CALL attach(fid, TRIM(str),   "shear", shear)
+     CALL attach(fid, TRIM(str),     "eps",   eps)
    END SUBROUTINE geometry_outputinputs
 end module geometry

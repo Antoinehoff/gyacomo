@@ -47,7 +47,7 @@ KIN_E   = 1;
 % (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
 CO      = 'LR';
 GKCO    = 1; % gyrokinetic operator
-ABCO    = 1; % interspecies collisions
+ABCO    = 1; % INTERSPECIES collisions
 INIT_ZF = 0; ZF_AMP = 0.0;
 CLOS    = 0;   % Closure model (0: =0 truncation, 1: gyrofluid closure (p+2j<=Pmax))s
 NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)

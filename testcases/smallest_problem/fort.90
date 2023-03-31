@@ -1,41 +1,41 @@
 &BASIC
   nrun       = 99999999
   dt         = 0.01
-  tmax       = 50
-  maxruntime = 72000
+  tmax       = 5
+  maxruntime = 356400
   job2load   = -1
 /
 &GRID
   pmax   = 4
-  jmax   = 2
-  Nx     = 128
+  jmax   = 1
+  Nx     = 16
   Lx     = 200
-  Ny     = 48
+  Ny     = 12
   Ly     = 60
-  Nz     = 1
+  Nz     = 6
   SG     = .f.
   Nexc   = 1
 /
 &GEOMETRY
-  geom   = 'Z-pinch'
-  q0     = 0.0
-  shear  = 0.0 
-  eps    = 0.0
+  geom   = 's-alpha'
+  q0     = 1.4
+  shear  = 0.0
+  eps    = 0.18
   kappa  = 1.0
   s_kappa= 0.0
   delta  = 0.0
   s_delta= 0.0
   zeta   = 0.0
   s_zeta = 0.0
-  parallel_bc = 'shearless'
+  parallel_bc = 'dirichlet'
   shift_y= 0.0
 /
 &OUTPUT_PAR
-  dtsave_0d = 1
+  dtsave_0d = 0.5
   dtsave_1d = -1
   dtsave_2d = -1
-  dtsave_3d = 5
-  dtsave_5d = 20
+  dtsave_3d = 1
+  dtsave_5d = 5
   write_doubleprecision = .f.
   write_gamma = .t.
   write_hf    = .t.
@@ -47,25 +47,22 @@
   write_temp  = .t.
 /
 &MODEL_PAR
+  ! Collisionality
+  CLOS    = 0
+  NL_CLOS = -1
   LINEARITY = 'nonlinear'
   Na      = 2 ! number of species
-  mu_x    = 1.0
-  mu_y    = 1.0
+  mu_x    = 0.2
+  mu_y    = 0.4
   N_HD    = 4
-  mu_z    = 0.0
+  mu_z    = 0.6
   HYP_V   = 'hypcoll'
-  mu_p    = 0.0
-  mu_j    = 0.0
-  nu      = 0.1
-  beta    = 0.0
+  mu_p    = 0.1
+  mu_j    = 0.5
+  nu      = 1.0
+  beta    = 0.1
   ADIAB_E = .f.
   tau_e   = 1.0
-/
-&CLOSURE_PAR
-  hierarchy_closure='truncation'
-  dmax = -1
-  nonlinear_closure='anti_laguerre_aliasing' !(truncation,full_sum,anti_laguerre_aliasing)
-  nmax = 0
 /
 &SPECIES
  ! ions
@@ -73,18 +70,19 @@
  tau_  = 1.0
  sigma_= 1.0
  q_    = 1.0
- k_N_  = 2.0
- k_T_  = 0.4
+ k_N_  = 3.0!2.22
+ k_T_  = 4.0!6.96
 /
 &SPECIES
  ! electrons
  name_ = 'electrons'
  tau_  = 1.0
  sigma_= 0.023338
- q_    =-1.0
- k_N_  = 2.0
- k_T_  = 0.4
+ q_    = -1.0
+ k_N_  = 1.0!2.22
+ k_T_  = 2.0!6.96
 /
+
 &COLLISION_PAR
   collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
   GK_CO           = .t.
@@ -92,10 +90,10 @@
   mat_file       = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /
 &INITIAL_CON
-  INIT_OPT         = 'phi' !(phi,blob)
+  INIT_OPT         = 'blob'
   ACT_ON_MODES     = 'donothing'
-  init_background  = 0.0
-  init_noiselvl    = 0.005
+  init_background  = 1.0
+  init_noiselvl    = 0.0
   iseed            = 42
 /
 &TIME_INTEGRATION_PAR

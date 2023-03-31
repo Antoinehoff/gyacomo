@@ -9,7 +9,7 @@ SUBROUTINE endrun
   IF( nlend ) THEN
      !----------------------------------------------------------------------
      !              1.   Normal end of run
-     IF(my_id .EQ. 0) WRITE(*,'(/a)') '   Normal exit'
+     CALL speak('   Normal exit')
 
      !----------------------------------------------------------------------
      !              2.   Abnormal exit

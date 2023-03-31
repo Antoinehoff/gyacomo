@@ -4,35 +4,42 @@ include local/make.inc
 # Standard version with optimized compilation (ifort compiler)
 all: F90 = mpif90
 all: F90FLAGS = -O3 -xHOST
-all: EXEC = $(BINDIR)/gyacomo22
+all: EXEC = $(BINDIR)/gyacomo23_dp
 all: dirs src/srcinfo.h
 all: compile
+
+# Single precision version
+sp: F90 = mpif90
+sp: F90FLAGS = -DSINGLE_PRECISION -O3 -xHOST
+sp: EXEC = $(BINDIR)/gyacomo23_sp
+sp: dirs src/srcinfo.h
+sp: compile
 
 # Fast compilation
 fast: F90 = mpif90
 fast: F90FLAGS = -fast
-fast: EXEC = $(BINDIR)/gyacomo22_fast
+fast: EXEC = $(BINDIR)/gyacomo23_fast
 fast: dirs src/srcinfo.h
 fast: compile
 
 # Debug version with all flags
 debug: F90 = mpif90
-debug: F90FLAGS = -g -traceback -ftrapuv -warn all -debug all
-debug: EXEC = $(BINDIR)/gyacomo22_debug
+debug: F90FLAGS = -C -g -traceback -ftrapuv -warn all -debug all
+debug: EXEC = $(BINDIR)/gyacomo23_debug
 debug: dirs src/srcinfo.h
 debug: compile
 
 # For compiling on marconi
 marconi: F90 = mpiifort
 marconi: F90FLAGS = -O3 -xHOST
-marconi: EXEC = $(BINDIR)/gyacomo22
+marconi: EXEC = $(BINDIR)/gyacomo23_dp
 marconi: dirs src/srcinfo.h
 marconi: compile
 
 # For compiling on daint
 daint: F90 = ftn
 daint: F90FLAGS = -O3
-daint: EXEC = $(BINDIR)/gyacomo22
+daint: EXEC = $(BINDIR)/gyacomo23_dp
 daint: dirs src/srcinfo.h
 daint: compile
 
@@ -40,7 +47,7 @@ daint: compile
 gopt: F90 = mpif90
 gopt: F90FLAGS = -O3 -std=legacy -ffree-line-length-0
 gopt: EXTMOD   = -J $(MODDIR)
-gopt: EXEC = $(BINDIR)/gyacomo22
+gopt: EXEC = $(BINDIR)/gyacomo23_dp
 gopt: dirs src/srcinfo.h
 gopt: compile
 
@@ -48,7 +55,7 @@ gopt: compile
 gdebug: F90 = mpif90
 gdebug: F90FLAGS = -C -g -std=legacy -ffree-line-length-0
 gdebug: EXTMOD   = -J $(MODDIR)
-gdebug: EXEC = $(BINDIR)/gyacomo22_debug
+gdebug: EXEC = $(BINDIR)/gyacomo23_debug
 gdebug: dirs src/srcinfo.h
 gdebug: compile
 
@@ -83,9 +90,9 @@ $(OBJDIR)/ghosts_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/inital.o \
 $(OBJDIR)/initial_par_mod.o $(OBJDIR)/lag_interp_mod.o $(OBJDIR)/main.o \
 $(OBJDIR)/memory.o $(OBJDIR)/miller_mod.o $(OBJDIR)/model_mod.o \
 $(OBJDIR)/moments_eq_rhs_mod.o $(OBJDIR)/numerics_mod.o $(OBJDIR)/parallel_mod.o \
-$(OBJDIR)/ppexit.o $(OBJDIR)/ppinit.o $(OBJDIR)/prec_const_mod.o \
+$(OBJDIR)/ppexit.o $(OBJDIR)/prec_const_mod.o \
 $(OBJDIR)/processing_mod.o $(OBJDIR)/readinputs.o $(OBJDIR)/restarts_mod.o \
-$(OBJDIR)/solve_EM_fields.o $(OBJDIR)/stepon.o $(OBJDIR)/tesend.o \
+$(OBJDIR)/solve_EM_fields.o $(OBJDIR)/species_mod.o $(OBJDIR)/stepon.o $(OBJDIR)/tesend.o \
 $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 
 # To compile the executable
@@ -96,7 +103,7 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
  $(OBJDIR)/advance_field_mod.o : src/advance_field_mod.F90 \
    $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/initial_par_mod.o \
 	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)/basic_mod.o \
-	 $(OBJDIR)/fields_mod.o
+	 $(OBJDIR)/fields_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/closure_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/advance_field_mod.F90 -o $@
 
  $(OBJDIR)/array_mod.o : src/array_mod.F90 \
@@ -106,11 +113,11 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
  $(OBJDIR)/auxval.o : src/auxval.F90 \
  	 $(OBJDIR)/fourier_mod.o $(OBJDIR)/memory.o $(OBJDIR)/model_mod.o \
 	 $(OBJDIR)/geometry_mod.o  $(OBJDIR)/grid_mod.o $(OBJDIR)/numerics_mod.o \
-	 $(OBJDIR)/parallel_mod.o
+	 $(OBJDIR)/parallel_mod.o $(OBJDIR)/processing_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/auxval.F90 -o $@
 
  $(OBJDIR)/basic_mod.o : src/basic_mod.F90 \
- 	 $(OBJDIR)/prec_const_mod.o
+ 	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/parallel_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/basic_mod.F90 -o $@
 
  $(OBJDIR)/calculus_mod.o : src/calculus_mod.F90  \
@@ -129,16 +136,21 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/closure_mod.F90 -o $@
 
  $(OBJDIR)/collision_mod.o : src/collision_mod.F90 \
- 	 $(OBJDIR)/array_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o \
-   $(OBJDIR)/grid_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/prec_const_mod.o \
-	 $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
+ 	 $(OBJDIR)/array_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/cosolver_interface_mod.o\
+	 $(OBJDIR)/fields_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/model_mod.o \
+	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/species_mod.o $(OBJDIR)/time_integration_mod.o \
+	 $(OBJDIR)/utility_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/collision_mod.F90 -o $@
 
  $(OBJDIR)/control.o : src/control.F90 \
 	 $(OBJDIR)/auxval.o $(OBJDIR)/geometry_mod.o $(OBJDIR)/prec_const_mod.o \
-   $(OBJDIR)/basic_mod.o $(OBJDIR)/ppexit.o $(OBJDIR)/ppinit.o \
-	 $(OBJDIR)/readinputs.o $(OBJDIR)/tesend.o
+   $(OBJDIR)/basic_mod.o $(OBJDIR)/ppexit.o $(OBJDIR)/readinputs.o $(OBJDIR)/tesend.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/control.F90 -o $@
+
+ $(OBJDIR)/cosolver_interface_mod.o : src/cosolver_interface_mod.F90 \
+   $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/species_mod.o\
+	 $(OBJDIR)/prec_const_mod.o
+	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/cosolver_interface_mod.F90 -o $@
 
  $(OBJDIR)/diagnose.o : src/diagnose.F90 \
  	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/processing_mod.o $(OBJDIR)/array_mod.o \
@@ -161,7 +173,7 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/fields_mod.F90 -o $@
 
  $(OBJDIR)/fourier_mod.o : src/fourier_mod.F90 \
- 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/grid_mod.o
+ 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/fourier_mod.F90 -o $@
 
  $(OBJDIR)/geometry_mod.o : src/geometry_mod.F90 \
@@ -172,11 +184,11 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 
  $(OBJDIR)/ghosts_mod.o : src/ghosts_mod.F90 \
  	 $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/grid_mod.o\
-   $(OBJDIR)/geometry_mod.o $(OBJDIR)/ppinit.o  $(OBJDIR)/time_integration_mod.o
+   $(OBJDIR)/geometry_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/time_integration_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/ghosts_mod.F90 -o $@
 
  $(OBJDIR)/grid_mod.o : src/grid_mod.F90 \
- 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/prec_const_mod.o
+ 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/fourier_mod.o $(OBJDIR)/prec_const_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/grid_mod.F90 -o $@
 
  $(OBJDIR)/inital.o : src/inital.F90 \
@@ -210,7 +222,7 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/miller_mod.F90 -o $@
 
  $(OBJDIR)/model_mod.o : src/model_mod.F90 \
- 	 $(OBJDIR)/prec_const_mod.o
+ 	 $(OBJDIR)/grid_mod.o $(OBJDIR)/prec_const_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/model_mod.F90 -o $@
 
  $(OBJDIR)/moments_eq_rhs_mod.o : src/moments_eq_rhs_mod.F90 \
@@ -231,18 +243,12 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/numerics_mod.F90 -o $@
 
  $(OBJDIR)/parallel_mod.o : src/parallel_mod.F90 \
- 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/grid_mod.o
+ 	 $(OBJDIR)/prec_const_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/parallel_mod.F90 -o $@
 
  $(OBJDIR)/ppexit.o : src/ppexit.F90 \
  	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/coeff_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/ppexit.F90 -o $@
-
- $(OBJDIR)/ppinit.o : src/ppinit.F90 \
- 	 $(OBJDIR)/array_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/grid_mod.o\
-   $(OBJDIR)/fields_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/time_integration_mod.o \
-	 $(OBJDIR)/basic_mod.o
-	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/ppinit.F90 -o $@
 
  $(OBJDIR)/prec_const_mod.o : src/prec_const_mod.F90
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/prec_const_mod.F90 -o $@
@@ -262,10 +268,14 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/restarts_mod.F90 -o $@
 
  $(OBJDIR)/solve_EM_fields.o : src/solve_EM_fields.F90 \
- 	 $(OBJDIR)/array_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/grid_mod.o \
+   $(OBJDIR)/array_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/grid_mod.o \
 	 $(OBJDIR)/ghosts_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/array_mod.o \
 	 $(OBJDIR)/time_integration_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/parallel_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/solve_EM_fields.F90 -o $@
+
+ $(OBJDIR)/species_mod.o : src/species_mod.F90 \
+   $(OBJDIR)/basic_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/prec_const_mod.o
+	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/species_mod.F90 -o $@
 
  $(OBJDIR)/stepon.o : src/stepon.F90 \
  	 $(OBJDIR)/initial_par_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/advance_field_mod.o \

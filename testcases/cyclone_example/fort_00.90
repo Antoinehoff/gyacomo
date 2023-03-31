@@ -1,80 +1,94 @@
 &BASIC
-  nrun   = 100000000
-  dt     = 0.01
-  tmax   = 50
-  maxruntime = 356400
+  nrun       = 99999999
+  dt         = 0.01
+  tmax       = 500
+  maxruntime = 72000
+  job2load   = -1
 /
 &GRID
-  pmaxe  = 4
-  jmaxe  = 2
-  pmaxi  = 4
-  jmaxi  = 2
+  pmax   = 4
+  jmax   = 2
   Nx     = 128
   Lx     = 120
   Ny     = 64
-  Ly     = 160
-  Nz     = 16
+  Ly     = 120
+  Nz     = 24
+  SG     = .f.
   Nexc   = 0
-  SG     = .true.
 /
 &GEOMETRY
   geom   = 's-alpha'
   q0     = 1.4
   shear  = 0.8
   eps    = 0.18
-  parallel_BC = 'dirichlet'
+  kappa  = 1.0
+  s_kappa= 0.0
+  delta  = 0.0
+  s_delta= 0.0
+  zeta   = 0.0
+  s_zeta = 0.0
+  parallel_bc = 'dirichlet'
+  shift_y= 0.0
 /
 &OUTPUT_PAR
-  nsave_0d = 50
-  nsave_1d = -1
-  nsave_2d = -1
-  nsave_3d = 100
-  nsave_5d = 500
-  write_doubleprecision = .false.
-  write_gamma = .true.
-  write_hf    = .true.
-  write_phi   = .true.
-  write_Na00  = .false.
-  write_Napj  = .true.
-  write_Sapj  = .false.
-  write_dens  = .true.
-  write_temp  = .true.
-  job2load    = -1
+  dtsave_0d = 1
+  dtsave_1d = -1
+  dtsave_2d = -1
+  dtsave_3d = 5
+  dtsave_5d = 20
+  write_doubleprecision = .f.
+  write_gamma = .t.
+  write_hf    = .t.
+  write_phi   = .t.
+  write_Na00  = .t.
+  write_Napj  = .t.
+  write_dens  = .t.
+  write_fvel  = .t.
+  write_temp  = .t.
 /
 &MODEL_PAR
-  ! Collisionality
-  CLOS    = 0
-  NL_CLOS = 0
   LINEARITY = 'nonlinear'
-  KIN_E   = .false.
-  mu_x    = 0.1
-  mu_y    = 0.1
-  N_HD    = 2
+  Na      = 1 ! number of species
+  mu_x    = 1.0
+  mu_y    = 1.0
+  N_HD    = 4
   mu_z    = 2.0
-  mu_p    = 0
-  mu_j    = 0
-  nu      = 0.05
-  tau_e   = 1
-  tau_i   = 1
-  sigma_e = 0.023338
-  sigma_i = 1
-  q_e     = -1
-  q_i     = 1
-  K_Ni    = 2.22
-  K_Ti    = 6.92
+  HYP_V   = 'hypcoll'
+  mu_p    = 0.0
+  mu_j    = 0.0
+  nu      = 0.001
+  beta    = 0.0
+  ADIAB_E = .t.
+  tau_e   = 1.0
 /
+&CLOSURE_PAR
+  hierarchy_closure='truncation'
+  dmax = -1
+  nonlinear_closure='truncation'
+  nmax = 0
+/
+&SPECIES
+ ! ions
+ name_ = 'ions'
+ tau_  = 1.0
+ sigma_= 1.0
+ q_    = 1.0
+ k_N_  = 2.22
+ k_T_  = 6.96
+/
+
 &COLLISION_PAR
-  collision_model = 'DG'
-  gyrokin_CO      = .false.
-  interspecies    = .true.
-  mat_file        = 'null'
+  collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
+  GK_CO           = .f.
+  INTERSPECIES    = .true.
+  mat_file       = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /
 &INITIAL_CON
-  INIT_OPT      = 'blob'
-  ACT_ON_MODES  = 'donothing'
-  init_background  = 0
-  init_noiselvl = 1e-3
-  iseed         = 42
+  INIT_OPT         = 'blob'
+  ACT_ON_MODES     = 'donothing'
+  init_background  = 0.0
+  init_noiselvl    = 0.005
+  iseed            = 42
 /
 &TIME_INTEGRATION_PAR
   numerical_scheme = 'RK4'

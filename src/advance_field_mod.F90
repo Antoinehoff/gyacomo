@@ -6,77 +6,66 @@ implicit none
 CONTAINS
 
   SUBROUTINE advance_time_level
-
-    USE basic
-    USE time_integration
-    use prec_const
+    USE time_integration, ONLY :set_updatetlevel, updatetlevel, ntimelevel
     IMPLICIT NONE
     CALL set_updatetlevel(mod(updatetlevel,ntimelevel)+1)
   END SUBROUTINE advance_time_level
 
   SUBROUTINE advance_moments
 
-    USE basic
-    USE time_integration
-    USE grid
-    use prec_const
-    USE model,  ONLY: CLOS, KIN_E
-    use fields, ONLY: moments_e,     moments_i
-    use array,  ONLY: moments_rhs_e, moments_rhs_i
+    USE basic,  ONLY: dt
+    USE grid,   ONLY:local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
+                     ngp, ngj, ngz
+    USE closure,ONLY: evolve_mom
+    use fields, ONLY: moments
+    use array,  ONLY: moments_rhs
+    USE time_integration, ONLY: updatetlevel, A_E, b_E, ntimelevel
     IMPLICIT NONE
-    INTEGER :: p_int, j_int
-
-    CALL cpu_time(t0_adv_field)
-    IF(KIN_E) THEN
-      DO ip=ips_e,ipe_e
-        p_int = parray_e(ip)
-        DO ij=ijs_e,ije_e
-          j_int = jarray_e(ij)
-          IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmaxe))&
-          CALL advance_field(moments_e(ip,ij,ikys:ikye,ikxs:ikxe,izs:ize,:), moments_rhs_e(ip,ij,ikys:ikye,ikxs:ikxe,izs:ize,:))
-        ENDDO
-      ENDDO
-    ENDIF
-    DO ip=ips_i,ipe_i
-      p_int = parray_i(ip)
-      DO ij=ijs_i,ije_i
-        j_int = jarray_i(ij)
-        IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmaxi))&
-        CALL advance_field(moments_i(ip,ij,ikys:ikye,ikxs:ikxe,izs:ize,:), moments_rhs_i(ip,ij,ikys:ikye,ikxs:ikxe,izs:ize,:))
-      ENDDO
-    ENDDO
-    ! Execution time end
-    CALL cpu_time(t1_adv_field)
-    tc_adv_field = tc_adv_field + (t1_adv_field - t0_adv_field)
-  END SUBROUTINE advance_moments
-
-
-  SUBROUTINE advance_field( f, f_rhs )
-
-    USE basic
-    USE time_integration
-    USE array
-    USE grid
-    use prec_const
-    IMPLICIT NONE
-
-    COMPLEX(dp), DIMENSION ( ikys:ikye, ikxs:ikxe, izs:ize, ntimelevel ) :: f
-    COMPLEX(dp), DIMENSION ( ikys:ikye, ikxs:ikxe, izs:ize, ntimelevel ) :: f_rhs
-    INTEGER :: istage
-
+    INTEGER :: ia, ip, ij, ikx,iky,iz, istage, ipi, iji, izi
     SELECT CASE (updatetlevel)
     CASE(1)
-        DO istage=1,ntimelevel
-          f(ikys:ikye,ikxs:ikxe,izs:ize,1) = f(ikys:ikye,ikxs:ikxe,izs:ize,1) &
-                   + dt*b_E(istage)*f_rhs(ikys:ikye,ikxs:ikxe,izs:ize,istage)
-        END DO
+      DO istage=1,ntimelevel
+      DO iz    =1,local_nz
+        izi = iz+ngz/2
+      DO ikx   =1,local_nkx
+      DO iky   =1,local_nky
+      DO ij    =1,local_nj
+        iji = ij+ngj/2
+      DO ip    =1,local_np
+        ipi = ip+ngp/2
+      DO ia    =1,local_na
+        IF( evolve_mom(ipi,iji) )&
+        moments(ia,ipi,iji,iky,ikx,izi,1) = moments(ia,ipi,iji,iky,ikx,izi,1) &
+               + dt*b_E(istage)*moments_rhs(ia,ip,ij,iky,ikx,iz,istage)
+      END DO
+      END DO
+      END DO
+      END DO
+      END DO
+      END DO
+      END DO
     CASE DEFAULT
-        f(ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel) = f(ikys:ikye,ikxs:ikxe,izs:ize,1);
-        DO istage=1,updatetlevel-1
-          f(ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel) = f(ikys:ikye,ikxs:ikxe,izs:ize,updatetlevel) + &
-                            dt*A_E(updatetlevel,istage)*f_rhs(ikys:ikye,ikxs:ikxe,izs:ize,istage)
-        END DO
+      moments(:,:,:,:,:,:,updatetlevel) = moments(:,:,:,:,:,:,1);
+      DO istage=1,ntimelevel-1
+      DO iz    =1,local_nz
+        izi = iz+ngz/2
+      DO ikx   =1,local_nkx
+      DO iky   =1,local_nky
+      DO ij    =1,local_nj
+        iji = ij+ngj/2
+      DO ip    =1,local_np
+        ipi = ip+ngp/2
+      DO ia    =1,local_na
+        IF( evolve_mom(ipi,iji) )&
+        moments(ia,ipi,iji,iky,ikx,izi,updatetlevel) = moments(ia,ipi,iji,iky,ikx,izi,updatetlevel) + &
+                          dt*A_E(updatetlevel,istage)*moments_rhs(ia,ip,ij,iky,ikx,iz,istage)
+      END DO
+      END DO
+      END DO
+      END DO
+      END DO
+      END DO
+      END DO
     END SELECT
-  END SUBROUTINE advance_field
-
+  END SUBROUTINE advance_moments
 END MODULE advance_field_routine

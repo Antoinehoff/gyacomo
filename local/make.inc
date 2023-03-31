@@ -71,6 +71,8 @@ LIBS += -lfm
 # Add FFTW3 local lib
 ifdef FFTW3DIR
       LIBS  += -lfftw3 -lfftw3_mpi
+      # single_precision fftw
+      LIBS  += -lfftw3f -lfftw3f_mpi
       LDIRS += -L$(FFTW3DIR)/lib
       IDIRS += -I$(FFTW3DIR)/include
 endif
