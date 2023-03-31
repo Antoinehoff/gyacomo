@@ -1,0 +1,161 @@
+MPI initialized
+
+Start at  31/03/2023 13:44:29.587
+Start at  31/03/2023 13:44:29.587
+Start at  31/03/2023 13:44:29.587
+Start at  31/03/2023 13:44:29.587
+Start at  31/03/2023 13:44:29.587
+ Load basic data...
+ Reading input fort_00.90                      ...
+Start at  31/03/2023 13:44:29.587
+...basic data loaded.
+
+ Read input parameters...
+ Parallel BC : 
+ shearless                                                                      
+                                                                                
+                                                                                
+                    
+  Time integration with RK4       
+...input parameters read
+
+ Calculate auxval...
+ === Set auxiliary values ===
+ FFTW3 y-grid distribution
+ Z-pinch geometry
+ 
+ --------- Parallel environement ----------
+    n_procs   6
+num_procs_p   1, num_procs_ky  6, num_procs_z   1
+ 
+my_id  =   0, rank_p    0, rank_ky   0, rank_z   0
+              ips_e =   1, ipe_e  =   3
+              ijs_e =   1, ije_e  =   3
+              ips_i =   1, ipe_i  =   3
+              ijs_i =   1, ije_i  =   3
+              ikxs  =   1, ikxe   = 128
+              ikys  =   1, ikye   =   5
+              izs   =   1, ize    =   1
+ 
+my_id  =   1, rank_p    0, rank_ky   1, rank_z   0
+              ips_e =   1, ipe_e  =   3
+              ijs_e =   1, ije_e  =   3
+              ips_i =   1, ipe_i  =   3
+              ijs_i =   1, ije_i  =   3
+              ikxs  =   1, ikxe   = 128
+              ikys  =   6, ikye   =  10
+              izs   =   1, ize    =   1
+ 
+my_id  =   2, rank_p    0, rank_ky   2, rank_z   0
+              ips_e =   1, ipe_e  =   3
+              ijs_e =   1, ije_e  =   3
+              ips_i =   1, ipe_i  =   3
+              ijs_i =   1, ije_i  =   3
+              ikxs  =   1, ikxe   = 128
+              ikys  =  11, ikye   =  15
+              izs   =   1, ize    =   1
+ 
+my_id  =   3, rank_p    0, rank_ky   3, rank_z   0
+              ips_e =   1, ipe_e  =   3
+              ijs_e =   1, ije_e  =   3
+              ips_i =   1, ipe_i  =   3
+              ijs_i =   1, ije_i  =   3
+              ikxs  =   1, ikxe   = 128
+              ikys  =  16, ikye   =  20
+              izs   =   1, ize    =   1
+ 
+my_id  =   4, rank_p    0, rank_ky   4, rank_z   0
+              ips_e =   1, ipe_e  =   3
+              ijs_e =   1, ije_e  =   3
+              ips_i =   1, ipe_i  =   3
+              ijs_i =   1, ije_i  =   3
+              ikxs  =   1, ikxe   = 128
+              ikys  =  21, ikye   =  25
+              izs   =   1, ize    =   1
+ 
+my_id  =   5, rank_p    0, rank_ky   5, rank_z   0
+              ips_e =   1, ipe_e  =   3
+              ijs_e =   1, ije_e  =   3
+              ips_i =   1, ipe_i  =   3
+              ijs_i =   1, ije_i  =   3
+              ikxs  =   1, ikxe   = 128
+              ikys  =   1, ikye   =   0
+              izs   =   1, ize    =   1
+ ------------------------------------------
+...auxval calculated
+
+ Create initial state...
+ Init noisy phi
+ Apply closure
+ Ghosts communication
+ Computing fluid moments
+...initial state created
+
+ Initial diagnostics...
+   outputs_00.h5 created
+...initial diagnostics done
+( 0.019[s])
+
+ Time integration loop..
+|t/tmax =     1./   50.| Gxi =   0.10E-08| Qxi =   0.51E-09|
+|t/tmax =     2./   50.| Gxi =   0.84E-09| Qxi =   0.40E-09|
+|t/tmax =     3./   50.| Gxi =   0.11E-08| Qxi =   0.50E-09|
+|t/tmax =     4./   50.| Gxi =   0.20E-08| Qxi =   0.86E-09|
+|t/tmax =     5./   50.| Gxi =   0.40E-08| Qxi =   0.17E-08|
+|t/tmax =     6./   50.| Gxi =   0.87E-08| Qxi =   0.36E-08|
+|t/tmax =     7./   50.| Gxi =   0.20E-07| Qxi =   0.84E-08|
+|t/tmax =     8./   50.| Gxi =   0.49E-07| Qxi =   0.20E-07|
+|t/tmax =     9./   50.| Gxi =   0.12E-06| Qxi =   0.49E-07|
+|t/tmax =    10./   50.| Gxi =   0.31E-06| Qxi =   0.12E-06|
+|t/tmax =    11./   50.| Gxi =   0.79E-06| Qxi =   0.32E-06|
+|t/tmax =    12./   50.| Gxi =   0.21E-05| Qxi =   0.84E-06|
+|t/tmax =    13./   50.| Gxi =   0.56E-05| Qxi =   0.22E-05|
+|t/tmax =    14./   50.| Gxi =   0.15E-04| Qxi =   0.59E-05|
+|t/tmax =    15./   50.| Gxi =   0.41E-04| Qxi =   0.16E-04|
+|t/tmax =    16./   50.| Gxi =   0.11E-03| Qxi =   0.44E-04|
+|t/tmax =    17./   50.| Gxi =   0.31E-03| Qxi =   0.12E-03|
+|t/tmax =    18./   50.| Gxi =   0.85E-03| Qxi =   0.33E-03|
+|t/tmax =    19./   50.| Gxi =   0.24E-02| Qxi =   0.92E-03|
+|t/tmax =    20./   50.| Gxi =   0.66E-02| Qxi =   0.26E-02|
+|t/tmax =    21./   50.| Gxi =   0.18E-01| Qxi =   0.71E-02|
+|t/tmax =    22./   50.| Gxi =   0.52E-01| Qxi =   0.20E-01|
+|t/tmax =    23./   50.| Gxi =   0.15    | Qxi =   0.56E-01|
+|t/tmax =    24./   50.| Gxi =   0.41    | Qxi =   0.16    |
+|t/tmax =    25./   50.| Gxi =    1.1    | Qxi =   0.43    |
+|t/tmax =    26./   50.| Gxi =    3.0    | Qxi =    1.1    |
+|t/tmax =    27./   50.| Gxi =    7.5    | Qxi =    2.8    |
+|t/tmax =    28./   50.| Gxi =    16.    | Qxi =    6.0    |
+|t/tmax =    29./   50.| Gxi =    22.    | Qxi =    7.4    |
+|t/tmax =    30./   50.| Gxi =    15.    | Qxi =    3.8    |
+|t/tmax =    31./   50.| Gxi =    5.8    | Qxi =  -0.84E-01|
+|t/tmax =    32./   50.| Gxi =    6.1    | Qxi =    1.6    |
+|t/tmax =    33./   50.| Gxi =    6.2    | Qxi =    1.1    |
+|t/tmax =    34./   50.| Gxi =    6.1    | Qxi =    1.5    |
+|t/tmax =    35./   50.| Gxi =    6.3    | Qxi =    1.3    |
+|t/tmax =    36./   50.| Gxi =    6.7    | Qxi =    1.6    |
+|t/tmax =    37./   50.| Gxi =    6.7    | Qxi =    1.5    |
+|t/tmax =    38./   50.| Gxi =    6.6    | Qxi =    1.8    |
+|t/tmax =    39./   50.| Gxi =    7.5    | Qxi =    2.5    |
+|t/tmax =    40./   50.| Gxi =    6.8    | Qxi =    1.3    |
+|t/tmax =    41./   50.| Gxi =    7.2    | Qxi =    1.6    |
+|t/tmax =    42./   50.| Gxi =    6.6    | Qxi =    2.4    |
+|t/tmax =    43./   50.| Gxi =    7.0    | Qxi =    2.7    |
+|t/tmax =    44./   50.| Gxi =    7.4    | Qxi =    1.9    |
+|t/tmax =    45./   50.| Gxi =    6.2    | Qxi =   0.77    |
+|t/tmax =    46./   50.| Gxi =    5.0    | Qxi =   0.52    |
+|t/tmax =    47./   50.| Gxi =    5.9    | Qxi =    1.4    |
+|t/tmax =    48./   50.| Gxi =    6.8    | Qxi =    1.5    |
+|t/tmax =    49./   50.| Gxi =    7.0    | Qxi =    1.8    |
+|t/tmax =    50./   50.| Gxi =    7.0    | Qxi =    2.0    |
+
+TMAX reached
+...time integration done
+
+ CPU Time =            2 [min]           8 [s]
+ (   128.737169000000      [s])
+Final transport values : | Gxi =    7.0    | Qxi =    2.0    |
+ Saving last state
+
+   Normal exit
+Done at  31/03/2023 13:46:38.364
+ ..plan Destruction.
