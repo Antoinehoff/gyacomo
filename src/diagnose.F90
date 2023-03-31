@@ -28,16 +28,17 @@ SUBROUTINE diagnose(kstep)
 END SUBROUTINE diagnose
 
 SUBROUTINE init_outfile(comm,file0,file,fid)
-  USE diagnostics_par, ONLY : write_doubleprecision, diag_par_outputinputs, input_fname
-  USE basic,           ONLY : speak, jobnum, basic_outputinputs
-  USE grid,            ONLY : grid_outputinputs
-  USE geometry,        ONLY : geometry_outputinputs
-  USE model,           ONLY : model_outputinputs
-  USE species,         ONLY : species_outputinputs
-  USE collision,       ONLY : coll_outputinputs
-  USE initial_par,     ONLY : initial_outputinputs
-  USE time_integration,ONLY : time_integration_outputinputs
-  USE futils,          ONLY : creatf, creatg, creatd, attach, putfile
+  USE diagnostics_par, ONLY: write_doubleprecision, diag_par_outputinputs, input_fname
+  USE basic,           ONLY: speak, jobnum, basic_outputinputs
+  USE grid,            ONLY: grid_outputinputs
+  USE geometry,        ONLY: geometry_outputinputs
+  USE model,           ONLY: model_outputinputs
+  USE closure,         ONLY: closure_outputinputs
+  USE species,         ONLY: species_outputinputs
+  USE collision,       ONLY: coll_outputinputs
+  USE initial_par,     ONLY: initial_outputinputs
+  USE time_integration,ONLY: time_integration_outputinputs
+  USE futils,          ONLY: creatf, creatg, creatd, attach, putfile
   IMPLICIT NONE
   !input
   INTEGER,            INTENT(IN)    :: comm
@@ -69,14 +70,15 @@ SUBROUTINE init_outfile(comm,file0,file,fid)
   CALL attach(fid, "/data/input/codeinfo",   "author",   AUTHOR) !defined in srcinfo.h
   CALL attach(fid, "/data/input/codeinfo", "execdate", EXECDATE) !defined in srcinfo.h
   CALL attach(fid, "/data/input/codeinfo",     "host",     HOST) !defined in srcinfo.h
-  CALL basic_outputinputs(fid)
-  CALL grid_outputinputs(fid)
-  CALL geometry_outputinputs(fid)
-  CALL diag_par_outputinputs(fid)
-  CALL model_outputinputs(fid)
-  CALL species_outputinputs(fid)
-  CALL coll_outputinputs(fid)
-  CALL initial_outputinputs(fid)
+  CALL            basic_outputinputs(fid)
+  CALL             grid_outputinputs(fid)
+  CALL         geometry_outputinputs(fid)
+  CALL         diag_par_outputinputs(fid)
+  CALL            model_outputinputs(fid)
+  CALL          closure_outputinputs(fid)
+  CALL          species_outputinputs(fid)
+  CALL             coll_outputinputs(fid)
+  CALL          initial_outputinputs(fid)
   CALL time_integration_outputinputs(fid)
   !  Save STDIN (input file) of this run
   IF(jobnum .LE. 99) THEN

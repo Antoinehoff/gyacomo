@@ -9,6 +9,7 @@ subroutine auxval
   use prec_const
   USE numerics
   USE geometry
+  USE closure, ONLY: set_closure_model, hierarchy_closure
   USE parallel, ONLY: init_parallel_var, my_id, num_procs, num_procs_p, num_procs_z, num_procs_ky, rank_p, rank_ky, rank_z
   USE processing, ONLY: init_process
   IMPLICIT NONE
@@ -39,6 +40,8 @@ subroutine auxval
 
   CALL build_dv4Hp_table ! precompute the hermite fourth derivative table
 
+  CALL set_closure_model ! set the closure scheme in use
+
   !! Display parallel settings
   CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   DO i_ = 0,num_procs-1
@@ -67,7 +70,11 @@ subroutine auxval
   ENDDO
   CALL mpi_barrier(MPI_COMM_WORLD, ierr)
 
-  IF((CLOS .EQ. 1)) &
-    CALL speak('Closure = 1 -> Maximal Napj degree is min(Pmax,2*Jmax+1): D = '// str(dmax))
+  SELECT CASE(hierarchy_closure)
+  CASE('truncation')
+    CALL speak('Truncation closure')
+  CASE('max_degree')
+    CALL speak('Max degree closure -> Maximal Napj degree is D = '// str(dmax))
+  END SELECT
 
 END SUBROUTINE auxval

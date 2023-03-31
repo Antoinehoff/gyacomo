@@ -15,8 +15,8 @@ CONTAINS
 
     USE basic,  ONLY: dt
     USE grid,   ONLY:local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
-                     ngp, ngj, ngz, dmax, parray, jarray, dmax
-    USE model,  ONLY: CLOS
+                     ngp, ngj, ngz
+    USE closure,ONLY: evolve_mom
     use fields, ONLY: moments
     use array,  ONLY: moments_rhs
     USE time_integration, ONLY: updatetlevel, A_E, b_E, ntimelevel
@@ -34,6 +34,7 @@ CONTAINS
       DO ip    =1,local_np
         ipi = ip+ngp/2
       DO ia    =1,local_na
+        IF( evolve_mom(ipi,iji) )&
         moments(ia,ipi,iji,iky,ikx,izi,1) = moments(ia,ipi,iji,iky,ikx,izi,1) &
                + dt*b_E(istage)*moments_rhs(ia,ip,ij,iky,ikx,iz,istage)
       END DO
@@ -55,7 +56,7 @@ CONTAINS
       DO ip    =1,local_np
         ipi = ip+ngp/2
       DO ia    =1,local_na
-        IF((CLOS .NE. 1) .OR. (parray(ipi)+2*jarray(iji) .LE. dmax))&
+        IF( evolve_mom(ipi,iji) )&
         moments(ia,ipi,iji,iky,ikx,izi,updatetlevel) = moments(ia,ipi,iji,iky,ikx,izi,updatetlevel) + &
                           dt*A_E(updatetlevel,istage)*moments_rhs(ia,ip,ij,iky,ikx,iz,istage)
       END DO

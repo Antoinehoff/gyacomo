@@ -8,10 +8,11 @@ SUBROUTINE compute_moments_eq_rhs
   USE array
   USE fields
   USE grid,       ONLY: local_na, local_np, local_nj, local_nkx, local_nky, local_nz,&
-                        nzgrid,pp2,ngp,ngj,ngz,dmax,&
+                        nzgrid,pp2,ngp,ngj,ngz,&
                         diff_dz_coeff,diff_kx_coeff,diff_ky_coeff,diff_p_coeff,diff_j_coeff,&
                         parray,jarray,kxarray, kyarray, kparray
   USE basic
+  USE closure,    ONLY: evolve_mom
   USE prec_const
   USE collision
   USE time_integration
@@ -55,7 +56,7 @@ SUBROUTINE compute_moments_eq_rhs
             a:DO ia = 1,local_na
               Napj = moments(ia,ipi,iji,iky,ikx,izi,updatetlevel)
               RHS = 0._xp
-              IF((CLOS .NE. 1) .OR. (p_int +2*j_int .LE. dmax)) THEN ! for the closure scheme
+              IF(evolve_mom(ipi,iji)) THEN ! for the closure scheme
                 !! Compute moments_ mixing terms
                 ! Perpendicular dynamic
                 ! term propto n^{p,j}

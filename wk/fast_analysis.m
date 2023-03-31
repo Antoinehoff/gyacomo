@@ -9,11 +9,19 @@ PARTITION  = '/misc/gyacomo23_outputs/';
 % resdir = 'paper_2_GYAC23/CBC/7x4x192x96x32_nu_0.05_muxy_1.0_muz_2.0';
 % resdir = 'paper_2_GYAC23/CBC/Full_NL_7x4x192x96x32_nu_0.05_muxy_1.0_muz_2.0';
 
-%% tests
+%% tests single vs double precision
 % resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24';
-resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_xp';
+% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_dp';
 % resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_sp';
-% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_Lx_180';
+% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_sp_clos_1';
+% resdir = 'paper_2_GYAC23/precision_study/3x2x128x64x24_sp_muz_2.0';
+resdir = 'paper_2_GYAC23/precision_study/test_3x2x128x64x24_sp_muz_2.0';
+% resdir = 'paper_2_GYAC23/precision_study/3x2x128x64x24_sp_clos_1';
+
+%% 
+% resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0';
+% resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0_full_NL';
+% resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0_muxy_0';
  %%
 J0 = 00; J1 = 10;
 
@@ -22,7 +30,7 @@ DATADIR = [PARTITION,resdir,'/'];
 data    = {};
 data    = compile_results_low_mem(data,DATADIR,J0,J1);
 
-if 0
+if 1
 %% Plot transport and phi radial profile
 [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 
@@ -50,7 +58,7 @@ options.NAME      = '\phi';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'xz';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -61,6 +69,11 @@ data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
 create_film(data,options,'.gif')
+end
+
+if 0
+%% Performance profiler
+profiler(data)
 end
 
 if 0

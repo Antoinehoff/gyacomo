@@ -13,10 +13,11 @@ CONTAINS
     USE parallel,    ONLY: num_procs_p, comm_p,dsp_p,rcv_p
     USE grid,        ONLY: &
       local_na, &
-      local_np, total_np, total_nj,&
+      local_np, ngp, total_np, total_nj, ngj,&
       local_nkx, local_nky, local_nz, bar
     USE array,       ONLY: Capj
     USE MPI
+    USE closure,     ONLY: evolve_mom
     IMPLICIT NONE
     LOGICAL, INTENT(IN) :: GK_CO
     COMPLEX(xp), DIMENSION(total_np)    :: local_coll, buffer
@@ -30,7 +31,7 @@ CONTAINS
           a:DO ia = 1,local_na
             j:DO ij = 1,total_nj
               p:DO ip = 1,total_np
-                IF((CLOS .NE. 1) .OR. (p_int+2*j_int .LE. dmax)) THEN !compute for every moments except for closure 1
+              IF(evolve_mom(ip+ngp/2,ij+ngj/2)) THEN !compute for every moments except for closure 1
                   !! Take GK or DK limit
                   IF (GK_CO) THEN ! GK operator (k-dependant)
                     ikx_C = ikx; iky_C = iky; iz_C = iz;

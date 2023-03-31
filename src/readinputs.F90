@@ -9,6 +9,7 @@ SUBROUTINE readinputs
   USE initial_par,      ONLY: initial_readinputs
   USE time_integration, ONLY: time_integration_readinputs
   USE geometry,         ONLY: geometry_readinputs
+  USE closure,          ONLY: closure_readinputs
 
   USE prec_const
   IMPLICIT NONE
@@ -29,6 +30,9 @@ SUBROUTINE readinputs
   ! Load model parameters from input file
   CALL model_readinputs
 
+  ! Load parameters for moment closure scheme
+  CALL closure_readinputs
+  
   ! Load model parameters from input file
   CALL species_readinputs
 

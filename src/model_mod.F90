@@ -4,8 +4,6 @@ MODULE model
   IMPLICIT NONE
   PRIVATE
   ! INPUTS
-  INTEGER,  PUBLIC, PROTECTED ::    CLOS =  0         ! linear truncation method
-  INTEGER,  PUBLIC, PROTECTED :: NL_CLOS =  0         ! nonlinear truncation method
   INTEGER,  PUBLIC, PROTECTED ::    KERN =  0         ! Kernel model
   CHARACTER(len=16), &
             PUBLIC, PROTECTED ::LINEARITY= 'linear'   ! To turn on non linear bracket term
@@ -39,7 +37,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /MODEL_PAR/ CLOS, NL_CLOS, KERN, LINEARITY, &
+    NAMELIST /MODEL_PAR/ KERN, LINEARITY, &
                          mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, Na,&
                          nu, k_gB, k_cB, lambdaD, beta, ADIAB_E, tau_e
 
@@ -70,8 +68,6 @@ CONTAINS
     CHARACTER(len=256)  :: str
     WRITE(str,'(a)') '/data/input/model'
     CALL creatd(fid, 0,(/0/),TRIM(str),'Model Input')
-    CALL attach(fid, TRIM(str),      "CLOS",    CLOS)
-    CALL attach(fid, TRIM(str),   "NL_CLOS", NL_CLOS)
     CALL attach(fid, TRIM(str),      "KERN",    KERN)
     CALL attach(fid, TRIM(str), "LINEARITY", LINEARITY)
     CALL attach(fid, TRIM(str),      "mu_x",    mu_x)

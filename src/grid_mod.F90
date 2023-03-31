@@ -163,7 +163,6 @@ CONTAINS
     CALL set_kygrid(LINEARITY,N_HD)
     CALL set_kxgrid(shear,Npol,LINEARITY,N_HD)
     CALL set_zgrid (Npol)
-
     ! print*, 'p:',parray
     ! print*, 'j:',jarray
     ! print*, 'ky:',kyarray

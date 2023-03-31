@@ -14,8 +14,20 @@ DATA.JMAX    = h5readatt(filename,'/data/input/grid','jmax');
 DATA.Nx      = h5readatt(filename,'/data/input/grid','Nx');
 DATA.Ny      = h5readatt(filename,'/data/input/grid','Ny');
 DATA.L       = h5readatt(filename,'/data/input/grid','Lx');
+try
 DATA.CLOS    = h5readatt(filename,'/data/input/model','CLOS');
 DATA.NL_CLOS = h5readatt(filename,'/data/input/model','NL_CLOS');
+catch
+    try
+        DATA.ha_cl   = h5readatt(filename,'/data/input/closure','hierarchy_closure');
+        DATA.CLOS    = h5readatt(filename,'/data/input/closure','dmax');   
+        DATA.nl_cl   = h5readatt(filename,'/data/input/closure','nonlinear_closure');   
+        DATA.NL_CLOS = h5readatt(filename,'/data/input/closure','nmax');   
+    catch
+        DATA.CLOS = 99;
+        DATA.NL_CLOS = 99;
+    end
+end
 DATA.Na      = h5readatt(filename,'/data/input/model','Na');
 DATA.NU      = h5readatt(filename,'/data/input/model','nu');
 DATA.MUp     = h5readatt(filename,'/data/input/model','mu_p');

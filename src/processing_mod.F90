@@ -15,7 +15,7 @@ MODULE processing
    USE geometry,         ONLY: Jacobian, iInt_Jacobian
    USE time_integration, ONLY: updatetlevel
    USE calculus,         ONLY: simpson_rule_z, grad_z, grad_z_5D, grad_z2, grad_z4, grad_z4_5D, interp_z
-   USE model,            ONLY: EM, CLOS, beta, HDz_h
+   USE model,            ONLY: EM, beta, HDz_h
    USE species,          ONLY: tau,q_tau,q_o_sqrt_tau_sigma,sqrt_tau_o_sigma
    USE parallel,         ONLY: num_procs_ky, rank_ky, comm_ky
    USE mpi
@@ -49,7 +49,7 @@ CONTAINS
    !
    SUBROUTINE compute_nadiab_moments
       IMPLICIT NONE
-      INTEGER :: ia,ip,ij,iky,ikx,iz, j_int, p_int
+      INTEGER :: ia,ip,ij,iky,ikx,iz
       !non adiab moments
       DO iz=1,local_nz+ngz
       DO ikx=1,local_nkx
@@ -72,25 +72,6 @@ CONTAINS
       ENDDO
       ENDDO
       ENDDO
-      !! Ensure to kill the moments too high if closue option is set to 1
-      IF(CLOS .EQ. 1) THEN
-         DO iz=1,local_nz+ngz
-         DO ikx=1,local_nkx
-         DO iky=1,local_nky
-         DO ij=1,local_nj+ngj
-         j_int = jarray(ij)
-         DO ip=1,local_np+ngp
-         p_int = parray(ip)
-            DO ia = 1,local_na
-            IF(p_int+2*j_int .GT. dmax) &
-               nadiab_moments(ia,ip,ij,iky,ikx,iz) = 0._xp
-         ENDDO
-         ENDDO
-         ENDDO
-         ENDDO
-         ENDDO
-         ENDDO
-      ENDIF
    END SUBROUTINE compute_nadiab_moments
 
    ! z grid gradients
