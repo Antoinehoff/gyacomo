@@ -37,14 +37,14 @@ while(CONTINUE)
             CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
             DT_SIM    = h5readatt(filename,'/data/input/basic','dt');
             [Pe, Je, Pi, Ji, kx, ky, z] = load_grid_data(filename);
-            W_GAMMA   = strcmp(h5readatt(filename,'/data/input','write_gamma'),'y');
-            W_HF      = strcmp(h5readatt(filename,'/data/input','write_hf'   ),'y');
-            KIN_E     = strcmp(h5readatt(filename,'/data/input',     'KIN_E' ),'y');
-            BETA      = h5readatt(filename,'/data/input','beta');
+            W_GAMMA   = strcmp(h5readatt(filename,'/data/input/diag_par','write_gamma'),'y');
+            W_HF      = strcmp(h5readatt(filename,'/data/input/diag_par','write_hf'   ),'y');
+            KIN_E     = strcmp(h5readatt(filename,'/data/input/model',     'ADIAB_E' ),'n');
+            BETA      = h5readatt(filename,'/data/input/model','beta');
 
             if W_GAMMA
-                [ GGAMMA_RI, Ts0D, ~] = load_0D_data(filename, 'gflux_ri');
-                PGAMMA_RI            = load_0D_data(filename, 'pflux_ri');
+                [ GGAMMA_RI, Ts0D, ~] = load_0D_data(filename, 'gflux_xi');
+                PGAMMA_RI            = load_0D_data(filename, 'pflux_xi');
                 GGAMMAI_ = cat(1,GGAMMAI_,GGAMMA_RI); clear GGAMMA_RI
                 PGAMMAI_ = cat(1,PGAMMAI_,PGAMMA_RI); clear PGAMMA_RI
             end
