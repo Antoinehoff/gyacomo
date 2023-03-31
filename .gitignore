@@ -40,7 +40,7 @@ local/
 Gallery/
 .vscode/settings.json
 *figure*
-*results*
+results*
 out*
 !scripts/*
 *.avi
