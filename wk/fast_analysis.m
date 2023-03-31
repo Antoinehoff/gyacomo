@@ -1,8 +1,8 @@
 % Directory of the code "mypathtogyacomo/gyacomo/"
 % Partition of the computer where the data have to be searched
-PARTITION  = '/misc/gyacomo23_outputs/';
+% PARTITION  = '/misc/gyacomo23_outputs/';
 % PARTITION  = gyacomodir;
-
+PARTITION = '/home/ahoffman/gyacomo/';
 %% CBC 
 % resdir = 'paper_2_GYAC23/CBC/7x4x192x96x32_nu_0.05_muxy_0.5_muz_0.2';
 % resdir = 'paper_2_GYAC23/CBC/7x4x192x96x32_nu_0.05_muxy_1.0_muz_1.0';
@@ -15,13 +15,16 @@ PARTITION  = '/misc/gyacomo23_outputs/';
 % resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_sp';
 % resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_sp_clos_1';
 % resdir = 'paper_2_GYAC23/precision_study/3x2x128x64x24_sp_muz_2.0';
-resdir = 'paper_2_GYAC23/precision_study/test_3x2x128x64x24_sp_muz_2.0';
+% resdir = 'paper_2_GYAC23/precision_study/test_3x2x128x64x24_sp_muz_2.0';
 % resdir = 'paper_2_GYAC23/precision_study/3x2x128x64x24_sp_clos_1';
 
 %% 
 % resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0';
 % resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0_full_NL';
 % resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0_muxy_0';
+
+resdir = 'testcases/zpinch_example';
+
  %%
 J0 = 00; J1 = 10;
 

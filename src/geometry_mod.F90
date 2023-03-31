@@ -121,6 +121,9 @@ CONTAINS
           call eval_zpinch_geometry
           SHEARED = .FALSE.
           shear   = 0._xp
+          q0      = 0._xp
+          eps     = 0._xp
+          kappa   = 1._xp
         CASE('miller')
           CALL speak('Miller geometry')
           call set_miller_parameters(kappa,s_kappa,delta,s_delta,zeta,s_zeta)
