@@ -1,8 +1,8 @@
 &BASIC
   nrun       = 99999999
   dt         = 0.01
-  tmax       = 10
-  maxruntime = 356400
+  tmax       = 50
+  maxruntime = 72000
   job2load   = -1
 /
 &GRID
@@ -18,9 +18,9 @@
 /
 &GEOMETRY
   geom   = 'Z-pinch'
-  q0     = 0.0
-  shear  = 0.0
-  eps    = 0.0
+  q0     = 1.4
+  shear  = 0.8
+  eps    = 0.18
   kappa  = 1.0
   s_kappa= 0.0
   delta  = 0.0
@@ -31,11 +31,11 @@
   shift_y= 0.0
 /
 &OUTPUT_PAR
-  dtsave_0d = 0.1
+  dtsave_0d = 1
   dtsave_1d = -1
   dtsave_2d = -1
-  dtsave_3d = 1
-  dtsave_5d = 10
+  dtsave_3d = 5
+  dtsave_5d = 20
   write_doubleprecision = .f.
   write_gamma = .t.
   write_hf    = .t.
@@ -47,9 +47,6 @@
   write_temp  = .t.
 /
 &MODEL_PAR
-  ! Collisionality
-  CLOS    = 0
-  NL_CLOS = -1
   LINEARITY = 'nonlinear'
   Na      = 2 ! number of species
   mu_x    = 1.0
@@ -60,9 +57,15 @@
   mu_p    = 0.0
   mu_j    = 0.0
   nu      = 0.1
-  beta    = 0.01
+  beta    = 0.0
   ADIAB_E = .f.
   tau_e   = 1.0
+/
+&CLOSURE_PAR
+  hierarchy_closure='truncation'
+  dmax = -1
+  nonlinear_closure='anti_laguerre_aliasing' !(truncation,full_sum,anti_laguerre_aliasing)
+  nmax = 0
 /
 &SPECIES
  ! ions
@@ -78,22 +81,21 @@
  name_ = 'electrons'
  tau_  = 1.0
  sigma_= 0.023338
- q_    = -1.0
+ q_    =-1.0
  k_N_  = 2.0
  k_T_  = 0.4
 /
-
 &COLLISION_PAR
-  collision_model = 'SG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
+  collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
   GK_CO           = .t.
   INTERSPECIES    = .true.
   mat_file       = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /
 &INITIAL_CON
-  INIT_OPT         = 'phi'
+  INIT_OPT         = 'phi' !(phi,blob)
   ACT_ON_MODES     = 'donothing'
-  init_background  = 0.005
-  init_noiselvl    = 0.00
+  init_background  = 0.0
+  init_noiselvl    = 0.005
   iseed            = 42
 /
 &TIME_INTEGRATION_PAR

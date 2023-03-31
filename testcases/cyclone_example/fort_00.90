@@ -47,9 +47,6 @@
   write_temp  = .t.
 /
 &MODEL_PAR
-  ! Collisionality
-  CLOS    = 0
-  NL_CLOS = 0
   LINEARITY = 'nonlinear'
   Na      = 1 ! number of species
   mu_x    = 1.0
@@ -63,6 +60,12 @@
   beta    = 0.0
   ADIAB_E = .t.
   tau_e   = 1.0
+/
+&CLOSURE_PAR
+  hierarchy_closure='truncation'
+  dmax = -1
+  nonlinear_closure='truncation'
+  nmax = 0
 /
 &SPECIES
  ! ions
