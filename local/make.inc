@@ -78,10 +78,10 @@ ifdef FFTW3DIR
 endif
 
 # Add lapack local lib
-ifdef LAPACKDIR
-      LIBS += -llapack -lblas
-      LDIRS += -L$(LAPACKDIR)/lib
-endif
+#ifdef LAPACKDIR
+      LIBS  += -llapack -lblas
+#      LDIRS += -L$(LAPACKDIR)/lib
+#endif
 
 # FM library
 ifdef FMDIR

@@ -8,6 +8,7 @@ SUBROUTINE stepon
    use mpi,                   ONLY: MPI_COMM_WORLD
    USE time_integration,      ONLY: ntimelevel
    USE prec_const,            ONLY: xp
+   USE DLRA,                  ONLY: test_SVD
    IMPLICIT NONE
 
    INTEGER :: num_step, ierr
@@ -56,6 +57,7 @@ SUBROUTINE stepon
 
       !! TEST SINGULAR VALUE DECOMPOSITION
       ! CALL filter_singular_value_ky_pj(nsv,moments)
+      ! CALL test_SVD
       
       IF( nlend ) EXIT ! exit do loop
 
