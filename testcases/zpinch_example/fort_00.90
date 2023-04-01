@@ -34,8 +34,8 @@
   dtsave_0d = 1
   dtsave_1d = -1
   dtsave_2d = -1
-  dtsave_3d = 5
-  dtsave_5d = 20
+  dtsave_3d = 1
+  dtsave_5d = 10
   write_doubleprecision = .f.
   write_gamma = .t.
   write_hf    = .t.

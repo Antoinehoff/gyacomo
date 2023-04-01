@@ -1,18 +1,18 @@
 &BASIC
   nrun       = 99999999
   dt         = 0.01
-  tmax       = 500
+  tmax       = 50
   maxruntime = 72000
   job2load   = -1
 /
 &GRID
-  pmax   = 4
-  jmax   = 2
-  Nx     = 128
+  pmax   = 2
+  jmax   = 1
+  Nx     = 64
   Lx     = 120
-  Ny     = 64
+  Ny     = 48
   Ly     = 120
-  Nz     = 24
+  Nz     = 16
   SG     = .f.
   Nexc   = 0
 /
@@ -34,7 +34,7 @@
   dtsave_0d = 1
   dtsave_1d = -1
   dtsave_2d = -1
-  dtsave_3d = 5
+  dtsave_3d = 1
   dtsave_5d = 20
   write_doubleprecision = .f.
   write_gamma = .t.
@@ -49,14 +49,14 @@
 &MODEL_PAR
   LINEARITY = 'nonlinear'
   Na      = 1 ! number of species
-  mu_x    = 1.0
-  mu_y    = 1.0
+  mu_x    = 0.0
+  mu_y    = 0.0
   N_HD    = 4
   mu_z    = 2.0
   HYP_V   = 'hypcoll'
   mu_p    = 0.0
   mu_j    = 0.0
-  nu      = 0.001
+  nu      = 0.1
   beta    = 0.0
   ADIAB_E = .t.
   tau_e   = 1.0
@@ -79,7 +79,7 @@
 
 &COLLISION_PAR
   collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
-  GK_CO           = .f.
+  GK_CO           = .t.
   INTERSPECIES    = .true.
   mat_file       = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /

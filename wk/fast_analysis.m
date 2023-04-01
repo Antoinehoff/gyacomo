@@ -23,7 +23,9 @@ PARTITION = '/home/ahoffman/gyacomo/';
 % resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0_full_NL';
 % resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0_muxy_0';
 
+%% testcases
 resdir = 'testcases/zpinch_example';
+% resdir = 'testcases/cyclone_example';
 
  %%
 J0 = 00; J1 = 10;
@@ -33,7 +35,7 @@ DATADIR = [PARTITION,resdir,'/'];
 data    = {};
 data    = compile_results_low_mem(data,DATADIR,J0,J1);
 
-if 1
+if 0
 %% Plot transport and phi radial profile
 [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 
@@ -60,7 +62,7 @@ options.NAME      = '\phi';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
-options.PLAN      = 'xz';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -78,10 +80,10 @@ if 0
 profiler(data)
 end
 
-if 0
+if 1
 %% Hermite-Laguerre spectrum
-[data.Nipjz, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'Nipjz');
-data.Nipjz = log(data.Nipjz);
+[data.Napjz, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Napjz');
+% data.Nipjz = log(data.Nipjz);
 % options.TIME = 'avg';
 options.P2J        = 0;
 options.ST         = 1;
