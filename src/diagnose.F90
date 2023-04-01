@@ -160,17 +160,11 @@ SUBROUTINE diagnose_full(kstep)
      CALL creatd(fidres, rank, dims,  "/data/var0d/time",     "Time t*c_s/R")
      CALL creatd(fidres, rank, dims, "/data/var0d/cstep", "iteration number")
      IF (write_gamma) THEN
-       DO ia=1,total_na
-         letter_a = name(ia)(1:1)
-         CALL creatd(fidres, rank, dims, "/data/var0d/gflux_x"//letter_a, "Radial gyro transport")
-         CALL creatd(fidres, rank, dims, "/data/var0d/pflux_x"//letter_a, "Radial part transport")
-      ENDDO
+      CALL creatd(fidres, rank, dims, "/data/var0d/gflux_x", "Radial gyro transport")
+      CALL creatd(fidres, rank, dims, "/data/var0d/pflux_x", "Radial part transport")
      ENDIF
      IF (write_hf) THEN
-       DO ia=1,total_na
-         letter_a = name(ia)(1:1)
-         CALL creatd(fidres, rank, dims, "/data/var0d/hflux_x"//letter_a, "Radial part heat flux")
-      ENDDO
+      CALL creatd(fidres, rank, dims, "/data/var0d/hflux_x", "Radial part heat flux")
      ENDIF
      IF (cstep==0) THEN
        iframe0d=0
@@ -184,26 +178,22 @@ SUBROUTINE diagnose_full(kstep)
      CALL creatd(fidres, rank, dims, "/data/var3d/cstep", "iteration number")
      IF (write_phi) CALL creatg(fidres, "/data/var3d/phi", "phi")
      IF (write_phi.AND.EM) CALL creatg(fidres, "/data/var3d/psi", "psi")
-     ! Loop to create species related data
-     DO ia=1,total_na
-       letter_a = name(ia)(1:1)
-       IF (write_Na00) THEN
-        CALL creatg(fidres, "/data/var3d/N"//letter_a//"00", "gyroceneter density "//letter_a)
-        CALL creatg(fidres, "/data/var3d/N"//letter_a//"pjz", "pj(z) moment spectrum "//letter_a)
-       ENDIF
-       IF (write_dens) THEN
-        CALL creatg(fidres, "/data/var3d/dens_"//letter_a, "density "//letter_a)
-       ENDIF
-       IF (write_fvel) THEN
-         CALL creatg(fidres, "/data/var3d/upar_"//letter_a, "parallel fluid velocity "//letter_a)
-         CALL creatg(fidres, "/data/var3d/uper_"//letter_a, "perpendicular fluid velocity "//letter_a)
-       ENDIF
-       IF (write_temp) THEN
-         CALL creatg(fidres, "/data/var3d/Tper_"//letter_a, "perpendicular temperature "//letter_a)
-         CALL creatg(fidres, "/data/var3d/Tpar_"//letter_a, "parallel temperature "//letter_a)
-         CALL creatg(fidres, "/data/var3d/temp_"//letter_a, "tiotal temperature "//letter_a)
-       ENDIF
-    ENDDO
+    IF (write_Na00) THEN
+    CALL creatg(fidres, "/data/var3d/Na00", "gyrocenter density ")
+    CALL creatg(fidres, "/data/var3d/Napjz", "pj(z) moment spectrum ")
+    ENDIF
+    IF (write_dens) THEN
+    CALL creatg(fidres, "/data/var3d/dens", "density ")
+    ENDIF
+    IF (write_fvel) THEN
+      CALL creatg(fidres, "/data/var3d/upar", "parallel fluid velocity ")
+      CALL creatg(fidres, "/data/var3d/uper", "perpendicular fluid velocity ")
+    ENDIF
+    IF (write_temp) THEN
+      CALL creatg(fidres, "/data/var3d/Tper", "perpendicular temperature ")
+      CALL creatg(fidres, "/data/var3d/Tpar", "parallel temperature ")
+      CALL creatg(fidres, "/data/var3d/temp", "tiotal temperature ")
+    ENDIF
      IF (cstep==0) THEN
        iframe3d=0
      ENDIF
@@ -298,18 +288,12 @@ SUBROUTINE diagnose_0d
   ! Ion transport data
   IF (write_gamma) THEN
     CALL compute_radial_transport
-    DO ia=1,Na
-      letter_a = name(ia)(1:1)
-      CALL append(fidres, "/data/var0d/gflux_x"//letter_a,REAL(gflux_x(ia),dp),ionode=0)
-      CALL append(fidres, "/data/var0d/pflux_x"//letter_a,REAL(pflux_x(ia),dp),ionode=0)
-    ENDDO
+    CALL append(fidres, "/data/var0d/gflux_x",REAL(gflux_x,dp),ionode=0)
+    CALL append(fidres, "/data/var0d/pflux_x",REAL(pflux_x,dp),ionode=0)
   ENDIF
   IF (write_hf) THEN
     CALL compute_radial_heatflux
-    DO ia=1,Na
-      letter_a = name(ia)(1:1)
-      CALL append(fidres, "/data/var0d/hflux_x"//letter_a,REAL(hflux_x(ia),dp),ionode=0)
-    ENDDO
+    CALL append(fidres, "/data/var0d/hflux_x",REAL(hflux_x,dp),ionode=0)
   ENDIF
 END SUBROUTINE diagnose_0d
 
@@ -318,7 +302,7 @@ SUBROUTINE diagnose_3d
   USE futils, ONLY: append, getatt, attach, putarrnd, putarr
   USE fields, ONLY: phi, psi, moments
   USE array,  ONLY: Napjz,dens,upar,uper,Tpar,Tper,temp
-  USE grid, ONLY: CONTAINSp0, ip0,ij0, local_na,&
+  USE grid, ONLY: CONTAINSp0, ip0,ij0, local_na, total_na,&
                   total_np, total_nj, total_nky, total_nkx, total_nz, &
                   local_np, local_nj, local_nky, local_nkx, local_nz, &
                   ngz
@@ -332,9 +316,8 @@ SUBROUTINE diagnose_3d
   IMPLICIT NONE
   CHARACTER :: letter_a
   INTEGER   :: ia
-  COMPLEX(xp), DIMENSION(local_nky,local_nkx,local_nz) :: Na00_
-  COMPLEX(xp), DIMENSION(local_nky,local_nkx,local_nz) :: fmom
-  COMPLEX(xp), DIMENSION(local_np, local_nj, local_nz) :: Napjz_
+  COMPLEX(xp), DIMENSION(local_na,local_nky,local_nkx,local_nz) :: Na00_
+  COMPLEX(xp), DIMENSION(local_na,local_np, local_nj, local_nz) :: Napjz_
   ! add current time, cstep and frame
   CALL append(fidres,  "/data/var3d/time",           REAL(time,dp),ionode=0)
   CALL append(fidres, "/data/var3d/cstep", real(cstep,dp),ionode=0)
@@ -346,47 +329,32 @@ SUBROUTINE diagnose_3d
   IF (write_phi.AND.EM) CALL write_field3d_kykxz(psi (:,:,(1+ngz/2):(local_nz+ngz/2)), 'psi')
   IF (write_Na00) THEN
     CALL compute_Napjz_spectrum
-    DO ia=1,local_na
-      letter_a = name(ia)(1:1)
-      IF (CONTAINSp0) THEN
-        ! gyrocenter density
-        Na00_    = moments(ia,ip0,ij0,:,:,(1+ngz/2):(local_nz+ngz/2),updatetlevel)
-      ELSE
-        Na00_    = 0._xp
-      ENDIF
-      CALL write_field3d_kykxz(Na00_, 'N'//letter_a//'00')
-     ! <<Napj>x>y spectrum
-      Napjz_ = Napjz(ia,:,:,:)
-      CALL write_field3d_pjz(Napjz_, 'N'//letter_a//'pjz')
-    ENDDO
+    IF (CONTAINSp0) THEN
+      ! gyrocenter density
+      Na00_    = moments(:,ip0,ij0,:,:,(1+ngz/2):(local_nz+ngz/2),updatetlevel)
+    ELSE
+      Na00_    = 0._xp
+    ENDIF
+    CALL write_field3da_kykxz(Na00_, 'Na00')
+    ! <<Napj>x>y spectrum
+    Napjz_ = Napjz
+    CALL write_field3da_pjz(Napjz_, 'Napjz')
   ENDIF
   !! Fuid moments
   IF (write_dens .OR. write_fvel .OR. write_temp) &
   CALL compute_fluid_moments
-
-  DO ia=1,local_na
-    letter_a = name(ia)(1:1)
-    IF (write_dens) THEN
-      fmom = dens(ia,:,:,:)
-      CALL write_field3d_kykxz(fmom, 'dens_'//letter_a)
-    ENDIF
-
-    IF (write_fvel) THEN
-      fmom = upar(ia,:,:,:)
-      CALL write_field3d_kykxz(fmom, 'upar_'//letter_a)
-      fmom = uper(ia,:,:,:)
-      CALL write_field3d_kykxz(fmom, 'uper_'//letter_a)
-    ENDIF
-
-    IF (write_temp) THEN
-      fmom = Tpar(ia,:,:,:)
-      CALL write_field3d_kykxz(fmom, 'Tpar_'//letter_a)
-      fmom = Tper(ia,:,:,:)
-      CALL write_field3d_kykxz(fmom, 'Tper_'//letter_a)
-      fmom = temp(ia,:,:,:)
-      CALL write_field3d_kykxz(fmom, 'temp_'//letter_a)
-    ENDIF
-  ENDDO
+  IF (write_dens) THEN
+    CALL write_field3da_kykxz(dens, 'dens')
+  ENDIF
+  IF (write_fvel) THEN
+    CALL write_field3da_kykxz(upar, 'upar')
+    CALL write_field3da_kykxz(uper, 'uper')
+  ENDIF
+  IF (write_temp) THEN
+    CALL write_field3d_kykxz(Tpar, 'Tpar')
+    CALL write_field3d_kykxz(Tper, 'Tper')
+    CALL write_field3d_kykxz(temp, 'temp')
+  ENDIF
   CONTAINS
     SUBROUTINE write_field3d_kykxz(field, text)
       USE parallel, ONLY : gather_xyz, num_procs
@@ -403,15 +371,31 @@ SUBROUTINE diagnose_3d
         CALL gather_xyz(field,field_full,local_nky,total_nky,total_nkx,local_nz,total_nz)
         CALL putarr(fidres, dset_name, field_full, ionode=0)
       ENDIF
-        ! CALL attach(fidres, dset_name, "time", time)
       END SUBROUTINE write_field3d_kykxz
 
-    SUBROUTINE write_field3d_pjz(field, text)
+      SUBROUTINE write_field3da_kykxz(field, text)
+        USE parallel, ONLY : gather_xyz, num_procs
+        IMPLICIT NONE
+        COMPLEX(xp), DIMENSION(local_na,local_nky,total_nkx,local_nz), INTENT(IN) :: field
+        CHARACTER(*), INTENT(IN) :: text
+        COMPLEX(xp), DIMENSION(total_na,total_nky,total_nkx,total_nz) :: field_full
+        CHARACTER(50) :: dset_name
+        field_full = 0;
+        WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
+        IF (num_procs .EQ. 1) THEN ! no data distribution
+          CALL putarr(fidres, dset_name, field, ionode=0)
+        ELSE
+          CALL gather_xyz(field,field_full,local_nky,total_nky,total_nkx,local_nz,total_nz)
+          CALL putarr(fidres, dset_name, field_full, ionode=0)
+        ENDIF
+        END SUBROUTINE write_field3da_kykxz
+
+    SUBROUTINE write_field3da_pjz(field, text)
       USE parallel, ONLY : gather_pjz, num_procs
       IMPLICIT NONE
-      COMPLEX(xp), DIMENSION(local_np,local_nj,local_nz), INTENT(IN) :: field
+      COMPLEX(xp), DIMENSION(local_na,local_np,local_nj,local_nz), INTENT(IN) :: field
       CHARACTER(*), INTENT(IN) :: text
-      COMPLEX(xp), DIMENSION(total_np,total_nj,total_nz) :: field_full
+      COMPLEX(xp), DIMENSION(total_na,total_np,total_nj,total_nz) :: field_full
       CHARACTER(LEN=50) :: dset_name
       field_full = 0;
       WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
@@ -422,7 +406,7 @@ SUBROUTINE diagnose_3d
         CALL putarr(fidres, dset_name, field_full, ionode=0)
       ENDIF
       CALL attach(fidres, dset_name, "time", time)
-    END SUBROUTINE write_field3d_pjz
+    END SUBROUTINE write_field3da_pjz
 
 END SUBROUTINE diagnose_3d
 

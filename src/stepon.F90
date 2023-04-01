@@ -54,6 +54,9 @@ SUBROUTINE stepon
         CALL checkfield_all()
       CALL stop_chrono(chrono_chck)
 
+      !! TEST SINGULAR VALUE DECOMPOSITION
+      ! CALL filter_singular_value_ky_pj(nsv,moments)
+      
       IF( nlend ) EXIT ! exit do loop
 
       CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
