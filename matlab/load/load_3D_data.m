@@ -13,6 +13,10 @@ function [ data, time, dt ] = load_3D_data( filename, variablename )
         sz  = size(tmp);
         cmpx = 0;
     end
+    % add a z dimension even if 2D
+    if(numel(sz) == 2)
+        sz = [sz 1];
+    end
     % add time dimension
     sz    = [sz numel(time)];
     data     = zeros(sz);
@@ -20,16 +24,22 @@ function [ data, time, dt ] = load_3D_data( filename, variablename )
     for it = 1:numel(time)
         tmp         = h5read(filename,['/data/var3d/',variablename,'/', num2str(cstart+it,'%06d')]);
         if cmpx
-            if(numel(sz) == 3)
-                data(:,:,it) = tmp.real + 1i * tmp.imaginary;
-            else
+            switch numel(sz)
+                case(3)
+                data(:,:,1,it) = tmp.real + 1i * tmp.imaginary;
+                case(4)
                 data(:,:,:,it) = tmp.real + 1i * tmp.imaginary;
+                case(5)
+                data(:,:,:,:,it) = tmp.real + 1i * tmp.imaginary;
             end
         else
-            if(numel(sz) == 3)
-                data(:,:,it) = tmp;
-            else
+            switch numel(sz)
+                case(3)
+                data(:,:,1,it) = tmp;
+                case(4)
                 data(:,:,:,it) = tmp;
+                case(5)
+                data(:,:,:,:,it) = tmp;
             end
         end
     end

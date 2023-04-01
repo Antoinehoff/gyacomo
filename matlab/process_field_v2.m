@@ -9,35 +9,35 @@ for i = 1:numel(OPTIONS.TIME)
 end
 FRAMES = unique(FRAMES);
 %% Setup the plot geometry
-[KX, KY] = meshgrid(DATA.kx, DATA.ky);
+[KX, KY] = meshgrid(DATA.grids.kx, DATA.grids.ky);
 directions = {'y','x','z'};
-Nx = DATA.Nx; Ny = DATA.Ny; Nz = DATA.Nz; Nt = numel(FRAMES);
+Nx = DATA.grids.Nx; Ny = DATA.grids.Ny; Nz = DATA.grids.Nz; Nt = numel(FRAMES);
 POLARPLOT = OPTIONS.POLARPLOT;
 LTXNAME = OPTIONS.NAME;
 switch OPTIONS.PLAN
     case 'xy'
         XNAME = '$x$'; YNAME = '$y$';
-        [X,Y] = meshgrid(DATA.x,DATA.y);
+        [X,Y] = meshgrid(DATA.grids.x,DATA.grids.y);
         REALP = 1; COMPDIM = 3; POLARPLOT = 0; SCALE = 1;
     case 'xz'
         XNAME = '$x$'; YNAME = '$z$';
-        [Y,X] = meshgrid(DATA.z,DATA.x);
+        [Y,X] = meshgrid(DATA.grids.z,DATA.grids.x);
         REALP = 1; COMPDIM = 1; SCALE = 0;
     case 'yz'
         XNAME = '$y$'; YNAME = '$z$'; 
-        [Y,X] = meshgrid(DATA.z,DATA.y);
+        [Y,X] = meshgrid(DATA.grids.z,DATA.grids.y);
         REALP = 1; COMPDIM = 2; SCALE = 0;
     case 'kxky'
         XNAME = '$k_x$'; YNAME = '$k_y$';
-        [X,Y] = meshgrid(DATA.kx,DATA.ky);
+        [X,Y] = meshgrid(DATA.grids.kx,DATA.grids.ky);
         REALP = 0; COMPDIM = 3; POLARPLOT = 0; SCALE = 1;
     case 'kxz'
         XNAME = '$k_x$'; YNAME = '$z$';
-        [Y,X] = meshgrid(DATA.z,DATA.kx);
+        [Y,X] = meshgrid(DATA.grids.z,DATA.grids.kx);
         REALP = 0; COMPDIM = 1; POLARPLOT = 0; SCALE = 0;
     case 'kyz'
         XNAME = '$k_y$'; YNAME = '$z$';
-        [Y,X] = meshgrid(DATA.z,DATA.ky);
+        [Y,X] = meshgrid(DATA.grids.z,DATA.grids.ky);
         REALP = 0; COMPDIM = 2; POLARPLOT = 0; SCALE = 0;
     case 'sx'
         XNAME = '$v_\parallel$'; YNAME = '$\mu$';
@@ -112,24 +112,24 @@ switch OPTIONS.COMP
             i = OPTIONS.COMP;
             compr = @(x) x(i,:,:);
             if REALP
-                COMPNAME = sprintf(['y=','%2.1f'],DATA.x(i));
+                COMPNAME = sprintf(['y=','%2.1f'],DATA.grids.x(i));
             else
-                COMPNAME = sprintf(['k_y=','%2.1f'],DATA.kx(i));
+                COMPNAME = sprintf(['k_y=','%2.1f'],DATA.grids.kx(i));
             end
             FIELDNAME = [LTXNAME,'(',COMPNAME,')'];
         case 2
             i = OPTIONS.COMP;
             compr = @(x) x(:,i,:);
             if REALP
-                COMPNAME = sprintf(['x=','%2.1f'],DATA.y(i));
+                COMPNAME = sprintf(['x=','%2.1f'],DATA.grids.y(i));
             else
-                COMPNAME = sprintf(['k_x=','%2.1f'],DATA.ky(i));
+                COMPNAME = sprintf(['k_x=','%2.1f'],DATA.grids.ky(i));
             end
             FIELDNAME = [LTXNAME,'(',COMPNAME,')'];
         case 3
             i = OPTIONS.COMP;
             compr = @(x) x(:,:,i);
-            COMPNAME = sprintf(['z=','%2.1f'],DATA.z(i));
+            COMPNAME = sprintf(['z=','%2.1f'],DATA.grids.z(i));
             FIELDNAME = [LTXNAME,'(',COMPNAME,')'];
     end
 end
@@ -161,7 +161,6 @@ end
 switch OPTIONS.NAME
     case '\phi' %ES pot
         NAME = 'phi';
-%         FLD_ = DATA.PHI(:,:,:,FRAMES); % data to plot
         FLD_ = DATA.PHI(:,:,:,FRAMES); % data to plot
         OPE_ = 1;        % Operation on data
     case '\psi' %EM pot
@@ -296,7 +295,7 @@ else
         tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
     end
     for it = 1:numel(FRAMES)
-        for iz = 1:numel(DATA.z)
+        for iz = 1:numel(DATA.grids.z)
             tmp(:,:,iz) = squeeze(process(OPE_.*FLD_(:,:,iz,it)));
         end
         FIELD(:,:,it) = squeeze(compr(tmp));

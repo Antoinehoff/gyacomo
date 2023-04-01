@@ -1,21 +1,21 @@
 function [DATA] = compile_results_low_mem(DATA,DIRECTORY,JOBNUMMIN,JOBNUMMAX)
 CONTINUE = 1;
 JOBNUM   = JOBNUMMIN; JOBFOUND = 0;
-DATA.TJOB_SE  = []; % Start and end times of jobs
-DATA.NU_EVOL  = []; % evolution of parameter nu between jobs
-DATA.CO_EVOL  = []; % evolution of CO
-DATA.MUx_EVOL  = []; % evolution of parameter mu between jobs
-DATA.MUy_EVOL  = []; % evolution of parameter mu between jobs
-DATA.MUz_EVOL  = []; % evolution of parameter mu between jobs
-DATA.K_N_EVOL = []; %
-DATA.K_T_EVOL = []; %
-DATA.L_EVOL   = []; % 
-DATA.DT_EVOL  = []; %
+DATA.params_evol.TJOB_SE  = []; % Start and end times of jobs
+DATA.params_evol.NU_EVOL  = []; % evolution of parameter nu between jobs
+DATA.params_evol.CO_EVOL  = []; % evolution of CO
+DATA.params_evol.MUx_EVOL  = []; % evolution of parameter mu between jobs
+DATA.params_evol.MUy_EVOL  = []; % evolution of parameter mu between jobs
+DATA.params_evol.MUz_EVOL  = []; % evolution of parameter mu between jobs
+DATA.params_evol.K_N_EVOL = []; %
+DATA.params_evol.K_T_EVOL = []; %
+DATA.params_evol.L_EVOL   = []; % 
+DATA.params_evol.DT_EVOL  = []; %
 % Low memoery cost data
-HFLUXI_   = [];
+HFLUX_   = [];
 HFLUXE_   = [];
-GGAMMAI_ = [];
-PGAMMAI_ = [];
+GGAMMA_ = [];
+PGAMMA_ = [];
 Ts0D_    = [];
 DATA.outfilenames = {};
 ii = 1;
@@ -36,38 +36,38 @@ while(CONTINUE)
             % Loading from output file
             CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
             DT_SIM    = h5readatt(filename,'/data/input/basic','dt');
-            [Pe, Je, Pi, Ji, kx, ky, z] = load_grid_data(filename);
+            [Parray, Jarray, kx, ky, z] = load_grid_data(filename);
             W_GAMMA   = strcmp(h5readatt(filename,'/data/input/diag_par','write_gamma'),'y');
             W_HF      = strcmp(h5readatt(filename,'/data/input/diag_par','write_hf'   ),'y');
             KIN_E     = strcmp(h5readatt(filename,'/data/input/model',     'ADIAB_E' ),'n');
             BETA      = h5readatt(filename,'/data/input/model','beta');
 
             if W_GAMMA
-                [ GGAMMA_RI, Ts0D, ~] = load_0D_data(filename, 'gflux_xi');
-                PGAMMA_RI            = load_0D_data(filename, 'pflux_xi');
-                GGAMMAI_ = cat(1,GGAMMAI_,GGAMMA_RI); clear GGAMMA_RI
-                PGAMMAI_ = cat(1,PGAMMAI_,PGAMMA_RI); clear PGAMMA_RI
+                [ GGAMMA_R, Ts0D, ~] = load_0D_data(filename, 'gflux_x');
+                PGAMMA_R            = load_0D_data(filename, 'pflux_x');
+                GGAMMA_ = cat(1,GGAMMA_,GGAMMA_R); clear GGAMMA_R
+                PGAMMA_ = cat(1,PGAMMA_,PGAMMA_R); clear PGAMMA_R
             end
 
             if W_HF
-                [ HFLUX_XI, Ts0D, ~] = load_0D_data(filename, 'hflux_xi');
-                HFLUXI_ = cat(1,HFLUXI_,HFLUX_XI); clear HFLUX_XI
+                [ HFLUX_X, Ts0D, ~] = load_0D_data(filename, 'hflux_x');
+                HFLUX_ = cat(1,HFLUX_,HFLUX_X); clear HFLUX_X
             end
 
             Ts0D_   = cat(1,Ts0D_,Ts0D);
 
             % Evolution of simulation parameters
-            load_params
-            DATA.TJOB_SE   = [DATA.TJOB_SE   Ts0D(1)     Ts0D(end)];
-            DATA.NU_EVOL   = [DATA.NU_EVOL   DATA.NU     DATA.NU];
-            DATA.CO_EVOL   = [DATA.CO_EVOL   DATA.CO     DATA.CO];
-            DATA.MUx_EVOL  = [DATA.MUx_EVOL  DATA.MUx    DATA.MUx];
-            DATA.MUy_EVOL  = [DATA.MUy_EVOL  DATA.MUy    DATA.MUy];
-            DATA.MUz_EVOL  = [DATA.MUz_EVOL  DATA.MUz    DATA.MUz];
-            DATA.K_N_EVOL  = [DATA.K_N_EVOL DATA.K_N   DATA.K_N];
-            DATA.K_T_EVOL  = [DATA.K_T_EVOL DATA.K_T   DATA.K_T];
-            DATA.L_EVOL    = [DATA.L_EVOL    DATA.L      DATA.L];
-            DATA.DT_EVOL   = [DATA.DT_EVOL   DATA.DT_SIM DATA.DT_SIM];
+            DATA = load_params(DATA,filename);
+            DATA.params_evol.TJOB_SE   = [DATA.params_evol.TJOB_SE   Ts0D(1)     Ts0D(end)];
+            DATA.params_evol.NU_EVOL   = [DATA.params_evol.NU_EVOL   DATA.inputs.NU     DATA.inputs.NU];
+            DATA.params_evol.CO_EVOL   = [DATA.params_evol.CO_EVOL   DATA.inputs.CO     DATA.inputs.CO];
+            DATA.params_evol.MUx_EVOL  = [DATA.params_evol.MUx_EVOL  DATA.inputs.MUx    DATA.inputs.MUx];
+            DATA.params_evol.MUy_EVOL  = [DATA.params_evol.MUy_EVOL  DATA.inputs.MUy    DATA.inputs.MUy];
+            DATA.params_evol.MUz_EVOL  = [DATA.params_evol.MUz_EVOL  DATA.inputs.MUz    DATA.inputs.MUz];
+            DATA.params_evol.K_N_EVOL  = [DATA.params_evol.K_N_EVOL  DATA.inputs.K_N    DATA.inputs.K_N];
+            DATA.params_evol.K_T_EVOL  = [DATA.params_evol.K_T_EVOL  DATA.inputs.K_T    DATA.inputs.K_T];
+            DATA.params_evol.L_EVOL    = [DATA.params_evol.L_EVOL    DATA.inputs.L      DATA.inputs.L];
+            DATA.params_evol.DT_EVOL   = [DATA.params_evol.DT_EVOL   DATA.inputs.DT_SIM DATA.inputs.DT_SIM];
 
             ii = ii + 1;
             JOBFOUND = JOBFOUND + 1;
@@ -118,30 +118,31 @@ else
     % scaling
     DATA.scale = 1;%(1/Nx/Ny)^2;
     % Fields
-    DATA.GGAMMA_RI = GGAMMAI_; DATA.PGAMMA_RI = PGAMMAI_; DATA.HFLUX_X = HFLUXI_;
+    DATA.GGAMMA_RI = GGAMMA_; DATA.PGAMMA_RI = PGAMMA_; DATA.HFLUX_X = HFLUX_;
     if(KIN_E)
     DATA.HFLUX_XE = HFLUXE_;
     end
     DATA.Ts0D = Ts0D_;
     DATA.KIN_E=KIN_E;
     % grids
-    DATA.Pe = Pe; DATA.Pi = Pi; 
-    DATA.Je = Je; DATA.Ji = Ji; 
-    DATA.kx = kx; DATA.ky = ky; DATA.z = z; DATA.Npol = -z(1)/pi;
-    DATA.x  = x;  DATA.y  = y;
-    DATA.ikx0 = ikx0; DATA.iky0 = iky0;
-    DATA.Nx = Nx; DATA.Ny = Ny; DATA.Nz = Nz; DATA.Nkx = Nkx; DATA.Nky = Nky; 
-    DATA.Pmaxe = numel(Pe); DATA.Pmaxi = numel(Pi); DATA.Jmaxe = numel(Je); DATA.Jmaxi = numel(Ji);
+    DATA.grids.Parray = Parray;
+    DATA.grids.Jarray = Jarray;
+    DATA.grids.kx = kx; DATA.grids.ky = ky; DATA.grids.z = z; DATA.grids.Npol = -z(1)/pi;
+    DATA.grids.x  = x;  DATA.grids.y  = y;
+    DATA.grids.ikx0 = ikx0; DATA.grids.iky0 = iky0;
+    DATA.grids.Nx = Nx; DATA.grids.Ny = Ny; DATA.grids.Nz = Nz; DATA.grids.Nkx = Nkx; DATA.grids.Nky = Nky; 
+    DATA.grids.Np = numel(Parray);DATA.grids.Nj = numel(Jarray);
+    DATA.grids.deltap = Parray(2)-Parray(1);
     DATA.dir      = DIRECTORY;
     DATA.localdir = DIRECTORY;
-    DATA.param_title=['$\nu_{',DATA.CONAME,'}=$', num2str(DATA.NU), ...
-        ', $\kappa_{Ni}=$',num2str(DATA.K_N),', $\kappa_{Ti}=$',num2str(DATA.K_T),...
-        ', $L=',num2str(DATA.L),'$, $N=',...
-        num2str(DATA.Nx),'$, $(P,J)=(',num2str(DATA.Pi(end)),',',...
-        num2str(DATA.Ji(end)),')$,',' $\mu_{hd}=$(',num2str(DATA.MUx),...
-        ',',num2str(DATA.MUy),')'];
-    DATA.paramshort = [num2str(DATA.Pmaxi),'x',num2str(DATA.Jmaxi),'x',...
-        num2str(DATA.Nkx),'x',num2str(DATA.Nky),'x',num2str(DATA.Nz)];
+    DATA.param_title=['$\nu_{',DATA.inputs.CONAME,'}=$', num2str(DATA.inputs.NU), ...
+        ', $\kappa_{Ni}=$',num2str(DATA.inputs.K_N),', $\kappa_{Ti}=$',num2str(DATA.inputs.K_T),...
+        ', $L=',num2str(DATA.inputs.L),'$, $N=',...
+        num2str(DATA.grids.Nx),'$, $(P,J)=(',num2str(DATA.grids.Parray(end)),',',...
+        num2str(DATA.grids.Jarray(end)),')$,',' $\mu_{hd}=$(',num2str(DATA.inputs.MUx),...
+        ',',num2str(DATA.inputs.MUy),')'];
+    DATA.paramshort = [num2str(DATA.grids.Np),'x',num2str(DATA.grids.Nj),'x',...
+        num2str(DATA.grids.Nkx),'x',num2str(DATA.grids.Nky),'x',num2str(DATA.grids.Nz)];
     JOBNUM = LASTJOB;
 
     filename = sprintf([DIRECTORY,'outputs_%.2d.h5'],JOBNUM);
