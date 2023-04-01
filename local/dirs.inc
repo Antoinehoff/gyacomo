@@ -11,6 +11,6 @@ FMDIR      = $(HOME)/lib/FM
 FFTW3DIR   = $(HOME)/lib/fftw-3.3.8
 #FFTW3DIR   = $(FFTW_HOME)#for Marconi
 FUTILS_DIR = $(HOME)/lib/futils/src
-#LAPACKDIR  = $(HOME)/lib/lapack
-
+LAPACKDIR  = $(HOME)/lib/lapack-3.10.0
+BLASDIR    = $(HOME)/lib/BLAS-3.11.0
 # Naming ideas : HeLaZ, MoNoLiT (Moment Non Linear Torroidal)
