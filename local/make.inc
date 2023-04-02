@@ -79,14 +79,8 @@ endif
 
 # Add lapack local lib
 ifdef LAPACKDIR
-      LIBS  += -llapack
+      LIBS  += -llapack -lblas
       LDIRS += -L$(LAPACKDIR)
-endif
-
-# Add blas local lib
-ifdef BLASDIR
-      LIBS  += -lblas
-      LDIRS += -L$(BLASDIR)
 endif
 
 # FM library
