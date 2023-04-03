@@ -11,4 +11,3 @@ FMDIR      = $(HOME)/lib/FM
 FFTW3DIR   = $(HOME)/lib/fftw-3.3.10
 #FFTW3DIR   = $(FFTW_HOME)#for Marconi
 FUTILS_DIR = $(HOME)/lib/futils/src
-LAPACKDIR  = $(HOME)/lib/lapack-3.11.0

@@ -59,6 +59,16 @@ gdebug: EXEC = $(BINDIR)/gyacomo23_debug
 gdebug: dirs src/srcinfo.h
 gdebug: compile
 
+# test SVD
+test_svd: F90 = mpif90
+test_svd: F90FLAGS = -DTEST_SVD -g -traceback -ftrapuv -warn all -debug all
+test_svd: EXEC = $(BINDIR)/gyacomo23_test_svd
+test_svd: dirs src/srcinfo.h
+test_svd: dirs src/srcinfo.h
+test_svd: LAPACKDIR  = $(HOME)/lib/lapack-3.10.0
+test_svd: LIBS  += -llapack -lblas
+test_svd: LDIRS += -L$(LAPACKDIR)
+test_svd: compile
 # subroutines
 dirs:
 	mkdir -p $(BINDIR)
