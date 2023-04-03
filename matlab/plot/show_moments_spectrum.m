@@ -6,9 +6,16 @@ Ja = DATA.grids.Jarray;
 Time_ = DATA.Ts3D;
 FIGURE.fig = figure; FIGURE.FIGNAME = ['mom_spectrum_',DATA.params_string];
 set(gcf, 'Position',  [100 50 1000 400])
-
+if OPTIONS.LOGSCALE
+%     compress = @(x,ia) log(sum(abs(squeeze(x(ia,:,:,:))),3));
+    compress = @(x,ia) log(sum(abs(squeeze(x(:,:,:,:))),3));
+else
+%     compress = @(x,ia) sum(abs(squeeze(x(ia,:,:,:))),3);
+    compress = @(x,ia) sum(abs(squeeze(x(:,:,:,:))),3);
+end
 for ia = 1:DATA.inputs.Na
-    Napjz  = sum(abs(squeeze(DATA.Napjz(ia,:,:,:,:))),3);
+%     Napjz  = sum(abs(squeeze(DATA.Napjz(ia,:,:,:,:))),3);
+    Napjz  =compress(DATA.Napjz);
     subplot(double(DATA.inputs.Na),1,double(ia))
     if OPTIONS.P2J
         plotname = ['$\langle\sum_k |N_',species_name{ia},'^{pj}|\rangle_{p+2j=const}$'];
@@ -92,5 +99,7 @@ for ia = 1:DATA.inputs.Na
     title(plotname)
 
 end
+suptitle(DATA.paramshort)
+
 end
 

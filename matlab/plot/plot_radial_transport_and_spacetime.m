@@ -26,11 +26,12 @@ clr_ = lines(20);
 mvm = @(x) movmean(x,OPTIONS.NMVA);
     FIGURE.fig = figure; FIGURE.FIGNAME = ['ZF_transport_drphi','_',DATA.params_string]; %set(gcf, 'Position',  [500, 1000, 1000, 600])
     FIGURE.ax1 = subplot(2,1,1,'parent',FIGURE.fig);
-        plot(mvm(DATA.Ts0D),mvm(DATA.PGAMMA_RI*SCALE),'--',...
-            'color',clr_((DATA.grids.Np-1)/2,:),...
+    for ia = 1:DATA.inputs.Na
+        plot(mvm(DATA.Ts0D),mvm(DATA.PGAMMA_RI(ia,:)*SCALE),'--',...
+            'color',clr_((DATA.grids.Np-1)/2+(ia-1),:),...
             'DisplayName',['$\Gamma_x$ ',DATA.paramshort]); hold on;
-        plot(mvm(DATA.Ts0D),mvm(DATA.HFLUX_X*SCALE),'-',...
-            'color',clr_((DATA.grids.Np-1)/2,:),...
+        plot(mvm(DATA.Ts0D),mvm(DATA.HFLUX_X(ia,:)*SCALE),'-',...
+            'color',clr_((DATA.grids.Np-1)/2+(ia-1),:),...
             'DisplayName',['$Q_x$ ',DATA.paramshort]); hold on;
         ylabel('Transport')  
         if(~isnan(Qx_infty_avg))
@@ -44,6 +45,7 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
             catch
             end
         end
+    end
         xlim([DATA.Ts0D(1),DATA.Ts0D(end)]);
     grid on; set(gca,'xticklabel',[]); 
     title({DATA.param_title,...
@@ -82,4 +84,6 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
         subplot(311)
         plot(DATA.Ts3D,squeeze(mean(plt(f2plot),1)));
     end
+    suptitle(DATA.paramshort)
+
 end

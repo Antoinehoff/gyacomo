@@ -48,12 +48,12 @@ for i = 1:2
                 MODESTR = '$\max_{k_y}$';
             otherwise
                 plt_ = @(x,ik) movmean(abs(squeeze(x(OPTIONS.ik,ik,FRAMES))),Nma);
-                MODESTR = ['$k_y=$',num2str(DATA.ky(OPTIONS.ik))];
+                MODESTR = ['$k_y=$',num2str(DATA.grids.ky(OPTIONS.ik))];
         end
         kstr = 'k_x';
         % Number max of modes to plot is kx>0 (1/2) of the non filtered modes (2/3)
-        Nmax = ceil(DATA.Nkx*1/3);
-        k = DATA.kx;
+        Nmax = ceil(DATA.grids.Nkx*1/3);
+        k = DATA.grids.kx;
     elseif MODES_SELECTOR == 1
         switch OPTIONS.ik
             case 'sum'
@@ -64,12 +64,12 @@ for i = 1:2
                 MODESTR = '$\max_{k_x}$';
             otherwise
                 plt_ = @(x,ik) movmean(abs(squeeze(x(ik,OPTIONS.ik,FRAMES))),Nma);
-                MODESTR = ['$k_x=$',num2str(DATA.kx(OPTIONS.ik))];
+                MODESTR = ['$k_x=$',num2str(DATA.grids.kx(OPTIONS.ik))];
         end
         kstr = 'k_y';
         % Number max of modes to plot is ky>0 (1/1) of the non filtered modes (2/3)
-        Nmax = ceil(DATA.Nky*2/3);
-        k = DATA.ky;
+        Nmax = ceil(DATA.grids.Nky*2/3);
+        k = DATA.grids.ky;
     end 
     if NORMALIZED
         plt = @(x,ik) plt_(x,ik)./max(plt_(x,ik));
@@ -120,7 +120,7 @@ for i = 1:2
 %     subplot(2+d,3,3+3*(i-1))
     FIGURE.axes(3+3*(i-1)) = subplot(2+d,3,3+3*(i-1),'parent',FIGURE.fig);
         plot(k(MODES),gamma,...
-                'DisplayName',['(',num2str(DATA.Pmaxi-1),',',num2str(DATA.Jmaxi-1),')']); hold on;
+                'DisplayName',['(',num2str(DATA.inputs.PMAX),',',num2str(DATA.inputs.JMAX),')']); hold on;
         for i_ = 1:numel(mod2plot)
             plot(k(MODES(mod2plot(i_))),gamma(mod2plot(i_)),'x','color',clr_(i_,:));
         end
@@ -132,10 +132,10 @@ for i = 1:2
 end
 
 if d
-    [~,ikx] = min(abs(DATA.kx-OPTIONS.fftz.kx));
-    [~,iky] = min(abs(DATA.ky-OPTIONS.fftz.ky));
+    [~,ikx] = min(abs(DATA.grids.kx-OPTIONS.fftz.kx));
+    [~,iky] = min(abs(DATA.grids.ky-OPTIONS.fftz.ky));
     sz_=size(DATA.PHI);nkz = sz_(3)/2;
-    k = [(0:nkz/2), (-nkz/2+1):-1]/DATA.Npol;
+    k = [(0:nkz/2), (-nkz/2+1):-1]/DATA.grids.Npol;
     % Spectral treatment of z-dimension
     Y = fft(DATA.PHI(iky,ikx,:,:),[],3);
     phi = squeeze(Y(1,1,2:2:end,:)); 
@@ -158,7 +158,7 @@ if d
         set(gca,'YDir','normal')
     %     xlim([t(1) t(end)]); %ylim([1e-5 1])
         xlabel('$k_\parallel$'); ylabel('$t c_s /\rho_s$');
-        title(['$k_x=$',num2str(DATA.kx(ikx)),', $k_y=$',num2str(DATA.ky(iky))]);  
+        title(['$k_x=$',num2str(DATA.grids.kx(ikx)),', $k_y=$',num2str(DATA.grids.ky(iky))]);  
 
     subplot(3,3,8)
         for i_ = 1:numel(mod2plot)
@@ -174,7 +174,7 @@ if d
 
     subplot(3,3,9)
         plot(k(MODES),gamma,...
-                'DisplayName',['(',num2str(DATA.Pmaxi-1),',',num2str(DATA.Jmaxi-1),')']); hold on;
+                'DisplayName',['(',num2str(DATA.inputs.PMAX),',',num2str(DATA.inputs.JMAX),')']); hold on;
         for i_ = 1:numel(mod2plot)
             plot(k(MODES(mod2plot(i_))),gamma(mod2plot(i_)),'x','color',clr_(i_,:));
         end
@@ -185,5 +185,5 @@ if d
         title('Growth rates')   
     
 end
-
+suptitle(DATA.paramshort)
 end

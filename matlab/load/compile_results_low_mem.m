@@ -43,14 +43,25 @@ while(CONTINUE)
             BETA      = h5readatt(filename,'/data/input/model','beta');
 
             if W_GAMMA
-                [ GGAMMA_R, Ts0D, ~] = load_0D_data(filename, 'gflux_x');
-                PGAMMA_R            = load_0D_data(filename, 'pflux_x');
+                try
+                    [ GGAMMA_R, Ts0D, ~] = load_0D_data(filename, 'gflux_x');
+                    PGAMMA_R             = load_0D_data(filename, 'pflux_x');
+                catch
+                    % old version
+                    [ GGAMMA_R, Ts0D, ~] = load_0D_data(filename, 'gflux_xi');
+                    PGAMMA_R             = load_0D_data(filename, 'pflux_xi');
+                end
                 GGAMMA_ = cat(1,GGAMMA_,GGAMMA_R); clear GGAMMA_R
                 PGAMMA_ = cat(1,PGAMMA_,PGAMMA_R); clear PGAMMA_R
             end
 
             if W_HF
-                [ HFLUX_X, Ts0D, ~] = load_0D_data(filename, 'hflux_x');
+                try
+                    [ HFLUX_X, Ts0D, ~] = load_0D_data(filename, 'hflux_x');
+                catch
+                    % old version
+                    [ HFLUX_X, Ts0D, ~] = load_0D_data(filename, 'hflux_xi');
+                end
                 HFLUX_ = cat(1,HFLUX_,HFLUX_X); clear HFLUX_X
             end
 
