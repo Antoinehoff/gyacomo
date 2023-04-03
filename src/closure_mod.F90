@@ -46,7 +46,7 @@ SUBROUTINE set_closure_model
     DO ip = 1,local_np+ngp
       DO ij = 1, local_nj+ngj
           evolve_mom(ip,ij) = (parray(ip).GE.0) .AND. (jarray(ij).GE.0) &
-                        .AND. (2*parray(ip)+jarray(ij) .GT. dmax)
+                        .AND. (2*parray(ip)+jarray(ij) .LE. dmax)
       ENDDO
     ENDDO  
   CASE DEFAULT
