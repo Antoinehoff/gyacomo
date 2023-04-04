@@ -2,7 +2,9 @@ MODULE restarts
 USE basic
 USE futils,          ONLY: openf, closef, getarr, getatt, isgroup,&
                            isdataset, getarrnd, putarrnd
-USE grid
+USE grid, ONLY: local_Na,local_Na_offset,local_np,local_np_offset,&
+local_nj,local_nj_offset,local_nky,local_nky_offset,local_nkx,local_nkx_offset,&
+local_nz,local_nz_offset,ngp,ngj,ngz, total_nz, deltap
 USE fields
 USE diagnostics_par
 USE time_integration
@@ -23,8 +25,8 @@ CONTAINS
     INTEGER :: cstep_cp, jobnum_cp
     INTEGER :: n_
     INTEGER :: deltap_cp
-    INTEGER :: pmax_cp, jmax_cp, n0, Nkx_cp, Nky_cp, Nz_cp, Na_cp, Np_cp, Nj_cp
-    INTEGER :: ia,ip,ij,iky,ikx,iz, iacp,ipcp,ijcp,iycp,ixcp,izcp, ierr
+    INTEGER :: n0, Np_cp, Nj_cp, Nkx_cp, Nky_cp, Nz_cp, Na_cp
+    INTEGER :: ia,ip,ij,iky,ikx,iz,it, iacp,ipcp,ijcp,iycp,ixcp,izcp, ierr
     INTEGER :: ipi,iji,izi
     REAL(xp):: timer_tot_1,timer_tot_2
     COMPLEX(xp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: moments_cp
@@ -38,15 +40,13 @@ CONTAINS
     CALL getatt(fidrst,"/data/input/grid" ,   "Nkx",   Nkx_cp)
     CALL getatt(fidrst,"/data/input/grid" ,   "Nky",   Nky_cp)
     CALL getatt(fidrst,"/data/input/grid" ,    "Nz",    Nz_cp)
-    IF(Nz_cp .NE. Nz) &
+    IF(Nz_cp .NE. total_nz) &
       ERROR STOP "!! cannot change Nz in a restart, interp or reduction not implemented !!"
     CALL getatt(fidrst,"/data/input/grid" ,"deltap",deltap_cp)
     IF(deltap_cp .NE. deltap) &
       ERROR STOP "!! cannot change deltap in a restart, not implemented !!"
-    CALL getatt(fidrst,"/data/input/grid" , "pmax", pmax_cp)
-    Np_cp = pmax_cp/deltap_cp+1
-    CALL getatt(fidrst,"/data/input/grid" , "jmax", jmax_cp)
-    Nj_cp = jmax_cp+1
+    CALL getatt(fidrst,"/data/input/grid" , "Np", Np_cp)
+    CALL getatt(fidrst,"/data/input/grid" , "Nj", Nj_cp)
     CALL getatt(fidrst,"/data/input/model",   "Na",   Na_cp)
     CALL getatt(fidrst,"/data/input/basic" , "start_iframe5d", n0)
     ! Find the last results of the checkpoint file by iteration
@@ -67,10 +67,10 @@ CONTAINS
     CALL speak('.. restart from t = '//str(time))
     ! Read state of system from checkpoint file
     ! Brute force loading: load the full moments and take what is needed (RAM dangerous...)
-    ! other possibility is to loop over slices
+    ! (other possibility would be to loop over slices)
     CALL allocate_array(moments_cp, 1,Na_cp, 1,Np_cp, 1,Nj_cp, 1,Nky_cp, 1,Nkx_cp, 1,Nz_cp)
     WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments", n_
-    CALL getarr(fidrst, dset_name, moments_cp(:,:,:,:,:,:))
+    CALL getarr(fidrst, dset_name, moments_cp)
 
     moments     = 0._xp;
     z: DO iz = 1,local_nz
@@ -86,7 +86,7 @@ CONTAINS
             p: DO ip=1,local_np
               ipcp = ip + local_np_offset
               ipi  = ip + ngp/2
-              a: DO ia=1,Na_cp
+              a: DO ia=1,local_na
                 iacp = ia + local_na_offset
                 ! IF((iacp.LE.Na_cp).AND.(ipcp.LE.Np_cp).AND.(ijcp.LE.Nj_cp).AND.(iycp.LE.Nky_cp).AND.(ixcp.LE.Nkx_cp).AND.(izcp.LE.Nz_cp)) &
                   moments(ia,ipi,iji,iky,ikx,izi,1) = moments_cp(iacp,ipcp,ijcp,iycp,ixcp,izcp)
@@ -96,6 +96,15 @@ CONTAINS
         ENDDO y
       ENDDO x
     ENDDO z
+    ! DO it = 1,4
+    ! moments(1:local_Na,(1+ngp/2):(local_np+ngp/2),(1+ngj/2):(local_nj+ngj/2),1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),it) =&
+    ! moments_cp((1+local_Na_offset):(local_Na+local_Na_offset),&
+    !            (1+local_np_offset):(local_np+local_np_offset),&
+    !            (1+local_nj_offset):(local_nj+local_nj_offset),&
+    !            (1+local_nky_offset):(local_nky+local_nky_offset),&
+    !            (1+local_nkx_offset):(local_nkx+local_nkx_offset),&
+    !            (1+local_nz_offset):(local_nz+local_nz_offset))
+    ! ENDDO
     !! deallocate the full moment variable
     DEALLOCATE(moments_cp)
     CALL closef(fidrst)

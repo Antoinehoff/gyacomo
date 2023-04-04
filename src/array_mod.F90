@@ -51,7 +51,7 @@ MODULE array
   ! REAL(xp), DIMENSION(:,:,:), ALLOCATABLE :: HF_phi_correction_operator
 
   ! Kinetic spectrum sum_kx,ky(|Napj(z)|^2), (ia,ip,ij,iz) (should be real)
-  REAL(xp), DIMENSION(:,:,:,:), ALLOCATABLE :: Napjz
+  COMPLEX(xp), DIMENSION(:,:,:,:), ALLOCATABLE :: Napjz
 
   ! particle density for electron and ions (iky,ikx,iz)
   COMPLEX(xp), DIMENSION(:,:,:,:), ALLOCATABLE :: dens

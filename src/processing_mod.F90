@@ -377,18 +377,18 @@ CONTAINS
       USE array,  ONLY : Napjz
       USE time_integration, ONLY : updatetlevel
       IMPLICIT NONE
-      REAL(xp), DIMENSION(local_np,local_nj,local_nz) :: local_sum,global_sum, buffer
+      REAL(xp), DIMENSION(local_np,local_nj,local_nz) :: local_sum, global_sum, buffer
       INTEGER  :: i_, root, count, ia, ip, ij, iky, ikx, iz
       root = 0
       DO ia=1,local_na
          ! z-moment spectrum
          ! build local sum
          local_sum = 0._xp
-         DO iz = 1,local_nz
+         DO iz  = 1,local_nz
          DO ikx = 1,local_nkx
          DO iky = 1,local_nky
-         DO ij = 1,local_nj
-         DO ip = 1,local_np
+         DO ij  = 1,local_nj
+         DO ip  = 1,local_np
             local_sum(ip,ij,iz)  = local_sum(ip,ij,iz)  + &
                (moments(ia,ip+Ngp/2,ij+Ngj/2,iky,ikx,iz+Ngz/2,updatetlevel) &
                * CONJG(moments(ia,ip+Ngp/2,ij+Ngj/2,iky,ikx,iz+Ngz/2,updatetlevel)))

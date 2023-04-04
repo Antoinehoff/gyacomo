@@ -1,14 +1,14 @@
 &BASIC
   nrun       = 99999999
   dt         = 0.01
-  tmax       = 50
+  tmax       = 25
   maxruntime = 72000
   job2load   = -1
 /
 &GRID
-  pmax   = 4
-  jmax   = 2
-  Nx     = 128
+  pmax   = 2
+  jmax   = 1
+  Nx     = 64
   Lx     = 200
   Ny     = 48
   Ly     = 60
@@ -63,7 +63,8 @@
 /
 &CLOSURE_PAR
   hierarchy_closure='truncation'
-  dmax = -1
+  !hierarchy_closure='max_degree'
+  dmax = 2
   nonlinear_closure='anti_laguerre_aliasing' !(truncation,full_sum,anti_laguerre_aliasing)
   nmax = 0
 /
@@ -92,7 +93,7 @@
   mat_file       = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /
 &INITIAL_CON
-  INIT_OPT         = 'phi' !(phi,blob)
+  INIT_OPT         = 'blob' !(phi,blob)
   ACT_ON_MODES     = 'donothing'
   init_background  = 0.0
   init_noiselvl    = 0.005

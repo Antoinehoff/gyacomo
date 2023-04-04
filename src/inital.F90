@@ -20,8 +20,9 @@ SUBROUTINE inital
   !!!!!! Set the moments arrays Nepj, Nipj and phi!!!!!!
   ! through loading a previous state
   IF ( job2load .GE. 0 ) THEN
-   CALL speak('Load moments')
+    CALL speak('Load moments')
     CALL load_moments ! get N_0
+    CALL apply_closure_model
     CALL update_ghosts_moments
     CALL solve_EM_fields ! compute phi_0=phi(N_0)
     CALL update_ghosts_EM
@@ -324,7 +325,7 @@ END SUBROUTINE init_phi_ppj
 !!!!!!! Initialize an ionic Gaussian blob on top of the preexisting modes
 !******************************************************************************!
 SUBROUTINE initialize_blob
-  USE grid,       ONLY: local_na, local_np, local_nj, total_nkx, local_nky, local_nz,&
+  USE grid,       ONLY: local_na, local_np, local_nj, total_nkx, local_nky, local_nz, total_nz,&
                         AA_x, AA_y, parray, jarray,&
                         ngp,ngj,ngz, iky0, ieven, kxarray, kyarray, zarray
   USE fields,     ONLY: moments
@@ -335,9 +336,16 @@ SUBROUTINE initialize_blob
   IMPLICIT NONE
   REAL(xp) ::kx, ky, z, sigma_x, sigma_y, gain
   INTEGER :: ia,iky,ikx,iz,ip,ij, p, j
-  sigma_y = 1.0
+  sigma_y = 0.5
   sigma_x = sigma_y
-  gain  = 10.0
+  gain  = 1.0
+  ! One can increase the gain if we run 3D sim
+  IF(total_nz .GT. 1) THEN
+    sigma_y = 1.0
+    sigma_x = sigma_y
+    gain = 10.0
+  ENDIF
+
   DO ia=1,local_na
     DO iky=1,local_nky
       ky = kyarray(iky)

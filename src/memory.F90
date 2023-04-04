@@ -35,7 +35,7 @@ SUBROUTINE memory
   CALL allocate_array(          Sapj, 1,local_na, 1,local_np,  1,local_nj, 1,local_nky, 1,local_nkx, 1,local_nz)
   
   ! 4D+ arrays
-  CALL allocate_array(         napjz, 1,local_na,  1,local_np,  1,local_nj, 1,local_nz)
+  CALL allocate_array(         Napjz, 1,local_na,  1,local_np,  1,local_nj, 1,local_nz)
   CALL allocate_array(          dens, 1,local_na, 1,local_nky, 1,local_nkx, 1,local_nz)
   CALL allocate_array(          upar, 1,local_na, 1,local_nky, 1,local_nkx, 1,local_nz)
   CALL allocate_array(          uper, 1,local_na, 1,local_nky, 1,local_nkx, 1,local_nz)
