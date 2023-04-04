@@ -95,20 +95,18 @@ SUBROUTINE diagnose_full(kstep)
   USE grid,            ONLY: &
     local_nj,local_nky,local_nkx,local_nz,ngj,ngz,&
     parray_full,pmax,jarray_full,jmax,&
-    kyarray_full,kxarray_full,zarray_full, total_na
+    kyarray_full,kxarray_full,zarray_full
   USE diagnostics_par
   USE futils,          ONLY: creatf, creatg, creatd, closef, putarr, putfile, attach, openf, putarrnd
-  USE species,         ONLY: name
   USE array
   USE model,           ONLY: EM
   USE parallel,        ONLY: my_id, comm0
   USE collision,       ONLY: coll_outputinputs
   USE geometry,        ONLY: gxx,gxy,gyy,gxz,gyz,gzz,hatR,hatZ,hatB,dBdx,dBdy,dBdz,Jacobian,gradz_coeff,Ckxky
   IMPLICIT NONE
-  CHARACTER           :: letter_a
   INTEGER, INTENT(in) :: kstep
   INTEGER, parameter  :: BUFSIZE = 2
-  INTEGER :: rank = 0, ierr, ia
+  INTEGER :: rank = 0, ierr
   INTEGER :: dims(1) = (/0/)
   !____________________________________________________________________________
   !                   1.   Initial diagnostics
@@ -256,15 +254,12 @@ END SUBROUTINE diagnose_full
 !!-------------- Auxiliary routines -----------------!!
 SUBROUTINE diagnose_0d
   USE basic
-  USE futils, ONLY: append, attach, getatt
+  USE futils, ONLY: append, attach, getatt, creatd
   USE diagnostics_par
   USE prec_const
   USE processing
   USE model,   ONLY: Na
-  USE species, ONLY: name
   IMPLICIT NONE
-  CHARACTER :: letter_a
-  INTEGER   :: ia
   ! Time measurement data
   CALL append(fidres, "/profiler/Tc_rhs",       REAL(chrono_mrhs%ttot,dp),ionode=0)
   CALL append(fidres, "/profiler/Tc_adv_field", REAL(chrono_advf%ttot,dp),ionode=0)
@@ -278,6 +273,10 @@ SUBROUTINE diagnose_0d
   CALL append(fidres, "/profiler/Tc_grad",      REAL(chrono_grad%ttot,dp),ionode=0)
   CALL append(fidres, "/profiler/Tc_nadiab",    REAL(chrono_napj%ttot,dp),ionode=0)
   CALL append(fidres, "/profiler/Tc_step",      REAL(chrono_step%ttot,dp),ionode=0)
+#ifdef TEST_SVD
+  CALL creatd(fidres, 0, (/0/), "/profiler/Tc_DLRA", "cumulative total DLRA computation time")
+  CALL append(fidres, "/profiler/Tc_DLRA",      REAL(chrono_DLRA%ttot,dp),ionode=0) 
+#endif
   CALL append(fidres, "/profiler/time",                REAL(time,dp),ionode=0)
   ! Processing data
   CALL append(fidres,  "/data/var0d/time",      REAL(time,dp),ionode=0)
@@ -311,13 +310,9 @@ SUBROUTINE diagnose_3d
   USE prec_const
   USE processing, ONLY: compute_fluid_moments, compute_Napjz_spectrum
   USE model,      ONLY: EM
-  USE species,    ONLY: name
   USE parallel,   ONLY: manual_3D_bcast
   IMPLICIT NONE
-  CHARACTER :: letter_a
-  INTEGER   :: ia
   COMPLEX(xp), DIMENSION(local_na,local_nky,local_nkx,local_nz) :: Na00_
-  COMPLEX(xp), DIMENSION(local_na,local_np, local_nj, local_nz) :: Napjz_
   ! add current time, cstep and frame
   CALL append(fidres,  "/data/var3d/time",           REAL(time,dp),ionode=0)
   CALL append(fidres, "/data/var3d/cstep", real(cstep,dp),ionode=0)
@@ -337,8 +332,7 @@ SUBROUTINE diagnose_3d
     ENDIF
     CALL write_field3da_kykxz(Na00_, 'Na00')
     ! <<Napj>x>y spectrum
-    Napjz_ = Napjz
-    CALL write_field3da_pjz(Napjz_, 'Napjz')
+    CALL write_field3da_pjz(Napjz, 'Napjz')
   ENDIF
   !! Fuid moments
   IF (write_dens .OR. write_fvel .OR. write_temp) &
@@ -351,15 +345,15 @@ SUBROUTINE diagnose_3d
     CALL write_field3da_kykxz(uper, 'uper')
   ENDIF
   IF (write_temp) THEN
-    CALL write_field3d_kykxz(Tpar, 'Tpar')
-    CALL write_field3d_kykxz(Tper, 'Tper')
-    CALL write_field3d_kykxz(temp, 'temp')
+    CALL write_field3da_kykxz(Tpar, 'Tpar')
+    CALL write_field3da_kykxz(Tper, 'Tper')
+    CALL write_field3da_kykxz(temp, 'temp')
   ENDIF
   CONTAINS
     SUBROUTINE write_field3d_kykxz(field, text)
       USE parallel, ONLY : gather_xyz, num_procs
       IMPLICIT NONE
-      COMPLEX(xp), DIMENSION(local_nky,total_nkx,local_nz), INTENT(IN) :: field
+      COMPLEX(xp), DIMENSION(:,:,:), INTENT(IN) :: field
       CHARACTER(*), INTENT(IN) :: text
       COMPLEX(xp), DIMENSION(total_nky,total_nkx,total_nz) :: field_full
       CHARACTER(50) :: dset_name
@@ -376,16 +370,23 @@ SUBROUTINE diagnose_3d
       SUBROUTINE write_field3da_kykxz(field, text)
         USE parallel, ONLY : gather_xyz, num_procs
         IMPLICIT NONE
-        COMPLEX(xp), DIMENSION(local_na,local_nky,total_nkx,local_nz), INTENT(IN) :: field
+        COMPLEX(xp), DIMENSION(:,:,:,:), INTENT(IN) :: field
         CHARACTER(*), INTENT(IN) :: text
         COMPLEX(xp), DIMENSION(total_na,total_nky,total_nkx,total_nz) :: field_full
+        COMPLEX(xp), DIMENSION(local_nky,total_nkx,local_nz) :: buff_local
+        COMPLEX(xp), DIMENSION(total_nky,total_nkx,total_nz) :: buff_full
         CHARACTER(50) :: dset_name
+        INTEGER :: ia
         field_full = 0;
         WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var3d", TRIM(text), iframe3d
         IF (num_procs .EQ. 1) THEN ! no data distribution
           CALL putarr(fidres, dset_name, field, ionode=0)
         ELSE
-          CALL gather_xyz(field,field_full,local_nky,total_nky,total_nkx,local_nz,total_nz)
+          DO ia = 1,total_Na
+            buff_local = field(ia,:,:,:)
+            CALL gather_xyz(buff_local,buff_full,local_nky,total_nky,total_nkx,local_nz,total_nz)
+            field_full(ia,:,:,:) = buff_full
+          ENDDO
           CALL putarr(fidres, dset_name, field_full, ionode=0)
         ENDIF
         END SUBROUTINE write_field3da_kykxz
@@ -393,7 +394,7 @@ SUBROUTINE diagnose_3d
     SUBROUTINE write_field3da_pjz(field, text)
       USE parallel, ONLY : gather_pjz, num_procs
       IMPLICIT NONE
-      COMPLEX(xp), DIMENSION(local_na,local_np,local_nj,local_nz), INTENT(IN) :: field
+      COMPLEX(xp), DIMENSION(:,:,:,:), INTENT(IN) :: field
       CHARACTER(*), INTENT(IN) :: text
       COMPLEX(xp), DIMENSION(total_na,total_np,total_nj,total_nz) :: field_full
       CHARACTER(LEN=50) :: dset_name
@@ -402,7 +403,7 @@ SUBROUTINE diagnose_3d
       IF (num_procs .EQ. 1) THEN ! no data distribution
         CALL putarr(fidres, dset_name, field, ionode=0)
       ELSE
-        CALL gather_pjz(field,field_full,local_np,total_np,total_nj,local_nz,total_nz)
+        CALL gather_pjz(field,field_full,total_na,local_np,total_np,total_nj,local_nz,total_nz)
         CALL putarr(fidres, dset_name, field_full, ionode=0)
       ENDIF
       CALL attach(fidres, dset_name, "time", time)
@@ -418,7 +419,6 @@ SUBROUTINE diagnose_5d
   USE grid,   ONLY:total_np, total_nj, total_nky, total_nkx, total_nz, &
                    local_np, local_nj, local_nky, local_nkx, local_nz, &
                    ngp, ngj, ngz, total_na
-  USE time_integration, ONLY: updatetlevel, ntimelevel
   USE diagnostics_par
   USE prec_const, ONLY: xp,dp
   IMPLICIT NONE
@@ -436,18 +436,18 @@ SUBROUTINE diagnose_5d
   CONTAINS
 
   SUBROUTINE write_field5d(field, text)
-    USE basic,    ONLY: GATHERV_OUTPUT, jobnum, dt
-    USE futils,   ONLY: attach, putarr, putarrnd
-    USE parallel, ONLY: gather_pjxyz, num_procs
-    USE prec_const, ONLY: xp
+    USE basic,            ONLY: GATHERV_OUTPUT, jobnum, dt
+    USE futils,           ONLY: attach, putarr, putarrnd
+    USE parallel,         ONLY: gather_pjxyz, num_procs
+    USE prec_const,       ONLY: xp
     IMPLICIT NONE
-    COMPLEX(xp), DIMENSION(total_na,local_np+ngp,local_nj+ngj,local_nky,local_nkx,local_nz+ngz,ntimelevel), INTENT(IN) :: field
+    COMPLEX(xp), DIMENSION(:,:,:,:,:,:,:), INTENT(IN) :: field
     CHARACTER(*), INTENT(IN) :: text
     COMPLEX(xp), DIMENSION(total_na,local_np,local_nj,local_nky,local_nkx,local_nz) :: field_sub
     COMPLEX(xp), DIMENSION(total_na,total_np,total_nj,total_nky,total_nkx,total_nz) :: field_full
     CHARACTER(LEN=50) :: dset_name
-    field_sub  = field(1:total_na,(1+ngp/2):(local_np+ngp/2),((1+ngj/2)):((local_nj+ngj/2)),&
-                          1:local_nky,1:local_nkx,  ((1+ngz/2)):((local_nz+ngz/2)),updatetlevel)
+    field_sub  = field(1:total_na,(1+ngp/2):(local_np+ngp/2),(1+ngj/2):(local_nj+ngj/2),&
+                          1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),1)
     field_full = 0;
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var5d", TRIM(text), iframe5d
     IF (num_procs .EQ. 1) THEN

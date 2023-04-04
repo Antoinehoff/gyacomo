@@ -239,8 +239,8 @@ CONTAINS
   SUBROUTINE gather_xyz(field_loc,field_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot
-    COMPLEX(xp), DIMENSION(nky_loc,nkx_tot,nz_loc), INTENT(IN)  :: field_loc
-    COMPLEX(xp), DIMENSION(nky_tot,nkx_tot,nz_tot), INTENT(OUT) :: field_tot
+    COMPLEX(xp), DIMENSION(:,:,:), INTENT(IN)  :: field_loc
+    COMPLEX(xp), DIMENSION(:,:,:), INTENT(OUT) :: field_tot
     COMPLEX(xp), DIMENSION(nky_tot,nz_loc) :: buffer_yt_zl !full  y, local z
     COMPLEX(xp), DIMENSION(nky_tot,nz_tot) :: buffer_yt_zt !full  y, full  z
     COMPLEX(xp), DIMENSION(nky_loc):: buffer_yl_zc !local y, constant z
@@ -272,42 +272,45 @@ CONTAINS
       ENDDO
     ENDIF
   END SUBROUTINE gather_xyz
+  
 
   !!!!! Gather a field in kinetic + z coordinates on rank 0 !!!!!
-  SUBROUTINE gather_pjz(field_loc,field_tot,np_loc,np_tot,nj_tot,nz_loc,nz_tot)
+  SUBROUTINE gather_pjz(field_loc,field_tot,na_tot,np_loc,np_tot,nj_tot,nz_loc,nz_tot)
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: np_loc,np_tot, nj_tot, nz_loc,nz_tot
-    COMPLEX(xp), DIMENSION(np_loc,nj_tot,nz_loc), INTENT(IN)  :: field_loc
-    COMPLEX(xp), DIMENSION(np_tot,nj_tot,nz_tot), INTENT(OUT) :: field_tot
+    INTEGER, INTENT(IN) :: na_tot,np_loc,np_tot, nj_tot, nz_loc,nz_tot
+    COMPLEX(xp), DIMENSION(:,:,:,:), INTENT(IN)  :: field_loc
+    COMPLEX(xp), DIMENSION(:,:,:,:), INTENT(OUT) :: field_tot
     COMPLEX(xp), DIMENSION(np_tot,nz_loc) :: buffer_pt_zl !full  p, local z
     COMPLEX(xp), DIMENSION(np_tot,nz_tot) :: buffer_pt_zt !full  p, full  z
     COMPLEX(xp), DIMENSION(np_loc) :: buffer_pl_zc !local p, constant z
     COMPLEX(xp), DIMENSION(np_tot) :: buffer_pt_zc !full  p, constant z
-    INTEGER :: snd_p, snd_z, root_p, root_z, root_ky, ij, iz
+    INTEGER :: snd_p, snd_z, root_p, root_z, root_ky, ij, iz, ia
 
     snd_p  = np_loc    ! Number of points to send along p (per z)
     snd_z  = np_tot*nz_loc ! Number of points to send along z (full p)
 
     root_p = 0; root_z = 0; root_ky = 0
     IF(rank_ky .EQ. root_ky) THEN
-      DO ij = 1,nj_tot
-        DO iz = 1,nz_loc
-          ! fill a buffer to contain a slice of data at constant j and z
-          buffer_pl_zc(1:np_loc) = field_loc(1:np_loc,ij,iz)
-          CALL MPI_GATHERV(buffer_pl_zc, snd_p,        mpi_xp_c, &
-                           buffer_pt_zc, rcv_p, dsp_p, mpi_xp_c, &
-                           root_p, comm_p, ierr)
-          buffer_pt_zl(1:np_tot,iz) = buffer_pt_zc(1:np_tot)
+      DO ia= 1,na_tot
+        DO ij = 1,nj_tot
+          DO iz = 1,nz_loc
+            ! fill a buffer to contain a slice of data at constant j and z
+            buffer_pl_zc(1:np_loc) = field_loc(ia,1:np_loc,ij,iz)
+            CALL MPI_GATHERV(buffer_pl_zc, snd_p,        mpi_xp_c, &
+                            buffer_pt_zc, rcv_p, dsp_p, mpi_xp_c, &
+                            root_p, comm_p, ierr)
+            buffer_pt_zl(1:np_tot,iz) = buffer_pt_zc(1:np_tot)
+          ENDDO
+          ! send the full line on y contained by root_p
+          IF(rank_p .EQ. root_p) THEN
+            CALL MPI_GATHERV(buffer_pt_zl, snd_z,         mpi_xp_c, &
+                            buffer_pt_zt, rcv_zp, dsp_zp, mpi_xp_c, &
+                            root_z, comm_z, ierr)
+          ENDIF
+          ! ID 0 (the one who output) rebuild the whole array
+          IF(my_id .EQ. 0) &
+            field_tot(ia,1:np_tot,ij,1:nz_tot) = buffer_pt_zt(1:np_tot,1:nz_tot)
         ENDDO
-        ! send the full line on y contained by root_p
-        IF(rank_p .EQ. root_p) THEN
-          CALL MPI_GATHERV(buffer_pt_zl, snd_z,          mpi_xp_c, &
-                           buffer_pt_zt, rcv_zp, dsp_zp, mpi_xp_c, &
-                           root_z, comm_z, ierr)
-        ENDIF
-        ! ID 0 (the one who output) rebuild the whole array
-        IF(my_id .EQ. 0) &
-          field_tot(1:np_tot,ij,1:nz_tot) = buffer_pt_zt(1:np_tot,1:nz_tot)
       ENDDO
     ENDIF
   END SUBROUTINE gather_pjz
@@ -317,8 +320,8 @@ CONTAINS
   SUBROUTINE gather_pjxyz(field_loc,field_tot,na_tot,np_loc,np_tot,nj_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: na_tot,np_loc,np_tot,nj_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot
-    COMPLEX(xp), DIMENSION(np_loc,nj_tot,nky_loc,nkx_tot,nz_loc), INTENT(IN)  :: field_loc
-    COMPLEX(xp), DIMENSION(na_tot,np_tot,nj_tot,nky_tot,nkx_tot,nz_tot), INTENT(OUT) :: field_tot
+    COMPLEX(xp), DIMENSION(:,:,:,:,:,:), INTENT(IN)  :: field_loc
+    COMPLEX(xp), DIMENSION(:,:,:,:,:,:), INTENT(OUT) :: field_tot
     COMPLEX(xp), DIMENSION(np_tot,nky_tot,nz_loc) :: buffer_pt_yt_zl ! full p,     full y, local    z
     COMPLEX(xp), DIMENSION(np_tot,nky_tot,nz_tot) :: buffer_pt_yt_zt ! full p,     full y, full     z
     COMPLEX(xp), DIMENSION(np_tot,nky_loc) :: buffer_pt_yl_zc     ! full p,    local y, constant z
@@ -336,7 +339,7 @@ CONTAINS
           z: DO iz = 1,nz_loc
             y: DO iy = 1,nky_loc
               ! fill a buffer to contain a slice of p data at constant j, ky, kx and z
-              buffer_pl_cy_zc(1:np_loc) = field_loc(1:np_loc,ij,iy,ix,iz)
+              buffer_pl_cy_zc(1:np_loc) = field_loc(ia,1:np_loc,ij,iy,ix,iz)
               CALL MPI_GATHERV(buffer_pl_cy_zc, snd_p,       mpi_xp_c, &
                               buffer_pt_cy_zc, rcv_p, dsp_p, mpi_xp_c, &
                               root_p, comm_p, ierr)
@@ -368,7 +371,7 @@ CONTAINS
   SUBROUTINE manual_3D_bcast(field_,n1,n2,n3)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: n1,n2,n3
-    COMPLEX(xp), DIMENSION(n1,n2,n3), INTENT(INOUT) :: field_
+    COMPLEX(xp), DIMENSION(:,:,:), INTENT(INOUT) :: field_
     COMPLEX(xp) :: buffer(n1,n2,n3)
     INTEGER     :: i_, root, world_rank, world_size, count, i1,i2,i3
     root = 0;
@@ -441,7 +444,7 @@ CONTAINS
   SUBROUTINE exchange_ghosts_1D(f,nbr_L,nbr_R,np,ng)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: np,ng, nbr_L, nbr_R
-    COMPLEX(xp), DIMENSION(np+ng), INTENT(INOUT) :: f
+    COMPLEX(xp), DIMENSION(:), INTENT(INOUT) :: f
     INTEGER :: ierr, first, last, ig
     first = 1 + ng/2
     last  = np + ng/2
