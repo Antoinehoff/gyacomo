@@ -9,19 +9,19 @@ data.TPER_I = rotate(data.TPER_I);
 data.TPAR_I = rotate(data.TPAR_I);
 data.TEMP_I = rotate(data.TEMP_I);
 
-data.Ny = data.Nky*2-1;
-data.Nx = data.Nkx;
+data.grids.Ny = data.grids.Nky*2-1;
+data.grids.Nx = data.grids.Nkx;
 
-if numel(data.kx)>1
-    dkx = data.kx(2); 
+if numel(data.grids.kx)>1
+    dkx = data.grids.kx(2); 
 else
     dkx = 1;
 end
 
-dky = data.ky(2);
+dky = data.grids.ky(2);
 Lx = 2*pi/dkx;   Ly = 2*pi/dky;
-x = linspace(-Lx/2,Lx/2,data.Nx+1); x = x(1:end-1);
-y = linspace(-Ly/2,Ly/2,data.Ny+1); y = y(1:end-1);
-data.x = x; data.y = y; data.Lx = Lx; data.Ly = Ly;
+x = linspace(-Lx/2,Lx/2,data.grids.Nx+1); x = x(1:end-1);
+y = linspace(-Ly/2,Ly/2,data.grids.Ny+1); y = y(1:end-1);
+data.grids.x = x; data.grids.y = y; data.grids.Lx = Lx; data.grids.Ly = Ly;
 end
 

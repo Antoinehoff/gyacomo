@@ -1,6 +1,8 @@
 function [DATA] = compile_results_low_mem(DATA,DIRECTORY,JOBNUMMIN,JOBNUMMAX)
 CONTINUE = 1;
 JOBNUM   = JOBNUMMIN; JOBFOUND = 0;
+DATA.CODENAME = 'GYAC';
+DATA.folder = DIRECTORY;
 DATA.params_evol.TJOB_SE  = []; % Start and end times of jobs
 DATA.params_evol.NU_EVOL  = []; % evolution of parameter nu between jobs
 DATA.params_evol.CO_EVOL  = []; % evolution of CO
@@ -51,8 +53,8 @@ while(CONTINUE)
                     [ GGAMMA_R, Ts0D, ~] = load_0D_data(filename, 'gflux_xi');
                     PGAMMA_R             = load_0D_data(filename, 'pflux_xi');
                 end
-                GGAMMA_ = cat(1,GGAMMA_,GGAMMA_R); clear GGAMMA_R
-                PGAMMA_ = cat(1,PGAMMA_,PGAMMA_R); clear PGAMMA_R
+                GGAMMA_ = cat(2,GGAMMA_,GGAMMA_R); clear GGAMMA_R
+                PGAMMA_ = cat(2,PGAMMA_,PGAMMA_R); clear PGAMMA_R
             end
 
             if W_HF
@@ -62,7 +64,7 @@ while(CONTINUE)
                     % old version
                     [ HFLUX_X, Ts0D, ~] = load_0D_data(filename, 'hflux_xi');
                 end
-                HFLUX_ = cat(1,HFLUX_,HFLUX_X); clear HFLUX_X
+                HFLUX_ = cat(2,HFLUX_,HFLUX_X); clear HFLUX_X
             end
 
             Ts0D_   = cat(1,Ts0D_,Ts0D);

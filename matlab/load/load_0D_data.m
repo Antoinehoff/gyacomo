@@ -5,6 +5,6 @@ function [ data, time, dt ] = load_0D_data( filename, variablename )
     Na    = h5readatt(filename,'/data/input/model','Na');
     cstart= h5readatt(filename,'/data/input/basic','start_iframe0d'); 
     data  = h5read(filename,['/data/var0d/',variablename]);
-%     data  = reshape(data,[Na, numel(time)]);
+    data  = reshape(data,[Na, numel(time)]);
 end
 

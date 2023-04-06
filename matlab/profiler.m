@@ -24,7 +24,8 @@ for i = 1:numel(data.outfilenames)
     STETC = [ STETC; h5read(outfilename,'/profiler/Tc_step')];
     TS0TC = [ TS0TC; h5read(outfilename,'/profiler/time')];
 end
-
+CPUTI = CPUTI(end);
+DTSIM = mean(DTSIM);
 N_T          = 12;
 
 missing_Tc   = STETC - RHSTC - ADVTC - GHOTC - CLOTC ...

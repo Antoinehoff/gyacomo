@@ -5,35 +5,35 @@ DATA.namelist = namelist;
 DATA.folder   = folder;
 %% Grid
 coofile = 'coord.dat.h5';
-DATA.vp  = h5read([folder,coofile],'/coord/vp');
-DATA.Nvp = numel(DATA.vp);
+DATA.grids.vp  = h5read([folder,coofile],'/coord/vp');
+DATA.grids.Nvp = numel(DATA.grids.vp);
 
-DATA.mu  = h5read([folder,coofile],'/coord/mu');
-DATA.Nmu = numel(DATA.mu);
+DATA.grids.mu  = h5read([folder,coofile],'/coord/mu');
+DATA.grids.Nmu = numel(DATA.grids.mu);
 
-DATA.kx  = h5read([folder,coofile],'/coord/kx');
-DATA.Nkx = numel(DATA.kx);
-DATA.Nx  = DATA.Nkx;
+DATA.grids.kx  = h5read([folder,coofile],'/coord/kx');
+DATA.grids.Nkx = numel(DATA.grids.kx);
+DATA.grids.Nx  = DATA.grids.Nkx;
 
-DATA.ky  = h5read([folder,coofile],'/coord/ky');
-DATA.Nky = numel(DATA.ky);
-DATA.Ny  = DATA.Nky*2-1;
+DATA.grids.ky  = h5read([folder,coofile],'/coord/ky');
+DATA.grids.Nky = numel(DATA.grids.ky);
+DATA.grids.Ny  = DATA.grids.Nky*2-1;
 
-DATA.z   = h5read([folder,coofile],'/coord/z');
-DATA.Nz  = numel(DATA.z);
+DATA.grids.z   = h5read([folder,coofile],'/coord/z');
+DATA.grids.Nz  = numel(DATA.grids.z);
 
-DATA.paramshort = [num2str(DATA.Nkx),'x',num2str(DATA.Nky),'x',num2str(DATA.Nz),...
-                    'x',num2str(DATA.Nvp),'x',num2str(DATA.Nmu)];
-if numel(DATA.kx)>1
-    dkx = DATA.kx(2); 
+DATA.params_string = [num2str(DATA.grids.Nkx),'x',num2str(DATA.grids.Nky),'x',num2str(DATA.grids.Nz),...
+                    'x',num2str(DATA.grids.Nvp),'x',num2str(DATA.grids.Nmu)];
+if numel(DATA.grids.kx)>1
+    dkx = DATA.grids.kx(2); 
 else
     dkx = 1;
 end
-dky = DATA.ky(2);
+dky = DATA.grids.ky(2);
 Lx = 2*pi/dkx;   Ly = 2*pi/dky;
-x = linspace(-Lx/2,Lx/2,DATA.Nx+1); x = x(1:end-1);
-y = linspace(-Ly/2,Ly/2,DATA.Ny+1); y = y(1:end-1);
-DATA.x = x; DATA.y = y; DATA.Lx = Lx; DATA.Ly = Ly;
+x = linspace(-Lx/2,Lx/2,DATA.grids.Nx+1); x = x(1:end-1);
+y = linspace(-Ly/2,Ly/2,DATA.grids.Ny+1); y = y(1:end-1);
+DATA.grids.x = x; DATA.grids.y = y; DATA.grids.Lx = Lx; DATA.grids.Ly = Ly;
 %% Transport
 nrgfile           = 'nrg.dat.h5';
 % nrgfile           = 'nrg_1.h5';
@@ -45,10 +45,10 @@ DATA.HFLUX_X   = h5read([folder,nrgfile],'/nrgions/Q_es');
 phifile   = 'field.dat.h5';
 % phifile   = 'field_1.h5';
 DATA.Ts3D = h5read([folder,phifile],'/field/time');
-DATA.DENS_I = zeros(DATA.Nkx,DATA.Nky,DATA.Nz,numel(DATA.Ts3D));
-DATA.TPER_I = zeros(DATA.Nkx,DATA.Nky,DATA.Nz,numel(DATA.Ts3D));
-DATA.TPAR_I = zeros(DATA.Nkx,DATA.Nky,DATA.Nz,numel(DATA.Ts3D));
-DATA.PHI    = zeros(DATA.Nkx,DATA.Nky,DATA.Nz,numel(DATA.Ts3D));
+DATA.DENS_I = zeros(DATA.grids.Nkx,DATA.grids.Nky,DATA.grids.Nz,numel(DATA.Ts3D));
+DATA.TPER_I = zeros(DATA.grids.Nkx,DATA.grids.Nky,DATA.grids.Nz,numel(DATA.Ts3D));
+DATA.TPAR_I = zeros(DATA.grids.Nkx,DATA.grids.Nky,DATA.grids.Nz,numel(DATA.Ts3D));
+DATA.PHI    = zeros(DATA.grids.Nkx,DATA.grids.Nky,DATA.grids.Nz,numel(DATA.Ts3D));
 
 momfile = 'mom_ions.dat.h5';
 % momfile = 'mom_ions_1.h5';

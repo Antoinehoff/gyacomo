@@ -22,7 +22,7 @@ options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag
 options.INTERP   = 1;
 options.NCUT     = 4;              % Number of cuts for averaging and error estimation
 options.RESOLUTION = 256;
-PLOT = plot_radial_transport_and_spacetime(DATA,options,'GENE');
+PLOT = plot_radial_transport_and_spacetime(DATA,options);
 % Put on full fig
 axcp = copyobj(PLOT.ax1,full_fig); 
 set(axcp,'Position',get(axes(1),'position'));delete(axes(1));
