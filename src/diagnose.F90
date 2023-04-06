@@ -127,6 +127,9 @@ SUBROUTINE diagnose_full(kstep)
     CALL creatd(fidres, 0, dims, "/profiler/Tc_diag",       "cumulative sym computation time")
     CALL creatd(fidres, 0, dims, "/profiler/Tc_step",       "cumulative total step computation time")
     CALL creatd(fidres, 0, dims, "/profiler/time",          "current simulation time")
+#ifdef TEST_SVD
+    CALL creatd(fidres, 0, (/0/), "/profiler/Tc_DLRA", "cumulative total DLRA computation time")
+#endif
     ! Grid info
     CALL creatg(fidres, "/data/grid", "Grid data")
     CALL putarr(fidres, "/data/grid/coordkx",   kxarray_full,  "kx*rho_s0", ionode=0)
@@ -169,6 +172,15 @@ SUBROUTINE diagnose_full(kstep)
      ENDIF
      CALL attach(fidres,"/data/var0d/" , "frames", iframe0d)
     END IF
+    !  var2d group (gyro transport)
+    IF (nsave_0d .GT. 0) THEN
+      CALL creatg(fidres, "/data/var2d", "2d profiles")
+      CALL creatd(fidres, rank, dims,  "/data/var2d/time",     "Time t*c_s/R")
+      CALL creatd(fidres, rank, dims, "/data/var2d/cstep", "iteration number")
+#ifdef TEST_SVD
+      CALL creatg(fidres, "/data/var2d/sv_ky_pj", "singular values of the moment ky/pj cut")
+#endif
+    ENDIF
     !  var3d group (phi,psi, fluid moments, Ni00, Napjz)
     IF (nsave_3d .GT. 0) THEN
      CALL creatg(fidres, "/data/var3d", "3d profiles")
@@ -221,6 +233,12 @@ SUBROUTINE diagnose_full(kstep)
         CALL diagnose_0d
       END IF
     END IF
+    !                       2.2   2d profiles
+    IF (nsave_2d .GT. 0) THEN
+      IF (MOD(cstep, nsave_2d) == 0) THEN
+        CALL diagnose_2d
+      ENDIF
+    ENDIF
     !                       2.3   3d profiles
     IF (nsave_3d .GT. 0) THEN
       IF (MOD(cstep, nsave_3d) == 0) THEN
@@ -274,7 +292,6 @@ SUBROUTINE diagnose_0d
   CALL append(fidres, "/profiler/Tc_nadiab",    REAL(chrono_napj%ttot,dp),ionode=0)
   CALL append(fidres, "/profiler/Tc_step",      REAL(chrono_step%ttot,dp),ionode=0)
 #ifdef TEST_SVD
-  CALL creatd(fidres, 0, (/0/), "/profiler/Tc_DLRA", "cumulative total DLRA computation time")
   CALL append(fidres, "/profiler/Tc_DLRA",      REAL(chrono_DLRA%ttot,dp),ionode=0) 
 #endif
   CALL append(fidres, "/profiler/time",                REAL(time,dp),ionode=0)
@@ -295,6 +312,25 @@ SUBROUTINE diagnose_0d
     CALL append(fidres, "/data/var0d/hflux_x",REAL(hflux_x,dp),ionode=0)
   ENDIF
 END SUBROUTINE diagnose_0d
+
+SUBROUTINE diagnose_2d
+  USE prec_const
+  USE basic
+  USE diagnostics_par
+  USE futils, ONLY: putarr, append
+#ifdef TEST_SVD
+  USE DLRA, ONLY: Sf
+#endif
+  IMPLICIT NONE
+  CHARACTER(50) :: dset_name
+  iframe2d=iframe2d+1
+  CALL append(fidres,"/data/var2d/time", REAL(time,dp), ionode=0)
+  CALL append(fidres,"/data/var2d/cstep",REAL(cstep,dp),ionode=0)
+#ifdef TEST_SVD
+  WRITE(dset_name, "(A, '/', i6.6)") "/data/var2d/sv_ky_pj/", iframe2d
+  CALL putarr(fidres, dset_name, Sf, ionode=0)
+#endif
+END SUBROUTINE
 
 SUBROUTINE diagnose_3d
   USE basic

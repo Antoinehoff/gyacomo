@@ -1,0 +1,107 @@
+&BASIC
+  nrun       = 99999999
+  dt         = 0.01
+  tmax       = 500
+  maxruntime = 72000
+  job2load   = -1
+/
+&GRID
+  pmax   = 4
+  jmax   = 2
+  Nx     = 64
+  Lx     = 200
+  Ny     = 48
+  Ly     = 60
+  Nz     = 1
+  SG     = .f.
+  Nexc   = 1
+/
+&GEOMETRY
+  geom   = 'Z-pinch'
+  q0     = 0.0
+  shear  = 0.0 
+  eps    = 0.0
+  kappa  = 1.0
+  s_kappa= 0.0
+  delta  = 0.0
+  s_delta= 0.0
+  zeta   = 0.0
+  s_zeta = 0.0
+  parallel_bc = 'shearless'
+  shift_y= 0.0
+/
+&OUTPUT_PAR
+  dtsave_0d = 0.1
+  dtsave_1d = -1
+  dtsave_2d = 0.1
+  dtsave_3d = 1
+  dtsave_5d = 10
+  write_doubleprecision = .f.
+  write_gamma = .t.
+  write_hf    = .t.
+  write_phi   = .t.
+  write_Na00  = .t.
+  write_Napj  = .t.
+  write_dens  = .t.
+  write_fvel  = .t.
+  write_temp  = .t.
+/
+&MODEL_PAR
+  LINEARITY = 'nonlinear'
+  Na      = 2 ! number of species
+  mu_x    = 1.0
+  mu_y    = 1.0
+  N_HD    = 4
+  mu_z    = 0.0
+  HYP_V   = 'hypcoll'
+  mu_p    = 0.0
+  mu_j    = 0.0
+  nu      = 0.1
+  beta    = 0.0
+  ADIAB_E = .f.
+  tau_e   = 1.0
+/
+&CLOSURE_PAR
+  hierarchy_closure='truncation'
+  !hierarchy_closure='max_degree'
+  dmax = 2
+  nonlinear_closure='anti_laguerre_aliasing' !(truncation,full_sum,anti_laguerre_aliasing)
+  nmax = 0
+/
+&SPECIES
+ ! ions
+ name_ = 'ions'
+ tau_  = 1.0
+ sigma_= 1.0
+ q_    = 1.0
+ k_N_  = 2.0
+ k_T_  = 0.4
+/
+&SPECIES
+ ! electrons
+ name_ = 'electrons'
+ tau_  = 1.0
+ sigma_= 0.023338
+ q_    =-1.0
+ k_N_  = 2.0
+ k_T_  = 0.4
+/
+&COLLISION_PAR
+  collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
+  GK_CO           = .t.
+  INTERSPECIES    = .true.
+  mat_file       = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
+/
+&INITIAL_CON
+  INIT_OPT         = 'blob' !(phi,blob)
+  ACT_ON_MODES     = 'donothing'
+  init_background  = 0.0
+  init_noiselvl    = 0.005
+  iseed            = 42
+/
+&TIME_INTEGRATION_PAR
+  numerical_scheme = 'RK4'
+/
+&DLRA
+  nsv_filter = 2
+/

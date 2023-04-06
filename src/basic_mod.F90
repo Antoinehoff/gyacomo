@@ -40,6 +40,10 @@ MODULE basic
   type(chrono), PUBLIC, PROTECTED :: chrono_runt, chrono_mrhs, chrono_advf, chrono_pois, chrono_sapj,&
    chrono_diag, chrono_chck, chrono_step, chrono_clos, chrono_ghst, chrono_coll, chrono_napj, chrono_grad
 
+#ifdef TEST_SVD
+  type(chrono), PUBLIC, PROTECTED :: chrono_DLRA
+#endif
+
   LOGICAL, PUBLIC, PROTECTED :: GATHERV_OUTPUT = .true.
 
   PUBLIC :: allocate_array, basic_outputinputs,basic_data,&
@@ -85,6 +89,9 @@ CONTAINS
     chrono_chck%ttot = 0
     chrono_diag%ttot = 0
     chrono_step%ttot = 0
+#ifdef TEST_SVD
+    chrono_DLRA%ttot = 0
+#endif
   END SUBROUTINE basic_data
 
 

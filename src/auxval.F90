@@ -12,6 +12,9 @@ subroutine auxval
   USE closure, ONLY: set_closure_model, hierarchy_closure
   USE parallel, ONLY: init_parallel_var, my_id, num_procs, num_procs_p, num_procs_z, num_procs_ky, rank_p, rank_ky, rank_z
   USE processing, ONLY: init_process
+#ifdef TEST_SVD
+  USE DLRA, ONLY: init_DLRA
+#endif
   IMPLICIT NONE
 
   INTEGER :: i_, ierr
@@ -41,6 +44,10 @@ subroutine auxval
   CALL build_dv4Hp_table ! precompute the hermite fourth derivative table
 
   CALL set_closure_model ! set the closure scheme in use
+
+#ifdef TEST_SVD
+  CALL init_DLRA(local_nky,local_np*local_nj)
+#endif
 
   !! Display parallel settings
   CALL mpi_barrier(MPI_COMM_WORLD, ierr)

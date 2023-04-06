@@ -1,239 +1,243 @@
 module DLRA
-    USE prec_const
-    implicit none
-
-    PUBLIC :: filter_singular_value_ky_pj, test_SVD
-
-    CONTAINS
-
-    SUBROUTINE filter_singular_value_ky_pj(nsv,array_ky_pj)
-        IMPLICIT NONE
-        ! ARGUMENTS
-        INTEGER, INTENT(IN) :: nsv                                ! number of singular values to keep
-        COMPLEX(xp), DIMENSION(:,:), INTENT(INOUT) :: array_ky_pj ! Array to filter
-        !
-
-        ! Singular value decomposition
-        ! CALL SVD(array_ky_pj,singular_values)
-    END SUBROUTINE
-
-    SUBROUTINE test_svd
+   USE prec_const
+   USE parallel
+   implicit none
 #ifdef TEST_SVD
-        ! Program to perform Singular Value Decomposition (SVD)
-        ! using LAPACK library
-        
-        ! Specify the dimensions of the input matrix A
-        INTEGER, PARAMETER :: m = 3, n = 2
-        
-        ! Declare the input matrix A
-        COMPLEX, DIMENSION(m,n) :: A
-        
-        ! OUTPUT
-        COMPLEX, DIMENSION(m,m) :: U
-        REAL,    DIMENSION(MIN(m,n)) :: S
-        COMPLEX, DIMENSION(n,n) :: VT
+   ! LOCAL VARIABLES
+   COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: A_buff,Bf,Br ! buffer and full/reduced rebuilt matrices
+   COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: U            ! basis
+   REAL(xp),    DIMENSION(:),   ALLOCATABLE :: Sf, Sr       ! full and reduced singular values
+   COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: VT           ! basis
+   INTEGER :: lda, ldu, ldvt, info, lwork, i, m,n, nsv_filter
+   COMPLEX(xp), DIMENSION(:), ALLOCATABLE :: work
+   REAL(xp),    DIMENSION(:), ALLOCATABLE :: rwork
+   PUBLIC :: init_DLRA, filter_sv_moments_ky_pj, test_SVD
 
-        ! local variables
-        INTEGER :: lda, ldu, ldvt, info, lwork, i, j
-        COMPLEX, DIMENSION(:), ALLOCATABLE :: work
-        REAL,    DIMENSION(:), ALLOCATABLE :: rwork
-    
-        ! Set the leading dimensions for the input and output arrays
-        lda = MAX(1, m)
-        ldu = MAX(1, m)
-        ldvt = MAX(1, n)
-        
-        ! Define the input matrix A
-        A = RESHAPE((/ (1.0,0.1), (2.0,0.2), (3.0,0.3), (4.0,0.4), (5.0,0.5), (6.0,0.6) /), SHAPE(A))
+CONTAINS
 
-        ! Print the input matrix A
-        WRITE(*,*) 'Input matrix A = '
-        DO i = 1, m
-          WRITE(*,*) ('(',REAL(A(i,j)), AIMAG(A(i,j)),')', j=1,n)
-        END DO
-
-        ALLOCATE(work(5*n), rwork(5*n))
-        ! Compute the optimal workspace size
-        lwork = -1
-        CALL CGESVD('A', 'A', m, n, A, lda, S, U, ldu, VT, ldvt, work, lwork, rwork, info)
-
-        ! Allocate memory for the workspace arrays
-        lwork = CEILING(REAL(work(1)), KIND=SELECTED_REAL_KIND(1, 6))
-
-        ! Compute the SVD of A using the LAPACK subroutine CGESVD
-        CALL CGESVD('A', 'A', m, n, A, lda, S, U, ldu, VT, ldvt, work, lwork, rwork, info)
-        
-        ! Print the results
-        WRITE(*,*) 'U = '
-        DO i = 1, m
-            WRITE(*,*) ('(',REAL(U(i,j)), AIMAG(U(i,j)),')', j=1,m)
-        END DO
-        WRITE(*,*)
-        WRITE(*,*) 'S = '
-        WRITE(*,'(2F8.3)') (S(i), i=1,n)
-        WRITE(*,*)
-        WRITE(*,*) 'VT = '
-        DO i = 1, n
-            WRITE(*,*) ('(',REAL(VT(i,j)), AIMAG(VT(i,j)),')', j=1,n)
-        END DO
-      
-        ! Reconstruct A from its SVD
-        A = MATMUL(U, MATMUL(diagmat(S,m,n), VT))
-      
-        ! Print the reconstructed matrix A
-        WRITE(*,*) 'Reconstructed matrix A = '
-        DO i = 1, m
-          WRITE(*,*) ('(',REAL(A(i,j)), AIMAG(A(i,j)),')', j=1,n)
-        END DO
-        stop
-#endif
-      END SUBROUTINE test_svd
-      
-    ! SUBROUTINE test_svd
-    !     ! Program to perform Singular Value Decomposition (SVD)
-    !     ! using LAPACK library
-        
-    !     ! Specify the dimensions of the input matrix A
-    !       INTEGER, PARAMETER :: m = 3, n = 2
-    !       INTEGER, PARAMETER :: lda = m
-        
-    !     ! Declare the input matrix A
-    !       REAL, DIMENSION(lda,n) :: A
-        
-    !     ! Specify the dimensions of the output matrices
-    !       INTEGER, PARAMETER :: ldu = m, ldvt = n
-    !       INTEGER, PARAMETER :: lwork = 5*n
-    !       REAL, DIMENSION(ldu,m) :: U
-    !       REAL, DIMENSION(n) :: S
-    !       REAL, DIMENSION(ldvt,n) :: VT
-    !       REAL, DIMENSION(lwork) :: work
-    !       INTEGER :: info,i,j
-        
-    !     ! Define the input matrix A
-    !       A = RESHAPE((/ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0 /), SHAPE(A))
-        
-    !     ! Compute the SVD of A using the LAPACK subroutine SGESVD
-    !       CALL SGESVD('A', 'A', m, n, A, lda, S, U, ldu, VT, ldvt, work, lwork, info)
-        
-    !     ! Print the results
-    !       WRITE(*,*) 'U = '
-    !       DO i = 1, m
-    !          WRITE(*,'(6F8.3)') (U(i,j), j=1,m)
-    !       END DO
-    !       WRITE(*,*)
-    !       WRITE(*,*) 'S = '
-    !       WRITE(*,'(2F8.3)') (S(i), i=1,n)
-    !       WRITE(*,*)
-    !       WRITE(*,*) 'VT = '
-    !       DO i = 1, n
-    !          WRITE(*,'(6F8.3)') (VT(i,j), j=1,n)
-    !       END DO
-
-    !     ! Reconstruct A from its SVD
-    !     A = MATMUL(U, MATMUL(diagmat(S,m,n), TRANSPOSE(VT)))
-
-    !     ! Print the reconstructed matrix A
-    !     WRITE(*,*) 'Reconstructed matrix A = '
-    !     DO i = 1, m
-    !     WRITE(*,'(2X, 3F8.3)') (A(i,j), j=1,n)
-    !     END DO
-    !     stop
-    !     END SUBROUTINE test_svd
-
-    ! SUBROUTINE test_svd
-    !     IMPLICIT NONE
-    !     INTEGER, PARAMETER :: m = 3, n = 2
-    !     COMPLEX(xp), DIMENSION(m, n) :: A
-    !     COMPLEX(xp), DIMENSION(m, m) :: U
-    !     COMPLEX(xp), DIMENSION(n, n) :: VT
-    !     REAL(xp), DIMENSION(MIN(m,n)) :: S
-    !     INTEGER :: i, j
-        
-    !     ! Initialize A
-    !     A = RESHAPE((/ (1.0_xp, 2.0_xp), (3.0_xp, 4.0_xp), (5.0_xp, 6.0_xp),&
-    !                    (1.5_xp, 2.5_xp), (3.5_xp, 4.5_xp), (5.5_xp, 6.5_xp) /), [m, n])
-
-    !     ! Print input
-    !     WRITE(*,*) "A = "
-    !     DO i = 1, m
-    !         WRITE(*,"(3F8.3)") (REAL(A(i,j)), AIMAG(A(i,j)), j=1,n)
-    !     END DO
-    !     WRITE(*,*)
-        
-    !     ! Call the SVD subroutine
-    !     CALL svd(A, U, S, VT, m, n)
-        
-    !     ! Print the resultas
-    !     WRITE(*,*) "U = "
-    !     DO i = 1, m
-    !         WRITE(*,"(3F8.3)") (REAL(U(i,j)), AIMAG(U(i,j)), j=1,m)
-    !     END DO
-    !     WRITE(*,*)
-        
-    !     WRITE(*,*) "S = ", S
-    !     WRITE(*,*)
-        
-    !     WRITE(*,*) "VT = "
-    !     DO i = 1, n
-    !         WRITE(*,"(3F8.3)") (REAL(VT(i,j)), AIMAG(VT(i,j)), j=1,n)
-    !     END DO
-    ! END SUBROUTINE test_svd
-    
-
-    SUBROUTINE svd(A, U, S, VT, m, n)
+   SUBROUTINE init_DLRA(m_,n_)
+      USE basic
       IMPLICIT NONE
-      ! INPUT
-      COMPLEX(xp), DIMENSION(m,n), INTENT(IN)  :: A
-      INTEGER, INTENT(IN) :: m, n
-      ! OUTPUT
-      COMPLEX(xp), DIMENSION(m,m), INTENT(OUT) :: U
-      REAL(xp),    DIMENSION(MIN(m,n)), INTENT(OUT) :: S
-      COMPLEX(xp), DIMENSION(n,n), INTENT(OUT) :: VT
-      ! local variables
-      INTEGER :: lda, ldu, ldvt, info, lwork
-      COMPLEX(xp), DIMENSION(:), ALLOCATABLE :: work
-      REAL(xp),    DIMENSION(:), ALLOCATABLE :: rwork
-#ifdef LAPACKDIR      
-        ! Set the leading dimensions for the input and output arrays
-        lda = MAX(1, m)
-        ldu = MAX(1, m)
-        ldvt = MAX(1, n)
-    
-        ! Compute the optimal workspace size
-        lwork = -1
-        CALL ZGESVD('A', 'A', m, n, A, lda, S, U, ldu, VT, ldvt, work, lwork, rwork, info)
-    
-        ! Allocate memory for the workspace arrays
-        lwork = CEILING(REAL(work(1)), KIND=SELECTED_REAL_KIND(1, 6))
-        ALLOCATE(work(lwork), rwork(5*MIN(m,n)))
-    
-        ! Compute the SVD
-        CALL ZGESVD('A', 'A', m, n, A, lda, S, U, ldu, VT, ldvt, work, lwork, rwork, info)
-    
-        ! Free the workspace arrays
-        DEALLOCATE(work, rwork)
+      ! ARGUMENTS
+      INTEGER, INTENT(IN) :: m_,n_                      ! dimensions of the input array
+      ! read the input
+      INTEGER :: lun   = 90              ! File duplicated from STDIN
+      NAMELIST /DLRA/ nsv_filter
+      READ(lun,dlra)
+      m   = m_
+      n   = n_
+      info = 1
+      ! Allocate the matrices
+      ALLOCATE(A_buff(m,n),Bf(m,n),Br(m,n))
+      ALLOCATE(U(m,m),Sf(MIN(m,n)),Sr(MIN(m,n)),VT(n,n))
+      ! Set the leading dimensions for the input and output arrays
+      lda  = MAX(1, m)
+      ldu  = MAX(1, m)
+      ldvt = MAX(1, n)
+      ALLOCATE(work(5*n), rwork(5*MIN(m,n)))
+      ! Compute the optimal workspace size
+      lwork = -1
+#ifdef SINGLE_PRECISION
+      CALL CGESVD('A', 'A', m, n, A_buff, lda, Sf, U, ldu, VT, ldvt, work, lwork, rwork, info)
+#else
+      CALL ZGESVD('A', 'A', m, n, A_buff, lda, Sf, U, ldu, VT, ldvt, work, lwork, rwork, info)
 #endif
-    END SUBROUTINE svd
-    
-      
-    FUNCTION diagmat(S, m, n) RESULT(D)
+      ! Allocate memory for the workspace arrays
+      lwork = 2*CEILING(REAL(work(1)))
+      DEALLOCATE(work)
+      ALLOCATE(work(lwork))
+   END SUBROUTINE init_DLRA
+
+   SUBROUTINE filter_sv_moments_ky_pj
+      USE fields,           ONLY: moments
+      USE grid,             ONLY: total_nky, total_np, total_nj, ngp,ngj,ngz,&
+         local_np, local_nj, local_nz, local_nkx, local_nky, local_na
+      USE time_integration, ONLY: updatetlevel
+      USE basic,            ONLY: start_chrono, stop_chrono, chrono_DLRA
       IMPLICIT NONE
-      ! INPUT
-      REAL, DIMENSION(:), INTENT(IN) :: S
-      INTEGER, INTENT(IN) :: m, n
-      ! OUTPUT
-      COMPLEX, DIMENSION(m,n) :: D
+
+      ! Arguments
+      INTEGER :: nsv_filter           ! number of singular values to keep
       ! Local variables
-      INTEGER :: i, j
-  
+      COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: moments_lky_lpj ! local ky and local pj data
+      COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: moments_gky_lpj ! global ky, local pj data
+      COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: moments_gky_gpj ! full gathered data for SVD (input of SVD)
+      INTEGER :: ia,ix,iz, m,n, ip, ij, iy
+      CALL start_chrono(chrono_DLRA)
+      ALLOCATE(moments_lky_lpj(local_nky,local_np*local_nj))
+      ALLOCATE(moments_gky_lpj(total_nky,local_np*local_nj))
+      ALLOCATE(moments_gky_gpj(total_nky,total_np*total_nj))
+      DO iz = 1+ngz/2,local_nz+ngz/2
+         DO ix = 1,local_nkx
+            DO ia = 1,local_na
+               ! Build the local slice explicitely
+               DO ip = 1,local_np
+                  DO ij = 1,local_nj
+                     DO iy = 1,local_nky
+                        moments_lky_lpj(iy,local_np*(ij-1)+ip) = moments(ia,ip+ngp/2,ij+ngj/2,iy,ix,iz,updatetlevel)
+                     ENDDO
+                  ENDDO
+               ENDDO
+               ! Gather ky data
+               IF(num_procs_ky .GT. 1) THEN
+                  ! MPI communication
+               ELSE
+                  moments_gky_lpj = moments_lky_lpj
+               ENDIF
+               ! Gather p data
+               IF(num_procs_p .GT. 1) THEN
+                  ! MPI communication
+               ELSE
+                  moments_gky_gpj = moments_gky_lpj
+               ENDIF
+               ! The process 0 performs the SVD
+               IF(my_id .EQ. 0) THEN
+                  m = total_nky
+                  n = total_np*total_nj
+                  nsv_filter = -1
+                  CALL filter_singular_value(moments_gky_gpj)
+               ENDIF
+               ! Distribute ky data
+               IF(num_procs_ky .GT. 1) THEN
+                  ! MPI communication
+               ELSE
+                  moments_gky_lpj = moments_gky_gpj
+               ENDIF
+               ! Distribute p data
+               IF(num_procs_p .GT. 1) THEN
+                  ! MPI communication
+               ELSE
+                  moments_lky_lpj = moments_gky_lpj
+               ENDIF
+               ! Put back the data into the moments array
+               DO ip = 1,local_np
+                  DO ij = 1,local_nj
+                     DO iy = 1,local_nky
+                        moments(ia,ip+ngp/2,ij+ngj/2,iy,ix,iz,updatetlevel) = moments_lky_lpj(iy,local_np*(ij-1)+ip)
+                     ENDDO
+                  ENDDO
+               ENDDO
+
+            ENDDO
+         ENDDO
+      ENDDO
+      CALL stop_chrono(chrono_DLRA)
+   END SUBROUTINE filter_sv_moments_ky_pj
+
+   SUBROUTINE filter_singular_value(A)
+      IMPLICIT NONE
+      ! ARGUMENTS
+      COMPLEX(xp), DIMENSION(:,:), INTENT(INOUT) :: A ! Array to filter
+      ! copy of the input since it is changed in the svd procedure
+      A_buff = A;
+#ifdef SINGLE_PRECISION
+      CALL CGESVD('A', 'A', m, n, A_buff, lda, Sf, U, ldu, VT, ldvt, work, lwork, rwork, info)
+#else
+      CALL ZGESVD('A', 'A', m, n, A_buff, lda, Sf, U, ldu, VT, ldvt, work, lwork, rwork, info)
+#endif
+      IF(info.GT.0) print*,"SVD did not converge, info=",info
+      ! Filter the values
+      Sr = 0._xp
+      IF (nsv_filter .GT. 0) THEN
+         DO i=1,MIN(m,n)-nsv_filter
+            Sr(i) = Sf(i)
+         ENDDO
+      ELSE ! do not filter if nsv_filter<0
+         Sr = Sf
+      ENDIF
+      ! Reconstruct A from its reduced SVD
+      A = MATMUL(U, MATMUL(diagmat(Sr,m,n), VT)) ! reduced
+   END SUBROUTINE filter_singular_value
+
+   FUNCTION diagmat(S, m, n) RESULT(D)
+      IMPLICIT NONE
+      ! INPUT
+      REAL(xp), DIMENSION(:), INTENT(IN) :: S
+      INTEGER, INTENT(IN) :: m, n
+      ! OUTPUT
+      COMPLEX(xp), DIMENSION(m,n) :: D
+      ! Local variables
+      INTEGER :: i
       ! Initialize the output array to zero
       D = 0.0
-  
       ! Fill the diagonal elements of the output array with the input vector S
       DO i = 1, MIN(m,n)
-          D(i,i) = S(i)
+         D(i,i) = S(i)
       END DO
-  
-  END FUNCTION diagmat
+   END FUNCTION diagmat
 
+   SUBROUTINE test_svd
+      ! Specify the dimensions of the input matrix A
+      INTEGER :: m,n
+
+      ! Declare the input matrix A and reconstructed matrix B
+      COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: A,B,A_buff
+
+      ! OUTPUT
+      COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: U
+      REAL(xp),    DIMENSION(:),   ALLOCATABLE :: S
+      COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: VT
+      ! local variables
+      INTEGER :: lda, ldu, ldvt, info, lwork, i, j
+      COMPLEX(xp), DIMENSION(:), ALLOCATABLE :: work
+      REAL(xp),    DIMENSION(:), ALLOCATABLE :: rwork
+
+      m = 3
+      n = 2
+      ALLOCATE(A_buff(m,n),A(m,n),B(m,n),U(m,m),S(MIN(m,n)),VT(n,n))
+      ! Set the leading dimensions for the input and output arrays
+      lda  = MAX(1, m)
+      ldu  = MAX(1, m)
+      ldvt = MAX(1, n)
+
+      ! Define the input matrix A
+      A = RESHAPE((/ (1._xp,0.1_xp), (2._xp,0.2_xp), (3._xp,0.3_xp), (4._xp,0.4_xp), (5._xp,0.5_xp), (6._xp,0.6_xp) /), SHAPE(A))
+      ! copy of the input since it is changed in the svd procedure
+      A_buff = A;
+      ! Print the input matrix A
+      WRITE(*,*) 'Input matrix A = '
+      DO i = 1, m
+         WRITE(*,*) ('(',REAL(A(i,j)), AIMAG(A(i,j)),')', j=1,n)
+      END DO
+
+      ! CALL svd(A, U, S, VT, m, n)
+      ALLOCATE(work(5*n), rwork(5*n))
+      ! Compute the optimal workspace size
+      lwork = -1
+#ifdef SINGLE_PRECISION
+      CALL CGESVD('A', 'A', m, n, A_buff, lda, S, U, ldu, VT, ldvt, work, lwork, rwork, info)
+#else
+      CALL ZGESVD('A', 'A', m, n, A_buff, lda, S, U, ldu, VT, ldvt, work, lwork, rwork, info)
+#endif
+
+      ! Allocate memory for the workspace arrays
+      lwork = CEILING(REAL(work(1)), KIND=SELECTED_REAL_KIND(1, 6))
+
+      ! Compute the SVD of A using the LAPACK subroutine CGESVD
+#ifdef SINGLE_PRECISION
+      CALL CGESVD('A', 'A', m, n, A_buff, lda, S, U, ldu, VT, ldvt, work, lwork, rwork, info)
+#else
+      CALL ZGESVD('A', 'A', m, n, A_buff, lda, S, U, ldu, VT, ldvt, work, lwork, rwork, info)
+#endif
+      ! Print the results
+      ! WRITE(*,*) 'U = '
+      ! DO i = 1, m
+      !     WRITE(*,*) ('(',REAL(U(i,j)), AIMAG(U(i,j)),')', j=1,m)
+      ! END DO
+      ! WRITE(*,*)
+      WRITE(*,*) 'S = '
+      WRITE(*,'(2F8.3)') (S(i), i=1,n)
+      WRITE(*,*)
+      ! WRITE(*,*) 'VT = '
+      ! DO i = 1, n
+      !     WRITE(*,*) ('(',REAL(VT(i,j)), AIMAG(VT(i,j)),')', j=1,n)
+      ! END DO
+
+      ! Reconstruct A from its SVD
+      B = MATMUL(U, MATMUL(diagmat(S,m,n), VT))
+      ! Print the error with the intput matrix
+      WRITE(*,*) '||A-USVT||=', sum(abs(A-B))
+      stop
+   END SUBROUTINE test_svd
+#endif
 end module DLRA

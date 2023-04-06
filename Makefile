@@ -61,7 +61,8 @@ gdebug: compile
 
 # test SVD
 test_svd: F90 = mpif90
-test_svd: F90FLAGS = -DTEST_SVD -g -traceback -ftrapuv -warn all -debug all
+# test_svd: F90FLAGS = -DTEST_SVD -g -traceback -ftrapuv -warn all -debug all
+test_svd: F90FLAGS = -DTEST_SVD -O3
 test_svd: EXEC = $(BINDIR)/gyacomo23_test_svd
 test_svd: dirs src/srcinfo.h
 test_svd: dirs src/srcinfo.h
@@ -123,7 +124,7 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/DLRA_mod.o
  $(OBJDIR)/auxval.o : src/auxval.F90 \
  	 $(OBJDIR)/fourier_mod.o $(OBJDIR)/memory.o $(OBJDIR)/model_mod.o \
 	 $(OBJDIR)/geometry_mod.o  $(OBJDIR)/grid_mod.o $(OBJDIR)/numerics_mod.o \
-	 $(OBJDIR)/parallel_mod.o $(OBJDIR)/processing_mod.o
+	 $(OBJDIR)/parallel_mod.o $(OBJDIR)/processing_mod.o $(OBJDIR)/DLRA_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/auxval.F90 -o $@
 
  $(OBJDIR)/basic_mod.o : src/basic_mod.F90 \
@@ -309,5 +310,6 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/DLRA_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/utility_mod.F90 -o $@
 
  $(OBJDIR)/DLRA_mod.o : src/DLRA_mod.F90  \
-   $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o
+   $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/grid_mod.o \
+   $(OBJDIR)/time_integration_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/DLRA_mod.F90 -o $@
