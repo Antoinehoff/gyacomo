@@ -55,26 +55,17 @@ SUBROUTINE update_ghosts_p_mom
   USE grid,     ONLY: local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
                               ngp,ngj,ngz
   IMPLICIT NONE
-  INTEGER :: ierr, first, last, count
+  INTEGER :: ierr, first, last, count, iz,ikx,iky,ij,igp,ia
+  COMPLEX(xp), DIMENSION(local_na,ngp/2,local_nj+ngj,local_nky,local_nkx,local_nz+ngz) :: buffer_send, buffer_recv
   first = 1 + ngp/2
   last  = local_np + ngp/2
-  ! count = local_na*(local_nj+ngj)*local_nky*local_nkx*(local_nz+ngz) ! Number of elements to send
-  !!!!!!!!!!! Send ghost to right neighbour !!!!!!!!!!!!!!!!!!!!!!
-  ! DO ig = 1,ngp/2
-  !   CALL mpi_sendrecv(moments(:,last-(ig-1),:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_R, 14+ig, &
-  !                     moments(:,first-ig   ,:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_L, 14+ig, &
-  !                     comm0, status, ierr)
-  ! ENDDO
-  !!!!!!!!!!! Send ghost to left neighbour !!!!!!!!!!!!!!!!!!!!!!
-  ! DO ig = 1,ngp/2
-  ! CALL mpi_sendrecv(moments(:,first+(ig-1),:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_L, 16+ig, &
-  !                   moments(:,last + ig   ,:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_R, 16+ig, &
-  !                   comm0, status, ierr)
-  ! ENDDO
+
   count = (ngp/2)*local_na*(local_nj+ngj)*local_nky*local_nkx*(local_nz+ngz) ! Number of elements to send
+  !!!!!! Send to the right, receive from the left
   CALL mpi_sendrecv(moments(:,(last-(ngp/2-1)):(last),:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_R, 14, &
                     moments(:,(first-ngp/2):(first-1),:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_L, 14, &
                     comm0, status, ierr)
+  !!!!!!! Send to the left, receive from the right
   CALL mpi_sendrecv(moments(:,(first):(first+(ngp/2-1)),:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_L, 16, &
                     moments(:,(last+1):(last+ngp/2)    ,:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_R, 16, &
                     comm0, status, ierr)

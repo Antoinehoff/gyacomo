@@ -216,7 +216,7 @@ END SUBROUTINE interp_z
 SUBROUTINE simpson_rule_z(local_nz,zweights_SR,f,intf)
   ! integrate f(z) over z using the simpon's rule. Assume periodic boundary conditions (f(ize+1) = f(izs))
   !from molix BJ Frei
-  USE prec_const, ONLY: xp, onethird
+  USE prec_const, ONLY: xp, onethird, mpi_xp_c
   USE parallel,   ONLY: num_procs_z, rank_z, comm_z, manual_0D_bcast
   USE mpi
   implicit none
@@ -238,12 +238,12 @@ SUBROUTINE simpson_rule_z(local_nz,zweights_SR,f,intf)
   IF (num_procs_z .GT. 1) THEN
       !! Everyone sends its local_sum to root = 0
       IF (rank_z .NE. root) THEN
-          CALL MPI_SEND(buffer, 1 , MPI_DOUBLE_COMPLEX, root, 5678, comm_z, ierr)
+          CALL MPI_SEND(buffer, 1 , mpi_xp_c, root, 5678, comm_z, ierr)
       ELSE
           ! Recieve from all the other processes
           DO i_ = 0,num_procs_z-1
               IF (i_ .NE. rank_z) &
-                  CALL MPI_RECV(buffer, 1 , MPI_DOUBLE_COMPLEX, i_, 5678, comm_z, MPI_STATUS_IGNORE, ierr)
+                  CALL MPI_RECV(buffer, 1 , mpi_xp_c, i_, 5678, comm_z, MPI_STATUS_IGNORE, ierr)
                   intf = intf + buffer
           ENDDO
       ENDIF

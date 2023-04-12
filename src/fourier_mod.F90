@@ -96,15 +96,20 @@ MODULE fourier
     REAL(xp),                             INTENT(IN) :: inv_Nx, inv_Ny
     REAL(xp), DIMENSION(local_nky_ptr),   INTENT(IN) :: ky_, AA_y
     REAL(xp), DIMENSION(local_nkx_ptr),   INTENT(IN) :: kx_, AA_x
-    COMPLEX(c_xp_c), DIMENSION(local_nky_ptr,local_nkx_ptr), &
-                                          INTENT(IN) :: F_(:,:), G_(:,:)
+    COMPLEX(c_xp_c), DIMENSION(local_nky_ptr,local_nkx_ptr) &
+                                                     :: F_(:,:), G_(:,:)
     real(c_xp_r), pointer,             INTENT(INOUT) :: sum_real_(:,:)
     INTEGER :: ikx,iky
+    !! Anti aliasing
+    DO ikx = 1,local_nkx_ptr
+        F_(:,ikx) = F_(:,ikx)*AA_y(:)*AA_x(ikx)
+        G_(:,ikx) = G_(:,ikx)*AA_y(:)*AA_x(ikx)
+    ENDDO
     ! First term df/dx x dg/dy
     DO ikx = 1,local_nkx_ptr
       DO iky = 1,local_nky_ptr
-        cmpx_data_f(ikx,iky) = imagu*kx_(ikx)*F_(iky,ikx)*AA_x(ikx)*AA_y(iky) 
-        cmpx_data_g(ikx,iky) = imagu*ky_(iky)*G_(iky,ikx)*AA_x(ikx)*AA_y(iky)
+        cmpx_data_f(ikx,iky) = imagu*kx_(ikx)*F_(iky,ikx)!*AA_x(ikx)*AA_y(iky) 
+        cmpx_data_g(ikx,iky) = imagu*ky_(iky)*G_(iky,ikx)!*AA_x(ikx)*AA_y(iky)
       ENDDO
     ENDDO
 
@@ -120,9 +125,9 @@ MODULE fourier
     DO ikx = 1,local_nkx_ptr
       DO iky = 1,local_nky_ptr
         cmpx_data_f(ikx,iky) = &
-              imagu*ky_(iky)*F_(iky,ikx)*AA_x(ikx)*AA_y(iky)
+              imagu*ky_(iky)*F_(iky,ikx)!*AA_x(ikx)*AA_y(iky)
         cmpx_data_g(ikx,iky) = &
-              imagu*kx_(ikx)*G_(iky,ikx)*AA_x(ikx)*AA_y(iky)
+              imagu*kx_(ikx)*G_(iky,ikx)!*AA_x(ikx)*AA_y(iky)
       ENDDO
     ENDDO
 #ifdef SINGLE_PRECISION

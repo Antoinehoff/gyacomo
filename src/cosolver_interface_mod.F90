@@ -1,6 +1,6 @@
 module cosolver_interface
 ! contains the Hermite-Laguerre collision operators solved using COSOlver.
-USE prec_const, ONLY: xp
+USE prec_const, ONLY: xp, mpi_xp_c
 IMPLICIT NONE
 PRIVATE
 PUBLIC :: load_COSOlver_mat, compute_cosolver_coll
@@ -47,11 +47,11 @@ CONTAINS
               ENDDO p
               IF (num_procs_p .GT. 1) THEN
                 ! Reduce the local_sums to root = 0
-                CALL MPI_REDUCE(local_coll, buffer, total_np, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, comm_p, ierr)
+                CALL MPI_REDUCE(local_coll, buffer, total_np, mpi_xp_c, MPI_SUM, 0, comm_p, ierr)
                 ! buffer contains the entire collision term along p, we scatter it between
                 ! the other processes (use of scatterv since Pmax/Np is not an integer)
-                CALL MPI_SCATTERV(buffer, rcv_p, dsp_p, MPI_DOUBLE_COMPLEX,&
-                                  TColl_distr, local_np, MPI_DOUBLE_COMPLEX, &
+                CALL MPI_SCATTERV(buffer, rcv_p, dsp_p, mpi_xp_c,&
+                                  TColl_distr, local_np, mpi_xp_c, &
                                   0, comm_p, ierr)
               ELSE
                 TColl_distr = local_coll

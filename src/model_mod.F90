@@ -48,6 +48,7 @@ CONTAINS
     ENDIF
 
     IF(Na .EQ. 1) THEN
+      IF(.NOT. ADIAB_E) ERROR STOP "With one species, ADIAB_E must be set to .true. STOP"
       IF(my_id.EQ.0) print*, 'Adiabatic electron model -> beta = 0'
       beta = 0._xp
     ENDIF

@@ -38,21 +38,20 @@ SUBROUTINE set_closure_model
   CASE('truncation')
     DO ip = 1,local_np+ngp
       DO ij = 1, local_nj+ngj
-        evolve_mom(ip,ij) = (parray(ip).GE.0) .AND. (jarray(ij).GE.0) &
+        evolve_mom(ip,ij) = ((parray(ip).GE.0) .AND. (jarray(ij).GE.0)) &
                       .AND. (parray(ip).LE.pmax) .AND. (jarray(ij).LE.jmax)
       ENDDO
     ENDDO
   CASE('max_degree')
     DO ip = 1,local_np+ngp
       DO ij = 1, local_nj+ngj
-          evolve_mom(ip,ij) = (parray(ip).GE.0) .AND. (jarray(ij).GE.0) &
+          evolve_mom(ip,ij) = ((parray(ip).GE.0) .AND. (jarray(ij).GE.0)) &
                         .AND. (parray(ip)+2*jarray(ij) .LE. dmax)
       ENDDO
     ENDDO  
   CASE DEFAULT
     ERROR STOP "closure scheme not recognized (avail: truncation,max_degree)"
   END SELECT
-
   ! Set the nonlinear closure scheme (truncation of sum over n in Sapj)
   ALLOCATE(nmaxarray(local_nj))
   SELECT CASE(nonlinear_closure)

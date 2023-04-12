@@ -93,7 +93,7 @@ CONTAINS
   END SUBROUTINE geometry_readinputs
 
   subroutine eval_magnetic_geometry
-    USE grid,     ONLY: total_nky, total_nz, local_nkx, local_nky, local_nz, Ngz,&
+    USE grid,     ONLY: total_nky, total_nz, local_nkx, local_nky, local_nz, ngz,&
                         kxarray, kyarray, set_kparray, nzgrid, zweights_SR, ieven
     USE basic,    ONLY: speak
     USE miller,   ONLY: set_miller_parameters, get_miller
@@ -106,7 +106,7 @@ CONTAINS
     INTEGER  :: eo,iz,iky,ikx
 
     ! Allocate arrays
-    CALL geometry_allocate_mem(local_nky,local_nkx,local_nz,Ngz,nzgrid)
+    CALL geometry_allocate_mem(local_nky,local_nkx,local_nz,ngz,nzgrid)
     !
     IF( (total_nky .EQ. 1) .AND. (total_nz .EQ. 1)) THEN !1D perp linear run
       CALL speak('1D perpendicular geometry')
@@ -142,7 +142,7 @@ CONTAINS
     CALL set_kparray(gxx,gxy,gyy,hatB)
     DO eo = 1,nzgrid
       ! Curvature operator (Frei et al. 2022 eq 2.15)
-      DO iz = 1,local_nz+Ngz
+      DO iz = 1,local_nz+ngz
         G1 = gxx(iz,eo)*gyy(iz,eo)-gxy(iz,eo)*gxy(iz,eo)
         G2 = gxx(iz,eo)*gyz(iz,eo)-gxy(iz,eo)*gxz(iz,eo)
         G3 = gxy(iz,eo)*gyz(iz,eo)-gyy(iz,eo)*gxz(iz,eo)
@@ -178,7 +178,7 @@ CONTAINS
   !
 
   SUBROUTINE eval_salpha_geometry
-    USE grid, ONLY : local_nz,Ngz,zarray,nzgrid
+    USE grid, ONLY : local_nz,ngz,zarray,nzgrid
   ! evaluate s-alpha geometry model
   implicit none
   REAL(xp) :: z
@@ -186,7 +186,7 @@ CONTAINS
   alpha_MHD = 0._xp
 
   DO eo = 1,nzgrid
-   DO iz = 1,local_nz+Ngz
+   DO iz = 1,local_nz+ngz
     z = zarray(iz,eo)
 
     ! metric
@@ -230,14 +230,14 @@ CONTAINS
   !
 
   SUBROUTINE eval_zpinch_geometry
-  USE grid, ONLY : local_nz,Ngz,zarray,nzgrid
+  USE grid, ONLY : local_nz,ngz,zarray,nzgrid
   implicit none
   REAL(xp) :: z
   INTEGER  :: iz, eo
   alpha_MHD = 0._xp
 
   DO eo = 1,nzgrid
-   DO iz = 1,local_nz+Ngz
+   DO iz = 1,local_nz+ngz
     z = zarray(iz,eo)
 
     ! metric
@@ -280,13 +280,13 @@ CONTAINS
     !--------------------------------------------------------------------------------
     ! NOT TESTED
   subroutine eval_1D_geometry
-    USE grid, ONLY : local_nz,Ngz,zarray, nzgrid
+    USE grid, ONLY : local_nz,ngz,zarray, nzgrid
     ! evaluate 1D perp geometry model
     implicit none
     REAL(xp) :: z
     INTEGER  :: iz, eo
     DO eo = 1,nzgrid
-      DO iz = 1,local_nz+Ngz
+      DO iz = 1,local_nz+ngz
       z = zarray(iz,eo)
 
       ! metric
@@ -457,31 +457,31 @@ END SUBROUTINE set_ikx_zBC_map
 !--------------------------------------------------------------------------------
 !
 
-   SUBROUTINE geometry_allocate_mem(local_nky,local_nkx,local_nz,Ngz,nzgrid)
-     INTEGER, INTENT(IN) :: local_nky,local_nkx,local_nz,Ngz,nzgrid
+   SUBROUTINE geometry_allocate_mem(local_nky,local_nkx,local_nz,ngz,nzgrid)
+     INTEGER, INTENT(IN) :: local_nky,local_nkx,local_nz,ngz,nzgrid
        ! Curvature and geometry
-       ALLOCATE( Ckxky(local_nky,local_nkx,local_nz+Ngz,nzgrid))
-       ALLOCATE(   Jacobian(local_nz+Ngz,nzgrid))
-       ALLOCATE(        gxx(local_nz+Ngz,nzgrid))
-       ALLOCATE(        gxy(local_nz+Ngz,nzgrid))
-       ALLOCATE(        gxz(local_nz+Ngz,nzgrid))
-       ALLOCATE(        gyy(local_nz+Ngz,nzgrid))
-       ALLOCATE(        gyz(local_nz+Ngz,nzgrid))
-       ALLOCATE(        gzz(local_nz+Ngz,nzgrid))
-       ALLOCATE(       dBdx(local_nz+Ngz,nzgrid))
-       ALLOCATE(       dBdy(local_nz+Ngz,nzgrid))
-       ALLOCATE(       dBdz(local_nz+Ngz,nzgrid))
-       ALLOCATE(     dlnBdz(local_nz+Ngz,nzgrid))
-       ALLOCATE(       hatB(local_nz+Ngz,nzgrid))
-       ! ALLOCATE(Gamma_phipar,(local_nz+Ngz,nzgrid)) (not implemented)
-       ALLOCATE(       hatR(local_nz+Ngz,nzgrid))
-       ALLOCATE(       hatZ(local_nz+Ngz,nzgrid))
-       ALLOCATE(         Rc(local_nz+Ngz,nzgrid))
-       ALLOCATE(       phic(local_nz+Ngz,nzgrid))
-       ALLOCATE(         Zc(local_nz+Ngz,nzgrid))
-       ALLOCATE(       dxdR(local_nz+Ngz,nzgrid))
-       ALLOCATE(       dxdZ(local_nz+Ngz,nzgrid))
-       ALLOCATE(gradz_coeff(local_nz+Ngz,nzgrid))
+       ALLOCATE( Ckxky(local_nky,local_nkx,local_nz+ngz,nzgrid))
+       ALLOCATE(   Jacobian(local_nz+ngz,nzgrid))
+       ALLOCATE(        gxx(local_nz+ngz,nzgrid))
+       ALLOCATE(        gxy(local_nz+ngz,nzgrid))
+       ALLOCATE(        gxz(local_nz+ngz,nzgrid))
+       ALLOCATE(        gyy(local_nz+ngz,nzgrid))
+       ALLOCATE(        gyz(local_nz+ngz,nzgrid))
+       ALLOCATE(        gzz(local_nz+ngz,nzgrid))
+       ALLOCATE(       dBdx(local_nz+ngz,nzgrid))
+       ALLOCATE(       dBdy(local_nz+ngz,nzgrid))
+       ALLOCATE(       dBdz(local_nz+ngz,nzgrid))
+       ALLOCATE(     dlnBdz(local_nz+ngz,nzgrid))
+       ALLOCATE(       hatB(local_nz+ngz,nzgrid))
+       ! ALLOCATE(Gamma_phipar,(local_nz+ngz,nzgrid)) (not implemented)
+       ALLOCATE(       hatR(local_nz+ngz,nzgrid))
+       ALLOCATE(       hatZ(local_nz+ngz,nzgrid))
+       ALLOCATE(         Rc(local_nz+ngz,nzgrid))
+       ALLOCATE(       phic(local_nz+ngz,nzgrid))
+       ALLOCATE(         Zc(local_nz+ngz,nzgrid))
+       ALLOCATE(       dxdR(local_nz+ngz,nzgrid))
+       ALLOCATE(       dxdZ(local_nz+ngz,nzgrid))
+       ALLOCATE(gradz_coeff(local_nz+ngz,nzgrid))
 
    END SUBROUTINE geometry_allocate_mem
 

@@ -2,12 +2,13 @@ MODULE processing
    USE prec_const,  ONLY: xp, imagu, SQRT2, SQRT3, onetwelfth, twothird
    USE grid,        ONLY: &
       local_na, local_np, local_nj, local_nky, local_nkx, local_nz, Ngz,Ngj,Ngp,nzgrid, &
-      parray,pmax,ip0, iodd, ieven,&
+      parray,pmax,ip0, iodd, ieven, total_nz, &
       CONTAINSp0,ip1,CONTAINSp1,ip2,CONTAINSp2,ip3,CONTAINSp3,&
       jarray,jmax,ij0, dmax,&
       kyarray, AA_y,&
       kxarray, AA_x,&
-      zarray, zweights_SR, ieven, iodd, inv_deltaz
+      zarray, zweights_SR, ieven, iodd, inv_deltaz,&
+      kroneck_p0, kroneck_p1
    USE fields,           ONLY: moments, phi, psi
    USE array,            ONLY : kernel, nadiab_moments, &
       ddz_napj, ddzND_Napj, interp_napj,&
@@ -40,9 +41,10 @@ CONTAINS
       ALLOCATE( gflux_x(local_na))
       ALLOCATE( hflux_x(local_na))
    END SUBROUTINE init_process
+   
 !------------------------------ HIGH FREQUENCY ROUTINES -------------
 ! The following routines (nadiab computing, interp and grads) must be
-! as fast as possible since they are called every RK substep.
+! as fast as possible since they are called every RK step
    ! evaluate the non-adiabatique ion moments
    !
    ! n_{pi} = N^{pj} + kernel(j) /tau_i phi delta_p0
@@ -51,63 +53,26 @@ CONTAINS
       IMPLICIT NONE
       INTEGER :: ia,ip,ij,iky,ikx,iz
       !non adiab moments
-      DO iz=1,local_nz+ngz
-      DO ikx=1,local_nkx
-      DO iky=1,local_nky
-      DO ij=1,local_nj+ngj
-      DO ip=1,local_np+ngp
-      DO ia = 1,local_na
-         IF(parray(ip) .EQ. 0) THEN
-            nadiab_moments(ia,ip,ij,iky,ikx,iz) = moments(ia,ip,ij,iky,ikx,iz,updatetlevel) &
-            + q_tau(ia)*kernel(ia,ij,iky,ikx,iz,ieven)*phi(iky,ikx,iz)
-            ELSEIF( (parray(ip) .EQ. 1) .AND. (beta .GT. 0) ) THEN
-            nadiab_moments(ia,ip,ij,iky,ikx,iz) = moments(ia,ip,ij,iky,ikx,iz,updatetlevel) &
-               - q_o_sqrt_tau_sigma(ia)*kernel(ia,ij,iky,ikx,iz,ieven)*psi(iky,ikx,iz)
-         ELSE
-            nadiab_moments(ia,ip,ij,iky,ikx,iz) = moments(ia,ip,ij,iky,ikx,iz,updatetlevel)
-         ENDIF
-      ENDDO
-      ENDDO
-      ENDDO
-      ENDDO
-      ENDDO
-      ENDDO
+      ! default : same as moments
+      nadiab_moments(:,:,:,:,:,:) = moments(:,:,:,:,:,:,updatetlevel)
+      ! add phi and psi contribution
+      IF (CONTAINSp0) THEN
+         DO ij=1,local_nj+ngj
+         DO ia = 1,local_na
+            nadiab_moments(ia,ip0,ij,:,:,:) = moments(ia,ip0,ij,:,:,:,updatetlevel) &
+            +q_tau(ia)*kernel(ia,ij,:,:,:,ieven)*phi(:,:,:)
+         ENDDO 
+         ENDDO
+      ENDIF
+      IF (CONTAINSp1 .AND. (beta .GT. 0)) THEN
+         DO ij=1,local_nj+ngj
+         DO ia = 1,local_na
+            nadiab_moments(ia,ip1,ij,:,:,:) = moments(ia,ip1,ij,:,:,:,updatetlevel) &
+               -q_o_sqrt_tau_sigma(ia)*kernel(ia,ij,:,:,:,iodd)*psi(:,:,:)
+         ENDDO 
+         ENDDO
+      ENDIF
    END SUBROUTINE compute_nadiab_moments
-
-   ! z grid gradients
-   ! SUBROUTINE compute_gradients_z
-   !    IMPLICIT NONE
-   !    INTEGER :: eo, p_int, j_int, ia,ip,ij,iky,ikx,iz,izi
-   !    COMPLEX(xp), DIMENSION(local_nz+ngz) :: f_in
-   !    COMPLEX(xp), DIMENSION(local_nz)     :: f_out
-   !       ! Compute z first derivative
-   !       DO iz=1,local_nz+ngz
-   !          izi = iz+ngz/2
-   !       DO ikx=1,local_nkx
-   !       DO iky=1,local_nky
-   !       DO ij=1,local_nj+ngj
-   !       DO ip=1,local_np+ngp
-   !       DO ia = 1,local_na
-   !          ddz_napj(ia,ip,ij,iky,ikx,iz) = inv_deltaz *(&
-   !             +onetwelfth*nadiab_moments(ia,ip,ij,iky,ikx,izi-2)&
-   !               -twothird*nadiab_moments(ia,ip,ij,iky,ikx,izi-1)&
-   !               +twothird*nadiab_moments(ia,ip,ij,iky,ikx,izi+1)&
-   !             -onetwelfth*nadiab_moments(ia,ip,ij,iky,ikx,izi-2)&
-   !             )
-   !          ddzND_Napj(ia,ip,ij,iky,ikx,iz) = inv_deltaz**4 *(&
-   !             +1._xp*moments(ia,ip,ij,iky,ikx,izi-2,updatetlevel)&
-   !             -4._xp*moments(ia,ip,ij,iky,ikx,izi-1,updatetlevel)&
-   !             +6._xp*moments(ia,ip,ij,iky,ikx,izi  ,updatetlevel)&
-   !             -4._xp*moments(ia,ip,ij,iky,ikx,izi+1,updatetlevel)&
-   !             +1._xp*moments(ia,ip,ij,iky,ikx,izi-2,updatetlevel)&
-   !          )
-   !       ENDDO
-   !       ENDDO
-   !       ENDDO
-   !       ENDDO
-   !       ENDDO
-   !       ENDDO
-   ! END SUBROUTINE compute_gradients_z
 
    ! ! z grid gradients
    SUBROUTINE compute_gradients_z
@@ -115,6 +80,7 @@ CONTAINS
       INTEGER :: eo, p_int, ia,ip,ij,iky,ikx,iz
       COMPLEX(xp), DIMENSION(local_nz+ngz) :: f_in
       COMPLEX(xp), DIMENSION(local_nz)     :: f_out
+   IF(total_nz .GT. 4) THEN
       DO ikx = 1,local_nkx
       DO iky = 1,local_nky
       DO ij = 1,local_nj+ngj
@@ -129,23 +95,22 @@ CONTAINS
          ! Compute z first derivative
          f_in = nadiab_moments(ia,ip,ij,iky,ikx,:)
          CALL   grad_z(eo,local_nz,ngz,inv_deltaz,f_in,f_out)
-         ddz_napj(ia,ip,ij,iky,ikx,:) = f_out(:)
+         ddz_napj(ia,ip,ij,iky,ikx,:) = f_out
          ! Parallel numerical diffusion
-         IF (HDz_h) THEN
-            f_in = nadiab_moments(ia,ip,ij,iky,ikx,:)
-         ELSE
+         IF (.NOT. HDz_h) &
             f_in = moments(ia,ip,ij,iky,ikx,:,updatetlevel)
-         ENDIF
          CALL  grad_z4(local_nz,ngz,inv_deltaz,f_in,f_out)
          ! get output
-         DO iz = 1,local_nz
-            ddzND_Napj(ia,ip,ij,iky,ikx,iz) = f_out(iz)
-         ENDDO
+         ddzND_Napj(ia,ip,ij,iky,ikx,:) = f_out
       ENDDO
       ENDDO
       ENDDO
       ENDDO
       ENDDO
+   ELSE ! 2D Z-pinch
+      ddz_napj   = 0._xp
+      ddzND_Napj = 0._xp
+   ENDIF
    END SUBROUTINE compute_gradients_z
 
       ! z grid interpolation

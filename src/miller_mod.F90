@@ -6,7 +6,7 @@ MODULE miller
   USE basic
   USE parallel, ONLY: my_id, num_procs_z, nbr_U, nbr_D, comm0
   ! use coordinates,only: gcoor, get_dzprimedz
-  USE grid, ONLY: local_Nky, local_Nkx, local_nz, Ngz, kyarray, kxarray, zarray, Nz, local_nz_offset
+  USE grid, ONLY: local_Nky, local_Nkx, local_nz, ngz, nzgrid, kyarray, kxarray, zarray, total_nz, local_nz_offset
   ! use discretization
   USE lagrange_interpolation
   ! use par_in, only: beta, sign_Ip_CW, sign_Bt_CW, Npol
@@ -59,12 +59,12 @@ CONTAINS
     real(xp), INTENT(INOUT) :: edge_opt        ! alpha mhd
     real(xp), INTENT(INOUT) :: xpdx_pm_geom    ! amplitude mag. eq. pressure grad.
     real(xp), INTENT(INOUT) :: C_y, C_xy
-    real(xp), dimension(1:local_nz+Ngz,1:2), INTENT(INOUT) :: &
+    real(xp), dimension(local_nz+ngz,nzgrid), INTENT(INOUT) :: &
                                               gxx_,gyy_,gzz_,gxy_,gxz_,gyz_,&
                                               dBdx_,dBdy_,Bfield_,jacobian_,&
                                               dBdz_,R_hat_,Z_hat_,dxdR_,dxdZ_, &
                                               gradz_coeff_
-    real(xp), dimension(1:local_Nky,1:local_Nkx,1:local_nz+Ngz,1:2), INTENT(INOUT) :: Ckxky_
+    real(xp), dimension(local_Nky,local_Nkx,local_nz+ngz,nzgrid), INTENT(INOUT) :: Ckxky_
     INTEGER :: iz, ikx, iky, eo
     ! No parameter in gyacomo yet
     real(xp) :: sign_Ip_CW=1 ! current sign (only normal current)
@@ -96,8 +96,8 @@ CONTAINS
     real(xp), dimension(500*(Npol+1)):: gxx, gxy, gxz, gyy, gyz, gzz, dtheta_dchi_s, dBp_dchi_s, jacobian, dBdx, dBdz
     real(xp), dimension(500*(Npol+1)):: g_xx, g_xy, g_xz, g_yy, g_yz, g_zz, tmp_arr_s, dxdR_s, dxdZ_s, K_x, K_y !tmp_arr2
 
-    real(xp), dimension(1:Nz):: gxx_out,gxy_out,gxz_out,gyy_out,gyz_out,gzz_out,Bfield_out,jacobian_out, dBdx_out, dBdz_out, chi_out
-    real(xp), dimension(1:Nz):: R_out, Z_out, dxdR_out, dxdZ_out
+    real(xp), dimension(1:total_nz):: gxx_out,gxy_out,gxz_out,gyy_out,gyz_out,gzz_out,Bfield_out,jacobian_out, dBdx_out, dBdz_out, chi_out
+    real(xp), dimension(1:total_nz):: R_out, Z_out, dxdR_out, dxdZ_out
     real(xp):: d_inv, drPsi, dxPsi, dq_dx, dq_xpsi, R0, Z0, B0, F, D0_full, D1_full, D2_full, D3_full
     !real(xp) :: Lnorm, Psi0 ! currently module-wide defined anyway
     real(xp):: pprime, ffprime, D0_mid, D1_mid, D2_mid, D3_mid, dx_drho, pi, mu_0, dzprimedz
@@ -435,13 +435,13 @@ CONTAINS
 
     if (edge_opt==0.0) then
        !gene z-grid
-       chi_out=linspace(-pi*Npol,pi*Npol-2*pi*Npol/Nz,Nz)
+       chi_out=linspace(-pi*Npol,pi*Npol-2*pi*Npol/total_nz,total_nz)
     else
        !new parallel coordinate chi_out==zprime
        !see also tracer_aux.F90
        if (Npol>1) ERROR STOP '>> ERROR << Npol>1 has not been implemented for edge_opt=\=0.0'
-       do k=1,Nz
-          chi_out(k)=sinh((-pi+k*2.*pi/Nz)*log(edge_opt*pi+sqrt(edge_opt**2*pi**2+1))/pi)/edge_opt
+       do k=1,total_nz
+          chi_out(k)=sinh((-pi+k*2.*pi/total_nz)*log(edge_opt*pi+sqrt(edge_opt**2*pi**2+1))/pi)/edge_opt
        enddo
        !transform metrics according to chain rule
        do k=1,np_s
@@ -461,73 +461,73 @@ CONTAINS
     endif !edge_opt
 
     !interpolate down to GENE z-grid
-    call lag3interp(gxx,chi_s,np_s,gxx_out,chi_out,Nz)
-    call lag3interp(gxy,chi_s,np_s,gxy_out,chi_out,Nz)
-    call lag3interp(gxz,chi_s,np_s,gxz_out,chi_out,Nz)
-    call lag3interp(gyy,chi_s,np_s,gyy_out,chi_out,Nz)
-    call lag3interp(gyz,chi_s,np_s,gyz_out,chi_out,Nz)
-    call lag3interp(gzz,chi_s,np_s,gzz_out,chi_out,Nz)
-    call lag3interp(B_s,chi_s,np_s,Bfield_out,chi_out,Nz)
-    call lag3interp(jacobian,chi_s,np_s,jacobian_out,chi_out,Nz)
-    call lag3interp(dBdx,chi_s,np_s,dBdx_out,chi_out,Nz)
-    call lag3interp(dBdz,chi_s,np_s,dBdz_out,chi_out,Nz)
-    call lag3interp(R_s,chi_s,np_s,R_out,chi_out,Nz)
-    call lag3interp(Z_s,chi_s,np_s,Z_out,chi_out,Nz)
-    call lag3interp(dxdR_s,chi_s,np_s,dxdR_out,chi_out,Nz)
-    call lag3interp(dxdZ_s,chi_s,np_s,dxdZ_out,chi_out,Nz)
+    call lag3interp(gxx,chi_s,np_s,gxx_out,chi_out,total_nz)
+    call lag3interp(gxy,chi_s,np_s,gxy_out,chi_out,total_nz)
+    call lag3interp(gxz,chi_s,np_s,gxz_out,chi_out,total_nz)
+    call lag3interp(gyy,chi_s,np_s,gyy_out,chi_out,total_nz)
+    call lag3interp(gyz,chi_s,np_s,gyz_out,chi_out,total_nz)
+    call lag3interp(gzz,chi_s,np_s,gzz_out,chi_out,total_nz)
+    call lag3interp(B_s,chi_s,np_s,Bfield_out,chi_out,total_nz)
+    call lag3interp(jacobian,chi_s,np_s,jacobian_out,chi_out,total_nz)
+    call lag3interp(dBdx,chi_s,np_s,dBdx_out,chi_out,total_nz)
+    call lag3interp(dBdz,chi_s,np_s,dBdz_out,chi_out,total_nz)
+    call lag3interp(R_s,chi_s,np_s,R_out,chi_out,total_nz)
+    call lag3interp(Z_s,chi_s,np_s,Z_out,chi_out,total_nz)
+    call lag3interp(dxdR_s,chi_s,np_s,dxdR_out,chi_out,total_nz)
+    call lag3interp(dxdZ_s,chi_s,np_s,dxdZ_out,chi_out,total_nz)
     ! Fill the interior of the geom arrays with the results
-    do eo=1,2
+    do eo=1,nzgrid
       DO iz = 1,local_nz
-        gxx_(iz+Ngz/2,eo)      = gxx_out(iz-local_nz_offset)
-        gyy_(iz+Ngz/2,eo)      = gyy_out(iz-local_nz_offset)
-        gxz_(iz+Ngz/2,eo)      = gxz_out(iz-local_nz_offset)
-        gyz_(iz+Ngz/2,eo)      = gyz_out(iz-local_nz_offset)
-        dBdx_(iz+Ngz/2,eo)     = dBdx_out(iz-local_nz_offset)
-        dBdy_(iz+Ngz/2,eo)     = 0.
-        gxy_(iz+Ngz/2,eo)      = gxy_out(iz-local_nz_offset)
-        gzz_(iz+Ngz/2,eo)      = gzz_out(iz-local_nz_offset)
-        Bfield_(iz+Ngz/2,eo)   = Bfield_out(iz-local_nz_offset)
-        jacobian_(iz+Ngz/2,eo) = jacobian_out(iz-local_nz_offset)
-        dBdz_(iz+Ngz/2,eo)     = dBdz_out(iz-local_nz_offset)
-        R_hat_(iz+Ngz/2,eo)    = R_out(iz-local_nz_offset)
-        Z_hat_(iz+Ngz/2,eo)    = Z_out(iz-local_nz_offset)
-        dxdR_(iz+Ngz/2,eo)     = dxdR_out(iz-local_nz_offset)
-        dxdZ_(iz+Ngz/2,eo)     = dxdZ_out(iz-local_nz_offset)
+        gxx_(iz+ngz/2,eo)      = gxx_out(iz+local_nz_offset)
+        gyy_(iz+ngz/2,eo)      = gyy_out(iz+local_nz_offset)
+        gxz_(iz+ngz/2,eo)      = gxz_out(iz+local_nz_offset)
+        gyz_(iz+ngz/2,eo)      = gyz_out(iz+local_nz_offset)
+        dBdx_(iz+ngz/2,eo)     = dBdx_out(iz+local_nz_offset)
+        dBdy_(iz+ngz/2,eo)     = 0.
+        gxy_(iz+ngz/2,eo)      = gxy_out(iz+local_nz_offset)
+        gzz_(iz+ngz/2,eo)      = gzz_out(iz+local_nz_offset)
+        Bfield_(iz+ngz/2,eo)   = Bfield_out(iz+local_nz_offset)
+        jacobian_(iz+ngz/2,eo) = jacobian_out(iz+local_nz_offset)
+        dBdz_(iz+ngz/2,eo)     = dBdz_out(iz+local_nz_offset)
+        R_hat_(iz+ngz/2,eo)    = R_out(iz+local_nz_offset)
+        Z_hat_(iz+ngz/2,eo)    = Z_out(iz+local_nz_offset)
+        dxdR_(iz+ngz/2,eo)     = dxdR_out(iz+local_nz_offset)
+        dxdZ_(iz+ngz/2,eo)     = dxdZ_out(iz+local_nz_offset)
       ENDDO
-    !! UPDATE GHOSTS VALUES (since the miller function in GENE does not)
-    CALL update_ghosts_z(gxx_(:,eo))
-    CALL update_ghosts_z(gyy_(:,eo))
-    CALL update_ghosts_z(gxz_(:,eo))
-    CALL update_ghosts_z(gxy_(:,eo))
-    CALL update_ghosts_z(gzz_(:,eo))
-    CALL update_ghosts_z(Bfield_(:,eo))
-    CALL update_ghosts_z(dBdx_(:,eo))
-    CALL update_ghosts_z(dBdy_(:,eo))
-    CALL update_ghosts_z(dBdz_(:,eo))
-    CALL update_ghosts_z(jacobian_(:,eo))
-    CALL update_ghosts_z(R_hat_(:,eo))
-    CALL update_ghosts_z(Z_hat_(:,eo))
-    CALL update_ghosts_z(dxdR_(:,eo))
-    CALL update_ghosts_z(dxdZ_(:,eo))
+      !! UPDATE GHOSTS VALUES (since the miller function in GENE does not)
+      CALL update_ghosts_z(gxx_(:,eo))
+      CALL update_ghosts_z(gyy_(:,eo))
+      CALL update_ghosts_z(gxz_(:,eo))
+      CALL update_ghosts_z(gxy_(:,eo))
+      CALL update_ghosts_z(gzz_(:,eo))
+      CALL update_ghosts_z(Bfield_(:,eo))
+      CALL update_ghosts_z(dBdx_(:,eo))
+      CALL update_ghosts_z(dBdy_(:,eo))
+      CALL update_ghosts_z(dBdz_(:,eo))
+      CALL update_ghosts_z(jacobian_(:,eo))
+      CALL update_ghosts_z(R_hat_(:,eo))
+      CALL update_ghosts_z(Z_hat_(:,eo))
+      CALL update_ghosts_z(dxdR_(:,eo))
+      CALL update_ghosts_z(dxdZ_(:,eo))
 
-    ! Curvature operator (Frei et al. 2022 eq 2.15)
-    DO iz = 1,local_nz+Ngz
-      G1 = gxy_(iz,eo)*gxy_(iz,eo)-gxx_(iz,eo)*gyy_(iz,eo)
-      G2 = gxy_(iz,eo)*gxz_(iz,eo)-gxx_(iz,eo)*gyz_(iz,eo)
-      G3 = gyy_(iz,eo)*gxz_(iz,eo)-gxy_(iz,eo)*gyz_(iz,eo)
-      Cx = (G1*dBdy_(iz,eo) + G2*dBdz_(iz,eo))/Bfield_(iz,eo)
-      Cy = (G3*dBdz_(iz,eo) - G1*dBdx_(iz,eo))/Bfield_(iz,eo)
+      ! Curvature operator (Frei et al. 2022 eq 2.15)
+      DO iz = 1,local_nz+ngz
+        G1 = gxy_(iz,eo)*gxy_(iz,eo)-gxx_(iz,eo)*gyy_(iz,eo)
+        G2 = gxy_(iz,eo)*gxz_(iz,eo)-gxx_(iz,eo)*gyz_(iz,eo)
+        G3 = gyy_(iz,eo)*gxz_(iz,eo)-gxy_(iz,eo)*gyz_(iz,eo)
+        Cx = (G1*dBdy_(iz,eo) + G2*dBdz_(iz,eo))/Bfield_(iz,eo)
+        Cy = (G3*dBdz_(iz,eo) - G1*dBdx_(iz,eo))/Bfield_(iz,eo)
 
-      DO iky = 1,local_Nky
-        ky = kyarray(iky)
-         DO ikx= 1,local_Nkx
-           kx = kxarray(ikx)
-           Ckxky_(iky, ikx, iz,eo) = (Cx*kx + Cy*ky)
-         ENDDO
+        DO iky = 1,local_Nky
+          ky = kyarray(iky)
+          DO ikx= 1,local_Nkx
+            kx = kxarray(ikx)
+            Ckxky_(iky, ikx, iz,eo) = Cx*kx + Cy*ky
+          ENDDO
+        ENDDO
+        ! coefficient in the front of parallel derivative
+        gradz_coeff_(iz,eo) = 1._xp / jacobian_(iz,eo) / Bfield_(iz,eo)
       ENDDO
-      ! coefficient in the front of parallel derivative
-      gradz_coeff_(iz,eo) = 1._xp / jacobian_(iz,eo) / Bfield_(iz,eo)
-    ENDDO
   ENDDO
 
   contains
@@ -536,12 +536,12 @@ CONTAINS
     SUBROUTINE update_ghosts_z(fz_)
       IMPLICIT NONE
       ! INTEGER,  INTENT(IN) :: nztot_
-      REAL(xp), DIMENSION(1:local_nz+Ngz), INTENT(INOUT) :: fz_
+      REAL(xp), DIMENSION(1:local_nz+ngz), INTENT(INOUT) :: fz_
       REAL(xp), DIMENSION(-2:2) :: buff
       INTEGER :: status(MPI_STATUS_SIZE), count, last, first
-      last = local_nz+Ngz/2
-      first= 1 + Ngz/2
-      IF(Nz .GT. 1) THEN
+      last = local_nz+ngz/2
+      first= 1 + ngz/2
+      IF(total_nz .GT. 1) THEN
         IF (num_procs_z .GT. 1) THEN
           CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
             count = 1 ! one point to exchange
