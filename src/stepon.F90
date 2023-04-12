@@ -114,8 +114,9 @@ CONTAINS
       IMPLICIT NONE
       LOGICAL :: checkf_
       REAL    :: sum_
-      IF(LINEARITY .NE. 'linear') CALL anti_aliasing   ! ensure 0 mode for 2/3 rule
-      IF(LINEARITY .NE. 'linear') CALL enforce_symmetry ! Enforcing symmetry on kx = 0
+      !! Maybe useless
+      ! IF(LINEARITY .NE. 'linear') CALL anti_aliasing   ! ensure 0 mode for 2/3 rule
+      ! IF(LINEARITY .NE. 'linear') CALL enforce_symmetry ! Enforcing symmetry on kx = 0
 
       mlend=.FALSE.
       IF(.NOT.nlend) THEN
