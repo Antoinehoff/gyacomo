@@ -1,17 +1,14 @@
 %% _______________________________________________________________________
 SIMDIR = ['../results/',SIMID,'/'];
 % Grid parameters
-GRID.pmaxe = PMAXE;  % Electron Hermite moments
-GRID.jmaxe = JMAXE;  % Electron Laguerre moments
-GRID.pmaxi = PMAXI;  % Ion Hermite moments
-GRID.jmaxi = JMAXI;  % Ion Laguerre moments
-GRID.Nx    = NX; % x grid resolution
-GRID.Lx    = LX; % x length
-GRID.Nexc  = NEXC; % to extend Lx when s>0
-GRID.Ny    = NY; % y ''
-GRID.Ly    = LY; % y ''
-GRID.Nz    = NZ;    % z resolution
-GRID.Npol  = NPOL;    % z resolution
+GRID.pmax = PMAX; % Hermite moments
+GRID.jmax = JMAX; % Laguerre moments
+GRID.Nx   = NX;   % x grid resolution
+GRID.Lx   = LX;   % x length
+GRID.Nexc = NEXC; % to extend Lx when s>0
+GRID.Ny   = NY;   % y ''
+GRID.Ly   = LY;   % y ''
+GRID.Nz   = NZ;   % z resolution
 if SG; GRID.SG = '.true.'; else; GRID.SG = '.false.';end;
 % Geometry
 GEOM.geom  = ['''',GEOMETRY,''''];
@@ -23,12 +20,11 @@ GEOM.delta = DELTA; % triangularity
 GEOM.zeta  = ZETA;  % squareness
 GEOM.parallel_bc  = ['''',PARALLEL_BC,''''];
 GEOM.shift_y  = SHIFT_Y;
+GEOM.Npol  = NPOL;
 % Model parameters
-MODEL.CLOS    = CLOS;
-MODEL.NL_CLOS = NL_CLOS;
 MODEL.LINEARITY = ['''',LINEARITY,''''];
-MODEL.KIN_E   = KIN_E;
-if KIN_E; MODEL.KIN_E = '.true.'; else; MODEL.KIN_E = '.false.';end;
+MODEL.Na        = NA;
+if ADIAB_E; MODEL.ADIAB_E = '.true.'; else; MODEL.ADIAB_E = '.false.';end;
 MODEL.beta    = BETA;
 MODEL.mu_x    = MU_X;
 MODEL.mu_y    = MU_Y;
@@ -56,6 +52,11 @@ MODEL.K_Te    = K_Te;
 MODEL.k_gB   = k_gB;      % Magnetic gradient
 MODEL.k_cB   = k_cB;      % Magnetic curvature
 MODEL.lambdaD = LAMBDAD;
+% CLOSURE parameters
+CLOSURE.hierarchy_closure = ['''',HRCY_CLOS,''''];
+CLOSURE.nonlinear_closure = ['''',NLIN_CLOS,''''];
+CLOSURE.dmax              = DMAX;
+CLOSURE.nmax              = NMAX;
 % Collision parameters
 COLL.collision_model = ['''',CO,''''];
 if (GKCO); COLL.GK_CO = '.true.'; else; COLL.GK_CO = '.false.';end;
@@ -93,17 +94,10 @@ end
 if ~ABCO
     CONAME = [CONAME,'aa'];
 end
-if    (CLOS == 0); CLOSNAME = 'Trunc.';
-elseif(CLOS == 1); CLOSNAME = 'Clos. 1';
-elseif(CLOS == 2); CLOSNAME = 'Clos. 2';
-end
+CLOSNAME   = [HRCY_CLOS,' dmax=',num2str(DMAX)];
+NLCLOSNAME = [NLIN_CLOS,' nmax=',num2str(NMAX)];
 % Hermite-Laguerre degrees naming
-if (PMAXE == PMAXI) && (JMAXE == JMAXI)
-    HLdeg_   = ['_',num2str(PMAXE+1),'x',num2str(JMAXE+1)];
-else
-    HLdeg_   = ['_Pe_',num2str(PMAXE+1),'_Je_',num2str(JMAXE+1),...
-        '_Pi_',num2str(PMAXI+1),'_Ji_',num2str(JMAXI+1)];
-end
+HLdeg_   = ['_',num2str(PMAX+1),'x',num2str(JMAX+1)];
 % temp. dens. drives
 drives_ = [];
 if abs(K_Ni) > 0; drives_ = [drives_,'_kN_',num2str(K_Ni)]; end;
@@ -115,7 +109,7 @@ coll_   = sprintf(coll_,NU);
 lin_ = [];
 if ~LINEARITY; lin_ = '_lin'; end
 adiabe_ = [];
-if ~KIN_E; adiabe_ = '_adiabe'; end
+if ADIAB_E; adiabe_ = '_adiabe'; end
 % resolution and boxsize
 res_ = [num2str(GRID.Nx),'x',num2str(GRID.Ny)];
 if  (LX ~= LY)
@@ -158,11 +152,11 @@ BASIC.maxruntime = str2num(CLUSTER.TIME(1:2))*3600 ...
                    + str2num(CLUSTER.TIME(4:5))*60 ...
                    + str2num(CLUSTER.TIME(7:8));
 % Outputs parameters
-OUTPUTS.nsave_0d = floor(1.0/SPS0D/DT);
-OUTPUTS.nsave_1d = -1;
-OUTPUTS.nsave_2d = floor(1.0/SPS2D/DT);
-OUTPUTS.nsave_3d = floor(1.0/SPS3D/DT);
-OUTPUTS.nsave_5d = floor(1.0/SPS5D/DT);
+OUTPUTS.dtsave_0d = DTSAVE0D;
+OUTPUTS.dtsave_1d = -1;
+OUTPUTS.dtsave_2d = DTSAVE2D;
+OUTPUTS.dtsave_3d = DTSAVE3D;
+OUTPUTS.dtsave_5d = DTSAVE5D;
 if W_DOUBLE; OUTPUTS.write_doubleprecision = '.true.'; else; OUTPUTS.write_doubleprecision = '.false.';end;
 if W_GAMMA;  OUTPUTS.write_gamma = '.true.'; else; OUTPUTS.write_gamma = '.false.';end;
 if W_HF;     OUTPUTS.write_hf    = '.true.'; else; OUTPUTS.write_hf    = '.false.';end;
@@ -184,7 +178,7 @@ end
 % mkdir(BASIC.MISCDIR)
 % end
 %% Compile and WRITE input file
-INPUT = write_fort90(OUTPUTS,GRID,GEOM,MODEL,COLL,INITIAL,TIME_INTEGRATION,BASIC);
+INPUT = write_fort90(OUTPUTS,GRID,GEOM,MODEL,CLOSURE,COLL,INITIAL,TIME_INTEGRATION,BASIC);
 nproc = 1;
 MAKE  = 'cd ..; make; cd wk';
 % system(MAKE);

@@ -11,16 +11,16 @@ if OPTIONS.ST == 0
 end
 if OPTIONS.LOGSCALE
     logname = 'log';
-    compress = @(x,ia) squeeze(log(sum(abs(x(ia,:,:,:,:)),4)));
+    compress = @(x,ia) (log(sum(abs(x(ia,:,:,:,:)),4)));
 %     compress = @(x,ia) log(sum(abs(squeeze(x(:,:,:,:))),3));
 else
     logname = '';
-    compress = @(x,ia) squeeze(sum(abs(x(ia,:,:,:,:)),4));
+    compress = @(x,ia) (sum(abs(x(ia,:,:,:,:)),4));
 %     compress = @(x,ia) sum(abs(squeeze(x(:,:,:,:))),3);
 end
 for ia = 1:DATA.inputs.Na
-%     Napjz  = sum(abs(squeeze(DATA.Napjz(ia,:,:,:,:))),3);
-    Napjz  =compress(DATA.Napjz,ia);
+    Napjz = compress(DATA.Napjz,ia);
+    Napjz = reshape(Napjz,DATA.grids.Np,DATA.grids.Nj,numel(DATA.Ts3D)); 
     subplot(double(DATA.inputs.Na),1,double(ia))
     plotname = [logname,'$\langle\sum_k |N_',species_name{ia},'^{pj}|\rangle_{p+2j=const}$'];
     %We order the moments (0,0) (1,0) (2,0) (0,1) (3,0) (1,1) (4,0) (2,1) (0,2) etc.
@@ -60,12 +60,22 @@ for ia = 1:DATA.inputs.Na
     for i_ = 1:Nmoments
        Na_ST(i_,:) = Napjz((HL_deg(i_,1)/DATA.grids.deltap)+1,HL_deg(i_,2)+1,:); 
     end  
+
+    if OPTIONS.FILTER
+    % Experimental filtering
+    nt_fourth  = ceil(numel(Time_)/4);
+    nt_half    = ceil(numel(Time_)/2);
+    Na_ST_avg = mean(Na_ST(:,nt_fourth:nt_half),2);
+    Na_ST     = (Na_ST - Na_ST_avg)./Na_ST;
+    OPTIONS.NORMALIZED = 0;
+    %
+    end
     % plots
     % scaling
     if OPTIONS.NORMALIZED
-    plt = @(x,i) squeeze(x(i,:)./max(x(i,:)));
+    plt = @(x,i) reshape(x(i,:)./max(x(i,:)),numel(p2j),numel(Time_));
     else
-    plt = @(x,i) squeeze(x(i,:));
+    plt = @(x,i) reshape(x(i,:),numel(p2j),numel(Time_));
     end
     if OPTIONS.ST
         imagesc(Time_,p2j,plt(Na_ST,1:numel(p2j))); 
@@ -75,6 +85,11 @@ for ia = 1:DATA.inputs.Na
             yticks(p2j);
             yticklabels(ticks_labels)
         end
+            if OPTIONS.FILTER
+            caxis([0 0.2]);
+            title('Relative fluctuation from the average');
+            end
+            colorbar
     else
         colors_ = jet(numel(p2j));
         for i = 1:numel(p2j)
@@ -83,7 +98,7 @@ for ia = 1:DATA.inputs.Na
                'color',colors_(i,:)); hold on;
         end
     title(plotname)
-end
+    end
 suptitle(DATA.paramshort)
 
 end

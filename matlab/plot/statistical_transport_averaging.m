@@ -50,6 +50,6 @@ res.Gx_std = std (gamma);
 disp(['G_x=',sprintf('%2.2e',res.Gx_avg),'+-',sprintf('%2.2e',res.Gx_std)]);
 res.Qx_avg = mean(Qx);
 res.Qx_std = std (Qx);
-disp(['G_x=',sprintf('%2.2e',res.Qx_avg),'+-',sprintf('%2.2e',res.Qx_std)]);
+disp(['Q_x=',sprintf('%2.2e',res.Qx_avg),'+-',sprintf('%2.2e',res.Qx_std)]);
 end
 

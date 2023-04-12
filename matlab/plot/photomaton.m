@@ -5,7 +5,7 @@ switch OPTIONS.PLAN
     case 'RZ'
         toplot = poloidal_plot(DATA,OPTIONS);
     otherwise
-        toplot = process_field_v2(DATA,OPTIONS);
+        toplot = process_field(DATA,OPTIONS);
 end
 FNAME  = toplot.FILENAME;
 FRAMES = toplot.FRAMES;

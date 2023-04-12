@@ -145,7 +145,11 @@ else
     DATA.grids.ikx0 = ikx0; DATA.grids.iky0 = iky0;
     DATA.grids.Nx = Nx; DATA.grids.Ny = Ny; DATA.grids.Nz = Nz; DATA.grids.Nkx = Nkx; DATA.grids.Nky = Nky; 
     DATA.grids.Np = numel(Parray);DATA.grids.Nj = numel(Jarray);
-    DATA.grids.deltap = Parray(2)-Parray(1);
+    if(numel(Parray)>1)
+        DATA.grids.deltap = Parray(2)-Parray(1);
+    else
+        DATA.grids.deltap = 1
+    end
     DATA.dir      = DIRECTORY;
     DATA.localdir = DIRECTORY;
     DATA.param_title=['$\nu_{',DATA.inputs.CONAME,'}=$', num2str(DATA.inputs.NU), ...

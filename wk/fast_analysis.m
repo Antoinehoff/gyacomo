@@ -18,7 +18,7 @@ PARTITION = '/home/ahoffman/gyacomo/';
 % resdir = 'paper_2_GYAC23/precision_study/test_3x2x128x64x24_sp_muz_2.0';
 % resdir = 'paper_2_GYAC23/precision_study/3x2x128x64x24_sp_clos_1';
 
-%%
+%% Marconi results
 % resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0_muxy_0';
 % resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_SG';
 % resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0_full_NL';
@@ -31,15 +31,40 @@ PARTITION = '/home/ahoffman/gyacomo/';
 % resdir = 'paper_2_GYAC23/collisionless/CBC/9x5x128x64x24_dp';
 % resdir = 'paper_2_GYAC23/collisionless/CBC/11x6x128x64x24_dp';
 % resdir = 'paper_2_GYAC23/collisionless/CBC/9x5x192x96x32_dp';
+
+%% low precision 3D ITG
+% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/CBC_3x2x64x48x16_CLOS_1';
+% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_0.0';
+% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_3.0';
+% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_3.5';
+resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_4.0';
+% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_4.5';
+% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_5.3';
+% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/CBC';
+
+% resdir = 'results/paper_2_GYAC23/5x2x64x48x16/kT_3.5';
+% resdir = 'results/paper_2_GYAC23/5x2x64x48x16/kT_4.0';
+% resdir = 'results/paper_2_GYAC23/5x2x64x48x16/kT_4.5';
+% resdir = 'results/paper_2_GYAC23/5x2x64x48x16/kT_5.3';
+% resdir = 'results/paper_2_GYAC23/5x2x64x48x16/CBC';
+
+% resdir = 'results/paper_2_GYAC23/9x2x64x48x16/kT_3.5';
+% resdir = 'results/paper_2_GYAC23/9x2x64x48x16/kT_4.0';
+% resdir = 'results/paper_2_GYAC23/9x2x64x48x16/kT_4.5';
+% resdir = 'results/paper_2_GYAC23/9x2x64x48x16/kT_5.3';
+% resdir = 'results/paper_2_GYAC23/9x2x64x48x16/CBC';
+
 %% testcases
-% resdir = 'testcases/zpinch_example';
-% resdir = 'testcases/cyclone_example';
-resdir = 'testcases/DLRA_zpinch/base_case';
+% resdir = 'testcases/ITG_zpinch';
+% resdir = 'testcases/zpinch_example/results_trunc';
+% resdir = 'testcases/zpinch_example/results_maxd=2';
+% resdir = 'testcases/DLRA_zpinch/base_case';
 % resdir = 'testcases/DLRA_zpinch/nsv_filter_2';
 % resdir = 'testcases/DLRA_zpinch/nsv_filter_6';
+% resdir = 'testcases/cyclone_example';
 
  %%
-J0 = 00; J1 = 10;
+J0 = 00; J1 = 01;
 
 % Load basic info (grids and time traces)
 DATADIR = [PARTITION,resdir,'/'];
@@ -90,9 +115,9 @@ end
 if 0
 %% fields snapshots
 % Options
-[data.Na00, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'Na00');
+[data.Na00, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Na00');
+data.Ni00 = reshape(data.Na00(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 
-data.Ni00 = reshape(squeeze(data.Na00(1,:,:,:,:)),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 0;
@@ -115,12 +140,11 @@ if 0
 %% Hermite-Laguerre spectrum
 [data.Napjz, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Napjz');
 % [data.Napjz, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'Nipjz');
-options.ST         = 0;
+options.ST         = 1;
 options.NORMALIZED = 0;
 options.LOGSCALE   = 1;
+options.FILTER     = 1; %filter the 50% time-average of the spectrum from
 fig = show_moments_spectrum(data,options);
-% fig = show_napjz(data,options);
-% save_figure(data,fig,'.png');
 end
 
 if 0
@@ -129,8 +153,8 @@ if 0
 
 options.NORMALIZED = 0;
 options.TIME   = [000:9000];
-options.KX_TW  = [1 20]; %kx Growth rate time window
-options.KY_TW  = [0 20];  %ky Growth rate time window
+options.KX_TW  = [1 80]; %kx Growth rate time window
+options.KY_TW  = [0 80];  %ky Growth rate time window
 options.NMA    = 1;
 options.NMODES = 800;
 options.iz     = 'avg'; % avg or index

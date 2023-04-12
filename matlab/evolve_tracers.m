@@ -1,27 +1,36 @@
 % Options
 SHOW_FILM = 1;
-field2plot  ='phi';
-INIT     = 'lin';   % lin (for a line)/ round (for a small round)/ gauss for random
-U_TIME   = 500;     % >0 for frozen velocity at a given time, -1 for evolving field
+field2plot ='phi';
+% INIT     = 'lin';   % lin (for a line)/ round (for a small round)/ gauss for random
+INIT     = 'gauss';   % lin (for a line)/ round (for a small round)/ gauss for random
+U_TIME   = 50;     % >0 for frozen velocity at a given time, -1 for evolving field
 Evolve_U = 1;       % 0 for frozen velocity at a given time, 1 for evolving field
-Tfin     = 2000;
+Tfin     = 300;
 dt_      = 0.1;
 Nstep    = ceil(Tfin/dt_);
 % Init tracers
-Np      = 3; %number of tracers
+Np      = 10; %number of tracers
 % color = tcolors;
 color = jet(Np);
 tcolors = distinguishable_colors(Np); %Their colors
 dimmed  = 0; % to dimm the colormap in the background (infty = white, 0 normal color)
-Na = 1000/dt_; %length of trace
+Na = 10/dt_; %length of trace
 
+% load data
+[data.PHI, data.Ts3D] = compile_results_3D (DATADIR,J0,J1,'phi');
+[data.DENS_ , ~]      = compile_results_3Da(DATADIR,J0,J1,'dens');
+[data.Na00, ~]        = compile_results_3Da(DATADIR,J0,J1,'Na00');
+
+data.Ni00   = reshape( data.Na00(1,:,:,:,:),size(data.PHI));
+data.DENS_I = reshape(data.DENS_(1,:,:,:,:),size(data.PHI));
+% setup
 Traj_x = zeros(Np,Nstep);
 Traj_y = zeros(Np,Nstep);
 Disp_x = zeros(Np,Nstep);
 Disp_y = zeros(Np,Nstep);
 
-xmax = max(data.x); xmin = min(data.x);
-ymax = max(data.y); ymin = min(data.y);
+xmax = max(data.grids.x); xmin = min(data.grids.x);
+ymax = max(data.grids.y); ymin = min(data.grids.y);
 
 switch INIT
     case 'lin'
@@ -48,8 +57,9 @@ switch INIT
 end
 
 % position grid and velocity field
-[YY_, XX_ ,ZZ_] = meshgrid(data.y,data.x,data.z);
-[KX,KY] = meshgrid(data.kx,data.ky);
+% [YY_, XX_ ,ZZ_] = meshgrid(data.grids.y,data.grids.x,data.grids.z);
+[YY_, XX_] = meshgrid(data.grids.y,data.grids.x);
+[KX,KY] = meshgrid(data.grids.kx,data.grids.ky);
 Ux = zeros(size(XX_));
 Uy = zeros(size(XX_));
 Uz = zeros(size(XX_));
@@ -57,10 +67,7 @@ ni = zeros(size(XX_));
 
 [~,itu_] = min(abs(U_TIME-data.Ts3D));
 % computing the frozen velocity field
-for iz = 1:data.Nz
-%     Ux(:,:,iz) = real(ifft2( 1i*KY.*(data.PHI(:,:,iz,itu_)),data.Nx,data.Ny));
-%     Uy(:,:,iz) = real(ifft2(-1i*KX.*(data.PHI(:,:,iz,itu_)),data.Nx,data.Ny));
-%     ni(:,:,iz) = real(ifft2(data.DENS_I(:,:,iz,itu_),data.Nx,data.Ny));
+for iz = 1:data.grids.Nz
     Ux(:,:,iz) = ifourier_GENE( 1i*KY.*(data.PHI(:,:,iz,itu_)))';
     Uy(:,:,iz) = ifourier_GENE(-1i*KX.*(data.PHI(:,:,iz,itu_)))';
     ni(:,:,iz) = ifourier_GENE(data.DENS_I(:,:,iz,itu_))';
@@ -92,11 +99,10 @@ while(t_<Tfin && it <= Nstep)
    end
     if Evolve_U && (itu_old ~= itu_)
         % updating the velocity field and density field
-        for iz = 1:data.Nz
+        for iz = 1:data.grids.Nz
             Ux(:,:,iz) = ifourier_GENE( 1i*KY.*(data.PHI(:,:,iz,itu_)))';
             Uy(:,:,iz) = ifourier_GENE(-1i*KX.*(data.PHI(:,:,iz,itu_)))';
-%             ni(:,:,iz) = ifourier_GENE(data.DENS_I(:,:,iz,itu_))';
-            ni(:,:,iz) = ifourier_GENE(data.Ni00(:,:,iz,itu_))';
+            ni(:,:,iz) = ifourier_GENE(data.DENS_I(:,:,iz,itu_))';
         end
     end
     % evolve each tracer
@@ -104,11 +110,11 @@ while(t_<Tfin && it <= Nstep)
         % locate the tracer
             % find corners of the cell
             x_ = Xp(ip);
-            [e_x,ixC] = min(abs(x_-data.x)); 
+            [e_x,ixC] = min(abs(x_-data.grids.x)); 
             if e_x == 0 % on the face
                 ix0 = ixC;
                 ix1 = ixC;
-            elseif x_ > data.x(ixC) % right from grid point
+            elseif x_ > data.grids.x(ixC) % right from grid point
                 ix0 = ixC;
                 ix1 = ixC+1;
             else % left
@@ -116,11 +122,11 @@ while(t_<Tfin && it <= Nstep)
                 ix1 = ixC; 
             end
             y_ = Yp(ip);
-            [e_y,iyC] = min(abs(y_-data.y));
+            [e_y,iyC] = min(abs(y_-data.grids.y));
             if e_y == 0 % on the face
                 iy0 = iyC;
                 iy1 = iyC;
-            elseif y_ > data.y(iyC) % above
+            elseif y_ > data.grids.y(iyC) % above
                 iy0 = iyC;
                 iy1 = iyC+1;
             else % under
@@ -128,20 +134,20 @@ while(t_<Tfin && it <= Nstep)
                 iy1 = iyC; 
             end
             z_ = Zp(ip,1);
-            [e_z,izC] = min(abs(z_-data.z));
+            [e_z,izC] = min(abs(z_-data.grids.z));
             if e_z == 0 % on the face
                 iz0 = izC;
                 iz1 = izC;
-            elseif z_ > data.z(izC) % before
+            elseif z_ > data.grids.z(izC) % before
                 iz0 = izC;
                 iz1 = izC+1;
             else % behind
                 iz0 = izC-1;  
                 iz1 = izC; 
             end
-            x0   = data.x(ix0); x1 = data.x(ix1); %left right
-            y0   = data.y(iy0); y1 = data.y(iy1); %down top
-            z0   = data.z(iz0); z1 = data.z(iz1); %back front
+            x0   = data.grids.x(ix0); x1 = data.grids.x(ix1); %left right
+            y0   = data.grids.y(iy0); y1 = data.grids.y(iy1); %down top
+            z0   = data.grids.z(iz0); z1 = data.grids.z(iz1); %back front
             if(e_x > 0)
                 ai__ = (x_ - x0)/(x1-x0); % interp coeff x
             else
@@ -182,7 +188,6 @@ while(t_<Tfin && it <= Nstep)
 
 %             push the particle
             q = sign(-u___(3));
-%             q =1;
             x_ = x_ + dt_*u___(1)*q;
             y_ = y_ + dt_*u___(2)*q;
                 
