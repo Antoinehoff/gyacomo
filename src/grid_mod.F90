@@ -30,6 +30,9 @@ MODULE grid
   REAL(xp), DIMENSION(:,:), ALLOCATABLE, PUBLIC,PROTECTED :: zarray
   REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: zarray_full
   REAL(xp), DIMENSION(:,:,:,:), ALLOCATABLE, PUBLIC,PROTECTED :: kparray !kperp
+  ! Kronecker delta for p=0, p=1, p=2, j=0, j=1
+  REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: kroneck_p0, kroneck_p1, kroneck_p2, kroneck_p3
+  REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: kroneck_j0, kroneck_j1
   ! Indexation variables
   INTEGER,  PUBLIC, PROTECTED ::  ias ,iae  ! species index
   INTEGER,  PUBLIC, PROTECTED ::  ips ,ipe  ! Hermite
@@ -163,15 +166,6 @@ CONTAINS
     CALL set_kygrid(LINEARITY,N_HD)
     CALL set_kxgrid(shear,Npol,LINEARITY,N_HD)
     CALL set_zgrid (Npol)
-    ! print*, 'p:',parray
-    ! print*, 'j:',jarray
-    ! print*, 'ky:',kyarray
-    ! print*, 'kx:',kxarray
-    ! print*, 'z:',zarray
-    ! print*, parray(ip0)
-    ! print*, jarray(ij0)
-    ! print*, kyarray(iky0)
-    ! print*, kxarray(ikx0)
   END SUBROUTINE set_grids
 
   SUBROUTINE init_1Dgrid_distr
@@ -226,30 +220,53 @@ CONTAINS
     local_np       = ipe - ips + 1
     local_np_offset = ips - 1
     !! local grid computations
-    ! Flag to avoid unnecessary logical operations
-    CONTAINSp0 = .FALSE.; CONTAINSp1 = .FALSE.
-    CONTAINSp2 = .FALSE.; CONTAINSp3 = .FALSE.
-    SOLVE_POISSON  = .FALSE.; SOLVE_AMPERE   = .FALSE.
+    ! Allocate and fill pgrid array
     ALLOCATE(parray(local_np+ngp))
-    ! Fill the interior (no ghosts)
     DO ip = 1,local_np+ngp
       parray(ip) = (ip-1-ngp/2+local_np_offset)*deltap
-      ! Storing indices of particular degrees for fluid moments computations
-      SELECT CASE (parray(ip))
-      CASE(0); ip0 = ip; CONTAINSp0 = .TRUE.
-      CASE(1); ip1 = ip; CONTAINSp1 = .TRUE.
-      CASE(2); ip2 = ip; CONTAINSp2 = .TRUE.
-      CASE(3); ip3 = ip; CONTAINSp3 = .TRUE.
-      END SELECT
-    END DO
+    ENDDO
     local_pmax = parray(local_np+ngp/2)
     local_pmin = parray(1+ngp/2)
-    IF(CONTAINSp0) SOLVE_POISSON = .TRUE.
-    IF(CONTAINSp1) SOLVE_AMPERE  = .TRUE.
-    !DGGK operator uses moments at index p=2 (ip=3) for the p=0 term so the
-    ! process that contains ip=1 MUST contain ip=3 as well for both e and i.
-    IF(CONTAINSp0 .AND. .NOT. (CONTAINSp2))&
-     WRITE(*,*) "Warning : distribution along p may not work with DGGK"
+    ! Allocate kronecker arrays for p=0,1,2,3
+    ALLOCATE(kroneck_p0(local_np+ngp)); kroneck_p0 = 0._xp
+    ALLOCATE(kroneck_p1(local_np+ngp)); kroneck_p1 = 0._xp
+    ALLOCATE(kroneck_p2(local_np+ngp)); kroneck_p2 = 0._xp
+    ALLOCATE(kroneck_p3(local_np+ngp)); kroneck_p3 = 0._xp
+    DO ip = 1,local_np+ngp
+      SELECT CASE (parray(ip))
+      CASE(0)
+        ip0            = ip
+        kroneck_p0(ip) = 1._xp
+      CASE(1)
+        ip1            = ip
+        kroneck_p1(ip) = 1._xp
+      CASE(2)
+        ip2            = ip
+        kroneck_p2(ip) = 1._xp
+      CASE(3)
+        ip3            = ip
+        kroneck_p3(ip) = 1._xp
+      END SELECT
+    END DO
+    ! Set local flags to avoid unnecessary logical operations
+    CONTAINSp0 = .FALSE.; CONTAINSp1 = .FALSE.
+    CONTAINSp2 = .FALSE.; CONTAINSp3 = .FALSE.
+    DO ip = 1,local_np+ngp
+      SELECT CASE (parray(ip))
+      CASE(0); CONTAINSp0 = .TRUE.
+      CASE(1); CONTAINSp1 = .TRUE.
+      CASE(2); CONTAINSp2 = .TRUE.
+      CASE(3); CONTAINSp3 = .TRUE.
+      END SELECT
+    END DO
+    ! Flags that sets if Poisson and Ampere have to be solved locally
+    SOLVE_POISSON  = .FALSE.; SOLVE_AMPERE   = .FALSE.
+    DO ip = 1+ngp/2,local_np+ngp/2
+      SELECT CASE (parray(ip))
+      CASE(0); SOLVE_POISSON = .TRUE.
+      CASE(1); SOLVE_AMPERE  = .TRUE.
+      END SELECT
+    END DO
     ! Precomputations
     pmax_xp       = real(pmax,xp)
     diff_p_coeff  = pmax_xp*(1._xp/pmax_xp)**6
@@ -289,6 +306,17 @@ CONTAINS
     DO ij = 1,local_nj+ngj
       IF(jarray(ij) .EQ. 0) ij0 = ij
       IF(jarray(ij) .EQ. 1) ij1 = ij
+    END DO
+    ! Kronecker arrays for j
+    ALLOCATE(kroneck_j0(local_nj+ngj)); kroneck_j0 = 0._xp
+    ALLOCATE(kroneck_j1(local_nj+ngj)); kroneck_j1 = 0._xp
+    DO ij = 1,local_nj+ngj
+      SELECT CASE(jarray(ij))
+      CASE(0)
+        kroneck_j0(ij) = 1._xp
+      CASE(1)
+        kroneck_j1(ij) = 1._xp
+      END SELECT  
     END DO
   END SUBROUTINE set_jgrid
 
