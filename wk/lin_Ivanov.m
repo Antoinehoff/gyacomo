@@ -20,12 +20,12 @@ default_plots_options
 EXECNAME = 'gyacomo23_sp'; % single precision
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-TAU = 1e-3;                  % e/i temperature ratio
-NU = 0.01/TAU;                 % Collision frequency
+TAU = 1e-2;                  % e/i temperature ratio
+NU = 0.05/TAU;                 % Collision frequency
 K_Ne = 0*2.22;              % ele Density
 K_Te = 0*6.96;              % ele Temperature
 K_Ni = 0*2.22;              % ion Density gradient drive
-K_Ti = 1.0*2/TAU;              % ion Temperature
+K_Ti = 0.36*2/TAU;              % ion Temperature
 SIGMA_E = 0.0233380;        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 NA = 1;                     % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
@@ -68,7 +68,7 @@ JOB2LOAD = -1;     % Start a new simulation serie
 %% OPTIONS
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 CO        = 'DG';       % Collision operator (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-GKCO      = 0;          % Gyrokinetic operator
+GKCO      = 1;          % Gyrokinetic operator
 ABCO      = 1;          % INTERSPECIES collisions
 INIT_ZF   = 0;          % Initialize zero-field quantities
 % HRCY_CLOS = 'max_degree';   % Closure model for higher order moments
@@ -169,5 +169,10 @@ options.FILTER     = 0; %filter the 50% time-average of the spectrum from
 fig = show_moments_spectrum(data,options);
 end
 
-
+% filename = '/home/ahoffman/gyacomo/wk/benchmark_and_scan_scripts/Ivanov_2020_fig2_kT_0.26_chi_0.1.txt';
+% % filename = '/home/ahoffman/gyacomo/wk/benchmark_and_scan_scripts/Ivanov_2020_fig2_kT_1_chi_0.1.txt';
+% dIV = load(filename);
+% 
+% figure 
+% plot(dIV(:,1),2*dIV(:,2))
 

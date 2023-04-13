@@ -1,13 +1,15 @@
 % Directory of the code "mypathtogyacomo/gyacomo/"
 % Partition of the computer where the data have to be searched
 % PARTITION  = '/misc/gyacomo23_outputs/';
-% PARTITION  = gyacomodir;
 PARTITION = '/home/ahoffman/gyacomo/';
 %% CBC 
-% resdir = 'paper_2_GYAC23/CBC/7x4x192x96x32_nu_0.05_muxy_0.5_muz_0.2';
-% resdir = 'paper_2_GYAC23/CBC/7x4x192x96x32_nu_0.05_muxy_1.0_muz_1.0';
-% resdir = 'paper_2_GYAC23/CBC/7x4x192x96x32_nu_0.05_muxy_1.0_muz_2.0';
-% resdir = 'paper_2_GYAC23/CBC/Full_NL_7x4x192x96x32_nu_0.05_muxy_1.0_muz_2.0';
+% resdir = 'paper_2_GYAC23/CBC/5x3x128x64x24_dp';
+% resdir = 'paper_2_GYAC23/CBC/7x4x128x64x24_dp';
+% resdir = 'paper_2_GYAC23/CBC/9x5x128x64x24_dp';
+% resdir = 'paper_2_GYAC23/CBC/9x5x192x96x32_dp';
+% resdir = 'paper_2_GYAC23/CBC/11x6x128x64x24_dp';
+% resdir = 'paper_2_GYAC23/CBC/11x6x128x64x24_dp';
+% resdir = 'paper_2_GYAC23/CBC/21x11x128x64x24_dp';
 
 %% tests single vs double precision
 % resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24';
@@ -32,12 +34,19 @@ PARTITION = '/home/ahoffman/gyacomo/';
 % resdir = 'paper_2_GYAC23/collisionless/CBC/11x6x128x64x24_dp';
 % resdir = 'paper_2_GYAC23/collisionless/CBC/9x5x192x96x32_dp';
 
+% resdir = 'paper_2_GYAC23/collisionless/kT_scan_nu_1e-3/5x3x128x64x24_dp';
+% resdir = 'paper_2_GYAC23/collisionless/kT_scan_nu_1e-3/7x4x128x64x24_dp';
+% resdir = 'paper_2_GYAC23/collisionless/kT_scan_nu_1e-3/9x5x128x64x24_dp';
+
+% resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/5x3x128x64x24_dp';
+% resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/9x5x128x64x24_dp';
+
 %% low precision 3D ITG
 % resdir = 'results/paper_2_GYAC23/3x2x64x48x16/CBC_3x2x64x48x16_CLOS_1';
 % resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_0.0';
 % resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_3.0';
 % resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_3.5';
-resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_4.0';
+% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_4.0';
 % resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_4.5';
 % resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_5.3';
 % resdir = 'results/paper_2_GYAC23/3x2x64x48x16/CBC';
@@ -54,6 +63,16 @@ resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_4.0';
 % resdir = 'results/paper_2_GYAC23/9x2x64x48x16/kT_5.3';
 % resdir = 'results/paper_2_GYAC23/9x2x64x48x16/CBC';
 
+% resdir = 'results/paper_2_GYAC23/11x2x64x48x16/kT_3.5';
+% resdir = 'results/paper_2_GYAC23/11x2x64x48x16/kT_4.0';
+% resdir = 'results/paper_2_GYAC23/11x2x64x48x16/kT_4.5';
+% resdir = 'results/paper_2_GYAC23/11x2x64x48x16/kT_5.3';
+% resdir = 'results/paper_2_GYAC23/11x2x64x48x16/CBC';
+
+%% Box size effect on CBC
+% resdir = 'results/paper_2_GYAC23/7x4x128x64x24/CBC_L120';
+resdir = 'results/paper_2_GYAC23/7x4x128x64x24/CBC_L180';
+
 %% testcases
 % resdir = 'testcases/ITG_zpinch';
 % resdir = 'testcases/zpinch_example/results_trunc';
@@ -64,7 +83,7 @@ resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_4.0';
 % resdir = 'testcases/cyclone_example';
 
  %%
-J0 = 00; J1 = 01;
+J0 = 00; J1 = 10;
 
 % Load basic info (grids and time traces)
 DATADIR = [PARTITION,resdir,'/'];
@@ -138,12 +157,12 @@ end
 
 if 0
 %% Hermite-Laguerre spectrum
-[data.Napjz, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Napjz');
-% [data.Napjz, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'Nipjz');
-options.ST         = 1;
+% [data.Napjz, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Napjz');
+[data.Napjz, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'Nipjz');
+options.ST         = 0;
 options.NORMALIZED = 0;
 options.LOGSCALE   = 1;
-options.FILTER     = 1; %filter the 50% time-average of the spectrum from
+options.FILTER     = 0; %filter the 50% time-average of the spectrum from
 fig = show_moments_spectrum(data,options);
 end
 

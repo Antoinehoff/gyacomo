@@ -31,14 +31,14 @@ NA = 1;                     % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
 BETA = 0.0;                 % electron plasma beta
 %% Set up grid parameters
-P = 10;
-J = 1;%P/2;
+P = 6;
+J = 2;%P/2;
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
-NX = 32;                     % real space x-gridpoints
-NY = 10;                    % real space y-gridpoints
+NX = 16;                     % real space x-gridpoints
+NY = 8;                    % real space y-gridpoints
 LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
-LY = 2*pi/0.1;              % Size of the squared frequency domain in y direction
+LY = 2*pi/0.2;              % Size of the squared frequency domain in y direction
 NZ = 16;                    % number of perpendicular planes (parallel grid)
 SG = 0;                     % Staggered z grids option
 NEXC = 0;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))

@@ -11,12 +11,12 @@ if OPTIONS.ST == 0
 end
 if OPTIONS.LOGSCALE
     logname = 'log';
-    compress = @(x,ia) (log(sum(abs(x(ia,:,:,:,:)),4)));
-%     compress = @(x,ia) log(sum(abs(squeeze(x(:,:,:,:))),3));
+%     compress = @(x,ia) (log(sum(abs(x(ia,:,:,:,:)),4)));
+    compress = @(x,ia) log(sum(abs(squeeze(x(:,:,:,:))),3));
 else
     logname = '';
-    compress = @(x,ia) (sum(abs(x(ia,:,:,:,:)),4));
-%     compress = @(x,ia) sum(abs(squeeze(x(:,:,:,:))),3);
+%     compress = @(x,ia) (sum(abs(x(ia,:,:,:,:)),4));
+    compress = @(x,ia) sum(abs(squeeze(x(:,:,:,:))),3);
 end
 for ia = 1:DATA.inputs.Na
     Napjz = compress(DATA.Napjz,ia);
@@ -93,7 +93,7 @@ for ia = 1:DATA.inputs.Na
     else
         colors_ = jet(numel(p2j));
         for i = 1:numel(p2j)
-           semilogy(Time_,plt(Na_ST,i),...
+           semilogy(Time_,squeeze(Na_ST(i,:)),...
                'DisplayName',ticks_labels{i},...
                'color',colors_(i,:)); hold on;
         end
