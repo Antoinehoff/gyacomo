@@ -107,73 +107,11 @@ CONTAINS
     CALL MPI_CART_SHIFT(comm0, 2, 1, nbr_D, nbr_U, ierr) !down   up    neighbours
   END SUBROUTINE ppinit
 
+  ! Here we intialize arrays that describes the data parallelization for each processes. These are used then in gather calls
   SUBROUTINE init_parallel_var(np_loc,np_tot,nky_loc,nky_tot,nz_loc)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: np_loc,np_tot,nky_loc,nky_tot,nz_loc
     INTEGER :: i_
-    !     !! P reduction at constant x,y,z,j
-    ! ALLOCATE(rcv_p(0:num_procs_p-1),dsp_p(0:num_procs_p-1)) !Displacement sizes for balance diagnostic
-    ! ! all processes share their local number of points
-    ! CALL MPI_ALLGATHER(np_loc,1,MPI_INTEGER,rcv_p,1,MPI_INTEGER,comm_p,ierr)
-    ! ! the displacement array can be build from each np_loc as
-    ! dsp_p(0)=0
-    ! DO i_=1,num_procs_p-1
-    !    dsp_p(i_) =dsp_p(i_-1) + rcv_p(i_-1)
-    ! END DO
-    ! !!!!!! XYZ gather variables
-    ! !! Y reduction at constant x and z
-    ! ! number of points recieved and displacement for the y reduction
-    ! ALLOCATE(rcv_y(0:num_procs_ky-1),dsp_y(0:num_procs_ky-1)) !Displacement sizes for balance diagnostic
-    ! ! all processes share their local number of points
-    ! CALL MPI_ALLGATHER(nky_loc,1,MPI_INTEGER,rcv_y,1,MPI_INTEGER,comm_ky,ierr)
-    ! ! the displacement array can be build from each np_loc as
-    ! dsp_y(0)=0
-    ! DO i_=1,num_procs_ky-1
-    !    dsp_y(i_) =dsp_y(i_-1) + rcv_y(i_-1)
-    ! END DO
-    ! !! Z reduction for full slices of y data but constant x
-    ! ! number of points recieved and displacement for the z reduction
-    ! ALLOCATE(rcv_zy(0:num_procs_z-1),dsp_zy(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
-    ! ! all processes share their local number of points
-    ! CALL MPI_ALLGATHER(nz_loc*nky_tot,1,MPI_INTEGER,rcv_zy,1,MPI_INTEGER,comm_z,ierr)
-    ! ! the displacement array can be build from each np_loc as
-    ! dsp_zy(0)=0
-    ! DO i_=1,num_procs_z-1
-    !    dsp_zy(i_) =dsp_zy(i_-1) + rcv_zy(i_-1)
-    ! END DO
-    ! !!!!! PJZ gather variables
-    ! !! P reduction at constant j and z is already done in module GRID
-    ! !! Z reduction for full slices of p data but constant j
-    ! ! number of points recieved and displacement for the z reduction
-    ! ALLOCATE(rcv_zp(0:num_procs_z-1),dsp_zp(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
-    ! ! all processes share their local number of points
-    ! CALL MPI_ALLGATHER(nz_loc*np_tot,1,MPI_INTEGER,rcv_zp,1,MPI_INTEGER,comm_z,ierr)
-    ! ! the displacement array can be build from each np_loc as
-    ! dsp_zp(0)=0
-    ! DO i_=1,num_procs_z-1
-    !    dsp_zp(i_) =dsp_zp(i_-1) + rcv_zp(i_-1)
-    ! END DO
-    ! !!!!! PJXYZ gather variables
-    ! !! Y reduction for full slices of p data but constant j
-    ! ! number of points recieved and displacement for the y reduction
-    ! ALLOCATE(rcv_yp(0:num_procs_ky-1),dsp_yp(0:num_procs_ky-1)) !Displacement sizes for balance diagnostic
-    ! ! all processes share their local number of points
-    ! CALL MPI_ALLGATHER(nky_loc*np_tot,1,MPI_INTEGER,rcv_yp,1,MPI_INTEGER,comm_ky,ierr)
-    ! ! the displacement array can be build from each np_loc as
-    ! dsp_yp(0)=0
-    ! DO i_=1,num_procs_ky-1
-    !    dsp_yp(i_) =dsp_yp(i_-1) + rcv_yp(i_-1)
-    ! END DO
-    ! !! Z reduction for full slices of py data but constant j
-    ! ! number of points recieved and displacement for the z reduction
-    ! ALLOCATE(rcv_zyp(0:num_procs_z-1),dsp_zyp(0:num_procs_z-1)) !Displacement sizes for balance diagnostic
-    ! ! all processes share their local number of points
-    ! CALL MPI_ALLGATHER(nz_loc*np_tot*nky_tot,1,MPI_INTEGER,rcv_zyp,1,MPI_INTEGER,comm_z,ierr)
-    ! ! the displacement array can be build from each np_loc as
-    ! dsp_zyp(0)=0
-    ! DO i_=1,num_procs_z-1
-    !    dsp_zyp(i_) =dsp_zyp(i_-1) + rcv_zyp(i_-1)
-    ! END DO
     ! P reduction at constant x,y,z,j
     ALLOCATE(rcv_p(num_procs_p),dsp_p(num_procs_p)) !Displacement sizes for balance diagnostic
     CALL MPI_ALLGATHER(np_loc,1,MPI_INTEGER,rcv_p,1,MPI_INTEGER,comm_p,ierr)
@@ -316,7 +254,6 @@ CONTAINS
   END SUBROUTINE gather_pjz
 
   !!!!! Gather a field in kinetic + spatial coordinates on rank 0 !!!!!
-  !!!!! Gather a field in spatial coordinates on rank 0 !!!!!
   SUBROUTINE gather_pjxyz(field_loc,field_tot,na_tot,np_loc,np_tot,nj_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: na_tot,np_loc,np_tot,nj_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot

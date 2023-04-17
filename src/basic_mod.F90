@@ -4,7 +4,6 @@ MODULE basic
   use prec_const, ONLY : xp
   IMPLICIT none
   PRIVATE
-  ! INCLUDE 'fftw3-mpi.f03'
   ! INPUT PARAMETERS
   INTEGER,  PUBLIC, PROTECTED :: nrun       = 1        ! Number of time steps to run
   real(xp), PUBLIC, PROTECTED :: tmax       = 100000.0 ! Maximum simulation time
@@ -19,37 +18,35 @@ MODULE basic
   INTEGER, PUBLIC, PROTECTED  :: cstep   = 0           ! Current step number (Init from restart file)
   LOGICAL, PUBLIC             :: nlend   = .FALSE.     ! Signal end of run
   LOGICAL, PUBLIC             :: crashed = .FALSE.     ! Signal end of crashed run
-
   INTEGER, PUBLIC :: iframe0d ! counting the number of times 0d datasets are outputed (for diagnose)
   INTEGER, PUBLIC :: iframe1d ! counting the number of times 1d datasets are outputed (for diagnose)
   INTEGER, PUBLIC :: iframe2d ! counting the number of times 2d datasets are outputed (for diagnose)
   INTEGER, PUBLIC :: iframe3d ! counting the number of times 3d datasets are outputed (for diagnose)
   INTEGER, PUBLIC :: iframe5d ! counting the number of times 5d datasets are outputed (for diagnose)
-
   !  List of logical file units
   INTEGER, PUBLIC, PROTECTED  :: lu_in   = 90              ! File duplicated from STDIN
   INTEGER, PUBLIC, PROTECTED  :: lu_stop = 91              ! stop file, see subroutine TESEND
-
   ! To measure computation time
   type :: chrono
     real(xp) :: tstart !start of the chrono
     real(xp) :: tstop  !stop 
     real(xp) :: ttot   !cumulative time
   end type chrono
-
+  ! Define the chronos for each relevant routines
   type(chrono), PUBLIC, PROTECTED :: chrono_runt, chrono_mrhs, chrono_advf, chrono_pois, chrono_sapj,&
    chrono_diag, chrono_chck, chrono_step, chrono_clos, chrono_ghst, chrono_coll, chrono_napj, chrono_grad
-
 #ifdef TEST_SVD
+  ! A chrono for SVD tests
   type(chrono), PUBLIC, PROTECTED :: chrono_DLRA
 #endif
-
+  ! This sets if the outputs is done through a large gather or using parallelization from futils
+  !  it is recommended to set it to .true.
   LOGICAL, PUBLIC, PROTECTED :: GATHERV_OUTPUT = .true.
-
+  ! Routines interfaces
   PUBLIC :: allocate_array, basic_outputinputs,basic_data,&
             speak, str, increase_step, increase_cstep, increase_time, display_h_min_s,&
             set_basic_cp, daytim, start_chrono, stop_chrono
-
+  ! Interface for allocating arrays, these routines allocate and initialize directly to zero
   INTERFACE allocate_array
     MODULE PROCEDURE allocate_array_xp1,allocate_array_xp2,allocate_array_xp3, &
                      allocate_array_xp4, allocate_array_xp5, allocate_array_xp6, allocate_array_xp7

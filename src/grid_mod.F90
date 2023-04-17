@@ -10,7 +10,7 @@ MODULE grid
   !   GRID Input
   INTEGER,  PUBLIC, PROTECTED :: pmax  = 1      ! The maximal Hermite-moment computed
   INTEGER,  PUBLIC, PROTECTED :: jmax  = 1      ! The maximal Laguerre-moment computed
-  INTEGER,  PUBLIC, PROTECTED :: maxj  = 1     ! The maximal Laguerre-moment
+  INTEGER,  PUBLIC, PROTECTED :: maxj  = 1      ! The maximal Laguerre-moment
   INTEGER,  PUBLIC, PROTECTED :: dmax  = 1      ! The maximal full GF set of i-moments v^dmax
   INTEGER,  PUBLIC, PROTECTED :: Nx    = 4      ! Number of total internal grid points in x
   REAL(xp), PUBLIC, PROTECTED :: Lx    = 120_xp ! horizontal length of the spatial box
@@ -563,12 +563,6 @@ CONTAINS
       ! Find local extrema
       local_zmax(eo) = zarray(local_nz+ngz/2,eo)
       local_zmin(eo) = zarray(1+ngz/2,eo)
-      ! Fill the ghosts
-      ! Continue angles
-      ! DO ig = 1,ngz/2
-      !   zarray(ig,eo)          = local_zmin(eo)-REAL(ngz/2-(ig-1),xp)*deltaz
-      !   zarray(local_nz+ngz/2+ig,eo) = local_zmax(eo)+REAL(ig,xp)*deltaz
-      ! ENDDO
       ! Periodic z \in (-pi pi-dz)
       DO ig = 1,ngz/2 ! first ghost cells
         iglob = ig+local_nz_offset-ngz/2

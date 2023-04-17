@@ -16,36 +16,34 @@ subroutine auxval
   USE DLRA, ONLY: init_DLRA
 #endif
   IMPLICIT NONE
-
   INTEGER :: i_, ierr
-  IF (my_id .EQ. 0) WRITE(*,*) '=== Set auxiliary values ==='
-
+  CALL speak('=== Set auxiliary values ===')
   ! Init the grids
-  CALL set_grids(shear,Npol,LINEARITY,N_HD,EM,Na) ! radial modes (MPI distributed by FFTW)
-
-  CALL memory ! Allocate memory for global arrays
-
+  CALL set_grids(shear,Npol,LINEARITY,N_HD,EM,Na) 
+  ! Allocate memory for global arrays
+  CALL memory
+  ! Initialize displacement and receive arrays
   CALL init_parallel_var(local_np,total_np,local_nky,total_nky,local_nz)
-
+  ! Initialize heatflux variables
   CALL init_process
-
-  CALL eval_magnetic_geometry ! precompute coeff for lin equation
-
-  CALL compute_lin_coeff ! precompute coeff for lin equation and geometry
-
-  CALL evaluate_kernels ! precompute the kernels
-
-  CALL evaluate_EM_op ! compute inverse of poisson and ampere operators
-
-  IF ( LINEARITY .NE. 'linear' ) THEN;
-    CALL build_dnjs_table ! precompute the Laguerre nonlin product coeffs
-  ENDIF
-
-  CALL build_dv4Hp_table ! precompute the hermite fourth derivative table
-
-  CALL set_closure_model ! set the closure scheme in use
+  ! precompute coeff for lin equation
+  CALL eval_magnetic_geometry 
+  ! precompute coeff for lin equation and geometry
+  CALL compute_lin_coeff 
+  ! precompute the kernels
+  CALL evaluate_kernels 
+  ! compute inverse of poisson and ampere operators
+  CALL evaluate_EM_op 
+  ! precompute the Laguerre nonlin product coeffs
+  IF ( LINEARITY .NE. 'linear' ) &
+    CALL build_dnjs_table 
+  ! precompute the hermite fourth derivative table
+  CALL build_dv4Hp_table 
+  ! set the closure scheme in use
+  CALL set_closure_model 
 
 #ifdef TEST_SVD
+  ! If we want to test SVD decomposition etc.
   CALL init_DLRA(local_nky,local_np*local_nj)
 #endif
 
