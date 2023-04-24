@@ -13,7 +13,6 @@ LOGICAL,              PUBLIC, PROTECTED :: cosolver_coll ! check if cosolver mat
 PUBLIC :: init_collision
 PUBLIC :: collision_readinputs, coll_outputinputs
 PUBLIC :: compute_Capj
-PUBLIC :: compute_lenard_bernstein, compute_dougherty
 
 CONTAINS
   SUBROUTINE init_collision
@@ -34,6 +33,11 @@ CONTAINS
       ! Lenhard bernstein
       CASE   ('LB','lenhard-bernstein','Lenhard-Bernstein')
         collision_model = 'LB'
+        cosolver_coll   = .false.
+        INTERSPECIES    = .false.
+      ! Ivanov model (Ivanov et al. 2022)
+      CASE ('IV','ivanov','Ivanov')
+        collision_model = 'IV'
         cosolver_coll   = .false.
         INTERSPECIES    = .false.
       ! Dougherty
@@ -91,6 +95,8 @@ CONTAINS
       SELECT CASE(collision_model)
         CASE ('LB')
           CALL compute_lenard_bernstein
+        CASE('IV')
+          CALL compute_ivanov
         CASE ('DG')
           CALL compute_dougherty
         CASE ('SG','LR','LD')
@@ -110,7 +116,7 @@ CONTAINS
   !******************************************************************************!
   SUBROUTINE compute_lenard_bernstein
     USE grid, ONLY: ias,iae, ips,ipe, ijs,ije, parray, jarray, &
-                    ikys,ikye, ikxs,ikxe, izs,ize, kparray
+                    ikys,ikye, ikxs,ikxe, izs,ize, kparray, ngp, ngj, ngz
     USE species,          ONLY: sigma2_tau_o2, nu_ab
     USE time_integration, ONLY: updatetlevel
     USE array,            ONLY: Capj
@@ -118,25 +124,25 @@ CONTAINS
     IMPLICIT NONE
     COMPLEX(xp) :: TColl_
     REAL(xp)    :: j_xp, p_xp, ba_2, kp
-    INTEGER     :: iz,ikx,iky,ij,ip,ia,eo
-    DO iz = izs,ize
+    INTEGER     :: iz,ikx,iky,ij,ip,ia,eo,ipi,iji,izi
+    DO iz = izs,ize; izi = iz + ngz/2
     DO ikx = ikxs, ikxe;
     DO iky = ikys, ikye;
-    DO ij = ijs,ije
-    DO ip = ips,ipe;
+    DO ij = ijs,ije; iji = ij + ngj/2
+    DO ip = ips,ipe; ipi = ip + ngp/2
     DO ia = ias, iae
       !** Auxiliary variables **
-      eo   = MODULO(parray(ip),2)
-      p_xp = REAL(parray(ip),xp)
-      j_xp = REAL(jarray(ij),xp)
-      kp   = kparray(iky,ikx,iz,eo)
+      eo   = MODULO(parray(ipi),2)
+      p_xp = REAL(parray(ipi),xp)
+      j_xp = REAL(jarray(iji),xp)
+      kp   = kparray(iky,ikx,izi,eo)
       ba_2 = kp**2 * sigma2_tau_o2(ia) ! this is (ba/2)^2
 
       !** Assembling collison operator **
       ! -nuee (p + 2j) Nepj
-      TColl_ = -nu_ab(ia,ia) * (p_xp + 2._xp*j_xp)*moments(ia,ip,ij,iky,ikx,iz,updatetlevel)
+      TColl_ = -nu_ab(ia,ia) * (p_xp + 2._xp*j_xp)*moments(ia,ipi,iji,iky,ikx,izi,updatetlevel)
       IF(GK_CO) THEN
-        TColl_ = TColl_ - nu_ab(ia,ia) *2._xp*ba_2*moments(ia,ip,ij,iky,ikx,iz,updatetlevel)
+        TColl_ = TColl_ - nu_ab(ia,ia) *2._xp*ba_2*moments(ia,ipi,iji,iky,ikx,izi,updatetlevel)
       ENDIF
       Capj(ia,ip,ij,iky,ikx,iz) = TColl_
     ENDDO
@@ -146,6 +152,63 @@ CONTAINS
     ENDDO
     ENDDO
     END SUBROUTINE compute_lenard_bernstein
+
+      !******************************************************************************!
+  !! Doughtery drift-kinetic collision operator (species like)
+  !******************************************************************************!
+  SUBROUTINE compute_ivanov
+    USE grid, ONLY: local_na, local_np, local_nj, parray, jarray, ngp, ngj, &
+                    ip0, ip2, ij0, ij1, ieven, &
+                    local_nky, local_nkx, local_nz, ngz,&
+                    kparray
+    USE species,          ONLY: nu_ab, tau, q_tau
+    USE time_integration, ONLY: updatetlevel
+    USE array,            ONLY: Capj
+    USE fields,           ONLY: moments, phi
+    USE prec_const,       ONLY: xp, SQRT2, twothird
+    IMPLICIT NONE
+    COMPLEX(xp) :: Tmp
+    INTEGER     :: iz,ikx,iky,ij,ip,ia, ipi,iji,izi
+    REAL(xp)    :: j_xp, p_xp, kp_xp
+    DO iz = 1,local_nz
+      izi = iz + ngz/2
+      DO ikx = 1,local_nkx
+        DO iky = 1,local_nky 
+          kp_xp = kparray(iky,ikx,izi,ieven)
+          DO ij = 1,local_nj
+            iji = ij + ngj/2 
+            DO ip = 1,local_np
+              ipi = ip + ngp/2
+              DO ia = 1,local_na
+                !** Auxiliary variables **
+                p_xp      = REAL(parray(ipi),xp)
+                j_xp      = REAL(jarray(iji),xp)
+                !** Assembling collison operator **
+                IF( (p_xp .EQ. 0._xp) .AND. (j_xp .EQ. 0._xp)) THEN !Ca00
+                  Tmp = tau(ia)**2 * kp_xp**4*(&
+                    67_xp/120_xp      *moments(ia,ip0,ij0,iky,ikx,izi,updatetlevel)&
+                   +67_xp*SQRT2/240_xp*moments(ia,ip2,ij0,iky,ikx,izi,updatetlevel)&
+                   -67_xp/240_xp      *moments(ia,ip0,ij1,iky,ikx,izi,updatetlevel)&
+                   -3_xp/10_xp        *q_tau(ia)*phi(iky,ikx,izi))
+                ELSEIF( (p_xp .EQ. 2._xp) .AND. (j_xp .EQ. 0._xp)) THEN ! Ca20
+                  Tmp = tau(ia) * kp_xp**2*(&
+                   -SQRT2*twothird*moments(ia,ip0,ij0,iky,ikx,izi,updatetlevel)&
+                   -2._xp*twothird*moments(ia,ip2,ij0,iky,ikx,izi,updatetlevel))
+                ELSEIF( (p_xp .EQ. 0._xp) .AND. (j_xp .EQ. 1._xp)) THEN ! Ca01
+                  Tmp = tau(ia) * kp_xp**2*(&
+                    2._xp*twothird*moments(ia,ip0,ij0,iky,ikx,izi,updatetlevel)&
+                   -2._xp*twothird*moments(ia,ip0,ij1,iky,ikx,izi,updatetlevel))
+                ELSE
+                  Tmp = 0._xp
+                ENDIF
+                Capj(ia,ip,ij,iky,ikx,iz) = nu_ab(ia,ia) * Tmp
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDDO
+  END SUBROUTINE compute_ivanov
 
   !******************************************************************************!
   !! Doughtery collision operator
@@ -191,10 +254,10 @@ CONTAINS
                 Tmp = -(p_xp + 2._xp*j_xp)*moments(ia,ipi,iji,iky,ikx,izi,updatetlevel)
                 IF( (p_xp .EQ. 1._xp) .AND. (j_xp .EQ. 0._xp)) THEN !Ce10
                   Tmp = Tmp +  moments(ia,ip1,ij1,iky,ikx,iz,updatetlevel)
-                ELSEIF( (p_xp .EQ. 2._xp) .AND. (j_xp .EQ. 0._xp)) THEN ! Ce20
+                ELSEIF( (p_xp .EQ. 2._xp) .AND. (j_xp .EQ. 0._xp)) THEN ! Ca20
                   Tmp = Tmp +       twothird*moments(ia,ip2,ij0,iky,ikx,izi,updatetlevel) &
                             - SQRT2*twothird*moments(ia,ip0,ij1,iky,ikx,izi,updatetlevel)
-                ELSEIF( (p_xp .EQ. 0._xp) .AND. (j_xp .EQ. 1._xp)) THEN ! Ce01
+                ELSEIF( (p_xp .EQ. 0._xp) .AND. (j_xp .EQ. 1._xp)) THEN ! Ca01
                   Tmp = Tmp +  2._xp*twothird*moments(ia,ip0,ij1,iky,ikx,izi,updatetlevel) &
                               -SQRT2*twothird*moments(ia,ip2,ij0,iky,ikx,izi,updatetlevel)
                 ENDIF
