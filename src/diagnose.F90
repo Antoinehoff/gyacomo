@@ -322,7 +322,6 @@ SUBROUTINE diagnose_2d
   USE DLRA, ONLY: Sf
 #endif
   IMPLICIT NONE
-  CHARACTER(50) :: dset_name
   iframe2d=iframe2d+1
   CALL append(fidres,"/data/var2d/time", REAL(time,dp), ionode=0)
   CALL append(fidres,"/data/var2d/cstep",REAL(cstep,dp),ionode=0)
@@ -339,7 +338,7 @@ SUBROUTINE diagnose_3d
   USE array,  ONLY: Napjz,dens,upar,uper,Tpar,Tper,temp
   USE grid, ONLY: CONTAINSp0, ip0,ij0, local_na, total_na,&
                   total_np, total_nj, total_nky, total_nkx, total_nz, &
-                  local_np, local_nj, local_nky, local_nkx, local_nz, &
+                  local_np, local_nky, local_nkx, local_nz, &
                   ngz
   USE time_integration, ONLY: updatetlevel
   USE diagnostics_par

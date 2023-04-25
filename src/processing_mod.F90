@@ -51,7 +51,7 @@ CONTAINS
    !
    SUBROUTINE compute_nadiab_moments
       IMPLICIT NONE
-      INTEGER :: ia,ip,ij,iky,ikx,iz
+      INTEGER :: ia,ij
       !non adiab moments
       ! default : same as moments
       nadiab_moments(:,:,:,:,:,:) = moments(:,:,:,:,:,:,updatetlevel)
@@ -77,7 +77,7 @@ CONTAINS
    ! ! z grid gradients
    SUBROUTINE compute_gradients_z
       IMPLICIT NONE
-      INTEGER :: eo, p_int, ia,ip,ij,iky,ikx,iz
+      INTEGER :: eo, p_int, ia,ip,ij,iky,ikx
       COMPLEX(xp), DIMENSION(local_nz+ngz) :: f_in
       COMPLEX(xp), DIMENSION(local_nz)     :: f_out
    IF(total_nz .GT. 4) THEN

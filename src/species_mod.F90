@@ -21,7 +21,7 @@ MODULE species
   REAL(xp), ALLOCATABLE, DIMENSION(:,:),PUBLIC, PROTECTED :: nu_ab              ! Collision frequency tensor
   !! Auxiliary variables to store precomputation
   REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: tau_q              ! factor of the magnetic moment coupling
-  REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q_tau              !
+  REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q_tau              ! charge/temp ratio
   REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: sqrtTau_q          ! factor of parallel moment term
   REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q_sigma_sqrtTau    ! factor of parallel phi term
   REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: sigma2_tau_o2      ! factor of the Kernel argument

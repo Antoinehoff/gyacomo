@@ -26,7 +26,7 @@ CONTAINS
     INTEGER :: n_
     INTEGER :: deltap_cp
     INTEGER :: n0, Np_cp, Nj_cp, Nkx_cp, Nky_cp, Nz_cp, Na_cp
-    INTEGER :: ia,ip,ij,iky,ikx,iz,it, iacp,ipcp,ijcp,iycp,ixcp,izcp, ierr
+    INTEGER :: ia,ip,ij,iky,ikx,iz, iacp,ipcp,ijcp,iycp,ixcp,izcp, ierr
     INTEGER :: ipi,iji,izi
     REAL(xp):: timer_tot_1,timer_tot_2
     COMPLEX(xp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: moments_cp

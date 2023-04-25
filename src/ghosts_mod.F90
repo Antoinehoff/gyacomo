@@ -55,8 +55,7 @@ SUBROUTINE update_ghosts_p_mom
   USE grid,     ONLY: local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
                               ngp,ngj,ngz
   IMPLICIT NONE
-  INTEGER :: ierr, first, last, count, iz,ikx,iky,ij,igp,ia
-  COMPLEX(xp), DIMENSION(local_na,ngp/2,local_nj+ngj,local_nky,local_nkx,local_nz+ngz) :: buffer_send, buffer_recv
+  INTEGER :: ierr, first, last, count
   first = 1 + ngp/2
   last  = local_np + ngp/2
 
