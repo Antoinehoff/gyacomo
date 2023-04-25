@@ -10,11 +10,11 @@ if numel(size(DATA.PHI)) == 3
 else
     switch OPTIONS.iz
         case 'avg'
-            field = squeeze(mean(DATA.PHI,3));
+            field = reshape(mean(DATA.PHI,3),DATA.grids.Nky,DATA.grids.Nkx,numel(DATA.Ts3D));
             zstrcomp = 'z-avg';
         otherwise
-            field = squeeze(DATA.PHI(:,:,OPTIONS.iz,:));
-            zstrcomp = ['z=',DATA.z(OPTIONS.iz)];
+            field = reshape(DATA.PHI(:,:,OPTIONS.iz,:),DATA.grids.Nky,DATA.grids.Nkx,numel(DATA.Ts3D));
+            zstrcomp = ['z=',num2str(DATA.grids.z(OPTIONS.iz))];
     end
 end
 
@@ -30,7 +30,7 @@ TW = [OPTIONS.KY_TW; OPTIONS.KX_TW];
 
 [~,ikzf] = max(mean(squeeze(abs(field(1,:,FRAMES))),2));
 
-FIGURE.fig = figure; set(gcf, 'Position',  [100 100 1200 700])
+FIGURE.fig = figure; %set(gcf, 'Position',  [100 100 1200 700])
 FIGURE.FIGNAME = 'mode_growth_meter';
 for i = 1:2
     MODES_SELECTOR = i; %(1:kx=0; 2:ky=0)
@@ -185,5 +185,5 @@ if d
         title('Growth rates')   
     
 end
-suptitle(DATA.paramshort)
+top_title(DATA.paramshort)
 end

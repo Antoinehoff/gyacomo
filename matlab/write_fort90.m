@@ -108,7 +108,6 @@ fprintf(fid,'/\n');
 
 fprintf(fid,'&INITIAL_CON\n');
 fprintf(fid,['  INIT_OPT      = ', INITIAL.INIT_OPT,'\n']);
-fprintf(fid,['  ACT_ON_MODES  = ', INITIAL.ACT_ON_MODES,'\n']);
 fprintf(fid,['  init_background  = ', num2str(INITIAL.init_background),'\n']);
 fprintf(fid,['  init_noiselvl = ', num2str(INITIAL.init_noiselvl),'\n']);
 fprintf(fid,['  iseed         = ', num2str(INITIAL.iseed),'\n']);

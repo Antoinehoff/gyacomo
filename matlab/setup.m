@@ -61,25 +61,28 @@ CLOSURE.nmax              = NMAX;
 COLL.collision_model = ['''',CO,''''];
 if (GKCO); COLL.GK_CO = '.true.'; else; COLL.GK_CO = '.false.';end;
 if (ABCO); COLL.INTERSPECIES = '.true.'; else; COLL.INTERSPECIES = '.false.';end;
-COLL.mat_file   = '''null''';
+COLL.mat_file   = 'null';
 switch CO
     case 'SG'
-        COLL.mat_file = '''../../../iCa/gk_sugama_P_20_J_10_N_150_kpm_8.0.h5''';
-%         COLL.mat_file = '''../../../iCa/gk.hacked_sugama_P_10_J_5_N_150_kpm_8.0.h5''';
-%         COLL.mat_file = '''../../../iCa/gk.hacked_sugama_P_4_J_2_N_75_kpm_5.0.h5''';
+        COLL.mat_file = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5';
+%         COLL.mat_file = 'gk.hacked_sugama_P_10_J_5_N_150_kpm_8.0.h5';
+%         COLL.mat_file = 'gk.hacked_sugama_P_4_J_2_N_75_kpm_5.0.h5';
     case 'LR'
-        COLL.mat_file = '''../../../iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5''';
+        COLL.mat_file = 'gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5';
     case 'LD'
-        COLL.mat_file = '''../../../iCa/gk_coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5''';
-%         COLL.mat_file = '''../../../iCa/LDGKii_P10_J5_dk_5e-2_km_5_NFLR_12_k2trunc.h5''';
-%         COLL.mat_file = '''../../../iCa/LDGKii_P10_J5_dk_5e-2_km_5_NFLR_30.h5''';        
-%         COLL.mat_file = '''../../../iCa/LDGK_P6_J3_dk_5e-2_km_2.5_NFLR_20.h5''';        
+        COLL.mat_file = 'gk_landau_P10_J5_dk_5e-2_km_2.0_NFLR_12.h5';
+        % COLL.mat_file = 'gk_landau_P11_J7_dk_5e-2_km_2.0_NFLR_16.h5';
+        % COLL.mat_file = 'gk_coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5';
+%         COLL.mat_file = 'LDGKii_P10_J5_dk_5e-2_km_5_NFLR_12_k2trunc.h5';
+%         COLL.mat_file = 'LDGKii_P10_J5_dk_5e-2_km_5_NFLR_30.h5';        
+%         COLL.mat_file = 'LDGK_P6_J3_dk_5e-2_km_2.5_NFLR_20.h5';        
 end
+COLL.mat_file = [gyacomodir,'iCa/',COLL.mat_file];
+COLL.mat_file = ['''',COLL.mat_file,''''];
 COLL.coll_kcut = COLL_KCUT;
 % Time integration and intialization parameters
 TIME_INTEGRATION.numerical_scheme  = ['''',NUMERICAL_SCHEME,''''];
 INITIAL.INIT_OPT = ['''',INIT_OPT,''''];
-INITIAL.ACT_ON_MODES   = ['''',ACT_ON_MODES,''''];
 INITIAL.init_background  = BCKGD0;
 INITIAL.init_noiselvl    = NOISE0;
 INITIAL.iseed            = 42;

@@ -28,10 +28,10 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
     FIGURE.ax1 = subplot(2,1,1,'parent',FIGURE.fig);
     for ia = 1:DATA.inputs.Na
         plot(mvm(DATA.Ts0D),mvm(DATA.PGAMMA_RI(ia,:)*SCALE),'--',...
-            'color',clr_((DATA.grids.Np-1)/2+(ia-1),:),...
+            'color',clr_(max(1,(DATA.grids.Np-1)/2+(ia-1)),:),...
             'DisplayName',['$\Gamma_x$ ',DATA.paramshort]); hold on;
         plot(mvm(DATA.Ts0D),mvm(DATA.HFLUX_X(ia,:)*SCALE),'-',...
-            'color',clr_((DATA.grids.Np-1)/2+(ia-1),:),...
+            'color',clr_(max(1,(DATA.grids.Np-1)/2+(ia-1)),:),...
             'DisplayName',['$Q_x$ ',DATA.paramshort]); hold on;
         ylabel('Transport')  
         if(~isnan(Qx_infty_avg))
@@ -84,6 +84,5 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
         subplot(311)
         plot(DATA.Ts3D,squeeze(mean(plt(f2plot),1)));
     end
-    suptitle(DATA.paramshort)
-
+    top_title(DATA.paramshort)
 end

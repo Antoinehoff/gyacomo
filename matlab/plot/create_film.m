@@ -36,7 +36,7 @@ if hmax == hmin
     disp('Warning : h = hmin = hmax = const')
 else
 % Setup figure frame
-fig  = figure('Color','white','Position', toplot.DIMENSIONS.*[1 1 1.2 1]);
+fig  = figure('Color','white','Position', toplot.DIMENSIONS.*[0 0 1.2 1]);
     if ~strcmp(OPTIONS.PLAN,'sx')
         pcolor(X,Y,FIELD(:,:,1)); % to set up
         if BWR

@@ -1,4 +1,10 @@
 % Metadata path
+gyacomodir  = pwd;
+gyacomodir = gyacomodir(1:end-2);
+addpath(genpath([gyacomodir,'matlab'])) % ... add
+addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
+addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
+addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0';
 %% Scans over KT and NU, keeping ky, CO constant (CBC_kT_nu_scan.m)
 % datafname = 'p2_linear/8x24_ky_0.3_P_4_J_2_kT_3_6.96_nu_0_1_DGDK.mat';
 % datafname = 'p2_linear/8x24_ky_0.3_P_8_J_4_kT_3_6.96_nu_0_1_DGDK.mat';
@@ -13,7 +19,7 @@
 % datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_SGGK_P_2_20_KT_6.96.mat';
 %  datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_hypcoll_P_2_30_KT_6.96.mat';
 %  datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_hypcoll_P_2_30_KT_5.3.mat';
- datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_dvpar4_P_2_30_KT_6.96.mat';
+ % datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_dvpar4_P_2_30_KT_6.96.mat';
 %  datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_dvpar4_P_2_10_KT_6.96.mat';
 %  datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_dvpar4_P_6_10_KT_6.96.mat';
 %  datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_dvpar4_P_2_10_KT_5.3.mat';
@@ -22,6 +28,15 @@
 % datafname = 'p2_linear/8x24_ky_0.3_J_2_15_P_2_30_kT_5.3_DGDK_0.05.mat';
 % datafname = 'p2_linear/8x24_ky_0.3_J_2_15_P_2_20_kT_6.96_DGDK_0.02.mat';
 % datafname = 'p2_linear/8x24_ky_0.3_J_2_15_P_2_30_kT_5.3_DGDK_0.025.mat';
+%% new
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_3.5_6.96_nu_0_0.5_IVDK.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_3.5_6.96_nu_0_0.5_DGDK.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_3.5_6.96_nu_0_0.5_DGGK.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_3.5_6.96_nu_0_0.5_SGGK.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_3.5_6.96_nu_0_0.5_LDGK.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_6_J_3_kT_3.5_6.96_nu_0_0.5_DGGK.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_6_J_3_kT_3.5_6.96_nu_0_0.5_SGGK.mat';
+datafname = 'p2_linear_new/8x24_ky_0.3_P_6_J_3_kT_3.5_6.96_nu_0_0.5_LDGK.mat';
 %% Load data
 fname = ['../results/',datafname];
 d = load(fname);

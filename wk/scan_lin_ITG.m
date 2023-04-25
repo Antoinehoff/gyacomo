@@ -12,32 +12,33 @@ addpath(genpath([gyacomodir,'matlab/compute'])) % Add compute module
 addpath(genpath([gyacomodir,'matlab/load'])) % Add load module
 
 %% Set simulation parameters
-SIMID = 'dbg'; % Name of the simulation
-RUN = 1; % To run or just to load
+SIMID = 'lin_ITG'; % Name of the simulation
+RUN = 0; % To run or just to load
 default_plots_options
 EXECNAME = 'gyacomo23_sp'; % single precision
 % EXECNAME = 'gyacomo23_dp'; % double precision
 
+for i = 1:numel(KT_A)
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
 NU = 0.001;                 % Collision frequency
 TAU = 1.0;                  % e/i temperature ratio
 K_Ne = 0*2.22;              % ele Density
 K_Te = 0*6.96;              % ele Temperature
-K_Ni = 1*2.22;              % ion Density gradient drive
-K_Ti = 5.0;              % ion Temperature
+K_Ni = 2.22;              % ion Density gradient drive
+K_Ti = KT_A(i);              % ion Temperature
 SIGMA_E = 0.0233380;        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 NA = 1;                     % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
 BETA = 0.0;                 % electron plasma beta
 %% Set up grid parameters
-P = 1;
-J = 1;%P/2;
+P = 60;
+J = 30;%P/2;
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
-NX = 4;                     % real space x-gridpoints
+NX = 8;                     % real space x-gridpoints
 NY = 2;                    % real space y-gridpoints
-LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
+LX = 2*pi/0.05;              % Size of the squared frequency domain in x direction
 LY = 2*pi/0.3;              % Size of the squared frequency domain in y direction
 NZ = 24;                    % number of perpendicular planes (parallel grid)
 SG = 0;                     % Staggered z grids option
@@ -58,10 +59,10 @@ NPOL   = 1;       % Number of poloidal turns
 
 %% TIME PARAMETERS
 TMAX     = 50;  % Maximal time unit
-DT       = 1e-2;   % Time step
+DT       = 1e-3;   % Time step
 DTSAVE0D = 1;      % Sampling per time unit for 0D arrays
 DTSAVE2D = -1;     % Sampling per time unit for 2D arrays
-DTSAVE3D = 1;      % Sampling per time unit for 3D arrays
+DTSAVE3D = 2;      % Sampling per time unit for 3D arrays
 DTSAVE5D = 100;     % Sampling per time unit for 5D arrays
 JOB2LOAD = -1;     % Start a new simulation serie
 
@@ -141,15 +142,15 @@ figure
 semilogy(data.Ts0D,data.HFLUX_X);
 xlabel('$tc_s/R$'); ylabel('$Q_x$');
 end
-if 0 % Activate or not
+if 1 % Activate or not
 %% plot mode evolution and growth rates
 % Load phi
 [data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');
 options.NORMALIZED = 0; 
 options.TIME   = data.Ts3D;
  % Time window to measure the growth of kx/ky modes
-options.KX_TW  = [0.5 1]*data.Ts3D(end);
-options.KY_TW  = [0.5 1]*data.Ts3D(end);
+options.KX_TW  = [0.2 1]*data.Ts3D(end);
+options.KY_TW  = [0.2 1]*data.Ts3D(end);
 options.NMA    = 1; % Set NMA option to 1
 options.NMODES = 999; % Set how much modes we study
 options.iz     = 'avg'; % Compressing z
@@ -157,6 +158,6 @@ options.ik     = 1; %
 options.fftz.flag = 0; % Set fftz.flag option to 0
 fig = mode_growth_meter(data,options); % Call the function mode_growth_meter with data and options as input arguments, and store the result in fig
 end
-
+end
 
 

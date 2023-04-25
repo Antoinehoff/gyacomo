@@ -60,8 +60,8 @@ while(CONTINUE)
         %% load results %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         disp(sprintf('Loading ID %.2d (%s)',JOBNUM,filename));
         % Loading from output file
-        CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
-        DT_SIM    = h5readatt(filename,'/data/input','dt');
+        % CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
+        % DT_SIM    = h5readatt(filename,'/data/input','dt');
         [Pe, Je, Pi, Ji, kx, ky, z] = load_grid_data(filename);
         W_GAMMA   = strcmp(h5readatt(filename,'/data/input','write_gamma'),'y');
         W_HF      = strcmp(h5readatt(filename,'/data/input','write_hf'   ),'y');

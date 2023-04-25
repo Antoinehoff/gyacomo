@@ -1,86 +1,64 @@
-% Directory of the code "mypathtogyacomo/gyacomo/"
+gyacomodir = pwd; gyacomodir = gyacomodir(1:end-2); % get code directory
+addpath(genpath([gyacomodir,'matlab'])) % ... add
+addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
+addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
+addpath(genpath([gyacomodir,'matlab/load'])) % ... add
+default_plots_options
 % Partition of the computer where the data have to be searched
-% PARTITION  = '/misc/gyacomo23_outputs/';
-PARTITION = '/home/ahoffman/gyacomo/';
-%% CBC 
-% resdir = 'paper_2_GYAC23/CBC/5x3x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/CBC/7x4x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/CBC/9x5x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/CBC/9x5x192x96x32_dp';
-% resdir = 'paper_2_GYAC23/CBC/11x6x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/CBC/11x6x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/CBC/21x11x128x64x24_dp';
+PARTITION  = '/misc/gyacomo23_outputs/';
+% PARTITION = '/home/ahoffman/gyacomo/';
 
-%% tests single vs double precision
-% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24';
-% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_sp';
-% resdir = 'paper_2_GYAC23/precision_study/5x3x128x64x24_sp_clos_1';
-% resdir = 'paper_2_GYAC23/precision_study/3x2x128x64x24_sp_muz_2.0';
-% resdir = 'paper_2_GYAC23/precision_study/test_3x2x128x64x24_sp_muz_2.0';
-% resdir = 'paper_2_GYAC23/precision_study/3x2x128x64x24_sp_clos_1';
+%% Tests
+% resdir = 'test_stepon_AA/CBC_stepon_AA';
+% resdir = 'test_stepon_AA/CBC_no_stepon_AA'; % No clear conclusions
+%% CBC benchmark
+% resdir = 'paper_2_GYAC23/CBC/3x2x128x64x24';
+% resdir = 'paper_2_GYAC23/CBC/3x2x128x64x24_nu_5e-2';
+% resdir = 'paper_2_GYAC23/CBC/5x3x128x64x24';
+% resdir = 'paper_2_GYAC23/CBC/7x4x128x64x24';
+% resdir = 'paper_2_GYAC23/CBC/21x6x192x96x24';
 
-%% Marconi results
-% resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0_muxy_0';
-% resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_SG';
-% resdir = 'paper_2_GYAC23/collisionless/kT_5.3/5x3x128x64x24_dp_muz_2.0_full_NL';
-% resdir = 'paper_2_GYAC23/collisionless/kT_5.3/7x4x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/collisionless/kT_5.3/9x5x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/collisionless/kT_5.3/11x6x128x64x24_dp';
+%% low precision kT scan
+% resdir = 'paper_2_GYAC23/local_runs/1x2x64x48x16/CBC';
+% resdir = 'paper_2_GYAC23/local_runs/1x2x64x48x16/CBC_dp';
+% resdir = 'paper_2_GYAC23/local_runs/1x2x128x64x16/CBC';
 
-% resdir = 'paper_2_GYAC23/collisionless/CBC/5x3x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/collisionless/CBC/7x4x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/collisionless/CBC/9x5x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/collisionless/CBC/11x6x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/collisionless/CBC/9x5x192x96x32_dp';
+% resdir = 'paper_2_GYAC23/local_runs/nu=0.05/5x2x64x48x16/kT_3.5';
+% resdir = 'paper_2_GYAC23/local_runs/nu=0.05/5x2x64x48x16/kT_4.0';
+% resdir = 'paper_2_GYAC23/local_runs/nu=0.05/5x2x64x48x16/kT_4.5';
+% resdir = 'paper_2_GYAC23/local_runs/nu=0.05/5x2x64x48x16/kT_5.3';
+% resdir = 'paper_2_GYAC23/local_runs/5x2x64x48x16/CBC';
+% resdir = 'paper_2_GYAC23/local_runs/5x2x64x48x16/CBC_noise_init';
 
-% resdir = 'paper_2_GYAC23/collisionless/kT_scan_nu_1e-3/5x3x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/collisionless/kT_scan_nu_1e-3/7x4x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/collisionless/kT_scan_nu_1e-3/9x5x128x64x24_dp';
+% resdir = 'paper_2_GYAC23/local_runs/nu=0.05/9x2x64x48x16/kT_3.5';
+% resdir = 'paper_2_GYAC23/local_runs/nu=0.05/9x2x64x48x16/kT_4.0';
+% resdir = 'paper_2_GYAC23/local_runs/nu=0.05/9x2x64x48x16/kT_4.5';
+% resdir = 'paper_2_GYAC23/local_runs/nu=0.05/9x2x64x48x16/kT_5.3';
+% resdir = 'paper_2_GYAC23/local_runs/9x2x64x48x16/CBC';
 
-% resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/5x3x128x64x24_dp';
-% resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/9x5x128x64x24_dp';
+% resdir = 'paper_2_GYAC23/local_runs/nu=0.05/11x2x64x48x16/kT_4.0';
+% resdir = 'paper_2_GYAC23/local_runs/nu=0.05/11x2x64x48x16/kT_4.5';
+% resdir = 'paper_2_GYAC23/local_runs/nu=0.05/11x2x64x48x16/kT_5.3';
+% resdir = 'paper_2_GYAC23/local_runs/nu=0.05/11x2x64x48x16/CBC';
+% resdir = 'paper_2_GYAC23/local_runs/11x2x64x48x16/CBC';
 
-%% low precision 3D ITG
-% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/CBC_3x2x64x48x16_CLOS_1';
-% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_0.0';
-% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_3.0';
-% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_3.5';
-% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_4.0';
-% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_4.5';
-% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/kT_5.3';
-% resdir = 'results/paper_2_GYAC23/3x2x64x48x16/CBC';
+%% Collision scan
+% resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_CBC/7x2x64x48x16/nu_0.1';
+% resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_CBC/9x2x64x48x16/nu_0.1';
+% resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_CBC/9x2x64x48x16/nu_0.1';
+% resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/9x5x128x64x24/nu_0.5';
+% resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/5x3x128x64x24/nu_0.5';
+% resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/9x2x128x64x24/nu_0.5';
+% resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/9x2x128x64x24_Lx200/nu_0.5';
+% resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_kT_5.3/9x2x128x64x24/nu_0.01';
 
-% resdir = 'results/paper_2_GYAC23/5x2x64x48x16/kT_3.5';
-% resdir = 'results/paper_2_GYAC23/5x2x64x48x16/kT_4.0';
-% resdir = 'results/paper_2_GYAC23/5x2x64x48x16/kT_4.5';
-% resdir = 'results/paper_2_GYAC23/5x2x64x48x16/kT_5.3';
-% resdir = 'results/paper_2_GYAC23/5x2x64x48x16/CBC';
-
-% resdir = 'results/paper_2_GYAC23/9x2x64x48x16/kT_3.5';
-% resdir = 'results/paper_2_GYAC23/9x2x64x48x16/kT_4.0';
-% resdir = 'results/paper_2_GYAC23/9x2x64x48x16/kT_4.5';
-% resdir = 'results/paper_2_GYAC23/9x2x64x48x16/kT_5.3';
-% resdir = 'results/paper_2_GYAC23/9x2x64x48x16/CBC';
-
-% resdir = 'results/paper_2_GYAC23/11x2x64x48x16/kT_3.5';
-% resdir = 'results/paper_2_GYAC23/11x2x64x48x16/kT_4.0';
-% resdir = 'results/paper_2_GYAC23/11x2x64x48x16/kT_4.5';
-% resdir = 'results/paper_2_GYAC23/11x2x64x48x16/kT_5.3';
-% resdir = 'results/paper_2_GYAC23/11x2x64x48x16/CBC';
-
-%% Box size effect on CBC
-% resdir = 'results/paper_2_GYAC23/7x4x128x64x24/CBC_L120';
-resdir = 'results/paper_2_GYAC23/7x4x128x64x24/CBC_L180';
-
-%% testcases
-% resdir = 'testcases/ITG_zpinch';
-% resdir = 'testcases/zpinch_example/results_trunc';
-% resdir = 'testcases/zpinch_example/results_maxd=2';
-% resdir = 'testcases/DLRA_zpinch/base_case';
-% resdir = 'testcases/DLRA_zpinch/nsv_filter_2';
-% resdir = 'testcases/DLRA_zpinch/nsv_filter_6';
-% resdir = 'testcases/cyclone_example';
+%% kT eff study
+% resdir = 'paper_2_GYAC23/kT_eff_study/1x3x128x64x24_kT_3.0/Lx120';
+% resdir = 'paper_2_GYAC23/kT_eff_study/1x3x128x64x24_kT_3.0/Lx240';
+% resdir = 'paper_2_GYAC23/kT_eff_study/3x3x128x64x24_kT_3.4/Lx120';
+% resdir = 'paper_2_GYAC23/kT_eff_study/3x3x128x64x24_kT_3.4/Lx240';
+resdir = 'paper_2_GYAC23/kT_eff_study/5x3x128x64x24_kT_3.5';
+% resdir = 'paper_2_GYAC23/kT_eff_study/7x3x128x64x24_kT_3.6';
 
  %%
 J0 = 00; J1 = 10;
@@ -102,15 +80,17 @@ options.NMVA     = 1;              % Moving average for time traces
 options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 options.INTERP   = 0;
 options.RESOLUTION = 256;
-fig = plot_radial_transport_and_spacetime(data,options);
+plot_radial_transport_and_spacetime(data,options);
 end
 
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
+[data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.NAME      = '\phi';
+% options.NAME      = '\phi^{NZ}';
 % options.NAME      = '\omega_z';
 % options.NAME     = 'N_i^{00}';
 % options.NAME      = 's_{Ey}';
@@ -144,8 +124,8 @@ options.NORMALIZE = 0;
 options.NAME      = 'N_i^{00}';
 % options.NAME      = '\phi';
 options.PLAN      = 'xy';
-options.COMP      = 'avg';
-options.TIME      = [800 900 1000];
+options.COMP      = 1;
+options.TIME      = [300];
 options.RESOLUTION = 256;
 fig = photomaton(data,options);
 % save_figure(data,fig)
@@ -155,25 +135,25 @@ if 0
 profiler(data)
 end
 
-if 0
+if 1
 %% Hermite-Laguerre spectrum
-% [data.Napjz, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Napjz');
-[data.Napjz, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'Nipjz');
-options.ST         = 0;
+[data.Napjz, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Napjz');
+% [data.Napjz, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'Nipjz');
+options.ST         = 1;
 options.NORMALIZED = 0;
 options.LOGSCALE   = 1;
 options.FILTER     = 0; %filter the 50% time-average of the spectrum from
 fig = show_moments_spectrum(data,options);
 end
 
-if 0
+if 1
 %% Mode evolution
 [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 
 options.NORMALIZED = 0;
 options.TIME   = [000:9000];
-options.KX_TW  = [1 80]; %kx Growth rate time window
-options.KY_TW  = [0 80];  %ky Growth rate time window
+options.KX_TW  = [30 40]; %kx Growth rate time window
+options.KY_TW  = [10 20];  %ky Growth rate time window
 options.NMA    = 1;
 options.NMODES = 800;
 options.iz     = 'avg'; % avg or index

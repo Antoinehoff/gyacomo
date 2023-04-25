@@ -46,8 +46,8 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 
 %Paper 2
 % folder = '/misc/gene_results/CBC/KT_6.96_64x32x32x24x12_Nexc_5/';
-% folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x8x4_Nexc_5_00/';
-folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x16x8_Nexc_5_00/';
+folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x8x4_Nexc_5_00/';
+% folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x16x8_Nexc_5_00/';
 % folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x32x16_Nexc_5_00/';
 % folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x32x16_Nexc_5_01/';
 
@@ -66,18 +66,35 @@ folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x16x8_Nexc_5_00/';
 % debug ? shearless
 % folder = '/misc/gene_results/CBC/shearless_CBC_128x64x24x24x12_00/';
 % folder = '/misc/gene_results/CBC/shearless_CBC_128x64x24x24x12_01/';
+if 0
+%% FULL DATA LOAD (LONG)
 gene_data = load_gene_data(folder);
+end
 gene_data.FIGDIR = folder;
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
-gene_data.grids.Np = gene_data.grids.Nvp-1;
-gene_data.grids.Nj = gene_data.grids.Nmu-1;
+gene_data.grids.Np = gene_data.grids.Nvp;
+gene_data.grids.Nj = gene_data.grids.Nmu;
 gene_data.CODENAME = 'GENE';
 gene_data.inputs = gene_data.grids;
 gene_data.inputs.Na = 1;
 gene_data.paramshort = gene_data.params_string;
+if 0
 %% Dashboard (Compilation of main plots of the sim)
 dashboard(gene_data);
+end
 
+if 1
+%% ONLY HEAT FLUX
+nrgfile           = 'nrg.dat.h5';
+% nrgfile           = 'nrg_1.h5';
+T    = h5read([folder,nrgfile],'/nrgions/time');
+Qx   = h5read([folder,nrgfile],'/nrgions/Q_es');
+[~,it0] = min(abs(0.25*T(end)-T(end));
+Qavg = mean(Qx(it0:end));
+Qstd = std(Qx(it0:end));
+figure
+plot(data.Ts0D,data.HFLUX_X,'DisplayName',folder(32:48))
+end
 %% Separated plot routines
 if 0
 %% Space time diagramm (fig 11 Ivanov 2020)
@@ -88,8 +105,8 @@ options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag
 options.INTERP   = 1;
 options.NCUT     = 4;              % Number of cuts for averaging and error estimation
 options.RESOLUTION = 256;
-fig = plot_radial_transport_and_spacetime(gene_data,options);
-save_figure(gene_data,fig,'.png')
+plot_radial_transport_and_spacetime(gene_data,options);
+% save_figure(gene_data,fig,'.png')
 end
 
 if 0

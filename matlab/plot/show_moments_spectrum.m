@@ -5,18 +5,16 @@ Pa = DATA.grids.Parray;
 Ja = DATA.grids.Jarray;
 Time_ = DATA.Ts3D;
 FIGURE.fig = figure; FIGURE.FIGNAME = ['mom_spectrum_',DATA.params_string];
-set(gcf, 'Position',  [100 50 1000 400])
+% set(gcf, 'Position',  [100 50 1000 400])
 if OPTIONS.ST == 0
     OPTIONS.LOGSCALE = 0;
 end
 if OPTIONS.LOGSCALE
     logname = 'log';
-%     compress = @(x,ia) (log(sum(abs(x(ia,:,:,:,:)),4)));
-    compress = @(x,ia) log(sum(abs(squeeze(x(:,:,:,:))),3));
+    compress = @(x,ia) log(sum(abs((x(:,:,:,:,:))),4));
 else
     logname = '';
-%     compress = @(x,ia) (sum(abs(x(ia,:,:,:,:)),4));
-    compress = @(x,ia) sum(abs(squeeze(x(:,:,:,:))),3);
+    compress = @(x,ia) sum(abs((x(:,:,:,:,:))),4);
 end
 for ia = 1:DATA.inputs.Na
     Napjz = compress(DATA.Napjz,ia);
@@ -99,7 +97,7 @@ for ia = 1:DATA.inputs.Na
         end
     title(plotname)
     end
-suptitle(DATA.paramshort)
+top_title(DATA.paramshort)
 
 end
 

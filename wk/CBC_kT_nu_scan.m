@@ -5,24 +5,24 @@ addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
 addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0';
 % EXECNAME = 'gyacomo_debug';
-EXECNAME = 'gyacomo';
+EXECNAME = 'gyacomo23_sp';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%
-SIMID = 'p2_linear';  % Name of the simulation
-RERUN   = 0; % rerun if the data does not exist
+SIMID = 'p2_linear_new';  % Name of the simulation
+RERUN   = 1; % rerun if the data does not exist
 RUN     = 1;
-KT_a = [3:0.5:6.5 6.96];
-NU_a = [0 0.01:0.01:0.1 0.2 0.5 1.0];
+KT_a = [3.5 4.0 4.5 5.0 5.5 6.0 6.5 6.96];
+NU_a = [0 0.001 0.002 0.005 0.01 0.02 0.05 0.1 0.2 0.5];
 % KT_a = 3.5;
 % NU_a = 0.5;
-P    = 16;
-J    = 8;
+P    = 8;
+J    = 4;
 % collision setting
-CO        = 'DG';
-GKCO      = 0; % gyrokinetic operator
+CO        = 'LD';
+GKCO      = 1; % gyrokinetic operator
 COLL_KCUT = 1.75;
 % model
-KIN_E   = 0;         % 1: kinetic electrons, 2: adiabatic electrons
+NA   = 1;         % 1: kinetic electrons, 2: adiabatic electrons
 BETA    = 1e-4;     % electron plasma beta
 % background gradients setting
 K_N    = 2.22;            % Density '''
@@ -31,7 +31,7 @@ K_N    = 2.22;            % Density '''
 GEOMETRY= 's-alpha';
 SHEAR   = 0.8;    % magnetic shear
 % time and numerical grid
-DT     = 2e-3;
+DT     = 1e-2;
 TMAX   = 30;
 kymin  = 0.3;
 NY     = 2;
@@ -59,10 +59,8 @@ for KT = KT_a
     K_Ne    = K_N;            % ele Density '''
     K_Ni    = K_N;            % ion Density gradient drive
     %% GRID PARAMETERS
-    PMAXE   = P;     % Hermite basis size of electrons
-    JMAXE   = J;     % Laguerre "
-    PMAXI   = P;     % " ions
-    JMAXI   = J;     % "
+    PMAX   = P;     % Hermite basis size
+    JMAX   = J;     % Laguerre "
     NX      = 8;    % real space x-gridpoints
     LX      = 2*pi/0.8;   % Size of the squared frequency domain
     LY      = 2*pi/kymin;     % Size of the squared frequency domain
@@ -81,12 +79,11 @@ for KT = KT_a
 %     PARALLEL_BC = 'periodic'; %'dirichlet','periodic','shearless','disconnected'
     SHIFT_Y = 0.0;
     %% TIME PARMETERS
-    SPS0D   = 1;      % Sampling per time unit for 2D arrays
-    SPS2D   = -1;      % Sampling per time unit for 2D arrays
-    SPS3D   = 1;      % Sampling per time unit for 2D arrays
-    SPS5D   = 1/2;    % Sampling per time unit for 5D arrays
-    SPSCP   = 0;    % Sampling per time unit for checkpoints
-    JOB2LOAD= -1;
+    DTSAVE0D = 1;      % Sampling per time unit for 0D arrays
+    DTSAVE2D = -1;     % Sampling per time unit for 2D arrays
+    DTSAVE3D = 2;      % Sampling per time unit for 3D arrays
+    DTSAVE5D = 100;     % Sampling per time unit for 5D arrays
+    JOB2LOAD = -1;     % Start a new simulation serie
     %% OPTIONS
     LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
     % Collision operator
@@ -106,12 +103,18 @@ for KT = KT_a
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % unused
+    ADIAB_E = (NA==1);
     HD_CO   = 0.0;    % Hyper diffusivity cutoff ratio
     MU      = 0.0; % Hyperdiffusivity coefficient
     INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
     MU_X    = MU;     %
     MU_Y    = MU;     %
     N_HD    = 4;
+    HYP_V   = 'none';
+    HRCY_CLOS = 'truncation';   % Closure model for higher order moments
+    DMAX      = -1;
+    NLIN_CLOS = 'truncation';   % Nonlinear closure model for higher order moments
+    NMAX      = 0;
     MU_Z    = 1.0;     %
     MU_P    = 0.0;     %
     MU_J    = 0.0;     %
@@ -126,43 +129,50 @@ for KT = KT_a
     filename = [SIMID,'/',PARAMS,'/'];
     LOCALDIR  = [gyacomodir,'results/',filename,'/'];
     % check if data exist to run if no data
-    data_ = compile_results(LOCALDIR,0,0); %Compile the results from first output found to JOBNUMMAX if existing
-    if RUN && (RERUN || isempty(data_.NU_EVOL) || numel(data_.Ts3D)<10)
-        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
+    data_ = {};
+    try
+        data_ = compile_results_low_mem(data_,LOCALDIR,00,00);
+    catch
+        data_.outfilenames = [];
+    end
+    if RUN && (RERUN || isempty(data_.outfilenames))
+        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0; cd ../../../wk'])
+        % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
 %         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 3 2 1 0; cd ../../../wk'])
     end
-    if ~isempty(data_.NU_EVOL)
-        if numel(data_.Ts3D)>10
-        % Load results after trying to run
-        filename = [SIMID,'/',PARAMS,'/'];
-        LOCALDIR  = [gyacomodir,'results/',filename,'/'];
+    data_    = compile_results_low_mem(data_,LOCALDIR,00,00);
+    [data_.PHI, data_.Ts3D] = compile_results_3D(LOCALDIR,00,00,'phi');
+    if numel(data_.Ts3D)>10
+    % Load results after trying to run
+    filename = [SIMID,'/',PARAMS,'/'];
+    LOCALDIR  = [gyacomodir,'results/',filename,'/'];
 
-        data_ = compile_results(LOCALDIR,0,0); %Compile the results from first output found to JOBNUMMAX if existing
+    data_    = compile_results_low_mem(data_,LOCALDIR,00,00);
+    [data_.PHI, data_.Ts3D] = compile_results_3D(LOCALDIR,00,00,'phi');
 
-        % linear growth rate (adapted for 2D zpinch and fluxtube)
-        options.TRANGE = [0.5 1]*data_.Ts3D(end);
-        options.NPLOTS = 0; % 1 for only growth rate and error, 2 for omega local evolution, 3 for plot according to z
-        options.GOK    = 0; %plot 0: gamma 1: gamma/k 2: gamma^2/k^3
+    % linear growth rate (adapted for 2D zpinch and fluxtube)
+    options.TRANGE = [0.5 1]*data_.Ts3D(end);
+    options.NPLOTS = 0; % 1 for only growth rate and error, 2 for omega local evolution, 3 for plot according to z
+    options.GOK    = 0; %plot 0: gamma 1: gamma/k 2: gamma^2/k^3
 
-        [~,it1] = min(abs(data_.Ts3D-0.5*data_.Ts3D(end))); % start of the measurement time window
-        [~,it2] = min(abs(data_.Ts3D-1.0*data_.Ts3D(end))); % end of ...
-        field   = 0;
-        field_t = 0;
-        for ik = 2:NY/2+1
-            field   = squeeze(sum(abs(data_.PHI),3)); % take the sum over z
-            field_t = squeeze(field(ik,1,:)); % take the kx =0, ky = ky mode only
-            to_measure  = log(field_t(it1:it2));
-            tw = data_.Ts3D(it1:it2);
-    %         gr = polyfit(tw,to_measure,1);
-            gr = fit(tw,to_measure,'poly1');
-            err= confint(gr);
-            g_ky(i,j,ik)  = gr.p1;
-            g_std(i,j,ik) = abs(err(2,1)-err(1,1))/2;
-        end
-        [gmax, ikmax] = max(g_ky(i,j,:));
+    [~,it1] = min(abs(data_.Ts3D-0.5*data_.Ts3D(end))); % start of the measurement time window
+    [~,it2] = min(abs(data_.Ts3D-1.0*data_.Ts3D(end))); % end of ...
+    field   = 0;
+    field_t = 0;
+    for ik = 2:NY/2+1
+        field   = squeeze(sum(abs(data_.PHI),3)); % take the sum over z
+        field_t = squeeze(field(ik,1,:)); % take the kx =0, ky = ky mode only
+        to_measure  = log(field_t(it1:it2));
+        tw = double(data_.Ts3D(it1:it2));
+%         gr = polyfit(tw,to_measure,1);
+        gr = fit(tw,to_measure,'poly1');
+        err= confint(gr);
+        g_ky(i,j,ik)  = gr.p1;
+        g_std(i,j,ik) = abs(err(2,1)-err(1,1))/2;
+    end
+    [gmax, ikmax] = max(g_ky(i,j,:));
 
-        msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,data_.ky(ikmax)); disp(msg);
-        end
+    msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,data_.grids.ky(ikmax)); disp(msg);
     end
     
     i = i + 1;

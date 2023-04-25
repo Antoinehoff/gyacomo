@@ -19,7 +19,8 @@ end
 % n1 = numel(X_);
 [~,n0] = min(abs(X_-tw(1)));
 [~,n1] = min(abs(X_-tw(2)));
-mvm = @(x) movmean(x,1);
+mvm = @(x) x;
+% mvm = @(x) movmean(x,1);
 shift = 0;%X_(n0);
 % shift = 0;
 skip = 1;

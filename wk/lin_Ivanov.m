@@ -18,10 +18,11 @@ default_plots_options
 % EXECNAME = 'gyacomo23_dp'; % double precision
 % To compile single precision gyacomo do 'make clean; make sp' in the /gyacomo folder
 EXECNAME = 'gyacomo23_sp'; % single precision
+% EXECNAME = 'gyacomo23_debug'; % single precision
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
 TAU = 1e-2;                  % e/i temperature ratio
-NU = 0.05/TAU;                 % Collision frequency
+NU = 0.1/TAU;                 % Collision frequency
 K_Ne = 0*2.22;              % ele Density
 K_Te = 0*6.96;              % ele Temperature
 K_Ni = 0*2.22;              % ion Density gradient drive
@@ -67,7 +68,7 @@ JOB2LOAD = -1;     % Start a new simulation serie
 
 %% OPTIONS
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
-CO        = 'DG';       % Collision operator (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
+CO        = 'IV';       % Collision operator (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
 GKCO      = 1;          % Gyrokinetic operator
 ABCO      = 1;          % INTERSPECIES collisions
 INIT_ZF   = 0;          % Initialize zero-field quantities

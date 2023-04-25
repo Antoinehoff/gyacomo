@@ -34,7 +34,7 @@ while(CONTINUE)
         end
         if openable
             %% load results %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            disp(sprintf('Loading ID %.2d (%s)',JOBNUM,filename));
+            fprintf('Loading ID %.2d (%s)\n',JOBNUM,filename);
             % Loading from output file
             CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
             DT_SIM    = h5readatt(filename,'/data/input/basic','dt');
@@ -148,7 +148,7 @@ else
     if(numel(Parray)>1)
         DATA.grids.deltap = Parray(2)-Parray(1);
     else
-        DATA.grids.deltap = 1
+        DATA.grids.deltap = 1;
     end
     DATA.dir      = DIRECTORY;
     DATA.localdir = DIRECTORY;

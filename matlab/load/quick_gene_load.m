@@ -77,6 +77,9 @@ path = '/home/ahoffman/gene/linear_CBC_results/';
 % fname = 'CBC_miller_nz_24_nv_scan_nw_16_kine.txt';
 %---------- CBC
 % fname = 'CBC_salpha_nx_8_nz_24_nv_36_nw_16_adiabe.txt';
+% fname = 'CBC_salpha_nx_8_nz_18_nv_18_nw_8_adiabe.txt';
+% fname = 'CBC_salpha_nx_8_nz_18_nv_12_nw_8_adiabe.txt';
+fname = 'CBC_salpha_nx_8_nz_24_nv_60_nw_30_adiabe.txt';
 % fname = 'CBC_salpha_nx_8_nz_24_nv_36_nw_16_kine.txt';
 % fname = 'CBC_miller_nx_20_nz_32_nv_32_nw_12_adiabe.txt';
 % fname = 'CBC_miller_nx_8_nz_24_nv_36_nw_16_adiabe.txt';
@@ -85,7 +88,7 @@ path = '/home/ahoffman/gene/linear_CBC_results/';
 %----------Convergence nv CBC
 % fname = 'CBC_ky_0.3_nv_scan_8x1x24_nw_8_Lv_3_Lw_6.txt';
 % fname = 'CBC_ky_0.3_nv_scan_8x1x24_nw_16_Lv_3_Lw_6.txt';
-fname = 'CBC_ky_0.3_nv_scan_8x1x24_nw_24_Lv_3_Lw_6.txt';
+% fname = 'CBC_ky_0.3_nv_scan_8x1x24_nw_24_Lv_3_Lw_6.txt';
 
 data_ = load([path,fname]);
 
