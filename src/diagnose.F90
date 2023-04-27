@@ -100,7 +100,7 @@ SUBROUTINE diagnose_full(kstep)
     parray_full,pmax,jarray_full,jmax,&
     kyarray_full,kxarray_full,zarray_full
   USE diagnostics_par
-  USE futils,          ONLY: creatf, creatg, creatd, closef, putarr, putfile, attach, openf, putarrnd
+  USE futils,          ONLY: creatf, creatg, creatd, closef, putarr, putfile, attach, openf!, putarrnd ! Routine de merde, jamais l'utiliser
   USE array
   USE model,           ONLY: EM
   USE parallel,        ONLY: my_id, comm0
@@ -142,22 +142,22 @@ SUBROUTINE diagnose_full(kstep)
     CALL putarr(fidres, "/data/grid/coordj" ,   jarray_full,   "j", ionode=0)
     ! Metric info
     CALL   creatg(fidres, "/data/metric", "Metric data")
-    CALL putarrnd(fidres, "/data/metric/gxx",            gxx((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/gxy",            gxy((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/gxz",            gxz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/gyy",            gyy((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/gyz",            gyz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/gzz",            gzz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/hatR",          hatR((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/hatZ",          hatZ((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/hatB",          hatB((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/dBdx",      dBdx((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/dBdy",      dBdy((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/dBdz",      dBdz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/Jacobian",    Jacobian((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/gradz_coeff", gradz_coeff((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    CALL putarrnd(fidres, "/data/metric/Ckxky",       Ckxky(1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 3/))
-    CALL putarrnd(fidres, "/data/metric/kernel",    kernel(1,(1+ngj/2):(local_nj+ngj/2),1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),1), (/1, 2, 4/))
+    ! CALL putarrnd(fidres, "/data/metric/gxx",            gxx((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    ! CALL putarrnd(fidres, "/data/metric/gxy",            gxy((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    ! CALL putarrnd(fidres, "/data/metric/gxz",            gxz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    ! CALL putarrnd(fidres, "/data/metric/gyy",            gyy((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    ! CALL putarrnd(fidres, "/data/metric/gyz",            gyz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    ! CALL putarrnd(fidres, "/data/metric/gzz",            gzz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    ! CALL putarrnd(fidres, "/data/metric/hatR",          hatR((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    ! CALL putarrnd(fidres, "/data/metric/hatZ",          hatZ((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    ! CALL putarrnd(fidres, "/data/metric/hatB",          hatB((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    ! CALL putarrnd(fidres, "/data/metric/dBdx",      dBdx((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    ! CALL putarrnd(fidres, "/data/metric/dBdy",      dBdy((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    ! CALL putarrnd(fidres, "/data/metric/dBdz",      dBdz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    ! CALL putarrnd(fidres, "/data/metric/Jacobian",    Jacobian((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    ! CALL putarrnd(fidres, "/data/metric/gradz_coeff", gradz_coeff((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    ! CALL putarrnd(fidres, "/data/metric/Ckxky",       Ckxky(1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 3/))
+    ! CALL putarrnd(fidres, "/data/metric/kernel",    kernel(1,(1+ngj/2):(local_nj+ngj/2),1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),1), (/1, 2, 4/))
     !  var0d group (gyro transport)
     IF (nsave_0d .GT. 0) THEN
      CALL creatg(fidres, "/data/var0d", "0d profiles")
@@ -369,7 +369,7 @@ END SUBROUTINE
 
 SUBROUTINE diagnose_3d
   USE basic
-  USE futils, ONLY: append, getatt, attach, putarrnd, putarr
+  USE futils, ONLY: append, getatt, attach, putarr!, putarrnd
   USE fields, ONLY: phi, psi, moments
   USE array,  ONLY: Napjz,dens,upar,uper,Tpar,Tper,temp
   USE grid, ONLY: CONTAINSp0, ip0,ij0, local_na, total_na,&
@@ -485,7 +485,7 @@ END SUBROUTINE diagnose_3d
 SUBROUTINE diagnose_5d
 
   USE basic,  ONLY: time, iframe5d,cstep
-  USE futils, ONLY: append, getatt, attach, putarrnd, putarr
+  USE futils, ONLY: append, getatt, attach, putarr !,putarrnd
   USE fields, ONLY: moments
   USE grid,   ONLY:total_np, total_nj, total_nky, total_nkx, total_nz, &
                    local_np, local_nj, local_nky, local_nkx, local_nz, &
@@ -508,7 +508,7 @@ SUBROUTINE diagnose_5d
 
   SUBROUTINE write_field5d(field, text)
     USE basic,            ONLY: GATHERV_OUTPUT, jobnum, dt
-    USE futils,           ONLY: attach, putarr, putarrnd
+    USE futils,           ONLY: attach, putarr!, putarrnd
     USE parallel,         ONLY: gather_pjxyz, num_procs
     USE prec_const,       ONLY: xp
     IMPLICIT NONE
@@ -523,12 +523,12 @@ SUBROUTINE diagnose_5d
     WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var5d", TRIM(text), iframe5d
     IF (num_procs .EQ. 1) THEN
       CALL putarr(fidres, dset_name, field_sub, ionode=0)
-    ELSEIF(GATHERV_OUTPUT) THEN ! output using one node (gatherv)
+    ELSE!IF(GATHERV_OUTPUT) THEN ! output using one node (gatherv)
       CALL gather_pjxyz(field_sub,field_full,total_na,local_np,total_np,total_nj,local_nky,total_nky,total_nkx,local_nz,total_nz)
       CALL putarr(fidres, dset_name, field_full, ionode=0)
-    ELSE
-      CALL putarrnd(fidres, dset_name, field_sub,  (/1,3,5/))
-    ENDIF
+    ! ELSE
+    !   CALL putarrnd(fidres, dset_name, field_sub,  (/1,3,5/))
+     ENDIF
     CALL attach(fidres, dset_name, 'cstep', cstep)
     CALL attach(fidres, dset_name, 'time', time)
     CALL attach(fidres, dset_name, 'jobnum', jobnum)
