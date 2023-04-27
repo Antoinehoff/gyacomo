@@ -13,7 +13,8 @@ MODULE diagnostics_par
 
   INTEGER, PUBLIC, PROTECTED :: nsave_0d, nsave_1d, nsave_2d, nsave_3d, nsave_5d ! save data every n step
   REAL,    PUBLIC, PROTECTED :: dtsave_0d, dtsave_1d, dtsave_2d, dtsave_3d, dtsave_5d ! save data every dt time unit
-
+  ! Change diagnostic mode (full/txtonly)
+  CHARACTER(len=256), PUBLIC, PROTECTED :: diag_mode = "full"
   !  HDF5 file
   CHARACTER(len=256), PUBLIC :: resfile,resfile0 = "outputs"            ! Head of main result file name
   CHARACTER(len=256), PUBLIC :: momfile,momfile0 = "moments"   ! Head of the moment spectrum file (N_a(p,j,z))
@@ -44,6 +45,7 @@ CONTAINS
     NAMELIST /OUTPUT_PAR/ write_doubleprecision, write_gamma, write_hf, write_phi
     NAMELIST /OUTPUT_PAR/ write_Na00, write_Napj, write_Sapj
     NAMELIST /OUTPUT_PAR/ write_dens, write_fvel, write_temp
+    NAMELIST /OUTPUT_PAR/ diag_mode
 
     READ(lu_in,output_par)
 

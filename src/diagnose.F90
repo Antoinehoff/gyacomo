@@ -1,7 +1,7 @@
 SUBROUTINE diagnose(kstep)
   !   Diagnostics, writing simulation state to disk
   USE basic,           ONLY: lu_in, chrono_runt, cstep, dt, time, tmax, display_h_min_s
-  USE diagnostics_par, ONLY: input_fname
+  USE diagnostics_par, ONLY: input_fname, diag_mode
   USE processing,      ONLY: pflux_x, hflux_x
   USE parallel,        ONLY: my_id
   IMPLICIT NONE
@@ -15,12 +15,15 @@ SUBROUTINE diagnose(kstep)
   IF (kstep .EQ. -1) THEN
      ! Display total run time
      CALL display_h_min_s(chrono_runt%ttot)
-     ! Show last state transport values
-     IF (my_id .EQ. 0) &
-      WRITE(*,"(A,G10.2,A8,G10.2,A)") 'Final transport values : | Gxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'|'
   END IF
   !! Specific diagnostic calls
-  CALL diagnose_full(kstep)
+  SELECT CASE(diag_mode)
+  CASE('full')
+    CALL diagnose_full(kstep)
+  CASE('txtonly')
+    CALL diagnose_txtonly(kstep)
+  END SELECT
+
   ! Terminal info
   IF ((kstep .GE. 0) .AND. (MOD(cstep, INT(1.0/dt)) == 0) .AND. (my_id .EQ. 0)) THEN
     WRITE(*,"(A,F6.0,A1,F6.0,A8,G10.2,A8,G10.2,A)")'|t/tmax = ', time,"/",tmax,'| Gxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'|'
@@ -268,6 +271,39 @@ SUBROUTINE diagnose_full(kstep)
     CALL closef(fidres)
   END IF
 END SUBROUTINE diagnose_full
+
+!! This routine outputs only txt file 0D data (flux and time)
+SUBROUTINE diagnose_txtonly(kstep)
+  USE basic
+  USE diagnostics_par
+  USE processing,      ONLY: pflux_x, hflux_x, compute_radial_transport, compute_radial_heatflux
+  USE parallel,        ONLY: my_id, comm0
+  USE futils,          ONLY: creatf, creatg, creatd, attach, putfile, closef
+  IMPLICIT NONE
+  INTEGER, INTENT(in) :: kstep
+  INTEGER, parameter  :: BUFSIZE = 2
+  INTEGER :: rank = 0, ierr
+  INTEGER :: dims(1) = (/0/)
+  IF (kstep .GE. 0) THEN
+    ! output the transport in a txt file
+    IF ( MOD(cstep, nsave_0d) == 0 ) THEN
+      CALL compute_radial_transport
+      CALL compute_radial_heatflux
+      IF (my_id .EQ. 0) &
+        WRITE(1,*) time, pflux_x(1), hflux_x(1)
+    END IF
+  !! Save the last state
+  ELSEIF (kstep .EQ. -1) THEN
+    CALL init_outfile(comm0,   resfile0,resfile,fidres)
+    CALL creatg(fidres, "/data/var5d", "5d profiles")
+    CALL creatd(fidres, rank, dims,  "/data/var5d/time",     "Time t*c_s/R")
+    CALL creatd(fidres, rank, dims, "/data/var5d/cstep", "iteration number")
+    CALL creatg(fidres, "/data/var5d/moments", "full moments array")
+    CALL attach(fidres,"/data/var5d/" , "frames", iframe5d)
+    CALL diagnose_5d
+    CALL closef(fidres)
+  ENDIF
+END SUBROUTINE diagnose_txtonly
 
 !!-------------- Auxiliary routines -----------------!!
 SUBROUTINE diagnose_0d

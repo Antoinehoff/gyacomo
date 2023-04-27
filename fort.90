@@ -1,5 +1,5 @@
 &BASIC
-  nrun       = 99999999
+  nrun       = 1e6
   dt         = 0.01
   tmax       = 50
   maxruntime = 72000
@@ -45,6 +45,7 @@
   write_dens  = .t.
   write_fvel  = .t.
   write_temp  = .t.
+  !diag_mode   = 'txtonly'
 /
 &MODEL_PAR
   LINEARITY = 'nonlinear'
