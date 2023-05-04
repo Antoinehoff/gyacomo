@@ -43,13 +43,21 @@ daint: EXEC = $(BINDIR)/gyacomo23_dp
 daint: dirs src/srcinfo.h
 daint: compile
 
-# gfortran opt version, for compilation with gfortran
-gopt: F90 = mpif90
-gopt: F90FLAGS = -O3 -std=legacy -ffree-line-length-0
-gopt: EXTMOD   = -J $(MODDIR)
-gopt: EXEC = $(BINDIR)/gyacomo23_dp
-gopt: dirs src/srcinfo.h
-gopt: compile
+# gfortran sp version, for compilation with gfortran
+gfsp: F90 = mpif90
+gfsp: F90FLAGS = -DSINGLE_PRECISION -O3 -std=legacy -ffree-line-length-0
+gfsp: EXTMOD   = -J $(MODDIR)
+gfsp: EXEC = $(BINDIR)/gyacomo23_sp
+gfsp: dirs src/srcinfo.h
+gfsp: compile
+
+# gfortran dp version, for compilation with gfortran
+gfdp: F90 = mpif90
+gfdp: F90FLAGS = -O3 -std=legacy -ffree-line-length-0
+gfdp: EXTMOD   = -J $(MODDIR)
+gfdp: EXEC = $(BINDIR)/gyacomo23_dp
+gfdp: dirs src/srcinfo.h
+gfdp: compile
 
 # gfortran version, compile with gfortran
 gdebug: F90 = mpif90
