@@ -9,7 +9,7 @@ SUBROUTINE stepon
    USE time_integration,      ONLY: ntimelevel
    USE prec_const,            ONLY: xp
 #ifdef TEST_SVD
-   USE DLRA,                  ONLY: test_svd,filter_sv_moments_ky_pj
+   USE CLA,                  ONLY: test_svd,filter_sv_moments_ky_pj
 #endif
    IMPLICIT NONE
 

@@ -36,7 +36,7 @@ SUBROUTINE set_closure_model
   ! set the evolve mom array
   ALLOCATE(evolve_mom(local_np+ngp,local_nj+ngj))
   SELECT CASE(hierarchy_closure)
-  CASE('truncation')
+  CASE('truncation','monomial')
     DO ip = 1,local_np+ngp
       DO ij = 1, local_nj+ngj
         evolve_mom(ip,ij) = ((parray(ip).GE.0) .AND. (jarray(ij).GE.0)) &
@@ -56,7 +56,7 @@ SUBROUTINE set_closure_model
   ! Set the nonlinear closure scheme (truncation of sum over n in Sapj)
   ALLOCATE(nmaxarray(local_nj))
   SELECT CASE(nonlinear_closure)
-  CASE('truncation')
+  CASE('truncation','monomial')
     IF(nmax .LT. 0) THEN
       CALL speak("Set nonlinear truncation to anti Laguerre aliasing")
       DO ij = 1,local_nj
@@ -73,6 +73,11 @@ SUBROUTINE set_closure_model
     nmaxarray(:) = jmax
   CASE DEFAULT
     ERROR STOP "nonlinear closure scheme not recognized (avail: truncation,anti_laguerre_aliasing,full_sum)"
+  END SELECT
+
+  ! If monomial truncation, setup the coefficients required
+  SELECT CASE(nonlinear_closure)
+    CASE('monomial')
   END SELECT
 
 END SUBROUTINE set_closure_model

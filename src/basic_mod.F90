@@ -37,7 +37,7 @@ MODULE basic
    chrono_diag, chrono_chck, chrono_step, chrono_clos, chrono_ghst, chrono_coll, chrono_napj, chrono_grad
 #ifdef TEST_SVD
   ! A chrono for SVD tests
-  type(chrono), PUBLIC, PROTECTED :: chrono_DLRA
+  type(chrono), PUBLIC, PROTECTED :: chrono_CLA
 #endif
   ! This sets if the outputs is done through a large gather or using parallelization from futils
   !  it is recommended to set it to .true.
@@ -87,7 +87,7 @@ CONTAINS
     chrono_diag%ttot = 0
     chrono_step%ttot = 0
 #ifdef TEST_SVD
-    chrono_DLRA%ttot = 0
+    chrono_CLA%ttot = 0
 #endif
   END SUBROUTINE basic_data
 

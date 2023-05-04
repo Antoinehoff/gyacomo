@@ -13,7 +13,7 @@ subroutine auxval
   USE parallel, ONLY: init_parallel_var, my_id, num_procs, num_procs_p, num_procs_z, num_procs_ky, rank_p, rank_ky, rank_z
   USE processing, ONLY: init_process
 #ifdef TEST_SVD
-  USE DLRA, ONLY: init_DLRA
+  USE CLA, ONLY: init_CLA
 #endif
   IMPLICIT NONE
   INTEGER :: i_, ierr
@@ -44,7 +44,7 @@ subroutine auxval
 
 #ifdef TEST_SVD
   ! If we want to test SVD decomposition etc.
-  CALL init_DLRA(local_nky,local_np*local_nj)
+  CALL init_CLA(local_nky,local_np*local_nj)
 #endif
 
   !! Display parallel settings

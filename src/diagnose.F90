@@ -131,7 +131,7 @@ SUBROUTINE diagnose_full(kstep)
     CALL creatd(fidres, 0, dims, "/profiler/Tc_step",       "cumulative total step computation time")
     CALL creatd(fidres, 0, dims, "/profiler/time",          "current simulation time")
 #ifdef TEST_SVD
-    CALL creatd(fidres, 0, (/0/), "/profiler/Tc_DLRA", "cumulative total DLRA computation time")
+    CALL creatd(fidres, 0, (/0/), "/profiler/Tc_CLA", "cumulative total CLA computation time")
 #endif
     ! Grid info
     CALL creatg(fidres, "/data/grid", "Grid data")
@@ -328,7 +328,7 @@ SUBROUTINE diagnose_0d
   CALL append(fidres, "/profiler/Tc_nadiab",    REAL(chrono_napj%ttot,dp),ionode=0)
   CALL append(fidres, "/profiler/Tc_step",      REAL(chrono_step%ttot,dp),ionode=0)
 #ifdef TEST_SVD
-  CALL append(fidres, "/profiler/Tc_DLRA",      REAL(chrono_DLRA%ttot,dp),ionode=0) 
+  CALL append(fidres, "/profiler/Tc_CLA",      REAL(chrono_CLA%ttot,dp),ionode=0) 
 #endif
   CALL append(fidres, "/profiler/time",                REAL(time,dp),ionode=0)
   ! Processing data
@@ -355,7 +355,7 @@ SUBROUTINE diagnose_2d
   USE diagnostics_par
   USE futils, ONLY: putarr, append
 #ifdef TEST_SVD
-  USE DLRA, ONLY: Sf
+  USE CLA, ONLY: Sf
 #endif
   IMPLICIT NONE
   iframe2d=iframe2d+1

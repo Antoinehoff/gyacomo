@@ -102,6 +102,6 @@
 &TIME_INTEGRATION_PAR
   numerical_scheme = 'RK4'
 /
-&DLRA
+&CLA
   nsv_filter = 0
 /

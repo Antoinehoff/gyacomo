@@ -1,8 +1,11 @@
-module DLRA
+module CLA
+   ! This si the Computational Linear Algebra module.
+   ! It contains tools as routines to DO singular value decomposition and filtering
+   ! and matrices inversion to compute coefficient for the monomial
+   ! closure
    USE prec_const
    USE parallel
    implicit none
-#ifdef TEST_SVD
    ! LOCAL VARIABLES
    COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: A_buff,Bf,Br ! buffer and full/reduced rebuilt matrices
    COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: U            ! basis
@@ -11,19 +14,116 @@ module DLRA
    INTEGER :: lda, ldu, ldvt, info, lwork, i, m,n, nsv_filter
    COMPLEX(xp), DIMENSION(:), ALLOCATABLE :: work
    REAL(xp),    DIMENSION(:), ALLOCATABLE :: rwork
-   PUBLIC :: init_DLRA, filter_sv_moments_ky_pj, test_SVD
+
+   REAL(xp), DIMENSION(:), ALLOCATABLE :: ln ! Laguerre coefficients
+   REAL(xp), DIMENSION(:), ALLOCATABLE :: hn ! Hermite coefficients
+#ifdef TEST_SVD
+   ! These routines are meant for testing SVD filtering
+   PUBLIC :: init_CLA, filter_sv_moments_ky_pj, test_SVD
+#endif
+
+   PUBLIC :: invert_utr_matrix, build_hermite_matrix, build_laguerre_matrix
 
 CONTAINS
+   !--------------Routines to compute coeff for monomial truncation----------
+   ! Invert an upper triangular matrix
+   SUBROUTINE invert_utr_matrix(U,invU)
+      IMPLICIT NONE
+      REAL(xp), DIMENSION(:,:), INTENT(IN)  :: U   ! Matrix to invert
+      REAL(xp), DIMENSION(:,:), INTENT(OUT) :: invU! Result
+   END SUBROUTINE
 
-   SUBROUTINE init_DLRA(m_,n_)
+   SUBROUTINE build_hermite_matrix(d,U)
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: d
+      REAL(xp), DIMENSION(d,d), INTENT(OUT) :: U
+   END SUBROUTINE
+
+   SUBROUTINE build_laguerre_matrix(d,U)
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: d
+      REAL(xp), DIMENSION(d,d), INTENT(OUT) :: U
+
+
+   END SUBROUTINE
+
+   ! Compute the kth coefficient of the nth degree Laguerre 
+   ! adapted from LaguerrePoly.m by David Terr, Raytheon, 5-11-04
+   ! lnk = (-1)^k/k! binom(n,k), s.t. Ln(x) = sum_k lnk x^k
+   SUBROUTINE set_laguerre_coeffs(n)
+      IMPLICIT NONE
+      INTEGER,  INTENT(IN)  :: n ! Polyn. Deg. and index
+      INTEGER, DIMENSION(n+1) :: lnm2, lnm1
+      INTEGER :: k, e
+      ALLOCATE(ln(n+1))
+      IF (n == 0) THEN
+          ln = 1
+      ELSEIF (n == 1) THEN
+          ln = [-1, 1]
+      ELSE
+          lnm2 = 0.0
+          lnm2(n+1) = 1
+          lnm1 = 0.0
+          lnm1(n) = -1
+          lnm1(n+1) = 1
+          DO k = 2, n
+              ln = 0.0
+              DO e = n-k+1, n
+                  ln(e) = (2*k-1)*lnm1(e) - lnm1(e+1) + (1-k)*lnm2(e)
+              END DO
+              ln(n+1) = (2*k-1)*lnm1(n+1) + (1-k)*lnm2(n+1)
+              ln = ln/k
+              IF (k < n) THEN
+                  lnm2 = lnm1
+                  lnm1 = ln
+              END IF
+          END DO
+      END IF
+   END SUBROUTINE
+
+      ! Compute the kth coefficient of the nth degree hermite 
+   ! (-1)^k/k! binom(j,k)
+   SUBROUTINE set_hermite_coeffs(n)
+      IMPLICIT NONE
+      INTEGER,  INTENT(IN)  :: n ! Polyn. Deg. and index
+      INTEGER, DIMENSION(n+1) :: hnm2, hnm1
+      INTEGER :: k, e
+      ALLOCATE(hn(n+1))
+      IF (n .EQ. 0) THEN 
+         hn = 1
+      ELSEIF (n .EQ. 1) THEN
+         hn = [2, 0]
+      ELSE
+         hnm2 = 0
+         hnm2(n+1) = 1
+         hnm1 = 0
+         hnm1(n) = 2
+ 
+         DO k = 2, n
+             hn = 0
+             DO e = n-k+1, 2, -2
+                 hn(e) = 2*(hnm1(e+1) - (k-1)*hnm2(e))
+               END DO
+             hn(n+1) = -2*(k-1)*hnm2(n+1)
+             IF (k < n) THEN
+                 hnm2 = hnm1
+                 hnm1 = hn
+             END IF
+            END DO
+      END IF
+   END SUBROUTINE             
+
+   !--------------Routines to test singular value filtering -----------------
+#ifdef TEST_SVD
+   SUBROUTINE init_CLA(m_,n_)
       USE basic
       IMPLICIT NONE
       ! ARGUMENTS
       INTEGER, INTENT(IN) :: m_,n_                      ! dimensions of the input array
       ! read the input
       INTEGER :: lun   = 90              ! File duplicated from STDIN
-      NAMELIST /DLRA/ nsv_filter
-      READ(lun,dlra)
+      NAMELIST /CLA/ nsv_filter
+      READ(lun,CLA)
       m   = m_
       n   = n_
       info = 1
@@ -46,14 +146,14 @@ CONTAINS
       lwork = 2*CEILING(REAL(work(1)))
       DEALLOCATE(work)
       ALLOCATE(work(lwork))
-   END SUBROUTINE init_DLRA
+   END SUBROUTINE init_CLA
 
    SUBROUTINE filter_sv_moments_ky_pj
       USE fields,           ONLY: moments
       USE grid,             ONLY: total_nky, total_np, total_nj, ngp,ngj,ngz,&
          local_np, local_nj, local_nz, local_nkx, local_nky, local_na
       USE time_integration, ONLY: updatetlevel
-      USE basic,            ONLY: start_chrono, stop_chrono, chrono_DLRA
+      USE basic,            ONLY: start_chrono, stop_chrono, chrono_CLA
       IMPLICIT NONE
 
       ! Arguments
@@ -63,7 +163,7 @@ CONTAINS
       COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: moments_gky_lpj ! global ky, local pj data
       COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: moments_gky_gpj ! full gathered data for SVD (input of SVD)
       INTEGER :: ia,ix,iz, m,n, ip, ij, iy
-      CALL start_chrono(chrono_DLRA)
+      CALL start_chrono(chrono_CLA)
       ALLOCATE(moments_lky_lpj(local_nky,local_np*local_nj))
       ALLOCATE(moments_gky_lpj(total_nky,local_np*local_nj))
       ALLOCATE(moments_gky_gpj(total_nky,total_np*total_nj))
@@ -121,7 +221,7 @@ CONTAINS
             ENDDO
          ENDDO
       ENDDO
-      CALL stop_chrono(chrono_DLRA)
+      CALL stop_chrono(chrono_CLA)
    END SUBROUTINE filter_sv_moments_ky_pj
 
    SUBROUTINE filter_singular_value(A)
@@ -142,7 +242,7 @@ CONTAINS
          DO i=1,MIN(m,n)-nsv_filter
             Sr(i) = Sf(i)
          ENDDO
-      ELSE ! do not filter if nsv_filter<0
+      ELSE ! DO not filter IF nsv_filter<0
          Sr = Sf
       ENDIF
       ! Reconstruct A from its reduced SVD
@@ -167,7 +267,7 @@ CONTAINS
    END FUNCTION diagmat
 
    SUBROUTINE test_svd
-      ! Specify the dimensions of the input matrix A
+      ! SpecIFy the dimensions of the input matrix A
       INTEGER :: m,n
 
       ! Declare the input matrix A and reconstructed matrix B
@@ -240,4 +340,4 @@ CONTAINS
       stop
    END SUBROUTINE test_svd
 #endif
-end module DLRA
+END module CLA
