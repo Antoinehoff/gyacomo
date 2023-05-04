@@ -1,5 +1,5 @@
 &BASIC
-  nrun       = 1e6
+  nrun       = 99999999
   dt         = 0.01
   tmax       = 50
   maxruntime = 72000
