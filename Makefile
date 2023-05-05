@@ -73,7 +73,6 @@ test_svd: F90 = mpif90
 test_svd: F90FLAGS = -DTEST_SVD -O3
 test_svd: EXEC = $(BINDIR)/gyacomo23_test_svd
 test_svd: dirs src/srcinfo.h
-test_svd: dirs src/srcinfo.h
 test_svd: compile
 # subroutines
 dirs:
@@ -148,7 +147,7 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/CLA_mod.o
 
  $(OBJDIR)/closure_mod.o : src/closure_mod.F90 \
  	 $(OBJDIR)/model_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/grid_mod.o \
-	 $(OBJDIR)/array_mod.o $(OBJDIR)/fields_mod.o
+	 $(OBJDIR)/array_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/CLA_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/closure_mod.F90 -o $@
 
  $(OBJDIR)/collision_mod.o : src/collision_mod.F90 \

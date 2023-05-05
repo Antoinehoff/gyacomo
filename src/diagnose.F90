@@ -96,7 +96,6 @@ SUBROUTINE diagnose_full(kstep)
   USE basic,           ONLY: speak,chrono_runt,&
                              cstep,iframe0d,iframe3d,iframe5d,crashed
   USE grid,            ONLY: &
-    local_nj,local_nky,local_nkx,local_nz,ngj,ngz,&
     parray_full,pmax,jarray_full,jmax,&
     kyarray_full,kxarray_full,zarray_full
   USE diagnostics_par
@@ -105,7 +104,6 @@ SUBROUTINE diagnose_full(kstep)
   USE model,           ONLY: EM
   USE parallel,        ONLY: my_id, comm0
   USE collision,       ONLY: coll_outputinputs
-  USE geometry,        ONLY: gxx,gxy,gyy,gxz,gyz,gzz,hatR,hatZ,hatB,dBdx,dBdy,dBdz,Jacobian,gradz_coeff,Ckxky
   IMPLICIT NONE
   INTEGER, INTENT(in) :: kstep
   INTEGER, parameter  :: BUFSIZE = 2
@@ -282,7 +280,7 @@ SUBROUTINE diagnose_txtonly(kstep)
   IMPLICIT NONE
   INTEGER, INTENT(in) :: kstep
   INTEGER, parameter  :: BUFSIZE = 2
-  INTEGER :: rank = 0, ierr
+  INTEGER :: rank = 0
   INTEGER :: dims(1) = (/0/)
   IF (kstep .GE. 0) THEN
     ! output the transport in a txt file
@@ -507,7 +505,7 @@ SUBROUTINE diagnose_5d
   CONTAINS
 
   SUBROUTINE write_field5d(field, text)
-    USE basic,            ONLY: GATHERV_OUTPUT, jobnum, dt
+    USE basic,            ONLY: jobnum, dt
     USE futils,           ONLY: attach, putarr!, putarrnd
     USE parallel,         ONLY: gather_pjxyz, num_procs
     USE prec_const,       ONLY: xp

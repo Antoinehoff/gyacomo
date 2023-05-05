@@ -8,7 +8,7 @@
 &GRID
   pmax   = 4
   jmax   = 2
-  Nx     = 128
+  Nx     = 64
   Lx     = 200
   Ny     = 48
   Ly     = 60

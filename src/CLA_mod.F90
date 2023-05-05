@@ -5,8 +5,9 @@ module CLA
    ! closure
    USE prec_const
    USE parallel
+   USE FMZM ! For factorial
    implicit none
-   ! LOCAL VARIABLES
+   ! local variables for DLRA and SVD
    COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: A_buff,Bf,Br ! buffer and full/reduced rebuilt matrices
    COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: U            ! basis
    REAL(xp),    DIMENSION(:),   ALLOCATABLE :: Sf, Sr       ! full and reduced singular values
@@ -15,103 +16,158 @@ module CLA
    COMPLEX(xp), DIMENSION(:), ALLOCATABLE :: work
    REAL(xp),    DIMENSION(:), ALLOCATABLE :: rwork
 
-   REAL(xp), DIMENSION(:), ALLOCATABLE :: ln ! Laguerre coefficients
-   REAL(xp), DIMENSION(:), ALLOCATABLE :: hn ! Hermite coefficients
+   ! local variables for monomial truncation (Hermite and Laguerre coeff)
+    ! Coeff for the linear combination of the monomial truncation scheme
+   REAL(xp), PUBLIC, PROTECTED, DIMENSION(:), ALLOCATABLE :: c_Pp1, c_Pp2, c_Jp1
+   
 #ifdef TEST_SVD
    ! These routines are meant for testing SVD filtering
    PUBLIC :: init_CLA, filter_sv_moments_ky_pj, test_SVD
 #endif
 
-   PUBLIC :: invert_utr_matrix, build_hermite_matrix, build_laguerre_matrix
+   PUBLIC :: set_monomial_trunc_coeff
 
 CONTAINS
    !--------------Routines to compute coeff for monomial truncation----------
+   SUBROUTINE set_monomial_trunc_coeff(Pmax,Jmax)
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: Pmax,Jmax ! truncation degree (p,j>d are not evolved)
+      REAL(xp), DIMENSION(Pmax+3,Pmax+3) :: HH, iHH   ! Hermite matrix to invert  (+1 dim for p=0 and +2 dim for coeff P+1,P+2)
+      REAL(xp), DIMENSION(Jmax+2,Jmax+2) :: LL, iLL   ! Laguerre matrix to invert (+1 dim for j=0 and +1 dim for coeff J+1)
+      INTEGER :: i,n
+      ! Hermite
+      HH = 0._dp
+      DO i = 1,Pmax+3
+         n = i-1 !poly. degree
+         HH(1:i,i) = get_hermite_coeffs(n)
+      ENDDO
+      CALL inverse_triangular(Pmax+3,HH,iHH)
+
+      ! Laguerre
+      LL = 0._dp
+      DO i = 1,Jmax+2
+         n = i-1 !poly. degree
+         LL(1:i,i) = get_laguerre_coeffs(n)
+      ENDDO
+      CALL inverse_triangular(Jmax+2,LL,iLL)
+
+      ! Allocate and fill the monomial truncation coefficients
+      ALLOCATE(c_Pp1(Pmax+1))
+      DO i = 1,Pmax+1
+         c_Pp1(i) = -iHH(i,Pmax+2)/iHH(Pmax+2,Pmax+2)
+      ENDDO
+      ALLOCATE(c_Pp2(Pmax+1))
+      DO i = 1,Pmax+1
+         c_Pp2(i) = -iHH(i,Pmax+3)/iHH(Pmax+3,Pmax+3)
+      ENDDO
+      ALLOCATE(c_Jp1(Jmax+1))
+      DO i = 1,Jmax+1
+         c_Jp1(i) = 0*iLL(i,Jmax+2)/iLL(Jmax+2,Jmax+2)
+      ENDDO
+   END SUBROUTINE
+
    ! Invert an upper triangular matrix
-   SUBROUTINE invert_utr_matrix(U,invU)
+   SUBROUTINE inverse_triangular(N,U,invU)
       IMPLICIT NONE
-      REAL(xp), DIMENSION(:,:), INTENT(IN)  :: U   ! Matrix to invert
-      REAL(xp), DIMENSION(:,:), INTENT(OUT) :: invU! Result
+      INTEGER, INTENT(in) :: N ! size of the matrix
+      REAL(xp), DIMENSION(N,N), INTENT(IN)  :: U   ! Matrix to invert
+      REAL(xp), DIMENSION(N,N), INTENT(OUT) :: invU! Result
+      ! local variables
+      INTEGER :: info
+      invU = U
+#ifdef SINGLE_PRECISION
+      CALL STRTRI('U','N',N,invU,N,info)
+#else
+      CALL DTRTRI('U','N',N,invU,N,info)
+#endif
+      IF (info .LT. 0) THEN
+         print*, info
+         ERROR STOP "STOP, LAPACK TRTRI: illegal value at index"
+      ELSEIF(info .GT. 0) THEN
+         ERROR STOP "STOP, LAPACK TRTRI: singular matrix"
+      ENDIF
    END SUBROUTINE
 
-   SUBROUTINE build_hermite_matrix(d,U)
+   ! Compute the kth coefficient of the nth degree Hermite 
+   ! adapted from LaguerrePoly.m by David Terr, Raytheon, 5-10-04
+   FUNCTION get_hermite_coeffs(n) RESULT(hn)
       IMPLICIT NONE
-      INTEGER, INTENT(IN) :: d
-      REAL(xp), DIMENSION(d,d), INTENT(OUT) :: U
-   END SUBROUTINE
-
-   SUBROUTINE build_laguerre_matrix(d,U)
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: d
-      REAL(xp), DIMENSION(d,d), INTENT(OUT) :: U
-
-
-   END SUBROUTINE
+      INTEGER,  INTENT(IN)     :: n ! Polyn. Deg. and index
+      REAL(xp), DIMENSION(n+1) :: hn ! Hermite coefficients
+      REAL(xp), DIMENSION(n+1)  :: hnm2, hnm1, tmp
+      INTEGER :: k, e, factn
+      IF (n .EQ. 0) THEN 
+         hn = 1._xp
+      ELSEIF (n .EQ. 1) THEN
+         hn = [2._xp, 0._xp]
+      ELSE
+         hnm2      = 0._xp
+         hnm2(n+1) = 1._xp
+         hnm1      = 0._xp
+         hnm1(n)   = 2._xp
+         DO k = 2,n
+             hn = 0._xp
+             DO e = n-k+1,n,2
+                 hn(e) = REAL(2*(hnm1(e+1) - (k-1)*hnm2(e)),xp)
+               END DO
+             hn(n+1) = REAL(-2*(k-1)*hnm2(n+1),xp)
+             IF (k .LT. n) THEN
+                 hnm2 = hnm1
+                 hnm1 = hn
+             END IF
+            END DO
+      END IF
+      ! Normalize the polynomials 
+      factn = 1
+      DO k = 1,n
+         factn = k*factn
+      ENDDO
+      hn = hn/SQRT(REAL(2**n*factn,xp))
+      ! reverse order
+      tmp = hn
+      DO k = 1,n+1
+         hn(n+1-(k-1)) = tmp(k)
+      ENDDO
+   END FUNCTION
 
    ! Compute the kth coefficient of the nth degree Laguerre 
    ! adapted from LaguerrePoly.m by David Terr, Raytheon, 5-11-04
    ! lnk = (-1)^k/k! binom(n,k), s.t. Ln(x) = sum_k lnk x^k
-   SUBROUTINE set_laguerre_coeffs(n)
+   FUNCTION get_laguerre_coeffs(n) RESULT(ln)
       IMPLICIT NONE
-      INTEGER,  INTENT(IN)  :: n ! Polyn. Deg. and index
-      INTEGER, DIMENSION(n+1) :: lnm2, lnm1
+      INTEGER,  INTENT(IN)     :: n ! Polyn. Deg. and index
+      REAL(xp), DIMENSION(n+1) :: ln ! Laguerre coefficients
+      REAL(xp), DIMENSION(n+1) :: lnm2, lnm1, tmp
       INTEGER :: k, e
-      ALLOCATE(ln(n+1))
-      IF (n == 0) THEN
-          ln = 1
-      ELSEIF (n == 1) THEN
-          ln = [-1, 1]
+      IF (n .EQ. 0) THEN
+          ln = 1._xp
+      ELSEIF (n .EQ. 1) THEN
+          ln = [-1._xp, 1._xp]
       ELSE
-          lnm2 = 0.0
-          lnm2(n+1) = 1
-          lnm1 = 0.0
-          lnm1(n) = -1
-          lnm1(n+1) = 1
+          lnm2      = 0._xp
+          lnm2(n+1) = 1._xp
+          lnm1      = 0._xp
+          lnm1(n)   =-1._xp
+          lnm1(n+1) = 1._xp
           DO k = 2, n
-              ln = 0.0
+              ln = 0
               DO e = n-k+1, n
-                  ln(e) = (2*k-1)*lnm1(e) - lnm1(e+1) + (1-k)*lnm2(e)
+                  ln(e) = REAL((2*k-1)*lnm1(e) - lnm1(e+1) + (1-k)*lnm2(e),xp)
               END DO
-              ln(n+1) = (2*k-1)*lnm1(n+1) + (1-k)*lnm2(n+1)
-              ln = ln/k
+              ln(n+1) = REAL((2*k-1)*lnm1(n+1) + (1-k)*lnm2(n+1),xp)
+              ln = ln/REAL(k,xp)
               IF (k < n) THEN
                   lnm2 = lnm1
                   lnm1 = ln
               END IF
           END DO
       END IF
-   END SUBROUTINE
-
-      ! Compute the kth coefficient of the nth degree hermite 
-   ! (-1)^k/k! binom(j,k)
-   SUBROUTINE set_hermite_coeffs(n)
-      IMPLICIT NONE
-      INTEGER,  INTENT(IN)  :: n ! Polyn. Deg. and index
-      INTEGER, DIMENSION(n+1) :: hnm2, hnm1
-      INTEGER :: k, e
-      ALLOCATE(hn(n+1))
-      IF (n .EQ. 0) THEN 
-         hn = 1
-      ELSEIF (n .EQ. 1) THEN
-         hn = [2, 0]
-      ELSE
-         hnm2 = 0
-         hnm2(n+1) = 1
-         hnm1 = 0
-         hnm1(n) = 2
- 
-         DO k = 2, n
-             hn = 0
-             DO e = n-k+1, 2, -2
-                 hn(e) = 2*(hnm1(e+1) - (k-1)*hnm2(e))
-               END DO
-             hn(n+1) = -2*(k-1)*hnm2(n+1)
-             IF (k < n) THEN
-                 hnm2 = hnm1
-                 hnm1 = hn
-             END IF
-            END DO
-      END IF
-   END SUBROUTINE             
+      ! reverse order
+      tmp = ln
+      DO k = 1,n+1
+         ln(n+1-(k-1)) = tmp(k)
+      ENDDO
+   END FUNCTION
 
    !--------------Routines to test singular value filtering -----------------
 #ifdef TEST_SVD
