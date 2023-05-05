@@ -74,9 +74,6 @@ test_svd: F90FLAGS = -DTEST_SVD -O3
 test_svd: EXEC = $(BINDIR)/gyacomo23_test_svd
 test_svd: dirs src/srcinfo.h
 test_svd: dirs src/srcinfo.h
-test_svd: LAPACKDIR  = $(HOME)/lib/lapack-3.10.0
-test_svd: LIBS  += -llapack -lblas
-test_svd: LDIRS += -L$(LAPACKDIR)
 test_svd: compile
 # subroutines
 dirs:
