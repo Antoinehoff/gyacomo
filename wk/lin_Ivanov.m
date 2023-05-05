@@ -21,7 +21,7 @@ EXECNAME = 'gyacomo23_sp'; % single precision
 % EXECNAME = 'gyacomo23_debug'; % single precision
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-TAU = 1e-2;                  % e/i temperature ratio
+TAU = 1e-3;                  % e/i temperature ratio
 NU = 0.1/TAU;                 % Collision frequency
 K_Ne = 0*2.22;              % ele Density
 K_Te = 0*6.96;              % ele Temperature
@@ -68,8 +68,8 @@ JOB2LOAD = -1;     % Start a new simulation serie
 
 %% OPTIONS
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
-CO        = 'IV';       % Collision operator (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-GKCO      = 1;          % Gyrokinetic operator
+CO        = 'SG';       % Collision operator (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
+GKCO      = 0;          % Gyrokinetic operator
 ABCO      = 1;          % INTERSPECIES collisions
 INIT_ZF   = 0;          % Initialize zero-field quantities
 % HRCY_CLOS = 'max_degree';   % Closure model for higher order moments
@@ -109,7 +109,7 @@ NOISE0  = 1.0e-5; % Initial noise amplitude
 BCKGD0  = 0.0;    % Initial background
 k_gB   = 1.0;     % Magnetic gradient strength
 k_cB   = 1.0;     % Magnetic curvature strength
-COLL_KCUT = 1000; % Cutoff for collision operator
+COLL_KCUT = 1.0; % Cutoff for collision operator
 
 %%-------------------------------------------------------------------------
 %% RUN

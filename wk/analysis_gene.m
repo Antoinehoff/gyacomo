@@ -46,13 +46,14 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 
 %Paper 2
 % folder = '/misc/gene_results/CBC/KT_6.96_64x32x32x24x12_Nexc_5/';
-folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x8x4_Nexc_5_00/';
+% folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x8x4_Nexc_5_00/';
 % folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x16x8_Nexc_5_00/';
 % folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x32x16_Nexc_5_00/';
 % folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x32x16_Nexc_5_01/';
 
 % folder = '/misc/gene_results/CBC/KT_5.3_128x64x24x32x16_Nexc_5_00/';
-% folder = '/misc/gene_results/CBC/KT_5.3_128x64x24x32x16_Nexc_5_01/';
+% folder = '/misc/gene_results/CBC/KT_4.5_192x96x24x30x16_00/';
+folder = '/misc/gene_results/CBC/KT_5.0_192x96x24x30x16_00/';
 % folder = '/misc/gene_results/CBC/new_sim/KT_5.3_128x64x24x16x8_Nexc_5/';
 % folder = '/misc/gene_results/CBC/new_sim/KT_5.3_128x64x24x8x4_Nexc_5/';
 % folder = '/misc/gene_results/CBC/new_sim/KT_6.96_128x64x24x8x4_Nexc_5_smallvbox/';
@@ -69,7 +70,6 @@ folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x8x4_Nexc_5_00/';
 if 0
 %% FULL DATA LOAD (LONG)
 gene_data = load_gene_data(folder);
-end
 gene_data.FIGDIR = folder;
 gene_data = invert_kxky_to_kykx_gene_results(gene_data);
 gene_data.grids.Np = gene_data.grids.Nvp;
@@ -78,6 +78,7 @@ gene_data.CODENAME = 'GENE';
 gene_data.inputs = gene_data.grids;
 gene_data.inputs.Na = 1;
 gene_data.paramshort = gene_data.params_string;
+end
 if 0
 %% Dashboard (Compilation of main plots of the sim)
 dashboard(gene_data);
@@ -89,11 +90,15 @@ nrgfile           = 'nrg.dat.h5';
 % nrgfile           = 'nrg_1.h5';
 T    = h5read([folder,nrgfile],'/nrgions/time');
 Qx   = h5read([folder,nrgfile],'/nrgions/Q_es');
-[~,it0] = min(abs(0.25*T(end)-T(end));
+[~,it0] = min(abs(T-0.25*T(end)));
 Qavg = mean(Qx(it0:end));
-Qstd = std(Qx(it0:end));
+Qstd = std(Qx(it0:end))/2;
 figure
-plot(data.Ts0D,data.HFLUX_X,'DisplayName',folder(32:48))
+plot(T,Qx,'DisplayName',folder(32:48)); hold on;
+plot([T(it0) T(end)],Qavg*[1 1],'-k');
+plot([T(it0) T(end)],(Qavg+Qstd)*[1 1],'--k');
+plot([T(it0) T(end)],(Qavg-Qstd)*[1 1],'--k');
+disp(['Q_avg=',sprintf('%2.2e',Qavg),'+-',sprintf('%2.2e',Qstd)]);
 end
 %% Separated plot routines
 if 0

@@ -15,9 +15,9 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0'
 % datafname = 'p2_linear/8x24_ky_0.3_kT_3_6.96_P_2_40_DGDK_0.025.mat';
 %% Scans over NU and PJ, keeping ky and KY constant (CBC_nu_PJ_scan.m)
 % datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_DGDK_P_2_40_KT_6.96.mat';
-% datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_DGDK_P_2_40_KT_5.3.mat';
+% % datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_DGDK_P_2_40_KT_5.3.mat';
 % datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_SGGK_P_2_20_KT_6.96.mat';
-%  datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_hypcoll_P_2_30_KT_6.96.mat';
+ % datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_hypcoll_P_2_30_KT_6.96.mat';
 %  datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_hypcoll_P_2_30_KT_5.3.mat';
  % datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_dvpar4_P_2_30_KT_6.96.mat';
 %  datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_dvpar4_P_2_10_KT_6.96.mat';
@@ -34,12 +34,35 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0'
 % datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_3.5_6.96_nu_0_0.5_DGGK.mat';
 % datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_3.5_6.96_nu_0_0.5_SGGK.mat';
 % datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_3.5_6.96_nu_0_0.5_LDGK.mat';
+
 % datafname = 'p2_linear_new/8x24_ky_0.3_P_6_J_3_kT_3.5_6.96_nu_0_0.5_DGGK.mat';
 % datafname = 'p2_linear_new/8x24_ky_0.3_P_6_J_3_kT_3.5_6.96_nu_0_0.5_SGGK.mat';
-datafname = 'p2_linear_new/8x24_ky_0.3_P_6_J_3_kT_3.5_6.96_nu_0_0.5_LDGK.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_6_J_3_kT_3.5_6.96_nu_0_0.5_LDGK.mat';
+
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_8_J_4_kT_3.5_6.96_nu_0_0.5_DGGK.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_8_J_4_kT_3.5_6.96_nu_0_0.5_SGGK.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_8_J_4_kT_3.5_6.96_nu_0_0.5_LDGK.mat';
+
+% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_10_DGDK_0.05.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_30_DGGK_0.05.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_SGGK_0.05.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_10_LDGK_0.05.mat';
+
+% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_DGDK_0.1.mat';
+datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_DGGK_0.1.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_SGGK_0.1.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_10_LDGK_0.1.mat';
+
+%% Chose if we filter gamma>0.05
+FILTERGAMMA = 1;
+
 %% Load data
 fname = ['../results/',datafname];
 d = load(fname);
+if FILTERGAMMA
+    d.data = d.data.*(d.data>0.025);
+    d.err  = d.err.*(d.data>0.025);
+end
 if 1
 %% Pcolor of the peak
 figure;
@@ -50,8 +73,8 @@ title(d.title);
 xlabel(d.s1name); ylabel(d.s2name);
 set(gca,'XTicklabel',d.s1)
 set(gca,'YTicklabel',d.s2)
-% colormap(jet)
-colormap(bluewhitered)
+colormap(jet)
+% colormap(bluewhitered)
 clb=colorbar; 
 clb.Label.String = '$\gamma c_s/R$';
 clb.Label.Interpreter = 'latex';

@@ -40,7 +40,7 @@
          4.5 1.2e+0 5.4e-1;...%192x64x24x6x4  kymin=0.05 ! Lx is too small... (weird oscillations)
 	    ];
 	%-------------- GENE ---------------
-	kT_Qi_GENE = ...
+	kT_Qi_GENE_SR = ...
 	    [...
 	     13. 2.7e+2 2.2e+1;...%128x64x16x24x12 kymin=0.02 (large box)
 	%      13. 2.0e+2 6.6e+1;...%128x64x16x24x12 kymin=0.05
@@ -51,18 +51,22 @@
 	     5.3 9.7e+0 6.8e+0;...%128x64x16x24x12 kymin=0.05
 	     4.5 2.3e-1 5.0e-2;...%128x64x16x24x12 kymin=0.05
 	    ];
+	kT_Qi_GENE_HR = ...
+	    [...
+	     5.3 3.8e-1 1.7e-1;...%128x64x16x32x16 Nexc=5 kymin=0.05
+	    ];
 	%% Heat conductivity Xi [Ln/rhoi^2/cs] computed as Xi = Qi/kT/kN
 	%init
 	kT_Xi_GM_32  = kT_Qi_GM_32;
 	kT_Xi_GM_53  = kT_Qi_GM_53;
 	kT_Xi_GM_HD  = kT_Qi_GM_HD;
-	kT_Xi_GENE   = kT_Qi_GENE;
+	kT_Xi_GENE   = kT_Qi_GENE_SR;
 	%scale
 	for i = 2:3
 	kT_Xi_GM_32 (:,i) = kT_Qi_GM_32 (:,i)./kT_Qi_GM_32 (:,1)./kN;
 	kT_Xi_GM_53 (:,i) = kT_Qi_GM_53 (:,i)./kT_Qi_GM_53 (:,1)./kN;
 	kT_Xi_GM_HD (:,i) = kT_Qi_GM_HD (:,i)./kT_Qi_GM_HD (:,1)./kN;
-	kT_Xi_GENE  (:,i) = kT_Qi_GENE  (:,i)./kT_Qi_GENE  (:,1)./kN;
+	kT_Xi_GENE  (:,i) = kT_Qi_GENE_SR  (:,i)./kT_Qi_GENE_SR  (:,1)./kN;
 	end
 	%% Dimits fig 3 data
 	KT_DIM      = [4.0 4.5 5.0 6.0 7.0 9.0 12. 14. 16. 18.];

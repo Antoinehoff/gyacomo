@@ -48,8 +48,8 @@ PARTITION  = '/misc/gyacomo23_outputs/';
 % resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_CBC/9x2x64x48x16/nu_0.1';
 % resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/9x5x128x64x24/nu_0.5';
 % resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/5x3x128x64x24/nu_0.5';
-% resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/9x2x128x64x24/nu_0.5';
-% resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/9x2x128x64x24_Lx200/nu_0.5';
+resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/9x5x128x64x24/nu_0.5';
+% resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/9x5x128x64x24_Lx200/nu_0.5';
 % resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_kT_5.3/9x2x128x64x24/nu_0.01';
 
 %% kT eff study
@@ -57,8 +57,9 @@ PARTITION  = '/misc/gyacomo23_outputs/';
 % resdir = 'paper_2_GYAC23/kT_eff_study/1x3x128x64x24_kT_3.0/Lx240';
 % resdir = 'paper_2_GYAC23/kT_eff_study/3x3x128x64x24_kT_3.4/Lx120';
 % resdir = 'paper_2_GYAC23/kT_eff_study/3x3x128x64x24_kT_3.4/Lx240';
-resdir = 'paper_2_GYAC23/kT_eff_study/5x3x128x64x24_kT_3.5';
-% resdir = 'paper_2_GYAC23/kT_eff_study/7x3x128x64x24_kT_3.6';
+% resdir = 'paper_2_GYAC23/kT_eff_study/5x3x128x64x24_kT_3.5';
+% resdir = 'paper_2_GYAC23/kT_eff_study/7x3x128x64x24_kT_3.6/truncation';
+% resdir = 'paper_2_GYAC23/kT_eff_study/7x3x128x64x24_kT_3.6/dmax';
 
  %%
 J0 = 00; J1 = 10;
@@ -124,8 +125,8 @@ options.NORMALIZE = 0;
 options.NAME      = 'N_i^{00}';
 % options.NAME      = '\phi';
 options.PLAN      = 'xy';
-options.COMP      = 1;
-options.TIME      = [300];
+options.COMP      = 'avg';
+options.TIME      = [10 50 80];
 options.RESOLUTION = 256;
 fig = photomaton(data,options);
 % save_figure(data,fig)

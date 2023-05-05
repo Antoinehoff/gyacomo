@@ -1,6 +1,6 @@
 codir  = '/home/ahoffman/cosolver/';
-matname= 'gk_sugama_tau1e-3_P4_J2_dk_5e-2_km_5.0_NFLR_5';
-matdir = [codir,'SGGK_tau1e-3_P4_J2_dk_0.05_kpm_5.0/matrices/'];
+matname= 'gk_sugama_tau1e-2_P4_J2_dk_5e-2_km_5.0_NFLR_5';
+matdir = [codir,'SGGK_tau1e-2_P4_J2_dk_0.05_kpm_5.0/matrices/'];
 kperp  = load([matdir,'kperp.in']); 
 Nkp    = numel(kperp);
 outdir = '/home/ahoffman/gyacomo/iCa/';
