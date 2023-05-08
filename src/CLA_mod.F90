@@ -75,10 +75,14 @@ CONTAINS
       ! local variables
       INTEGER :: info
       invU = U
+#ifdef LAPACKDIR
 #ifdef SINGLE_PRECISION
       CALL STRTRI('U','N',N,invU,N,info)
 #else
       CALL DTRTRI('U','N',N,invU,N,info)
+#endif
+#else
+      ERROR STOP "Cannot use monomial truncation without LAPACK"
 #endif
       IF (info .LT. 0) THEN
          print*, info
