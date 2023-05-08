@@ -146,8 +146,7 @@ CONTAINS
   !  1 2 3 4
   SUBROUTINE set_grids(shear,Npol,LINEARITY,N_HD,EM,Na)
     USE fourier, ONLY: init_grid_distr_and_plans
-    REAL(xp), INTENT(IN) :: shear
-    INTEGER,  INTENT(IN) :: Npol
+    REAL(xp), INTENT(IN) :: shear, Npol
     CHARACTER(len=*), INTENT(IN) :: LINEARITY
     INTEGER, INTENT(IN)  :: N_HD
     LOGICAL, INTENT(IN)  :: EM
@@ -398,8 +397,7 @@ CONTAINS
   SUBROUTINE set_kxgrid(shear,Npol,LINEARITY,N_HD)
     USE prec_const
     IMPLICIT NONE
-    REAL(xp), INTENT(IN) :: shear
-    INTEGER,  INTENT(IN) :: Npol
+    REAL(xp), INTENT(IN) :: shear, Npol
     CHARACTER(len=*), INTENT(IN) ::LINEARITY
     INTEGER, INTENT(IN)  :: N_HD
     INTEGER :: ikx
@@ -490,11 +488,11 @@ CONTAINS
     USE prec_const
     USE parallel, ONLY: num_procs_z, rank_z
     IMPLICIT NONE
-    REAL(xp):: grid_shift, Lz, zmax, zmin
-    INTEGER :: istart, iend, in, Npol, iz, ig, eo, iglob
+    REAL(xp):: grid_shift, Lz, zmax, zmin, Npol
+    INTEGER :: istart, iend, in, iz, ig, eo, iglob
     total_nz = Nz
     ! Length of the flux tube (in ballooning angle)
-    Lz         = 2._xp*pi*REAL(Npol,xp)
+    Lz         = 2._xp*pi*Npol
     ! Z stepping (#interval = #points since periodic)
     deltaz        = Lz/REAL(Nz,xp)
     inv_deltaz    = 1._xp/deltaz
@@ -515,24 +513,24 @@ CONTAINS
     ENDIF
     ! Build the full grids on process 0 to diagnose it without comm
     ALLOCATE(zarray_full(total_nz))
-    IF (Nz .EQ. 1) Npol = 0
-    zmax = 0; zmin = 0;
-    DO iz = 1,total_nz ! z in [-pi pi-dz] x Npol
-      zarray_full(iz) = REAL(iz-1,xp)*deltaz - Lz/2._xp
-      IF(zarray_full(iz) .GT. zmax) zmax = zarray_full(iz)
-      IF(zarray_full(iz) .LT. zmin) zmin = zarray_full(iz)
-    END DO
-    !! Parallel data distribution
-    IF( (Nz .EQ. 1) .AND. (num_procs_z .GT. 1) ) &
-    ERROR STOP '>> ERROR << Cannot have multiple core in z-direction (Nz = 1)'
-    ! Local data distribution
-    CALL decomp1D(total_nz, num_procs_z, rank_z, izs, ize)
-    local_nz        = ize - izs + 1
-    local_nz_offset = izs - 1
-    ! Ghosts boundaries (depend on the order of z operators)
-    IF(Nz .EQ. 1) THEN
-      ngz              = 0
-      zarray_full(izs) = 0
+    IF (Nz .EQ. 1) Npol = 0._xp
+      zmax = 0; zmin = 0;
+      DO iz = 1,total_nz ! z in [-pi pi-dz] x Npol
+        zarray_full(iz) = REAL(iz-1,xp)*deltaz - Lz/2._xp
+        IF(zarray_full(iz) .GT. zmax) zmax = zarray_full(iz)
+        IF(zarray_full(iz) .LT. zmin) zmin = zarray_full(iz)
+      END DO
+      !! Parallel data distribution
+      IF( (Nz .EQ. 1) .AND. (num_procs_z .GT. 1) ) &
+      ERROR STOP '>> ERROR << Cannot have multiple core in z-direction (Nz = 1)'
+      ! Local data distribution
+      CALL decomp1D(total_nz, num_procs_z, rank_z, izs, ize)
+      local_nz        = ize - izs + 1
+      local_nz_offset = izs - 1
+      ! Ghosts boundaries (depend on the order of z operators)
+      IF(Nz .EQ. 1) THEN
+        ngz              = 0
+        zarray_full(izs) = 0
     ELSEIF(Nz .GE. 4) THEN
       ngz =4
       IF(mod(Nz,2) .NE. 0 ) THEN

@@ -20,7 +20,7 @@ implicit none
   REAL(xp),    PUBLIC, PROTECTED :: s_zeta    = 0._xp ! '' szeta = r dzeta/dr
   ! to apply shift in the parallel z-BC if shearless
   REAL(xp),    PUBLIC, PROTECTED :: shift_y   = 0._xp ! for Arno <3
-  INTEGER,     PUBLIC, PROTECTED :: Npol      = 1         ! number of poloidal turns
+  REAL(xp),    PUBLIC, PROTECTED :: Npol      = 1._xp ! number of poloidal turns (real for 3D zpinch studies)
   ! Chooses the type of parallel BC we use for the unconnected kx modes (active for non-zero shear only)
   !  'periodic'     : Connect a disconnected kx to a mode on the other cadran
   !  'dirichlet'    : Connect a disconnected kx to 0
@@ -103,7 +103,7 @@ CONTAINS
     REAL(xp) :: kx,ky
     COMPLEX(xp), DIMENSION(local_nz) :: integrant
     real(xp) :: G1,G2,G3,Cx,Cy
-    INTEGER  :: eo,iz,iky,ikx
+    INTEGER  :: eo,iz,iky,ikx, Npol_i
 
     ! Allocate arrays
     CALL geometry_allocate_mem(local_nky,local_nkx,local_nz,ngz,nzgrid)
@@ -114,6 +114,7 @@ CONTAINS
     ELSE
       SELECT CASE(geom)
         CASE('s-alpha')
+          IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for s-alpha geometry"
           CALL speak('s-alpha geometry')
           call eval_salpha_geometry
         CASE('Z-pinch','z-pinch','Zpinch','zpinch')
@@ -126,8 +127,9 @@ CONTAINS
           kappa   = 1._xp
         CASE('miller')
           CALL speak('Miller geometry')
+          IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for Miller geometry"
           call set_miller_parameters(kappa,s_kappa,delta,s_delta,zeta,s_zeta)
-          call get_miller(eps,major_R,major_Z,q0,shear,Npol,alpha_MHD,edge_opt,&
+          call get_miller(eps,major_R,major_Z,q0,shear,FLOOR(Npol),alpha_MHD,edge_opt,&
                           C_y,C_xy,xpdx_pm_geom,gxx,gyy,gzz,gxy,gxz,gyz,&
                           dBdx,dBdy,hatB,jacobian,dBdz,hatR,hatZ,dxdR,dxdZ,&
                           Ckxky,gradz_coeff)

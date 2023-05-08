@@ -19,8 +19,12 @@
 &GEOMETRY
   geom   = 'Z-pinch'
   q0     = 0.0
-  shear  = 0.0 
+  shear  = 0.0
   eps    = 0.0
+  !geom   = 'miller'
+  !q0     = 1.4
+  !shear  = 0.8
+  !eps    = 0.18
   kappa  = 1.0
   s_kappa= 0.0
   delta  = 0.0
@@ -29,6 +33,7 @@
   s_zeta = 0.0
   parallel_bc = 'shearless'
   shift_y= 0.0
+  Npol   = 1.0
 /
 &OUTPUT_PAR
   dtsave_0d = 1
