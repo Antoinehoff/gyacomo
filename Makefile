@@ -36,6 +36,22 @@ marconi: EXEC = $(BINDIR)/gyacomo23_dp
 marconi: dirs src/srcinfo.h
 marconi: compile
 
+# For compiling on marconi in single prec.
+marconi_sp: F90 = mpiifort
+marconi_sp: F90FLAGS = -O3 -xHOST
+marconi_sp: F90FLAGS = -DSINGLE_PRECISION -O3 -xHOST
+marconi_sp: EXEC = $(BINDIR)/gyacomo23_sp
+marconi_sp: dirs src/srcinfo.h
+marconi_sp: compile
+
+# For compiling on marconi in single prec.
+marconi_dbg: F90 = mpiifort
+marconi_dbg: F90FLAGS = -g -traceback -ftrapuv -warn all -debug all
+marconi_dbg: F90FLAGS = -DSINGLE_PRECISION -O3 -xHOST
+marconi_dbg: EXEC = $(BINDIR)/gyacomo23_sp
+marconi_dbg: dirs src/srcinfo.h
+marconi_dbg: compile
+
 # For compiling on daint
 daint: F90 = ftn
 daint: F90FLAGS = -O3
