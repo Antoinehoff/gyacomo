@@ -46,9 +46,8 @@ marconi_sp: compile
 
 # For compiling on marconi in single prec.
 marconi_dbg: F90 = mpiifort
-marconi_dbg: F90FLAGS = -g -traceback -ftrapuv -warn all -debug all
-marconi_dbg: F90FLAGS = -DSINGLE_PRECISION -O3 -xHOST
-marconi_dbg: EXEC = $(BINDIR)/gyacomo23_sp
+marconi_dbg: F90FLAGS = -DSINGLE_PRECISION -g -traceback -ftrapuv -warn all -debug all
+marconi_dbg: EXEC = $(BINDIR)/gyacomo23_dbg
 marconi_dbg: dirs src/srcinfo.h
 marconi_dbg: compile
 
