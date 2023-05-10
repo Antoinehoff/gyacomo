@@ -103,7 +103,7 @@ CONTAINS
     REAL(xp) :: kx,ky
     COMPLEX(xp), DIMENSION(local_nz) :: integrant
     real(xp) :: G1,G2,G3,Cx,Cy
-    INTEGER  :: eo,iz,iky,ikx, Npol_i
+    INTEGER  :: eo,iz,iky,ikx
 
     ! Allocate arrays
     CALL geometry_allocate_mem(local_nky,local_nkx,local_nz,ngz,nzgrid)
