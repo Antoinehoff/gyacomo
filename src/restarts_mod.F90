@@ -3,8 +3,10 @@ USE basic
 USE futils,          ONLY: openf, closef, getarr, getatt, isgroup,&
                            isdataset, getarrnd, putarrnd
 USE grid, ONLY: local_Na,local_Na_offset,local_np,local_np_offset,&
-local_nj,local_nj_offset,local_nky,local_nky_offset,local_nkx,local_nkx_offset,&
-local_nz,local_nz_offset,ngp,ngj,ngz, total_nz, deltap
+  local_nj,local_nj_offset,local_nky,local_nky_offset,local_nkx,local_nkx_offset,&
+  local_nz,local_nz_offset,ngp,ngj,ngz, deltap,&
+  total_Na,total_Np,total_Nj,total_Nky,total_Nkx,total_Nz,ieven,&
+  kyarray_full,kxarray_full,zarray, zarray_full, local_zmin, local_zmax ! for z interp
 USE fields
 USE diagnostics_par
 USE time_integration
@@ -26,9 +28,13 @@ CONTAINS
     INTEGER :: n_
     INTEGER :: deltap_cp
     INTEGER :: n0, Np_cp, Nj_cp, Nkx_cp, Nky_cp, Nz_cp, Na_cp
-    INTEGER :: ia,ip,ij,iky,ikx,iz, iacp,ipcp,ijcp,iycp,ixcp,izcp, ierr
-    INTEGER :: ipi,iji,izi
-    REAL(xp):: timer_tot_1,timer_tot_2
+    INTEGER :: ia,ip,ij,iky,ikx,iz, iacp,ipcp,ijcp,iycp,ixcp, ierr
+    INTEGER :: ipi,iji,izi,izg
+    REAL(xp), DIMENSION(:), ALLOCATABLE :: ky_cp, kx_cp, z_cp
+    REAL(xp):: Lx_cp, Ly_cp, Lz_cp, dz_cp, zi, zj_cp, zjp1_cp
+    REAL(xp):: timer_tot_1,timer_tot_2, zerotoone
+    INTEGER,  DIMENSION(:), ALLOCATABLE  :: z_idx_mapping
+    REAL(xp), DIMENSION(:), ALLOCATABLE  :: z_cp_stretched
     COMPLEX(xp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: moments_cp
     CALL cpu_time(timer_tot_1)
     ! Checkpoint filename
@@ -36,18 +42,39 @@ CONTAINS
     CALL speak("Resume from "//rstfile)
     ! Open file
     CALL openf(rstfile, fidrst,mpicomm=comm0)
-    ! Get the checkpoint moments degrees to allocate memory
-    CALL getatt(fidrst,"/data/input/grid" ,   "Nkx",   Nkx_cp)
-    CALL getatt(fidrst,"/data/input/grid" ,   "Nky",   Nky_cp)
-    CALL getatt(fidrst,"/data/input/grid" ,    "Nz",    Nz_cp)
-    IF(Nz_cp .NE. total_nz) &
-      ERROR STOP "!! cannot change Nz in a restart, interp or reduction not implemented !!"
+    ! Get the dimensions of the checkpoint moments
+    CALL getatt(fidrst,"/data/input/model",  "Na", Na_cp)
+    CALL getatt(fidrst,"/data/input/grid" ,  "Np", Np_cp)
+    CALL getatt(fidrst,"/data/input/grid" ,  "Nj", Nj_cp)
+    CALL getatt(fidrst,"/data/input/grid" , "Nky", Nky_cp)
+    CALL getatt(fidrst,"/data/input/grid" , "Nkx", Nkx_cp)
+    CALL getatt(fidrst,"/data/input/grid" ,  "Nz", Nz_cp)
+    !! Check dimensional compatibility with the planned simulation
+    IF(Na_cp  .NE. total_Na ) CALL speak("NOTE: Na  has changed")
+    IF(Np_cp  .NE. total_Np ) CALL speak("NOTE: Np  has changed")
+    IF(Nj_cp  .NE. total_Nj ) CALL speak("NOTE: Nj  has changed")
+    IF(Nky_cp .NE. total_Nky) CALL speak("NOTE: Nky has changed")
+    IF(Nkx_cp .NE. total_Nkx) CALL speak("NOTE: Nkx has changed")
+    ! Get the x,y fourier modes and the z space and check grids
+    ALLOCATE(ky_cp(Nky_cp),kx_cp(Nkx_cp),z_cp(Nz_cp))
+    CALL getarr(fidrst,"/data/grid/coordky",ky_cp); Ly_cp = 2._xp*PI/ky_cp(2)
+    CALL getarr(fidrst,"/data/grid/coordkx",kx_cp); Lx_cp = 2._xp*PI/kx_cp(2)
+    CALL getarr(fidrst,"/data/grid/coordz" , z_cp); Lz_cp =-2._xp*z_cp(1)
+    ! check changes
+    IF(ABS(ky_cp(2)-kyarray_full(2)) .GT. 1e-3) CALL speak("NOTE: Ly  has changed")
+    IF(ABS(kx_cp(2)-kxarray_full(2)) .GT. 1e-3) CALL speak("NOTE: Lx  has changed")
+    IF(ABS(z_cp(1) - zarray_full(1)) .GT. 1e-3) CALL speak("NOTE: Lz  has changed")
+    dz_cp = (z_cp(2)- z_cp(1)) !! check deltaz changes
+    ! IF(ABS(deltaz - dz_cp) .GT. 1e-3) ERROR STOP "ERROR STOP: change of deltaz is not implemented."
+    ! compute the mapping for z grid adaptation
+    ALLOCATE(z_idx_mapping(total_Nz+1),z_cp_stretched(Nz_cp+1)) ! we allocate them +1 for periodicity
+    CALL z_grid_mapping(total_nz,Nz_cp,zarray_full,z_idx_mapping,z_cp_stretched)
+    !! 
     CALL getatt(fidrst,"/data/input/grid" ,"deltap",deltap_cp)
     IF(deltap_cp .NE. deltap) &
       ERROR STOP "!! cannot change deltap in a restart, not implemented !!"
-    CALL getatt(fidrst,"/data/input/grid" , "Np", Np_cp)
-    CALL getatt(fidrst,"/data/input/grid" , "Nj", Nj_cp)
-    CALL getatt(fidrst,"/data/input/model",   "Na",   Na_cp)
+
+    !!!! Looking for the latest set in the full moments output (5D arrays)
     CALL getatt(fidrst,"/data/input/basic" , "start_iframe5d", n0)
     ! Find the last results of the checkpoint file by iteration
     n_ = n0+1
@@ -73,38 +100,36 @@ CONTAINS
     CALL getarr(fidrst, dset_name, moments_cp)
 
     moments     = 0._xp;
-    z: DO iz = 1,local_nz
-      izcp = iz + local_nz_offset
-      izi  = iz + ngz/2
-      x: DO ikx=1,local_nkx
-        ixcp = ikx+local_nkx_offset
-        y: DO iky=1,local_nky
-          iycp = iky + local_nky_offset
-          j: DO ij=1,local_nj
-            ijcp = ij + local_nj_offset
-            iji  = ij + ngj/2
-            p: DO ip=1,local_np
-              ipcp = ip + local_np_offset
-              ipi  = ip + ngp/2
-              a: DO ia=1,local_na
-                iacp = ia + local_na_offset
-                ! IF((iacp.LE.Na_cp).AND.(ipcp.LE.Np_cp).AND.(ijcp.LE.Nj_cp).AND.(iycp.LE.Nky_cp).AND.(ixcp.LE.Nkx_cp).AND.(izcp.LE.Nz_cp)) &
-                  moments(ia,ipi,iji,iky,ikx,izi,1) = moments_cp(iacp,ipcp,ijcp,iycp,ixcp,izcp)
-              ENDDO a
-            ENDDO p
-          ENDDO j
-        ENDDO y
-      ENDDO x
-    ENDDO z
-    ! DO it = 1,4
-    ! moments(1:local_Na,(1+ngp/2):(local_np+ngp/2),(1+ngj/2):(local_nj+ngj/2),1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),it) =&
-    ! moments_cp((1+local_Na_offset):(local_Na+local_Na_offset),&
-    !            (1+local_np_offset):(local_np+local_np_offset),&
-    !            (1+local_nj_offset):(local_nj+local_nj_offset),&
-    !            (1+local_nky_offset):(local_nky+local_nky_offset),&
-    !            (1+local_nkx_offset):(local_nkx+local_nkx_offset),&
-    !            (1+local_nz_offset):(local_nz+local_nz_offset))
-    ! ENDDO
+    x: DO ikx=1,local_nkx
+    ixcp = ikx+local_nkx_offset
+      y: DO iky=1,local_nky
+      iycp = iky + local_nky_offset
+        j: DO ij=1,local_nj
+        ijcp = ij + local_nj_offset
+        iji  = ij + ngj/2
+          p: DO ip=1,local_np
+          ipcp = ip + local_np_offset
+          ipi  = ip + ngp/2
+            a: DO ia=1,local_na
+            iacp = ia + local_na_offset
+            IF((iacp.LE.Na_cp).AND.(ipcp.LE.Np_cp).AND.(ijcp.LE.Nj_cp).AND.(iycp.LE.Nky_cp).AND.(ixcp.LE.Nkx_cp)) THEN
+              z: DO iz = 1,local_nz
+                izi     = iz + ngz/2           ! local interior index (for ghosted arrays)
+                izg     = iz + local_nz_offset ! global index
+                zi      = zarray(iz,ieven)           ! position (=zarray_full(izg))
+                zj_cp   = z_cp_stretched(z_idx_mapping(izg))
+                zjp1_cp = z_cp_stretched(z_idx_mapping(izg)+1)
+                zerotoone = (zi - zj_cp)/(zjp1_cp-zj_cp) ! weight for interpolation
+                moments(ia,ipi,iji,iky,ikx,izi,1) = &
+                  zerotoone       *moments_cp(iacp,ipcp,ijcp,iycp,ixcp,z_idx_mapping(izg))&
+                +(1._xp-zerotoone)*moments_cp(iacp,ipcp,ijcp,iycp,ixcp,z_idx_mapping(izg+1))
+              ENDDO z
+            ENDIF
+            ENDDO a
+          ENDDO p
+        ENDDO j
+      ENDDO y
+    ENDDO x
     !! deallocate the full moment variable
     DEALLOCATE(moments_cp)
     CALL closef(fidrst)
@@ -113,8 +138,60 @@ CONTAINS
     ! stop time measurement
     CALL cpu_time(timer_tot_2)
     CALL speak('** Total load time : '// str(timer_tot_2 - timer_tot_1)//' **')
-
   END SUBROUTINE load_moments
   !******************************************************************************!
-
+  ! Auxiliary routine
+  SUBROUTINE z_grid_mapping(Nz_new,Nz_cp,zarray_new,z_idx_mapping, z_cp_stretched)
+    ! Adapt check point to new zgrid when dz is kept constant
+    ! We adapt the data in z by stretching and interpolating it to the new grid
+    !                   o_o_o_o_o_o_o             checkpoint grid
+    !                   1 2 3 4 5 6 7
+    !
+    ! x_____x_____x_____x_____x_____x_____x_____x new grid
+    ! 1     2     3     4     5     6     7     8
+    ! V                                         V (start and end are fixed)
+    ! o______o______o______o______o______o______o stretched checkpoint grid (dz_s = Lz_new/Nzcp)
+    ! 1      2      3      4      5      6      7 
+    ! 
+    ! 1_____1_____2_____3_____4_____5_____6_____7 left index mapping in z_idx_mapping
+      INTEGER,  INTENT(IN) :: Nz_new, Nz_cp
+      REAL(xp), DIMENSION(Nz_new),   INTENT(IN) :: zarray_new
+      INTEGER,  DIMENSION(Nz_new+1), INTENT(OUT) :: z_idx_mapping
+      REAL(xp), DIMENSION(Nz_cp+1) , INTENT(OUT) :: z_cp_stretched
+      ! local variables
+      INTEGER :: iz_new, jz_cp
+      REAL(xp):: zi, zj_cp, dz_s
+      LOGICAL :: in_interval
+      ! stretched checkpoint grid interval 
+      dz_s  = (zarray_new(Nz_new)-zarray_new(1))/(Nz_cp-1) 
+      ! We loop over each new z grid points 
+      DO iz_new = 1,Nz_new
+        zi = zarray_new(iz_new) ! current position
+        ! Loop over the stretched checkpoint grid to find the right interval
+        zj_cp = zarray_new(1) ! init cp grid position
+        jz_cp = 1             ! init cp grid index
+        in_interval = .FALSE. ! flag to check if we stand in the interval
+        DO WHILE (.NOT. in_interval)
+          in_interval = (zi .GE. zj_cp) .AND. (zi .LE. zj_cp+dz_s)
+          ! Increment
+          zj_cp = zj_cp + dz_s
+          jz_cp = jz_cp + 1
+          IF(jz_cp .GT. Nz_cp+1) ERROR STOP "STOP: could not adapt grid .."
+        ENDDO ! per construction the while loop should always top
+        z_idx_mapping(iz_new) = jz_cp-1 ! The last index was one too much so we store the one before
+      ENDDO
+      ! we build explicitly the stretched cp grid for output and double check
+      DO jz_cp = 1,Nz_cp
+        z_cp_stretched(jz_cp) = zarray_new(1) + (jz_cp-1)*dz_s
+      ENDDO
+      ! Periodicity
+      z_cp_stretched(Nz_cp+1) = z_cp_stretched(1)
+      z_idx_mapping (Nz_new+1) = z_idx_mapping (1)
+      ! Check that the start and the end of the grids are the same
+      print*, z_cp_stretched
+      print*,zarray_new
+      print*, z_idx_mapping
+      IF(.NOT.(abs(z_cp_stretched(1)-zarray_new(1) .LT. 1e-3).AND.(abs(z_cp_stretched(Nz_cp)-zarray_new(Nz_new)).LT.1e-3))) &
+        ERROR STOP "Failed to stretch the cp grid"
+    END SUBROUTINE z_grid_mapping
 END MODULE restarts
