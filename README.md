@@ -6,7 +6,7 @@
 </figure>
 
 GYACOMO (Gyrokinetic Advanced Collision Moment solver, 2021)
-Copyright (C) 2022  A.C.D. Hoffmann
+Copyright (C) 2022 EPFL
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,6 +20,9 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+Author: Antoine C.D. Hoffmann
+Publication: Hoffmann, A., Frei, B., & Ricci, P. (2023). Gyrokinetic simulations of plasma turbulence in a Z-pinch using a moment-based approach and advanced collision operators. Journal of Plasma Physics, 89(2), 905890214. doi:10.1017/S0022377823000284
 
 # How to compile and run GYACOMO
 
