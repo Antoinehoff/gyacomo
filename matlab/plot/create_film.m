@@ -36,7 +36,7 @@ if hmax == hmin
     disp('Warning : h = hmin = hmax = const')
 else
 % Setup figure frame
-fig  = figure('Color','white','Position', toplot.DIMENSIONS.*[0 0 1.2 1]);
+fig  = figure('Color','white');%,'Position', toplot.DIMENSIONS.*[0.5 0.5 1.0 1]);
     if ~strcmp(OPTIONS.PLAN,'sx')
         pcolor(X,Y,FIELD(:,:,1)); % to set up
         if BWR
@@ -70,7 +70,7 @@ fig  = figure('Color','white','Position', toplot.DIMENSIONS.*[0 0 1.2 1]);
             if toplot.INTERP
                 shading interp; 
             end
-            set(pclr, 'edgecolor','none'); pbaspect(toplot.ASPECT);
+            set(pclr, 'edgecolor','none'); %pbaspect(toplot.ASPECT);
             if BWR
             colormap(bluewhitered)
             end

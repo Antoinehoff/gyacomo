@@ -70,32 +70,54 @@ for ia = 1:DATA.inputs.Na
     end
     % plots
     % scaling
-    if OPTIONS.NORMALIZED
-    plt = @(x,i) reshape(x(i,:)./max(x(i,:)),numel(p2j),numel(Time_));
-    else
-    plt = @(x,i) reshape(x(i,:),numel(p2j),numel(Time_));
-    end
-    if OPTIONS.ST
-        imagesc(Time_,p2j,plt(Na_ST,1:numel(p2j))); 
-        set(gca,'YDir','normal')        
-        xlabel('$t$'); ylabel(yname);
-        if ~isempty(ticks_labels)
-            yticks(p2j);
-            yticklabels(ticks_labels)
+    if OPTIONS.TAVG_2D
+        nt_half    = ceil(numel(Time_)/2);        
+        Napjz_tavg = mean(Napjz(:,:,nt_half:end),3);
+        x_ = DATA.grids.Parray;
+        y_ = DATA.grids.Jarray;
+        if OPTIONS.TAVG_2D_CTR
+            [YY,XX] = meshgrid(y_,x_);
+            surf(XX,YY,Napjz_tavg);
+        else
+            imagesc(x_,y_,Napjz_tavg');
+            set(gca,'YDir','normal')        
+            xlabel('$p$'); ylabel('$j$');
         end
-            if OPTIONS.FILTER
-            caxis([0 0.2]);
-            title('Relative fluctuation from the average');
+        clb = colorbar; colormap(jet);
+        clb.Label.String = '$\log\langle E(p,j) \rangle_t$';
+        clb.TickLabelInterpreter = 'latex';
+        clb.Label.Interpreter = 'latex';
+        clb.Label.FontSize= 18;
+    else
+        if OPTIONS.NORMALIZED
+        plt = @(x,i) reshape(x(i,:)./max(x(i,:)),numel(p2j),numel(Time_));
+        else
+        plt = @(x,i) reshape(x(i,:),numel(p2j),numel(Time_));
+        end
+        Nlabelmax = 15;
+        nskip = floor(numel(p2j)/Nlabelmax);
+        if OPTIONS.ST
+            imagesc(Time_,p2j,plt(Na_ST,1:numel(p2j))); 
+            set(gca,'YDir','normal')        
+            xlabel('$t$'); ylabel(yname);
+            if ~isempty(ticks_labels)
+                yticks(p2j(1:nskip:end));
+                yticklabels(ticks_labels(1:nskip:end))
             end
-            colorbar
-    else
-        colors_ = jet(numel(p2j));
-        for i = 1:numel(p2j)
-           semilogy(Time_,squeeze(Na_ST(i,:)),...
-               'DisplayName',ticks_labels{i},...
-               'color',colors_(i,:)); hold on;
+                if OPTIONS.FILTER
+                caxis([0 0.2]);
+                title('Relative fluctuation from the average');
+                end
+                colorbar
+        else
+            colors_ = jet(numel(p2j));
+            for i = 1:numel(p2j)
+               semilogy(Time_,squeeze(Na_ST(i,:)),...
+                   'DisplayName',ticks_labels{i},...
+                   'color',colors_(i,:)); hold on;
+            end
+        title(plotname)
         end
-    title(plotname)
     end
 top_title(DATA.paramshort)
 

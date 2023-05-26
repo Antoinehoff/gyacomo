@@ -13,14 +13,14 @@ addpath(genpath([gyacomodir,'matlab/load'])) % Add load module
 
 %% Set simulation parameters
 SIMID = 'dbg'; % Name of the simulation
-RUN = 1; % To run or just to load
+RUN = 0; % To run or just to load
 default_plots_options
 EXECNAME = 'gyacomo23_sp'; % single precision
 % EXECNAME = 'gyacomo23_dp'; % double precision
 
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-NU = 0.05;                 % Collision frequency
+NU = 0.001;                 % Collision frequency
 TAU = 1.0;                  % e/i temperature ratio
 K_Ne = 0*2.22;              % ele Density
 K_Te = 0*6.96;              % ele Temperature
@@ -31,13 +31,13 @@ NA = 1;                     % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
 BETA = 0.0;                 % electron plasma beta
 %% Set up grid parameters
-P = 16;
+P = 60;
 J = P/2;
-DT       = 1e-2;   % Time step
+DT   = 1e-2;   % Time step
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
 NX = 8;                     % real space x-gridpoints
-NY = 12;                    % real space y-gridpoints
+NY = 2;                    % real space y-gridpoints
 LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
 LY = 2*pi/0.1;              % Size of the squared frequency domain in y direction
 NZ = 24;                    % number of perpendicular planes (parallel grid)
@@ -71,7 +71,8 @@ CO        = 'DG';       % Collision operator (LB:L.Bernstein, DG:Dougherty, SG:S
 GKCO      = 1;          % Gyrokinetic operator
 ABCO      = 1;          % INTERSPECIES collisions
 INIT_ZF   = 0;          % Initialize zero-field quantities
-HRCY_CLOS = 'truncation';   % Closure model for higher order moments
+% HRCY_CLOS = 'truncation';   % Closure model for higher order moments
+HRCY_CLOS = 'monomial';   % Closure model for higher order moments
 DMAX      = -1;
 NLIN_CLOS = 'truncation';   % Nonlinear closure model for higher order moments
 NMAX      = 0;

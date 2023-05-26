@@ -10,20 +10,20 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 SIMID = 'p2_linear_new';  % Name of the simulation
 RERUN   = 0; % rerun if the data does not exist
 RUN     = 1;
-% KT_a = [3:0.5:6.5 6.96];
-KT_a = [6.96];
-P_a  = [2];
+nu_a = [1e-3,2e-3,5e-3,1e-2,2e-2,5e-2,1e-1];
+% KT_a = [5.5 6];
+% P_a  = [25];
 % P_a  = [3:1:29];
-% P_a  = 2:2:10;
+P_a  = 2:2:4;
 J_a  = floor(P_a/2);
 % collision setting
 CO        = 'DG';
-NU        = 1e-3;
-GKCO      = 0; % gyrokinetic operator
+K_T       = 6.96;
+GKCO      = 1; % gyrokinetic operator
 COLL_KCUT = 1.75;
 % model
 KIN_E   = 0;         % 1: kinetic electrons, 2: adiabatic electrons
-BETA    = 0;     % electron plasma beta
+BETA    = 1e-4;     % electron plasma beta
 % background gradients setting
 K_N    = 2.22;            % Density '''
 % Geometry
@@ -31,12 +31,12 @@ K_N    = 2.22;            % Density '''
 GEOMETRY= 's-alpha';
 SHEAR   = 0.8;    % magnetic shear
 % time and numerical grid
-DT0    = 5e-3;
+DT0    = 1e-2;
 TMAX   = 30;
 kymin  = 0.3;
 NY     = 2;
 % arrays for the result
-g_ky = zeros(numel(KT_a),numel(P_a),NY/2+1);
+g_ky = zeros(numel(nu_a),numel(P_a),NY/2+1);
 g_avg= g_ky*0;
 g_std= g_ky*0;
 % Naming of the collision operator
@@ -49,13 +49,13 @@ end
 j = 1;
 for P = P_a
 i = 1;
-for KT = KT_a
+for NU = nu_a
     %% PHYSICAL PARAMETERS
     TAU     = 1.0;            % e/i temperature ratio
     % SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
     SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
-    K_Te    = KT;            % ele Temperature '''
-    K_Ti    = KT;            % ion Temperature '''
+    K_Te    = K_T;            % ele Temperature '''
+    K_Ti    = K_T;            % ion Temperature '''
     K_Ne    = K_N;            % ele Density '''
     K_Ni    = K_N;            % ion Density gradient drive
     %% GRID PARAMETERS
@@ -134,16 +134,13 @@ for KT = KT_a
     data_ = {};
     try
         data_ = compile_results_low_mem(data_,LOCALDIR,00,00);
-        if numel(data_.Ts3D) < 10
-            data_.outfilenames = [];
-        end
     catch
         data_.outfilenames = [];
     end
     if RUN && (RERUN || isempty(data_.outfilenames))
         % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0; cd ../../../wk'])
-        % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
-        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 3 2 1 0; cd ../../../wk'])
+        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
+        % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 3 2 1 0; cd ../../../wk'])
     end
     data_    = compile_results_low_mem(data_,LOCALDIR,00,00);
     [data_.PHI, data_.Ts3D] = compile_results_3D(LOCALDIR,00,00,'phi');
@@ -200,20 +197,20 @@ y_ = g_ky(:,:,2);
 e_ = g_std(:,:,2);
 
 %%
-if(numel(KT_a)>1 && numel(P_a)>1)
+if(numel(nu_a)>1 && numel(P_a)>1)
 %% Save metadata
-ktmin = num2str(min(KT_a)); ktmax = num2str(max(KT_a));
+numin = num2str(min(nu_a)); numax = num2str(max(nu_a));
  pmin = num2str(min(P_a));   pmax = num2str(max(P_a));
 filename = [num2str(NX),'x',num2str(NZ),'_ky_',num2str(kymin),...
-            '_kT_',ktmin,'_',ktmax,...
-            '_P_',pmin,'_',pmax,'_',CONAME,'_',num2str(NU),'.mat'];
+            '_nu_',numin,'_',numax,...
+            '_P_',pmin,'_',pmax,'_',CONAME,'_kT_',num2str(K_T),'.mat'];
 metadata.name   = filename;
 metadata.kymin  = kymin;
-metadata.title  = ['$\nu_{',CONAME,'}=$',num2str(NU),', $\kappa_N=$',num2str(K_N),', $k_y=$',num2str(kymin)];
+metadata.title  = ['$\kappa_T=$',num2str(K_T),', $\kappa_N=$',num2str(K_N),', $k_y=$',num2str(kymin)];
 metadata.par    = [num2str(NX),'x1x',num2str(NZ)];
 metadata.nscan  = 2;
-metadata.s1name = '$\kappa_T$';
-metadata.s1     = KT_a;
+metadata.s1name = ['$\nu_{',CONAME,'}=$'];
+metadata.s1     = nu_a;
 metadata.s2name = '$P$, $J=\lfloor P/2 \rfloor$';
 metadata.s2     = P_a;
 metadata.dname  = '$\gamma c_s/R$';

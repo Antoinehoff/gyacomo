@@ -48,10 +48,19 @@ PARTITION  = '/misc/gyacomo23_outputs/';
 % resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_CBC/9x2x64x48x16/nu_0.1';
 % resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/9x5x128x64x24/nu_0.5';
 % resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/5x3x128x64x24/nu_0.5';
-resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/9x5x128x64x24/nu_0.5';
+% resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/9x5x128x64x24/nu_0.5';
 % resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/9x5x128x64x24_Lx200/nu_0.5';
-% resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_kT_5.3/9x2x128x64x24/nu_0.01';
+% resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_kT_5.3/9x5x128x64x24/nu_0.005';
+% resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/11x6x192x96x24/nu_0.1';
 
+% resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/9x5x192x96x24/nu_0.2';
+% resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/17x9x192x96x24/nu_0.2';
+
+% resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/9x5x192x96x24/nu_0.02';
+resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/17x9x192x96x24/nu_0.02';
+
+% resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/9x5x192x96x24/nu_0.2';
+% resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/17x9x192x96x24/nu_0.02';
 %% kT eff study
 % resdir = 'paper_2_GYAC23/kT_eff_study/1x3x128x64x24_kT_3.0/Lx120';
 % resdir = 'paper_2_GYAC23/kT_eff_study/1x3x128x64x24_kT_3.0/Lx240';
@@ -61,6 +70,16 @@ resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/9x5x128x64x24/nu_0.5
 % resdir = 'paper_2_GYAC23/kT_eff_study/7x3x128x64x24_kT_3.6/truncation';
 % resdir = 'paper_2_GYAC23/kT_eff_study/7x3x128x64x24_kT_3.6/dmax';
 
+%% dev
+% PARTITION='';
+% resdir = '/home/ahoffman/gyacomo/testcases/zpinch_3D';
+% resdir = '/home/ahoffman/gyacomo';
+%% CBC benchmark
+% resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_1e-3/3x2x128x64x24/kT_7.0';
+% resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_1e-3/5x3x128x64x24/kT_7.0';
+% resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_1e-3/9x5x128x64x24/kT_7.0';
+% resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_1e-3/17x9x128x64x24/kT_7.0';
+% resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_1e-3/31x16x128x64x24/kT_7.0';
  %%
 J0 = 00; J1 = 10;
 
@@ -87,13 +106,15 @@ end
 if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-[data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
+% [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
+% [data.Na00, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Na00');
+% data.Ni00 = reshape(data.Na00(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = '\phi^{NZ}';
 % options.NAME      = '\omega_z';
-% options.NAME     = 'N_i^{00}';
+options.NAME     = 'N_i^{00}';
 % options.NAME      = 's_{Ey}';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = 'Q_x';
@@ -104,7 +125,7 @@ options.PLAN      = 'xy';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
-options.TIME      =  data.Ts3D;
+options.TIME      =  data.Ts3D(1:1:end);
 % options.TIME      = [0:1500];
 data.EPS          = 0.1;
 data.a = data.EPS * 2000;
@@ -116,6 +137,7 @@ if 0
 %% fields snapshots
 % Options
 [data.Na00, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Na00');
+[data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 data.Ni00 = reshape(data.Na00(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 
 options.INTERP    = 0;
@@ -126,7 +148,7 @@ options.NAME      = 'N_i^{00}';
 % options.NAME      = '\phi';
 options.PLAN      = 'xy';
 options.COMP      = 'avg';
-options.TIME      = [10 50 80];
+options.TIME      = [100 200 300];
 options.RESOLUTION = 256;
 fig = photomaton(data,options);
 % save_figure(data,fig)
@@ -144,10 +166,12 @@ options.ST         = 1;
 options.NORMALIZED = 0;
 options.LOGSCALE   = 1;
 options.FILTER     = 0; %filter the 50% time-average of the spectrum from
+options.TAVG_2D    = 1; %Show a 2D plot of the modes, 50% time averaged
+options.TAVG_2D_CTR= 1; %make it contour plot
 fig = show_moments_spectrum(data,options);
 end
 
-if 1
+if 0
 %% Mode evolution
 [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 

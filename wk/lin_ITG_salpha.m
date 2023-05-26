@@ -31,8 +31,8 @@ NA = 1;                     % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
 BETA = 0.0;                 % electron plasma beta
 %% Set up grid parameters
-P = 12;
-J = 6;%P/2;
+P = 2;
+J = 1;%P/2;
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
 NX = 8;                     % real space x-gridpoints

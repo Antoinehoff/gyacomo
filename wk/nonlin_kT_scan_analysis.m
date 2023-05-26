@@ -1,14 +1,23 @@
 kN=2.22;
 figure
-ERRBAR = 0; LOGSCALE = 0;
-nustr = '1e-3';
-rootdir = ['/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_',nustr];GENE = 0;
-% rootdir = '/misc/gene_results/kT_scan_nu0'; GENE = 1;
+ERRBAR = 0; LOGSCALE = 1;
+% nustr = '1e-3'; mrkstyl='o';
+% nustr = '1e-2'; mrkstyl='^';
+nustr = '5e-2'; mrkstyl='s';
+GENE = 1;
+if ~GENE
+    rootdir = ['/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_',nustr];
+    % mrkstyl='v';
+else
+    rootdir = '/misc/gene_results/kT_scan_nu0'; 
+    mrkstyl='d';
+end
+Mmax = 6;
 msz = 10; lwt = 2.0;
-mrkstyl='v';
 xname = '$\kappa_T (\kappa_N=2.22)$';
 scanvarname = 'kT';
-scanvalues = [6.96,6.5:-0.5:4.0];
+scanvalues = [9.0 8.0 6.96,6.5:-0.5:4.0];
+tplotvalues= [9.0 8.0 6.96 6.5 6 5];
 % Get all subdirectories
 system(['ls -d ',rootdir,'/*/ > list.txt']);
 fid = fopen('list.txt');
@@ -22,19 +31,20 @@ while ischar(tline)
     tline = fgetl(fid);
     i_ = i_+1;
 end
-[~,ids] = sort(Ps);
 fclose(fid);
-system('command rm list.txt');5
-
+system('command rm list.txt');
+[~,ids] = sort(Ps);
 directories = directories(ids); Ps = Ps(ids);
+
 if GENE
-    clrs_ = jet(numel(directories));
+    % clrs_ = lines(numel(directories));
+    clrs_ = cool(numel(directories));
 else
     clrs_ = cool(numel(directories));
+    % clrs_ = lines(numel(directories));
 end
-M = numel(directories);
-
-% chi_kT_PJ = zeros(numel(scanvalues),M);
+M   = numel(directories);
+chi_kT_PJ = zeros(numel(scanvalues),M);
 for j = 1:M
      % Get all subdirectories
     system(['ls -d ',directories{j},'*/ > list.txt']);
@@ -61,6 +71,7 @@ for j = 1:M
     Chi_avg = 1:N;
     Chi_std = 1:N;
     data = {};
+    itp = 1;
     for i = 1:N
         subdir = subdirectories{i};
         if ~GENE
@@ -75,7 +86,17 @@ for j = 1:M
             data.Ts0D        = h5read([subdir,nrgfile],'/nrgions/time');
             data.HFLUX_X     = h5read([subdir,nrgfile],'/nrgions/Q_es');
         end
-        Trange  = data.Ts0D(end)*[0.3 1.0];
+        try
+            Trange  = data.Ts0D(end)*[0.5 1.0];
+        catch % if data does not exist put 0 everywhere
+            data.Ts0D = 0;
+            data.HFLUX_X = 0;
+            Trange = 0;
+            data.inputs.PMAX = Ps(j);
+            data.inputs.JMAX = Js(j);
+            data.inputs.K_T  = kTs(i);
+            data.inputs.K_N  = kN;
+        end
         %
         [~,it0] = min(abs(Trange(1)  -data.Ts0D)); 
         [~,it1] = min(abs(Trange(end)-data.Ts0D)); 
@@ -97,14 +118,19 @@ for j = 1:M
         end
         Chi_avg(i) = Qx_avg(i)./data.inputs.K_T/data.inputs.K_N;
         Chi_std(i) = Qx_std(i)./data.inputs.K_T/data.inputs.K_N;
-        x(i) = data.inputs.K_T;
-        subplot(N,2,2*i-1)
-        hold on;
-        Qx      = data.HFLUX_X;
-        T       = data.Ts0D;
-        plot(T,Qx,'DisplayName',...
-            ['$Q_{avg}=',sprintf('%2.2f',Qx_avg(i)),'\pm',sprintf('%2.2f',Qx_std(i)),'$'],...
-            'Color',clr_); hold on
+        x(i) = kTs(i);
+        if itp <= numel(tplotvalues)
+        if scanvalues(i) == tplotvalues(itp)
+            subplot(numel(tplotvalues),2,2*itp-1)
+            hold on;
+            Qx      = data.HFLUX_X;
+            T       = data.Ts0D;
+            plot(T,Qx,'DisplayName',...
+                ['$Q_{avg}=',sprintf('%2.2f',Qx_avg(i)),'\pm',sprintf('%2.2f',Qx_std(i)),'$'],...
+                'Color',clr_); hold on
+            itp = itp + 1;
+        end
+        end
     end
     % plot;
     subplot(222)
@@ -112,89 +138,69 @@ for j = 1:M
     if ERRBAR
     errorbar(x,Chi_avg,Chi_std,'DisplayName',...
         ['(',num2str(data.inputs.PMAX),',',num2str(data.inputs.JMAX),')'],...
-        'color',clr_,'Marker',mrkstyl); 
+        'color',clr_,'Marker',mrkstyl,'MarkerFaceColor',clr_,...
+        'MarkerSize',7,'LineWidth',2); 
     else
         plot(x,Chi_avg,'DisplayName',...
         ['(',num2str(data.inputs.PMAX),',',num2str(data.inputs.JMAX),')'],...
-        'color',clr_,'Marker',mrkstyl); 
+        'color',clr_,'Marker',mrkstyl,'MarkerFaceColor',clr_,...
+        'MarkerSize',7,'LineWidth',2); 
     end
     hold on;
-    % chi_kT_PJ(:,j) = Chi_avg;
+    chi_kT_PJ(1:N,j) = Chi_avg;
 end
-% Formatting
-for i = 1:N
-    subplot(N,2,2*i-1)
+% Formatting and add GENE ref
+for i = 1:numel(tplotvalues)
+    subplot(numel(tplotvalues),2,2*i-1)
     ylabel('$Q_x$');
     yl = ylim; xl = xlim;
-    title(['$\kappa_T=',num2str(x(i)),'$'],'Position',[xl(2)/2 yl(2)]);
+    title(['$R/L_T=',num2str(tplotvalues(i)),'$'],'Position',[xl(2)/4 yl(2)]);
     if LOGSCALE 
         set(gca,'YScale','log')
     else
         set(gca,'YScale','linear');
     end
-    if i<N
+    if i<numel(tplotvalues)
         xticklabels([]);
     else
         xlabel('$t c_s/R$');
     end
+    grid off
+    xlim([0 1000]);
 end
 subplot(222)
 hold on;
 Dim2000 = load('/home/ahoffman/gyacomo/wk/benchmark_and_scan_scripts/Dimits_2000_fig3_full_no_GF.txt');
-plot(Dim2000(:,1),Dim2000(:,2),'ok','DisplayName','Dimits 2000');
-xline(4.0,'DisplayName','Dimits $\kappa_T^{crit}$','color',[0 0 0])
+plot(Dim2000(:,1),Dim2000(:,2),'ok','DisplayName','Dimits 2000',...
+        'MarkerFaceColor','k','MarkerSize',7,'LineWidth',2);
+% xline(4.0,'DisplayName','Dimits $\kappa_T^{crit}$','color',[0 0 0])
+Dim2000 = load('/home/ahoffman/gyacomo/wk/benchmark_and_scan_scripts/Dimits_2000_fig3_dashed_low.txt');
+plot(Dim2000(:,1),Dim2000(:,2),'--k','DisplayName','Dimits 2000 fit');
 if LOGSCALE
     set(gca,'YScale','log')
 end
-	%-------------- GENE ---------------
-kT_Qi_GENE = ...
-    [...
-     13. 2.7e+2 2.2e+1;...%128x64x16x24x12 kymin=0.02 (large box)
-     11. 1.9e+2 1.7e+1;...%128x64x16x24x12 kymin=0.02 (large box)
-     9.0 1.1e+2 4.2e+1;...%128x64x16x24x12 kymin=0.05
-     7.0 3.5e+1 4.6e+0;...%128x64x16x24x12 kymin=0.05
-     5.3 9.7e+0 6.8e+0;...%128x64x16x24x12 kymin=0.05
-     4.5 2.3e-1 5.0e-2;...%128x64x16x24x12 kymin=0.05
-    ];
-y_ = kT_Qi_GENE  (:,2)./kT_Qi_GENE  (:,1)./kN;
-e_ = kT_Qi_GENE  (:,3)./kT_Qi_GENE  (:,1)./kN;
-plot(kT_Qi_GENE (:,1),y_,...
-    '+-.k','DisplayName','GENE 24x12',...
-    'MarkerSize',msz,'LineWidth',lwt); hold on
-kT_Qi_GENE = ...
-    [...
-     6.5 1.9e+0;...%128x64x16x32x16 kymin=0.05
-     6.0 1.0e-1;...%128x64x16x32x16 kymin=0.05
-     5.5 3.9e-2;...%128x64x16x32x16 kymin=0.05
-     5.3 1.4e-2;...%128x64x16x32x16 kymin=0.05
-     4.5 1.2e-2;...%128x64x16x32x16 kymin=0.05
-     4.0 2.9e-6;...%128x64x16x32x16 kymin=0.05
-    ];
-y_ = kT_Qi_GENE  (:,2);
-plot(kT_Qi_GENE (:,1),y_,...
-    '*-.k','DisplayName','GENE 32x16',...
-    'MarkerSize',msz,'LineWidth',lwt); hold on
-ylabel('$\chi$');
-xlabel(xname);
+
+ylabel('$\chi L_N/\rho_s^2 c_s$');
+xlabel('$R/L_T$');
 title(['$\nu_{DGDK}=$',nustr])
 legend('show');
 legend('Location','northwest')
-xlim([3.5 8]);
-ylim([0 3.5]);
+xlim([3.5 10]);
+grid on
+% ylim([0 3.5]);
 
+if 0
 %%
 % subplot(224)
-% figure
-% clrs_ = cool(N);
-% % [PJ,KT] = meshgrid(Ps,scanvalues);
-% % surf(KT,PJ,chi_kT_PJ)
-% for i=1:N
-%     target = chi_kT_PJ(i,end);
-%     % loglog(Ps,abs(chi_kT_PJ(i,:)-target)/target,'o--','color',clrs_(i,:),...
-%         % 'DisplayName',['$\kappa_T=$',num2str(x(i))]); hold on
-%     semilogy(Ps,abs(chi_kT_PJ(i,:)-target)/target,'o--','color',clrs_(i,:),...
-%         'DisplayName',['$\kappa_T=$',num2str(x(i))]); hold on
-% end
-% % ylabel('error in \%')
-% ylabel('$\chi$')
-% xlabel('P (J=P/2)');
+figure
+[PJ,KT] = meshgrid(Ps,scanvalues);
+contourf(KT,PJ,(chi_kT_PJ),10)
+% pclr=pcolor(KT,PJ,chi_kT_PJ);
+xlabel('$R/L_T$')
+ylabel('P (J=P/2)');
+clb=colorbar; 
+colormap(bluewhitered)
+clb.Label.String = '$\chi$';
+clb.Label.Interpreter = 'latex';
+clb.Label.FontSize= 18;
+end

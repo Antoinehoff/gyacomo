@@ -1,24 +1,14 @@
 kN=2.22;
 figure
-ERRBAR = 0; LOGSCALE = 0;
-% resdir = '5x3x128x64x24'; clr_ = clrs_(1,:);   CBC_res = [44.08 06.51]; kTthresh = 2.8;
-% resdir = '7x4x128x64x24'; clr_ = clrs_(2,:);   CBC_res = [44.08 06.51]; kTthresh = 2.9;
-% resdir = '9x2x128x64x24'; clr_ = clrs_(3,:); CBC_res = [37.60 04.65]; kTthresh = 3.3;
-% resdir = '9x5x128x64x24'; clr_ = clrs_(3,:); CBC_res = [37.60 04.65]; kTthresh = 3.3;
-% resdir = '9x2x128x64x24_Lx200'; clr_ = clrs_(3,:); CBC_res = [37.60 04.65]; kTthresh = 3.3;
-% resdir = '9x5x128x64x24_Lx200'; clr_ = clrs_(3,:); CBC_res = [37.60 04.65]; kTthresh = 3.3;
-% resdir = '11x6x128x64x24'; clr_ = clrs_(5,:); kTthresh = 3.3;
-% resdir = '13x2x128x64x24'; clr_ = clrs_(4,:); kTthresh = 4.4;
-% resdir = '13x5x128x64x24'; clr_ = clrs_(4,:); kTthresh = 3.9;
-% resdir = '17x9x128x64x24'; clr_ = clrs_(7,:); kTthresh = 3.9;
+ERRBAR = 1; LOGSCALE = 0;
 resstr={};
 msz = 10; lwt = 2.0;
 % CO = 'DGGK'; mrkstyl='d';
-% CO = 'SGGK'; mrkstyl='s'; 
-CO = 'LDGK'; mrkstyl='o';
-% GRAD = 'kT_7.0';
-GRAD = 'kT_5.3';
-% GRAD = 'kT_4.5';
+CO = 'SGGK'; mrkstyl='s'; 
+% CO = 'LDGK'; mrkstyl='o';
+% GRAD = 'kT_7.0'; kT = 6.96;
+GRAD = 'kT_5.3'; kT = 5.3;
+% GRAD = 'kT_4.5'; kT = 4.5;
 xname = ['$\nu_{',CO,'}$ '];
 titlename = [CO,', ',GRAD];
 scanvarname = 'nu';
@@ -44,7 +34,8 @@ fclose(fid);
 system('command rm list.txt');
 
 directories = directories(ids); Ps = Ps(ids);
-clrs_ = cool(numel(directories));
+% clrs_ = cool(numel(directories));
+clrs_ = lines(numel(directories));
 
 for j = 1:numel(directories)
      % Get all subdirectories
@@ -76,7 +67,20 @@ for j = 1:numel(directories)
     for i = 1:N
         subdir = subdirectories{i};
         data    = compile_results_low_mem(data,subdir,00,10);
-        Trange  = data.Ts0D(end)*[0.3 1.0];
+        try
+            Trange  = data.Ts0D(end)*[0.5 1.0];
+        catch % if data does not exist put 0 everywhere
+            data.Ts0D = 0;
+            data.HFLUX_X = 0;
+            Trange = 0;
+            data.inputs.PMAX = Ps(j);
+            data.inputs.JMAX = Js(j);
+            data.inputs.K_T  = kT;
+            data.inputs.K_N  = kN;
+            data.inputs.NU   = nus(i);
+        end
+            Trange  = data.Ts0D(end)*[0.5 1.0];
+            % Trange  = [200 400];
         %
         [~,it0] = min(abs(Trange(1)  -data.Ts0D)); 
         [~,it1] = min(abs(Trange(end)-data.Ts0D)); 
@@ -102,7 +106,7 @@ for j = 1:numel(directories)
     if ERRBAR
     errorbar(x,Chi_avg,Chi_std,'DisplayName',...
         ['(',num2str(data.inputs.PMAX),',',num2str(data.inputs.JMAX),')'],...
-        'color',clr_,'Marker',mrkstyl); hold on;
+        'color',clr_,'MarkerFaceColor','k','MarkerSize',7,'LineWidth',2); hold on;
     else
         plot(x,Chi_avg,'DisplayName',...
         ['(',num2str(data.inputs.PMAX),',',num2str(data.inputs.JMAX),')'],...
@@ -116,7 +120,7 @@ for i = 1:N
     ylabel('$Q_x$');
     yl = ylim; xl = xlim;
     yl(1) = 0; ylim(yl);
-    title(['$\nu =',num2str(x(i)),'$'],'Position',[xl(2)/2 yl(2)]);
+    title(['$\nu =',num2str(nus(i)),'$'],'Position',[xl(2)/2 yl(2)]);
     if LOGSCALE 
         set(gca,'YScale','log')
     else
@@ -133,9 +137,12 @@ end
 subplot(122)
 hold on;
 Lin1999 = load('/home/ahoffman/gyacomo/wk/benchmark_and_scan_scripts/Lin_1999_fig2.txt');
-plot(Lin1999(:,1)/sqrt(2),Lin1999(:,2),'--ok','DisplayName','Lin1999');
+epsilon   = 0.18; q0 = 1.4;
+nuLINvsGM = 0.5/epsilon^(3/2)*q0;
+plot(Lin1999(:,1)/nuLINvsGM,Lin1999(:,2),'--ok','DisplayName','Lin1999');
+yline(0.035348,'--k','DisplayName','$\nu\sim 0$')
 set(gca,'XScale','log')
-xlim([min(x)*0.8 max(x)*1.2])
+xlim([ 1e-3 1])
 ylabel('$\chi$');
 xlabel(xname);
 title(titlename)

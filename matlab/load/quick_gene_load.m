@@ -76,11 +76,16 @@ path = '/home/ahoffman/gene/linear_CBC_results/';
 % fname = 'CBC_salpha_nz_24_nv_scan_nw_16_kine.txt';
 % fname = 'CBC_miller_nz_24_nv_scan_nw_16_kine.txt';
 %---------- CBC
-% fname = 'CBC_salpha_nx_8_nz_24_nv_36_nw_16_adiabe.txt';
-% fname = 'CBC_salpha_nx_8_nz_18_nv_18_nw_8_adiabe.txt';
 % fname = 'CBC_salpha_nx_8_nz_18_nv_12_nw_8_adiabe.txt';
-% fname = 'CBC_salpha_nx_8_nz_24_nv_60_nw_30_adiabe.txt';
-fname = 'kT_5.3_salpha_nx_8_nz_24_nv_60_nw_30_adiabe.txt';
+% fname = 'CBC_salpha_nx_8_nz_18_nv_18_nw_8_adiabe.txt';
+
+% fname = 'CBC_salpha_nx_8_nz_24_nv_8_nw_4_adiabe.txt';
+% fname = 'CBC_salpha_nx_8_nz_24_nv_16_nw_8_adiabe.txt';
+% fname = 'CBC_salpha_nx_8_nz_24_nv_36_nw_16_adiabe.txt';
+fname = 'CBC_salpha_nx_8_nz_24_nv_48_nw_16_adiabe.txt';
+
+% fname = 'kT_5.3_salpha_nx_8_nz_24_nv_60_nw_30_adiabe.txt';
+
 % fname = 'CBC_salpha_nx_8_nz_24_nv_36_nw_16_kine.txt';
 % fname = 'CBC_miller_nx_20_nz_32_nv_32_nw_12_adiabe.txt';
 % fname = 'CBC_miller_nx_8_nz_24_nv_36_nw_16_adiabe.txt';

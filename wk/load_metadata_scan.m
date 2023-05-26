@@ -49,9 +49,26 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0'
 % datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_10_LDGK_0.05.mat';
 
 % datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_DGDK_0.1.mat';
-datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_DGGK_0.1.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_DGGK_0.1.mat';
 % datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_SGGK_0.1.mat';
 % datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_10_LDGK_0.1.mat';
+
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_2_J_1_kT_3_5_nu_0.001_0.1_DGGK.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_2.5_4.5_nu_0.001_0.1_DGGK.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_6_J_3_kT_2.5_4.5_nu_0.001_0.1_DGGK.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_8_J_4_kT_2.5_4.5_nu_0.001_0.1_DGGK.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.3_P_16_J_8_kT_2.5_4.5_nu_0.001_0.1_DGGK.mat';
+
+% datafname = 'p2_linear_new/8x24_ky_0.05_1_P_2_64_DGDK_0.001_kT_6.96.mat';
+%% ky pj scan
+% datafname = 'p2_linear_new/8x24_ky_0.05_1_P_2_64_DGDK_0.001_kT_6.96.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.05_1_P_2_48_DGDK_0.001_kT_6.96.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.05_1_P_2_16_DGGK_0.01_kT_5.3.mat';
+% datafname = 'p2_linear_new/8x24_ky_0.05_1_P_2_16_SGGK_0.01_kT_5.3.mat';
+datafname = 'p2_linear_new/8x24_ky_0.05_1_P_2_10_LDGK_0.01_kT_5.3.mat';
+%% Data for the paper :
+% Collisionless kT threshold
+% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_30_DGDK_0.001.mat';
 
 %% Chose if we filter gamma>0.05
 FILTERGAMMA = 1;
@@ -63,18 +80,20 @@ if FILTERGAMMA
     d.data = d.data.*(d.data>0.025);
     d.err  = d.err.*(d.data>0.025);
 end
-if 1
+if 0
 %% Pcolor of the peak
 figure;
 % [XX_,YY_] = meshgrid(d.s1,d.s2);
 [XX_,YY_] = meshgrid(1:numel(d.s1),1:numel(d.s2));
 pclr=imagesc_custom(XX_,YY_,d.data'.*(d.data>0)');
+% pclr=contourf(1:numel(d.s1),1:numel(d.s2),d.data'.*(d.data>0)');
+% pclr=surf(1:numel(d.s1),1:numel(d.s2),d.data'.*(d.data>0)');
 title(d.title);
 xlabel(d.s1name); ylabel(d.s2name);
-set(gca,'XTicklabel',d.s1)
-set(gca,'YTicklabel',d.s2)
+set(gca,'XTick',1:numel(d.s1),'XTicklabel',d.s1)
+set(gca,'YTick',1:numel(d.s2),'YTicklabel',d.s2)
 colormap(jet)
-% colormap(bluewhitered)
+colormap(bluewhitered)
 clb=colorbar; 
 clb.Label.String = '$\gamma c_s/R$';
 clb.Label.Interpreter = 'latex';
@@ -99,9 +118,11 @@ xlabel(d.s1name); ylabel(d.dname);title(d.title);
 xlim([d.s1(1) d.s1(end)]);
 colormap(colors_);
 clb = colorbar;
-caxis([d.s2(1)-0.5,d.s2(end)+0.5]);
+% caxis([d.s2(1)-0.5,d.s2(end)+0.5]);
+clim([1 numel(d.s2)+1]);
 clb.Ticks=linspace(d.s2(1),d.s2(end),numel(d.s2));
-clb.YTick=d.s2;
+clb.Ticks    =1.5:numel(d.s2)+1.5;
+clb.TickLabels=d.s2;
 clb.Label.String = d.s2name;
 clb.Label.Interpreter = 'latex';
 clb.Label.FontSize= 18;
@@ -169,29 +190,38 @@ if 0
 figure;  i_ = 0;
 % target_ = 2.72724991618068013377e-01; % Value for nuDGDK = 1.0, kT=6.96, (40,20), Nkx=8
 % target_ = 2.79666916212537142172e-01; % Value for nuDGDK = 0.05, kT=6.96, (40,20), Nkx=8
-target_ = 2.73048910051283844069e-01; % Value for nuDGDK = 0.0, kT=6.96, (40,20), Nkx=8
+% target_ = 2.71455e-01; % Value for nuDGDK = 0.001, kT=6.96, (40,20), Nkx=8
+% target_ = 1.39427e-01; % Value for nuDGDK = 0.001, kT=5.3, (30,16), Nkx=8
+target_ = 2.72510405826983714839e-01  % Value for nuDGDK = 0.001, kT=6.96, (50,25), Nkx=8
+% target_ = 2.73048910051283844069e-01; % Value for nuDGDK = 0.0, kT=6.96, (40,20), Nkx=8
 % target_ = 0.25*(d.data(end,end)+d.data(end-i_,end)+d.data(end,end-i_)+d.data(end-i_,end-i_));
 % eps_    = log(abs(target_ - d.data)/abs(target_));
 eps_    = max(-10,log(abs(target_ - d.data)/abs(target_)));
 sign_   = 1;%sign(d.data - target_);
 eps_ = d.data;
 for i = 1:numel(d.s1)
-    target_ = d.data(i,end);
-    eps_(i,:) = log(abs(target_ - d.data(i,1:end)));
-    if target_ > 0
-%     eps_(i,:) = max(-12,log(abs(target_ - d.data(i,1:end))/abs(target_)));
-%     eps_(i,:) = log(abs(target_ - d.data(i,1:end))/abs(target_));
-%     eps_(i,:) = min(100,100*abs(target_ - d.data(i,1:end))/abs(target_));
-    else
+    for j = 1:numel(d.s2)
+        % target_ = d.data(i,end);
+        % target_ = d.data(i,end);
+        % target_ = d.data(end,j);
+        eps_(i,j) = log(abs(target_ - d.data(i,j))/target);
+        if target_ > 0
+    %     eps_(i,:) = max(-12,log(abs(target_ - d.data(i,1:end))/abs(target_)));
+    %     eps_(i,:) = log(abs(target_ - d.data(i,1:end))/abs(target_));
+    %     eps_(i,:) = min(100,100*abs(target_ - d.data(i,1:end))/abs(target_));
+        else
+        end
     end
 end
 [XX_,YY_] = meshgrid(d.s1,d.s2);
 [XX_,YY_] = meshgrid(1:numel(d.s1),1:numel(d.s2));
 pclr=imagesc_custom(XX_,YY_,eps_'.*(d.data>0)'.*sign_');
+% pclr=contourf(1:numel(d.s1),1:numel(d.s2),eps_'.*(d.data>0)'.*sign_',5);
+% pclr=surf(1:numel(d.s1),1:numel(d.s2),eps_'.*(d.data>0)'.*sign_');
 title(d.title);
 xlabel(d.s1name); ylabel(d.s2name);
-set(gca,'XTicklabel',d.s1)
-set(gca,'YTicklabel',d.s2)
+set(gca,'XTick',1:numel(d.s1),'XTicklabel',d.s1)
+set(gca,'YTick',1:numel(d.s2),'YTicklabel',d.s2)
 % colormap(jet)
 colormap(bluewhitered)
 % caxis([-10, 0]);

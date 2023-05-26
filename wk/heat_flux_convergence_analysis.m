@@ -1,3 +1,5 @@
+figure 
+hold on
 if 0
     %% GYAC Local low res
     % resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/local_runs/nu=0.05/3x2x64x48x16/CBC/';
@@ -22,7 +24,7 @@ if 0
     legend('show')
     disp(['$Q_{avg}=',sprintf('%2.2f',Qavg),'\pm',sprintf('%2.2f',Qstd),'$']);
 end
-if 1
+if 0
 %% Manually gathered data
 QvsPJ = [...
    %vp mu  Qxav  Qxer   kT
@@ -36,7 +38,6 @@ QvsPJ = [...
     11 06 27.47 05.48 6.96;...
     13 05 16.45 04.63 6.96;...
 ];
-figure
 errorbar(QvsPJ(:,1).*QvsPJ(:,2),QvsPJ(:,3),QvsPJ(:,4),'--s',...
     'DisplayName','GYAC 64x48x16 ($\nu_{DGDK}=0.001$)'); hold on
 end    
@@ -62,7 +63,9 @@ if 0
 %     resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/CBC/7x4x128x64x24/';
 %     resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/local_runs/7x4x128x64x24/CBC_L120/';
 %     resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/local_runs/7x4x128x64x24/CBC_L180/';
-%     resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/CBC/21x6x192x96x24/';
+    % resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/CBC/21x6x192x96x24/';
+    % resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/CBC/21x6x192x96x24/';
+    % resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/CBC/21x6x192x96x24/';
     data = {};
     data    = compile_results_low_mem(data,resdir,00,10);
     % fast heat flux analysis

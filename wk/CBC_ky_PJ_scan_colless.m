@@ -4,26 +4,27 @@ addpath(genpath([gyacomodir,'matlab'])) % ... add
 addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
 addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0';
-EXECNAME = 'gyacomo23_sp';
+% EXECNAME = 'gyacomo23_sp';
+EXECNAME = 'gyacomo23_dp';
+% EXECNAME = 'gyacomo23_debug';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%
 SIMID = 'p2_linear_new';  % Name of the simulation
-RERUN   = 0; % rerun if the data does not exist
+RERUN   = 0; % rerun if the  data does not exist
 RUN     = 1;
-% KT_a = [3:0.5:6.5 6.96];
-KT_a = [6.96];
-P_a  = [2];
-% P_a  = [3:1:29];
-% P_a  = 2:2:10;
-J_a  = floor(P_a/2);
+K_T = 6.96;
+% P_a = [2 4 8 16 32 48];
+P_a = 64;
+% ky_a= [0.05:0.05:1.0];
+ky_a= [0.25:0.05:0.65];
 % collision setting
 CO        = 'DG';
-NU        = 1e-3;
 GKCO      = 0; % gyrokinetic operator
 COLL_KCUT = 1.75;
+NU        = 1e-3;
 % model
 KIN_E   = 0;         % 1: kinetic electrons, 2: adiabatic electrons
-BETA    = 0;     % electron plasma beta
+BETA    = 1e-4;     % electron plasma beta
 % background gradients setting
 K_N    = 2.22;            % Density '''
 % Geometry
@@ -31,12 +32,10 @@ K_N    = 2.22;            % Density '''
 GEOMETRY= 's-alpha';
 SHEAR   = 0.8;    % magnetic shear
 % time and numerical grid
-DT0    = 5e-3;
+DT0    = 2e-3;
 TMAX   = 30;
-kymin  = 0.3;
-NY     = 2;
 % arrays for the result
-g_ky = zeros(numel(KT_a),numel(P_a),NY/2+1);
+g_ky = zeros(numel(ky_a),numel(P_a),NY/2+1);
 g_avg= g_ky*0;
 g_std= g_ky*0;
 % Naming of the collision operator
@@ -45,27 +44,26 @@ if GKCO
 else
     CONAME = [CO,'DK'];
 end
-    
 j = 1;
 for P = P_a
 i = 1;
-for KT = KT_a
+for ky = ky_a
     %% PHYSICAL PARAMETERS
     TAU     = 1.0;            % e/i temperature ratio
     % SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
     SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
-    K_Te    = KT;            % ele Temperature '''
-    K_Ti    = KT;            % ion Temperature '''
+    K_Te    = K_T;            % ele Temperature '''
+    K_Ti    = K_T;            % ion Temperature '''
     K_Ne    = K_N;            % ele Density '''
     K_Ni    = K_N;            % ion Density gradient drive
     %% GRID PARAMETERS
-    J = floor(P/2);
     DT = DT0/sqrt(J);
     PMAX   = P;     % Hermite basis size
-    JMAX   = J;     % Laguerre "
+    JMAX   = P/2;     % Laguerre "
     NX      = 8;    % real space x-gridpoints
+    NY      = 2;
     LX      = 2*pi/0.8;   % Size of the squared frequency domain
-    LY      = 2*pi/kymin;     % Size of the squared frequency domain
+    LY      = 2*pi/ky;     % Size of the squared frequency domain
     NZ      = 24;    % number of perpendicular planes (parallel grid)
     NPOL    = 1;
     SG      = 0;     % Staggered z grids option
@@ -105,6 +103,7 @@ for KT = KT_a
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % unused
+    NA      = 1;
     ADIAB_E = (NA==1);
     HD_CO   = 0.0;    % Hyper diffusivity cutoff ratio
     MU      = 0.0; % Hyperdiffusivity coefficient
@@ -134,15 +133,13 @@ for KT = KT_a
     data_ = {};
     try
         data_ = compile_results_low_mem(data_,LOCALDIR,00,00);
-        if numel(data_.Ts3D) < 10
-            data_.outfilenames = [];
-        end
+        Ntime = numel(data_.Ts0D);
     catch
         data_.outfilenames = [];
     end
-    if RUN && (RERUN || isempty(data_.outfilenames))
+    if RUN && (RERUN || isempty(data_.outfilenames) || Ntime < 10)
         % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0; cd ../../../wk'])
-        % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
+        % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 2 2 1 0; cd ../../../wk'])
         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 3 2 1 0; cd ../../../wk'])
     end
     data_    = compile_results_low_mem(data_,LOCALDIR,00,00);
@@ -200,26 +197,24 @@ y_ = g_ky(:,:,2);
 e_ = g_std(:,:,2);
 
 %%
-if(numel(KT_a)>1 && numel(P_a)>1)
+if(numel(ky_a)>1 && numel(P_a)>1)
 %% Save metadata
-ktmin = num2str(min(KT_a)); ktmax = num2str(max(KT_a));
- pmin = num2str(min(P_a));   pmax = num2str(max(P_a));
-filename = [num2str(NX),'x',num2str(NZ),'_ky_',num2str(kymin),...
-            '_kT_',ktmin,'_',ktmax,...
-            '_P_',pmin,'_',pmax,'_',CONAME,'_',num2str(NU),'.mat'];
+ pmin  = num2str(min(P_a));   pmax = num2str(max(P_a));
+ kymin = num2str(min(ky_a));  kymax= num2str(max(ky_a));
+filename = [num2str(NX),'x',num2str(NZ),'_ky_',kymin,'_',kymax,...
+            '_P_',pmin,'_',pmax,'_',CONAME,'_',num2str(NU),'_kT_',num2str(K_T),'.mat'];
 metadata.name   = filename;
-metadata.kymin  = kymin;
-metadata.title  = ['$\nu_{',CONAME,'}=$',num2str(NU),', $\kappa_N=$',num2str(K_N),', $k_y=$',num2str(kymin)];
+metadata.kymin  = ky;
+metadata.title  = ['$\nu_{',CONAME,'}=$',num2str(NU),'$\kappa_T=$',num2str(K_T),', $\kappa_N=$',num2str(K_N)];
 metadata.par    = [num2str(NX),'x1x',num2str(NZ)];
 metadata.nscan  = 2;
-metadata.s1name = '$\kappa_T$';
-metadata.s1     = KT_a;
-metadata.s2name = '$P$, $J=\lfloor P/2 \rfloor$';
+metadata.s2name = '$P$';
 metadata.s2     = P_a;
+metadata.s1name = '$ky$';
+metadata.s1     = ky_a;
 metadata.dname  = '$\gamma c_s/R$';
 metadata.data   = y_;
 metadata.err    = e_;
-metadata.date   = date;
 save([SIMDIR,filename],'-struct','metadata');
 disp(['saved in ',SIMDIR,filename]);
 clear metadata tosave

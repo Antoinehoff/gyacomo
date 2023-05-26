@@ -9,16 +9,17 @@ EXECNAME = 'gyacomo23_sp';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%
 SIMID = 'p2_linear_new';  % Name of the simulation
-RERUN   = 1; % rerun if the data does not exist
+RERUN   = 0; % rerun if the data does not exist
 RUN     = 1;
-KT_a = [3.5 4.0 4.5 5.0 5.5 6.0 6.5 6.96];
-NU_a = [0 0.001 0.002 0.005 0.01 0.02 0.05 0.1 0.2 0.5];
-% KT_a = 3.5;
-% NU_a = 0.5;
-P    = 8;
-J    = 4;
+KT_a = [2.5 3.0 3.5 4.0 4.5 5.0];
+% KT_a = [3.0 3.5 4.0 4.5];
+NU_a = [1e-3 2e-3 5e-3 1e-2 2e-2 5e-2 1e-1 2e-1 5e-1 1e+0];
+% KT_a = 4.5;
+% NU_a = 0.01;
+P    = 16;
+J    = P/2;
 % collision setting
-CO        = 'LD';
+CO        = 'DG';
 GKCO      = 1; % gyrokinetic operator
 COLL_KCUT = 1.75;
 % model
@@ -31,7 +32,7 @@ K_N    = 2.22;            % Density '''
 GEOMETRY= 's-alpha';
 SHEAR   = 0.8;    % magnetic shear
 % time and numerical grid
-DT     = 1e-2;
+DT     = 5e-3;
 TMAX   = 30;
 kymin  = 0.3;
 NY     = 2;
@@ -136,8 +137,8 @@ for KT = KT_a
         data_.outfilenames = [];
     end
     if RUN && (RERUN || isempty(data_.outfilenames))
-        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0; cd ../../../wk'])
-        % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
+        % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0; cd ../../../wk'])
+        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
 %         system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 3 2 1 0; cd ../../../wk'])
     end
     data_    = compile_results_low_mem(data_,LOCALDIR,00,00);
