@@ -188,9 +188,6 @@ CONTAINS
       z_cp_stretched(Nz_cp+1) = z_cp_stretched(1)
       z_idx_mapping (Nz_new+1) = z_idx_mapping (1)
       ! Check that the start and the end of the grids are the same
-      print*, z_cp_stretched
-      print*,zarray_new
-      print*, z_idx_mapping
       IF(.NOT.(abs(z_cp_stretched(1)-zarray_new(1) .LT. 1e-3).AND.(abs(z_cp_stretched(Nz_cp)-zarray_new(Nz_new)).LT.1e-3))) &
         ERROR STOP "Failed to stretch the cp grid"
     END SUBROUTINE z_grid_mapping

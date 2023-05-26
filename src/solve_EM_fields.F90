@@ -82,15 +82,6 @@ CONTAINS
     ENDIF
     ! Transfer phi to all the others process along p
     CALL manual_3D_bcast(phi,local_nky,local_nkx,local_nz+ngz)
-    ! print*, SUM(ABS(moments(1,:,:,:,:,:,updatetlevel)))
-    ! print*, SUM(REAL(moments(1,:,:,:,:,:,updatetlevel)))
-    ! print*, SUM(IMAG(moments(1,:,:,:,:,:,updatetlevel)))
-    ! print*, SUM(REAL(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
-    ! print*, SUM(REAL(phi(:,:,:)))
-    ! print*, SUM(IMAG(phi(:,:,(1+ngz/2):(local_nz+ngz/2))))
-    ! print*, SUM(inv_poisson_op(:,:,:))
-    ! print*, rhtot
-    ! stop
   END SUBROUTINE poisson
 
   SUBROUTINE ampere
