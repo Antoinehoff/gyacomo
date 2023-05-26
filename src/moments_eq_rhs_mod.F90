@@ -76,6 +76,8 @@ CONTAINS
                   ! ddz derivative for Landau damping term
                   Ldamp     = xnapp1j(ia,ip) * ddz_napj(ia,ipi+1,iji,iky,ikx,iz) &
                             + xnapm1j(ia,ip) * ddz_napj(ia,ipi-1,iji,iky,ikx,iz)
+                  ! neglect Landau damping in temperature equation and higher moments as in Ivanov 2022
+                  IF(RM_LD_T_EQ .AND. ((j_int .GT. 0) .OR. (p_int .GT. 1))) Ldamp = 0._xp 
                   ! Mirror terms
                   Tnapp1j   = ynapp1j  (ia,ip,ij) * interp_napj(ia,ipi+1,iji  ,iky,ikx,iz)
                   Tnapp1jm1 = ynapp1jm1(ia,ip,ij) * interp_napj(ia,ipi+1,iji-1,iky,ikx,iz)

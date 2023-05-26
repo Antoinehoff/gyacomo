@@ -26,6 +26,8 @@ MODULE model
   REAL(xp), PUBLIC, PROTECTED ::   tau_e = 1.0        ! electron temperature ratio for adiabatic electrons
   ! Auxiliary variable
   LOGICAL,  PUBLIC, PROTECTED ::      EM =  .false.   ! Electromagnetic effects flag
+  ! Removes Landau damping in temperature and higher equation (Ivanov 2022)
+  LOGICAL,  PUBLIC, PROTECTED :: RM_LD_T_EQ = .false.
   PUBLIC :: model_readinputs, model_outputinputs
 
 CONTAINS
@@ -37,7 +39,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /MODEL_PAR/ KERN, LINEARITY, &
+    NAMELIST /MODEL_PAR/ KERN, LINEARITY, RM_LD_T_EQ, &
                          mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, Na,&
                          nu, k_gB, k_cB, lambdaD, beta, ADIAB_E, tau_e
 
@@ -71,6 +73,7 @@ CONTAINS
     CALL creatd(fid, 0,(/0/),TRIM(str),'Model Input')
     CALL attach(fid, TRIM(str),      "KERN",    KERN)
     CALL attach(fid, TRIM(str), "LINEARITY", LINEARITY)
+    CALL attach(fid, TRIM(str),"RM_LD_T_EQ",RM_LD_T_EQ)
     CALL attach(fid, TRIM(str),      "mu_x",    mu_x)
     CALL attach(fid, TRIM(str),      "mu_y",    mu_y)
     CALL attach(fid, TRIM(str),      "N_HD",    N_HD)
