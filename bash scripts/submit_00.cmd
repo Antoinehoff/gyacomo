@@ -9,5 +9,6 @@
 #SBATCH --output=out_00.txt
 #SBATCH --account=FUA36_TSVVT422
 #SBATCH --partition=skl_fua_dbg
+#SBATCH --qos=normal
 srun --cpu-bind=cores ./gyacomo 2 24 1 0
 
