@@ -23,6 +23,7 @@ GEOM.shift_y  = SHIFT_Y;
 GEOM.Npol  = NPOL;
 % Model parameters
 MODEL.LINEARITY = ['''',LINEARITY,''''];
+if RM_LD_T_EQ; MODEL.RM_LD_T_EQ = '.true.'; else; MODEL.RM_LD_T_EQ = '.false.'; end;
 MODEL.Na        = NA;
 if ADIAB_E; MODEL.ADIAB_E = '.true.'; else; MODEL.ADIAB_E = '.false.';end;
 MODEL.beta    = BETA;

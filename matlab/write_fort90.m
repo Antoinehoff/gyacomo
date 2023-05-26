@@ -53,7 +53,8 @@ fprintf(fid,['  write_temp  = ', OUTPUTS.write_temp,'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&MODEL_PAR\n');
-fprintf(fid,['  LINEARITY = ', MODEL.LINEARITY,'\n']);
+fprintf(fid,['LINEARITY = ', MODEL.LINEARITY,'\n']);
+fprintf(fid,['RM_LD_T_EQ= ', MODEL.RM_LD_T_EQ,'\n']);
 fprintf(fid,['  Na      = ', num2str(MODEL.Na),'\n']);
 fprintf(fid,['  mu_x    = ', num2str(MODEL.mu_x),'\n']);
 fprintf(fid,['  mu_y    = ', num2str(MODEL.mu_y),'\n']);

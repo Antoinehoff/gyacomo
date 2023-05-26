@@ -31,6 +31,7 @@ SIGMA_E = 0.0233380;        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 NA = 1;                     % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
 BETA = 0.0;                 % electron plasma beta
+RM_LD_T_EQ = 1;             % to remove Landau damping in temperature and higher eq.
 %% Set up grid parameters
 P = 2;
 J = 1;%P/2;
