@@ -23,9 +23,11 @@ MODULE model
   REAL(xp), PUBLIC, PROTECTED :: lambdaD =  0._xp     ! Debye length
   REAL(xp), PUBLIC, PROTECTED ::    beta =  0._xp     ! electron plasma Beta (8piNT_e/B0^2)
   LOGICAL,  PUBLIC            :: ADIAB_E =  .false.   ! adiabatic electron model
-  REAL(xp), PUBLIC, PROTECTED ::   tau_e = 1.0        ! electron temperature ratio for adiabatic electrons
+  REAL(xp), PUBLIC, PROTECTED ::   tau_e =  1.0        ! electron temperature ratio for adiabatic electrons
   ! Auxiliary variable
   LOGICAL,  PUBLIC, PROTECTED ::      EM =  .false.   ! Electromagnetic effects flag
+  LOGICAL,  PUBLIC, PROTECTED ::  MHD_PD =  .false.   ! MHD pressure drift
+
   ! Removes Landau damping in temperature and higher equation (Ivanov 2022)
   LOGICAL,  PUBLIC, PROTECTED :: RM_LD_T_EQ = .false.
   PUBLIC :: model_readinputs, model_outputinputs
@@ -34,14 +36,14 @@ CONTAINS
 
   SUBROUTINE model_readinputs
     !    Read the input parameters
-    USE basic,    ONLY: lu_in
-    USE parallel, ONLY: my_id,num_procs_p
+    USE basic,    ONLY: lu_in, speak
+    USE parallel, ONLY: num_procs_p
     USE prec_const
     IMPLICIT NONE
 
     NAMELIST /MODEL_PAR/ KERN, LINEARITY, RM_LD_T_EQ, &
                          mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, Na,&
-                         nu, k_gB, k_cB, lambdaD, beta, ADIAB_E, tau_e
+                         nu, k_gB, k_cB, lambdaD, MHD_PD, beta, ADIAB_E, tau_e
 
     READ(lu_in,model_par)
 
@@ -51,17 +53,16 @@ CONTAINS
 
     IF(Na .EQ. 1) THEN
       IF(.NOT. ADIAB_E) ERROR STOP "With one species, ADIAB_E must be set to .true. STOP"
-      IF(my_id.EQ.0) print*, 'Adiabatic electron model -> beta = 0'
+      CALL speak('Adiabatic electron model -> beta = 0')
       beta = 0._xp
     ENDIF
 
     IF(beta .GT. 0) THEN
-      IF(my_id.EQ.0) print*, 'Electromagnetic effects are included'
+      CALL speak('Electromagnetic effects are included')
       EM   = .TRUE.
     ENDIF
 
   END SUBROUTINE model_readinputs
-
 
   SUBROUTINE model_outputinputs(fid)
     ! Write the input parameters to the results_xx.h5 file
@@ -87,6 +88,7 @@ CONTAINS
     CALL attach(fid, TRIM(str),      "k_gB",    k_gB)
     CALL attach(fid, TRIM(str),      "k_cB",    k_cB)
     CALL attach(fid, TRIM(str),   "lambdaD", lambdaD)
+    CALL attach(fid, TRIM(str),    "MHD_PD",  MHD_PD)
     CALL attach(fid, TRIM(str),      "beta",    beta)
     CALL attach(fid, TRIM(str),   "ADIAB_E", ADIAB_E)
     CALL attach(fid, TRIM(str),     "tau_e",   tau_e)

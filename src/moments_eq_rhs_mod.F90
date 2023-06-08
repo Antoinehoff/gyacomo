@@ -16,10 +16,9 @@ CONTAINS
     USE prec_const
     USE collision
     USE time_integration
-    ! USE species, ONLY: xpdx
+    USE species, ONLY: Ptot
     USE geometry, ONLY: gradz_coeff, dlnBdz, Ckxky!, Gamma_phipar
     USE calculus, ONLY: interp_z, grad_z, grad_z2
-    ! USE species,  ONLY: xpdx
     IMPLICIT NONE
     INTEGER     :: ia, iz, iky,  ikx, ip ,ij, eo ! counters
     INTEGER     :: izi,ipi,iji ! interior points counters
@@ -69,8 +68,8 @@ CONTAINS
                   Tnapjp1 = xnapjp1(ia,ij) * nadiab_moments(ia,ipi,    iji+1,iky,ikx,izi)
                   ! term propto n^{p,j-1}
                   Tnapjm1 = xnapjm1(ia,ij) * nadiab_moments(ia,ipi,    iji-1,iky,ikx,izi)
-                  ! Perpendicular magnetic term (curvature and gradient drifts)
-                  Mperp   = imagu*Ckxky(iky,ikx,izi,eo)&
+                  ! Perpendicular magnetic term (curvature, gradient drifts and alpha MHD pressure drift)
+                  Mperp   = imagu*(Ckxky(iky,ikx,izi,eo) - beta*Ptot*ky)&
                             *(Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)
                   ! Parallel dynamic
                   ! ddz derivative for Landau damping term

@@ -24,13 +24,14 @@ MODULE prec_const
     INTEGER, PARAMETER :: xp       = REAL32
     INTEGER, PARAMETER :: c_xp_c   = C_FLOAT_COMPLEX
     INTEGER, PARAMETER :: c_xp_r   = C_FLOAT
+    INTEGER, PARAMETER :: mpi_xp_r = MPI_FLOAT
     INTEGER, PARAMETER :: mpi_xp_c = MPI_COMPLEX
 #else
     INTEGER, PARAMETER :: xp       = REAL64
     INTEGER, PARAMETER :: c_xp_c   = C_DOUBLE_COMPLEX
     INTEGER, PARAMETER :: c_xp_r   = C_DOUBLE
+    INTEGER, PARAMETER :: mpi_xp_r = MPI_DOUBLE
     INTEGER, PARAMETER :: mpi_xp_c = MPI_DOUBLE_COMPLEX
-
 #endif
   ! Auxiliary variables (unused)
   INTEGER, private   :: xp_r, xp_p !Range and precision of single

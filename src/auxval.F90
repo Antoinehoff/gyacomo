@@ -41,7 +41,7 @@ subroutine auxval
   CALL build_dv4Hp_table 
   ! set the closure scheme in use
   CALL set_closure_model 
-
+  
 #ifdef TEST_SVD
   ! If we want to test SVD decomposition etc.
   CALL init_CLA(local_nky,local_np*local_nj)

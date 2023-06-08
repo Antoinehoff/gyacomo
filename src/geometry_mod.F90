@@ -10,7 +10,7 @@ implicit none
   REAL(xp),    PUBLIC, PROTECTED :: q0        = 1.4_xp  ! safety factor
   REAL(xp),    PUBLIC, PROTECTED :: shear     = 0._xp   ! magnetic field shear
   REAL(xp),    PUBLIC, PROTECTED :: eps       = 0.18_xp ! inverse aspect ratio
-  REAL(xp),    PUBLIC, PROTECTED :: alpha_MHD = 0 ! shafranov shift effect alpha = -q2 R dbeta/dr
+  REAL(xp),    PUBLIC, PROTECTED :: alpha_MHD = 0._xp   ! shafranov shift effect alpha = -q2 R dbeta/dr
   ! parameters for Miller geometry
   REAL(xp),    PUBLIC, PROTECTED :: kappa     = 1._xp ! elongation (1 for circular)
   REAL(xp),    PUBLIC, PROTECTED :: s_kappa   = 0._xp ! r normalized derivative skappa = r/kappa dkappa/dr
@@ -21,6 +21,7 @@ implicit none
   ! to apply shift in the parallel z-BC if shearless
   REAL(xp),    PUBLIC, PROTECTED :: shift_y   = 0._xp ! for Arno <3
   REAL(xp),    PUBLIC, PROTECTED :: Npol      = 1._xp ! number of poloidal turns (real for 3D zpinch studies)
+  LOGICAL ,    PUBLIC, PROTECTED :: PB_PHASE  = .false. ! To activate the parallel boundary phase factor
   ! Chooses the type of parallel BC we use for the unconnected kx modes (active for non-zero shear only)
   !  'periodic'     : Connect a disconnected kx to a mode on the other cadran
   !  'dirichlet'    : Connect a disconnected kx to 0
@@ -31,9 +32,9 @@ implicit none
 
   ! GENE unused additional parameters for miller_mod
   REAL(xp), PUBLIC, PROTECTED :: edge_opt      = 0._xp ! meant to redistribute the points in z
-  REAL(xp), PUBLIC, PROTECTED :: major_R       = 1._xp ! major radius
+  REAL(xp), PUBLIC, PROTECTED :: major_R       = 1.0_xp ! major radius
   REAL(xp), PUBLIC, PROTECTED :: major_Z       = 0._xp ! vertical elevation
-  REAL(xp), PUBLIC, PROTECTED :: xpdx_pm_geom  = 0._xp ! amplitude mag. eq. pressure grad.
+  REAL(xp), PUBLIC, PROTECTED :: xpdx_pm_geom  = 1._xp ! amplitude mag. eq. pressure grad.
   REAL(xp), PUBLIC, PROTECTED ::          C_y  = 0._xp ! defines y coordinate : Cy (q theta - phi)
   REAL(xp), PUBLIC, PROTECTED ::         C_xy  = 1._xp ! defines x coordinate : B = Cxy Vx x Vy
 
@@ -44,7 +45,7 @@ implicit none
   ! Jacobian
   REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: Jacobian ! dimensions: z, odd/even p
   COMPLEX(xp), PUBLIC, PROTECTED        :: iInt_Jacobian ! Inverse integrated Jacobian
-  ! Metric
+  ! Metric (local arrays)
   REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: gxx, gxy, gxz, gyy, gyz, gzz ! dimensions: z, odd/even p
   REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dxdr, dxdZ, Rc, phic, Zc
   ! derivatives of magnetic field strength
@@ -55,6 +56,10 @@ implicit none
   REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatR, hatZ
   ! Some geometrical coefficients
   REAL(xp),    PUBLIC, DIMENSION(:,:) , ALLOCATABLE :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
+  ! full arrays for output
+  REAL(xp),    PUBLIC, DIMENSION(:), ALLOCATABLE :: gxx_full, gxy_full, gxz_full, gyy_full, gyz_full, gzz_full
+  REAL(xp),    PUBLIC, DIMENSION(:), ALLOCATABLE :: dxdr_full, dxdZ_full, Rc_full, phic_full, Zc_full
+  REAL(xp),    PUBLIC, DIMENSION(:), ALLOCATABLE :: dBdx_full, dBdy_full, dBdz_full, dlnBdz_full, hatB_full, hatR_full, hatZ_full, gradz_coeff_full
   ! Array to map the index of mode (kx,ky,-pi) to (kx+2pi*s*ky,ky,pi) for sheared periodic boundary condition
   INTEGER,     PUBLIC, DIMENSION(:,:), ALLOCATABLE :: ikx_zBC_L, ikx_zBC_R
   ! Geometric factor in front of the parallel phi derivative (not implemented)
@@ -76,7 +81,7 @@ CONTAINS
     IMPLICIT NONE
     NAMELIST /GEOMETRY/ geom, q0, shear, eps,&
       kappa, s_kappa,delta, s_delta, zeta, s_zeta,& ! For miller
-      parallel_bc, shift_y, Npol
+      parallel_bc, shift_y, Npol, PB_PHASE
     READ(lu_in,geometry)
     IF(shear .NE. 0._xp) SHEARED = .true.
     SELECT CASE(parallel_bc)
@@ -98,6 +103,8 @@ CONTAINS
     USE basic,    ONLY: speak
     USE miller,   ONLY: set_miller_parameters, get_miller
     USE calculus, ONLY: simpson_rule_z
+    USE model,    ONLY: beta
+    USE species,  ONLY: Ptot
     ! evalute metrix, elementwo_third_kpmaxts, jacobian and gradient
     implicit none
     REAL(xp) :: kx,ky
@@ -107,6 +114,10 @@ CONTAINS
 
     ! Allocate arrays
     CALL geometry_allocate_mem(local_nky,local_nkx,local_nz,ngz,nzgrid)
+
+    ! Set MHD pressure coefficient, flagged by model module's MHD_PD
+    alpha_MHD = q0**2*beta*Ptot
+
     !
     IF( (total_nky .EQ. 1) .AND. (total_nz .EQ. 1)) THEN !1D perp linear run
       CALL speak('1D perpendicular geometry')
@@ -114,8 +125,9 @@ CONTAINS
     ELSE
       SELECT CASE(geom)
         CASE('s-alpha')
-          IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for s-alpha geometry"
           CALL speak('s-alpha geometry')
+          IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for s-alpha geometry"
+          IF(MODULO(FLOOR(Npol),2) .EQ. 0)   ERROR STOP "Npol must be odd for s-alpha"
           call eval_salpha_geometry
         CASE('Z-pinch','z-pinch','Zpinch','zpinch')
           CALL speak('Z-pinch geometry')
@@ -128,6 +140,7 @@ CONTAINS
         CASE('miller')
           CALL speak('Miller geometry')
           IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for Miller geometry"
+          IF(MODULO(FLOOR(Npol),2) .EQ. 0)   ERROR STOP "Npol must be odd for Miller"
           call set_miller_parameters(kappa,s_kappa,delta,s_delta,zeta,s_zeta)
           call get_miller(eps,major_R,major_Z,q0,shear,FLOOR(Npol),alpha_MHD,edge_opt,&
                           C_y,C_xy,xpdx_pm_geom,gxx,gyy,gzz,gxy,gxz,gyz,&
@@ -185,7 +198,6 @@ CONTAINS
   implicit none
   REAL(xp) :: z
   INTEGER  :: iz, eo
-  alpha_MHD = 0._xp
 
   DO eo = 1,nzgrid
    DO iz = 1,local_nz+ngz
@@ -236,7 +248,6 @@ CONTAINS
   implicit none
   REAL(xp) :: z
   INTEGER  :: iz, eo
-  alpha_MHD = 0._xp
 
   DO eo = 1,nzgrid
    DO iz = 1,local_nz+ngz
@@ -315,10 +326,10 @@ CONTAINS
 
  SUBROUTINE set_ikx_zBC_map
    USE grid,       ONLY: local_nky,total_nkx,contains_zmin,contains_zmax, Nexc,&
-                         local_nky_offset
+                         local_nky_offset, kx_max, kx_min, kyarray, kxarray
    USE prec_const, ONLY: imagu, pi
    IMPLICIT NONE
-   ! REAL(xp) :: shift
+   REAL(xp) :: shift
    INTEGER :: ikx,iky, mn_y
    ALLOCATE(ikx_zBC_L(local_nky,total_nkx))
    ALLOCATE(ikx_zBC_R(local_nky,total_nkx))
@@ -348,13 +359,18 @@ CONTAINS
         ! get the real mode number (iky starts at 1 and is shifted from paral)
         mn_y = iky-1+local_nky_offset
         ! Formula for the shift due to shear after Npol turns
-        ! shift = 2._xp*PI*shear*kyarray(iky)*Npol
+        shift = 2._xp*PI*shear*kyarray(iky)*Npol
           DO ikx = 1,total_nkx
             ! Usual formula for shifting indices using that dkx = 2pi*shear*dky/Nexc
             ikx_zBC_L(iky,ikx) = ikx-mn_y*Nexc
+            ! Check if it has to be connected to the otherside of the kx grid
+            if(ikx_zBC_L(iky,ikx) .LE. 0) ikx_zBC_L(iky,ikx) = ikx_zBC_L(iky,ikx) + total_nkx
             ! Check if it points out of the kx domain
-            ! IF( (kxarray(ikx) - shift) .LT. kx_min ) THEN
-            IF( (ikx-mn_y*Nexc) .LT. 1 ) THEN ! outside of the frequ domain
+            print*, kxarray(ikx), shift, kx_min
+            IF( (kxarray(ikx) - shift) .LT. kx_min ) THEN ! outside of the frequ domain
+              print*,( ((kxarray(ikx) - shift)-kx_min) .LT. EPSILON(kx_min) )
+              print*, kxarray(ikx)-kx_min, EPSILON(kx_min)
+            ! IF( (ikx-mn_y*Nexc) .LT. 1 ) THEN 
               SELECT CASE(parallel_bc)
                 CASE ('dirichlet')! connected to 0
                   ikx_zBC_L(iky,ikx) = -99
@@ -367,7 +383,8 @@ CONTAINS
           ENDDO
           ! phase present in GENE from a shift of the x origin by Lx/2 (useless?)
           ! We also put the user defined shift in the y direction (see Volcokas et al. 2022)
-          pb_phase_L(iky) = (-1._xp)**(Nexc*mn_y)*EXP(imagu*REAL(mn_y,xp)*2._xp*pi*shift_y)
+          IF (PB_PHASE) &
+            pb_phase_L(iky) = (-1._xp)**(Nexc*mn_y-1)*EXP(imagu*REAL(mn_y,xp)*2._xp*pi*shift_y)
        ENDDO
      ENDIF
      ! Option for disconnecting every modes, viz. connecting all boundary to 0
@@ -378,13 +395,15 @@ CONTAINS
         ! get the real mode number (iky starts at 1 and is shifted from paral)
         mn_y = iky-1+local_nky_offset
         ! Formula for the shift due to shear after Npol
-        ! shift = 2._xp*PI*shear*kyarray(iky)*Npol
+        shift = 2._xp*PI*shear*kyarray(iky)*Npol
           DO ikx = 1,total_nkx
             ! Usual formula for shifting indices
             ikx_zBC_R(iky,ikx) = ikx+mn_y*Nexc
+            ! Check if it has to be connected to the otherside of the kx grid
+            if(ikx_zBC_R(iky,ikx) .GT. total_nkx) ikx_zBC_R(iky,ikx) = ikx_zBC_R(iky,ikx) - total_nkx
             ! Check if it points out of the kx domain
-            ! IF( (kxarray(ikx) + shift) .GT. kx_max ) THEN ! outside of the frequ domain
-            IF( (ikx+mn_y*Nexc) .GT. total_nkx ) THEN ! outside of the frequ domain
+            IF( (kxarray(ikx) + shift) .GT. kx_max ) THEN ! outside of the frequ domain
+            ! IF( (ikx+mn_y*Nexc) .GT. total_nkx ) THEN ! outside of the frequ domain
               SELECT CASE(parallel_bc)
                 CASE ('dirichlet') ! connected to 0
                   ikx_zBC_R(iky,ikx) = -99
@@ -398,7 +417,8 @@ CONTAINS
           ENDDO
           ! phase present in GENE from a shift ofthe x origin by Lx/2 (useless?)
           ! We also put the user defined shift in the y direction (see Volcokas et al. 2022)
-          pb_phase_R(iky) = (-1._xp)**(Nexc*mn_y)*EXP(-imagu*REAL(mn_y,xp)*2._xp*pi*shift_y)
+          IF (PB_PHASE) &
+            pb_phase_R(iky) = (-1._xp)**(Nexc*mn_y-1)*EXP(-imagu*REAL(mn_y,xp)*2._xp*pi*shift_y)
        ENDDO
      ENDIF
      ! Option for disconnecting every modes, viz. connecting all boundary to 0
@@ -407,12 +427,14 @@ CONTAINS
     ! write(*,*) kxarray
     ! write(*,*) kyarray
     ! write(*,*) 'ikx_zBC_L :-----------'
-    ! DO iky = ikys,ikye
+    ! DO iky = 1,local_nky
+    !   print*, 'iky=', iky
     !   print*, ikx_zBC_L(iky,:)
     ! enddo
     ! print*, pb_phase_L
     ! write(*,*) 'ikx_zBC_R :-----------'
-    ! DO iky = ikys,ikye
+    ! DO iky = 1,local_nky
+    !   print*, 'iky=', iky
     !   print*, ikx_zBC_R(iky,:)
     ! enddo
     ! print*, pb_phase_R
@@ -475,7 +497,6 @@ END SUBROUTINE set_ikx_zBC_map
        ALLOCATE(       dBdz(local_nz+ngz,nzgrid))
        ALLOCATE(     dlnBdz(local_nz+ngz,nzgrid))
        ALLOCATE(       hatB(local_nz+ngz,nzgrid))
-       ! ALLOCATE(Gamma_phipar,(local_nz+ngz,nzgrid)) (not implemented)
        ALLOCATE(       hatR(local_nz+ngz,nzgrid))
        ALLOCATE(       hatZ(local_nz+ngz,nzgrid))
        ALLOCATE(         Rc(local_nz+ngz,nzgrid))

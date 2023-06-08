@@ -54,13 +54,16 @@ SUBROUTINE set_closure_model
   CASE('max_degree')
     DO ip = 1,local_np+ngp
       DO ij = 1, local_nj+ngj
-          evolve_mom(ip,ij) = ((parray(ip).GE.0) .AND. (jarray(ij).GE.0)) &
-                        .AND. (parray(ip)+2*jarray(ij) .LE. dmax)
+        evolve_mom(ip,ij) = ((parray(ip).GE.0) .AND. (jarray(ij).GE.0)) .AND. (parray(ip)+2*jarray(ij) .LE. dmax)
+        ! evolve_mom(ip,ij) = (parray(ip).GE.0) .AND. (jarray(ij).GE.0)
+        ! evolve_mom(ip,ij) = ((parray(ip)+2*jarray(ij)) .LE. dmax)
+        ! evolve_mom(ip,ij) = evolve_mom(ip,ij) .AND. ((parray(ip)+2*jarray(ij)) .LE. dmax)
       ENDDO
     ENDDO  
   CASE DEFAULT
     ERROR STOP "closure scheme not recognized (avail: truncation,max_degree,monomial)"
   END SELECT
+
   ! If monomial truncation, setup the coefficients required
   SELECT CASE(hierarchy_closure)
   CASE('monomial')

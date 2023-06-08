@@ -97,16 +97,19 @@ SUBROUTINE diagnose_full(kstep)
                              cstep,iframe0d,iframe3d,iframe5d,crashed
   USE grid,            ONLY: &
     parray_full,pmax,jarray_full,jmax,&
-    kyarray_full,kxarray_full,zarray_full
+    kyarray_full,kxarray_full,zarray_full, ngz, total_nz, local_nz, ieven
+  USE geometry, ONLY: gxx, gxy, gxz, gyy, gyz, gzz, &
+                      hatR, hatZ, hatB, dBdx, dBdy, dBdz, Jacobian, gradz_coeff
   USE diagnostics_par
   USE futils,          ONLY: creatf, creatg, creatd, closef, putarr, putfile, attach, openf!, putarrnd ! Routine de merde, jamais l'utiliser
   USE array
   USE model,           ONLY: EM
-  USE parallel,        ONLY: my_id, comm0
+  USE parallel,        ONLY: my_id, comm0, gather_z
   USE collision,       ONLY: coll_outputinputs
   IMPLICIT NONE
   INTEGER, INTENT(in) :: kstep
   INTEGER, parameter  :: BUFSIZE = 2
+  REAL(xp), DIMENSION(total_nz) :: Az_full ! full z array for metric output
   INTEGER :: rank = 0, ierr
   INTEGER :: dims(1) = (/0/)
   !____________________________________________________________________________
@@ -140,20 +143,34 @@ SUBROUTINE diagnose_full(kstep)
     CALL putarr(fidres, "/data/grid/coordj" ,   jarray_full,   "j", ionode=0)
     ! Metric info
     CALL   creatg(fidres, "/data/metric", "Metric data")
-    ! CALL putarrnd(fidres, "/data/metric/gxx",            gxx((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    ! CALL putarrnd(fidres, "/data/metric/gxy",            gxy((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    ! CALL putarrnd(fidres, "/data/metric/gxz",            gxz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    ! CALL putarrnd(fidres, "/data/metric/gyy",            gyy((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    ! CALL putarrnd(fidres, "/data/metric/gyz",            gyz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    ! CALL putarrnd(fidres, "/data/metric/gzz",            gzz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    ! CALL putarrnd(fidres, "/data/metric/hatR",          hatR((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    ! CALL putarrnd(fidres, "/data/metric/hatZ",          hatZ((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    ! CALL putarrnd(fidres, "/data/metric/hatB",          hatB((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    ! CALL putarrnd(fidres, "/data/metric/dBdx",      dBdx((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    ! CALL putarrnd(fidres, "/data/metric/dBdy",      dBdy((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    ! CALL putarrnd(fidres, "/data/metric/dBdz",      dBdz((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    ! CALL putarrnd(fidres, "/data/metric/Jacobian",    Jacobian((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
-    ! CALL putarrnd(fidres, "/data/metric/gradz_coeff", gradz_coeff((1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 1/))
+    CALL gather_z(gxx((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+    CALL putarr(fidres, "/data/metric/gxx", Az_full, "gxx", ionode =0)
+    CALL gather_z(gxy((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+    CALL putarr(fidres, "/data/metric/gxy", Az_full, "gxy", ionode =0)
+    CALL gather_z(gxz((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+    CALL putarr(fidres, "/data/metric/gxz", Az_full, "gxz", ionode =0)
+    CALL gather_z(gyy((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+    CALL putarr(fidres, "/data/metric/gyy", Az_full, "gyy", ionode =0)
+    CALL gather_z(gyz((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+    CALL putarr(fidres, "/data/metric/gyz", Az_full, "gyz", ionode =0)
+    CALL gather_z(gzz((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+    CALL putarr(fidres, "/data/metric/gzz", Az_full, "gzz", ionode =0)
+    CALL gather_z(hatR((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+    CALL putarr(fidres, "/data/metric/hatR", Az_full, "hatR", ionode =0)
+    CALL gather_z(hatZ((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+    CALL putarr(fidres, "/data/metric/hatZ", Az_full, "hatZ", ionode =0)
+    CALL gather_z(hatB((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+    CALL putarr(fidres, "/data/metric/hatB", Az_full, "hatB", ionode =0)
+    CALL gather_z(dBdx((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+    CALL putarr(fidres, "/data/metric/dBdx", Az_full, "dBdx", ionode =0)
+    CALL gather_z(dBdy((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+    CALL putarr(fidres, "/data/metric/dBdy", Az_full, "dBdy", ionode =0)
+    CALL gather_z(dBdz((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+    CALL putarr(fidres, "/data/metric/dBdz", Az_full, "dBdz", ionode =0)
+    CALL gather_z(Jacobian((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+    CALL putarr(fidres, "/data/metric/Jacobian", Az_full, "Jacobian", ionode =0)
+    CALL gather_z(gradz_coeff((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+    CALL putarr(fidres, "/data/metric/gradz_coeff", Az_full, "gradz_coeff", ionode =0)
     ! CALL putarrnd(fidres, "/data/metric/Ckxky",       Ckxky(1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 3/))
     ! CALL putarrnd(fidres, "/data/metric/kernel",    kernel(1,(1+ngj/2):(local_nj+ngj/2),1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),1), (/1, 2, 4/))
     !  var0d group (gyro transport)

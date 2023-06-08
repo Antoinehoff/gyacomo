@@ -29,7 +29,7 @@ MODULE species
   REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q2_tau             ! factor of the gammaD sum
   REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q_o_sqrt_tau_sigma ! For psi field terms
   REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: sqrt_tau_o_sigma   ! For Ampere eq
-  REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: xpdx               ! radial pressure gradient
+  REAL(xp), PUBLIC, PROTECTED :: Ptot = 0._dp ! total pressure
   !! Accessible routines
   PUBLIC :: species_readinputs, species_outputinputs
 CONTAINS
@@ -37,7 +37,7 @@ CONTAINS
   SUBROUTINE species_readinputs
     !    Read the input parameters
     USE basic, ONLY : lu_in
-    USE model, ONLY : Na, nu, ADIAB_E
+    USE model, ONLY : Na, nu, ADIAB_E, MHD_PD
     USE prec_const
     IMPLICIT NONE
     INTEGER :: ia,ib
@@ -47,6 +47,7 @@ CONTAINS
     ! allocate the arrays of species parameters
     CALL species_allocate
     ! loop over the species namelists in the input file
+    Ptot = 0._xp
     DO ia = 1,Na
       ! default parameters
       name_  = 'ions'
@@ -74,13 +75,14 @@ CONTAINS
       q2_tau(ia)             = (q_**2)/tau_
       q_o_sqrt_tau_sigma(ia) = q_/SQRT(tau_)/sigma_
       sqrt_tau_o_sigma(ia)   = SQRT(tau_)/sigma_
-      xpdx(ia)               = 0._xp !not implemented yet
+      Ptot = Ptot + tau(ia)*(k_N(ia) + k_T(ia))
       ! We remove the adiabatic electron flag if electrons are included
       SELECT CASE (name_)
       CASE ('electrons','e','electron')
         ADIAB_E = .FALSE.
       END SELECT
     ENDDO
+    IF (.NOT. MHD_PD) Ptot = 0._dp
     !! Set collision frequency tensor
     IF (nu .EQ. 0) THEN
       nu_ab = 0
@@ -106,7 +108,6 @@ CONTAINS
     ! nu_i            = nu ! ion-ion collision frequ.
     ! nu_ee           = nu_e ! e-e coll. frequ.
     ! nu_ie           = nu_i ! i-e coll. frequ.
-
   END SUBROUTINE species_readinputs
 
 
@@ -150,7 +151,6 @@ CONTAINS
       ALLOCATE(            q2_tau(1:Na))
       ALLOCATE(q_o_sqrt_tau_sigma(1:Na))
       ALLOCATE(  sqrt_tau_o_sigma(1:Na))
-      ALLOCATE(              xpdx(1:Na))
   END SUBROUTINE species_allocate
 
 END MODULE species

@@ -1,4 +1,4 @@
-!! This source has been adapted from GENE https://genecode.org/ !!
+!! This source has been adapted from the GENE code https://genecode.org/ !!
 !>Implementation of the local equilibrium model of [R.L. Miller et al., PoP 5, 973 (1998)
 !>and [J. Candy, PPCF 51, 105009 (2009)]
 MODULE miller
@@ -56,7 +56,7 @@ CONTAINS
     real(xp), INTENT(INOUT) :: shat            ! safetyfactor
     INTEGER,  INTENT(IN)    :: Npol            ! number of poloidal turns
     real(xp), INTENT(INOUT) :: amhd            ! alpha mhd
-    real(xp), INTENT(INOUT) :: edge_opt        ! alpha mhd
+    real(xp), INTENT(INOUT) :: edge_opt        ! optimization of point placement
     real(xp), INTENT(INOUT) :: xpdx_pm_geom    ! amplitude mag. eq. pressure grad.
     real(xp), INTENT(INOUT) :: C_y, C_xy
     real(xp), dimension(local_nz+ngz,nzgrid), INTENT(INOUT) :: &

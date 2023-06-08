@@ -1,5 +1,5 @@
 MODULE parallel
-  use prec_const, ONLY : xp, mpi_xp_c
+  use prec_const, ONLY : xp, mpi_xp_c, mpi_xp_r
   USE mpi
   IMPLICIT NONE
   ! Auxiliary variables
@@ -30,6 +30,7 @@ MODULE parallel
   ! recieve and displacement counts for gatherv
   INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_p, dsp_p
   INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_y, dsp_y
+  INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_z, dsp_z
   INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_zy, dsp_zy
   INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_zp,  dsp_zp
   INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_yp,  dsp_yp
@@ -120,11 +121,19 @@ CONTAINS
        dsp_p(i_) =dsp_p(i_-1) + rcv_p(i_-1)
     END DO
     !!!!!! XYZ gather variables
+    ! y reduction at constant x,y,z,j
     ALLOCATE(rcv_y(num_procs_ky),dsp_y(num_procs_ky)) !Displacement sizes for balance diagnostic
     CALL MPI_ALLGATHER(nky_loc,1,MPI_INTEGER,rcv_y,1,MPI_INTEGER,comm_ky,ierr)
     dsp_y(1)=0
     DO i_=2,num_procs_ky
        dsp_y(i_) =dsp_y(i_-1) + rcv_y(i_-1)
+    END DO
+    ! z reduction at constant x,y,z,j
+    ALLOCATE(rcv_z(num_procs_z),dsp_z(num_procs_z)) !Displacement sizes for balance diagnostic
+    CALL MPI_ALLGATHER(nz_loc,1,MPI_INTEGER,rcv_z,1,MPI_INTEGER,comm_z,ierr)
+    dsp_z(1)=0
+    DO i_=2,num_procs_z
+       dsp_z(i_) =dsp_z(i_-1) + rcv_z(i_-1)
     END DO
     !! Z reduction for full slices of y data but constant x
     ALLOCATE(rcv_zy(num_procs_z),dsp_zy(num_procs_z)) !Displacement sizes for balance diagnostic
@@ -172,6 +181,31 @@ CONTAINS
     CALL attach(fid, TRIM(str),       "Np_kx",num_procs_ky)
     CALL attach(fid, TRIM(str),        "Np_z", num_procs_z)
   END SUBROUTINE parallel_ouptutinputs
+
+    !!!! Gather a field in z coordinates on rank 0 !!!!!
+  SUBROUTINE gather_z(field_loc,field_tot,nz_loc,nz_tot)
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: nz_loc,nz_tot
+    REAL(xp), DIMENSION(nz_loc), INTENT(IN)  :: field_loc
+    REAL(xp), DIMENSION(nz_tot), INTENT(OUT) :: field_tot
+    REAL(xp), DIMENSION(nz_loc) :: buffer_zl !full  y, local z
+    REAL(xp), DIMENSION(nz_tot) :: buffer_zt !full  z
+    INTEGER :: snd_z, root_z
+
+    snd_z     = nz_loc ! Number of points to send along z (full y)
+    root_z    = 0
+    buffer_zl = field_loc
+    if(num_procs_z .GT. 1) THEN
+      CALL MPI_GATHERV(buffer_zl, snd_z,          mpi_xp_r, &
+                       buffer_zt, rcv_z,   dsp_z, mpi_xp_r, &
+                       root_z, comm_z, ierr)
+      ! ID 0 (the one who output) rebuild the whole array
+    IF(my_id .EQ. 0) &
+      field_tot(1:nz_tot) = buffer_zt(1:nz_tot)
+    ELSE
+      field_tot = field_loc
+    ENDIF
+  END SUBROUTINE gather_z
 
   !!!! Gather a field in spatial coordinates on rank 0 !!!!!
   SUBROUTINE gather_xyz(field_loc,field_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot)

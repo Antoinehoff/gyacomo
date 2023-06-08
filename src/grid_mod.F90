@@ -438,13 +438,13 @@ CONTAINS
     ELSE ! Build apprpopriate grid
       deltakx      = 2._xp*PI/Lx
       IF(MODULO(total_nkx,2) .EQ. 0) THEN ! Even number of kx (-2 -1 0 1 2 3)
-        kx_max = (total_nkx/2)*deltakx
-        kx_min = -kx_max+deltakx
         ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
         DO ikx = 1,total_nkx
           kxarray_full(ikx) = deltakx*REAL(MODULO(ikx-1,total_nkx/2)-(total_nkx/2)*FLOOR(2.*real(ikx-1)/real(total_nkx)),xp)
           IF (ikx .EQ. total_nkx/2+1) kxarray_full(ikx) = -kxarray_full(ikx)
         END DO
+        kx_max = MAXVAL(kxarray_full)!(total_nkx/2)*deltakx
+        kx_min = MINVAL(kxarray_full)!-kx_max+deltakx
         ! Set local grid (not parallelized so same as full one)
         local_kxmax = 0._xp
         DO ikx = 1,local_nkx
@@ -461,7 +461,7 @@ CONTAINS
           ENDIF
         END DO
       ELSE ! Odd number of kx (-2 -1 0 1 2)
-        kx_max = (total_nkx-1)/2*deltakx
+        ERROR STOP "Gyacomo is safer with a even Kx number"
       ENDIF
     ENDIF
     ! Orszag 2/3 filter

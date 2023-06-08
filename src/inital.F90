@@ -466,11 +466,8 @@ SUBROUTINE init_ricci
   USE prec_const, ONLY: xp, imagu
   USE initial_par,ONLY: iseed, init_noiselvl, init_background
   USE model,      ONLY: LINEARITY
-  USE parallel,   ONLY: my_id
   IMPLICIT NONE
-
-  COMPLEX(xp), DIMENSION(186,52) :: ricci_mat_real, ricci_mat_imag, ricci_face
-  REAL(xp) :: tmp_real, tmp_imag
+  COMPLEX(xp), DIMENSION(186,52) :: ricci_mat_real, ricci_mat_imag
   COMPLEX(xp) :: scaling
   INTEGER  :: ia,ip,ij,ikx,iky,iz
   ! open data file
@@ -505,7 +502,7 @@ SUBROUTINE init_ricci
         END DO
       END DO
     END DO
-    print*, sum(moments)
+
     IF ( contains_ky0 ) THEN
       DO ip=1+ngp/2,local_np+ngp/2
         DO ij=1+ngj/2,local_nj+ngj/2
