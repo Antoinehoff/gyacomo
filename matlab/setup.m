@@ -15,17 +15,28 @@ GEOM.geom  = ['''',GEOMETRY,''''];
 GEOM.q0    = Q0;    % q factor
 GEOM.shear = SHEAR; % shear
 GEOM.eps   = EPS;   % inverse aspect ratio
-GEOM.kappa = KAPPA; % elongation
-GEOM.delta = DELTA; % triangularity
-GEOM.zeta  = ZETA;  % squareness
+GEOM.kappa   = KAPPA; % elongation
+GEOM.s_kappa = S_KAPPA; 
+GEOM.delta   = DELTA; % triangularity
+GEOM.s_delta = S_DELTA; 
+GEOM.zeta    = ZETA;  % squareness
+GEOM.s_zeta  = S_ZETA; 
 GEOM.parallel_bc  = ['''',PARALLEL_BC,''''];
 GEOM.shift_y  = SHIFT_Y;
 GEOM.Npol  = NPOL;
+if PB_PHASE; GEOM.PB_PHASE = '.true.'; else; GEOM.PB_PHASE = '.false.';end;
 % Model parameters
 MODEL.LINEARITY = ['''',LINEARITY,''''];
+try
+    RM_LD_T_EQ;
+catch
+    RM_LD_T_EQ = 0;
+end
 if RM_LD_T_EQ; MODEL.RM_LD_T_EQ = '.true.'; else; MODEL.RM_LD_T_EQ = '.false.'; end;
 MODEL.Na        = NA;
 if ADIAB_E; MODEL.ADIAB_E = '.true.'; else; MODEL.ADIAB_E = '.false.';end;
+if ADIAB_I; MODEL.ADIAB_I = '.true.'; else; MODEL.ADIAB_I = '.false.';end;
+if MHD_PD;  MODEL.MHD_PD  = '.true.'; else; MODEL.MHD_PD  = '.false.';end;
 MODEL.beta    = BETA;
 MODEL.mu_x    = MU_X;
 MODEL.mu_y    = MU_Y;
@@ -44,7 +55,6 @@ MODEL.sigma_i = 1.0;
 % charge q_a/e
 MODEL.q_e     =-1.0;
 MODEL.q_i     = 1.0;
-if MODEL.q_e == 0; SIMID = [SIMID,'_i']; end;
 % gradients L_perp/L_x
 MODEL.K_Ni    = K_Ni;       
 MODEL.K_Ne    = K_Ne;
@@ -71,7 +81,8 @@ switch CO
     case 'LR'
         COLL.mat_file = 'gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5';
     case 'LD'
-        COLL.mat_file = 'gk_landau_P10_J5_dk_5e-2_km_2.0_NFLR_12.h5';
+        % COLL.mat_file = 'gk_landau_P10_J5_dk_5e-2_km_2.0_NFLR_12.h5';
+        COLL.mat_file = 'gk_landauii_P16_J9_dk_5e-2_km_2.0_NFLR_8.h5';
         % COLL.mat_file = 'gk_landau_P11_J7_dk_5e-2_km_2.0_NFLR_16.h5';
         % COLL.mat_file = 'gk_coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5';
 %         COLL.mat_file = 'LDGKii_P10_J5_dk_5e-2_km_5_NFLR_12_k2trunc.h5';

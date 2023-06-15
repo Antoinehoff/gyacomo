@@ -12,56 +12,65 @@ addpath(genpath([gyacomodir,'matlab/compute'])) % Add compute module
 addpath(genpath([gyacomodir,'matlab/load'])) % Add load module
 
 %% Set simulation parameters
-SIMID = 'lin_ITG'; % Name of the simulation
+SIMID   = 'lin_KBM';  % Name of the simulation
 RUN = 1; % To run or just to load
 default_plots_options
-EXECNAME = 'gyacomo23_sp'; % single precision
-% EXECNAME = 'gyacomo23_dp'; % double precision
+% EXECNAME = 'gyacomo23_sp'; % single precision
+EXECNAME = 'gyacomo23_dp'; % double precision
+% EXECNAME = 'gyacomo23_debug'; % single precision
 
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-NU = 0.005;                 % Collision frequency
-TAU = 1.0;                  % e/i temperature ratio
-K_Ne = 0*2.22;              % ele Density
-K_Te = 0*6.96;              % ele Temperature
-K_Ni = 2.22;              % ion Density gradient drive
-K_Ti = 5.3;              % ion Temperature
+NU = 0.1;                   % Collision frequency
+TAU = 1.38;                  % e/i temperature ratio
+K_Ne    = 34;              % ele Density '''
+K_Te    = 56;               % ele Temperature '''
+K_Ni    = 34;              % ion Density gradient drive
+K_Ti    = 21;               % ion Temperature '''
 SIGMA_E = 0.0233380;        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
-NA = 1;                     % number of kinetic species
+NA = 2;                     % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
-BETA = 0.0;                 % electron plasma beta
+BETA    = 1.52e-4;             % electron plasma beta
+MHD_PD  = 0;                % MHD pressure drift
 %% Set up grid parameters
-P = 4;
-J = 2;%P/2;
+P = 2;
+J = P/2;%P/2;
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
-NX = 8;                     % real space x-gridpoints
-NY = 12;                    % real space y-gridpoints
-LX = 2*pi/0.05;              % Size of the squared frequency domain in x direction
-LY = 2*pi/0.1;              % Size of the squared frequency domain in y direction
-NZ = 24;                    % number of perpendicular planes (parallel grid)
+NX = 4;                     % real space x-gridpoints
+NY = 2;                    % real space y-gridpoints
+LX = 2*pi/0.3;              % Size of the squared frequency domain in x direction
+LY = 2*pi/0.2;              % Size of the squared frequency domain in y direction
+NZ = 16;                    % number of perpendicular planes (parallel grid)
 SG = 0;                     % Staggered z grids option
 NEXC = 1;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
-
 %% GEOMETRY
-GEOMETRY= 's-alpha';
-% GEOMETRY= 'miller';
-EPS     = 0.18;   % inverse aspect ratio
-Q0      = 1.4;    % safety factor
-SHEAR   = 0.8;    % magnetic shear
-KAPPA   = 1.0;    % elongation
-DELTA   = 0.0;    % triangularity
-ZETA    = 0.0;    % squareness
+% GEOMETRY= 's-alpha';
+GEOMETRY= 'miller';
+EPS     = 0.3;   % inverse aspect ratio
+% EPS     = 0.18;   % inverse aspect ratio
+Q0      = 5.7;    % safety factor
+% Q0      = 1.4;    % safety factor
+SHEAR   = 4.6;    % magnetic shear
+% SHEAR   = 0.8;    % magnetic shear
+KAPPA   = 1.8;   % elongation
+% KAPPA   = 1.0;   % elongation
+S_KAPPA = 0.0;
+DELTA   = 0.4;  % triangularity
+% DELTA   = 0.0;  % triangularity
+S_DELTA = 0.0;
+ZETA    = 0.0; % squareness
+S_ZETA  = 0.0;
 PARALLEL_BC = 'dirichlet'; % Boundary condition for parallel direction ('dirichlet','periodic','shearless','disconnected')
 SHIFT_Y = 0.0;    % Shift in the periodic BC in z
-NPOL   = 1;       % Number of poloidal turns
-
+NPOL    = 1;       % Number of poloidal turns
+PB_PHASE= 0;
 %% TIME PARAMETERS
-TMAX     = 50;  % Maximal time unit
-DT       = 1e-2;   % Time step
+TMAX     = 5;  % Maximal time unit
+DT       = 2e-3;   % Time step
 DTSAVE0D = 1;      % Sampling per time unit for 0D arrays
 DTSAVE2D = -1;     % Sampling per time unit for 2D arrays
-DTSAVE3D = 2;      % Sampling per time unit for 3D arrays
+DTSAVE3D = 3;      % Sampling per time unit for 3D arrays
 DTSAVE5D = 100;     % Sampling per time unit for 5D arrays
 JOB2LOAD = -1;     % Start a new simulation serie
 
@@ -94,11 +103,11 @@ W_SAPJ   = 0;     % Output flag for saparallel (parallel current of species alph
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% UNUSED PARAMETERS
 % These parameters are usually not to play with in linear runs
-MU      = 0.0;    % Hyperdiffusivity coefficient
+MU      = 0.1;    % Hyperdiffusivity coefficient
 MU_X    = MU;     % Hyperdiffusivity coefficient in x direction
 MU_Y    = MU;     % Hyperdiffusivity coefficient in y direction
 N_HD    = 4;      % Degree of spatial-hyperdiffusivity
-MU_Z    = 2.0;    % Hyperdiffusivity coefficient in z direction
+MU_Z    = 10.0;    % Hyperdiffusivity coefficient in z direction
 HYP_V   = 'hypcoll'; % Kinetic-hyperdiffusivity model
 MU_P    = 0.0;    % Hyperdiffusivity coefficient for Hermite
 MU_J    = 0.0;    % Hyperdiffusivity coefficient for Laguerre
@@ -117,9 +126,9 @@ setup
 if RUN
     MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
 %     RUN  =['time mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
-    RUN  =['time mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
+    % RUN  =['time mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
 %     RUN  =['time mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 6 1 0;'];
-%     RUN  =['time mpirun -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
+    RUN  =['time mpirun -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
     MVOUT='cd ../../../wk;';
     system([MVIN,RUN,MVOUT]);
 end
@@ -135,13 +144,8 @@ data = {}; % Initialize data as an empty cell array
 % load grids, inputs, and time traces
 data = compile_results_low_mem(data,LOCALDIR,J0,J1); 
 
-if 0
-%% Plot heat flux evolution
-figure
-semilogy(data.Ts0D,data.HFLUX_X);
-xlabel('$tc_s/R$'); ylabel('$Q_x$');
-end
-if 1 % Activate or not
+
+if 0 % Activate or not
 %% plot mode evolution and growth rates
 % Load phi
 [data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');
@@ -158,5 +162,16 @@ options.fftz.flag = 0; % Set fftz.flag option to 0
 fig = mode_growth_meter(data,options); % Call the function mode_growth_meter with data and options as input arguments, and store the result in fig
 end
 
-
+if 1
+%% Ballooning plot
+[data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');
+if data.inputs.BETA > 0
+[data.PSI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'psi');
+end
+options.time_2_plot = [120];
+options.kymodes     = [0.5];
+options.normalized  = 1;
+% options.field       = 'phi';
+fig = plot_ballooning(data,options);
+end
 

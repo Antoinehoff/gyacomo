@@ -2,20 +2,19 @@ function [FIG] = plot_ballooning(data,options)
     FIG.fig = figure; iplot = 1;
     [~,it0] = min(abs(data.Ts3D - options.time_2_plot(1)));
     [~,it1] = min(abs(data.Ts3D - options.time_2_plot(end)));
-    [~,ikyarray] = min(abs(data.ky - options.kymodes));
-%     phi_real=mean(real(data.PHI(:,:,:,it0:it1)),4);
-%     phi_imag=mean(imag(data.PHI(:,:,:,it0:it1)),4);
+    [~,ikyarray] = min(abs(data.grids.ky - options.kymodes));
+    ikyarray = unique(ikyarray);
     phi_real=real(data.PHI(:,:,:,it1));
     phi_imag=imag(data.PHI(:,:,:,it1));
     ncol = 1;
-    if data.BETA > 0
+    if data.inputs.BETA > 0
         psi_real=real(data.PSI(:,:,:,it1));
         psi_imag=imag(data.PSI(:,:,:,it1)); 
         ncol = 2;
     end
     % Apply ballooning transform
-    if(data.Nkx > 1)
-        nexc = round(data.ky(2)*data.SHEAR*2*pi/data.kx(2));
+    if(data.grids.Nkx > 1)
+        nexc = round(data.grids.ky(2)*data.inputs.SHEAR*2*pi/data.grids.kx(2));
     else
         nexc = 1;
     end
@@ -34,7 +33,7 @@ function [FIG] = plot_ballooning(data,options)
             ordered_ikx = [(Np_+1):Nkx 1:Np_];
         end
         try
-            idx=data.kx./data.kx(2);
+            idx=data.grids.kx./data.grids.kx(2);
         catch
             idx=0;
         end
@@ -54,11 +53,11 @@ function [FIG] = plot_ballooning(data,options)
         end
 
         % Define ballooning angle
-        coordz = data.z;
+        coordz = data.grids.z;
         for i_ =1: Nkx
             for iz=1:dims(3)
                 ii = dims(3)*(i_-1) + iz;
-                b_angle(ii) =coordz(iz) + 2*pi*idx(i_)./is;
+                b_angle(ii) =coordz(iz) + 2*pi*data.grids.Npol*idx(i_)./is;
             end
         end
         
@@ -73,6 +72,7 @@ function [FIG] = plot_ballooning(data,options)
         phib_norm = phib / normalization;
         phib_real_norm  = real( phib_norm);
         phib_imag_norm  = imag( phib_norm);
+        %
         subplot(numel(ikyarray),ncol,ncol*(iplot-1)+1)
         plot(b_angle/pi, phib_real_norm,'-b'); hold on;
         plot(b_angle/pi, phib_imag_norm ,'-r');
@@ -80,18 +80,20 @@ function [FIG] = plot_ballooning(data,options)
         legend('real','imag','norm')
         xlabel('$\chi / \pi$')
         ylabel('$\phi_B (\chi)$');
-        title(['$k_y=',sprintf('%2.2f',data.ky(iky)),...
+        title(['$k_y=',sprintf('%2.2f',data.grids.ky(iky)),...
                ',t_{avg}\in [',sprintf('%1.1f',data.Ts3D(it0)),',',sprintf('%1.1f',data.Ts3D(it1)),']$']);
-
-        if data.BETA > 0         
+        for i_ = 2*[1:data.grids.Nkx]-(data.grids.Nkx+1)
+          xline(data.grids.Npol*(i_),'HandleVisibility','off'); hold on;
+        end
+        if data.inputs.BETA > 0         
             psib_real = zeros(  Nkx*dims(3)  ,1);
             psib_imag = psib_real;
             for i_ =1:Nkx
-                start_ =  (i_ -1)*dims(3) +1;
+                start_ =  (i_-1)*dims(3) +1;
                 end_ =  i_*dims(3);
                 ikx  = ordered_ikx(i_);
-                psib_real(start_:end_) = psi_real(iky,ikx,:);
-                psib_imag(start_:end_) = psi_imag(iky,ikx,:);
+                psib_real(start_:end_)  = psi_real(iky,ikx,:);
+                psib_imag(start_:end_)  = psi_imag(iky,ikx,:);
             end
             psib = psib_real(:) + 1i * psib_imag(:);
             psib_norm = psib / normalization;
@@ -102,9 +104,12 @@ function [FIG] = plot_ballooning(data,options)
             plot(b_angle/pi, psib_imag_norm ,'-r');
             plot(b_angle/pi, abs(psib_norm),'-k');
             legend('real','imag','norm')
+            for i_ = 2*[1:data.grids.Nkx]-(data.grids.Nkx+1)
+                xline(data.grids.Npol*(i_),'HandleVisibility','off'); hold on;
+            end
             xlabel('$\chi / \pi$')
             ylabel('$\psi_B (\chi)$');
-            title(['$k_y=',sprintf('%2.2f',data.ky(iky)),...
+            title(['$k_y=',sprintf('%2.2f',data.grids.ky(iky)),...
                    ',t_{avg}\in [',sprintf('%1.1f',data.Ts3D(it0)),',',sprintf('%1.1f',data.Ts3D(it1)),']$']);
         end
         

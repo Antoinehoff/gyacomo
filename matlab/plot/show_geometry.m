@@ -1,18 +1,18 @@
 function [ FIGURE ] = show_geometry(DATA,OPTIONS)
 % filtering Z pinch and torus
-if DATA.Nz > 1 % Torus flux tube geometry
-    Nturns = floor(abs(DATA.z(1)/pi));
-    Nptor  = ceil(DATA.Nz*2/Nturns); Tgeom = 1;
+if DATA.grids.Nz > 1 % Torus flux tube geometry
+    Nturns = floor(abs(DATA.grids.z(1)/pi));
+    Nptor  = ceil(DATA.grids.Nz*2/Nturns); Tgeom = 1;
     a      = DATA.EPS; % Torus minor radius
     R      = 1.; % Torus major radius
-    q      = (DATA.Nz>1)*DATA.Q0; % Flux tube safety factor
+    q      = (DATA.grids.Nz>1)*DATA.inputs.Q0; % Flux tube safety factor
     theta  = linspace(-pi, pi, Nptor)   ; % Poloidal angle
     phi    = linspace(0., 2.*pi, Nptor) ; % Toroidal angle
     [t, p] = meshgrid(phi, theta);
     x_tor = (R + a.*cos(p)) .* cos(t);
     y_tor = (R + a.*cos(p)) .* sin(t);
     z_tor = a.*sin(p);
-    DIMENSIONS = [50 50 1200 600];
+    DIMENSIONS = [600 600 1200 600];
 else % Zpinch geometry
     Nturns = 0.1; Tgeom = 0;
     a      = 0.7; % Torus minor radius
@@ -48,7 +48,7 @@ yZ  = @(z) bX(z).*xY(z)-bY(z).*xX(z)./sqrt((bY(z).*xZ(z)-bZ(z).*xY(z)).^2+(bZ(z)
 yvec= @(z) [yX(z); yY(z); yZ(z)];
 % Plot high res field line
 % Planes plot
-theta  = DATA.z   ; % Poloidal angle
+theta  = DATA.grids.z   ; % Poloidal angle
 % Plot x,y,bvec at these points
 scale = 0.10;
 
@@ -56,11 +56,11 @@ scale = 0.10;
 OPTIONS.POLARPLOT = 0;
 OPTIONS.PLAN      = 'xy';
 r_o_R             = DATA.rho_o_R;
-[X,Y]             = meshgrid(r_o_R*DATA.x,r_o_R*DATA.y);
+[X,Y]             = meshgrid(r_o_R*DATA.grids.x,r_o_R*DATA.grids.y);
 max_              = 0;
-FIELDS            = zeros(DATA.Ny,DATA.Nx,DATA.Nz);
+FIELDS            = zeros(DATA.grids.Ny,DATA.grids.Nx,DATA.grids.Nz);
 
-FIGURE.fig = figure; FIGURE.FIGNAME = ['geometry','_',DATA.PARAMS]; set(gcf, 'Position',  DIMENSIONS)
+FIGURE.fig = figure; FIGURE.FIGNAME = ['geometry','_',DATA.params_string]; set(gcf, 'Position',  DIMENSIONS)
 for it_ = 1:numel(OPTIONS.TIME)
 subplot(1,numel(OPTIONS.TIME),it_)
     %plot magnetic geometry
@@ -86,7 +86,7 @@ subplot(1,numel(OPTIONS.TIME),it_)
     end
     end
     %plot vector basis
-    theta  = DATA.z   ; % Poloidal angle
+    theta  = DATA.grids.z   ; % Poloidal angle
     plot3(Xfl(theta),Yfl(theta),Zfl(theta),'ok'); hold on;
     quiver3(Xfl(theta),Yfl(theta),Zfl(theta),scale*xX(theta),scale*xY(theta),scale*xZ(theta),0,'r');
     quiver3(Xfl(theta),Yfl(theta),Zfl(theta),scale*yX(theta),scale*yY(theta),scale*yZ(theta),0,'g');
@@ -101,7 +101,7 @@ subplot(1,numel(OPTIONS.TIME),it_)
         if (tmp > max_) max_ = tmp;
     end
     for iz = OPTIONS.PLANES
-        z_             = DATA.z(iz);    
+        z_             = DATA.grids.z(iz);    
         Xp = Xfl(z_) + X*xX(z_) + Y*yX(z_);
         Yp = Yfl(z_) + X*xY(z_) + Y*yY(z_);
         Zp = Zfl(z_) + X*xZ(z_) + Y*yZ(z_);
@@ -110,7 +110,7 @@ subplot(1,numel(OPTIONS.TIME),it_)
         colormap(bluewhitered);
 %         caxis([-1,1]);
     end
-    if DATA.Nz == 1
+    if DATA.grids.Nz == 1
         xlim([0.65 0.75]);
         ylim([-0.1 0.1]);
         zlim([-0.2 0.2]);

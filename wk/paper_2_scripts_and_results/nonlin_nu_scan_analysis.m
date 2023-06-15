@@ -1,6 +1,6 @@
 kN=2.22;
 figure
-ERRBAR = 1; LOGSCALE = 0;
+ERRBAR = 0; LOGSCALE = 0; AU = 1;
 resstr={};
 msz = 10; lwt = 2.0;
 % CO = 'DGGK'; mrkstyl='d';
@@ -66,7 +66,7 @@ for j = 1:numel(directories)
     data = {};
     for i = 1:N
         subdir = subdirectories{i};
-        data    = compile_results_low_mem(data,subdir,00,10);
+        data    = compile_results_low_mem(data,subdir,00,20);
         try
             Trange  = data.Ts0D(end)*[0.5 1.0];
         catch % if data does not exist put 0 everywhere
@@ -79,8 +79,8 @@ for j = 1:numel(directories)
             data.inputs.K_N  = kN;
             data.inputs.NU   = nus(i);
         end
-            Trange  = data.Ts0D(end)*[0.5 1.0];
-            % Trange  = [200 400];
+            % Trange  = data.Ts0D(end)*[0.5 1.0];
+            Trange  = [200 400];
         %
         [~,it0] = min(abs(Trange(1)  -data.Ts0D)); 
         [~,it1] = min(abs(Trange(end)-data.Ts0D)); 
@@ -93,6 +93,9 @@ for j = 1:numel(directories)
         subplot(N,2,2*i-1)
         hold on;
         Qx      = data.HFLUX_X;
+        if AU 
+            Qx = Qx./max(Qx); 
+        end
         T       = data.Ts0D;
         % Plot heatflux vs time
         plot(T,Qx,'DisplayName',[scanvarname,'=',num2str(x(i))],...

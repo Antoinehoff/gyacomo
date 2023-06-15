@@ -1,7 +1,6 @@
 function [DATA] = load_params(DATA,filename)
     DATA.inputs.CO      = h5readatt(filename,'/data/input/coll','CO');
-    DATA.inputs.K_N     = h5readatt(filename,'/data/input/ions','k_N');
-    DATA.inputs.K_T     = h5readatt(filename,'/data/input/ions','k_T');
+
     DATA.inputs.Q0      = h5readatt(filename,'/data/input/geometry','q0');
     DATA.inputs.EPS     = h5readatt(filename,'/data/input/geometry','eps');
     DATA.inputs.SHEAR   = h5readatt(filename,'/data/input/geometry','shear');
@@ -38,10 +37,12 @@ function [DATA] = load_params(DATA,filename)
     DATA.inputs.MUz     = h5readatt(filename,'/data/input/model','mu_z');
     DATA.inputs.LINEARITY = h5readatt(filename,'/data/input/model','LINEARITY');
     DATA.inputs.BETA    = h5readatt(filename,'/data/input/model','beta');
-    DATA.inputs.TAU_E   = h5readatt(filename,'/data/input/model','tau_e');
+    DATA.inputs.TAU_I   = h5readatt(filename,'/data/input/model','tau_i');
     DATA.inputs.HYP_V   = h5readatt(filename,'/data/input/model','HYP_V');
     DATA.inputs.K_cB    = h5readatt(filename,'/data/input/model','k_cB');
     DATA.inputs.K_gB    = h5readatt(filename,'/data/input/model','k_gB');
+    DATA.inputs.ADIAB_E = h5readatt(filename,'/data/input/model','ADIAB_E') == 'y';
+    DATA.inputs.ADIAB_I = h5readatt(filename,'/data/input/model','ADIAB_I') == 'y';
 
     DATA.inputs.W_GAMMA   = h5readatt(filename,'/data/input/diag_par','write_gamma') == 'y';
     DATA.inputs.W_PHI     = h5readatt(filename,'/data/input/diag_par','write_phi')   == 'y';
@@ -56,6 +57,13 @@ function [DATA] = load_params(DATA,filename)
     DATA.inputs.K_N   = zeros(1,DATA.inputs.Na);
     DATA.inputs.K_T   = zeros(1,DATA.inputs.Na);
     spnames = {'ions','electrons'};
+    if(DATA.inputs.ADIAB_E) 
+        spnames = {spnames{1}};
+    end
+    if(DATA.inputs.ADIAB_I) 
+        spnames = {spnames{2}};
+    end
+        
     for ia=1:DATA.inputs.Na
         spdata = ['/data/input/',spnames{ia}];
         DATA.inputs.sigma(ia) = h5readatt(filename,spdata,'sigma');

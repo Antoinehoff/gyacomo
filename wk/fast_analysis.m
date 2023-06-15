@@ -5,8 +5,8 @@ addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 default_plots_options
 % Partition of the computer where the data have to be searched
-PARTITION  = '/misc/gyacomo23_outputs/';
-% PARTITION = '/home/ahoffman/gyacomo/';
+% PARTITION  = '/misc/gyacomo23_outputs/';
+PARTITION = '/home/ahoffman/gyacomo/';
 
 %% Tests
 % resdir = 'test_stepon_AA/CBC_stepon_AA';
@@ -56,11 +56,21 @@ PARTITION  = '/misc/gyacomo23_outputs/';
 % resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/9x5x192x96x24/nu_0.2';
 % resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/17x9x192x96x24/nu_0.2';
 
-% resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/9x5x192x96x24/nu_0.02';
-resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/17x9x192x96x24/nu_0.02';
+% resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/17x9x192x96x24/nu_0.02';
+% resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/17x9x192x96x24/nu_0.02';
 
 % resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/9x5x192x96x24/nu_0.2';
+
+% resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/17x9x192x96x24/continue_SG_nu_0.02';
+% resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/5x3x192x96x24/nu_0.02';
+% resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/9x5x192x96x24/nu_0.02';
 % resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/17x9x192x96x24/nu_0.02';
+
+
+% resdir = 'paper_2_GYAC23/collision_study/nuSGGK_scan_kT_5.3/17x9x192x96x24/nu_0.005';
+% resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_kT_5.3/5x3x192x96x24/nu_0.005';
+% resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_kT_5.3/9x5x192x96x24/nu_0.005';
+% resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_kT_5.3/17x9x128x64x24/nu_0.005';
 %% kT eff study
 % resdir = 'paper_2_GYAC23/kT_eff_study/1x3x128x64x24_kT_3.0/Lx120';
 % resdir = 'paper_2_GYAC23/kT_eff_study/1x3x128x64x24_kT_3.0/Lx240';
@@ -71,9 +81,9 @@ resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/17x9x192x96x24/nu_0.
 % resdir = 'paper_2_GYAC23/kT_eff_study/7x3x128x64x24_kT_3.6/dmax';
 
 %% dev
-% PARTITION='';
+PARTITION='';
 % resdir = '/home/ahoffman/gyacomo/testcases/zpinch_3D';
-% resdir = '/home/ahoffman/gyacomo';
+resdir = '/home/ahoffman/gyacomo/results/dev/3D_kine_zpinch_test';
 %% CBC benchmark
 % resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_1e-3/3x2x128x64x24/kT_7.0';
 % resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_1e-3/5x3x128x64x24/kT_7.0';
@@ -81,7 +91,7 @@ resdir = 'paper_2_GYAC23/collision_study/nuDGGK_scan_kT_5.3/17x9x192x96x24/nu_0.
 % resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_1e-3/17x9x128x64x24/kT_7.0';
 % resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_1e-3/31x16x128x64x24/kT_7.0';
  %%
-J0 = 00; J1 = 10;
+J0 = 00; J1 = 20;
 
 % Load basic info (grids and time traces)
 DATADIR = [PARTITION,resdir,'/'];
@@ -111,16 +121,16 @@ if 0
 % data.Ni00 = reshape(data.Na00(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-% options.NAME      = '\phi';
+options.NAME      = '\phi';
 % options.NAME      = '\phi^{NZ}';
 % options.NAME      = '\omega_z';
-options.NAME     = 'N_i^{00}';
+% options.NAME     = 'N_i^{00}';
 % options.NAME      = 's_{Ey}';
 % options.NAME      = 'n_i^{NZ}';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'xz';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -144,8 +154,8 @@ options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 0;
 options.NORMALIZE = 0;
-options.NAME      = 'N_i^{00}';
-% options.NAME      = '\phi';
+% options.NAME      = 'N_i^{00}';
+options.NAME      = '\phi';
 options.PLAN      = 'xy';
 options.COMP      = 'avg';
 options.TIME      = [100 200 300];
@@ -166,8 +176,8 @@ options.ST         = 1;
 options.NORMALIZED = 0;
 options.LOGSCALE   = 1;
 options.FILTER     = 0; %filter the 50% time-average of the spectrum from
-options.TAVG_2D    = 1; %Show a 2D plot of the modes, 50% time averaged
-options.TAVG_2D_CTR= 1; %make it contour plot
+options.TAVG_2D    = 0; %Show a 2D plot of the modes, 50% time averaged
+options.TAVG_2D_CTR= 0; %make it contour plot
 fig = show_moments_spectrum(data,options);
 end
 

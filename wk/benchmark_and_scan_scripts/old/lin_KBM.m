@@ -1,188 +1,162 @@
 %% QUICK RUN SCRIPT
-% This script create a directory in /results and run a simulation directly
-% from matlab framework. It is meant to run only small problems in linear
-% for benchmark and debugging purpose since it makes matlab "busy"
-%
-% SIMID   = 'test_circular_geom';  % Name of the simulation
-% SIMID   = 'linear_CBC';  % Name of the simulation
+% This script creates a directory in /results and runs a simulation directly
+% from the Matlab framework. It is meant to run only small problems in linear
+% for benchmarking and debugging purposes since it makes Matlab "busy".
+
+%% Set up the paths for the necessary Matlab modules
+gyacomodir = pwd;
+gyacomodir = gyacomodir(1:end-2);
+addpath(genpath([gyacomodir,'matlab'])) % Add matlab module
+addpath(genpath([gyacomodir,'matlab/plot'])) % Add plot module
+addpath(genpath([gyacomodir,'matlab/compute'])) % Add compute module
+addpath(genpath([gyacomodir,'matlab/load'])) % Add load module
+
+%% Set simulation parameters
 SIMID   = 'lin_KBM';  % Name of the simulation
-RUN     = 1 ; % To run or just to load
-addpath(genpath('../matlab')) % ... add
+RUN = 1; % To run or just to load
 default_plots_options
-HELAZDIR = '/home/ahoffman/HeLaZ/';
-EXECNAME = 'helaz3';
-% EXECNAME = 'helaz3_dbg';
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Set Up parameters
-CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% PHYSICAL PARAMETERS
-NU      = 0.0;          % Collision frequency
-TAU     = 1.0;          % e/i temperature ratio
-K_Ne    = 3;            % ele Density '''
-K_Te    = 4.5;          % ele Temperature '''
-K_Ni    = 3;            % ion Density gradient drive
-K_Ti    = 8;            % ion Temperature '''
+EXECNAME = 'gyacomo23_sp'; % single precision
+% EXECNAME = 'gyacomo23_dp'; % double precision
+
+%% Set up physical parameters
+CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
+NU = 0.005;                 % Collision frequency
+TAU = 1.0;                  % e/i temperature ratio
+K_Ne    = 3;                % ele Density '''
+K_Te    = 4.5;              % ele Temperature '''
+K_Ni    = 3;                % ion Density gradient drive
+K_Ti    = 8;                % ion Temperature '''
 SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
-% SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
-KIN_E   = 1;     % 1: kinetic electrons, 2: adiabatic electrons
-BETA    = 0.03;     % electron plasma beta
-%% GRID PARAMETERS
+NA = 2;                     % number of kinetic species
+ADIAB_E = (NA==1);          % adiabatic electron model
+BETA    = 0.03;             % electron plasma beta
+%% Set up grid parameters
 P = 4;
-J = P/2;
-PMAXE   = P;     % Hermite basis size of electrons
-JMAXE   = J;     % Laguerre "
-PMAXI   = P;     % " ions
-JMAXI   = J;     % "
-NX      = 9;    % real space x-gridpoints
-NY      = 2;     %     ''     y-gridpoints
-LX      = 2*pi/0.1;   % Size of the squared frequency domain
-LY      = 2*pi/0.25;     % Size of the squared frequency domain
-NZ      = 16;    % number of perpendicular planes (parallel grid)
-NPOL    = 1;
-SG      = 0;     % Staggered z grids option
+J = P/2;%P/2;
+PMAX = P;                   % Hermite basis size
+JMAX = J;                   % Laguerre basis size
+NX = 9;                     % real space x-gridpoints
+NY = 2;                    % real space y-gridpoints
+LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
+LY = 2*pi/0.25;              % Size of the squared frequency domain in y direction
+NZ = 16;                    % number of perpendicular planes (parallel grid)
+SG = 0;                     % Staggered z grids option
+NEXC = 1;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
+
 %% GEOMETRY
-% GEOMETRY= 'Z-pinch'; % Z-pinch overwrites q0, shear and eps
-GEOMETRY= 's-alpha';
-% GEOMETRY= 'circular';
+% GEOMETRY= 's-alpha';
+GEOMETRY= 'miller';
+EPS     = 0.18;   % inverse aspect ratio
 Q0      = 1.4;    % safety factor
 SHEAR   = 0.8;    % magnetic shear
-NEXC    = 1;      % To extend Lx if needed (Lx = Nexc/(kymin*shear))
-EPS     = 0.18;   % inverse aspect ratio
-%% TIME PARMETERS
-TMAX    = 15.1;  % Maximal time unit
-DT      = 5e-3;   % Time step
-SPS0D   = 1;      % Sampling per time unit for 2D arrays
-SPS2D   = 0;      % Sampling per time unit for 2D arrays
-SPS3D   = 10;      % Sampling per time unit for 2D arrays
-SPS5D   = 1/5;    % Sampling per time unit for 5D arrays
-SPSCP   = 0;    % Sampling per time unit for checkpoints
-JOB2LOAD= -1;
+KAPPA   = 1.0;    % elongation
+DELTA   = 0.0;    % triangularity
+ZETA    = 0.0;    % squareness
+PARALLEL_BC = 'dirichlet'; % Boundary condition for parallel direction ('dirichlet','periodic','shearless','disconnected')
+SHIFT_Y = 0.0;    % Shift in the periodic BC in z
+NPOL   = 1;       % Number of poloidal turns
+
+%% TIME PARAMETERS
+TMAX     = 15;  % Maximal time unit
+DT       = 5e-3;   % Time step
+DTSAVE0D = 1;      % Sampling per time unit for 0D arrays
+DTSAVE2D = -1;     % Sampling per time unit for 2D arrays
+DTSAVE3D = 2;      % Sampling per time unit for 3D arrays
+DTSAVE5D = 100;     % Sampling per time unit for 5D arrays
+JOB2LOAD = -1;     % Start a new simulation serie
+
 %% OPTIONS
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
-% Collision operator
-% (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-CO      = 'DG';
-GKCO    = 0; % gyrokinetic operator
-ABCO    = 1; % INTERSPECIES collisions
-INIT_ZF = 0; ZF_AMP = 0.0;
-CLOS    = 0;   % Closure model (0: =0 truncation, 1: v^Nmax closure (p+2j<=Pmax))s
-NL_CLOS = 0;   % nonlinear closure model (-2:nmax=jmax; -1:nmax=jmax-j; >=0:nmax=NL_CLOS)
-KERN    = 0;   % Kernel model (0 : GK)
-INIT_OPT= 'mom00';   % Start simulation with a noisy mom00/phi/allmom
+CO        = 'DG';       % Collision operator (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
+GKCO      = 0;          % Gyrokinetic operator
+ABCO      = 1;          % INTERSPECIES collisions
+INIT_ZF   = 0;          % Initialize zero-field quantities
+HRCY_CLOS = 'truncation';   % Closure model for higher order moments
+DMAX      = -1;
+NLIN_CLOS = 'truncation';   % Nonlinear closure model for higher order moments
+NMAX      = 0;
+KERN      = 0;   % Kernel model (0 : GK)
+INIT_OPT  = 'phi';   % Start simulation with a noisy mom00/phi/allmom
+NUMERICAL_SCHEME = 'RK4'; % Numerical integration scheme (RK2,SSPx_RK2,RK3,SSP_RK3,SSPx_RK3,IMEX_SSP2,ARK2,RK4,DOPRI5)
+
 %% OUTPUTS
-W_DOUBLE = 1;
-W_GAMMA  = 1; W_HF     = 1;
-W_PHI    = 1; W_NA00   = 1;
-W_DENS   = 1; W_TEMP   = 1;
-W_NAPJ   = 1; W_SAPJ   = 0;
+W_DOUBLE = 1;     % Output flag for double moments
+W_GAMMA  = 1;     % Output flag for gamma (Gyrokinetic Energy)
+W_HF     = 1;     % Output flag for high-frequency potential energy
+W_PHI    = 1;     % Output flag for potential
+W_NA00   = 1;     % Output flag for nalpha00 (density of species alpha)
+W_DENS   = 1;     % Output flag for total density
+W_TEMP   = 1;     % Output flag for temperature
+W_NAPJ   = 1;     % Output flag for nalphaparallel (parallel momentum of species alpha)
+W_SAPJ   = 0;     % Output flag for saparallel (parallel current of species alpha)
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% unused
-HD_CO   = 0.0;    % Hyper diffusivity cutoff ratio
-MU      = 0.0; % Hyperdiffusivity coefficient
-INIT_BLOB = 0; WIPE_TURB = 0; ACT_ON_MODES = 0;
-MU_X    = MU;     %
-MU_Y    = MU;     %
-N_HD    = 4;
-MU_Z    = 10; %
-MU_P    = 0.0;     %
-MU_J    = 0.0;     %
-LAMBDAD = 0.0;
-NOISE0  = 0.0e-5; % Init noise amplitude
-BCKGD0  = 1.0;    % Init background
-k_gB   = 1.0;
-k_cB   = 1.0;
+%% UNUSED PARAMETERS
+% These parameters are usually not to play with in linear runs
+MU      = 0.0;    % Hyperdiffusivity coefficient
+MU_X    = MU;     % Hyperdiffusivity coefficient in x direction
+MU_Y    = MU;     % Hyperdiffusivity coefficient in y direction
+N_HD    = 4;      % Degree of spatial-hyperdiffusivity
+MU_Z    = 2.0;    % Hyperdiffusivity coefficient in z direction
+HYP_V   = 'hypcoll'; % Kinetic-hyperdiffusivity model
+MU_P    = 0.0;    % Hyperdiffusivity coefficient for Hermite
+MU_J    = 0.0;    % Hyperdiffusivity coefficient for Laguerre
+LAMBDAD = 0.0;    % Lambda Debye
+NOISE0  = 0.0e-5; % Initial noise amplitude
+BCKGD0  = 1.0e-5;    % Initial background
+k_gB   = 1.0;     % Magnetic gradient strength
+k_cB   = 1.0;     % Magnetic curvature strength
+COLL_KCUT = 1; % Cutoff for collision operator
+
 %%-------------------------------------------------------------------------
 %% RUN
 setup
 % system(['rm fort*.90']);
 % Run linear simulation
 if RUN
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; time mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',HELAZDIR,'bin/',EXECNAME,' 1 4 1 0; cd ../../../wk'])
-    system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 1 ',HELAZDIR,'bin/',EXECNAME,' 1 1 1 0; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 2 3 0; cd ../../../wk'])
-%     system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',HELAZDIR,'bin/',EXECNAME,' 1 6 1 0; cd ../../../wk'])
+    MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
+%     RUN  =['time mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
+    RUN  =['time mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
+%     RUN  =['time mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 6 1 0;'];
+%     RUN  =['time mpirun -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
+    MVOUT='cd ../../../wk;';
+    system([MVIN,RUN,MVOUT]);
 end
 
-%% Load results
-%%
-filename = [SIMID,'/',PARAMS,'/'];
-LOCALDIR  = [HELAZDIR,'results/',filename,'/'];
+%% Analysis
+% load
+filename = [SIMID,'/',PARAMS,'/']; % Create the filename based on SIMID and PARAMS
+LOCALDIR = [gyacomodir,'results/',filename,'/']; % Create the local directory path based on gyacomodir, results directory, and filename
+FIGDIR   = LOCALDIR; % Set FIGDIR to the same path as LOCALDIR
 % Load outputs from jobnummin up to jobnummax
-JOBNUMMIN = 00; JOBNUMMAX = 00;
-data = compile_results(LOCALDIR,JOBNUMMIN,JOBNUMMAX); %Compile the results from first output found to JOBNUMMAX if existing
-
-%% Short analysis
-if 0
-%% linear growth rate (adapted for 2D zpinch and fluxtube)
-trange = [0.5 1]*data.Ts3D(end);
-nplots = 3;
-lg = compute_fluxtube_growth_rate(data,trange,nplots);
-[gmax,     kmax] = max(lg.g_ky(:,end));
-[gmaxok, kmaxok] = max(lg.g_ky(:,end)./lg.ky);
-msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,lg.ky(kmax)); disp(msg);
-msg = sprintf('gmax/k = %2.2f, kmax/k = %2.2f',gmaxok,lg.ky(kmaxok)); disp(msg);
-end
-
-if 1
-%% Ballooning plot
-options.time_2_plot = [120];
-options.kymodes     = [0.25];
-options.normalized  = 1;
-% options.field       = 'phi';
-fig = plot_ballooning(data,options);
-end
+J0 = 0; J1 = 0;
+data = {}; % Initialize data as an empty cell array
+% load grids, inputs, and time traces
+data = compile_results_low_mem(data,LOCALDIR,J0,J1); 
 
 if 0
-%% Hermite-Laguerre spectrum
-% options.TIME = 'avg';
-options.P2J        = 1;
-options.ST         = 1;
-options.PLOT_TYPE  = 'space-time';
-% options.PLOT_TYPE  =   'Tavg-1D';
-% options.PLOT_TYPE  = 'Tavg-2D';
-options.NORMALIZED = 0;
-options.JOBNUM     = 0;
-options.TIME       = [0 50];
-options.specie     = 'i';
-options.compz      = 'avg';
-fig = show_moments_spectrum(data,options);
-% fig = show_napjz(data,options);
-save_figure(data,fig)
-end
-
-if 0
-%% linear growth rate for 3D Zpinch (kz fourier transform)
-trange = [0.5 1]*data.Ts3D(end);
-options.keq0 = 1; % chose to plot planes at k=0 or max
-options.kxky = 1;
-options.kzkx = 0;
-options.kzky = 0;
-[lg, fig] = compute_3D_zpinch_growth_rate(data,trange,options);
-save_figure(data,fig)
-end
-if 0
-%% Mode evolution
-options.NORMALIZED = 0;
-options.K2PLOT = 1;
-options.TIME   = [0:1000];
-options.NMA    = 1;
-options.NMODES = 1;
-options.iz     = 'avg';
-fig = mode_growth_meter(data,options);
-save_figure(data,fig,'.png')
-end
-
-
-if 0
-%% RH TEST
-ikx = 2; t0 = 0; t1 = data.Ts3D(end);
-[~, it0] = min(abs(t0-data.Ts3D));[~, it1] = min(abs(t1-data.Ts3D));
-plt = @(x) squeeze(mean(real(x(1,ikx,:,it0:it1)),3))./squeeze(mean(real(x(1,ikx,:,it0)),3));
+%% Plot heat flux evolution
 figure
-plot(data.Ts3D(it0:it1), plt(data.PHI));
-xlabel('$t$'); ylabel('$\phi_z(t)/\phi_z(0)$')
-title(sprintf('$k_x=$%2.2f, $k_y=0.00$',data.kx(ikx)))
+semilogy(data.Ts0D,data.HFLUX_X);
+xlabel('$tc_s/R$'); ylabel('$Q_x$');
 end
+if 1 % Activate or not
+%% plot mode evolution and growth rates
+% Load phi
+[data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');
+options.NORMALIZED = 0; 
+options.TIME   = data.Ts3D;
+ % Time window to measure the growth of kx/ky modes
+options.KX_TW  = [0.2 1]*data.Ts3D(end);
+options.KY_TW  = [0.2 1]*data.Ts3D(end);
+options.NMA    = 1; % Set NMA option to 1
+options.NMODES = 999; % Set how much modes we study
+options.iz     = 'avg'; % Compressing z
+options.ik     = 1; %
+options.fftz.flag = 0; % Set fftz.flag option to 0
+fig = mode_growth_meter(data,options); % Call the function mode_growth_meter with data and options as input arguments, and store the result in fig
+end
+
+
+

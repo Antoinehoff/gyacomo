@@ -137,7 +137,7 @@ options.PLT_FTUBE = 0;
 data.EPS = 0.4;
 data.rho_o_R      = 3e-3; % Sound larmor radius over Machine size ratio
 fig = show_geometry(data,options);
-save_figure(data,fig,'.png')
+% save_figure(data,fig,'.png')
 end
 
 if 0
@@ -231,7 +231,7 @@ end
 
 if 0
 %% Metric infos
-options.SHOW_FLUXSURF = 0;
+options.SHOW_FLUXSURF = 1;
 options.SHOW_METRICS  = 1;
 [fig, geo_arrays] = plot_metric(data,options);
 end

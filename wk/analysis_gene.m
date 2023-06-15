@@ -60,9 +60,9 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 % folder = '/misc/gene_results/CBC/new_sim/KT_6.96_128x64x24x16x8_Nexc_5_largexbox/';
 % folder = '/misc/gene_results/CBC/KT_5.3_128x64x24x16x8_Muz_0.02/';
 % folder = '/misc/gene_results/kT_scan_nu0/30x16x128x64x24/kT_4.0/';
-folder = '/misc/gene_results/kT_scan_nu0/42x24x128x64x24/kT_6.5/';
+% folder = '/misc/gene_results/kT_scan_nu0/42x24x128x64x24/kT_6.5/';
 % Miller CBC
-% folder = '/misc/gene_results/CBC/Miller_KT_6.96_128x64x24x16x8/';
+folder = '/misc/gene_results/Miller_KT_6.96_128x64x24x16x8/output/';
 % folder = '/misc/gene_results/CBC/Miller_KT_4.1_128x64x24x16x8/';
 
 % debug ? shearless
@@ -176,21 +176,21 @@ names = {'$g^{xx}$','$g^{xy}$','$g^{xz}$','$g^{yy}$','$g^{yz}$','$g^{zz}$',...
 figure;
 subplot(311)
     for i = 1:6
-    plot(gene_data.z, gene_data.geo_arrays(:,i),'DisplayName',names{i}); hold on;
+    plot(gene_data.grids.z, gene_data.geo_arrays(:,i),'DisplayName',names{i}); hold on;
     end
-    xlim([min(gene_data.z),max(gene_data.z)]); legend('show'); title('GENE geometry');
+    xlim([min(gene_data.grids.z),max(gene_data.grids.z)]); legend('show'); title('GENE geometry');
 
 subplot(312)
     for i = 7:10
-    plot(gene_data.z, gene_data.geo_arrays(:,i),'DisplayName',names{i}); hold on;
+    plot(gene_data.grids.z, gene_data.geo_arrays(:,i),'DisplayName',names{i}); hold on;
     end
-    xlim([min(gene_data.z),max(gene_data.z)]); legend('show');
+    xlim([min(gene_data.grids.z),max(gene_data.grids.z)]); legend('show');
 
 subplot(313)
     for i = [11 12 14]
-    plot(gene_data.z, gene_data.geo_arrays(:,i),'DisplayName',names{i}); hold on;
+    plot(gene_data.grids.z, gene_data.geo_arrays(:,i),'DisplayName',names{i}); hold on;
     end
-    xlim([min(gene_data.z),max(gene_data.z)]); legend('show');
+    xlim([min(gene_data.grids.z),max(gene_data.grids.z)]); legend('show');
 
 end
 

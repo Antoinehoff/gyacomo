@@ -5,73 +5,11 @@ addpath(genpath([gyacomodir,'matlab'])) % ... add
 addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
 addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0';
-%% Scans over KT and NU, keeping ky, CO constant (CBC_kT_nu_scan.m)
-% datafname = 'p2_linear/8x24_ky_0.3_P_4_J_2_kT_3_6.96_nu_0_1_DGDK.mat';
-% datafname = 'p2_linear/8x24_ky_0.3_P_8_J_4_kT_3_6.96_nu_0_1_DGDK.mat';
-% datafname = 'p2_linear/8x24_ky_0.3_P_16_J_8_kT_3_6.96_nu_0_1_DGDK.mat';
-%% Scans over KT and PJ, keeping ky, CO constant (CBC_kT_PJ_scan.m)
-% datafname = 'p2_linear/8x24_ky_0.3_kT_3_6.96_P_2_40_DGDK_0.05.mat';
-% datafname = 'p2_linear/8x24_ky_0.3_kT_3_6.96_P_2_30_DGDK_0.05.mat';
-% datafname = 'p2_linear/8x24_ky_0.3_kT_3_6.96_P_2_40_DGDK_0.025.mat';
-%% Scans over NU and PJ, keeping ky and KY constant (CBC_nu_PJ_scan.m)
-% datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_DGDK_P_2_40_KT_6.96.mat';
-% % datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_DGDK_P_2_40_KT_5.3.mat';
-% datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_SGGK_P_2_20_KT_6.96.mat';
- % datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_hypcoll_P_2_30_KT_6.96.mat';
-%  datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_hypcoll_P_2_30_KT_5.3.mat';
- % datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_dvpar4_P_2_30_KT_6.96.mat';
-%  datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_dvpar4_P_2_10_KT_6.96.mat';
-%  datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_dvpar4_P_6_10_KT_6.96.mat';
-%  datafname = 'p2_linear/8x24_ky_0.3_nu_0.01_1_dvpar4_P_2_10_KT_5.3.mat';
-%% Scans over P and J, keeping nu, ky and kT constant (CBC_P_J_scan.m)
-% datafname = 'p2_linear/8x24_ky_0.3_J_2_15_P_2_30_kT_6.96_DGDK_0.05.mat';
-% datafname = 'p2_linear/8x24_ky_0.3_J_2_15_P_2_30_kT_5.3_DGDK_0.05.mat';
-% datafname = 'p2_linear/8x24_ky_0.3_J_2_15_P_2_20_kT_6.96_DGDK_0.02.mat';
-% datafname = 'p2_linear/8x24_ky_0.3_J_2_15_P_2_30_kT_5.3_DGDK_0.025.mat';
-%% new
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_3.5_6.96_nu_0_0.5_IVDK.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_3.5_6.96_nu_0_0.5_DGDK.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_3.5_6.96_nu_0_0.5_DGGK.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_3.5_6.96_nu_0_0.5_SGGK.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_3.5_6.96_nu_0_0.5_LDGK.mat';
 
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_6_J_3_kT_3.5_6.96_nu_0_0.5_DGGK.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_6_J_3_kT_3.5_6.96_nu_0_0.5_SGGK.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_6_J_3_kT_3.5_6.96_nu_0_0.5_LDGK.mat';
-
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_8_J_4_kT_3.5_6.96_nu_0_0.5_DGGK.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_8_J_4_kT_3.5_6.96_nu_0_0.5_SGGK.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_8_J_4_kT_3.5_6.96_nu_0_0.5_LDGK.mat';
-
-% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_10_DGDK_0.05.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_30_DGGK_0.05.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_SGGK_0.05.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_10_LDGK_0.05.mat';
-
-% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_DGDK_0.1.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_DGGK_0.1.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_SGGK_0.1.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_10_LDGK_0.1.mat';
-
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_2_J_1_kT_3_5_nu_0.001_0.1_DGGK.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_4_J_2_kT_2.5_4.5_nu_0.001_0.1_DGGK.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_6_J_3_kT_2.5_4.5_nu_0.001_0.1_DGGK.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_8_J_4_kT_2.5_4.5_nu_0.001_0.1_DGGK.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_P_16_J_8_kT_2.5_4.5_nu_0.001_0.1_DGGK.mat';
-
-% datafname = 'p2_linear_new/8x24_ky_0.05_1_P_2_64_DGDK_0.001_kT_6.96.mat';
-%% ky pj scan
-% datafname = 'p2_linear_new/8x24_ky_0.05_1_P_2_64_DGDK_0.001_kT_6.96.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.05_1_P_2_48_DGDK_0.001_kT_6.96.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.05_1_P_2_16_DGGK_0.01_kT_5.3.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.05_1_P_2_16_SGGK_0.01_kT_5.3.mat';
-datafname = 'p2_linear_new/8x24_ky_0.05_1_P_2_10_LDGK_0.01_kT_5.3.mat';
-%% Data for the paper :
-% Collisionless kT threshold
-% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_30_DGDK_0.001.mat';
+datafname = 'lin_KBM/12x24_ky_0.05_0.75_P_2_16_DGGK_0.01_be_0.03.mat';
 
 %% Chose if we filter gamma>0.05
-FILTERGAMMA = 1;
+FILTERGAMMA = 0;
 
 %% Load data
 fname = ['../results/',datafname];
@@ -104,14 +42,15 @@ if 1
 figure
 colors_ = jet(numel(d.s2));
 for i = 1:numel(d.s2)
-%     plot(d.s1,d.data(:,i),'s-',...
-%         'LineWidth',2.0,...
-%         'DisplayName',[d.s2name,'=',num2str(d.s2(i))],...
-%         'color',colors_(i,:)); 
-    errorbar(d.s1,d.data(:,i),d.err(:,i),'s-',...
-    'LineWidth',2.0,...
-    'DisplayName',[d.s2name,'=',num2str(d.s2(i))],...
-    'color',colors_(i,:)); 
+    % plot(d.s1,d.data(:,i),'s-',...
+    plot(d.s1(d.data(:,i)>0),d.data((d.data(:,i)>0),i),'s-',...
+        'LineWidth',2.0,...
+        'DisplayName',[d.s2name,'=',num2str(d.s2(i))],...
+        'color',colors_(i,:)); 
+    % errorbar(d.s1,d.data(:,i),d.err(:,i),'s-',...
+    % 'LineWidth',2.0,...
+    % 'DisplayName',[d.s2name,'=',num2str(d.s2(i))],...
+    % 'color',colors_(i,:)); 
     hold on;
 end
 xlabel(d.s1name); ylabel(d.dname);title(d.title);

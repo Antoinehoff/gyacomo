@@ -29,11 +29,15 @@ fprintf(fid,['  q0     = ', num2str(GEOM.q0),'\n']);
 fprintf(fid,['  shear  = ', num2str(GEOM.shear),'\n']);
 fprintf(fid,['  eps    = ', num2str(GEOM.eps),'\n']);
 fprintf(fid,['  kappa  = ', num2str(GEOM.kappa),'\n']);
+fprintf(fid,['s_kappa  = ', num2str(GEOM.s_kappa),'\n']);
 fprintf(fid,['  delta  = ', num2str(GEOM.delta),'\n']);
+fprintf(fid,['s_delta  = ', num2str(GEOM.s_delta),'\n']);
 fprintf(fid,['  zeta   = ', num2str(GEOM.zeta),'\n']);
+fprintf(fid,['s_zeta   = ', num2str(GEOM.s_zeta),'\n']);
 fprintf(fid,['  parallel_bc = ', GEOM.parallel_bc,'\n']);
 fprintf(fid,['  shift_y = ', num2str(GEOM.shift_y),'\n']);
 fprintf(fid,['  Npol    = ', num2str(GEOM.Npol),'\n']);
+fprintf(fid,['  PB_PHASE= ', GEOM.PB_PHASE,'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&OUTPUT_PAR\n');
@@ -69,6 +73,9 @@ fprintf(fid,['  k_cB    = ', num2str(MODEL.k_cB),'\n']);
 fprintf(fid,['  lambdaD = ', num2str(MODEL.lambdaD),'\n']);
 fprintf(fid,['  beta    = ', num2str(MODEL.beta),'\n']);
 fprintf(fid,['  ADIAB_E = ', MODEL.ADIAB_E,'\n']);
+fprintf(fid,['  ADIAB_I = ', MODEL.ADIAB_I,'\n']);
+fprintf(fid,['  tau_i   = ', num2str(MODEL.tau_i),'\n']);
+fprintf(fid,['  MHD_PD  = ', MODEL.MHD_PD,'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&CLOSURE_PAR\n');
@@ -78,18 +85,19 @@ fprintf(fid,['  nonlinear_closure=',CLOSURE.nonlinear_closure,'\n']);
 fprintf(fid,['  nmax             =',num2str(CLOSURE.nmax),'\n']);
 fprintf(fid,'/\n');
 
-fprintf(fid,'&SPECIES\n');
-fprintf(fid, '  name_  = ions \n');
-fprintf(fid,['  tau_   = ', num2str(MODEL.tau_i),'\n']);
-fprintf(fid,['  sigma_ = ', num2str(MODEL.sigma_i),'\n']);
-fprintf(fid,['  q_     = ', num2str(MODEL.q_i),'\n']);
-fprintf(fid,['  K_N_   = ', num2str(MODEL.K_Ni),'\n']);
-fprintf(fid,['  K_T_   = ', num2str(MODEL.K_Ti),'\n']);
-fprintf(fid,'/\n');
-
-if(MODEL.Na > 1)
-   fprintf(fid,'&SPECIES\n');
-    fprintf(fid, '  name_  = electrons');
+if(strcmp(MODEL.ADIAB_I,'.false.'))
+    fprintf(fid,'&SPECIES\n');
+    fprintf(fid, '  name_  = ions \n');
+    fprintf(fid,['  tau_   = ', num2str(MODEL.tau_i),'\n']);
+    fprintf(fid,['  sigma_ = ', num2str(MODEL.sigma_i),'\n']);
+    fprintf(fid,['  q_     = ', num2str(MODEL.q_i),'\n']);
+    fprintf(fid,['  K_N_   = ', num2str(MODEL.K_Ni),'\n']);
+    fprintf(fid,['  K_T_   = ', num2str(MODEL.K_Ti),'\n']);
+    fprintf(fid,'/\n');
+end
+if(strcmp(MODEL.ADIAB_E,'.false.'))
+    fprintf(fid,'&SPECIES\n');
+    fprintf(fid, '  name_  = electrons \n');
     fprintf(fid,['  tau_   = ', num2str(MODEL.tau_e),'\n']);
     fprintf(fid,['  sigma_ = ', num2str(MODEL.sigma_e),'\n']);
     fprintf(fid,['  q_     = ', num2str(MODEL.q_e),'\n']);
