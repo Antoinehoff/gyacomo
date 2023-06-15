@@ -37,7 +37,7 @@ CONTAINS
   SUBROUTINE species_readinputs
     !    Read the input parameters
     USE basic, ONLY : lu_in
-    USE model, ONLY : Na, nu, ADIAB_E, MHD_PD
+    USE model, ONLY : Na, nu, ADIAB_E, ADIAB_I, MHD_PD
     USE prec_const
     IMPLICIT NONE
     INTEGER :: ia,ib
@@ -80,6 +80,8 @@ CONTAINS
       SELECT CASE (name_)
       CASE ('electrons','e','electron')
         ADIAB_E = .FALSE.
+      CASE ('ions','i','ion')
+        ADIAB_I = .FALSE.
       END SELECT
     ENDDO
     IF (.NOT. MHD_PD) Ptot = 0._dp

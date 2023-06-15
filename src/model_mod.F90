@@ -23,7 +23,8 @@ MODULE model
   REAL(xp), PUBLIC, PROTECTED :: lambdaD =  0._xp     ! Debye length
   REAL(xp), PUBLIC, PROTECTED ::    beta =  0._xp     ! electron plasma Beta (8piNT_e/B0^2)
   LOGICAL,  PUBLIC            :: ADIAB_E =  .false.   ! adiabatic electron model
-  REAL(xp), PUBLIC, PROTECTED ::   tau_e =  1.0        ! electron temperature ratio for adiabatic electrons
+  LOGICAL,  PUBLIC            :: ADIAB_I =  .false.   ! adiabatic ion model
+  REAL(xp), PUBLIC, PROTECTED ::   tau_i =  1.0       ! electron-ion temperature ratio for ion adiabatic model
   ! Auxiliary variable
   LOGICAL,  PUBLIC, PROTECTED ::      EM =  .false.   ! Electromagnetic effects flag
   LOGICAL,  PUBLIC, PROTECTED ::  MHD_PD =  .false.   ! MHD pressure drift
@@ -43,18 +44,23 @@ CONTAINS
 
     NAMELIST /MODEL_PAR/ KERN, LINEARITY, RM_LD_T_EQ, &
                          mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, Na,&
-                         nu, k_gB, k_cB, lambdaD, MHD_PD, beta, ADIAB_E, tau_e
+                         nu, k_gB, k_cB, lambdaD, MHD_PD, beta, ADIAB_E, ADIAB_I, tau_i
 
     READ(lu_in,model_par)
 
-    IF((HYP_V .EQ. 'dvpar4') .AND. (num_procs_p .GT. 1)) THEN
+    IF (ADIAB_E .AND. ADIAB_I) &
+      ERROR STOP '>> ERROR << cannot have both adiab e and adiab i models'
+
+    IF((HYP_V .EQ. 'dvpar4') .AND. (num_procs_p .GT. 1)) &
       ERROR STOP '>> ERROR << dvpar4 velocity dissipation is not compatible with current p parallelization'
-    ENDIF
 
     IF(Na .EQ. 1) THEN
-      IF(.NOT. ADIAB_E) ERROR STOP "With one species, ADIAB_E must be set to .true. STOP"
-      CALL speak('Adiabatic electron model -> beta = 0')
-      beta = 0._xp
+      IF((.NOT. ADIAB_E) .AND. (.NOT. ADIAB_I)) ERROR STOP "With one species, ADIAB_E or ADIAB_I must be set to .true. STOP"
+      IF(ADIAB_E) THEN
+        CALL speak('Adiabatic electron model -> beta = 0')
+        beta = 0._xp
+      ENDIF
+      IF(ADIAB_I) CALL speak('Adiabatic ion model -> beta = 0')
     ENDIF
 
     IF(beta .GT. 0) THEN
@@ -91,7 +97,8 @@ CONTAINS
     CALL attach(fid, TRIM(str),    "MHD_PD",  MHD_PD)
     CALL attach(fid, TRIM(str),      "beta",    beta)
     CALL attach(fid, TRIM(str),   "ADIAB_E", ADIAB_E)
-    CALL attach(fid, TRIM(str),     "tau_e",   tau_e)
+    CALL attach(fid, TRIM(str),   "ADIAB_I", ADIAB_I)
+    CALL attach(fid, TRIM(str),     "tau_i",   tau_i)
   END SUBROUTINE model_outputinputs
 
 END MODULE model

@@ -134,10 +134,10 @@ SUBROUTINE evaluate_poisson_op
   USE grid,    ONLY : local_na, local_nkx, local_nky, local_nz,&
                       kxarray, kyarray, local_nj, ngj, ngz, ieven
   USE species, ONLY : q2_tau
-  USE model,   ONLY : ADIAB_E
+  USE model,   ONLY : ADIAB_E, ADIAB_I, tau_i
   USE prec_const, ONLY: xp
   IMPLICIT NONE
-  REAL(xp)    :: pol_tot, operator, operator_ion     ! (Z^2/tau (1-sum_n kernel_na^2))
+  REAL(xp)    :: pol_tot, operator_ion     ! (Z^2/tau (1-sum_n kernel_na^2))
   INTEGER     :: in,ikx,iky,iz,ia
   REAL(xp)    :: sumker     ! (Z_a^2/tau_a (1-sum_n kernel_na^2))
 
@@ -149,7 +149,7 @@ SUBROUTINE evaluate_poisson_op
   IF( (kxarray(ikx).EQ.0._xp) .AND. (kyarray(iky).EQ.0._xp) ) THEN
       inv_poisson_op(iky, ikx, iz) =  0._xp
       inv_pol_ion   (iky, ikx, iz) =  0._xp
-ELSE
+  ELSE
     ! loop over n only up to the max polynomial degree
     pol_tot = 0._xp  ! total polarisation term
     a:DO ia = 1,local_na ! sum over species
@@ -161,12 +161,15 @@ ELSE
       pol_tot = pol_tot + q2_tau(ia) - sumker
     ENDDO a
     operator_ion = pol_tot
-    IF(ADIAB_E) THEN ! Adiabatic electron model
+
+    IF(ADIAB_E) & ! Adiabatic electron model
       pol_tot = pol_tot + 1._xp
-    ENDIF
-    operator = pol_tot
+      
     inv_poisson_op(iky, ikx, iz) =  1._xp/pol_tot
     inv_pol_ion   (iky, ikx, iz) =  1._xp/operator_ion
+
+    IF(ADIAB_I) & ! adiabatic ions
+      inv_poisson_op(iky, ikx, iz)  = tau_i
   ENDIF
   END DO zloop
   END DO kyloop
