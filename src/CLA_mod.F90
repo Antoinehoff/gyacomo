@@ -5,7 +5,6 @@ module CLA
    ! closure
    USE prec_const
    USE parallel
-   USE FMZM ! For factorial
    implicit none
    ! local variables for DLRA and SVD
    COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: A_buff,Bf,Br ! buffer and full/reduced rebuilt matrices
