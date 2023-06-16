@@ -230,7 +230,7 @@ END SUBROUTINE init_gyrodens
 !******************************************************************************!
 SUBROUTINE init_phi
   USE grid,       ONLY: total_nkx, local_nky, local_nz,&
-                        ngz, iky0, ikx0, contains_ky0
+                        ngz, iky0, ikx0, contains_ky0, AA_x, AA_y
   USE fields,     ONLY: phi, moments
   USE prec_const, ONLY: xp
   USE initial_par,ONLY: iseed, init_noiselvl, init_background
@@ -261,6 +261,16 @@ SUBROUTINE init_phi
     phi(iky0,ikx0,iz) = REAL(phi(iky0,ikx0,iz),xp) !origin must be real
   END DO
   ENDIF
+  ! Putting to zero modes that are not in the 2/3 Orszag rule
+  IF (LINEARITY .NE. 'linear') THEN
+    DO ikx=1,total_nkx
+      DO iky=1,local_nky
+        DO iz=1,local_nz+ngz
+          phi(iky,ikx,iz) = phi(iky,ikx,iz)*AA_x(ikx)*AA_y(iky)
+        ENDDO
+      ENDDO
+    ENDDO
+  ENDIF
   !**** ensure no previous moments initialization
   moments = 0._xp
   !**** Zonal Flow initialization *******************************************
@@ -283,7 +293,7 @@ END SUBROUTINE init_phi
 !!!!!!! Initialize a ppj ES potential and cancel the moments
 !******************************************************************************!
 SUBROUTINE init_phi_ppj
-  USE grid,       ONLY: total_nkx, local_nky, local_nz,&
+  USE grid,       ONLY: total_nkx, local_nky, local_nz, AA_x, AA_y,&
                         ngz, iky0, ikx0, contains_ky0, ieven, kxarray, kyarray, zarray, deltakx
   USE fields,     ONLY: phi, moments
   USE prec_const, ONLY: xp
@@ -320,6 +330,16 @@ SUBROUTINE init_phi_ppj
         ENDDO
         phi(iky0,ikx0,iz) = REAL(phi(iky0,ikx0,iz),xp) !origin must be real
       END DO
+    ENDIF
+    ! Putting to zero modes that are not in the 2/3 Orszag rule
+    IF (LINEARITY .NE. 'linear') THEN
+      DO ikx=1,total_nkx
+        DO iky=1,local_nky
+          DO iz=1,local_nz+ngz
+            phi(iky,ikx,iz) = phi(iky,ikx,iz)*AA_x(ikx)*AA_y(iky)
+          ENDDO
+        ENDDO
+      ENDDO
     ENDIF
     !**** ensure no previous moments initialization
     moments = 0._xp
@@ -375,6 +395,20 @@ SUBROUTINE initialize_blob
         ENDDO
       ENDDO
     ENDDO
+    ! Putting to zero modes that are not in the 2/3 Orszag rule
+    IF (LINEARITY .NE. 'linear') THEN
+      DO ikx=1,total_nkx
+        DO iky=1,local_nky
+          DO iz=1,local_nz+ngz
+            DO ip=1,local_np+ngp
+              DO ij=1,local_nj+ngj
+                moments(ia, ip,ij,iky,ikx,iz, :) = moments(ia, ip,ij,iky,ikx,iz, :)*AA_x(ikx)*AA_y(iky)
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDIF
   ENDDO
 END SUBROUTINE initialize_blob
 !******************************************************************************!
