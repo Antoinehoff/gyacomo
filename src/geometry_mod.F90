@@ -31,13 +31,13 @@ implicit none
                PUBLIC, PROTECTED :: parallel_bc
 
   ! GENE unused additional parameters for miller_mod
-  REAL(xp), PUBLIC, PROTECTED :: edge_opt      = 0._xp ! meant to redistribute the points in z
+  REAL(xp), PUBLIC, PROTECTED :: edge_opt      = 0.0_xp ! meant to redistribute the points in z
   REAL(xp), PUBLIC, PROTECTED :: major_R       = 1.0_xp ! major radius
-  REAL(xp), PUBLIC, PROTECTED :: major_Z       = 0._xp ! vertical elevation
+  REAL(xp), PUBLIC, PROTECTED :: major_Z       = 0.0_xp ! vertical elevation
   REAL(xp), PUBLIC, PROTECTED :: xpdx_pm_geom  = 1._xp ! amplitude mag. eq. pressure grad.
   REAL(xp), PUBLIC, PROTECTED ::          C_y  = 0._xp ! defines y coordinate : Cy (q theta - phi)
   REAL(xp), PUBLIC, PROTECTED ::         C_xy  = 1._xp ! defines x coordinate : B = Cxy Vx x Vy
-
+  REAL(xp), PUBLIC            ::       Cyq0_x0 = 1._xp ! factor that is not 1 when non circular geom (Miller)
   ! Geometrical auxiliary variables
   LOGICAL,     PUBLIC, PROTECTED :: SHEARED  = .false. ! flag for shear magn. geom or not
   ! Curvature
@@ -83,7 +83,9 @@ CONTAINS
       kappa, s_kappa,delta, s_delta, zeta, s_zeta,& ! For miller
       parallel_bc, shift_y, Npol, PB_PHASE
     READ(lu_in,geometry)
-    IF(shear .NE. 0._xp) SHEARED = .true.
+    PB_PHASE = .false.
+    IF(geom  .EQ. 'z-pinch') shear   = 0._xp
+    IF(shear .NE.     0._xp) SHEARED = .true.
     SELECT CASE(parallel_bc)
       CASE ('dirichlet')
       CASE ('periodic')
@@ -99,19 +101,19 @@ CONTAINS
 
   subroutine eval_magnetic_geometry
     USE grid,     ONLY: total_nky, total_nz, local_nkx, local_nky, local_nz, ngz,&
-                        kxarray, kyarray, set_kparray, nzgrid, zweights_SR, ieven
+                        kxarray, kyarray, set_kparray, nzgrid, zweights_SR, ieven, set_kxgrid
     USE basic,    ONLY: speak
     USE miller,   ONLY: set_miller_parameters, get_miller
+    USE circular, ONLY: get_circ
     USE calculus, ONLY: simpson_rule_z
-    USE model,    ONLY: beta
+    USE model,    ONLY: beta, LINEARITY, N_HD
     USE species,  ONLY: Ptot
     ! evalute metrix, elementwo_third_kpmaxts, jacobian and gradient
     implicit none
     REAL(xp) :: kx,ky
     COMPLEX(xp), DIMENSION(local_nz) :: integrant
-    real(xp) :: G1,G2,G3,Cx,Cy
+    real(xp) :: Cx, Cy, g_xz, g_yz, g_zz
     INTEGER  :: eo,iz,iky,ikx
-
     ! Allocate arrays
     CALL geometry_allocate_mem(local_nky,local_nkx,local_nz,ngz,nzgrid)
 
@@ -124,12 +126,13 @@ CONTAINS
       call eval_1D_geometry
     ELSE
       SELECT CASE(geom)
-        CASE('s-alpha')
+        CASE('s-alpha','salpha')
           CALL speak('s-alpha geometry')
           IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for s-alpha geometry"
           IF(MODULO(FLOOR(Npol),2) .EQ. 0)   ERROR STOP "Npol must be odd for s-alpha"
           call eval_salpha_geometry
-        CASE('Z-pinch','z-pinch','Zpinch','zpinch')
+          Cyq0_x0 = 1._xp
+        CASE('z-pinch')
           CALL speak('Z-pinch geometry')
           call eval_zpinch_geometry
           SHEARED = .FALSE.
@@ -137,19 +140,28 @@ CONTAINS
           q0      = 0._xp
           eps     = 0._xp
           kappa   = 1._xp
-        CASE('miller')
+          Cyq0_x0 = 1._xp
+        CASE('miller','Miller')
           CALL speak('Miller geometry')
           IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for Miller geometry"
           IF(MODULO(FLOOR(Npol),2) .EQ. 0)   ERROR STOP "Npol must be odd for Miller"
           call set_miller_parameters(kappa,s_kappa,delta,s_delta,zeta,s_zeta)
           call get_miller(eps,major_R,major_Z,q0,shear,FLOOR(Npol),alpha_MHD,edge_opt,&
-                          C_y,C_xy,xpdx_pm_geom,gxx,gyy,gzz,gxy,gxz,gyz,&
-                          dBdx,dBdy,hatB,jacobian,dBdz,hatR,hatZ,dxdR,dxdZ,&
-                          Ckxky,gradz_coeff)
+                          C_y,C_xy,Cyq0_x0,xpdx_pm_geom,gxx,gxy,gxz,gyy,gyz,gzz,&
+                          dBdx,dBdy,dBdz,hatB,jacobian,hatR,hatZ,dxdR,dxdZ)
+        CASE('circular','circ')
+          CALL speak('Circular geometry')
+          IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for circular geometry"
+          IF(MODULO(FLOOR(Npol),2) .EQ. 0)   ERROR STOP "Npol must be odd for circular"
+          call get_circ(eps,major_R,major_Z,q0,shear,&
+                          C_y,C_xy,Cyq0_x0,gxx,gxy,gxz,gyy,gyz,gzz,&
+                          dBdx,dBdy,dBdz,hatB,jacobian,hatR,hatZ,dxdR,dxdZ)  
         CASE DEFAULT
           ERROR STOP '>> ERROR << geometry not recognized!!'
         END SELECT
     ENDIF
+    ! Reset kx grid (to account for Cyq0_x0 factor)
+    CALL set_kxgrid(shear,Npol,Cyq0_x0,LINEARITY,N_HD) 
     !
     ! Evaluate perpendicular wavenumber
     !  k_\perp^2 = g^{xx} k_x^2 + 2 g^{xy}k_x k_y + k_y^2 g^{yy}
@@ -158,12 +170,15 @@ CONTAINS
     DO eo = 1,nzgrid
       ! Curvature operator (Frei et al. 2022 eq 2.15)
       DO iz = 1,local_nz+ngz
-        G1 = gxx(iz,eo)*gyy(iz,eo)-gxy(iz,eo)*gxy(iz,eo)
-        G2 = gxx(iz,eo)*gyz(iz,eo)-gxy(iz,eo)*gxz(iz,eo)
-        G3 = gxy(iz,eo)*gyz(iz,eo)-gyy(iz,eo)*gxz(iz,eo)
-        ! Here we divide by hatB because our equation is formulated with grad(lnB) terms (not gradB like in GENE)
-        Cx =-(dBdy(iz,eo) + G2/G1*dBdz(iz,eo))/hatB(iz,eo)
-        Cy = (dBdx(iz,eo) - G3/G1*dBdz(iz,eo))/hatB(iz,eo)
+        ! !covariant metric
+        g_xz = jacobian(iz,eo)**2*(gxy(iz,eo)*gyz(iz,eo)-gyy(iz,eo)*gxz(iz,eo))
+        g_yz = jacobian(iz,eo)**2*(gxy(iz,eo)*gxz(iz,eo)-gxx(iz,eo)*gyz(iz,eo))
+        g_zz = jacobian(iz,eo)**2*(gxx(iz,eo)*gyy(iz,eo)-gxy(iz,eo)**2)
+        ! Formulation of curv. coeff with the covariant metric
+        ! note: the minus sign for Cx is also present in GENE geometry module in the
+        !       set_curvature routine and is done afterwards with an if statement..
+        Cx =-(dBdy(iz,eo) - g_yz/g_zz*dBdz(iz,eo))/hatB(iz,eo)
+        Cy = (dBdx(iz,eo) - g_xz/g_zz*dBdz(iz,eo))/hatB(iz,eo)
         DO iky = 1,local_nky
           ky = kyarray(iky)
            DO ikx= 1,local_nkx
@@ -175,8 +190,6 @@ CONTAINS
         gradz_coeff(iz,eo) = 1._xp /(jacobian(iz,eo)*hatB(iz,eo))
         ! d/dz(ln B) to correspond to the formulation in paper 2023
         dlnBdz(iz,eo)      = dBdz(iz,eo)/hatB(iz,eo)
-        ! Geometric factor in front to the maxwellian dzphi term (not implemented)
-        ! Gamma_phipar(iz,eo) = G2/G1
       ENDDO
     ENDDO
     !
@@ -215,7 +228,7 @@ CONTAINS
 
     ! Poloidal plane coordinates
       hatR(iz,eo) = 1._xp + eps*COS(z)
-      hatZ(iz,eo) = 1._xp + eps*SIN(z)
+      hatZ(iz,eo) = eps*SIN(z)
 
     ! toroidal coordinates
       Rc  (iz,eo) = hatR(iz,eo)
@@ -366,10 +379,10 @@ CONTAINS
             ! Check if it has to be connected to the otherside of the kx grid
             if(ikx_zBC_L(iky,ikx) .LE. 0) ikx_zBC_L(iky,ikx) = ikx_zBC_L(iky,ikx) + total_nkx
             ! Check if it points out of the kx domain
-            print*, kxarray(ikx), shift, kx_min
+            ! print*, kxarray(ikx), shift, kx_min
             IF( (kxarray(ikx) - shift) .LT. kx_min ) THEN ! outside of the frequ domain
-              print*,( ((kxarray(ikx) - shift)-kx_min) .LT. EPSILON(kx_min) )
-              print*, kxarray(ikx)-kx_min, EPSILON(kx_min)
+              ! print*,( ((kxarray(ikx) - shift)-kx_min) .LT. EPSILON(kx_min) )
+              ! print*, kxarray(ikx)-kx_min, EPSILON(kx_min)
             ! IF( (ikx-mn_y*Nexc) .LT. 1 ) THEN 
               SELECT CASE(parallel_bc)
                 CASE ('dirichlet')! connected to 0
