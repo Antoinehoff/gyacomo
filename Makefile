@@ -24,7 +24,7 @@ fast: compile
 
 # Debug version with all flags
 debug: F90 = mpif90
-debug: F90FLAGS = -C -g -traceback -ftrapuv -warn all -debug all
+debug: F90FLAGS = -C -g -traceback -warn all -check all -debug all -init=zero,snan -fpe0
 debug: EXEC = $(BINDIR)/gyacomo23_debug
 debug: dirs src/srcinfo.h
 debug: compile
@@ -112,7 +112,7 @@ $(OBJDIR)/diagnose.o : src/srcinfo.h
 
 # Main source dependencies
 FOBJ=$(OBJDIR)/advance_field_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/auxval.o \
-$(OBJDIR)/basic_mod.o $(OBJDIR)/coeff_mod.o $(OBJDIR)/closure_mod.o \
+$(OBJDIR)/basic_mod.o $(OBJDIR)/coeff_mod.o $(OBJDIR)/closure_mod.o $(OBJDIR)/circular_mod.o \
 $(OBJDIR)/collision_mod.o $(OBJDIR)/nonlinear_mod.o $(OBJDIR)/control.o \
 $(OBJDIR)/diagnose.o $(OBJDIR)/diagnostics_par_mod.o $(OBJDIR)/endrun.o \
 $(OBJDIR)/fields_mod.o $(OBJDIR)/fourier_mod.o $(OBJDIR)/geometry_mod.o \
@@ -154,6 +154,11 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/CLA_mod.o
  	 $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/grid_mod.o \
 	 $(OBJDIR)/parallel_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/calculus_mod.F90 -o $@
+
+ $(OBJDIR)/circular_mod.o : src/circular_mod.F90 \
+ 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/lag_interp_mod.o\
+	 $(OBJDIR)/prec_const_mod.o
+	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/circular_mod.F90 -o $@
 
  $(OBJDIR)/coeff_mod.o : src/coeff_mod.F90 \
  	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/model_mod.o \
@@ -207,14 +212,14 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/CLA_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/fourier_mod.F90 -o $@
 
  $(OBJDIR)/geometry_mod.o : src/geometry_mod.F90 \
- 	 $(OBJDIR)/array_mod.o $(OBJDIR)/calculus_mod.o $(OBJDIR)/miller_mod.o \
-   $(OBJDIR)/grid_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/prec_const_mod.o \
-	 $(OBJDIR)/utility_mod.o
+ 	 $(OBJDIR)/array_mod.o $(OBJDIR)/calculus_mod.o $(OBJDIR)/circular_mod.o \
+	 $(OBJDIR)/miller_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/model_mod.o \
+	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/utility_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/geometry_mod.F90 -o $@
 
  $(OBJDIR)/ghosts_mod.o : src/ghosts_mod.F90 \
- 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/grid_mod.o\
-   $(OBJDIR)/geometry_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/time_integration_mod.o
+ 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/grid_mod.o \
+	 $(OBJDIR)/geometry_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/time_integration_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/ghosts_mod.F90 -o $@
 
  $(OBJDIR)/grid_mod.o : src/grid_mod.F90 \
@@ -247,8 +252,8 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/CLA_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/memory.F90 -o $@
 
  $(OBJDIR)/miller_mod.o : src/miller_mod.F90 \
- 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/lag_interp_mod.o \
-   $(OBJDIR)/prec_const_mod.o
+ 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/lag_interp_mod.o\
+	 $(OBJDIR)/prec_const_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/miller_mod.F90 -o $@
 
  $(OBJDIR)/model_mod.o : src/model_mod.F90 \
