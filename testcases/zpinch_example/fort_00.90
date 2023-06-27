@@ -17,17 +17,17 @@
   Nexc   = 1
 /
 &GEOMETRY
-  geom   = 'Z-pinch'
-  q0     = 0.0
-  shear  = 0.0 
-  eps    = 0.0
+  geom   = 'z-pinch'
+  q0     = 1.4
+  shear  = 0.8 
+  eps    = 0.13
   kappa  = 1.0
   s_kappa= 0.0
   delta  = 0.0
   s_delta= 0.0
   zeta   = 0.0
   s_zeta = 0.0
-  parallel_bc = 'shearless'
+  parallel_bc = 'dirichlet'
   shift_y= 0.0
 /
 &OUTPUT_PAR
@@ -59,11 +59,11 @@
   nu      = 0.1
   beta    = 0.0
   ADIAB_E = .f.
-  tau_e   = 1.0
+  tau_i   = 1.0
 /
 &CLOSURE_PAR
-  !hierarchy_closure='truncation'
-  hierarchy_closure='max_degree'
+  hierarchy_closure='truncation'
+  !hierarchy_closure='max_degree'
   dmax = 2
   nonlinear_closure='anti_laguerre_aliasing' !(truncation,full_sum,anti_laguerre_aliasing)
   nmax = -1
