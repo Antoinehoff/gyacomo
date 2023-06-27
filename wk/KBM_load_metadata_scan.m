@@ -6,8 +6,9 @@ addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
 addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0';
 
-datafname = 'lin_KBM/12x24_ky_0.05_0.75_P_2_16_DGGK_0.01_be_0.03.mat';
-
+% datafname = 'lin_KBM/12x24_ky_0.05_0.75_P_2_16_DGGK_0.01_be_0.03.mat';
+% datafname = 'lin_KBM/12x24_ky_0.05_0.75_P_2_16_DGGK_0.01_be_0.03.mat';
+datafname ='lin_AUG_scan/12x24_ky_0.05_0.75_P_2_16_DGGK_0.01_be_0.000152.mat';
 %% Chose if we filter gamma>0.05
 FILTERGAMMA = 0;
 

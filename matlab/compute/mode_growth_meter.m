@@ -83,6 +83,7 @@ for i = 1:2
     amp   = MODES;
     i_=1;
     for ik = MODES
+
         to_measure = log(plt(field,ik));
         gr = polyfit(t(it1:it2),to_measure(it1:it2),1);
         gamma(i_) = gr(1);

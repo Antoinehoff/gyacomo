@@ -62,13 +62,15 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 % folder = '/misc/gene_results/kT_scan_nu0/30x16x128x64x24/kT_4.0/';
 % folder = '/misc/gene_results/kT_scan_nu0/42x24x128x64x24/kT_6.5/';
 % Miller CBC
-folder = '/misc/gene_results/Miller_KT_6.96_128x64x24x16x8/output/';
-% folder = '/misc/gene_results/CBC/Miller_KT_4.1_128x64x24x16x8/';
+% folder = '/misc/gene_results/Miller_AUG/Npol_1/output/';
+% folder = '/misc/gene_results/Miller_AUG/Npol_5/output/';
+% folder = '/misc/gene_results/Miller_AUG/circ/';
+folder = '/misc/gene_results/Miller_AUG/linear/Npol_1/';
 
 % debug ? shearless
 % folder = '/misc/gene_results/CBC/shearless_CBC_128x64x24x24x12_00/';
 % folder = '/misc/gene_results/CBC/shearless_CBC_128x64x24x24x12_01/';
-if 0
+if 1
 %% FULL DATA LOAD (LONG)
 gene_data = load_gene_data(folder);
 gene_data.FIGDIR = folder;
@@ -85,7 +87,7 @@ if 0
 dashboard(gene_data);
 end
 
-if 1
+if 0
 %% ONLY HEAT FLUX
 nrgfile           = 'nrg.dat.h5';
 % nrgfile           = 'nrg_1.h5';
@@ -168,7 +170,7 @@ gene_data.a = data.EPS * 2000;
 create_film(gene_data,options,'.gif')
 end
 
-if 0
+if 1
 %% Geometry
 names = {'$g^{xx}$','$g^{xy}$','$g^{xz}$','$g^{yy}$','$g^{yz}$','$g^{zz}$',...
          '$B_0$','$\partial_x B_0$','$\partial_y B_0$','$\partial_z B_0$',...

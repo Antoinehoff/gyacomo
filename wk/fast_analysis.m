@@ -5,8 +5,8 @@ addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 default_plots_options
 % Partition of the computer where the data have to be searched
-% PARTITION  = '/misc/gyacomo23_outputs/';
-PARTITION = '/home/ahoffman/gyacomo/';
+PARTITION  = '/misc/gyacomo23_outputs/';
+% PARTITION = '/home/ahoffman/gyacomo/';
 
 %% Tests
 % resdir = 'test_stepon_AA/CBC_stepon_AA';
@@ -90,6 +90,9 @@ resdir = '/home/ahoffman/gyacomo/results/dev/3D_kine_zpinch_test';
 % resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_1e-3/9x5x128x64x24/kT_7.0';
 % resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_1e-3/17x9x128x64x24/kT_7.0';
 % resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_1e-3/31x16x128x64x24/kT_7.0';
+
+%% Paper 3
+resdir = '/misc/gyacomo23_outputs/paper_3_GYAC23/nonlin_KBM';
  %%
 J0 = 00; J1 = 20;
 
@@ -156,9 +159,10 @@ options.AXISEQUAL = 0;
 options.NORMALIZE = 0;
 % options.NAME      = 'N_i^{00}';
 options.NAME      = '\phi';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 options.COMP      = 'avg';
-options.TIME      = [100 200 300];
+options.TIME      = [0:0.02:0.14];
+% options.TIME      = data.Ts3D(1:2:end);
 options.RESOLUTION = 256;
 fig = photomaton(data,options);
 % save_figure(data,fig)

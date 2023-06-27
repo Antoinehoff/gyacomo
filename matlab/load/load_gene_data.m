@@ -1,6 +1,10 @@
 function [ DATA ] = load_gene_data( folder )
 %to load gene data as for HeLaZ results
-namelist      = read_namelist([folder,'parameters']);
+try
+    namelist      = read_namelist([folder,'parameters']);
+catch
+    namelist      = read_namelist([folder,'parameters.dat']);
+end
 DATA.namelist = namelist;
 DATA.folder   = folder;
 %% Grid
@@ -29,7 +33,11 @@ if numel(DATA.grids.kx)>1
 else
     dkx = 1;
 end
-dky = DATA.grids.ky(2);
+if DATA.grids.Nky > 1
+    dky = DATA.grids.ky(2);
+else
+    dky = DATA.grids.ky(1);
+end
 Lx = 2*pi/dkx;   Ly = 2*pi/dky;
 x = linspace(-Lx/2,Lx/2,DATA.grids.Nx+1); x = x(1:end-1);
 y = linspace(-Ly/2,Ly/2,DATA.grids.Ny+1); y = y(1:end-1);

@@ -11,10 +11,10 @@ if OPTIONS.ST == 0
 end
 if OPTIONS.LOGSCALE
     logname = 'log';
-    compress = @(x,ia) log(sum(abs((x(:,:,:,:,:))),4));
+    compress = @(x,ia) log(sum(abs((x(ia,:,:,:,:))),4));
 else
     logname = '';
-    compress = @(x,ia) sum(abs((x(:,:,:,:,:))),4);
+    compress = @(x,ia) sum(abs((x(ia,:,:,:,:))),4);
 end
 for ia = 1:DATA.inputs.Na
     Napjz = compress(DATA.Napjz,ia);

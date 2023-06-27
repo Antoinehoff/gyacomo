@@ -37,13 +37,20 @@ function [DATA] = load_params(DATA,filename)
     DATA.inputs.MUz     = h5readatt(filename,'/data/input/model','mu_z');
     DATA.inputs.LINEARITY = h5readatt(filename,'/data/input/model','LINEARITY');
     DATA.inputs.BETA    = h5readatt(filename,'/data/input/model','beta');
-    DATA.inputs.TAU_I   = h5readatt(filename,'/data/input/model','tau_i');
+    try
+        DATA.inputs.TAU_I   = h5readatt(filename,'/data/input/model','tau_i');
+    catch
+        DATA.inputs.TAU_I   = 1.0;
+    end
     DATA.inputs.HYP_V   = h5readatt(filename,'/data/input/model','HYP_V');
     DATA.inputs.K_cB    = h5readatt(filename,'/data/input/model','k_cB');
     DATA.inputs.K_gB    = h5readatt(filename,'/data/input/model','k_gB');
     DATA.inputs.ADIAB_E = h5readatt(filename,'/data/input/model','ADIAB_E') == 'y';
-    DATA.inputs.ADIAB_I = h5readatt(filename,'/data/input/model','ADIAB_I') == 'y';
-
+    try
+        DATA.inputs.ADIAB_I = h5readatt(filename,'/data/input/model','ADIAB_I') == 'y';
+    catch 
+        DATA.inputs.ADIAB_I = 0;
+    end
     DATA.inputs.W_GAMMA   = h5readatt(filename,'/data/input/diag_par','write_gamma') == 'y';
     DATA.inputs.W_PHI     = h5readatt(filename,'/data/input/diag_par','write_phi')   == 'y';
     DATA.inputs.W_NA00    = h5readatt(filename,'/data/input/diag_par','write_Na00')  == 'y';

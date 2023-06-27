@@ -13,7 +13,7 @@ for i_ = 1:numel(names)
 end
 NPLOT = options.SHOW_FLUXSURF + options.SHOW_METRICS;
 if NPLOT > 0
-    fig = figure;
+    fig = figure; 
     if options.SHOW_METRICS
     subplot(3,NPLOT,1*NPLOT)
         for i = 1:6
@@ -32,6 +32,7 @@ if NPLOT > 0
         plot(data.grids.z, geo_arrays(:,i),'DisplayName',names{i}); hold on;
         end
         xlim([min(data.grids.z),max(data.grids.z)]); legend('show');
+        legend('Interpreter','none')
     end
     if options.SHOW_FLUXSURF
         subplot(1,2,1)

@@ -9,13 +9,13 @@ EXECNAME = 'gyacomo23_sp';
 % EXECNAME = 'gyacomo23_debug';
 CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%
-SIMID = 'lin_KBM';  % Name of the simulation
-RERUN   = 0; % rerun if the  data does not exist
+SIMID = 'lin_AUG_scan';  % Name of the simulation
+RERUN   = 1; % rerun if the  data does not exist
 RUN     = 1;
-K_Ne    = 3;                % ele Density '''
-K_Te    = 4.5;              % ele Temperature '''
-K_Ni    = 3;                % ion Density gradient drive
-K_Ti    = 8;                % ion Temperature '''
+K_Ne    = 34;              % ele Density '''
+K_Te    = 56;               % ele Temperature '''
+K_Ni    = 34;              % ion Density gradient drive
+K_Ti    = 21;               % ion Temperature '''
 P_a = [2 4 8 16];
 % P_a = 10;
 ky_a= 0.05:0.1:0.75;
@@ -27,11 +27,11 @@ COLL_KCUT = 1.75;
 NU        = 1e-2;
 % model
 NA      = 2;
-BETA    = 0.03;     % electron plasma beta
+BETA    = 1.52e-4;             % electron plasma beta
+MHD_PD  = 0;                % MHD pressure drift
 % Geometry
 GEOMETRY= 'miller';
 % GEOMETRY= 's-alpha';
-SHEAR   = 0.8;    % magnetic shear
 % time and numerical grid
 DT0    = 5e-3;
 TMAX   = 15;
@@ -51,7 +51,7 @@ for P = P_a
 i = 1;
 for ky = ky_a
     %% PHYSICAL PARAMETERS
-    TAU     = 1.0;            % e/i temperature ratio
+    TAU = 1.38;                  % e/i temperature ratio
     % SIGMA_E = 0.05196152422706632;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
     SIGMA_E = 0.0233380;   % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
     %% GRID PARAMETERS
@@ -67,15 +67,20 @@ for ky = ky_a
     SG      = 0;     % Staggered z grids option
     NEXC    = 1;     % To extend Lx if needed (Lx = Nexc/(kymin*shear))
     %% GEOMETRY
-    % GEOMETRY= 's-alpha';
-    EPS     = 0.18;   % inverse aspect ratio
-    Q0      = 1.4;    % safety factor
-    KAPPA   = 1.0;    % elongation
-    DELTA   = 0.0;    % triangularity
-    ZETA    = 0.0;    % squareness
-    PARALLEL_BC = 'dirichlet'; %'dirichlet','periodic','shearless','disconnected'
-%     PARALLEL_BC = 'periodic'; %'dirichlet','periodic','shearless','disconnected'
-    SHIFT_Y = 0.0;
+    GEOMETRY= 'miller';
+    EPS     = 0.3;   % inverse aspect ratio
+    Q0      = 5.7;    % safety factor
+    SHEAR   = 4.6;%*EPS;    % magnetic shear
+    KAPPA   = 1.8;   % elongation
+    S_KAPPA = 0.0;
+    DELTA   = 0.4;  % triangularity
+    S_DELTA = 0.0;
+    ZETA    = 0.0; % squareness
+    S_ZETA  = 0.0;
+    PARALLEL_BC = 'dirichlet'; % Boundary condition for parallel direction ('dirichlet','periodic','shearless','disconnected')
+    SHIFT_Y = 0.0;    % Shift in the periodic BC in z
+    PB_PHASE= 0;
+    MHD_PD  = 0;                % MHD pressure drift
     %% TIME PARMETERS
     DTSAVE0D = 1;      % Sampling per time unit for 0D arrays
     DTSAVE2D = -1;     % Sampling per time unit for 2D arrays
@@ -121,6 +126,7 @@ for ky = ky_a
     BCKGD0  = 0.0;    % Init background
     k_gB   = 1.0;
     k_cB   = 1.0;
+    ADIAB_I = 0;          % adiabatic ion model
     %% RUN
     setup
     % naming
@@ -136,7 +142,7 @@ for ky = ky_a
     end
     if RUN && (RERUN || isempty(data_.outfilenames) || Ntime < 10)
         % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0; cd ../../../wk'])
-        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 2 2 1 0; cd ../../../wk'])
+        system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
         % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 3 2 1 0; cd ../../../wk'])
     end
     data_    = compile_results_low_mem(data_,LOCALDIR,00,00);

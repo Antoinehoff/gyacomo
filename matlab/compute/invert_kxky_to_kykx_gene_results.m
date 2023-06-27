@@ -17,8 +17,11 @@ if numel(data.grids.kx)>1
 else
     dkx = 1;
 end
-
-dky = data.grids.ky(2);
+if data.grids.Nky > 1
+    dky = data.grids.ky(2);
+else
+    dky = data.grids.ky(1);
+end
 Lx = 2*pi/dkx;   Ly = 2*pi/dky;
 x = linspace(-Lx/2,Lx/2,data.grids.Nx+1); x = x(1:end-1);
 y = linspace(-Ly/2,Ly/2,data.grids.Ny+1); y = y(1:end-1);

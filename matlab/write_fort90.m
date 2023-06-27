@@ -29,11 +29,11 @@ fprintf(fid,['  q0     = ', num2str(GEOM.q0),'\n']);
 fprintf(fid,['  shear  = ', num2str(GEOM.shear),'\n']);
 fprintf(fid,['  eps    = ', num2str(GEOM.eps),'\n']);
 fprintf(fid,['  kappa  = ', num2str(GEOM.kappa),'\n']);
-fprintf(fid,['s_kappa  = ', num2str(GEOM.s_kappa),'\n']);
+fprintf(fid,['  s_kappa  = ', num2str(GEOM.s_kappa),'\n']);
 fprintf(fid,['  delta  = ', num2str(GEOM.delta),'\n']);
-fprintf(fid,['s_delta  = ', num2str(GEOM.s_delta),'\n']);
+fprintf(fid,['  s_delta  = ', num2str(GEOM.s_delta),'\n']);
 fprintf(fid,['  zeta   = ', num2str(GEOM.zeta),'\n']);
-fprintf(fid,['s_zeta   = ', num2str(GEOM.s_zeta),'\n']);
+fprintf(fid,['  s_zeta   = ', num2str(GEOM.s_zeta),'\n']);
 fprintf(fid,['  parallel_bc = ', GEOM.parallel_bc,'\n']);
 fprintf(fid,['  shift_y = ', num2str(GEOM.shift_y),'\n']);
 fprintf(fid,['  Npol    = ', num2str(GEOM.Npol),'\n']);
@@ -87,7 +87,7 @@ fprintf(fid,'/\n');
 
 if(strcmp(MODEL.ADIAB_I,'.false.'))
     fprintf(fid,'&SPECIES\n');
-    fprintf(fid, '  name_  = ions \n');
+    fprintf(fid, ['  name_  = ','''','ions','''',' \n']);
     fprintf(fid,['  tau_   = ', num2str(MODEL.tau_i),'\n']);
     fprintf(fid,['  sigma_ = ', num2str(MODEL.sigma_i),'\n']);
     fprintf(fid,['  q_     = ', num2str(MODEL.q_i),'\n']);
@@ -97,7 +97,7 @@ if(strcmp(MODEL.ADIAB_I,'.false.'))
 end
 if(strcmp(MODEL.ADIAB_E,'.false.'))
     fprintf(fid,'&SPECIES\n');
-    fprintf(fid, '  name_  = electrons \n');
+    fprintf(fid, ['  name_  = ','''','electrons','''',' \n']);
     fprintf(fid,['  tau_   = ', num2str(MODEL.tau_e),'\n']);
     fprintf(fid,['  sigma_ = ', num2str(MODEL.sigma_e),'\n']);
     fprintf(fid,['  q_     = ', num2str(MODEL.q_e),'\n']);

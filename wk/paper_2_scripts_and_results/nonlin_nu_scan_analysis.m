@@ -1,11 +1,11 @@
 kN=2.22;
 figure
-ERRBAR = 0; LOGSCALE = 0; AU = 1;
+ERRBAR = 0; LOGSCALE = 0; AU = 0;
 resstr={};
 msz = 10; lwt = 2.0;
 % CO = 'DGGK'; mrkstyl='d';
-CO = 'SGGK'; mrkstyl='s'; 
-% CO = 'LDGK'; mrkstyl='o';
+% CO = 'SGGK'; mrkstyl='s'; 
+CO = 'LDGK'; mrkstyl='o';
 % GRAD = 'kT_7.0'; kT = 6.96;
 GRAD = 'kT_5.3'; kT = 5.3;
 % GRAD = 'kT_4.5'; kT = 4.5;
@@ -79,8 +79,8 @@ for j = 1:numel(directories)
             data.inputs.K_N  = kN;
             data.inputs.NU   = nus(i);
         end
-            % Trange  = data.Ts0D(end)*[0.5 1.0];
-            Trange  = [200 400];
+            Trange  = data.Ts0D(end)*[0.5 1.0];
+            % Trange  = [200 400];
         %
         [~,it0] = min(abs(Trange(1)  -data.Ts0D)); 
         [~,it1] = min(abs(Trange(end)-data.Ts0D)); 
