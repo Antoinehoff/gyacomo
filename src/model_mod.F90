@@ -60,7 +60,7 @@ CONTAINS
         CALL speak('Adiabatic electron model -> beta = 0')
         beta = 0._xp
       ENDIF
-      IF(ADIAB_I) CALL speak('Adiabatic ion model -> beta = 0')
+      IF(ADIAB_I) CALL speak('Adiabatic ion model')
     ENDIF
 
     IF(beta .GT. 0) THEN

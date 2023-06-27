@@ -22,7 +22,7 @@ CONTAINS
                                 ip0, total_nj, ngj
     USE calculus,         ONLY: simpson_rule_z
     USE parallel,         ONLY: manual_3D_bcast
-    USE model,            ONLY: lambdaD, ADIAB_E, ADIAB_I, tau_i
+    USE model,            ONLY: lambdaD, ADIAB_E, tau_i
     use species,          ONLY: q
     USE processing,       ONLY: compute_density
     USE geometry,         ONLY: iInt_Jacobian, Jacobian

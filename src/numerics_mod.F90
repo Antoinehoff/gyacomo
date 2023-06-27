@@ -2,8 +2,9 @@
 !   The module numerics contains a set of routines that are called only once at
 ! the beginng of a run. These routines do not need to be optimzed
 MODULE numerics
+  USE prec_const, ONLY: xp
     implicit none
-
+    REAL(xp), PUBLIC, PROTECTED, ALLOCATABLE, DIMENSION(:,:,:,:,:) :: kernel_i
     PUBLIC :: build_dnjs_table, evaluate_kernels, evaluate_EM_op
     PUBLIC :: compute_lin_coeff, build_dv4Hp_table
 
@@ -71,14 +72,16 @@ END SUBROUTINE build_dv4Hp_table
 !******************************************************************************!
 SUBROUTINE evaluate_kernels
   USE basic
+  USE prec_const, ONLY: xp
   USE array,   ONLY : kernel!, HF_phi_correction_operator
   USE grid,    ONLY : local_na, local_nj,ngj, local_nkx, local_nky, local_nz, ngz, jarray, kparray,&
                       nzgrid
   USE species, ONLY : sigma2_tau_o2
-  USE prec_const, ONLY: xp
+  USE model,   ONLY : ADIAB_I, tau_i
   IMPLICIT NONE
   INTEGER    :: j_int, ia, eo, ikx, iky, iz, ij
-  REAL(xp)   :: j_xp, y_, factj
+  REAL(xp)   :: j_xp, y_, factj, sigma_i
+  sigma_i = 1._xp ! trivial singe sigma_a = sqrt(m_a/m_i)
 
 DO ia  = 1,local_na
   DO eo  = 1,nzgrid
@@ -100,6 +103,30 @@ DO ia  = 1,local_na
       ENDDO
     ENDDO
   ENDDO
+
+  !! ion kernels if we use adiabatic ions
+  IF(ADIAB_I) THEN
+    ALLOCATE(kernel_i(local_nj + ngj,local_nky,local_nkx,local_nz + ngz,nzgrid))
+    DO eo  = 1,nzgrid
+      DO ikx = 1,local_nkx
+        DO iky = 1,local_nky
+          DO iz  = 1,local_nz + ngz
+            DO ij = 1,local_nj + ngj
+              j_int = jarray(ij)
+              j_xp  = REAL(j_int,xp)
+              y_    =  sigma_i**2*tau_i/2._xp * kparray(iky,ikx,iz,eo)**2
+              IF(j_int .LT. 0) THEN !ghosts values
+                kernel_i(ij,iky,ikx,iz,eo) = 0._xp
+              ELSE
+                factj = REAL(GAMMA(j_xp+1._xp),xp)
+                kernel_i(ij,iky,ikx,iz,eo) = y_**j_int*EXP(-y_)/factj
+              ENDIF
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDDO
+  ENDIF
   ! !! Correction term for the evaluation of the heat flux
   ! HF_phi_correction_operator(:,:,:) = &
   !        2._xp * Kernel(ia,1,:,:,:,1) &
@@ -137,10 +164,11 @@ SUBROUTINE evaluate_poisson_op
   USE model,   ONLY : ADIAB_E, ADIAB_I, tau_i
   USE prec_const, ONLY: xp
   IMPLICIT NONE
-  REAL(xp)    :: pol_tot, operator_ion     ! (Z^2/tau (1-sum_n kernel_na^2))
+  REAL(xp)    :: pol_tot, operator_ion
   INTEGER     :: in,ikx,iky,iz,ia
-  REAL(xp)    :: sumker     ! (Z_a^2/tau_a (1-sum_n kernel_na^2))
-
+  REAL(xp)    :: sumker, q_i, sigma_i
+  q_i     = 1._xp ! we assume single charge ions for adiab. ion model
+  sigma_i = 1._xp ! trivial singe sigma_a = sqrt(m_a/m_i)
   ! This term has no staggered grid dependence. It is evalued for the
   ! even z grid since poisson uses p=0 moments and phi only.
   kxloop: DO ikx = 1,local_nkx
@@ -154,7 +182,7 @@ SUBROUTINE evaluate_poisson_op
     pol_tot = 0._xp  ! total polarisation term
     a:DO ia = 1,local_na ! sum over species
     ! ia = 1
-      sumker  = 0._xp  ! sum of ion polarisation term
+      sumker  = 0._xp  ! sum of ion polarisation term (Z_a^2/tau_a (1-sum_n kernel_na^2))
       DO in=1,local_nj
         sumker = sumker + q2_tau(ia)*kernel(ia,in+ngj/2,iky,ikx,iz+ngz/2,ieven)**2 ! ... sum recursively ...
       END DO
@@ -164,12 +192,17 @@ SUBROUTINE evaluate_poisson_op
 
     IF(ADIAB_E) & ! Adiabatic electron model
       pol_tot = pol_tot + 1._xp
+
+    IF(ADIAB_I) THEN ! adiabatic ions model (add ions polarisation)
+      sumker  = 0._xp  ! sum of ion polarisation term
+      DO in=1,local_nj
+        sumker = sumker + q_i**2/tau_i * kernel_i(in+ngj/2,iky,ikx,iz+ngz/2,ieven)**2 ! ... sum recursively ...
+      END DO
+      pol_tot = pol_tot + q_i**2/tau_i - sumker
+    ENDIF
       
     inv_poisson_op(iky, ikx, iz) =  1._xp/pol_tot
     inv_pol_ion   (iky, ikx, iz) =  1._xp/operator_ion
-
-    IF(ADIAB_I) & ! adiabatic ions
-      inv_poisson_op(iky, ikx, iz)  = tau_i
   ENDIF
   END DO zloop
   END DO kyloop
@@ -185,13 +218,15 @@ SUBROUTINE evaluate_ampere_op
   USE array,    ONLY : kernel, inv_ampere_op
   USE grid,     ONLY : local_na, local_nkx, local_nky, local_nz, ngz, total_nj, ngj,&
                        kparray, kxarray, kyarray, SOLVE_AMPERE, iodd
-  USE model,    ONLY : beta
+  USE model,    ONLY : beta, ADIAB_I
   USE species,  ONLY : q, sigma
   USE geometry, ONLY : hatB
   USE prec_const, ONLY: xp
   IMPLICIT NONE
-  REAL(xp)    :: sum_jpol, kperp2, operator     ! (Z^2/tau (1-sum_n kernel_na^2))
+  REAL(xp)    :: sum_jpol, kperp2, operator, q_i, sigma_i
   INTEGER     :: in,ikx,iky,iz,ia
+  q_i     = 1._xp ! single charge ion
+  sigma_i = 1._xp ! trivial singe sigma_a = sqrt(m_a/m_i)
   ! We do not solve Ampere if beta = 0 to spare waste of ressources
   IF(SOLVE_AMPERE) THEN
     x:DO ikx = 1,local_nkx
@@ -204,10 +239,15 @@ SUBROUTINE evaluate_ampere_op
       sum_jpol = 0._xp
       a:DO ia  = 1,local_na
         ! loop over n only up to the max polynomial degree
-        j:DO in=1,total_nj
+        DO in=1,total_nj
           sum_jpol = sum_jpol  + q(ia)**2/(sigma(ia)**2)*kernel(ia,in+ngj/2,iky,ikx,iz+ngz/2,iodd)**2 ! ... sum recursively ...
-        END DO j
+        END DO 
       END DO a
+      IF(ADIAB_I) THEN ! Add ion contribution on the polarisation
+        DO in=1,total_nj
+          sum_jpol = sum_jpol  + q_i**2/(sigma_i**2)*kernel_i(in+ngj/2,iky,ikx,iz+ngz/2,iodd)**2 ! ... sum recursively ...
+      END DO
+      ENDIF
       operator = 2._xp*kperp2*hatB(iz+ngz/2,iodd)**2 + beta*sum_jpol
       inv_ampere_op(iky, ikx, iz) =  1._xp/operator
     ENDIF
