@@ -96,20 +96,22 @@ SUBROUTINE diagnose_full(kstep)
   USE basic,           ONLY: speak,chrono_runt,&
                              cstep,iframe0d,iframe3d,iframe5d,crashed
   USE grid,            ONLY: &
-    parray_full,pmax,jarray_full,jmax,&
-    kyarray_full,kxarray_full,zarray_full, ngz, total_nz, local_nz, ieven
+    parray_full,pmax,jarray_full,jmax, kparray, &
+    kyarray_full,kxarray_full,zarray_full, ngz, total_nz, local_nz, ieven,&
+    local_Nky, total_nky, local_nkx, total_nkx
   USE geometry, ONLY: gxx, gxy, gxz, gyy, gyz, gzz, &
                       hatR, hatZ, hatB, dBdx, dBdy, dBdz, Jacobian, gradz_coeff
   USE diagnostics_par
   USE futils,          ONLY: creatf, creatg, creatd, closef, putarr, putfile, attach, openf!, putarrnd ! Routine de merde, jamais l'utiliser
   USE array
   USE model,           ONLY: EM
-  USE parallel,        ONLY: my_id, comm0, gather_z
+  USE parallel,        ONLY: my_id, comm0, gather_z, gather_xyz_real
   USE collision,       ONLY: coll_outputinputs
   IMPLICIT NONE
   INTEGER, INTENT(in) :: kstep
   INTEGER, parameter  :: BUFSIZE = 2
   REAL(xp), DIMENSION(total_nz) :: Az_full ! full z array for metric output
+  REAL(xp), DIMENSION(total_nky,total_nkx,total_nz) :: kp_full
   INTEGER :: rank = 0, ierr
   INTEGER :: dims(1) = (/0/)
   !____________________________________________________________________________
@@ -141,6 +143,8 @@ SUBROUTINE diagnose_full(kstep)
     CALL putarr(fidres, "/data/grid/coordz",    zarray_full,   "z/R", ionode=0)
     CALL putarr(fidres, "/data/grid/coordp" ,   parray_full,   "p", ionode=0)
     CALL putarr(fidres, "/data/grid/coordj" ,   jarray_full,   "j", ionode=0)
+    CALL gather_xyz_real(kparray(1:local_Nky,1:local_Nkx,1:local_nz,ieven),kp_full,local_nky,total_nky,total_nkx,local_nz,total_nz)
+    CALL putarr(fidres, "/data/grid/coordkp" ,      kp_full,   "kp", ionode=0)
     ! Metric info
     CALL   creatg(fidres, "/data/metric", "Metric data")
     CALL gather_z(gxx((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
@@ -171,8 +175,6 @@ SUBROUTINE diagnose_full(kstep)
     CALL putarr(fidres, "/data/metric/Jacobian", Az_full, "Jacobian", ionode =0)
     CALL gather_z(gradz_coeff((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
     CALL putarr(fidres, "/data/metric/gradz_coeff", Az_full, "gradz_coeff", ionode =0)
-    ! CALL putarrnd(fidres, "/data/metric/Ckxky",       Ckxky(1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),:), (/1, 1, 3/))
-    ! CALL putarrnd(fidres, "/data/metric/kernel",    kernel(1,(1+ngj/2):(local_nj+ngj/2),1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),1), (/1, 2, 4/))
     !  var0d group (gyro transport)
     IF (nsave_0d .GT. 0) THEN
      CALL creatg(fidres, "/data/var0d", "0d profiles")

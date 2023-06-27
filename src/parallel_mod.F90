@@ -37,7 +37,7 @@ MODULE parallel
   INTEGER, DIMENSION(:), ALLOCATABLE :: rcv_zyp, dsp_zyp
 
   PUBLIC :: ppinit, manual_0D_bcast, manual_3D_bcast, init_parallel_var, &
-            gather_xyz, gather_pjz, gather_pjxyz, exchange_ghosts_1D
+            gather_xyz, gather_xyz_real, gather_pjz, gather_pjxyz, exchange_ghosts_1D
 
 CONTAINS
 
@@ -245,6 +245,42 @@ CONTAINS
     ENDIF
   END SUBROUTINE gather_xyz
   
+  SUBROUTINE gather_xyz_real(field_loc,field_tot,nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot)
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: nky_loc,nky_tot,nkx_tot,nz_loc,nz_tot
+    REAL(xp), DIMENSION(:,:,:), INTENT(IN)  :: field_loc
+    REAL(xp), DIMENSION(:,:,:), INTENT(OUT) :: field_tot
+    REAL(xp), DIMENSION(nky_tot,nz_loc) :: buffer_yt_zl !full  y, local z
+    REAL(xp), DIMENSION(nky_tot,nz_tot) :: buffer_yt_zt !full  y, full  z
+    REAL(xp), DIMENSION(nky_loc):: buffer_yl_zc !local y, constant z
+    REAL(xp), DIMENSION(nky_tot):: buffer_yt_zc !full  y, constant z
+    INTEGER :: snd_y, snd_z, root_p, root_z, root_ky, ix, iz
+
+    snd_y  = nky_loc    ! Number of points to send along y (per z)
+    snd_z  = nky_tot*nz_loc ! Number of points to send along z (full y)
+    root_p = 0; root_z = 0; root_ky = 0
+    IF(rank_p .EQ. root_p) THEN
+      DO ix = 1,nkx_tot
+        DO iz = 1,nz_loc
+          ! fill a buffer to contain a slice of data at constant kx and z
+          buffer_yl_zc(1:nky_loc) = field_loc(1:nky_loc,ix,iz)
+          CALL MPI_GATHERV(buffer_yl_zc, snd_y,        mpi_xp_r, &
+                           buffer_yt_zc, rcv_y, dsp_y, mpi_xp_r, &
+                           root_ky, comm_ky, ierr)
+          buffer_yt_zl(1:nky_tot,iz) = buffer_yt_zc(1:nky_tot)
+        ENDDO
+        ! send the full line on y contained by root_ky
+        IF(rank_ky .EQ. root_ky) THEN
+          CALL MPI_GATHERV(buffer_yt_zl, snd_z,          mpi_xp_r, &
+                           buffer_yt_zt, rcv_zy, dsp_zy, mpi_xp_r, &
+                           root_z, comm_z, ierr)
+        ENDIF
+        ! ID 0 (the one who output) rebuild the whole array
+        IF(my_id .EQ. 0) &
+          field_tot(1:nky_tot,ix,1:nz_tot) = buffer_yt_zt(1:nky_tot,1:nz_tot)
+      ENDDO
+    ENDIF
+  END SUBROUTINE gather_xyz_real
 
   !!!!! Gather a field in kinetic + z coordinates on rank 0 !!!!!
   SUBROUTINE gather_pjz(field_loc,field_tot,na_tot,np_loc,np_tot,nj_tot,nz_loc,nz_tot)
