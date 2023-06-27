@@ -19,6 +19,7 @@ subroutine auxval
   INTEGER :: i_, ierr
   CALL speak('=== Set auxiliary values ===')
   ! Init the grids
+  CALL init_grids_data(Na,EM,LINEARITY) 
   CALL set_grids(shear,Npol,LINEARITY,N_HD,EM,Na) 
   ! Allocate memory for global arrays
   CALL memory
@@ -40,13 +41,11 @@ subroutine auxval
   ! precompute the hermite fourth derivative table
   CALL build_dv4Hp_table 
   ! set the closure scheme in use
-  CALL set_closure_model 
-  
+  CALL set_closure_model   
 #ifdef TEST_SVD
   ! If we want to test SVD decomposition etc.
   CALL init_CLA(local_nky,local_np*local_nj)
 #endif
-
   !! Display parallel settings
   CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   DO i_ = 0,num_procs-1

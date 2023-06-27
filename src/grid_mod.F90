@@ -108,8 +108,8 @@ MODULE grid
   REAL(xp), DIMENSION(:), ALLOCATABLE, PUBLIC,PROTECTED :: AA_y
 
   ! Public Functions
-  PUBLIC :: init_1Dgrid_distr
-  PUBLIC :: set_grids, set_kparray
+  PUBLIC :: init_1Dgrid_distr, init_grids_data
+  PUBLIC :: set_grids, set_kxgrid, set_kparray
   PUBLIC :: grid_readinputs, grid_outputinputs
   PUBLIC :: bar
 
@@ -117,7 +117,6 @@ MODULE grid
   real(xp), PUBLIC, PROTECTED    :: pmax_xp, jmax_xp
 
 CONTAINS
-
 
   SUBROUTINE grid_readinputs
     ! Read the input parameters
@@ -135,6 +134,136 @@ CONTAINS
     inv_Nx = 1._xp/REAL(Nx,xp)
     inv_Ny = 1._xp/REAL(Ny,xp)
   END SUBROUTINE grid_readinputs
+
+  !! Init the local and global number of points in all directions
+  SUBROUTINE init_grids_data(Na,EM,LINEARITY) 
+    USE fourier,  ONLY: init_grid_distr_and_plans
+    USE parallel, ONLY: num_procs_p, rank_p, num_procs_z, rank_z
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: Na        ! number of species coming from the model module
+    LOGICAL, INTENT(IN) :: EM        ! electromagnetic effects (to skip odd Hermite or not)
+    CHARACTER(len=*), INTENT(IN) :: LINEARITY    ! Linear or nonlinear run
+    INTEGER :: in, istart, iend
+    !!----------------- SPECIES INDICES (not parallelized)
+    ias = 1
+    iae = Na
+    total_Na = Na
+    local_Na = Na
+    local_Na_offset = ias - 1
+    !!----------------- HERMITE INDICES (parallelized)
+    ! If no parallel dim (Nz=1) and no EM effects (beta=0), the moment hierarchy
+    !! is separable between odds and even P
+    IF((Nz .EQ. 1) .AND. .NOT. EM) THEN
+      deltap  = 2
+      Ngp     = 2  ! two ghosts cells for p+/-2 only
+      pp2     = 1  ! index p+2 is ip+1
+    ELSE
+      deltap  = 1
+      Ngp     = 4  ! four ghosts cells for p+/-1 and p+/-2 terms
+      pp2     = 2  ! index p+2 is ip+2
+    ENDIF
+    ! Total number of Hermite polynomials we will evolve
+    total_np = (Pmax/deltap) + 1
+    ! Local data distribution
+    CALL decomp1D(total_np, num_procs_p, rank_p, ips, ipe)
+    local_np        = ipe - ips + 1
+    local_np_offset = ips - 1
+    ! Allocate the grid arrays
+    ALLOCATE(parray_full(total_np))
+    ALLOCATE(parray(local_np+ngp))
+    !!----------------- LAGUERRE INDICES (not parallelized)
+    ! Total number of J degrees
+    total_nj   = jmax+1
+    local_jmax = jmax
+    Ngj= 2      ! 2-points ghosts for j+\-1 terms
+    ! Indices of local data
+    ijs = 1; ije = jmax + 1
+    ! Local number of J
+    local_nj        = ije - ijs + 1
+    local_nj_offset = ijs - 1
+    ! allocate global and local
+    ALLOCATE(jarray_full(total_nj))
+    ALLOCATE(jarray(local_nj+ngj))
+    ALLOCATE(kroneck_j0(local_nj+ngj));
+    ALLOCATE(kroneck_j1(local_nj+ngj));
+    !!----------------- SPATIAL GRIDS (parallelized)
+    !! Parallel distribution of kx ky grid
+    IF (LINEARITY .NE. 'linear') THEN ! we let FFTW distribute if we use it
+      IF (my_id .EQ. 0) write(*,*) 'FFTW3 y-grid distribution'
+      CALL init_grid_distr_and_plans(Nx,Ny,comm_ky,local_nkx_ptr,local_nkx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
+    ELSE ! otherwise we distribute equally
+      IF (my_id .EQ. 0) write(*,*) 'Manual y-grid distribution'
+      CALL init_1Dgrid_distr
+    ENDIF
+    !!----------------- BINORMAL KY INDICES (parallelized)
+    Nky       = Ny/2+1 ! Defined only on positive kx since fields are real
+    total_nky = Nky
+    Ngy = 0 ! no ghosts cells in ky
+    ikys = local_nky_ptr_offset + 1
+    ikye = ikys + local_nky_ptr - 1
+    local_nky = ikye - ikys + 1
+    local_nky_offset = local_nky_ptr_offset
+    ALLOCATE(kyarray_full(Nky))
+    ALLOCATE(kyarray(local_nky))
+    ALLOCATE(AA_y(local_nky))
+    !!---------------- RADIAL KX INDICES (not parallelized)
+    Nkx       = Nx
+    total_nkx = Nx
+    ikxs = 1
+    ikxe = total_nkx
+    local_nkx_ptr = ikxe - ikxs + 1
+    local_nkx     = ikxe - ikxs + 1
+    local_nkx_offset = ikxs - 1
+    ALLOCATE(kxarray(local_nkx))
+    ALLOCATE(kxarray_full(total_nkx))
+    ALLOCATE(AA_x(local_nkx))
+    !!---------------- PARALLEL Z GRID (parallelized)
+    total_nz = Nz
+    IF (SG) THEN
+      CALL speak('--2 staggered z grids--')
+      ! indices for even p and odd p grids (used in kernel, jacobian, gij etc.)
+      ieven  = 1
+      iodd   = 2
+      nzgrid = 2
+    ELSE
+      ieven  = 1
+      iodd   = 1
+      nzgrid = 1
+    ENDIF
+    !! Parallel data distribution
+    IF( (Nz .EQ. 1) .AND. (num_procs_z .GT. 1) ) &
+    ERROR STOP '>> ERROR << Cannot have multiple core in z-direction (Nz = 1)'
+    ! Local data distribution
+    CALL decomp1D(total_nz, num_procs_z, rank_z, izs, ize)
+    local_nz        = ize - izs + 1
+    local_nz_offset = izs - 1
+    ! Ghosts boundaries (depend on the order of z operators)
+    IF(Nz .EQ. 1) THEN
+      ngz = 0
+    ELSEIF(Nz .GE. 4) THEN
+      ngz =4
+      IF(mod(Nz,2) .NE. 0 ) THEN
+        ERROR STOP '>> ERROR << Nz must be an even number for Simpson integration rule !!!!'
+     ENDIF
+    ELSE
+      ERROR STOP '>> ERROR << Nz is not appropriate!!'
+    ENDIF
+    ALLOCATE(zarray(local_nz+ngz,nzgrid))
+    ALLOCATE(zarray_full(total_nz))
+    ALLOCATE(counts_nz (num_procs_z))
+    ALLOCATE(displs_nz (num_procs_z))
+    CALL allocate_array(local_zmax,1,nzgrid)
+    CALL allocate_array(local_zmin,1,nzgrid)
+    ALLOCATE(zweights_SR(local_nz))
+    ! List of shift and local numbers between the different processes (used in scatterv and gatherv)
+    DO in = 0,num_procs_z-1
+      CALL decomp1D(total_nz, num_procs_z, in, istart, iend)
+      counts_nz(in+1) = iend-istart+1
+      displs_nz(in+1) = istart-1
+    ENDDO
+    !!---------------- Kperp grid
+    CALL allocate_array( kparray, 1,local_nky, 1,local_nkx, 1,local_nz+ngz, 1,nzgrid)
+  END SUBROUTINE
   !!!! GRID REPRESENTATION
   ! We define the grids that contain ghosts (p,j,z) with indexing from 1 to Nlocal + nghost
   ! e.g. nghost = 4, nlocal = 4
@@ -145,7 +274,6 @@ CONTAINS
   ! |_|_|_|_|
   !  1 2 3 4
   SUBROUTINE set_grids(shear,Npol,LINEARITY,N_HD,EM,Na)
-    USE fourier, ONLY: init_grid_distr_and_plans
     REAL(xp), INTENT(IN) :: shear, Npol
     CHARACTER(len=*), INTENT(IN) :: LINEARITY
     INTEGER, INTENT(IN)  :: N_HD
@@ -154,16 +282,8 @@ CONTAINS
     CALL set_agrid(Na)
     CALL set_pgrid(EM)
     CALL set_jgrid
-    !! Parallel distribution of kx ky grid
-    IF (LINEARITY .NE. 'linear') THEN
-      IF (my_id .EQ. 0) write(*,*) 'FFTW3 y-grid distribution'
-      CALL init_grid_distr_and_plans(Nx,Ny,comm_ky,local_nkx_ptr,local_nkx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
-    ELSE
-      CALL init_1Dgrid_distr
-      IF (my_id .EQ. 0) write(*,*) 'Manual y-grid distribution'
-    ENDIF
     CALL set_kygrid(LINEARITY,N_HD)
-    CALL set_kxgrid(shear,Npol,LINEARITY,N_HD)
+    CALL set_kxgrid(shear,Npol,1._xp,LINEARITY,N_HD) ! this will be redone after geometry if Cyq0_x0 .NE. 1
     CALL set_zgrid (Npol)
   END SUBROUTINE set_grids
 
@@ -188,39 +308,14 @@ CONTAINS
 
   SUBROUTINE set_pgrid(EM)
     USE prec_const
-    USE parallel, ONLY: num_procs_p, rank_p
     IMPLICIT NONE
     LOGICAL, INTENT(IN) :: EM
     INTEGER :: ip
-    ! If no parallel dim (Nz=1) and no EM effects (beta=0), the moment hierarchy
-    !! is separable between odds and even P and since the energy is injected in
-    !! P=0 and P=2 for density/temperature gradients there is no need of
-    !! simulating the odd p which will only be damped.
-    !! We define in this case a grid Parray = 0,2,4,...,Pmax i.e. deltap = 2
-    !! instead of 1 to spare computation
-    IF((Nz .EQ. 1) .AND. .NOT. EM) THEN
-      deltap  = 2
-      Ngp     = 2  ! two ghosts cells for p+/-2 only
-      pp2     = 1  ! index p+2 is ip+1
-    ELSE
-      deltap  = 1
-      Ngp     = 4  ! four ghosts cells for p+/-1 and p+/-2 terms
-      pp2     = 2  ! index p+2 is ip+2
-    ENDIF
-    ! Total number of Hermite polynomials we will evolve
-    total_np = (Pmax/deltap) + 1
     ! Build the full grids on process 0 to diagnose it without comm
-    ALLOCATE(parray_full(total_np))
     ! P
     DO ip = 1,total_np; parray_full(ip) = (ip-1)*deltap; END DO
-    !! Parallel data distribution
-    ! Local data distribution
-    CALL decomp1D(total_np, num_procs_p, rank_p, ips, ipe)
-    local_np       = ipe - ips + 1
-    local_np_offset = ips - 1
     !! local grid computations
-    ! Allocate and fill pgrid array
-    ALLOCATE(parray(local_np+ngp))
+    ! Fill pgrid array
     DO ip = 1,local_np+ngp
       parray(ip) = (ip-1-ngp/2+local_np_offset)*deltap
     ENDDO
@@ -279,20 +374,11 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER :: ij
-    ! Total number of J degrees
-    total_nj   = jmax+1
-    local_jmax = jmax
-    Ngj= 2      ! 2-points ghosts for j+\-1 terms
     ! Build the full grids on process 0 to diagnose it without comm
-    ALLOCATE(jarray_full(total_nj))
     ! J
-    DO ij = 1,total_nj; jarray_full(ij) = (ij-1); END DO
-    ! Indices of local data
-    ijs = 1; ije = jmax + 1
-    ! Local number of J
-    local_nj        = ije - ijs + 1
-    local_nj_offset = ijs - 1
-    ALLOCATE(jarray(local_nj+ngj))
+    DO ij = 1,total_nj
+      jarray_full(ij) = (ij-1)
+    END DO
     DO ij = 1,local_nj+ngj
       jarray(ij) = ij-1-ngj/2+local_nj_offset
     END DO
@@ -307,8 +393,8 @@ CONTAINS
       IF(jarray(ij) .EQ. 1) ij1 = ij
     END DO
     ! Kronecker arrays for j
-    ALLOCATE(kroneck_j0(local_nj+ngj)); kroneck_j0 = 0._xp
-    ALLOCATE(kroneck_j1(local_nj+ngj)); kroneck_j1 = 0._xp
+    kroneck_j0 = 0._xp
+    kroneck_j1 = 0._xp
     DO ij = 1,local_nj+ngj
       SELECT CASE(jarray(ij))
       CASE(0)
@@ -325,29 +411,18 @@ CONTAINS
     CHARACTER(len=*), INTENT(IN) ::LINEARITY
     INTEGER, INTENT(IN) :: N_HD
     INTEGER :: iky
-    Nky       = Ny/2+1 ! Defined only on positive kx since fields are real
-    total_nky = Nky
     ! Grid spacings
     IF (Ny .EQ. 1) THEN
-      deltaky = 2._xp*PI/Ly
-      ky_max  = deltaky
-      ky_min  = deltaky
+      ERROR STOP "Gyacomo cannot run with only one ky"
     ELSE
       deltaky = 2._xp*PI/Ly
       ky_max  = (Nky-1)*deltaky
       ky_min  = deltaky
     ENDIF
-    Ngy = 0 ! no ghosts cells in ky
     ! Build the full grids on process 0 to diagnose it without comm
-    ALLOCATE(kyarray_full(Nky))
     DO iky = 1,Nky
      kyarray_full(iky) = REAL(iky-1,xp) * deltaky
     END DO
-    ikys = local_nky_ptr_offset + 1
-    ikye = ikys + local_nky_ptr - 1
-    local_nky = ikye - ikys + 1
-    local_nky_offset = local_nky_ptr_offset
-    ALLOCATE(kyarray(local_nky))
     local_kymax = 0._xp
     ! Creating a grid ordered as dk*(0 1 2 3)
     ! We loop over the natural iky numbers (|1 2 3||4 5 6||... Nky|)
@@ -378,7 +453,6 @@ CONTAINS
     END DO
     ! Orszag 2/3 filter
     two_third_kymax = 2._xp/3._xp*deltaky*(Nky-1)
-    ALLOCATE(AA_y(local_nky))
     DO iky = 1,local_nky
       IF ( (kyarray(iky) .LT. two_third_kymax) .OR. (LINEARITY .EQ. 'linear')) THEN
         AA_y(iky) = 1._xp;
@@ -394,10 +468,10 @@ CONTAINS
     ENDIF
   END SUBROUTINE set_kygrid
 
-  SUBROUTINE set_kxgrid(shear,Npol,LINEARITY,N_HD)
+  SUBROUTINE set_kxgrid(shear,Npol,Cyq0_x0,LINEARITY,N_HD)
     USE prec_const
     IMPLICIT NONE
-    REAL(xp), INTENT(IN) :: shear, Npol
+    REAL(xp), INTENT(IN) :: shear, Npol, Cyq0_x0
     CHARACTER(len=*), INTENT(IN) ::LINEARITY
     INTEGER, INTENT(IN)  :: N_HD
     INTEGER :: ikx
@@ -405,7 +479,7 @@ CONTAINS
     IF(shear .GT. 0) THEN
       IF(my_id.EQ.0) write(*,*) 'Magnetic shear detected: set up sheared kx grid..'
       ! mininal size of box in x to respect dkx = 2pi shear dky
-      Lx_adapted = Ly/(2._xp*pi*shear*Npol)
+      Lx_adapted = Ly/(2._xp*pi*shear*Npol*Cyq0_x0)
       ! Put Nexc to 0 so that it is computed from a target value Lx
       IF(Nexc .EQ. 0) THEN
         Nexc = CEILING(0.9 * Lx/Lx_adapted)
@@ -414,60 +488,36 @@ CONTAINS
       ! x length is adapted
       Lx = Lx_adapted*Nexc
     ENDIF
-    Nkx       = Nx
-    total_nkx = Nx
-    ! Local data
-    ! Start and END indices of grid
-    ikxs = 1
-    ikxe = total_nkx
-    local_nkx_ptr = ikxe - ikxs + 1
-    local_nkx     = ikxe - ikxs + 1
-    local_nkx_offset = ikxs - 1
-    ALLOCATE(kxarray(local_nkx))
-    ALLOCATE(kxarray_full(total_nkx))
-    IF (Nx .EQ. 1) THEN
-      deltakx         = 1._xp
-      kxarray(1)      = 0._xp
-      ikx0           = 1
-      contains_kx0    = .true.
-      kx_max          = 0._xp
-      ikx_max         = 1
-      kx_min          = 0._xp
-      kxarray_full(1) = 0._xp
-      local_kxmax     = 0._xp
-    ELSE ! Build apprpopriate grid
-      deltakx      = 2._xp*PI/Lx
-      IF(MODULO(total_nkx,2) .EQ. 0) THEN ! Even number of kx (-2 -1 0 1 2 3)
-        ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
-        DO ikx = 1,total_nkx
-          kxarray_full(ikx) = deltakx*REAL(MODULO(ikx-1,total_nkx/2)-(total_nkx/2)*FLOOR(2.*real(ikx-1)/real(total_nkx)),xp)
-          IF (ikx .EQ. total_nkx/2+1) kxarray_full(ikx) = -kxarray_full(ikx)
-        END DO
-        kx_max = MAXVAL(kxarray_full)!(total_nkx/2)*deltakx
-        kx_min = MINVAL(kxarray_full)!-kx_max+deltakx
-        ! Set local grid (not parallelized so same as full one)
-        local_kxmax = 0._xp
-        DO ikx = 1,local_nkx
-          kxarray(ikx) = kxarray_full(ikx+local_nkx_offset)
-          ! Finding kx=0
-          IF (kxarray(ikx) .EQ. 0) THEN
-            ikx0 = ikx
-            contains_kx0 = .true.
-          ENDIF
-          ! Finding local kxmax
-          IF (ABS(kxarray(ikx)) .GT. local_kxmax) THEN
-            local_kxmax = ABS(kxarray(ikx))
-            ikx_max = ikx
-          ENDIF
-        END DO
-      ELSE ! Odd number of kx (-2 -1 0 1 2)
-        ERROR STOP "Gyacomo is safer with a even Kx number"
-      ENDIF
+    deltakx      = 2._xp*PI/Lx
+    IF(MODULO(total_nkx,2) .EQ. 0) THEN ! Even number of kx (-2 -1 0 1 2 3)
+      ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
+      DO ikx = 1,total_nkx
+        kxarray_full(ikx) = deltakx*REAL(MODULO(ikx-1,total_nkx/2)-(total_nkx/2)*FLOOR(2.*real(ikx-1)/real(total_nkx)),xp)
+        IF (ikx .EQ. total_nkx/2+1) kxarray_full(ikx) = -kxarray_full(ikx)
+      END DO
+      kx_max = MAXVAL(kxarray_full)!(total_nkx/2)*deltakx
+      kx_min = MINVAL(kxarray_full)!-kx_max+deltakx
+      ! Set local grid (not parallelized so same as full one)
+      local_kxmax = 0._xp
+      DO ikx = 1,local_nkx
+        kxarray(ikx) = kxarray_full(ikx+local_nkx_offset)
+        ! Finding kx=0
+        IF (kxarray(ikx) .EQ. 0) THEN
+          ikx0 = ikx
+          contains_kx0 = .true.
+        ENDIF
+        ! Finding local kxmax
+        IF (ABS(kxarray(ikx)) .GT. local_kxmax) THEN
+          local_kxmax = ABS(kxarray(ikx))
+          ikx_max = ikx
+        ENDIF
+      END DO
+    ELSE ! Odd number of kx (-2 -1 0 1 2)
+      ERROR STOP "Gyacomo is safer with an even Kx number"
     ENDIF
     ! Orszag 2/3 filter
     two_third_kxmax = 2._xp/3._xp*kx_max;
     ! Antialiasing filter
-    ALLOCATE(AA_x(local_nkx))
     DO ikx = 1,local_nkx
       IF ( ((kxarray(ikx) .GT. -two_third_kxmax) .AND. &
            (kxarray(ikx) .LT. two_third_kxmax))   .OR. (LINEARITY .EQ. 'linear')) THEN
@@ -486,11 +536,9 @@ CONTAINS
 
   SUBROUTINE set_zgrid(Npol)
     USE prec_const
-    USE parallel, ONLY: num_procs_z, rank_z
     IMPLICIT NONE
     REAL(xp):: grid_shift, Lz, zmax, zmin, Npol
-    INTEGER :: istart, iend, in, iz, ig, eo, iglob
-    total_nz = Nz
+    INTEGER :: iz, ig, eo
     ! Length of the flux tube (in ballooning angle)
     Lz         = 2._xp*pi*Npol
     ! Z stepping (#interval = #points since periodic)
@@ -499,80 +547,48 @@ CONTAINS
     ! Parallel hyperdiffusion coefficient
     diff_dz_coeff = (deltaz/2._xp)**4 ! adaptive fourth derivative (~GENE)
     IF (SG) THEN
-      CALL speak('--2 staggered z grids--')
       grid_shift = deltaz/2._xp
-      ! indices for even p and odd p grids (used in kernel, jacobian, gij etc.)
-      ieven  = 1
-      iodd   = 2
-      nzgrid = 2
     ELSE
       grid_shift = 0._xp
-      ieven  = 1
-      iodd   = 1
-      nzgrid = 1
     ENDIF
-    ! Build the full grids on process 0 to diagnose it without comm
-    ALLOCATE(zarray_full(total_nz))
-    IF (Nz .EQ. 1) Npol = 0._xp
-      zmax = 0; zmin = 0;
-      DO iz = 1,total_nz ! z in [-pi pi-dz] x Npol
-        zarray_full(iz) = REAL(iz-1,xp)*deltaz - Lz/2._xp
-        IF(zarray_full(iz) .GT. zmax) zmax = zarray_full(iz)
-        IF(zarray_full(iz) .LT. zmin) zmin = zarray_full(iz)
-      END DO
-      !! Parallel data distribution
-      IF( (Nz .EQ. 1) .AND. (num_procs_z .GT. 1) ) &
-      ERROR STOP '>> ERROR << Cannot have multiple core in z-direction (Nz = 1)'
-      ! Local data distribution
-      CALL decomp1D(total_nz, num_procs_z, rank_z, izs, ize)
-      local_nz        = ize - izs + 1
-      local_nz_offset = izs - 1
-      ! Ghosts boundaries (depend on the order of z operators)
-      IF(Nz .EQ. 1) THEN
-        ngz              = 0
-        zarray_full(izs) = 0
-    ELSEIF(Nz .GE. 4) THEN
-      ngz =4
-      IF(mod(Nz,2) .NE. 0 ) THEN
-        ERROR STOP '>> ERROR << Nz must be an even number for Simpson integration rule !!!!'
-     ENDIF
-    ELSE
-      ERROR STOP '>> ERROR << Nz is not appropriate!!'
-    ENDIF
-    ! List of shift and local numbers between the different processes (used in scatterv and gatherv)
-    ALLOCATE(counts_nz (num_procs_z))
-    ALLOCATE(displs_nz (num_procs_z))
-    DO in = 0,num_procs_z-1
-      CALL decomp1D(total_nz, num_procs_z, in, istart, iend)
-      counts_nz(in+1) = iend-istart+1
-      displs_nz(in+1) = istart-1
-    ENDDO
+    ! Build the full grids on process 0 to diagnose it without comm   
+    IF (Nz .EQ. 1) &
+      Npol = 0._xp
+    zmax = 0; zmin = 0;
+    DO iz = 1,total_nz ! z in [-pi pi-dz] x Npol
+      zarray_full(iz) = REAL(iz-1,xp)*deltaz - Lz/2._xp
+      IF(zarray_full(iz) .GT. zmax) zmax = zarray_full(iz)
+      IF(zarray_full(iz) .LT. zmin) zmin = zarray_full(iz)
+    END DO
+    IF(Nz .EQ. 1) &
+      zarray_full(izs) = 0
     ! Local z array
-    ALLOCATE(zarray(local_nz+ngz,nzgrid))
-    !! interior point loop
     DO iz = 1,local_nz
       DO eo = 1,nzgrid
         zarray(iz+ngz/2,eo) = zarray_full(iz+local_nz_offset) + REAL(eo-1,xp)*grid_shift
       ENDDO
     ENDDO
-    CALL allocate_array(local_zmax,1,nzgrid)
-    CALL allocate_array(local_zmin,1,nzgrid)
     DO eo = 1,nzgrid
       ! Find local extrema
       local_zmax(eo) = zarray(local_nz+ngz/2,eo)
       local_zmin(eo) = zarray(1+ngz/2,eo)
       ! Periodic z \in (-pi pi-dz)
-      DO ig = 1,ngz/2 ! first ghost cells
-        iglob = ig+local_nz_offset-ngz/2
-        IF (iglob .LE. 0) &
-          iglob = iglob + total_nz
-        zarray(ig,eo) = zarray_full(iglob)
-      ENDDO
-      DO ig = local_nz+ngz/2,local_nz+ngz ! last ghost cells
-        iglob = ig+local_nz_offset-ngz/2
-        IF (iglob .GT. total_nz) &
-          iglob = iglob - total_nz
-        zarray(ig,eo) = zarray_full(iglob)
+      ! DO ig = 1,ngz/2 ! first ghost cells
+      !   iglob = ig+local_nz_offset-ngz/2
+      !   IF (iglob .LE. 0) &
+      !     iglob = iglob + total_nz
+      !   zarray(ig,eo) = zarray_full(iglob)
+      ! ENDDO
+      ! DO ig = local_nz+ngz/2,local_nz+ngz ! last ghost cells
+      !   iglob = ig+local_nz_offset-ngz/2
+      !   IF (iglob .GT. total_nz) &
+      !     iglob = iglob - total_nz
+      !   zarray(ig,eo) = zarray_full(iglob)
+      ! ENDDO
+      ! continue in z<pi and z>pi
+      DO ig = 1,ngz/2
+        zarray(local_nz+ngz/2+ig,eo) = zarray(local_nz+ngz/2,eo) + ig*deltaz
+        zarray(ig,eo) = zarray(1+ngz/2,eo) - (3-ig)*deltaz
       ENDDO
       ! Set up the flags to know if the process contains the tip and/or the tail
       ! of the z domain (important for z-boundary condition)
@@ -582,7 +598,6 @@ CONTAINS
         contains_zmax = .TRUE.
     ENDDO
     ! local weights for Simpson rule
-    ALLOCATE(zweights_SR(local_nz))
     IF(total_nz .EQ. 1) THEN
       zweights_SR = 1._xp
     ELSE
@@ -597,10 +612,10 @@ CONTAINS
   END SUBROUTINE set_zgrid
 
   SUBROUTINE set_kparray(gxx, gxy, gyy,hatB)
+    IMPLICIT NONE
     REAL(xp), DIMENSION(local_nz+ngz,nzgrid), INTENT(IN) :: gxx,gxy,gyy,hatB
     INTEGER     :: eo,iz,iky,ikx
     REAL(xp)    :: kx, ky
-    CALL allocate_array( kparray, 1,local_nky, 1,local_nkx, 1,local_nz+ngz, 1,nzgrid)
     DO eo = 1,nzgrid
       DO iz = 1,local_nz+ngz
         DO iky = 1,local_nky
