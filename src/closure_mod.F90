@@ -29,11 +29,8 @@ SUBROUTINE set_closure_model
   IMPLICIT NONE
   INTEGER :: ip,ij
   ! adapt the dmax if it is set <0
-  IF(dmax .LT. 0) THEN
+  IF(dmax .LT. 0) &
     dmax = MIN(pmax,2*jmax+1)
-  ELSEIF(dmax .GT. (pmax+2*jmax)) THEN
-    ERROR STOP "dmax is higher than the maximal moments degree available"
-  ENDIF
   ! set the evolve mom array
   ALLOCATE(evolve_mom(local_np+ngp,local_nj+ngj))
   SELECT CASE(hierarchy_closure)
@@ -52,9 +49,12 @@ SUBROUTINE set_closure_model
       ENDDO
     ENDDO
   CASE('max_degree')
+    IF (dmax .GT. (pmax+2*jmax)) &
+      ERROR STOP "dmax is higher than the maximal moments degree available"
     DO ip = 1,local_np+ngp
       DO ij = 1, local_nj+ngj
-        evolve_mom(ip,ij) = ((parray(ip).GE.0) .AND. (jarray(ij).GE.0)) .AND. (parray(ip)+2*jarray(ij) .LE. dmax)
+        evolve_mom(ip,ij) = ((parray(ip).GE.0) .AND. (jarray(ij).GE.0)) &
+                      .AND. (parray(ip)+2*jarray(ij) .LE. dmax)
         ! evolve_mom(ip,ij) = (parray(ip).GE.0) .AND. (jarray(ij).GE.0)
         ! evolve_mom(ip,ij) = ((parray(ip)+2*jarray(ij)) .LE. dmax)
         ! evolve_mom(ip,ij) = evolve_mom(ip,ij) .AND. ((parray(ip)+2*jarray(ij)) .LE. dmax)
