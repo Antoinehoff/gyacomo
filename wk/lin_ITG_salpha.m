@@ -15,8 +15,9 @@ addpath(genpath([gyacomodir,'matlab/load'])) % Add load module
 SIMID = 'lin_ITG'; % Name of the simulation
 RUN = 1; % To run or just to load
 default_plots_options
-EXECNAME = 'gyacomo23_sp'; % single precision
-% EXECNAME = 'gyacomo23_dp'; % double precision
+% EXECNAME = 'gyacomo23_dp'; % single precision
+EXECNAME = 'gyacomo23_sp'; % double precision
+% EXECNAME = 'gyacomo23_debug'; % double precision
 
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
@@ -108,7 +109,12 @@ BCKGD0  = 1.0e-5;    % Initial background
 k_gB   = 1.0;     % Magnetic gradient strength
 k_cB   = 1.0;     % Magnetic curvature strength
 COLL_KCUT = 1; % Cutoff for collision operator
-
+S_KAPPA = 0.0;
+S_DELTA = 0.0;
+S_ZETA  = 0.0;
+PB_PHASE= 0;
+ADIAB_I = 0;
+MHD_PD  = 0;
 %%-------------------------------------------------------------------------
 %% RUN
 setup
@@ -117,9 +123,9 @@ setup
 if RUN
     MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
 %     RUN  =['time mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
-    RUN  =['time mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
+    % RUN  =['mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
 %     RUN  =['time mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 6 1 0;'];
-%     RUN  =['time mpirun -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
+    RUN  =['time mpirun -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
     MVOUT='cd ../../../wk;';
     system([MVIN,RUN,MVOUT]);
 end
