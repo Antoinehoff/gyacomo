@@ -124,7 +124,7 @@ fprintf(fid,'/\n');
 
 fprintf(fid,'&TIME_INTEGRATION_PAR\n');
 fprintf(fid,['  numerical_scheme = ', TIME_INTEGRATION.numerical_scheme,'\n']);
-fprintf(fid,'/');
+fprintf(fid,'/\n');
 
 fclose(fid);
 system(['cp fort*.90 ',BASIC.RESDIR,'/.']);
