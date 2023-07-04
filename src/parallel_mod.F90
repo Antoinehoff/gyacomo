@@ -378,17 +378,14 @@ CONTAINS
   SUBROUTINE manual_3D_bcast(field_,n1,n2,n3)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: n1,n2,n3
-    COMPLEX(xp), DIMENSION(:,:,:), INTENT(INOUT) :: field_
+    COMPLEX(xp), DIMENSION(n1,n2,n3), INTENT(INOUT) :: field_
     COMPLEX(xp) :: buffer(n1,n2,n3)
-    INTEGER     :: i_, root, world_rank, world_size, count, i1,i2,i3
-    root = 0;
-    count = n1*n2*n3;
-
-    CALL MPI_COMM_RANK(comm_p,world_rank,ierr)
-    CALL MPI_COMM_SIZE(comm_p,world_size,ierr)
-    IF (world_size .GT. 1) THEN
+    INTEGER     :: i_, root, count, i1,i2,i3
+    root = 0
+    count = n1*n2*n3
+    IF (num_procs_p .GT. 1) THEN
       !! Broadcast phi to the other processes on the same k range (communicator along p)
-      IF (world_rank .EQ. root) THEN
+      IF (rank_p .EQ. root) THEN
         ! Fill the buffer
         DO i3 = 1,n3
           DO i2 = 1,n2
@@ -399,7 +396,7 @@ CONTAINS
         ENDDO
         ! Send it to all the other processes
         DO i_ = 0,num_procs_p-1
-          IF (i_ .NE. world_rank) &
+          IF (i_ .NE. rank_p) &
           CALL MPI_SEND(buffer, count, mpi_xp_c, i_, 0, comm_p, ierr)
         ENDDO
       ELSE
@@ -422,20 +419,17 @@ CONTAINS
     IMPLICIT NONE
     COMPLEX(xp), INTENT(INOUT) :: v
     COMPLEX(xp) :: buffer
-    INTEGER     :: i_, root, world_rank, world_size, count
+    INTEGER     :: i_, root, count
     root = 0;
     count = 1;
-
-    CALL MPI_COMM_RANK(comm_z,world_rank,ierr)
-    CALL MPI_COMM_SIZE(comm_z,world_size,ierr)
-    IF (world_size .GT. 1) THEN
+    IF (num_procs_z .GT. 1) THEN
       !! Broadcast phi to the other processes on the same k range (communicator along p)
-      IF (world_rank .EQ. root) THEN
+      IF (rank_z .EQ. root) THEN
         ! Fill the buffer
         buffer = v
         ! Send it to all the other processes
         DO i_ = 0,num_procs_z-1
-          IF (i_ .NE. world_rank) &
+          IF (i_ .NE. rank_z) &
           CALL MPI_SEND(buffer, count, mpi_xp_c, i_, 0, comm_z, ierr)
         ENDDO
       ELSE
