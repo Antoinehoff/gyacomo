@@ -63,22 +63,22 @@ END SUBROUTINE compute_Sapj
 SUBROUTINE compute_nonlinear
   IMPLICIT NONE
   INTEGER :: iz,ij,ip,eo,ia,ikx,iky,izi,ipi,iji,ini,isi
-  DO iz = 1,local_nz
+  z:DO iz = 1,local_nz
     izi = iz + ngz/2
-    DO ij = 1,local_nj ! Loop over Laguerre moments
+    j:DO ij = 1,local_nj ! Loop over Laguerre moments
       iji = ij + ngj/2
       j_int=jarray(iji)
-      DO ip = 1,local_np ! Loop over Hermite moments
+      p:DO ip = 1,local_np ! Loop over Hermite moments
         ipi = ip + ngp/2
         IF(evolve_mom(ipi,iji)) THEN !compute for every moments except for closure 1
         p_int    = parray(ipi)
         sqrt_p   = SQRT(REAL(p_int,xp))
         sqrt_pp1 = SQRT(REAL(p_int,xp) + 1._xp)
         eo       = min(nzgrid,MODULO(parray(ip),2)+1)
-        DO ia = 1,local_na
+        a:DO ia = 1,local_na
             ! Set non linear sum truncation
             bracket_sum_r = 0._xp ! initialize sum over real nonlinear term
-            DO in = 1,nmaxarray(ij)+1 ! Loop over laguerre for the sum
+            n:DO in = 1,nmaxarray(ij)+1 ! Loop over laguerre for the sum
               ini = in+ngj/2
   !-----------!! ELECTROSTATIC CONTRIBUTION
               ! First convolution terms
@@ -86,34 +86,34 @@ SUBROUTINE compute_nonlinear
               ! Second convolution terms
               G_cmpx = 0._xp ! initialization of the sum
               smax   = MIN( jarray(ini)+jarray(iji), jmax );
-              DO is = 1, smax+1 ! sum truncation on number of moments
+              s1:DO is = 1, smax+1 ! sum truncation on number of moments
                 isi = is + ngj/2
                 G_cmpx(:,:) = G_cmpx(:,:) + &
                   dnjs(in,ij,is) * moments(ia,ipi,isi,:,:,izi,updatetlevel)
-              ENDDO
+              ENDDO s1
               ! this function add its result to bracket_sum_r
-              CALL poisson_bracket_and_sum(kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,local_nky_ptr,local_nkx_ptr,F_cmpx,G_cmpx,bracket_sum_r)
+                CALL poisson_bracket_and_sum(kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,local_nky_ptr,local_nkx_ptr,F_cmpx,G_cmpx,bracket_sum_r)
   !-----------!! ELECTROMAGNETIC CONTRIBUTION -sqrt(tau)/sigma*{Sum_s dnjs [sqrt(p+1)Nap+1s + sqrt(p)Nap-1s], Kernel psi}
               IF(EM) THEN
                 ! First convolution terms
                 F_cmpx(:,:) = -sqrt_tau_o_sigma(ia) * psi(:,:,izi) * kernel(ia,ini,:,:,izi,eo)
                 ! Second convolution terms
                 G_cmpx = 0._xp ! initialization of the sum
-                DO is = 1, smax+1 ! sum truncation on number of moments
+                s2:DO is = 1, smax+1 ! sum truncation on number of moments
                   isi = is + ngj/2
                   G_cmpx(:,:)  = G_cmpx(:,:) + &
                     dnjs(in,ij,is) * (sqrt_pp1*moments(ia,ipi+1,isi,:,:,izi,updatetlevel)&
                                     +sqrt_p  *moments(ia,ipi-1,isi,:,:,izi,updatetlevel))
-                ENDDO
+                ENDDO s2
                 ! this function add its result to bracket_sum_r
                 CALL poisson_bracket_and_sum(kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,local_nky_ptr,local_nkx_ptr,F_cmpx,G_cmpx,bracket_sum_r)
               ENDIF
-            ENDDO
+            ENDDO n
             ! Put the real nonlinear product back into k-space
 #ifdef SINGLE_PRECISION
             call fftwf_mpi_execute_dft_r2c(planf, bracket_sum_r, bracket_sum_c)
 #else
-            call fftw_mpi_execute_dft_r2c(planf, bracket_sum_r, bracket_sum_c)
+            call  fftw_mpi_execute_dft_r2c(planf, bracket_sum_r, bracket_sum_c)
 #endif
             ! Retrieve convolution in input format and apply anti aliasing
             DO ikx = 1,local_nkx_ptr
@@ -121,13 +121,13 @@ SUBROUTINE compute_nonlinear
                 Sapj(ia,ip,ij,iky,ikx,iz) = bracket_sum_c(ikx,iky)*AA_x(ikx)*AA_y(iky)
               ENDDO
             ENDDO
-            ENDDO
+          ENDDO a
           ELSE
             Sapj(:,ip,ij,:,:,iz) = 0._xp
           ENDIF
-      ENDDO
-    ENDDO
-  ENDDO
+      ENDDO p
+    ENDDO j
+  ENDDO z
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END SUBROUTINE compute_nonlinear
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
