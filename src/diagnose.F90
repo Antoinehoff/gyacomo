@@ -528,8 +528,9 @@ SUBROUTINE diagnose_5d
     USE futils,           ONLY: attach, putarr!, putarrnd
     USE parallel,         ONLY: gather_pjxyz, num_procs
     USE prec_const,       ONLY: xp
+    USE time_integration, ONLY: ntimelevel
     IMPLICIT NONE
-    COMPLEX(xp), DIMENSION(:,:,:,:,:,:,:), INTENT(IN) :: field
+    COMPLEX(xp), DIMENSION(total_na,local_np+ngp,local_nj+ngj,local_Nky,local_Nkx,local_nz+ngz,ntimelevel), INTENT(IN) :: field
     CHARACTER(*), INTENT(IN) :: text
     COMPLEX(xp), DIMENSION(total_na,local_np,local_nj,local_nky,local_nkx,local_nz) :: field_sub
     COMPLEX(xp), DIMENSION(total_na,total_np,total_nj,total_nky,total_nkx,total_nz) :: field_full
