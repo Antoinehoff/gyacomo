@@ -36,7 +36,7 @@ CONTAINS
       DO ia    =1,local_na
         IF( evolve_mom(ipi,iji) )&
         moments(ia,ipi,iji,iky,ikx,izi,1) = moments(ia,ipi,iji,iky,ikx,izi,1) &
-               + dt*b_E(istage)*moments_rhs(ia,ip,ij,iky,ikx,iz,istage)
+               + dt*b_E(istage,1)*moments_rhs(ia,ip,ij,iky,ikx,iz,istage)
       END DO
       END DO
       END DO

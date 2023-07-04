@@ -45,7 +45,7 @@ MODULE basic
   ! Routines interfaces
   PUBLIC :: allocate_array, basic_outputinputs,basic_data,&
             speak, str, increase_step, increase_cstep, increase_time, display_h_min_s,&
-            set_basic_cp, daytim, start_chrono, stop_chrono
+            set_basic_cp, daytim, start_chrono, stop_chrono, change_dt
   ! Interface for allocating arrays, these routines allocate and initialize directly to zero
   INTERFACE allocate_array
     MODULE PROCEDURE allocate_array_xp1,allocate_array_xp2,allocate_array_xp3, &
@@ -122,6 +122,11 @@ CONTAINS
   SUBROUTINE increase_cstep
     IMPLICIT NONE
     cstep  = cstep  + 1
+  END SUBROUTINE
+  SUBROUTINE change_dt(new_dt)
+    IMPLICIT NONE
+    REAL(xp), INTENT(IN) :: new_dt   
+    dt = new_dt
   END SUBROUTINE
   SUBROUTINE increase_time
     IMPLICIT NONE
@@ -244,7 +249,7 @@ CONTAINS
   !   "Convert an integer to string."
       integer, intent(in) :: k
       character(len=10)   :: str_
-      write (str_, "(i2.2)") k
+      write (str_, "(I8)") k
       str_ = adjustl(str_)
   end function str_int
 
