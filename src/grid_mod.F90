@@ -363,7 +363,7 @@ CONTAINS
     END DO
     ! Precomputations
     pmax_xp       = real(pmax,xp)
-    diff_p_coeff  = pmax_xp*(1._xp/pmax_xp)**6
+    diff_p_coeff  = pmax_xp*(1._xp/(pmax_xp+1._xp))**6
     ! Overwrite SOLVE_AMPERE flag if beta is zero
     IF(.NOT. EM) THEN
       SOLVE_AMPERE = .FALSE.
@@ -386,7 +386,7 @@ CONTAINS
     local_jmin = jarray(1+ngj/2)
     ! Precomputations
     jmax_xp      = real(jmax,xp)
-    diff_j_coeff = jmax_xp*(1._xp/jmax_xp)**6
+    diff_j_coeff = jmax_xp*(1._xp/(jmax_xp+1._xp))**6
     ! j=0 and j=1 indices
     DO ij = 1,local_nj+ngj
       IF(jarray(ij) .EQ. 0) ij0 = ij
