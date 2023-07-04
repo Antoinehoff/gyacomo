@@ -22,16 +22,15 @@ CONTAINS
                                 ip0, total_nj, ngj
     USE calculus,         ONLY: simpson_rule_z
     USE parallel,         ONLY: manual_3D_bcast
-    USE model,            ONLY: lambdaD, ADIAB_E, tau_i
+    USE model,            ONLY: lambdaD, ADIAB_E , tau_i
     use species,          ONLY: q
     USE processing,       ONLY: compute_density
     USE geometry,         ONLY: iInt_Jacobian, Jacobian
     IMPLICIT NONE
 
-    INTEGER     :: in, ia, ikx, iky, iz, izi, ini
-    COMPLEX(xp) :: fsa_phi, intf_, rhtot   ! current flux averaged phi
+    INTEGER     :: ij, ia, ikx, iky, iz, izi, iji, ierr
+    COMPLEX(xp) :: fsa_phi, intf_   ! current flux averaged phi
     COMPLEX(xp), DIMENSION(local_nz) :: rho, integrant  ! charge density q_a n_a and aux var
-    rhtot = 0
     !! Poisson can be solved only for process containng p=0
     IF ( SOLVE_POISSON ) THEN
         x:DO ikx = 1,local_nkx
@@ -40,11 +39,11 @@ CONTAINS
             DO iz = 1,local_nz
               izi = iz+ngz/2
               rho(iz) = 0._xp
-              DO in = 1,total_nj
-                ini = in+ngj/2
+              DO ij = 1,total_nj
+                iji = ij+ngj/2
                 DO ia = 1,local_na
-                  rho(iz) = rho(iz) + q(ia)*kernel(ia,ini,iky,ikx,izi,ieven)&
-                              *moments(ia,ip0,ini,iky,ikx,izi,updatetlevel)
+                  rho(iz) = rho(iz) + q(ia)*kernel(ia,iji,iky,ikx,izi,ieven)&
+                              *moments(ia,ip0,iji,iky,ikx,izi,updatetlevel)
                 END DO
               END DO
             END DO
@@ -69,9 +68,9 @@ CONTAINS
             ENDIF
             !!!!!!!!!!!!!!! Inverting the poisson equation
             DO iz = 1,local_nz
-              phi(iky,ikx,iz+ngz/2) = inv_poisson_op(iky,ikx,iz)*rho(iz)
+              izi = iz+ngz/2
+              phi(iky,ikx,izi) = inv_poisson_op(iky,ikx,iz)*rho(iz)
             ENDDO
-            rhtot = rhtot + sum(real(rho))
           ENDDO y
         ENDDO x
       ! Cancel origin singularity
@@ -94,7 +93,7 @@ CONTAINS
     use model,            ONLY: beta
     IMPLICIT NONE
     COMPLEX(xp) :: j_a ! current density
-    INTEGER     :: in, ia, ikx, iky, iz, ini, izi
+    INTEGER     :: ij, ia, ikx, iky, iz, iji, izi
     !! Ampere can be solved only with beta > 0 and for process containng p=1 moments
     IF ( SOLVE_AMPERE ) THEN
       z:DO iz = 1,local_nz
@@ -103,11 +102,11 @@ CONTAINS
           y:DO iky = 1,local_nky
           !!!!!!!!!!!!!!! compute current density contribution "j_a = q_a u_a" for each species
           j_a = 0._xp
-          n:DO in=1,total_nj
-          ini = in+ngj/2
+          n:DO ij=1,total_nj
+          iji = ij+ngj/2
             a:DO ia = 1,local_na
             j_a = j_a &
-              +q(ia)*sqrt_tau_o_sigma(ia)*kernel(ia,ini,iky,ikx,izi,iodd)*moments(ia,ip1,ini,iky,ikx,izi,updatetlevel)
+              +q(ia)*sqrt_tau_o_sigma(ia)*kernel(ia,iji,iky,ikx,izi,iodd)*moments(ia,ip1,iji,iky,ikx,izi,updatetlevel)
             ENDDO a
           ENDDO n
           !!!!!!!!!!!!!!! Inverting the Ampere equation
