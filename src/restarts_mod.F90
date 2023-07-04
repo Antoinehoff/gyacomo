@@ -94,7 +94,7 @@ CONTAINS
     CALL speak('.. restart from t = '//str(time))
     ! Read state of system from checkpoint file
     ! Brute force loading: load the full moments and take what is needed (RAM dangerous...)
-    ! (other possibility would be to loop over slices)
+    ! (other possibility would be to load all on process 0 and send the slices)
     CALL allocate_array(moments_cp, 1,Na_cp, 1,Np_cp, 1,Nj_cp, 1,Nky_cp, 1,Nkx_cp, 1,Nz_cp)
     WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments", n_
     CALL getarr(fidrst, dset_name, moments_cp)
@@ -112,6 +112,7 @@ CONTAINS
           ipi  = ip + ngp/2
             a: DO ia=1,local_na
             iacp = ia + local_na_offset
+            ! Checks that data exists (allows to extend the arrays if needed)
             IF((iacp.LE.Na_cp).AND.(ipcp.LE.Np_cp).AND.(ijcp.LE.Nj_cp).AND.(iycp.LE.Nky_cp).AND.(ixcp.LE.Nkx_cp)) THEN
               z: DO iz = 1,local_nz
                 izi     = iz + ngz/2           ! local interior index (for ghosted arrays)
@@ -120,10 +121,12 @@ CONTAINS
                 zj_cp   = z_cp_stretched(z_idx_mapping(izg))
                 zjp1_cp = z_cp_stretched(z_idx_mapping(izg)+1)
                 zerotoone = (zi - zj_cp)/(zjp1_cp-zj_cp) ! weight for interpolation
-                moments(ia,ipi,iji,iky,ikx,izi,1) = &
+                moments(ia,ipi,iji,iky,ikx,izi,:) = &
                   zerotoone       *moments_cp(iacp,ipcp,ijcp,iycp,ixcp,z_idx_mapping(izg))&
                 +(1._xp-zerotoone)*moments_cp(iacp,ipcp,ijcp,iycp,ixcp,z_idx_mapping(izg+1))
               ENDDO z
+            ELSE
+              moments(ia,ipi,iji,iky,ikx,izi,:) = 0._xp
             ENDIF
             ENDDO a
           ENDDO p
