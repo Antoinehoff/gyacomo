@@ -105,11 +105,12 @@ MODULE fourier
         F_(:,ikx) = F_(:,ikx)*AA_y(:)*AA_x(ikx)
         G_(:,ikx) = G_(:,ikx)*AA_y(:)*AA_x(ikx)
     ENDDO
-    ! First term df/dx x dg/dy
+    !--------------------------------------------------------------------
+    !-------------------- First term df/dx x dg/dy --------------------
     DO ikx = 1,local_nkx_ptr
       DO iky = 1,local_nky_ptr
-        cmpx_data_f(ikx,iky) = imagu*kx_(ikx)*F_(iky,ikx)!*AA_x(ikx)*AA_y(iky) 
-        cmpx_data_g(ikx,iky) = imagu*ky_(iky)*G_(iky,ikx)!*AA_x(ikx)*AA_y(iky)
+        cmpx_data_f(ikx,iky) = imagu*kx_(ikx)*F_(iky,ikx)
+        cmpx_data_g(ikx,iky) = imagu*ky_(iky)*G_(iky,ikx)
       ENDDO
     ENDDO
 
@@ -121,13 +122,14 @@ MODULE fourier
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
 #endif
     sum_real_ = sum_real_ + real_data_f*real_data_g*inv_Ny*inv_Nx
-    ! Second term -df/dy x dg/dx
+    !--------------------------------------------------------------------
+    !-------------------- Second term -df/dy x dg/dx --------------------
     DO ikx = 1,local_nkx_ptr
       DO iky = 1,local_nky_ptr
         cmpx_data_f(ikx,iky) = &
-              imagu*ky_(iky)*F_(iky,ikx)!*AA_x(ikx)*AA_y(iky)
+              imagu*ky_(iky)*F_(iky,ikx)
         cmpx_data_g(ikx,iky) = &
-              imagu*kx_(ikx)*G_(iky,ikx)!*AA_x(ikx)*AA_y(iky)
+              imagu*kx_(ikx)*G_(iky,ikx)
       ENDDO
     ENDDO
 #ifdef SINGLE_PRECISION
@@ -137,7 +139,7 @@ MODULE fourier
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
 #endif
-    sum_real_ = sum_real_ - real_data_f*real_data_g*inv_Ny*inv_Nx
+    sum_real_ = sum_real_ - 0*real_data_f*real_data_g*inv_Ny*inv_Nx
 END SUBROUTINE poisson_bracket_and_sum
 
 
