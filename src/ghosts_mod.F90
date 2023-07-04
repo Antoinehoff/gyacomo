@@ -98,7 +98,6 @@ SUBROUTINE update_ghosts_z_mom
   last  = local_nz + ngz/2
   count = local_na*(local_np+ngp)*(local_nj+ngj)*local_nky*local_nkx
   IF (num_procs_z .GT. 1) THEN
-    CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
     !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
     ! Send the last local moment to fill the -1 neighbour ghost
     DO ig=1,ngz/2
@@ -153,47 +152,54 @@ SUBROUTINE update_ghosts_z_3D(field)
   USE parallel, ONLY: nbr_U,nbr_D,comm0,num_procs_z
   USE grid,     ONLY: local_nky,local_nkx,local_nz,ngz
   IMPLICIT NONE
-  !! buffer for data exchanges
-  COMPLEX(xp),DIMENSION(local_nky,local_nkx,-ngz/2:ngz/2) :: buff_xy_zBC
+  !! buffer for data exchanges, the last dimension is indexing the z ghost cells
+  ! Example in the full periodic case
+  ! (down) |x|x|a|b|...|c|d|x|x| (UP) array along z with old ghost cells
+  !                  V
+  !              |a|b|c|d|            buffer
+  !               1 2 3 4             buffer indices
+  !                  V
+  !        |c|d|a|b|...|c|d|a|b|      array along z with update ghost cells
+  !         3 4             1 2       buffer indices
+  COMPLEX(xp),DIMENSION(local_nky,local_nkx,ngz) :: buff_xy_zBC
   COMPLEX(xp), INTENT(INOUT) :: field(local_nky,local_nkx,local_nz+ngz)
   INTEGER :: ikxBC_L, ikxBC_R, ikx, iky, first, last, ig, ierr
   first = 1 + ngz/2
   last  = local_nz + ngz/2
   count = local_nky * local_nkx
   IF (num_procs_z .GT. 1) THEN
-    CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
       !!!!!!!!!!! Send ghost to up neighbour !!!!!!!!!!!!!!!!!!!!!!
       DO ig = 1,ngz/2
       CALL mpi_sendrecv(     field(:,:,last-(ig-1)), count, mpi_xp_c, nbr_U, 30+ig, & ! Send to Up the last
-                       buff_xy_zBC(:,:,-ig),         count, mpi_xp_c, nbr_D, 30+ig, & ! Receive from Down the first-1
+                       buff_xy_zBC(:,:, ngz-(ig-1)), count, mpi_xp_c, nbr_D, 30+ig, & ! Receive from Down the first-1 (idx 3,4)
                         comm0, status, ierr)
       ENDDO
       !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
       DO ig = 1,ngz/2
       CALL mpi_sendrecv(     field(:,:,first+(ig-1)), count, mpi_xp_c, nbr_D, 32+ig, & ! Send to Down the first
-                       buff_xy_zBC(:,:,ig),           count, mpi_xp_c, nbr_U, 32+ig, & ! Recieve from Up the last+1
+                       buff_xy_zBC(:,:,ig),           count, mpi_xp_c, nbr_U, 32+ig, & ! Recieve from Up the last+1 (idx 1 2)
                         comm0, status, ierr)
       ENDDO
    ELSE
      ! no parallelization so just copy last cell into first ghosts and vice versa
      DO ig = 1,ngz/2
-       buff_xy_zBC(:,:,-ig) = field(:,:,last-(ig-1))
-       buff_xy_zBC(:,:, ig) = field(:,:,first+(ig-1))
+       buff_xy_zBC(:,:, ngz-(ig-1)) = field(:,:,last -(ig-1))
+       buff_xy_zBC(:,:, ig)         = field(:,:,first+(ig-1))
      ENDDO
    ENDIF
   DO iky = 1,local_nky
     DO ikx = 1,local_nkx
-      ikxBC_L = ikx_zBC_L(iky,ikx);
+      ikxBC_L = ikx_zBC_L(iky,ikx)
       IF (ikxBC_L .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
         DO ig = 1,ngz/2
-          field(iky,ikx,first-ig) = pb_phase_L(iky)*buff_xy_zBC(iky,ikxBC_L,-ig)
+          field(iky,ikx,first-ig) = pb_phase_L(iky)*buff_xy_zBC(iky,ikxBC_L,ngz-(ig-1))
         ENDDO
       ELSE
         DO ig = 1,ngz/2
           field(iky,ikx,first-ig) = 0._xp
         ENDDO
       ENDIF
-      ikxBC_R = ikx_zBC_R(iky,ikx);
+      ikxBC_R = ikx_zBC_R(iky,ikx)
       IF (ikxBC_R .NE. -99) THEN ! Exchanging the modes that have a periodic pair (a)
         ! last+1 gets first
         DO ig = 1,ngz/2
