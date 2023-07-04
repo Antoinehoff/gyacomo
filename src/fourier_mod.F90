@@ -139,7 +139,7 @@ MODULE fourier
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_f, real_data_f)
     call fftw_mpi_execute_dft_c2r(planb, cmpx_data_g, real_data_g)
 #endif
-    sum_real_ = sum_real_ - 0*real_data_f*real_data_g*inv_Ny*inv_Nx
+    sum_real_ = sum_real_ - real_data_f*real_data_g*inv_Ny*inv_Nx
 END SUBROUTINE poisson_bracket_and_sum
 
 
