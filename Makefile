@@ -1,12 +1,15 @@
 include local/dirs.inc
 include local/make.inc
 
-# Standard version with optimized compilation (ifort compiler)
-all: F90 = mpif90
-all: F90FLAGS = -O3 -xHOST
-all: EXEC = $(BINDIR)/gyacomo23_dp
-all: dirs src/srcinfo.h
-all: compile
+# Standard version with optimized compilation and double precision
+all: dp
+
+# Double precision version
+dp: F90 = mpif90
+dp: F90FLAGS = -O3 -xHOST
+dp: EXEC = $(BINDIR)/gyacomo23_dp
+dp: dirs src/srcinfo.h
+dp: compile
 
 # Single precision version
 sp: F90 = mpif90
