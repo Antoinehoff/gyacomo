@@ -3,7 +3,6 @@ SUBROUTINE tesend
 
   USE basic
   USE mpi
-  use prec_const
   USE parallel, ONLY: my_id
   IMPLICIT NONE
   LOGICAL :: mlend, mlexist
