@@ -10,7 +10,7 @@ SUBROUTINE inital
   USE closure,          ONLY: apply_closure_model
   USE ghosts,           ONLY: update_ghosts_moments, update_ghosts_EM
   USE restarts,         ONLY: load_moments, job2load
-  USE processing,       ONLY: compute_fluid_moments
+  USE processing,       ONLY: compute_fluid_moments, compute_radial_heatflux, compute_radial_transport
   USE model,            ONLY: LINEARITY
   USE nonlinear,        ONLY: compute_Sapj, nonlinear_init
   IMPLICIT NONE
@@ -88,13 +88,16 @@ SUBROUTINE inital
 
   !! Preparing auxiliary arrays at initial state
   ! particle density, fluid velocity and temperature (used in diagnose)
-  CALL speak('Computing fluid moments')
+  CALL speak('Computing fluid moments and transport')
   CALL compute_fluid_moments
+  CALL compute_radial_transport
+  CALL compute_radial_heatflux
 
   ! init auxval for nonlinear
   CALL nonlinear_init
   ! compute nonlinear for t=0 diagnostic
   CALL compute_Sapj ! compute S_0 = S(phi_0,N_0)
+
 
 END SUBROUTINE inital
 !******************************************************************************!
