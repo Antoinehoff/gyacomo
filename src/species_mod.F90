@@ -137,22 +137,22 @@ CONTAINS
     USE model, ONLY : Na
     IMPLICIT NONE
     !! Allocate the arrays
-      ALLOCATE(              name(1:Na))
-      ALLOCATE(        nu_ab(1:Na,1:Na))
-      ALLOCATE(               tau(1:Na))
-      ALLOCATE(             sigma(1:Na))
-      ALLOCATE(                 q(1:Na))
-      ALLOCATE(               k_N(1:Na))
-      ALLOCATE(               k_T(1:Na))
-      ALLOCATE(             tau_q(1:Na))
-      ALLOCATE(             q_tau(1:Na))
-      ALLOCATE(         sqrtTau_q(1:Na))
-      ALLOCATE(   q_sigma_sqrtTau(1:Na))
-      ALLOCATE(     sigma2_tau_o2(1:Na))
-      ALLOCATE(sqrt_sigma2_tau_o2(1:Na))
-      ALLOCATE(            q2_tau(1:Na))
-      ALLOCATE(q_o_sqrt_tau_sigma(1:Na))
-      ALLOCATE(  sqrt_tau_o_sigma(1:Na))
+      ALLOCATE(              name(Na))
+      ALLOCATE(          nu_ab(Na,Na))
+      ALLOCATE(               tau(Na))
+      ALLOCATE(             sigma(Na))
+      ALLOCATE(                 q(Na))
+      ALLOCATE(               k_N(Na))
+      ALLOCATE(               k_T(Na))
+      ALLOCATE(             tau_q(Na))
+      ALLOCATE(             q_tau(Na))
+      ALLOCATE(         sqrtTau_q(Na))
+      ALLOCATE(   q_sigma_sqrtTau(Na))
+      ALLOCATE(     sigma2_tau_o2(Na))
+      ALLOCATE(sqrt_sigma2_tau_o2(Na))
+      ALLOCATE(            q2_tau(Na))
+      ALLOCATE(q_o_sqrt_tau_sigma(Na))
+      ALLOCATE(  sqrt_tau_o_sigma(Na))
   END SUBROUTINE species_allocate
 
 END MODULE species
