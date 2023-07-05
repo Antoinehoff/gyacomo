@@ -55,6 +55,7 @@ CONTAINS
     IF(Nj_cp  .NE. total_Nj ) CALL speak("NOTE: Nj  has changed")
     IF(Nky_cp .NE. total_Nky) CALL speak("NOTE: Nky has changed")
     IF(Nkx_cp .NE. total_Nkx) CALL speak("NOTE: Nkx has changed")
+    IF(Nz_cp  .NE. total_Nz)  CALL speak("NOTE: Nz  has changed")
     ! Get the x,y fourier modes and the z space and check grids
     ALLOCATE(ky_cp(Nky_cp),kx_cp(Nkx_cp),z_cp(Nz_cp))
     CALL getarr(fidrst,"/data/grid/coordky",ky_cp); Ly_cp = 2._xp*PI/ky_cp(2)
@@ -67,8 +68,10 @@ CONTAINS
     dz_cp = (z_cp(2)- z_cp(1)) !! check deltaz changes
     ! IF(ABS(deltaz - dz_cp) .GT. 1e-3) ERROR STOP "ERROR STOP: change of deltaz is not implemented."
     ! compute the mapping for z grid adaptation
-    ALLOCATE(z_idx_mapping(total_Nz+1),z_cp_stretched(Nz_cp+1)) ! we allocate them +1 for periodicity
-    CALL z_grid_mapping(total_nz,Nz_cp,zarray_full,z_idx_mapping,z_cp_stretched)
+    IF(Nz_cp .GT. 1) THEN
+      ALLOCATE(z_idx_mapping(total_Nz+1),z_cp_stretched(Nz_cp+1)) ! we allocate them +1 for periodicity
+      CALL z_grid_mapping(total_nz,Nz_cp,zarray_full,z_idx_mapping,z_cp_stretched)
+    ENDIF
     !! 
     CALL getatt(fidrst,"/data/input/grid" ,"deltap",deltap_cp)
     IF(deltap_cp .NE. deltap) &
@@ -98,7 +101,6 @@ CONTAINS
     CALL allocate_array(moments_cp, 1,Na_cp, 1,Np_cp, 1,Nj_cp, 1,Nky_cp, 1,Nkx_cp, 1,Nz_cp)
     WRITE(dset_name, "(A, '/', i6.6)") "/data/var5d/moments", n_
     CALL getarr(fidrst, dset_name, moments_cp)
-
     moments     = 0._xp;
     x: DO ikx=1,local_nkx
     ixcp = ikx+local_nkx_offset
@@ -112,22 +114,26 @@ CONTAINS
           ipi  = ip + ngp/2
             a: DO ia=1,local_na
             iacp = ia + local_na_offset
-            ! Checks that data exists (allows to extend the arrays if needed)
-            IF((iacp.LE.Na_cp).AND.(ipcp.LE.Np_cp).AND.(ijcp.LE.Nj_cp).AND.(iycp.LE.Nky_cp).AND.(ixcp.LE.Nkx_cp)) THEN
               z: DO iz = 1,local_nz
-                izi     = iz + ngz/2           ! local interior index (for ghosted arrays)
-                izg     = iz + local_nz_offset ! global index
-                zi      = zarray(iz,ieven)           ! position (=zarray_full(izg))
-                zj_cp   = z_cp_stretched(z_idx_mapping(izg))
-                zjp1_cp = z_cp_stretched(z_idx_mapping(izg)+1)
-                zerotoone = (zi - zj_cp)/(zjp1_cp-zj_cp) ! weight for interpolation
-                moments(ia,ipi,iji,iky,ikx,izi,:) = &
-                  zerotoone       *moments_cp(iacp,ipcp,ijcp,iycp,ixcp,z_idx_mapping(izg))&
-                +(1._xp-zerotoone)*moments_cp(iacp,ipcp,ijcp,iycp,ixcp,z_idx_mapping(izg+1))
+              izi     = iz + ngz/2           ! local interior index (for ghosted arrays)
+              izg     = iz + local_nz_offset ! global index
+              ! Checks that data exists (allows to extend the arrays if needed)
+              IF((iacp.LE.Na_cp).AND.(ipcp.LE.Np_cp).AND.(ijcp.LE.Nj_cp).AND.(iycp.LE.Nky_cp).AND.(ixcp.LE.Nkx_cp)) THEN
+                  IF(Nz_cp .GT. 1) THEN ! interpolate
+                    zi      = zarray(izi,ieven)           ! position (=zarray_full(izg))
+                    zj_cp   = z_cp_stretched(z_idx_mapping(izg))
+                    zjp1_cp = z_cp_stretched(z_idx_mapping(izg)+1)
+                    zerotoone = (zi - zj_cp)/(zjp1_cp-zj_cp) ! weight for interpolation
+                    moments(ia,ipi,iji,iky,ikx,izi,:) = &
+                      zerotoone       *moments_cp(iacp,ipcp,ijcp,iycp,ixcp,z_idx_mapping(izg))&
+                    +(1._xp-zerotoone)*moments_cp(iacp,ipcp,ijcp,iycp,ixcp,z_idx_mapping(izg+1))
+                  ELSE ! copy on all planes
+                    moments(ia,ipi,iji,iky,ikx,izi,:) = moments_cp(iacp,ipcp,ijcp,iycp,ixcp,1)
+                  ENDIF
+                ELSE
+                  moments(ia,ipi,iji,iky,ikx,izi,:) = 0._xp
+                ENDIF
               ENDDO z
-            ELSE
-              moments(ia,ipi,iji,iky,ikx,izi,:) = 0._xp
-            ENDIF
             ENDDO a
           ENDDO p
         ENDDO j
@@ -175,7 +181,7 @@ CONTAINS
         jz_cp = 1             ! init cp grid index
         in_interval = .FALSE. ! flag to check if we stand in the interval
         DO WHILE (.NOT. in_interval)
-          in_interval = (zi .GE. zj_cp) .AND. (zi .LE. zj_cp+dz_s)
+          in_interval = (zi .GE. zj_cp) .AND. (zi .LT. zj_cp+dz_s)
           ! Increment
           zj_cp = zj_cp + dz_s
           jz_cp = jz_cp + 1
