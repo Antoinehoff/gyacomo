@@ -10,6 +10,7 @@ USE grid, ONLY: local_Na,local_Na_offset,local_np,local_np_offset,&
 USE fields
 USE diagnostics_par
 USE time_integration
+USE prec_const, ONLY : xp,dp,sp
 IMPLICIT NONE
 
 PUBLIC :: load_moments!, write_restart
@@ -41,7 +42,11 @@ CONTAINS
     WRITE(rstfile,'(a,a1,i2.2,a3)') TRIM(resfile0),'_',job2load,'.h5'
     CALL speak("Resume from "//rstfile)
     ! Open file
-    CALL openf(rstfile, fidrst,mpicomm=comm0)
+    IF(xp .EQ. dp) THEN
+      CALL openf(rstfile, fidrst, mode='r', real_prec='d', mpicomm=comm0)
+    ELSE
+      CALL openf(rstfile, fidrst, mode='r', mpicomm=comm0)
+    ENDIF
     ! Get the dimensions of the checkpoint moments
     CALL getatt(fidrst,"/data/input/model",  "Na", Na_cp)
     CALL getatt(fidrst,"/data/input/grid" ,  "Np", Np_cp)
