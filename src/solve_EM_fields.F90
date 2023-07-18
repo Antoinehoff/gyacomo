@@ -28,7 +28,7 @@ CONTAINS
     USE geometry,         ONLY: iInt_Jacobian, Jacobian
     IMPLICIT NONE
 
-    INTEGER     :: ij, ia, ikx, iky, iz, izi, iji, ierr
+    INTEGER     :: ij, ia, ikx, iky, iz, izi, iji
     COMPLEX(xp) :: fsa_phi, intf_   ! current flux averaged phi
     COMPLEX(xp), DIMENSION(local_nz) :: rho, integrant  ! charge density q_a n_a and aux var
     !! Poisson can be solved only for process containng p=0
