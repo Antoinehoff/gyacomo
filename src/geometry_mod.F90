@@ -84,8 +84,7 @@ CONTAINS
       parallel_bc, shift_y, Npol, PB_PHASE
     READ(lu_in,geometry)
     PB_PHASE = .false.
-    IF(geom  .EQ. 'z-pinch') shear   = 0._xp
-    IF(shear .NE.     0._xp) SHEARED = .true.
+    IF(shear .GT. 0._xp) SHEARED = .TRUE.
     SELECT CASE(parallel_bc)
       CASE ('dirichlet')
       CASE ('periodic')
@@ -132,7 +131,7 @@ CONTAINS
           IF(MODULO(FLOOR(Npol),2) .EQ. 0)   ERROR STOP "Npol must be odd for s-alpha"
           call eval_salpha_geometry
           Cyq0_x0 = 1._xp
-        CASE('z-pinch')
+        CASE('z-pinch','Z-pinch','zpinch','Zpinch')
           CALL speak('Z-pinch geometry')
           call eval_zpinch_geometry
           SHEARED = .FALSE.
@@ -295,7 +294,6 @@ CONTAINS
       dBdx(iz,eo) = -hatB(iz,eo) ! LB = 1
       dBdy(iz,eo) = 0._xp
       dBdz(iz,eo) = 0._xp ! Gene put a factor hatB or 1/hatR in this
-
   ENDDO
   ENDDO
 
@@ -372,7 +370,7 @@ CONTAINS
         ! get the real mode number (iky starts at 1 and is shifted from paral)
         mn_y = iky-1+local_nky_offset
         ! Formula for the shift due to shear after Npol turns
-        shift = 2._xp*PI*shear*kyarray(iky)*Npol
+        shift = 2._xp*PI*shear*kyarray(iky)*Npol*Cyq0_x0
           DO ikx = 1,total_nkx
             ! Usual formula for shifting indices using that dkx = 2pi*shear*dky/Nexc
             ikx_zBC_L(iky,ikx) = ikx-mn_y*Nexc
@@ -383,14 +381,16 @@ CONTAINS
             IF( (kxarray(ikx) - shift) .LT. kx_min ) THEN ! outside of the frequ domain
               ! print*,( ((kxarray(ikx) - shift)-kx_min) .LT. EPSILON(kx_min) )
               ! print*, kxarray(ikx)-kx_min, EPSILON(kx_min)
-            ! IF( (ikx-mn_y*Nexc) .LT. 1 ) THEN 
+              ! IF( (ikx-mn_y*Nexc) .LT. 1 ) THEN 
               SELECT CASE(parallel_bc)
-                CASE ('dirichlet')! connected to 0
-                  ikx_zBC_L(iky,ikx) = -99
-                CASE ('periodic')
-                  ikx_zBC_L(iky,ikx) = ikx
-                CASE ('cyclic')! reroute it by cycling through modes
-                  ikx_zBC_L(iky,ikx) = MODULO(ikx_zBC_L(iky,ikx)-1,total_nkx)+1
+              CASE ('dirichlet','disconnected') ! connected to 0
+                ikx_zBC_L(iky,ikx) = -99
+              CASE ('periodic')
+                ikx_zBC_L(iky,ikx) = ikx
+              CASE ('cyclic')! reroute it by cycling through modes
+                ikx_zBC_L(iky,ikx) = MODULO(ikx_zBC_L(iky,ikx)-1,total_nkx)+1
+              CASE DEFAULT
+                ERROR STOP "The parallel BC is not recognized (dirichlet, periodic, cyclic or disconnected)"
               END SELECT
             ENDIF
           ENDDO
@@ -408,7 +408,7 @@ CONTAINS
         ! get the real mode number (iky starts at 1 and is shifted from paral)
         mn_y = iky-1+local_nky_offset
         ! Formula for the shift due to shear after Npol
-        shift = 2._xp*PI*shear*kyarray(iky)*Npol
+        shift = 2._xp*PI*shear*kyarray(iky)*Npol*Cyq0_x0
           DO ikx = 1,total_nkx
             ! Usual formula for shifting indices
             ikx_zBC_R(iky,ikx) = ikx+mn_y*Nexc
@@ -418,13 +418,15 @@ CONTAINS
             IF( (kxarray(ikx) + shift) .GT. kx_max ) THEN ! outside of the frequ domain
             ! IF( (ikx+mn_y*Nexc) .GT. total_nkx ) THEN ! outside of the frequ domain
               SELECT CASE(parallel_bc)
-                CASE ('dirichlet') ! connected to 0
-                  ikx_zBC_R(iky,ikx) = -99
-                CASE ('periodic') ! connected to itself as for shearless
-                  ikx_zBC_R(iky,ikx) = ikx
-                CASE ('cyclic')
-                  ! write(*,*) 'check',ikx,iky, kxarray(ikx) + shift, '>', kx_max
-                  ikx_zBC_R(iky,ikx) = MODULO(ikx_zBC_R(iky,ikx)-1,total_nkx)+1
+              CASE ('dirichlet','disconnected') ! connected to 0
+                ikx_zBC_R(iky,ikx) = -99
+              CASE ('periodic') ! connected to itself as for shearless
+                ikx_zBC_R(iky,ikx) = ikx
+              CASE ('cyclic')
+                ! write(*,*) 'check',ikx,iky, kxarray(ikx) + shift, '>', kx_max
+                ikx_zBC_R(iky,ikx) = MODULO(ikx_zBC_R(iky,ikx)-1,total_nkx)+1
+              CASE DEFAULT
+                ERROR STOP "The parallel BC is not recognized (dirichlet, periodic, cyclic or disconnected)"
               END SELECT
             ENDIF
           ENDDO
@@ -452,6 +454,7 @@ CONTAINS
     ! enddo
     ! print*, pb_phase_R
     ! print*, shift_y
+    ! print*, kx_min, kx_max
     ! stop
     !!!!!!! Example of maps ('x' means connected to 0 value, in the table it is -99)
     ! dirichlet connection map BC of the RIGHT boundary (z=pi*Npol-dz)
