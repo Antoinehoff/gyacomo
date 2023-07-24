@@ -28,9 +28,12 @@ MODULE model
   ! Auxiliary variable
   LOGICAL,  PUBLIC, PROTECTED ::      EM =  .false.   ! Electromagnetic effects flag
   LOGICAL,  PUBLIC, PROTECTED ::  MHD_PD =  .false.   ! MHD pressure drift
-
   ! Removes Landau damping in temperature and higher equation (Ivanov 2022)
   LOGICAL,  PUBLIC, PROTECTED :: RM_LD_T_EQ = .false.
+  ! Flag to force the reality condition symmetry for the kx at ky=0
+  LOGICAL,  PUBLIC, PROTECTED :: FORCE_SYMMETRY = .false.
+
+  ! Module's routines
   PUBLIC :: model_readinputs, model_outputinputs
 
 CONTAINS
@@ -42,7 +45,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /MODEL_PAR/ KERN, LINEARITY, RM_LD_T_EQ, &
+    NAMELIST /MODEL_PAR/ KERN, LINEARITY, RM_LD_T_EQ, FORCE_SYMMETRY, &
                          mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, Na,&
                          nu, k_gB, k_cB, lambdaD, MHD_PD, beta, ADIAB_E, ADIAB_I, tau_i
 
