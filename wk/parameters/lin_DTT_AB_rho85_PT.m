@@ -45,10 +45,10 @@ PB_PHASE = 0;
 %% TIME PARAMETERS
 TMAX     = 15;  % Maximal time unit
 DT       = 1e-3;   % Time step
-DTSAVE0D = 1;      % Sampling per time unit for 0D arrays
-DTSAVE2D = -1;     % Sampling per time unit for 2D arrays
-DTSAVE3D = 2;      % Sampling per time unit for 3D arrays
-DTSAVE5D = 100;     % Sampling per time unit for 5D arrays
+DTSAVE0D = 0.5;      % Sampling time for 0D arrays
+DTSAVE2D = -1;     % Sampling time for 2D arrays
+DTSAVE3D = 0.5;      % Sampling time for 3D arrays
+DTSAVE5D = 100;     % Sampling time for 5D arrays
 JOB2LOAD = -1;     % Start a new simulation serie
 
 %% OPTIONS

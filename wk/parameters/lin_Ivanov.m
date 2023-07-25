@@ -43,10 +43,10 @@ NPOL   = 1;       % Number of poloidal turns
 %% TIME PARAMETERS
 TMAX     = 50;  % Maximal time unit
 DT       = 1e-2;   % Time step
-DTSAVE0D = 1;      % Sampling per time unit for 0D arrays
-DTSAVE2D = -1;     % Sampling per time unit for 2D arrays
-DTSAVE3D = 1;      % Sampling per time unit for 3D arrays
-DTSAVE5D = 20;     % Sampling per time unit for 5D arrays
+DTSAVE0D = 1;      % Sampling time for 0D arrays
+DTSAVE2D = -1;     % Sampling time for 2D arrays
+DTSAVE3D = 1;      % Sampling time for 3D arrays
+DTSAVE5D = 25;     % Sampling time for 5D arrays
 JOB2LOAD = -1;     % Start a new simulation serie
 
 %% OPTIONS
