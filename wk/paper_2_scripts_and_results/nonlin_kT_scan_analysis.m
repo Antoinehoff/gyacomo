@@ -1,10 +1,10 @@
 kN=2.22;
 figure
-ERRBAR = 0; LOGSCALE = 1;
-% nustr = '1e-3'; mrkstyl='o';
+ERRBAR = 0; LOGSCALE = 0;
+nustr = '1e-3'; mrkstyl='o';
 % nustr = '1e-2'; mrkstyl='^';
-nustr = '5e-2'; mrkstyl='s';
-GENE = 1;
+% nustr = '5e-2'; mrkstyl='s';
+GENE = 0;
 if ~GENE
     rootdir = ['/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_',nustr];
     % mrkstyl='v';

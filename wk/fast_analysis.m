@@ -71,7 +71,7 @@ PARTITION  = '/misc/gyacomo23_outputs/';
 % resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_kT_5.3/9x5x192x96x24/nu_0.005';
 % resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_kT_5.3/17x9x128x64x24/nu_0.005';
 % resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_kT_5.3/17x9x128x64x24_large_box/nu_0.005';
-resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_kT_5.3/17x9x128x64x24_ckcut_0.8/nu_0.005';
+% resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_kT_5.3/17x9x128x64x24_ckcut_0.8/nu_0.005';
 %% kT eff study
 % resdir = 'paper_2_GYAC23/kT_eff_study/1x3x128x64x24_kT_3.0/Lx120';
 % resdir = 'paper_2_GYAC23/kT_eff_study/1x3x128x64x24_kT_3.0/Lx240';
@@ -82,7 +82,7 @@ resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_kT_5.3/17x9x128x64x24_ckcut
 % resdir = 'paper_2_GYAC23/kT_eff_study/7x3x128x64x24_kT_3.6/dmax';
 
 %% dev
-% PARTITION='';
+PARTITION='';
 % resdir = '/home/ahoffman/gyacomo/testcases/zpinch_3D';
 % resdir = '/home/ahoffman/gyacomo/results/dev/3D_kine_zpinch_test';
 %% CBC benchmark
@@ -93,7 +93,7 @@ resdir = 'paper_2_GYAC23/collision_study/nuLDGK_scan_kT_5.3/17x9x128x64x24_ckcut
 % resdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_nu_1e-3/31x16x128x64x24/kT_7.0';
 
 %% Paper 3
-% resdir = '/misc/gyacomo23_outputs/paper_3_GYAC23/nonlin_KBM';
+resdir = '/misc/gyacomo23_outputs/paper_3_GYAC23/CBC_kine';
  %%
 J0 = 00; J1 = 20;
 
@@ -134,7 +134,7 @@ options.NAME      = '\phi';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
-options.PLAN      = 'xz';
+options.PLAN      = 'yz';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';

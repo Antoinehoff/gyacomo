@@ -1,6 +1,6 @@
 kN=2.22;
 figure
-ERRBAR = 0; LOGSCALE = 0; AU = 0;
+ERRBAR = 1; LOGSCALE = 0; AU = 0;
 resstr={};
 msz = 10; lwt = 2.0;
 % CO = 'DGGK'; mrkstyl='d';
@@ -68,7 +68,7 @@ for j = 1:numel(directories)
         subdir = subdirectories{i};
         data    = compile_results_low_mem(data,subdir,00,20);
         try
-            Trange  = data.Ts0D(end)*[0.5 1.0];
+            Trange  = data.Ts0D(end)*[0.5 0.75];
         catch % if data does not exist put 0 everywhere
             data.Ts0D = 0;
             data.HFLUX_X = 0;
@@ -79,7 +79,7 @@ for j = 1:numel(directories)
             data.inputs.K_N  = kN;
             data.inputs.NU   = nus(i);
         end
-            Trange  = data.Ts0D(end)*[0.5 1.0];
+            Trange  = data.Ts0D(end)*[0.25 0.75];
             % Trange  = [200 400];
         %
         [~,it0] = min(abs(Trange(1)  -data.Ts0D)); 
