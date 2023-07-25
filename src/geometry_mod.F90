@@ -95,7 +95,6 @@ CONTAINS
         ERROR STOP '>> ERROR << Parallel BC not recognized'
     END SELECT
     CALL speak('Parallel BC : '//parallel_bc)
-
   END SUBROUTINE geometry_readinputs
 
   subroutine eval_magnetic_geometry
@@ -143,7 +142,10 @@ CONTAINS
         CASE('miller','Miller')
           CALL speak('Miller geometry')
           IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for Miller geometry"
-          IF(MODULO(FLOOR(Npol),2) .EQ. 0)   ERROR STOP "Npol must be odd for Miller"
+          IF(MODULO(FLOOR(Npol),2) .EQ. 0)   THEN
+            write(*,*) "Npol must be odd for Miller, (Npol = ",Npol,")"
+            ERROR STOP
+          ENDIF
           call set_miller_parameters(kappa,s_kappa,delta,s_delta,zeta,s_zeta)
           call get_miller(eps,major_R,major_Z,q0,shear,FLOOR(Npol),alpha_MHD,edge_opt,&
                           C_y,C_xy,Cyq0_x0,xpdx_pm_geom,gxx,gxy,gxz,gyy,gyz,gzz,&
@@ -151,7 +153,10 @@ CONTAINS
         CASE('circular','circ')
           CALL speak('Circular geometry')
           IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for circular geometry"
-          IF(MODULO(FLOOR(Npol),2) .EQ. 0)   ERROR STOP "Npol must be odd for circular"
+          IF(MODULO(FLOOR(Npol),2) .EQ. 0)   THEN
+            write(*,*) "Npol must be odd for circular, (Npol = ",Npol,")"
+            ERROR STOP
+          ENDIF
           call get_circ(eps,major_R,major_Z,q0,shear,&
                           C_y,C_xy,Cyq0_x0,gxx,gxy,gxz,gyy,gyz,gzz,&
                           dBdx,dBdy,dBdz,hatB,jacobian,hatR,hatZ,dxdR,dxdZ)  
