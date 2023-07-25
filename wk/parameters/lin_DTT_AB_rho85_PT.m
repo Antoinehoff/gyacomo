@@ -1,25 +1,5 @@
-%% QUICK RUN SCRIPT
-% This script creates a directory in /results and runs a simulation directly
-% from the Matlab framework. It is meant to run only small problems in linear
-% for benchmarking and debugging purposes since it makes Matlab "busy".
-
-%% Set up the paths for the necessary Matlab modules
-gyacomodir = pwd;
-gyacomodir = gyacomodir(1:end-2);
-% mpirun     = 'mpirun';
-mpirun     = '/opt/homebrew/bin/mpirun';
-addpath(genpath([gyacomodir,'matlab'])) % Add matlab module
-addpath(genpath([gyacomodir,'matlab/plot'])) % Add plot module
-addpath(genpath([gyacomodir,'matlab/compute'])) % Add compute module
-addpath(genpath([gyacomodir,'matlab/load'])) % Add load module
-
 %% Set simulation parameters
-SIMID   = 'lin_DTT';  % Name of the simulation
-RUN = 1; % To run or just to load
-default_plots_options
-EXECNAME = 'gyacomo23_sp'; % single precision
-% EXECNAME = 'gyacomo23_dp'; % double precision
-
+SIMID   = 'lin_DTT_AB_rho85_PT';  % Name of the simulation
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
 NU = 0.05;                  % Collision frequency
@@ -38,11 +18,11 @@ P = 4;
 J = P/2;%P/2;
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
-NX = 32;                    % real space x-gridpoints
+NX = 16;                    % real space x-gridpoints
 NY = 16;                     % real space y-gridpoints
 LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
 LY = 2*pi/0.2;             % Size of the squared frequency domain in y direction
-NZ = 32;                    % number of perpendicular planes (parallel grid)
+NZ = 24;                    % number of perpendicular planes (parallel grid)
 SG = 0;                     % Staggered z grids option
 NEXC = 1;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 
@@ -115,63 +95,3 @@ k_gB   = 1.0;     % Magnetic gradient strength
 k_cB   = 1.0;     % Magnetic curvature strength
 COLL_KCUT = 1; % Cutoff for collision operator
 ADIAB_I = 0;          % adiabatic ion model
-
-%%-------------------------------------------------------------------------
-%% RUN
-setup
-% system(['rm fort*.90']);
-% Run linear simulation
-if RUN
-    MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
-%     RUN  =['time ',mpirun,' -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
-%    RUN  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
-     RUN  =['time ',mpirun,' -np 8 ',gyacomodir,'bin/',EXECNAME,' 1 4 2 0;'];
-%     RUN  =['time ',mpirun,' -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
-      % RUN = ['./../../../bin/gyacomo23_sp 0;'];
-    MVOUT='cd ../../../wk;';
-    system([MVIN,RUN,MVOUT]);
-end
-
-%% Analysis
-% load
-filename = [SIMID,'/',PARAMS,'/']; % Create the filename based on SIMID and PARAMS
-LOCALDIR = [gyacomodir,'results/',filename,'/']; % Create the local directory path based on gyacomodir, results directory, and filename
-FIGDIR   = LOCALDIR; % Set FIGDIR to the same path as LOCALDIR
-% Load outputs from jobnummin up to jobnummax
-J0 = 0; J1 = 0;
-data = {}; % Initialize data as an empty cell array
-% load grids, inputs, and time traces
-data = compile_results_low_mem(data,LOCALDIR,J0,J1); 
-
-
-if 0 % Activate or not
-%% plot mode evolution and growth rates
-% Load phi
-[data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');
-options.NORMALIZED = 0; 
-options.TIME   = data.Ts3D;
- % Time window to measure the growth of kx/ky modes
-options.KX_TW  = [0.2 1]*data.Ts3D(end);
-options.KY_TW  = [0.2 1]*data.Ts3D(end);
-options.NMA    = 1; % Set NMA option to 1
-options.NMODES = 999; % Set how much modes we study
-options.iz     = 'avg'; % Compressing z
-options.ik     = 1; %
-options.fftz.flag = 0; % Set fftz.flag option to 0
-fig = mode_growth_meter(data,options); % Call the function mode_growth_meter with data and options as input arguments, and store the result in fig
-end
-
-if 1
-%% Ballooning plot
-[data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');
-if data.inputs.BETA > 0
-[data.PSI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'psi');
-end
-options.time_2_plot = [120];
-options.kymodes     = [0.25];
-options.normalized  = 1;
-options.PLOT_KP     = 0;
-% options.field       = 'phi';
-fig = plot_ballooning(data,options);
-end
-

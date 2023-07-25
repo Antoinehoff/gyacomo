@@ -1,54 +1,36 @@
-%% QUICK RUN SCRIPT
-% This script creates a directory in /results and runs a simulation directly
-% from the Matlab framework. It is meant to run only small problems in linear
-% for benchmarking and debugging purposes since it makes Matlab "busy".
-
-%% Set up the paths for the necessary Matlab modules
-gyacomodir = pwd;
-gyacomodir = gyacomodir(1:end-2);
-addpath(genpath([gyacomodir,'matlab'])) % Add matlab module
-addpath(genpath([gyacomodir,'matlab/plot'])) % Add plot module
-addpath(genpath([gyacomodir,'matlab/compute'])) % Add compute module
-addpath(genpath([gyacomodir,'matlab/load'])) % Add load module
-
 %% Set simulation parameters
-SIMID   = 'ETG_adiab_i';  % Name of the simulation
-RUN = 1; % To run or just to load
-default_plots_options
-EXECNAME = 'gyacomo23_sp'; % single precision
-% EXECNAME = 'gyacomo23_dp'; % double precision
-% EXECNAME = 'gyacomo23_debug'; % single precision
+SIMID   = 'lin_Entropy';  % Name of the simulation
 
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-NU = 0.005;                   % Collision frequency
+NU = 0.00;                   % Collision frequency
 TAU = 1.0;                  % e/i temperature ratio
-K_Ne    = 2.22;             % ele Density '''
-K_Te    = 6.96;             % ele Temperature '''
-K_Ni    = 2.22;                % ion Density gradient drive
-K_Ti    = 6.96;                % ion Temperature '''
+K_Ne    = 2.5;             % ele Density '''
+K_Te    = K_Ne/4;             % ele Temperature '''
+K_Ni    = 2.5;                % ion Density gradient drive
+K_Ti    = K_Ni/4;                % ion Temperature '''
 SIGMA_E = 0.0233380;        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 NA = 2;                     % number of kinetic species
 ADIAB_E = 0;          % adiabatic electron model
 ADIAB_I = 0;          % adiabatic ion model
-BETA    = 0.001;             % electron plasma beta
+BETA    = 0.000;             % electron plasma beta
 MHD_PD  = 0;                % MHD pressure drift
 %% Set up grid parameters
-P = 2;
+P = 4;
 J = P/2;%P/2;
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
-NX = 8;                     % real space x-gridpoints
-NY = 2;                    % real space y-gridpoints
+NX = 2;                     % real space x-gridpoints
+NY = 12;                    % real space y-gridpoints
 LX = 2*pi/0.05;              % Size of the squared frequency domain in x direction
-LY = 2*pi/10.5;              % Size of the squared frequency domain in y direction
-NZ = 24;                    % number of perpendicular planes (parallel grid)
+LY = 2*pi/0.2;              % Size of the squared frequency domain in y direction
+NZ = 16;                    % number of perpendicular planes (parallel grid)
 SG = 0;                     % Staggered z grids option
 NEXC = 1;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 %% GEOMETRY
-GEOMETRY= 's-alpha';
+% GEOMETRY= 's-alpha';
 % GEOMETRY= 'miller';
-% GEOMETRY= 'z-pinch';
+GEOMETRY= 'z-pinch';
 EPS     = 0.18;   % inverse aspect ratio
 Q0      = 1.4;    % safety factor
 SHEAR   = 0.8;    % magnetic shear
@@ -63,8 +45,8 @@ SHIFT_Y = 0.0;    % Shift in the periodic BC in z
 NPOL    = 1;       % Number of poloidal turns
 PB_PHASE= 0;
 %% TIME PARAMETERS
-TMAX     = 50;  % Maximal time unit
-DT       = 1e-4;   % Time step
+TMAX     = 100;  % Maximal time unit
+DT       = 1e-3;   % Time step
 DTSAVE0D = 1;      % Sampling per time unit for 0D arrays
 DTSAVE2D = -1;     % Sampling per time unit for 2D arrays
 DTSAVE3D = 1;      % Sampling per time unit for 3D arrays
@@ -109,54 +91,8 @@ HYP_V   = 'hypcoll'; % Kinetic-hyperdiffusivity model
 MU_P    = 0.0;    % Hyperdiffusivity coefficient for Hermite
 MU_J    = 0.0;    % Hyperdiffusivity coefficient for Laguerre
 LAMBDAD = 0.0;    % Lambda Debye
-NOISE0  = 1.0e-8; % Initial noise amplitude
+NOISE0  = 1.0e-4; % Initial noise amplitude
 BCKGD0  = 0.0e-8;    % Initial background
 k_gB   = 1.0;     % Magnetic gradient strength
 k_cB   = 1.0;     % Magnetic curvature strength
 COLL_KCUT = 1; % Cutoff for collision operator
-
-%%-------------------------------------------------------------------------
-%% RUN
-setup
-% system(['rm fort*.90']);
-% Run linear simulation
-if RUN
-    MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
-    % RUN  =['time mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
-    % RUN  =['time mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
-    RUN  =['time mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 3 2 0;'];
-    % RUN  =['time mpirun -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
-    MVOUT='cd ../../../wk;';
-    system([MVIN,RUN,MVOUT]);
-end
-
-%% Analysis
-% load
-filename = [SIMID,'/',PARAMS,'/']; % Create the filename based on SIMID and PARAMS
-LOCALDIR = [gyacomodir,'results/',filename,'/']; % Create the local directory path based on gyacomodir, results directory, and filename
-FIGDIR   = LOCALDIR; % Set FIGDIR to the same path as LOCALDIR
-% Load outputs from jobnummin up to jobnummax
-J0 = 0; J1 = 0;
-data = {}; % Initialize data as an empty cell array
-% load grids, inputs, and time traces
-data = compile_results_low_mem(data,LOCALDIR,J0,J1); 
-
-
-if 1 % Activate or not
-%% plot mode evolution and growth rates
-% Load phi
-[data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');
-options.NORMALIZED = 0; 
-options.TIME   = data.Ts3D;
- % Time window to measure the growth of kx/ky modes
-options.KX_TW  = [0.2 1]*data.Ts3D(end);
-options.KY_TW  = [0.2 1]*data.Ts3D(end);
-options.NMA    = 1; % Set NMA option to 1
-options.NMODES = 999; % Set how much modes we study
-options.iz     = 'avg'; % Compressing z
-options.ik     = 1; %
-options.fftz.flag = 0; % Set fftz.flag option to 0
-fig = mode_growth_meter(data,options); % Call the function mode_growth_meter with data and options as input arguments, and store the result in fig
-end
-
-

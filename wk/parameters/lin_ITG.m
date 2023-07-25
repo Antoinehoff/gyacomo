@@ -1,23 +1,5 @@
-%% QUICK RUN SCRIPT
-% This script creates a directory in /results and runs a simulation directly
-% from the Matlab framework. It is meant to run only small problems in linear
-% for benchmarking and debugging purposes since it makes Matlab "busy".
-
-%% Set up the paths for the necessary Matlab modules
-gyacomodir = pwd;
-gyacomodir = gyacomodir(1:end-2);
-addpath(genpath([gyacomodir,'matlab'])) % Add matlab module
-addpath(genpath([gyacomodir,'matlab/plot'])) % Add plot module
-addpath(genpath([gyacomodir,'matlab/compute'])) % Add compute module
-addpath(genpath([gyacomodir,'matlab/load'])) % Add load module
-
 %% Set simulation parameters
 SIMID = 'lin_ITG'; % Name of the simulation
-RUN = 1; % To run or just to load
-default_plots_options
-% EXECNAME = 'gyacomo23_dp'; % single precision
-EXECNAME = 'gyacomo23_sp'; % double precision
-% EXECNAME = 'gyacomo23_debug'; % double precision
 
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
@@ -115,54 +97,3 @@ S_ZETA  = 0.0;
 PB_PHASE= 0;
 ADIAB_I = 0;
 MHD_PD  = 0;
-%%-------------------------------------------------------------------------
-%% RUN
-setup
-% system(['rm fort*.90']);
-% Run linear simulation
-if RUN
-    MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
-%     RUN  =['time mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
-    % RUN  =['mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
-%     RUN  =['time mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 6 1 0;'];
-    RUN  =['time mpirun -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
-    MVOUT='cd ../../../wk;';
-    system([MVIN,RUN,MVOUT]);
-end
-
-%% Analysis
-% load
-filename = [SIMID,'/',PARAMS,'/']; % Create the filename based on SIMID and PARAMS
-LOCALDIR = [gyacomodir,'results/',filename,'/']; % Create the local directory path based on gyacomodir, results directory, and filename
-FIGDIR   = LOCALDIR; % Set FIGDIR to the same path as LOCALDIR
-% Load outputs from jobnummin up to jobnummax
-J0 = 0; J1 = 0;
-data = {}; % Initialize data as an empty cell array
-% load grids, inputs, and time traces
-data = compile_results_low_mem(data,LOCALDIR,J0,J1); 
-
-if 0
-%% Plot heat flux evolution
-figure
-semilogy(data.Ts0D,data.HFLUX_X);
-xlabel('$tc_s/R$'); ylabel('$Q_x$');
-end
-if 1 % Activate or not
-%% plot mode evolution and growth rates
-% Load phi
-[data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');
-options.NORMALIZED = 0; 
-options.TIME   = data.Ts3D;
- % Time window to measure the growth of kx/ky modes
-options.KX_TW  = [0.2 1]*data.Ts3D(end);
-options.KY_TW  = [0.2 1]*data.Ts3D(end);
-options.NMA    = 1; % Set NMA option to 1
-options.NMODES = 999; % Set how much modes we study
-options.iz     = 'avg'; % Compressing z
-options.ik     = 1; %
-options.fftz.flag = 0; % Set fftz.flag option to 0
-fig = mode_growth_meter(data,options); % Call the function mode_growth_meter with data and options as input arguments, and store the result in fig
-end
-
-
-
