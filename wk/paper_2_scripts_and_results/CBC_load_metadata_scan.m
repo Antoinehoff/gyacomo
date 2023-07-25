@@ -10,6 +10,8 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0'
 % datafname = 'p2_linear/8x24_ky_0.3_P_8_J_4_kT_3_6.96_nu_0_1_DGDK.mat';
 % datafname = 'p2_linear/8x24_ky_0.3_P_16_J_8_kT_3_6.96_nu_0_1_DGDK.mat';
 %% Scans over KT and PJ, keeping ky, CO constant (CBC_kT_PJ_scan.m)
+% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_30_DGDK_0.001.mat';
+% datafname = 'p2_linear_check/8x24_ky_0.3_kT_3_9_P_2_30_DGDK_0.001.mat';
 % datafname = 'p2_linear/8x24_ky_0.3_kT_3_6.96_P_2_40_DGDK_0.05.mat';
 % datafname = 'p2_linear/8x24_ky_0.3_kT_3_6.96_P_2_30_DGDK_0.05.mat';
 % datafname = 'p2_linear/8x24_ky_0.3_kT_3_6.96_P_2_40_DGDK_0.025.mat';
@@ -46,7 +48,7 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0'
 % datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_10_DGDK_0.05.mat';
 % datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_30_DGGK_0.05.mat';
 % datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_SGGK_0.05.mat';
-% datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_10_LDGK_0.05.mat';
+datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_10_LDGK_0.05.mat';
 
 % datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_DGDK_0.1.mat';
 % datafname = 'p2_linear_new/8x24_ky_0.3_kT_3_6.96_P_2_20_DGGK_0.1.mat';
@@ -74,7 +76,7 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0'
 
 % datafname = 'p2_linear_new/8x24_P_4_ky_0.05_1_SGGK_nu_0.005_0.05_kT_5.3.mat';
 % datafname = 'p2_linear_new/8x24_P_8_ky_0.05_1_SGGK_nu_0.005_0.05_kT_5.3.mat';
-datafname = 'p2_linear_new/8x24_P_16_ky_0.05_1_SGGK_nu_0.005_0.05_kT_5.3.mat';
+% datafname = 'p2_linear_new/8x24_P_16_ky_0.05_1_SGGK_nu_0.005_0.05_kT_5.3.mat';
 
 % datafname = 'p2_linear_new/8x24_P_4_ky_0.05_1_LDGK_nu_0.005_0.05_kT_5.3.mat';
 % datafname = 'p2_linear_new/8x24_P_8_ky_0.05_1_LDGK_nu_0.005_0.05_kT_5.3.mat';
@@ -91,13 +93,13 @@ if FILTERGAMMA
     d.data = d.data.*(d.data>0.025);
     d.err  = d.err.*(d.data>0.025);
 end
-if 0
+if 1
 %% Pcolor of the peak
 figure;
 % [XX_,YY_] = meshgrid(d.s1,d.s2);
 [XX_,YY_] = meshgrid(1:numel(d.s1),1:numel(d.s2));
-pclr=imagesc_custom(XX_,YY_,d.data'.*(d.data>0)');
-% pclr=contourf(1:numel(d.s1),1:numel(d.s2),d.data'.*(d.data>0)');
+% pclr=imagesc_custom(XX_,YY_,d.data'.*(d.data>0)');
+pclr=contourf(1:numel(d.s1),1:numel(d.s2),d.data'.*(d.data>0)');
 % pclr=surf(1:numel(d.s1),1:numel(d.s2),d.data'.*(d.data>0)');
 title(d.title);
 xlabel(d.s1name); ylabel(d.s2name);
@@ -110,7 +112,7 @@ clb.Label.String = '$\gamma c_s/R$';
 clb.Label.Interpreter = 'latex';
 clb.Label.FontSize= 18;
 end
-if 1
+if 0
 %% Scan along first dimension
 figure
 colors_ = jet(numel(d.s2));

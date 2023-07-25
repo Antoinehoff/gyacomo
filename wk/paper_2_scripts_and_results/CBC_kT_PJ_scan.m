@@ -9,12 +9,12 @@ CLUSTER.TIME  = '99:00:00'; % allocation time hh:mm:ss
 %%
 SIMID = 'p2_linear_new';  % Name of the simulation
 RERUN   = 0; % rerun if the data does not exist
-RUN     = 1;
-% KT_a = [3:0.5:6.5 6.96];
-KT_a = [6.96];
-P_a  = [2];
+RUN     = 0;
+KT_a = [3:0.5:6.5 6.96];
+% KT_a = [6.96];
+% P_a  = [2];
 % P_a  = [3:1:29];
-% P_a  = 2:2:10;
+P_a  = 2:2:10;
 J_a  = floor(P_a/2);
 % collision setting
 CO        = 'DG';
