@@ -1,17 +1,29 @@
+%% Reference values
+Bref = 5.8048; % in Tesla
+Lref = 2.2121; % in meter
+Tref = 2.2085; % in keV
+nref = 14.598; % in 1e19 x m^{-3}
+mref = 2.0;    % in proton mass
+lnLAMBDA = 13; % Coulomb logarithm
+nuref   = 0.45*2.3031e-5*lnLAMBDA*nref*Lref/Tref/Tref; %(0.00235 in GENE)
+nu_ei   = 0.569013;
+nu_gn   = 0.00235;
+b_gn    = 0.0039;
+dpdx_gn =0.086;
 %% Set simulation parameters
 SIMID   = 'lin_DTT_AB_rho85_PT';  % Name of the simulation
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-NU = 0.05;                  % Collision frequency
-TAU = 1.0;                  % e/i temperature ratio
+nu = nu_ei; %(0.00235 in GENE)
+TAU = 0.9360;               % e/i temperature ratio
 K_Ne    = 1.33;             % ele Density '''
 K_Te    = 12.0;             % ele Temperature '''
-K_Ni    = 2.25;             % ion Density gradient drive
+K_Ni    = 1.33;             % ion Density gradient drive
 K_Ti    = 8.25;             % ion Temperature '''
-SIGMA_E = 0.0233380;        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
-NA      = 2;                % number of kinetic species
+SIGMA_E = 0.0233380/sqrt(mref);        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+NA      = 2;          % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
-BETA    = 0.0034;           % electron plasma beta
+BETA    = b_gn;           % electron plasma beta
 MHD_PD  = 0;
 %% Set up grid parameters
 P = 4;
@@ -30,7 +42,7 @@ NEXC = 1;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 % GEOMETRY= 's-alpha';
 GEOMETRY= 'miller';
 EPS     = 0.28;    % inverse aspect ratio
-Q0      = 2.15;    % safety factor
+Q0      =-2.15;    % safety factor
 SHEAR   = 3.62;    % magnetic shear
 KAPPA   = 1.53;    % elongation
 S_KAPPA = 0.77;
