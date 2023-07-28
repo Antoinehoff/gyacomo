@@ -1,59 +1,51 @@
-%% Reference values
-Bref = 5.8048; % in Tesla
-Lref = 2.2121; % in meter
-Tref = 2.2085; % in keV
-nref = 14.598; % in 1e19 x m^{-3}
-mref = 2.0;    % in proton mass
-lnLAMBDA = 13; % Coulomb logarithm
-nuref   = 0.45*2.3031e-5*lnLAMBDA*nref*Lref/Tref/Tref; %(0.00235 in GENE)
-nu_ei   = 0.569013;
-nu_gn   = 0.00235;
-b_gn    = 0.0039;
-dpdx_gn =0.086;
+% Parameters found in Parisi et al. 2020
+% Jet shot 92174
 %% Set simulation parameters
-SIMID   = 'lin_DTT_AB_rho85_PT';  % Name of the simulation
+SIMID   = 'lin_JET_rho97';  % Name of the simulation
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-nu = nu_ei; %(0.00235 in GENE)
-TAU = 0.9360;               % e/i temperature ratio
-K_Ne    = 1.33;             % ele Density '''
-K_Te    = 12.0;             % ele Temperature '''
-K_Ni    = 1.33;             % ion Density gradient drive
-K_Ti    = 8.25;             % ion Temperature '''
-SIGMA_E = 0.0233380/sqrt(mref);        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+nu = 0.83; %(0.00235 in GENE)
+TAU = 0.56;               % e/i temperature ratio
+K_Ne    = 10;             % ele Density '''
+K_Te    = 42;             % ele Temperature '''
+K_Ni    = 10;             % ion Density gradient drive
+K_Ti    = 11;             % ion Temperature '''
+SIGMA_E = 0.0233380;        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 NA      = 2;          % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
-BETA    = b_gn;           % electron plasma beta
+BETA    = 0.0031;           % electron plasma beta
 MHD_PD  = 0;
+
+%% GEOMETRY
+% GEOMETRY= 's-alpha';
+GEOMETRY= 'miller';
+EPS     = 0.9753*0.91/2.91;    % inverse aspect ratio
+Q0      = 5.10;    % safety factor
+SHEAR   = 3.36;    % magnetic shear
+KAPPA   = 1.55;    % elongation
+S_KAPPA = 0.95;
+DELTA   = 0.26;    % triangularity
+S_DELTA = 0.74;
+ZETA    = 0;    % squareness
+S_ZETA  = 0;
+PARALLEL_BC = 'dirichlet'; % Boundary condition for parallel direction ('dirichlet','periodic','shearless','disconnected')
+SHIFT_Y = 0.0;    % Shift in the periodic BC in z
+NPOL   = 1;       % Number of poloidal turns
+PB_PHASE = 0;
+
 %% Set up grid parameters
 P = 4;
 J = P/2;%P/2;
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
-NX = 16;                    % real space x-gridpoints
-NY = 16;                     % real space y-gridpoints
+NX = 8;                    % real space x-gridpoints
+NY = 2;                     % real space y-gridpoints
 LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
-LY = 2*pi/0.2;             % Size of the squared frequency domain in y direction
-NZ = 24;                    % number of perpendicular planes (parallel grid)
+LY = 2*pi/0.5;             % Size of the squared frequency domain in y direction
+NZ = 32;                    % number of perpendicular planes (parallel grid)
 SG = 0;                     % Staggered z grids option
 NEXC = 1;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 
-%% GEOMETRY
-% GEOMETRY= 's-alpha';
-GEOMETRY= 'miller';
-EPS     = 0.28;    % inverse aspect ratio
-Q0      =-2.15;    % safety factor
-SHEAR   = 3.62;    % magnetic shear
-KAPPA   = 1.53;    % elongation
-S_KAPPA = 0.77;
-DELTA   = 0.23;    % triangularity
-S_DELTA = 1.05;
-ZETA    =-0.01;    % squareness
-S_ZETA  =-0.17;
-PARALLEL_BC = 'dirichlet'; % Boundary condition for parallel direction ('dirichlet','periodic','shearless','disconnected')
-SHIFT_Y = 0.0;    % Shift in the periodic BC in z
-NPOL   = 1;       % Number of poloidal turns
-PB_PHASE = 0;
 %% TIME PARAMETERS
 TMAX     = 15;  % Maximal time unit
 DT       = 1e-3;   % Time step

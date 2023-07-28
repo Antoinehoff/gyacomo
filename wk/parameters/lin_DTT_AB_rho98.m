@@ -7,11 +7,11 @@ mref = 2.0;    % in proton mass
 lnLAMBDA = 13; % Coulomb logarithm
 nuref   = 0.45*2.3031e-5*lnLAMBDA*nref*Lref/Tref/Tref; %(0.00235 in GENE)
 nu_ei   = 0.569013;
-nu_gn   = 0.00235;
+nu_gn   = 0.235;
 b_gn    = 0.0039;
 dpdx_gn =0.086;
 %% Set simulation parameters
-SIMID   = 'lin_DTT_AB_rho85_PT';  % Name of the simulation
+SIMID   = 'lin_DTT_AB_rho98_PT';  % Name of the simulation
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
 nu = nu_ei; %(0.00235 in GENE)
@@ -20,7 +20,7 @@ K_Ne    = 65;             % ele Density '''
 K_Te    = 350;             % ele Temperature '''
 K_Ni    = K_Ne;             % ion Density gradient drive
 K_Ti    = 350;             % ion Temperature '''
-SIGMA_E = 0.0233380/sqrt(mref);        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+SIGMA_E = 0.0233380;        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 NA      = 2;          % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
 BETA    = b_gn;           % electron plasma beta
@@ -30,11 +30,11 @@ P = 4;
 J = P/2;%P/2;
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
-NX = 16;                    % real space x-gridpoints
-NY = 16;                     % real space y-gridpoints
+NX = 8;                    % real space x-gridpoints
+NY = 2;                     % real space y-gridpoints
 LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
-LY = 2*pi/0.2;             % Size of the squared frequency domain in y direction
-NZ = 24;                    % number of perpendicular planes (parallel grid)
+LY = 2*pi/0.5;             % Size of the squared frequency domain in y direction
+NZ = 32;                    % number of perpendicular planes (parallel grid)
 SG = 0;                     % Staggered z grids option
 NEXC = 1;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 

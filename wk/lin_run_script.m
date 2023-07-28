@@ -21,10 +21,22 @@ EXECNAME = 'gyacomo23_sp'; % single precision
 % EXECNAME = 'gyacomo23_dp'; % double precision
 
 %% Setup parameters
-% run lin_DTT_AB_rho85_PT
+% run lin_DTT_AB_rho85
+% run lin_DTT_AB_rho98
+run lin_JET_rho97
 % run lin_Entropy
 % run lin_ITG
-
+%% Change parameters
+NY   = 2;
+PMAX = 4;
+JMAX = 2;
+ky   = 10.0;
+LY   = 2*pi/ky;
+DT   = 1e-3/ky;
+SIGMA_E  = 0.023;
+TMAX     = 1.5/ky;
+DTSAVE0D = 0.01;
+DTSAVE3D = 0.01;
 %%-------------------------------------------------------------------------
 %% RUN
 setup
@@ -32,9 +44,9 @@ setup
 % Run linear simulation
 if RUN
     MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
-%     RUN  =['time ',mpirun,' -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
+    RUN  =['time ',mpirun,' -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
 %    RUN  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
-     RUN  =['time ',mpirun,' -np 8 ',gyacomodir,'bin/',EXECNAME,' 1 4 2 0;'];
+     % RUN  =['time ',mpirun,' -np 8 ',gyacomodir,'bin/',EXECNAME,' 1 4 2 0;'];
 %     RUN  =['time ',mpirun,' -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
       % RUN = ['./../../../bin/gyacomo23_sp 0;'];
     MVOUT='cd ../../../wk;';
@@ -53,7 +65,7 @@ data = {}; % Initialize data as an empty cell array
 data = compile_results_low_mem(data,LOCALDIR,J0,J1); 
 
 
-if 0 % Activate or not
+if 1 % Activate or not
 %% plot mode evolution and growth rates
 % Load phi
 [data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');
@@ -70,7 +82,7 @@ options.fftz.flag = 0; % Set fftz.flag option to 0
 fig = mode_growth_meter(data,options); % Call the function mode_growth_meter with data and options as input arguments, and store the result in fig
 end
 
-if 1
+if (1 && NZ>4)
 %% Ballooning plot
 [data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');
 if data.inputs.BETA > 0

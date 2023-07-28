@@ -1,62 +1,71 @@
+%% Reference values
+Bref = 5.8048; % in Tesla
+Lref = 2.2121; % in meter
+Tref = 2.2085; % in keV
+nref = 14.598; % in 1e19 x m^{-3}
+mref = 2.0;    % in proton mass
+lnLAMBDA = 13; % Coulomb logarithm
+nuref   = 0.45*2.3031e-5*lnLAMBDA*nref*Lref/Tref/Tref; %(0.00235 in GENE)
+nu_ei   = 0.569013;
+nu_gn   = 0.00235;
+b_gn    = 0.0039;
+dpdx_gn =0.086;
 %% Set simulation parameters
-SIMID   = 'lin_Entropy';  % Name of the simulation
-
+SIMID   = 'lin_DTT_AB_rho85_PT';  % Name of the simulation
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-NU = 0.00;                   % Collision frequency
-TAU = 1.0;                  % e/i temperature ratio
-K_Ne    = 2.5;             % ele Density '''
-K_Te    = K_Ne/4;             % ele Temperature '''
-K_Ni    = 2.5;                % ion Density gradient drive
-K_Ti    = K_Ni/4;                % ion Temperature '''
-SIGMA_E = 0.0233380;        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
-NA = 2;                     % number of kinetic species
-ADIAB_E = 0;          % adiabatic electron model
-ADIAB_I = 0;          % adiabatic ion model
-BETA    = 0.000;             % electron plasma beta
-MHD_PD  = 1;                % MHD pressure drift
+NU      = 0.1;            %(0.00235 or 0.56 in GENE?)
+TAU     = 0.9360;           % e/i temperature ratio
+K_Ne    = 1.33;             % ele Density '''
+K_Te    = 12.0;             % ele Temperature '''
+K_Ni    = 1.33;             % ion Density gradient drive
+K_Ti    = 8.25;             % ion Temperature '''
+SIGMA_E = 0.0233380/sqrt(mref);        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+NA      = 2;          % number of kinetic species
+ADIAB_E = (NA==1);          % adiabatic electron model
+BETA    = b_gn;           % electron plasma beta
+MHD_PD  = 0;
 %% Set up grid parameters
-P = 4;
-J = P/2;%P/2;
-PMAX = P;                   % Hermite basis size
-JMAX = J;                   % Laguerre basis size
-NX = 2;                     % real space x-gridpoints
-NY = 40;                    % real space y-gridpoints
-LX = 2*pi/0.05;              % Size of the squared frequency domain in x direction
-LY = 2*pi/0.1;              % Size of the squared frequency domain in y direction
-NZ = 1;                    % number of perpendicular planes (parallel grid)
+
+PMAX = 4;                   % Hermite basis size
+JMAX = PMAX/2;              % Laguerre basis size
+NX = 4;                    % real space x-gridpoints
+NY = 24;                     % real space y-gridpoints
+LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
+LY = 2*pi/0.2;             % Size of the squared frequency domain in y direction
+NZ = 24;                    % number of perpendicular planes (parallel grid)
 SG = 0;                     % Staggered z grids option
 NEXC = 1;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
+
 %% GEOMETRY
 % GEOMETRY= 's-alpha';
-% GEOMETRY= 'miller';
-GEOMETRY= 'z-pinch';
-EPS     = 0.18;   % inverse aspect ratio
-Q0      = 1.4;    % safety factor
-SHEAR   = 0.8;    % magnetic shear
-KAPPA   = 1.0;   % elongation
-S_KAPPA = 0.0;
-DELTA   = 0.0;  % triangularity
-S_DELTA = 0.0;
-ZETA    = 0.0; % squareness
-S_ZETA  = 0.0;
+GEOMETRY= 'miller';
+EPS     = 0.28;    % inverse aspect ratio
+Q0      =-2.15;    % safety factor
+SHEAR   = 3.62;    % magnetic shear
+KAPPA   = 1.53;    % elongation
+S_KAPPA = 0.77;
+DELTA   = 0.23;    % triangularity
+S_DELTA = 1.05;
+ZETA    =-0.01;    % squareness
+S_ZETA  =-0.17;
 PARALLEL_BC = 'dirichlet'; % Boundary condition for parallel direction ('dirichlet','periodic','shearless','disconnected')
 SHIFT_Y = 0.0;    % Shift in the periodic BC in z
-NPOL    = 1;       % Number of poloidal turns
-PB_PHASE= 0;
+NPOL   = 1;       % Number of poloidal turns
+PB_PHASE = 0;
 %% TIME PARAMETERS
-TMAX     = 50;  % Maximal time unit
-DT       = 1e-2;   % Time step
-DTSAVE0D = 1.0;    % Sampling time for 0D arrays
+TMAX     = 25;  % Maximal time unit
+DT       = 1e-3;   % Time step
+DTSAVE0D = 0.5;      % Sampling time for 0D arrays
 DTSAVE2D = -1;     % Sampling time for 2D arrays
-DTSAVE3D = 2.0;    % Sampling time for 3D arrays
-DTSAVE5D = 100;    % Sampling time for 5D arrays
+DTSAVE3D = 0.5;      % Sampling time for 3D arrays
+DTSAVE5D = 100;     % Sampling time for 5D arrays
 JOB2LOAD = -1;     % Start a new simulation serie
 
 %% OPTIONS
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 CO        = 'DG';       % Collision operator (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-GKCO      = 0;          % Gyrokinetic operator
+GKCO      = 1;          % Gyrokinetic operator
 ABCO      = 1;          % INTERSPECIES collisions
 INIT_ZF   = 0;          % Initialize zero-field quantities
 HRCY_CLOS = 'truncation';   % Closure model for higher order moments
@@ -91,8 +100,9 @@ HYP_V   = 'hypcoll'; % Kinetic-hyperdiffusivity model
 MU_P    = 0.0;    % Hyperdiffusivity coefficient for Hermite
 MU_J    = 0.0;    % Hyperdiffusivity coefficient for Laguerre
 LAMBDAD = 0.0;    % Lambda Debye
-NOISE0  = 1.0e-4; % Initial noise amplitude
-BCKGD0  = 0.0e-8;    % Initial background
+NOISE0  = 1.0e-5; % Initial noise amplitude
+BCKGD0  = 0.0e-5;    % Initial background
 k_gB   = 1.0;     % Magnetic gradient strength
 k_cB   = 1.0;     % Magnetic curvature strength
 COLL_KCUT = 1; % Cutoff for collision operator
+ADIAB_I = 0;          % adiabatic ion model
