@@ -1,6 +1,6 @@
 codir  = '/home/ahoffman/cosolver/';
-matname= 'gk_landau_P16_J9_dk_5e-2_km_2.0_NFLR_8';
-matdir = [codir,'LDGK_P16_J9_NFLR_8/matrices/'];
+matname= 'gk_landau_P12_J6_dk_5e-2_km_1.0_NFLR_16';
+matdir = [codir,'LDGK_P12_J6_dk_5e-2_km_1.0_NFLR_16/matrices/'];
 kperp  = load([matdir,'kperp.in']); 
 Nkp    = numel(kperp);
 outdir = '/home/ahoffman/gyacomo/iCa/';
