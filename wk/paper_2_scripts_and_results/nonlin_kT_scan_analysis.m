@@ -12,6 +12,8 @@ else
     rootdir = '/misc/gene_results/kT_scan_nu0'; 
     mrkstyl='d';
 end
+nustr = '5e-3'; mrkstyl='o';
+rootdir = '/misc/gyacomo23_outputs/paper_2_GYAC23/kT_scan_LDGK_nu_5e-3';
 Mmax = 6;
 msz = 10; lwt = 2.0;
 xname = '$\kappa_T (\kappa_N=2.22)$';
@@ -182,7 +184,7 @@ end
 
 ylabel('$\chi L_N/\rho_s^2 c_s$');
 xlabel('$R/L_T$');
-title(['$\nu_{DGDK}=$',nustr])
+title(['$\nu_{',data.inputs.CONAME,'}=$',nustr])
 legend('show');
 legend('Location','northwest')
 xlim([3.5 10]);

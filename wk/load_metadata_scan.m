@@ -10,7 +10,11 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0'
 % datafname = 'lin_KBM/12x24_ky_0.05_0.75_P_2_16_DGGK_0.01_be_0.03.mat';
 % datafname = 'lin_AUG_scan/12x24_ky_0.05_0.75_P_2_16_DGGK_0.01_be_0.000152.mat';
 % datafname = 'lin_Entropy_scan/2x1_ky_0.05_0.75_P_2_8_DGDK_0_be_0.mat';
-datafname = 'lin_DTT_AB_rho85_PT_scan/16x24_ky_0.1_1.5_P_2_8_DGGK_0.05_be_0.0034.mat';
+% datafname = 'lin_DTT_AB_rho85_PT_scan/16x24_ky_0.1_0.5_P_2_8_DGGK_0.05_be_0.0034.mat';
+% datafname = 'lin_DTT_AB_rho85_PT_scan/16x24_ky_0.1_0.5_P_2_8_DGGK_0.05_be_0.0039.mat';
+% datafname = 'lin_DTT_AB_rho85_PT_scan/16x24_ky_0.1_1_P_2_8_DGGK_0.05_be_0.0039.mat';
+datafname = 'lin_DTT_AB_rho85_PT_scan/16x24_ky_0.1_0.9_P_2_8_kN_1.33_DGGK_0.56901_be_0.0039.mat';
+% datafname = 'lin_DTT_AB_rho85_PT_scan/8x24_ky_0.05_1.5_P_2_8_kN_1.33_DGGK_0.1_be_0.0039.mat';
 %% Chose if we filter gamma>0.05
 FILTERGAMMA = 0;
 

@@ -2,20 +2,20 @@ kN=2.22;
 figure
 ERRBAR = 1; LOGSCALE = 0; AU = 0;
 resstr={};
+kN = 2.22;
 msz = 10; lwt = 2.0;
 % CO = 'DGGK'; mrkstyl='d';
-% CO = 'SGGK'; mrkstyl='s'; 
-CO = 'LDGK'; mrkstyl='o';
+CO = 'SGGK'; mrkstyl='s'; 
+% CO = 'LDGK'; mrkstyl='o';
 % GRAD = 'kT_7.0'; kT = 6.96;
 GRAD = 'kT_5.3'; kT = 5.3;
 % GRAD = 'kT_4.5'; kT = 4.5;
 xname = ['$\nu_{',CO,'}$ '];
-titlename = [CO,', ',GRAD];
 scanvarname = 'nu';
 rootdir = ['/misc/gyacomo23_outputs/paper_2_GYAC23/collision_study/nu',CO,'_scan_',GRAD]; 
 scanval = {'0.005' '0.01' '0.02' '0.05' '0.1' '0.2' '0.5'};
 naming = @(s) num2str(s);
-
+J0 = 00; J1 = 20;
  % Get all directories
 system(['ls -d ',rootdir,'/*/ > list.txt']);
 fid = fopen('list.txt');
@@ -39,6 +39,7 @@ clrs_ = lines(numel(directories));
 
 for j = 1:numel(directories)
      % Get all subdirectories
+    disp(directories{j});
     system(['ls -d ',directories{j},'*/ > list.txt']);
     fid = fopen('list.txt');
     tline = fgetl(fid); i_ = 1; nus=[]; subdirectories={};
@@ -56,7 +57,7 @@ for j = 1:numel(directories)
     subdirectories = subdirectories(ids); nus = nus(ids);
 
     naming = @(s) sprintf('%1.1f',s); clr_ = clrs_(j,:);
-    titlename = [CO,', ',GRAD,', ',resstr{j}];
+    titlename = [CO,', kT=',num2str(kT)];
     N   = numel(subdirectories);
     x = 1:N;
     Qx_avg  = 1:N;
@@ -65,9 +66,12 @@ for j = 1:numel(directories)
     Chi_std = 1:N;
     data = {};
     for i = 1:N
-        subdir = subdirectories{i};
-        data    = compile_results_low_mem(data,subdir,00,20);
+        subdir       = subdirectories{i};
+        % data         = compile_results_low_mem(data,subdir,J0,J1);
         try
+            [t, ~, Q]    = read_flux_out_XX(subdir);
+            data.Ts0D    = t;
+            data.HFLUX_X = Q;
             Trange  = data.Ts0D(end)*[0.5 0.75];
         catch % if data does not exist put 0 everywhere
             data.Ts0D = 0;
@@ -80,16 +84,16 @@ for j = 1:numel(directories)
             data.inputs.NU   = nus(i);
         end
             Trange  = data.Ts0D(end)*[0.25 0.75];
-            % Trange  = [200 400];
+            % Trange  = [100 400];
         %
         [~,it0] = min(abs(Trange(1)  -data.Ts0D)); 
         [~,it1] = min(abs(Trange(end)-data.Ts0D)); 
         %
         Qx_avg(i) = mean(data.HFLUX_X(it0:it1));
         Qx_std(i) =  std(data.HFLUX_X(it0:it1));
-        Chi_avg(i) = Qx_avg(i)./data.inputs.K_T/data.inputs.K_N;
-        Chi_std(i) = Qx_std(i)./data.inputs.K_T/data.inputs.K_N;
-        x(i) = data.inputs.NU;
+        Chi_avg(i) = Qx_avg(i)./kT/kN;
+        Chi_std(i) = Qx_std(i)./kT/kN;
+        x(i) = nus(i);
         subplot(N,2,2*i-1)
         hold on;
         Qx      = data.HFLUX_X;
@@ -102,19 +106,21 @@ for j = 1:numel(directories)
             'Color',clr_); hold on
         % plot([T(it0) T(end)],Qx_avg(i)*[1 1],'--k','DisplayName',...
         % ['$Q_{avg}=',sprintf('%2.2f',Qx_avg(i)),'\pm',sprintf('%2.2f',Qx_std(i)),'$']);
+        ylim([0 40]);
     end
     % plot chi vs nu
     subplot(122)
     hold on;
     if ERRBAR
     errorbar(x,Chi_avg,Chi_std,'DisplayName',...
-        ['(',num2str(data.inputs.PMAX),',',num2str(data.inputs.JMAX),')'],...
+        ['(',num2str(Ps(j)-1),',',num2str(Js(j)-1),') ',resstr{j}],...
         'color',clr_,'MarkerFaceColor','k','MarkerSize',7,'LineWidth',2); hold on;
     else
         plot(x,Chi_avg,'DisplayName',...
-        ['(',num2str(data.inputs.PMAX),',',num2str(data.inputs.JMAX),')'],...
+        ['(',num2str(Ps(j)-1),',',num2str(Js(j)-1),') ',resstr{j}],...
         'color',clr_,'Marker',mrkstyl); 
     end    
+    ylim([0 8])
 end
 
 % Formatting
