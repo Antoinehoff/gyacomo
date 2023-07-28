@@ -119,8 +119,6 @@ CONTAINS
                       - (Dphi + Dpsi) &
                       ! Collision term
                       + Capj(ia,ip,ij,iky,ikx,iz) &
-                      ! Perpendicular pressure effects (electromagnetic term) (TO CHECK)
-                      ! - i_ky*beta*xpdx(ia) * (Tnapj + Tnapp2j + Tnapm2j + Tnapjp1 + Tnapjm1)&
                       ! Parallel drive term (should be negligible, to test)
                       ! !! -Gamma_phipar(iz,eo)*Tphi*ddz_phi(iky,ikx,iz) &
                       ! Numerical perpendicular hyperdiffusion
