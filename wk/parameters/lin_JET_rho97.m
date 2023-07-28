@@ -4,8 +4,8 @@
 SIMID   = 'lin_JET_rho97';  % Name of the simulation
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-nu = 0.83; %(0.00235 in GENE)
-TAU = 0.56;               % e/i temperature ratio
+NU      = 0.83;  
+TAU     = 0.56;               % e/i temperature ratio
 K_Ne    = 10;             % ele Density '''
 K_Te    = 42;             % ele Temperature '''
 K_Ni    = 10;             % ion Density gradient drive
