@@ -25,10 +25,14 @@ SUBROUTINE diagnose(kstep)
   END SELECT
 
   ! Terminal info
-  ! IF ((kstep .GE. 0) .AND. (MOD(cstep, INT(1.0/dt)) == 0) .AND. (my_id .EQ. 0)) &
-  !   WRITE(*,"(A,F6.0,A1,F6.0,A8,G10.2,A8,G10.2,A)")'|t/tmax = ', time,"/",tmax,'| Gxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'|'
   IF ((kstep .GE. 0) .AND. (MOD(cstep, nsave_0d) == 0) .AND. (my_id .EQ. 0)) THEN
-    WRITE(*,"(A,F8.2,A8,G10.2,A8,G10.2,A)")'|t = ', time,'| Pxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'|'
+    if(SIZE(pflux_x) .GT. 1) THEN
+      WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A8,G10.3,A8,G10.3,A)")&
+      '|t = ', time,'| Pxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'| Pxe = ',pflux_x(2),'| Qxe = ',hflux_x(2),'|'
+    else
+      WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A)")&
+      '|t = ', time,'| Px  = ',pflux_x(1),'| Qx  = ',hflux_x(1),'|'
+    endif
   ENDIF
 END SUBROUTINE diagnose
 
