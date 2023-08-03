@@ -26,8 +26,8 @@ MODULE model
   LOGICAL,  PUBLIC            :: ADIAB_I =  .false.   ! adiabatic ion model
   REAL(xp), PUBLIC, PROTECTED ::   tau_i =  1.0       ! electron-ion temperature ratio for ion adiabatic model
   ! Auxiliary variable
-  LOGICAL,  PUBLIC, PROTECTED ::      EM =  .false.   ! Electromagnetic effects flag
-  LOGICAL,  PUBLIC, PROTECTED ::  MHD_PD =  .false.   ! MHD pressure drift
+  LOGICAL,  PUBLIC, PROTECTED ::      EM =  .true.    ! Electromagnetic effects flag
+  LOGICAL,  PUBLIC, PROTECTED ::  MHD_PD =  .true.    ! MHD pressure drift
   ! Removes Landau damping in temperature and higher equation (Ivanov 2022)
   LOGICAL,  PUBLIC, PROTECTED :: RM_LD_T_EQ = .false.
   ! Flag to force the reality condition symmetry for the kx at ky=0
@@ -45,9 +45,9 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
 
-    NAMELIST /MODEL_PAR/ KERN, LINEARITY, RM_LD_T_EQ, FORCE_SYMMETRY, &
+    NAMELIST /MODEL_PAR/ KERN, LINEARITY, RM_LD_T_EQ, FORCE_SYMMETRY, MHD_PD, &
                          mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, Na,&
-                         nu, k_gB, k_cB, lambdaD, MHD_PD, beta, ADIAB_E, ADIAB_I, tau_i
+                         nu, k_gB, k_cB, lambdaD, beta, ADIAB_E, ADIAB_I, tau_i
 
     READ(lu_in,model_par)
 
@@ -62,13 +62,16 @@ CONTAINS
       IF(ADIAB_E) THEN
         CALL speak('Adiabatic electron model -> beta = 0')
         beta = 0._xp
+        EM   = .false.
       ENDIF
       IF(ADIAB_I) CALL speak('Adiabatic ion model')
     ENDIF
 
     IF(beta .GT. 0) THEN
       CALL speak('Electromagnetic effects are included')
-      EM   = .TRUE.
+      EM = .TRUE.
+    ELSE
+      EM = .FALSE.
     ENDIF
 
   END SUBROUTINE model_readinputs
