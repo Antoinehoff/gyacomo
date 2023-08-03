@@ -1,4 +1,4 @@
-function [t_all, Pxi_all, Qxi_all] = read_flux_out_XX(folderPath,PLOT)
+function [t_all, Pxi_all, Qxi_all, Pxe_all, Qxe_all] = read_flux_out_XX(folderPath,PLOT)
     % Check if the prompt_string is provided as an argument
     if nargin < 1
         % If not provided, prompt the user for input
@@ -74,16 +74,20 @@ function [t_all, Pxi_all, Qxi_all] = read_flux_out_XX(folderPath,PLOT)
     if PLOT
     figure
     subplot(211)
-    plot(t_all,Pxi_all,'r','DisplayName','$\Gamma_{xi}$'); hold on;
+    plot(t_all,Pxi_all,'r','DisplayName','ions'); hold on;
     if(numel(t_all)==numel(Pxe_all))
-        plot(t_all,Pxe_all,'b','DisplayName','$\Gamma_{xe}$'); hold on;
+        plot(t_all,Pxe_all,'-.b','DisplayName','electrons'); hold on;
     end
-    title('Particle flux')
+    xlabel('$tc_s/R$'); ylabel('$\Gamma_{x}$');
+    legend('show')
+    title('Radial particle flux')
     subplot(212)
-    plot(t_all,Qxi_all,'r','DisplayName','$Q_{xi}$'); hold on;
+    plot(t_all,Qxi_all,'r','DisplayName','ions'); hold on;
     if(numel(t_all)==numel(Qxe_all))
-        plot(t_all,Qxe_all,'b','DisplayName','$Q_{xe}$'); hold on;
+        plot(t_all,Qxe_all,'-.b','DisplayName','electrons'); hold on;
     end
-    title('Heat flux')
+    xlabel('$tc_s/R$'); ylabel('$Q_{x}$');
+    legend('show');
+    title('Radial heat flux')
     end
 end
