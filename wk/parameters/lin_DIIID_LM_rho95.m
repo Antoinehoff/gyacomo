@@ -13,7 +13,7 @@ K_Ti    = 2.32;             % ion Temperature '''
 SIGMA_E = 0.0233380/sqrt(2);        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 NA      = 2;          % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
-BETA    = 1.32e-2;           % electron plasma beta
+BETA    = 1.32e-2*0.01;           % electron plasma beta in prct
 MHD_PD  = 1;
 %% Set up grid parameters
 P = 2;
