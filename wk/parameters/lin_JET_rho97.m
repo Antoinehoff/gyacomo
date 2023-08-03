@@ -5,7 +5,7 @@ SIMID   = 'lin_JET_rho97';  % Name of the simulation
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
 NU      = 0.1;   % Not the true value 
-TAU     = 0.56;               % e/i temperature ratio
+TAU     = 1/0.56;               % e/i temperature ratio
 K_Ne    = 10;             % ele Density '''
 K_Te    = 42;             % ele Temperature '''
 K_Ni    = 10;             % ion Density gradient drive
@@ -39,9 +39,9 @@ J = P/2;%P/2;
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
 NX = 8;                    % real space x-gridpoints
-NY = 2;                     % real space y-gridpoints
+NY = 8;                     % real space y-gridpoints
 LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
-LY = 2*pi/0.5;             % Size of the squared frequency domain in y direction
+LY = 2*pi/0.2;             % Size of the squared frequency domain in y direction
 NZ = 32;                    % number of perpendicular planes (parallel grid)
 SG = 0;                     % Staggered z grids option
 NEXC = 1;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
