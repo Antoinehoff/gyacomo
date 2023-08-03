@@ -30,6 +30,8 @@ TW = [OPTIONS.KY_TW; OPTIONS.KX_TW];
 
 [~,ikzf] = max(mean(squeeze(abs(field(1,:,FRAMES))),2));
 
+[wkykx, ekykx] = compute_growth_rates(DATA.PHI(:,:,:,FRAMES),DATA.Ts3D(FRAMES));
+
 FIGURE.fig = figure; %set(gcf, 'Position',  [100 100 1200 700])
 FIGURE.FIGNAME = 'mode_growth_meter';
 for i = 1:2
@@ -41,14 +43,20 @@ for i = 1:2
     if MODES_SELECTOR == 2
         switch OPTIONS.ik
             case 'sum'
-                plt_ = @(x,ik) movmean(squeeze(sum(abs((x(:,ik,FRAMES))),1)),Nma);
+                plt_ = @(f,ik) movmean(squeeze(sum(abs((f(:,ik,FRAMES))),1)),Nma);
                 MODESTR = '$\sum_{k_y}$';
+                omega= @(ik) wkykx(1,:,end);
+                err  = @(ik) ekykx(1,:);
             case 'max'
-                plt_ = @(x,ik) movmean(squeeze(max(abs((x(:,ik,FRAMES))),[],1)),Nma);
+                plt_ = @(f,ik) movmean(squeeze(max(abs((f(:,ik,FRAMES))),[],1)),Nma);
                 MODESTR = '$\max_{k_y}$';
+                omega= @(ik) wkykx(1,:,end);
+                err  = @(ik) ekykx(1,:);
             otherwise
-                plt_ = @(x,ik) movmean(abs(squeeze(x(OPTIONS.ik,ik,FRAMES))),Nma);
+                plt_ = @(f,ik) movmean(abs(squeeze(f(OPTIONS.ik,ik,FRAMES))),Nma);
                 MODESTR = ['$k_y=$',num2str(DATA.grids.ky(OPTIONS.ik))];
+                omega= @(ik) wkykx(OPTIONS.ik,:,end);
+                err  = @(ik) ekykx(OPTIONS.ik,:);
         end
         kstr = 'k_x';
         % Number max of modes to plot is kx>0 (1/2) of the non filtered modes (2/3)
@@ -59,13 +67,19 @@ for i = 1:2
             case 'sum'
                 plt_ = @(x,ik) movmean(squeeze(sum(abs((x(ik,:,FRAMES))),2)),Nma);
                 MODESTR = '$\sum_{k_x}$';
+                omega= @(ik) wkykx(:,1,end);
+                err  = @(ik) ekykx(:,1);
             case 'max'
                 plt_ = @(x,ik) movmean(squeeze(max(abs((x(ik,:,FRAMES))),[],2)),Nma);
                 MODESTR = '$\max_{k_x}$';
+                omega= @(ik) wkykx(:,1,end);
+                err  = @(ik) ekykx(:,1);
             otherwise
                 plt_ = @(x,ik) movmean(abs(squeeze(x(ik,OPTIONS.ik,FRAMES))),Nma);
                 MODESTR = ['$k_x=$',num2str(DATA.grids.kx(OPTIONS.ik))];
-        end
+                omega= @(ik) wkykx(:,OPTIONS.ik,end);
+                err  = @(ik) ekykx(:,OPTIONS.ik);
+       end
         kstr = 'k_y';
         % Number max of modes to plot is ky>0 (1/1) of the non filtered modes (2/3)
         Nmax = ceil(DATA.grids.Nky*2/3);
@@ -81,6 +95,8 @@ for i = 1:2
 
     gamma = MODES;
     amp   = MODES;
+    % w_ky = zeros(numel(MODES),numel(FRAMES)-1);
+    % ce   = zeros(numel(MODES),numel(FRAMES));
     i_=1;
     for ik = MODES
 
@@ -88,9 +104,29 @@ for i = 1:2
         gr = polyfit(t(it1:it2),to_measure(it1:it2),1);
         gamma(i_) = gr(1);
         amp(i_)   = gr(2);
+
+        % % Second method for measuring growth rate (measures frequ. too)
+        % if MODES_SELECTOR == 1
+        %     to_measure = reshape(DATA.PHI(ik,1,:,FRAMES),DATA.grids.Nz,numel(FRAMES));
+        % else
+        %     to_measure = reshape(DATA.PHI(1,ik,:,FRAMES),DATA.grids.Nz,numel(FRAMES));
+        % end
+        % for it = 2:numel(FRAMES)
+        %     phi_n   = to_measure(:,it); 
+        %     phi_nm1 = to_measure(:,it-1);
+        %     dt      = t(it)-t(it-1);
+        %     ZS      = sum(phi_nm1,1); %sum over z
+        % 
+        %     wl          = log(phi_n./phi_nm1)/dt;
+        %     w_ky(i_,it) = squeeze(sum(wl.*phi_nm1,1)./ZS);
+        % 
+        %     % for iky = 1:numel(w_ky(:,it))
+        %     %     ce(iky,it)   = abs(sum(abs(w_ky(iky,it)-wl(iky,:)).^2.*phi_nm1(iky,:),2)./ZS(iky,:));
+        %     % end
+        % end
         i_=i_+1;
     end
-    mod2plot = [2:min(Nmax,OPTIONS.NMODES+1)];
+    mod2plot = 2:min(Nmax,OPTIONS.NMODES+1);
     clr_ = jet(numel(mod2plot));
     %plot
 %     subplot(2+d,3,1+3*(i-1))
@@ -120,15 +156,25 @@ for i = 1:2
 
 %     subplot(2+d,3,3+3*(i-1))
     FIGURE.axes(3+3*(i-1)) = subplot(2+d,3,3+3*(i-1),'parent',FIGURE.fig);
-        plot(k(MODES),gamma,...
-                'DisplayName',['(',num2str(DATA.inputs.PMAX),',',num2str(DATA.inputs.JMAX),')']); hold on;
+    % yyaxis("left")
+        errorbar(k(MODES),real(omega(ik)),real(err(ik)),'-k',...
+                'DisplayName',...
+                ['$\gamma$, (',num2str(DATA.inputs.PMAX),',',num2str(DATA.inputs.JMAX),')']); 
+        hold on;
         for i_ = 1:numel(mod2plot)
             plot(k(MODES(mod2plot(i_))),gamma(mod2plot(i_)),'x','color',clr_(i_,:));
         end
         if MODES_SELECTOR == 2
             plot(k(ikzf),gamma(ikzf),'ok');
         end
-        xlabel(['$',kstr,'\rho_s$']); ylabel('$\gamma$');
+        % ylabel('$\gamma$');
+    % yyaxis("right")
+        errorbar(k(MODES),imag(omega(ik)),imag(err(ik)),'--k',...
+                'DisplayName',...
+                ['$\omega$, (',num2str(DATA.inputs.PMAX),',',num2str(DATA.inputs.JMAX),')']); 
+        hold on;
+        ylabel('$\gamma,\omega$');
+        xlabel(['$',kstr,'\rho_s$']);
         title('Growth rates')
 end
 

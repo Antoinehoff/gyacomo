@@ -6,8 +6,8 @@
 %% Set up the paths for the necessary Matlab modules
 gyacomodir = pwd;
 gyacomodir = gyacomodir(1:end-2);
-% mpirun     = 'mpirun';
-mpirun     = '/opt/homebrew/bin/mpirun'; % for macos
+mpirun     = 'mpirun';
+% mpirun     = '/opt/homebrew/bin/mpirun'; % for macos
 addpath(genpath([gyacomodir,'matlab']))         % Add matlab folder
 addpath(genpath([gyacomodir,'matlab/plot']))    % Add plot folder
 addpath(genpath([gyacomodir,'matlab/compute'])) % Add compute folder
@@ -24,20 +24,23 @@ EXECNAME = 'gyacomo23_sp'; % single precision
 % run lin_DTT_HM_rho85
 % run lin_DTT_HM_rho98
 % run lin_DTT_LM_rho90
-run lin_DTT_LM_rho95
-% run lin_JET_rho97
+% run lin_DTT_LM_rho95
+run lin_JET_rho97
 % run lin_Entropy
 % run lin_ITG
+% run lin_KBM
 %% Change parameters
 NY   = 2;
-PMAX = 4;
+NX   = 4;
+PMAX = 2;
 JMAX = PMAX/2;
-ky   = 1.0;
+ky   = 0.5;
 LY   = 2*pi/ky;
-DT   = 1e-5;
-% SIGMA_E = 0.04;
-TMAX     = 10;
-DTSAVE0D = 200*DT;
+DT   = 1e-3;
+TMAX = 10;
+% % SIGMA_E = 0.04;
+% TMAX     = 10;
+% DTSAVE0D = 200*DT;
 DTSAVE3D = TMAX/50;
 %%-------------------------------------------------------------------------
 %% RUN
