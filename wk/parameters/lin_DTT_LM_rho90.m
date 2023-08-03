@@ -1,51 +1,49 @@
-% Parameters found in Parisi et al. 2020
-% Jet shot 92174
+%% Reference values
+% See Neiser et al. 2019 Gyrokinetic GENE simulations of DIII-D near-edge L-mode plasmas
 %% Set simulation parameters
-SIMID   = 'lin_JET_rho97';  % Name of the simulation
+SIMID   = 'lin_DTT_HM_rho90';  % Name of the simulation
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-NU      = 0.1;   % Not the true value 
-TAU     = 0.56;               % e/i temperature ratio
-K_Ne    = 10;             % ele Density '''
-K_Te    = 42;             % ele Temperature '''
-K_Ni    = 10;             % ion Density gradient drive
-K_Ti    = 11;             % ion Temperature '''
-SIGMA_E = 0.0233380;        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+NU = 1.0; %(0.00235 in GENE)
+TAU = 0.281/0.0831;               % i/e temperature ratio
+K_Ne    = 2.91;             % ele Density '''
+K_Te    = 7.32;             % ele Temperature '''
+K_Ni    = K_Ne;             % ion Density gradient drive
+K_Ti    = 2.68;             % ion Temperature '''
+SIGMA_E = 0.0233380/sqrt(2);        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 NA      = 2;          % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
-BETA    = 0.0031;           % electron plasma beta
-MHD_PD  = 0;
-
-%% GEOMETRY
-% GEOMETRY= 's-alpha';
-GEOMETRY= 'miller';
-EPS     = 0.9753*0.91/2.91;    % inverse aspect ratio
-Q0      = 5.10;    % safety factor
-SHEAR   = 3.36;    % magnetic shear
-KAPPA   = 1.55;    % elongation
-S_KAPPA = 0.95;
-DELTA   = 0.26;    % triangularity
-S_DELTA = 0.74;
-ZETA    = 0;    % squareness
-S_ZETA  = 0;
-PARALLEL_BC = 'dirichlet'; % Boundary condition for parallel direction ('dirichlet','periodic','shearless','disconnected')
-SHIFT_Y = 0.0;    % Shift in the periodic BC in z
-NPOL   = 1;       % Number of poloidal turns
-PB_PHASE = 0;
-
+BETA    = 2.52e-2;           % electron plasma beta
+MHD_PD  = 1;
 %% Set up grid parameters
-P = 4;
+P = 2;
 J = P/2;%P/2;
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
 NX = 8;                    % real space x-gridpoints
 NY = 2;                     % real space y-gridpoints
 LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
-LY = 2*pi/0.5;             % Size of the squared frequency domain in y direction
+LY = 2*pi/0.3;             % Size of the squared frequency domain in y direction
 NZ = 32;                    % number of perpendicular planes (parallel grid)
 SG = 0;                     % Staggered z grids option
 NEXC = 1;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 
+%% GEOMETRY
+% GEOMETRY= 's-alpha';
+GEOMETRY= 'miller';
+Q0      = 3.69;    % safety factor
+SHEAR   = 2.98;    % magnetic shear
+EPS     = 0.28;    % inverse aspect ratio
+KAPPA   = 1.53;    % elongation
+S_KAPPA = 0.77;
+DELTA   = 0.23;    % triangularity
+S_DELTA = 1.05;
+ZETA    =-0.01;    % squareness
+S_ZETA  =-0.17;
+PARALLEL_BC = 'dirichlet'; % Boundary condition for parallel direction ('dirichlet','periodic','shearless','disconnected')
+SHIFT_Y = 0.0;    % Shift in the periodic BC in z
+NPOL   = 1;       % Number of poloidal turns
+PB_PHASE = 0;
 %% TIME PARAMETERS
 TMAX     = 15;  % Maximal time unit
 DT       = 1e-3;   % Time step
@@ -88,7 +86,7 @@ MU      = 0.0;    % Hyperdiffusivity coefficient
 MU_X    = MU;     % Hyperdiffusivity coefficient in x direction
 MU_Y    = MU;     % Hyperdiffusivity coefficient in y direction
 N_HD    = 4;      % Degree of spatial-hyperdiffusivity
-MU_Z    = 2.0;    % Hyperdiffusivity coefficient in z direction
+MU_Z    = 5.0;    % Hyperdiffusivity coefficient in z direction
 HYP_V   = 'hypcoll'; % Kinetic-hyperdiffusivity model
 MU_P    = 0.0;    % Hyperdiffusivity coefficient for Hermite
 MU_J    = 0.0;    % Hyperdiffusivity coefficient for Laguerre
