@@ -6,8 +6,8 @@
 %% Set up the paths for the necessary Matlab modules
 gyacomodir = pwd;
 gyacomodir = gyacomodir(1:end-2);
-mpirun     = 'mpirun';
-% mpirun     = '/opt/homebrew/bin/mpirun'; % for macos
+% mpirun     = 'mpirun';
+mpirun     = '/opt/homebrew/bin/mpirun'; % for macos
 addpath(genpath([gyacomodir,'matlab']))         % Add matlab folder
 addpath(genpath([gyacomodir,'matlab/plot']))    % Add plot folder
 addpath(genpath([gyacomodir,'matlab/compute'])) % Add compute folder
@@ -21,22 +21,24 @@ EXECNAME = 'gyacomo23_sp'; % single precision
 % EXECNAME = 'gyacomo23_dp'; % double precision
 
 %% Setup parameters
-% run lin_DTT_AB_rho85
-% run lin_DTT_AB_rho98
-run lin_JET_rho97
+% run lin_DTT_HM_rho85
+% run lin_DTT_HM_rho98
+% run lin_DTT_LM_rho90
+run lin_DTT_LM_rho95
+% run lin_JET_rho97
 % run lin_Entropy
 % run lin_ITG
 %% Change parameters
 NY   = 2;
 PMAX = 4;
-JMAX = 2;
-ky   = 10.0;
+JMAX = PMAX/2;
+ky   = 1.0;
 LY   = 2*pi/ky;
-DT   = 1e-3/ky;
-SIGMA_E  = 0.023;
-TMAX     = 1.5/ky;
-DTSAVE0D = 0.01;
-DTSAVE3D = 0.01;
+DT   = 1e-5;
+% SIGMA_E = 0.04;
+TMAX     = 10;
+DTSAVE0D = 200*DT;
+DTSAVE3D = TMAX/50;
 %%-------------------------------------------------------------------------
 %% RUN
 setup
@@ -44,9 +46,9 @@ setup
 % Run linear simulation
 if RUN
     MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
-    RUN  =['time ',mpirun,' -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
-%    RUN  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
-     % RUN  =['time ',mpirun,' -np 8 ',gyacomodir,'bin/',EXECNAME,' 1 4 2 0;'];
+    % RUN  =['time ',mpirun,' -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
+   RUN  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
+     % RUN  =['time ',mpirun,' -np 8 ',gyacomodir,'bin/',EXECNAME,' 2 2 2 0;'];
 %     RUN  =['time ',mpirun,' -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
       % RUN = ['./../../../bin/gyacomo23_sp 0;'];
     MVOUT='cd ../../../wk;';
