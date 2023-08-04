@@ -6,8 +6,8 @@
 %% Set up the paths for the necessary Matlab modules
 gyacomodir = pwd;
 gyacomodir = gyacomodir(1:end-2);
-mpirun     = 'mpirun';
-% mpirun     = '/opt/homebrew/bin/mpirun'; % for macos
+% mpirun     = 'mpirun';
+mpirun     = '/opt/homebrew/bin/mpirun'; % for macos
 addpath(genpath([gyacomodir,'matlab']))         % Add matlab folder
 addpath(genpath([gyacomodir,'matlab/plot']))    % Add plot folder
 addpath(genpath([gyacomodir,'matlab/compute'])) % Add compute folder
@@ -18,8 +18,8 @@ addpath(genpath([gyacomodir,'wk/parameters']))  % Add parameters folder
 RUN     = 1; % To run or just to load
 RERUN   = 0; % rerun if the  data does not exist
 default_plots_options
-EXECNAME = 'gyacomo23_sp'; % single precision
-% EXECNAME = 'gyacomo23_dp'; % double precision
+% EXECNAME = 'gyacomo23_sp'; % single precision
+EXECNAME = 'gyacomo23_dp'; % double precision
 
 %% Setup parameters
 % run lin_DTT_AB_rho85
@@ -30,10 +30,10 @@ run lin_JET_rho97
 
 %% Change parameters
 NY   = 2;
-% SIGMA_E  = 0.023;
 %% Scan parameters
 SIMID = [SIMID,'_scan'];
 P_a   = [2 4 6 8];
+% P_a   = 2;
 ky_a  = logspace(-1.5,1.5,30);
 %% Scan loop
 % arrays for the result
@@ -47,8 +47,8 @@ for PMAX = P_a
     i = 1;
     for ky = ky_a
         LY   = 2*pi/ky;
-        DT   = 1e-4;%min(1e-2,1e-3/ky);
-        TMAX = 10;%min(10,1.5/ky);
+        DT   = 1e-3*log(ky/0.05);%min(1e-2,1e-3/ky);
+        TMAX = 20;%min(10,1.5/ky);
         DTSAVE0D = 0.1;
         DTSAVE3D = 0.1;
         %% RUN
@@ -64,10 +64,15 @@ for PMAX = P_a
         catch
             data_.outfilenames = [];
         end
-        if RUN && (RERUN || isempty(data_.outfilenames) || Ntime < 10)
-            % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0; cd ../../../wk'])
-            system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0; cd ../../../wk'])
-            % system(['cd ../results/',SIMID,'/',PARAMS,'/; mpirun -np 6 ',gyacomodir,'bin/',EXECNAME,' 3 2 1 0; cd ../../../wk'])
+        if RUN && (RERUN || isempty(data_.outfilenames) || (Ntime < 10))
+            MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
+            % RUNG  =['time ',mpirun,' -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
+            RUNG  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
+            % RUNG  =['time ',mpirun,' -np 8 ',gyacomodir,'bin/',EXECNAME,' 2 2 2 0;'];
+            % RUNG  =['time ',mpirun,' -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
+            % RUNG = ['./../../../bin/gyacomo23_sp 0;'];
+            MVOUT='cd ../../../wk;';
+            system([MVIN,RUNG,MVOUT]);
         end
         data_    = compile_results_low_mem(data_,LOCALDIR,00,00);
         [data_.PHI, data_.Ts3D] = compile_results_3D(LOCALDIR,00,00,'phi');
