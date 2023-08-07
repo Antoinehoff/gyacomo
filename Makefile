@@ -118,6 +118,7 @@ FOBJ=$(OBJDIR)/advance_field_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/auxval.o \
 $(OBJDIR)/basic_mod.o $(OBJDIR)/coeff_mod.o $(OBJDIR)/closure_mod.o $(OBJDIR)/circular_mod.o \
 $(OBJDIR)/collision_mod.o $(OBJDIR)/nonlinear_mod.o $(OBJDIR)/control.o \
 $(OBJDIR)/diagnose.o $(OBJDIR)/diagnostics_par_mod.o $(OBJDIR)/endrun.o \
+$(OBJDIR)/ExB_shear_flow_mod.o \
 $(OBJDIR)/fields_mod.o $(OBJDIR)/fourier_mod.o $(OBJDIR)/geometry_mod.o \
 $(OBJDIR)/ghosts_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/inital.o \
 $(OBJDIR)/initial_par_mod.o $(OBJDIR)/lag_interp_mod.o $(OBJDIR)/main.o \
@@ -205,6 +206,11 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/CLA_mod.o
  $(OBJDIR)/endrun.o : src/endrun.F90 \
  	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/basic_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/endrun.F90 -o $@
+
+ $(OBJDIR)/ExB_shear_flow_mod.o : src/ExB_shear_flow_mod.F90 \
+	 $(OBJDIR)/basic_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/prec_const_mod.o\
+	 $(OBJDIR)/geometry_mod.o $(OBJDIR)/numerics_mod.o
+	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/ExB_shear_flow_mod.F90 -o $@
 
  $(OBJDIR)/fields_mod.o : src/fields_mod.F90 \
    $(OBJDIR)/prec_const_mod.o
