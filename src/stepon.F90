@@ -8,6 +8,7 @@ SUBROUTINE stepon
    use mpi,                   ONLY: MPI_COMM_WORLD
    USE time_integration,      ONLY: ntimelevel
    USE prec_const,            ONLY: xp
+   USE ExB_shear_flow,        ONLY: Apply_ExB_shear_flow, Update_ExB_shear_flow
 #ifdef TEST_SVD
    USE CLA,                  ONLY: test_svd,filter_sv_moments_ky_pj
 #endif
@@ -15,6 +16,14 @@ SUBROUTINE stepon
 
    INTEGER :: num_step, ierr
    LOGICAL :: mlend
+
+   ! Update the ExB backg. shear flow before the step
+   ! This call includes :
+   !  - the kx grid update
+   !  - the kernel, poisson op. and ampere op update
+   !  - kx-shift of the fields at required ky values
+   !  - the ExB shear value (s(ky)) update for the next time step
+   CALL Apply_ExB_shear_flow
 
    DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
       !----- BEFORE: All fields+ghosts are updated for step = n
@@ -69,6 +78,9 @@ SUBROUTINE stepon
       !----- AFTER: All fields are updated for step = n+1
 
    END DO
+
+   ! Update the ExB shear flow for the next step
+   CALL Update_ExB_shear_flow
 
 CONTAINS
 !!!! Basic structure to simplify stepon
