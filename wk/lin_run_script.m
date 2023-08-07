@@ -17,31 +17,34 @@ addpath(genpath([gyacomodir,'wk/parameters']))  % Add parameters folder
 %% Setup run or load an executable
 RUN = 1; % To run or just to load
 default_plots_options
+% EXECNAME = 'gyacomo23_sp_save'; % single precision
 EXECNAME = 'gyacomo23_sp'; % single precision
 % EXECNAME = 'gyacomo23_dp'; % double precision
+% EXECNAME = 'gyacomo23_debug'; % double precision
 
 %% Setup parameters
 % run lin_DTT_HM_rho85
 % run lin_DTT_HM_rho98
 % run lin_DTT_LM_rho90
 % run lin_DTT_LM_rho95
-run lin_JET_rho97
+% run lin_JET_rho97
 % run lin_Entropy
-% run lin_ITG
+run lin_ITG
 % run lin_KBM
 %% Change parameters
-NY   = 2;
-NX   = 4;
-PMAX = 2;
-JMAX = PMAX/2;
-ky   = 0.5;
-LY   = 2*pi/ky;
-DT   = 1e-3;
-TMAX = 10;
+% EXBRATE = 0.001;              % Background ExB shear flow
+% NY   = 2;
+% NX   = 4;
+% PMAX = 2;
+% JMAX = PMAX/2;
+% ky   = 0.5;
+% LY   = 2*pi/ky;
+% DT   = 1e-3;
+% TMAX = 10;
 % % SIGMA_E = 0.04;
 % TMAX     = 10;
 % DTSAVE0D = 200*DT;
-DTSAVE3D = TMAX/50;
+% DTSAVE3D = TMAX/50;
 %%-------------------------------------------------------------------------
 %% RUN
 setup
@@ -49,10 +52,10 @@ setup
 % Run linear simulation
 if RUN
     MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
-    % RUN  =['time ',mpirun,' -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
-   RUN  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
+    RUN  =['time ',mpirun,' -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
+   % RUN  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
      % RUN  =['time ',mpirun,' -np 8 ',gyacomodir,'bin/',EXECNAME,' 2 2 2 0;'];
-%     RUN  =['time ',mpirun,' -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
+    % RUN  =['time ',mpirun,' -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
       % RUN = ['./../../../bin/gyacomo23_sp 0;'];
     MVOUT='cd ../../../wk;';
     system([MVIN,RUN,MVOUT]);

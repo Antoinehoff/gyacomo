@@ -3,16 +3,17 @@ SIMID = 'lin_ITG'; % Name of the simulation
 
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-NU = 0.005;                 % Collision frequency
-TAU = 1.0;                  % e/i temperature ratio
-K_Ne = 0*2.22;              % ele Density
-K_Te = 0*6.96;              % ele Temperature
-K_Ni = 2.22;              % ion Density gradient drive
-K_Ti = 6.96;              % ion Temperature
+NU      = 0.005;            % Collision frequency
+TAU     = 1.0;              % e/i temperature ratio
+K_Ne    = 0*2.22;           % ele Density
+K_Te    = 0*6.96;           % ele Temperature
+K_Ni    = 2.22;             % ion Density gradient drive
+K_Ti    = 6.96;             % ion Temperature
 SIGMA_E = 0.0233380;        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
-NA = 1;                     % number of kinetic species
+NA      = 1;                % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
-BETA = 0.0;                 % electron plasma beta
+BETA    = 0.0;              % electron plasma beta
+EXBRATE = 0.0;              % Background ExB shear flow
 %% Set up grid parameters
 P = 4;
 J = 2;%P/2;
@@ -40,8 +41,8 @@ SHIFT_Y = 0.0;    % Shift in the periodic BC in z
 NPOL   = 1;       % Number of poloidal turns
 
 %% TIME PARAMETERS
-TMAX     = 50;  % Maximal time unit
-DT       = 1e-2;   % Time step
+TMAX     = 20;  % Maximal time unit
+DT       = 2e-2;   % Time step
 DTSAVE0D = 1;      % Sampling time for 0D arrays
 DTSAVE2D = -1;     % Sampling time for 2D arrays
 DTSAVE3D = 1;      % Sampling time for 3D arrays

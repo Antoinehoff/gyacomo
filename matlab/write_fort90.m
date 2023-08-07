@@ -72,6 +72,7 @@ fprintf(fid,['  k_gB    = ', num2str(MODEL.k_gB),'\n']);
 fprintf(fid,['  k_cB    = ', num2str(MODEL.k_cB),'\n']);
 fprintf(fid,['  lambdaD = ', num2str(MODEL.lambdaD),'\n']);
 fprintf(fid,['  beta    = ', num2str(MODEL.beta),'\n']);
+fprintf(fid,['  ExBrate = ', num2str(MODEL.ExBrate),'\n']);
 fprintf(fid,['  ADIAB_E = ', MODEL.ADIAB_E,'\n']);
 fprintf(fid,['  ADIAB_I = ', MODEL.ADIAB_I,'\n']);
 fprintf(fid,['  tau_i   = ', num2str(MODEL.tau_i),'\n']);
