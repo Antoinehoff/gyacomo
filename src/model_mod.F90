@@ -41,9 +41,9 @@ CONTAINS
 
   SUBROUTINE model_readinputs
     !    Read the input parameters
-    USE basic,    ONLY: lu_in, speak
-    USE parallel, ONLY: num_procs_p
-    USE prec_const
+    USE basic,          ONLY: lu_in, speak
+    USE parallel,       ONLY: num_procs_p
+    USE prec_const,     ONLY: xp
     IMPLICIT NONE
 
     NAMELIST /MODEL_PAR/ KERN, LINEARITY, RM_LD_T_EQ, FORCE_SYMMETRY, MHD_PD, &

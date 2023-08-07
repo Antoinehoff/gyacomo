@@ -99,7 +99,7 @@ CONTAINS
 
   subroutine eval_magnetic_geometry
     USE grid,     ONLY: total_nky, total_nz, local_nkx, local_nky, local_nz, ngz,&
-                        kxarray, kyarray, set_kparray, nzgrid, zweights_SR, ieven, set_kxgrid
+                        set_kparray, nzgrid, zweights_SR, ieven, set_kxgrid
     USE basic,    ONLY: speak
     USE miller,   ONLY: set_miller_parameters, get_miller
     USE circular, ONLY: get_circ
@@ -108,10 +108,8 @@ CONTAINS
     USE species,  ONLY: Ptot
     ! evalute metrix, elementwo_third_kpmaxts, jacobian and gradient
     implicit none
-    REAL(xp) :: kx,ky
     COMPLEX(xp), DIMENSION(local_nz) :: integrant
-    real(xp) :: Cx, Cy, g_xz, g_yz, g_zz
-    INTEGER  :: eo,iz,iky,ikx
+
     ! Allocate arrays
     CALL geometry_allocate_mem(local_nky,local_nkx,local_nz,ngz,nzgrid)
 

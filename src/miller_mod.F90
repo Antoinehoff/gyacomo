@@ -9,7 +9,6 @@ MODULE miller
   USE grid, ONLY: local_Nky, local_Nkx, local_nz, ngz, nzgrid, kyarray, kxarray, zarray, total_nz, local_nz_offset, iodd, ieven
   ! use discretization
   USE lagrange_interpolation
-  USE model
 
   implicit none
   public:: get_miller, set_miller_parameters

@@ -73,7 +73,7 @@ MODULE grid
   integer(C_INTPTR_T), PUBLIC,PROTECTED :: local_nkx_ptr, local_nky_ptr
   integer(C_INTPTR_T), PUBLIC,PROTECTED :: local_nkx_ptr_offset, local_nky_ptr_offset
   ! Grid spacing and limits
-  REAL(xp), PUBLIC, PROTECTED ::  deltap, deltaz, inv_deltaz
+  REAL(xp), PUBLIC, PROTECTED ::  deltap, deltaz, inv_deltaz, inv_dkx
   REAL(xp), PUBLIC, PROTECTED ::  deltakx, deltaky, kx_max, ky_max, kx_min, ky_min!, kp_max
   INTEGER , PUBLIC, PROTECTED ::  local_pmin,  local_pmax
   INTEGER , PUBLIC, PROTECTED ::  local_jmin,  local_jmax
@@ -492,7 +492,8 @@ CONTAINS
       ! x length is adapted
       Lx = Lx_adapted*Nexc
     ENDIF
-    deltakx      = 2._xp*PI/Lx
+    deltakx = 2._xp*PI/Lx
+    inv_dkx = 1._xp/deltakx   
     IF(MODULO(total_nkx,2) .EQ. 0) THEN ! Even number of kx (-2 -1 0 1 2 3)
       ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
       DO ikx = 1,total_nkx
@@ -629,10 +630,10 @@ CONTAINS
     two_third_kpmax = 2._xp/3._xp * MAXVAL(kparray)
   END SUBROUTINE
 
-  SUBROUTINE update_grids (sky,gxx,gxy,gyy,inv_hatB2)
+  SUBROUTINE update_grids (sky,gxx,gxy,inv_hatB2)
     IMPLICIT NONE
     REAL(xp), DIMENSION(local_nky),INTENT(IN) :: sky ! ExB grid shift
-    REAL(xp), DIMENSION(local_nz+ngz,nzgrid), INTENT(IN) :: gxx,gxy,gyy,inv_hatB2
+    REAL(xp), DIMENSION(local_nz+ngz,nzgrid), INTENT(IN) :: gxx,gxy,inv_hatB2
     INTEGER     :: eo,iz,iky,ikx
     REAL(xp)    :: kx, ky, skp2
     ! Update the kx grid
