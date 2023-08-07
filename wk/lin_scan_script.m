@@ -6,8 +6,8 @@
 %% Set up the paths for the necessary Matlab modules
 gyacomodir = pwd;
 gyacomodir = gyacomodir(1:end-2);
-% mpirun     = 'mpirun';
-mpirun     = '/opt/homebrew/bin/mpirun'; % for macos
+mpirun     = 'mpirun';
+% mpirun     = '/opt/homebrew/bin/mpirun'; % for macos
 addpath(genpath([gyacomodir,'matlab']))         % Add matlab folder
 addpath(genpath([gyacomodir,'matlab/plot']))    % Add plot folder
 addpath(genpath([gyacomodir,'matlab/compute'])) % Add compute folder
@@ -18,8 +18,8 @@ addpath(genpath([gyacomodir,'wk/parameters']))  % Add parameters folder
 RUN     = 1; % To run or just to load
 RERUN   = 0; % rerun if the  data does not exist
 default_plots_options
-% EXECNAME = 'gyacomo23_sp'; % single precision
-EXECNAME = 'gyacomo23_dp'; % double precision
+EXECNAME = 'gyacomo23_sp'; % single precision
+%EXECNAME = 'gyacomo23_dp'; % double precision
 
 %% Setup parameters
 % run lin_DTT_AB_rho85
@@ -35,6 +35,7 @@ SIMID = [SIMID,'_scan'];
 P_a   = [2 4 6 8];
 % P_a   = 2;
 ky_a  = logspace(-1.5,1.5,30);
+CO    = 'SG';
 %% Scan loop
 % arrays for the result
 g_ky = zeros(numel(ky_a),numel(P_a));
@@ -47,7 +48,7 @@ for PMAX = P_a
     i = 1;
     for ky = ky_a
         LY   = 2*pi/ky;
-        DT   = 1e-3*log(ky/0.05);%min(1e-2,1e-3/ky);
+        DT   = 1e-5;%/(1+log(ky/0.05));%min(1e-2,1e-3/ky);
         TMAX = 20;%min(10,1.5/ky);
         DTSAVE0D = 0.1;
         DTSAVE3D = 0.1;
