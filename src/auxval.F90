@@ -5,13 +5,15 @@ subroutine auxval
   USE grid
   USE array
   USE model
-  USE fourier, ONLY: init_grid_distr_and_plans
+  USE fourier,        ONLY: init_grid_distr_and_plans
   use prec_const
   USE numerics
   USE geometry
-  USE closure, ONLY: set_closure_model, hierarchy_closure
-  USE parallel, ONLY: init_parallel_var, my_id, num_procs, num_procs_p, num_procs_z, num_procs_ky, rank_p, rank_ky, rank_z
-  USE processing, ONLY: init_process
+  USE closure,        ONLY: set_closure_model, hierarchy_closure
+  USE parallel,       ONLY: init_parallel_var, my_id, num_procs, &
+    num_procs_p, num_procs_z, num_procs_ky, rank_p, rank_ky, rank_z
+  USE processing,     ONLY: init_process
+  USE ExB_shear_flow, ONLY: Setup_ExB_shear_flow
 #ifdef TEST_SVD
   USE CLA, ONLY: init_CLA
 #endif
@@ -34,7 +36,7 @@ subroutine auxval
   ! precompute the kernels
   CALL evaluate_kernels 
   ! compute inverse of poisson and ampere operators
-  CALL evaluate_EM_op 
+  CALL evaluate_EM_op
   ! precompute the Laguerre nonlin product coeffs
   IF ( LINEARITY .NE. 'linear' ) &
     CALL build_dnjs_table 
@@ -42,6 +44,8 @@ subroutine auxval
   CALL build_dv4Hp_table 
   ! set the closure scheme in use
   CALL set_closure_model   
+  ! Setup ExB shear variables
+  CALL Setup_ExB_shear_flow
 #ifdef TEST_SVD
   ! If we want to test SVD decomposition etc.
   CALL init_CLA(local_nky,local_np*local_nj)
