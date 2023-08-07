@@ -51,7 +51,7 @@ implicit none
   ! derivatives of magnetic field strength
   REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: dBdx, dBdy, dBdz, dlnBdz
   ! Relative magnetic field strength
-  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatB
+  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatB, inv_hatB2 ! normalized bckg magnetic gradient amplitude and its inv squared
   ! Relative strength of major radius
   REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatR, hatZ
   ! Some geometrical coefficients
@@ -71,7 +71,7 @@ implicit none
 
   ! Functions
   PUBLIC :: geometry_readinputs, geometry_outputinputs,&
-            eval_magnetic_geometry, set_ikx_zBC_map
+            eval_magnetic_geometry, set_ikx_zBC_map, evaluate_magn_curv
 CONTAINS
 
 
@@ -164,15 +164,39 @@ CONTAINS
           ERROR STOP '>> ERROR << geometry not recognized!!'
         END SELECT
     ENDIF
+    ! inv squared of the magnetic gradient bckg amplitude (for fast kperp update)
+    inv_hatB2 = 1/hatB/hatB
     ! Reset kx grid (to account for Cyq0_x0 factor)
     CALL set_kxgrid(shear,Npol,Cyq0_x0,LINEARITY,N_HD) 
     !
     ! Evaluate perpendicular wavenumber
     !  k_\perp^2 = g^{xx} k_x^2 + 2 g^{xy}k_x k_y + k_y^2 g^{yy}
     !  normalized to rhos_
-    CALL set_kparray(gxx,gxy,gyy,hatB)
+    CALL set_kparray(gxx,gxy,gyy,inv_hatB2)
+    ! Evaluate magnetic curvature operator Ckxky
+    CALL evaluate_magn_curv
+    ! coefficient in the front of parallel derivative
+    gradz_coeff = 1._xp /(jacobian*hatB)
+    ! d/dz(ln B) to correspond to the formulation in Hoffmann et al. 2023
+    dlnBdz      = dBdz/hatB
+    !
+    ! set the mapping for parallel boundary conditions
+    CALL set_ikx_zBC_map
+    !
+    ! Compute the inverse z integrated Jacobian (useful for flux averaging)
+    integrant = Jacobian((1+ngz/2):(local_nz+ngz/2),ieven) ! Convert into complex array
+    CALL simpson_rule_z(local_nz,zweights_SR,integrant,iInt_Jacobian)
+    iInt_Jacobian = 1._xp/iInt_Jacobian ! reverse it
+  END SUBROUTINE eval_magnetic_geometry
+
+  SUBROUTINE evaluate_magn_curv
+    USE grid,     ONLY: local_nkx, local_nky, local_nz, ngz,&
+                        kxarray, kyarray, nzgrid
+    IMPLICIT NONE
+    REAL(xp) :: kx,ky
+    real(xp) :: Cx, Cy, g_xz, g_yz, g_zz
+    INTEGER  :: eo,iz,iky,ikx
     DO eo = 1,nzgrid
-      ! Curvature operator (Frei et al. 2022 eq 2.15)
       DO iz = 1,local_nz+ngz
         ! !covariant metric
         g_xz = jacobian(iz,eo)**2*(gxy(iz,eo)*gyz(iz,eo)-gyy(iz,eo)*gxz(iz,eo))
@@ -186,25 +210,13 @@ CONTAINS
         DO iky = 1,local_nky
           ky = kyarray(iky)
            DO ikx= 1,local_nkx
-             kx = kxarray(ikx)
+             kx = kxarray(iky,ikx)
              Ckxky(iky, ikx, iz,eo) = (Cx*kx + Cy*ky)/C_xy
            ENDDO
         ENDDO
-        ! coefficient in the front of parallel derivative
-        gradz_coeff(iz,eo) = 1._xp /(jacobian(iz,eo)*hatB(iz,eo))
-        ! d/dz(ln B) to correspond to the formulation in paper 2023
-        dlnBdz(iz,eo)      = dBdz(iz,eo)/hatB(iz,eo)
       ENDDO
     ENDDO
-    !
-    ! set the mapping for parallel boundary conditions
-    CALL set_ikx_zBC_map
-    !
-    ! Compute the inverse z integrated Jacobian (useful for flux averaging)
-    integrant = Jacobian((1+ngz/2):(local_nz+ngz/2),ieven) ! Convert into complex array
-    CALL simpson_rule_z(local_nz,zweights_SR,integrant,iInt_Jacobian)
-    iInt_Jacobian = 1._xp/iInt_Jacobian ! reverse it
-  END SUBROUTINE eval_magnetic_geometry
+  END SUBROUTINE
   !
   !--------------------------------------------------------------------------------
   !
@@ -382,10 +394,10 @@ CONTAINS
             ! Check if it has to be connected to the otherside of the kx grid
             if(ikx_zBC_L(iky,ikx) .LE. 0) ikx_zBC_L(iky,ikx) = ikx_zBC_L(iky,ikx) + total_nkx
             ! Check if it points out of the kx domain
-            ! print*, kxarray(ikx), shift, kx_min
-            IF( (kxarray(ikx) - shift) .LT. kx_min ) THEN ! outside of the frequ domain
-              ! print*,( ((kxarray(ikx) - shift)-kx_min) .LT. EPSILON(kx_min) )
-              ! print*, kxarray(ikx)-kx_min, EPSILON(kx_min)
+            ! print*, kxarray(iky,ikx), shift, kx_min
+            IF( (kxarray(iky,ikx) - shift) .LT. kx_min ) THEN ! outside of the frequ domain
+              ! print*,( ((kxarray(iky,ikx) - shift)-kx_min) .LT. EPSILON(kx_min) )
+              ! print*, kxarray(iky,ikx)-kx_min, EPSILON(kx_min)
               ! IF( (ikx-mn_y*Nexc) .LT. 1 ) THEN 
               SELECT CASE(parallel_bc)
               CASE ('dirichlet','disconnected') ! connected to 0
@@ -420,7 +432,7 @@ CONTAINS
             ! Check if it has to be connected to the otherside of the kx grid
             if(ikx_zBC_R(iky,ikx) .GT. total_nkx) ikx_zBC_R(iky,ikx) = ikx_zBC_R(iky,ikx) - total_nkx
             ! Check if it points out of the kx domain
-            IF( (kxarray(ikx) + shift) .GT. kx_max ) THEN ! outside of the frequ domain
+            IF( (kxarray(iky,ikx) + shift) .GT. kx_max ) THEN ! outside of the frequ domain
             ! IF( (ikx+mn_y*Nexc) .GT. total_nkx ) THEN ! outside of the frequ domain
               SELECT CASE(parallel_bc)
               CASE ('dirichlet','disconnected') ! connected to 0
@@ -428,7 +440,7 @@ CONTAINS
               CASE ('periodic') ! connected to itself as for shearless
                 ikx_zBC_R(iky,ikx) = ikx
               CASE ('cyclic')
-                ! write(*,*) 'check',ikx,iky, kxarray(ikx) + shift, '>', kx_max
+                ! write(*,*) 'check',ikx,iky, kxarray(iky,ikx) + shift, '>', kx_max
                 ikx_zBC_R(iky,ikx) = MODULO(ikx_zBC_R(iky,ikx)-1,total_nkx)+1
               CASE DEFAULT
                 ERROR STOP "The parallel BC is not recognized (dirichlet, periodic, cyclic or disconnected)"
@@ -517,6 +529,7 @@ END SUBROUTINE set_ikx_zBC_map
        ALLOCATE(       dBdy(local_nz+ngz,nzgrid))
        ALLOCATE(       dBdz(local_nz+ngz,nzgrid))
        ALLOCATE(     dlnBdz(local_nz+ngz,nzgrid))
+       ALLOCATE(  inv_hatB2(local_nz+ngz,nzgrid))
        ALLOCATE(       hatB(local_nz+ngz,nzgrid))
        ALLOCATE(       hatR(local_nz+ngz,nzgrid))
        ALLOCATE(       hatZ(local_nz+ngz,nzgrid))

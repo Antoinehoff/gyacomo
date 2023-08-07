@@ -74,7 +74,7 @@ SUBROUTINE evaluate_kernels
   USE basic
   USE prec_const, ONLY: xp
   USE array,   ONLY : kernel!, HF_phi_correction_operator
-  USE grid,    ONLY : local_na, local_nj,ngj, local_nkx, local_nky, local_nz, ngz, jarray, kparray,&
+  USE grid,    ONLY : local_na, local_nj,ngj, local_nkx, local_nky, local_nz, ngz, jarray, kp2array,&
                       nzgrid
   USE species, ONLY : sigma2_tau_o2
   USE model,   ONLY : ADIAB_I, tau_i
@@ -91,7 +91,7 @@ DO ia  = 1,local_na
           DO ij = 1,local_nj + ngj
             j_int = jarray(ij)
             j_xp  = REAL(j_int,xp)
-            y_    =  sigma2_tau_o2(ia) * kparray(iky,ikx,iz,eo)**2
+            y_    =  sigma2_tau_o2(ia) * kp2array(iky,ikx,iz,eo)
             IF(j_int .LT. 0) THEN !ghosts values
               kernel(ia,ij,iky,ikx,iz,eo) = 0._xp
             ELSE
@@ -114,7 +114,7 @@ DO ia  = 1,local_na
             DO ij = 1,local_nj + ngj
               j_int = jarray(ij)
               j_xp  = REAL(j_int,xp)
-              y_    =  sigma_i**2*tau_i/2._xp * kparray(iky,ikx,iz,eo)**2
+              y_    =  sigma_i**2*tau_i/2._xp * kp2array(iky,ikx,iz,eo)
               IF(j_int .LT. 0) THEN !ghosts values
                 kernel_i(ij,iky,ikx,iz,eo) = 0._xp
               ELSE
@@ -174,7 +174,7 @@ SUBROUTINE evaluate_poisson_op
   kxloop: DO ikx = 1,local_nkx
   kyloop: DO iky = 1,local_nky
   zloop:  DO iz  = 1,local_nz
-  IF( (kxarray(ikx).EQ.0._xp) .AND. (kyarray(iky).EQ.0._xp) ) THEN
+  IF( (kxarray(iky,ikx).EQ.0._xp) .AND. (kyarray(iky).EQ.0._xp) ) THEN
       inv_poisson_op(iky, ikx, iz) =  0._xp
       inv_pol_ion   (iky, ikx, iz) =  0._xp
   ELSE
@@ -217,7 +217,7 @@ SUBROUTINE evaluate_ampere_op
   USE prec_const,   ONLY : xp
   USE array,    ONLY : kernel, inv_ampere_op
   USE grid,     ONLY : local_na, local_nkx, local_nky, local_nz, ngz, total_nj, ngj,&
-                       kparray, kxarray, kyarray, SOLVE_AMPERE, iodd
+                       kp2array, kxarray, kyarray, SOLVE_AMPERE, iodd
   USE model,    ONLY : beta, ADIAB_I
   USE species,  ONLY : q, sigma
   USE geometry, ONLY : hatB
@@ -232,8 +232,8 @@ SUBROUTINE evaluate_ampere_op
     x:DO ikx = 1,local_nkx
     y:DO iky = 1,local_nky
     z:DO iz  = 1,local_nz
-    kperp2 = kparray(iky,ikx,iz+ngz/2,iodd)**2
-    IF( (kxarray(ikx).EQ.0._xp) .AND. (kyarray(iky).EQ.0._xp) ) THEN
+    kperp2 = kp2array(iky,ikx,iz+ngz/2,iodd)
+    IF( (kxarray(iky,ikx).EQ.0._xp) .AND. (kyarray(iky).EQ.0._xp) ) THEN
         inv_ampere_op(iky, ikx, iz) =  0._xp
     ELSE
       sum_jpol = 0._xp

@@ -10,7 +10,7 @@ CONTAINS
     USE grid,       ONLY: local_na, local_np, local_nj, local_nkx, local_nky, local_nz,&
                           nzgrid,pp2,ngp,ngj,ngz,&
                           diff_dz_coeff,diff_kx_coeff,diff_ky_coeff,diff_p_coeff,diff_j_coeff,&
-                          parray,jarray,kxarray, kyarray, kparray
+                          parray,jarray,kxarray, kyarray, kp2array
     USE basic
     USE closure,    ONLY: evolve_mom
     USE prec_const
@@ -35,10 +35,10 @@ CONTAINS
     z:DO  iz = 1,local_nz
       izi = iz + ngz/2
       x:DO ikx = 1,local_nkx
-        kx       = kxarray(ikx)                     ! radial wavevector
-        i_kx     = imagu * kx                       ! radial derivative
         y:DO iky = 1,local_nky
+          kx       = kxarray(iky,ikx)                 ! radial wavevector
           ky       = kyarray(iky)                     ! binormal wavevector
+          i_kx     = imagu * kx                       ! radial derivative
           i_ky     = imagu * ky                       ! binormal derivative
           phikykxz = phi(iky,ikx,izi)
           psikykxz = psi(iky,ikx,izi)
@@ -50,7 +50,7 @@ CONTAINS
               ipi   = ip+ngp/2
               p_int = parray(ipi)                   ! Hermite degree
               eo    = min(nzgrid,MODULO(p_int,2)+1) ! Indicates if we are on odd or even z grid
-              kperp2= kparray(iky,ikx,izi,eo)**2
+              kperp2= kp2array(iky,ikx,izi,eo)
               ! Species loop
               a:DO ia = 1,local_na
                 Napj = moments(ia,ipi,iji,iky,ikx,izi,updatetlevel)
