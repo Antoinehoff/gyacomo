@@ -34,7 +34,8 @@ MODULE basic
   end type chrono
   ! Define the chronos for each relevant routines
   type(chrono), PUBLIC, PROTECTED :: chrono_runt, chrono_mrhs, chrono_advf, chrono_pois, chrono_sapj,&
-   chrono_diag, chrono_chck, chrono_step, chrono_clos, chrono_ghst, chrono_coll, chrono_napj, chrono_grad
+   chrono_diag, chrono_chck, chrono_step, chrono_clos, chrono_ghst, chrono_coll, chrono_napj, &
+   chrono_grad, chrono_ExBs
 #ifdef TEST_SVD
   ! A chrono for SVD tests
   type(chrono), PUBLIC, PROTECTED :: chrono_CLA
@@ -86,6 +87,7 @@ CONTAINS
     chrono_chck%ttot = 0
     chrono_diag%ttot = 0
     chrono_step%ttot = 0
+    chrono_ExBs%ttot = 0
 #ifdef TEST_SVD
     chrono_CLA%ttot = 0
 #endif
