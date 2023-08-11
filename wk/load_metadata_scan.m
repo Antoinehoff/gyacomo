@@ -15,7 +15,11 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0'
 % datafname = 'lin_DTT_AB_rho85_PT_scan/16x24_ky_0.1_1_P_2_8_DGGK_0.05_be_0.0039.mat';
 % datafname = 'lin_DTT_AB_rho85_PT_scan/16x24_ky_0.1_0.9_P_2_8_kN_1.33_DGGK_0.56901_be_0.0039.mat';
 % datafname = 'lin_DTT_AB_rho85_PT_scan/8x24_ky_0.05_1.5_P_2_8_kN_1.33_DGGK_0.1_be_0.0039.mat';
-datafname = 'lin_JET_rho97_scan/8x32_ky_0.031623_31.6228_P_1_1_kN_31.4286_DGGK_0.1_be_0.0031.mat';
+% datafname = 'lin_JET_rho97_scan/4x32_ky_0.01_10_P_2_8_kN_10_DGGK_0.1_be_0.0031.mat';
+% datafname = 'lin_JET_rho97_scan/4x32_ky_0.01_10_P_2_8_kN_10_DGGK_0.05_be_0.0031.mat';
+% datafname = 'lin_JET_rho97_scan/8x32_ky_0.01_10_P_2_8_kN_10_DGGK_0.05_be_0.0031.mat';
+% datafname = 'lin_JET_rho97_scan/8x32_ky_0.01_10_P_2_2_kN_10_DGGK_0.05_be_0.0031.mat';
+datafname = 'lin_JET_rho97_scan/8x32_ky_0.031623_31.6228_P_2_8_kN_10_DGGK_0.1_be_0.0031.mat';
 %% Chose if we filter gamma>0.05
 FILTERGAMMA = 1;
 

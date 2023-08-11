@@ -1,4 +1,4 @@
-function [FIGURE] = mode_growth_meter(DATA,OPTIONS)
+function [FIGURE, kykx, wkykx, ekykx] = mode_growth_meter(DATA,OPTIONS)
 
 NORMALIZED = OPTIONS.NORMALIZED;
 Nma   = OPTIONS.NMA; %Number moving average
@@ -30,7 +30,9 @@ TW = [OPTIONS.KY_TW; OPTIONS.KX_TW];
 
 [~,ikzf] = max(mean(squeeze(abs(field(1,:,FRAMES))),2));
 
+% Amplitude ratio method to measure growth rates and freq.
 [wkykx, ekykx] = compute_growth_rates(DATA.PHI(:,:,:,FRAMES),DATA.Ts3D(FRAMES));
+kykx = meshgrid(DATA.grids.ky,DATA.grids.kx)';
 
 FIGURE.fig = figure; %set(gcf, 'Position',  [100 100 1200 700])
 FIGURE.FIGNAME = 'mode_growth_meter';
@@ -95,35 +97,13 @@ for i = 1:2
 
     gamma = MODES;
     amp   = MODES;
-    % w_ky = zeros(numel(MODES),numel(FRAMES)-1);
-    % ce   = zeros(numel(MODES),numel(FRAMES));
     i_=1;
+    % Alternative method to measure growth
     for ik = MODES
-
         to_measure = log(plt(field,ik));
         gr = polyfit(t(it1:it2),to_measure(it1:it2),1);
         gamma(i_) = gr(1);
         amp(i_)   = gr(2);
-
-        % % Second method for measuring growth rate (measures frequ. too)
-        % if MODES_SELECTOR == 1
-        %     to_measure = reshape(DATA.PHI(ik,1,:,FRAMES),DATA.grids.Nz,numel(FRAMES));
-        % else
-        %     to_measure = reshape(DATA.PHI(1,ik,:,FRAMES),DATA.grids.Nz,numel(FRAMES));
-        % end
-        % for it = 2:numel(FRAMES)
-        %     phi_n   = to_measure(:,it); 
-        %     phi_nm1 = to_measure(:,it-1);
-        %     dt      = t(it)-t(it-1);
-        %     ZS      = sum(phi_nm1,1); %sum over z
-        % 
-        %     wl          = log(phi_n./phi_nm1)/dt;
-        %     w_ky(i_,it) = squeeze(sum(wl.*phi_nm1,1)./ZS);
-        % 
-        %     % for iky = 1:numel(w_ky(:,it))
-        %     %     ce(iky,it)   = abs(sum(abs(w_ky(iky,it)-wl(iky,:)).^2.*phi_nm1(iky,:),2)./ZS(iky,:));
-        %     % end
-        % end
         i_=i_+1;
     end
     mod2plot = 2:min(Nmax,OPTIONS.NMODES+1);
@@ -135,7 +115,7 @@ for i = 1:2
         pclr = pcolor(XX,YY,abs(plt(fftshift(field,MODES_SELECTOR),1:numel(k))));set(pclr, 'edgecolor','none');  hold on;
         set(gca,'YDir','normal')
     %     xlim([t(1) t(end)]); %ylim([1e-5 1])
-        xlabel(['$',kstr,'\rho_s$']); ylabel('$t c_s /\rho_s$');
+        xlabel(['$',kstr,'\rho_s$']); ylabel('$t c_s /R_0$');
         title([MODESTR,', ',zstrcomp])  
 
 %     subplot(2+d,3,2+3*(i-1))
@@ -151,13 +131,24 @@ for i = 1:2
         plot(t(it1)*[1 1],[1e-10 1],'--k')
         plot(t(it2)*[1 1],[1e-10 1],'--k')
         xlim([t(1) t(end)]); %ylim([1e-5 1])
-        xlabel('$t c_s /\rho_s$'); ylabel(['$|\phi_{',kstr,'}|$']);
+        xlabel('$t c_s /R_0$'); ylabel(['$|\phi_{',kstr,'}|$']);
         title('Measure time window')
 
 %     subplot(2+d,3,3+3*(i-1))
     FIGURE.axes(3+3*(i-1)) = subplot(2+d,3,3+3*(i-1),'parent',FIGURE.fig);
     % yyaxis("left")
-        errorbar(k(MODES),real(omega(ik)),real(err(ik)),'-k',...
+    if OPTIONS.GOK2
+        x_ = k(MODES);
+        y_ = real(omega(ik))./k(MODES).^2;
+        e_ = real(err(ik))./k(MODES).^2;
+        lb_= '\gamma/k^2';
+    else
+        x_ = k(MODES);
+        y_ = real(omega(ik));
+        e_ = real(err(ik));
+        lb_= '\gamma';
+    end
+        errorbar(x_,y_,e_,'-ok',...
                 'LineWidth',1.5,...
                 'DisplayName',...
                 ['$\gamma$, (',num2str(DATA.inputs.PMAX),',',num2str(DATA.inputs.JMAX),')']); 
@@ -170,12 +161,12 @@ for i = 1:2
         end
         % ylabel('$\gamma$');
     % yyaxis("right")
-        errorbar(k(MODES),imag(omega(ik)),imag(err(ik)),'--k',...
+        errorbar(k(MODES),imag(omega(ik)),imag(err(ik)),'--ok',...
                 'LineWidth',1.5,...
                 'DisplayName',...
                 ['$\omega$, (',num2str(DATA.inputs.PMAX),',',num2str(DATA.inputs.JMAX),')']); 
         hold on;
-        ylabel('$\gamma,\omega$');
+        ylabel(['$',lb_,',\omega$']);
         xlabel(['$',kstr,'\rho_s$']);
         title('Growth rates')
 end
