@@ -39,7 +39,7 @@ CONTAINS
     SUBROUTINE Apply_ExB_shear_flow
         USE basic,      ONLY: chrono_ExBs, start_chrono, stop_chrono
         USE grid,       ONLY: local_nky, kxarray, update_grids, &
-            local_nkx, deltakx, kx_min, kx_max
+            total_nkx, deltakx, kx_min, kx_max
         USE prec_const, ONLY: PI
         USE geometry,   ONLY: gxx,gxy,inv_hatB2, evaluate_magn_curv
         USE numerics,   ONLY: evaluate_EM_op, evaluate_kernels
@@ -55,13 +55,17 @@ CONTAINS
             IF(shiftnow_ExB(iky)) THEN
                 print*, "SHIFT ARRAYS"
                 ! shift all fields
-                DO ikx = 1,local_nkx
+                DO ikx = 1,total_nkx
                     ikx_s = ikx + jump_ExB(iky)
-                    IF( (kxarray(iky,ikx) .GE. kx_min) .AND. (kxarray(iky,ikx) .LE. kx_max) ) THEN
+                    ! We test if the shifted modes are still in contained in our resolution
+                    ! IF( (kxarray(iky,ikx)-sky_ExB(iky) .GE. kx_min) .AND. (kxarray(iky,ikx)-sky_ExB(iky) .LE. kx_max) ) THEN
+                    IF ( ((ikx_s .GT. 0 ) .AND. (ikx_s .LE. total_nkx )) .AND. &
+                         (((ikx   .LE. (total_nkx/2+1)) .AND. (ikx_s .LE. (total_nkx/2+1))) .OR. &
+                          ((ikx   .GT. (total_nkx/2+1)) .AND. (ikx_s .GT. (total_nkx/2+1)))) ) THEN
                         moments(:,:,:,iky,ikx,:,:) = moments(:,:,:,iky,ikx_s,:,:)
                         phi(iky,ikx,:)             = phi(iky,ikx_s,:)
                         psi(iky,ikx,:)             = psi(iky,ikx_s,:)
-                    ELSE
+                    ELSE ! if it is not, it is lost (~dissipation for high modes)
                         moments(:,:,:,iky,ikx,:,:) = 0._xp
                         phi(iky,ikx,:)             = 0._xp
                         psi(iky,ikx,:)             = 0._xp
@@ -76,9 +80,9 @@ CONTAINS
         CALL update_grids(sky_ExB,gxx,gxy,inv_hatB2)
 
         !   update the EM op., the kernels and the curvature op.
-        CALL evaluate_kernels
-        CALL evaluate_EM_op
-        CALL evaluate_magn_curv
+        ! CALL evaluate_kernels
+        ! CALL evaluate_EM_op
+        ! CALL evaluate_magn_curv
 
         CALL stop_chrono(chrono_ExBs)
     END SUBROUTINE Apply_ExB_shear_flow
