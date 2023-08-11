@@ -31,7 +31,8 @@ run lin_JET_rho97
 % run lin_KBM
 %% Change parameters
 NY   = 2;
-NX   = 4;
+NX   = 6;
+NZ   = 32;
 PMAX = 2;
 JMAX = PMAX/2;
 ky   = 0.5;
