@@ -11,7 +11,13 @@ for i_ = 1:numel(names)
     namae = names{i_};
     geo_arrays(:,i_) = h5read(data.outfilenames{end},['/data/metric/',namae])';
 end
-NPLOT = options.SHOW_FLUXSURF + options.SHOW_METRICS;
+try
+    NPLOT = options.SHOW_FLUXSURF + options.SHOW_METRICS;
+catch
+    NPLOT = 2;
+    options.SHOW_FLUXSURF = 1;
+    options.SHOW_METRICS  = 1;
+end
 if NPLOT > 0
     fig = figure; 
     if options.SHOW_METRICS

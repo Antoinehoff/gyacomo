@@ -5,13 +5,15 @@ addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 default_plots_options
 % Partition of the computer where the data have to be searched
-PARTITION='';
-
+% PARTITION='/Users/ahoffmann/gyacomo/results/paper_3/';
+PARTITION='/misc/gyacomo23_outputs/paper_3/';
 %% Paper 3
-resdir = '/Users/ahoffmann/gyacomxlio/results/paper_3/DTT_rho85/3x2x192x48x32';
-% resdir = '/Users/ahoffmann/gyacomo/results/paper_3/DTT_rho85/3x2x192x48x32_NT';
-% resdir = '/Users/ahoffmann/gyacomo/results/paper_3/DTT_rho98/3x2x192x48x32';
-resdir = '/Users/ahoffmann/gyacomo/results/paper_3/DTT_rho98/3x2x192x48x32_0.25grad';
+% resdir = 'DTT_rho85/3x2x192x48x32';
+% resdir = 'DTT_rho85/3x2x192x48x32_NT';
+% resdir = 'DTT_rho98/3x2x192x48x32';
+% resdir = 'DTT_rho98/3x2x192x48x32_0.25grad';
+% resdir = 'LM_DIIID_rho95/5x3x512x92x32';
+resdir = 'LM_DIIID_rho95/3x2x512x92x32';
  %%
 J0 = 00; J1 = 02;
 
