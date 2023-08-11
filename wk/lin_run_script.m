@@ -15,7 +15,7 @@ addpath(genpath([gyacomodir,'matlab/load']))    % Add load folder
 addpath(genpath([gyacomodir,'wk/parameters']))  % Add parameters folder
 
 %% Setup run or load an executable
-RUN = 1; % To run or just to load
+RUN = 0; % To run or just to load
 default_plots_options
 % EXECNAME = 'gyacomo23_sp_save'; % single precision
 EXECNAME = 'gyacomo23_sp'; % single precision
@@ -32,15 +32,15 @@ EXECNAME = 'gyacomo23_sp'; % single precision
 run lin_ITG
 % run lin_KBM
 %% Change parameters
-% EXBRATE = 0.001;              % Background ExB shear flow
-% NY   = 2;
-% NX   = 4;
-% PMAX = 2;
-% JMAX = PMAX/2;
-% ky   = 0.5;
-% LY   = 2*pi/ky;
-% DT   = 1e-3;
-% TMAX = 10;
+EXBRATE = 0.0;              % Background ExB shear flow
+NY   = 40;
+NX   = 8;
+PMAX = 16;
+JMAX = PMAX/2;
+ky   = 0.05;
+LY   = 2*pi/ky;
+DT   = 5e-3;
+TMAX = 50;
 % % SIGMA_E = 0.04;
 % TMAX     = 10;
 % DTSAVE0D = 200*DT;
@@ -52,9 +52,9 @@ setup
 % Run linear simulation
 if RUN
     MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
-    RUN  =['time ',mpirun,' -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
+    % RUN  =['time ',mpirun,' -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
    % RUN  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
-     % RUN  =['time ',mpirun,' -np 8 ',gyacomodir,'bin/',EXECNAME,' 2 2 2 0;'];
+     RUN  =['time ',mpirun,' -np 8 ',gyacomodir,'bin/',EXECNAME,' 2 2 2 0;'];
     % RUN  =['time ',mpirun,' -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
       % RUN = ['./../../../bin/gyacomo23_sp 0;'];
     MVOUT='cd ../../../wk;';
@@ -86,8 +86,9 @@ options.NMA    = 1; % Set NMA option to 1
 options.NMODES = 999; % Set how much modes we study
 options.iz     = 'avg'; % Compressing z
 options.ik     = 1; %
+options.GOK2   = 0; % plot gamma/k^2
 options.fftz.flag = 0; % Set fftz.flag option to 0
-fig = mode_growth_meter(data,options); % Call the function mode_growth_meter with data and options as input arguments, and store the result in fig
+[fig, kykx, wkykx, ekykx] = mode_growth_meter(data,options); % Call the function mode_growth_meter with data and options as input arguments, and store the result in fig
 end
 
 if (1 && NZ>4)

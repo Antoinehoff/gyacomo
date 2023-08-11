@@ -19,7 +19,7 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0'
 % datafname = 'lin_JET_rho97_scan/4x32_ky_0.01_10_P_2_8_kN_10_DGGK_0.05_be_0.0031.mat';
 % datafname = 'lin_JET_rho97_scan/8x32_ky_0.01_10_P_2_8_kN_10_DGGK_0.05_be_0.0031.mat';
 % datafname = 'lin_JET_rho97_scan/8x32_ky_0.01_10_P_2_2_kN_10_DGGK_0.05_be_0.0031.mat';
-datafname = 'lin_JET_rho97_scan/8x32_ky_0.031623_31.6228_P_2_2_kN_10_DGGK_0.1_be_0.0031.mat';
+datafname = 'lin_JET_rho97_scan/8x32_ky_0.031623_31.6228_P_2_8_kN_10_DGGK_0.1_be_0.0031.mat';
 %% Chose if we filter gamma>0.05
 FILTERGAMMA = 0;
 

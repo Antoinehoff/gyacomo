@@ -18,8 +18,8 @@ addpath(genpath([gyacomodir,'wk/parameters']))  % Add parameters folder
 RUN     = 1; % To run or just to load
 RERUN   = 0; % rerun if the  data does not exist
 default_plots_options
-EXECNAME = 'gyacomo23_sp'; % single precision
-% EXECNAME = 'gyacomo23_dp'; % double precision
+% EXECNAME = 'gyacomo23_sp'; % single precision
+EXECNAME = 'gyacomo23_dp'; % double precision
 
 %% Setup parameters
 % run lin_DTT_AB_rho85
@@ -30,6 +30,7 @@ run lin_JET_rho97
 
 %% Change parameters
 NY   = 2;
+EXBRATE = 0;
 % SIGMA_E  = 0.023;
 %% Scan parameters
 SIMID = [SIMID,'_scan'];
