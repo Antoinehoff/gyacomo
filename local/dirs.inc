@@ -4,18 +4,29 @@ SRCDIR   = $(PREFIX)/src
 BINDIR   = $(PREFIX)/bin
 OBJDIR   = $(PREFIX)/obj
 LIBDIR   = $(HOME)/lib
-#LIBDIR   = $(HOME)/lib_gnu 
 MODDIR   = $(PREFIX)/mod
 
-FMDIR      = $(LIBDIR)/FM
-FUTILS_DIR = $(LIBDIR)/futils/src
-# For local install :
-HDF5_LIB   = $(HDF5_ROOT)/lib
-#HDF5_LIB   = /usr/local/hdf5-1.8.22/lib
-FFTW3DIR   = $(LIBDIR)/fftw-3.3.10
-#LAPACKDIR  = $(LIBDIR)/lapack-3.10.0
-# For marconi (use of modules):
-#  -comment HDF5_LIB, FFTW3DIR and LAPACKDIR
-#  -uncomment the following lines if the module are loaded
-#FFTW3DIR   = $(FFTW_HOME)#mandatory
-#LAPACKDIR  = $(LAPACK_HOME)#optional
+#OS environment: Linux, Marconi or MacOS
+ENVTYPE = Linux
+
+ifeq ($(ENVTYPE), Linux) #Linux env.
+	FMDIR      = $(LIBDIR)/FM
+	FUTILS_DIR = $(LIBDIR)/futils/src
+	FFTW3DIR   = $(LIBDIR)/fftw-3.3.10
+	LAPACKDIR  = $(HOME)/lib/lapack-3.10.0
+	HDF5_LIB   = $(HDF5_ROOT)/lib
+endif
+ifeq ($(ENVTYPE), Marconi) #Marconi env.
+	FMDIR      = $(LIBDIR)/FM
+	FUTILS_DIR = $(LIBDIR)/futils/src
+	FFTW3DIR   = $(FFTW_HOME)
+	LAPACKDIR  = $(LAPACK_HOME)
+	HDF5_LIB   = $(HDF5_ROOT)/lib
+endif
+ifeq ($(ENVTYPE), MacOS) #MacOS
+	FMDIR      = $(LIBDIR)/FM
+	FUTILS_DIR = $(LIBDIR)/futils/src
+	FFTW3DIR   = $(LIBDIR)/fftw-3.3.10
+	LAPACKDIR = /opt/homebrew/opt/lapack
+	HDF5_LIB   = /usr/local/hdf5-1.8.22/lib
+endif

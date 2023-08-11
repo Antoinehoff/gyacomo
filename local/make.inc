@@ -107,7 +107,15 @@ ifeq ($(COMPTYPE), c) #cray
 endif
 
 #Flag for finding external libraries in LDIR
-EXTLIBS   = $(LDIRS) -Wl,--start-group $(LIBS) -Wl,--end-group
+ifeq ($(ENVTYPE), Linux) #Linux env.
+     EXTLIBS   = $(LDIRS) -Wl,--start-group $(LIBS) -Wl,--end-group
+endif
+ifeq ($(ENVTYPE), Marconi) #Linux env.
+     EXTLIBS   = $(LDIRS) -Wl,--start-group $(LIBS) -Wl,--end-group
+endif
+ifeq ($(ENVTYPE), MacOS) #Linux env.
+     EXTLIBS   = $(LDIRS) $(LIBS)
+endif
 
 #Flag for finding external include files
 EXTINC    = $(IDIRS)
