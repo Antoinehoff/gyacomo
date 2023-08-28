@@ -15,13 +15,9 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0'
 % datafname = 'lin_DTT_AB_rho85_PT_scan/16x24_ky_0.1_1_P_2_8_DGGK_0.05_be_0.0039.mat';
 % datafname = 'lin_DTT_AB_rho85_PT_scan/16x24_ky_0.1_0.9_P_2_8_kN_1.33_DGGK_0.56901_be_0.0039.mat';
 % datafname = 'lin_DTT_AB_rho85_PT_scan/8x24_ky_0.05_1.5_P_2_8_kN_1.33_DGGK_0.1_be_0.0039.mat';
-% datafname = 'lin_JET_rho97_scan/4x32_ky_0.01_10_P_2_8_kN_10_DGGK_0.1_be_0.0031.mat';
-% datafname = 'lin_JET_rho97_scan/4x32_ky_0.01_10_P_2_8_kN_10_DGGK_0.05_be_0.0031.mat';
-% datafname = 'lin_JET_rho97_scan/8x32_ky_0.01_10_P_2_8_kN_10_DGGK_0.05_be_0.0031.mat';
-% datafname = 'lin_JET_rho97_scan/8x32_ky_0.01_10_P_2_2_kN_10_DGGK_0.05_be_0.0031.mat';
-datafname = 'lin_JET_rho97_scan/8x32_ky_0.031623_31.6228_P_2_8_kN_10_DGGK_0.1_be_0.0031.mat';
+datafname = 'lin_JET_rho97_scan/8x32_ky_0.031623_31.6228_P_1_1_kN_31.4286_DGGK_0.1_be_0.0031.mat';
 %% Chose if we filter gamma>0.05
-FILTERGAMMA = 0;
+FILTERGAMMA = 1;
 
 %% Load data
 fname = ['../results/',datafname];
@@ -29,7 +25,7 @@ d = load(fname);
 gamma = real(d.data); g_err = real(d.err);
 omega = imag(d.data); w_err = imag(d.err);
 if FILTERGAMMA
-    d.data = real(gamma).*(real(gamma)>0.025) + imag(gamma);
+    gamma = gamma.*(gamma>0.025);
 end
 if 0
 %% Pcolor of the peak
@@ -46,7 +42,7 @@ set(gca,'YTick',1:numel(d.s2),'YTicklabel',d.s2)
 colormap(jet)
 colormap(bluewhitered)
 clb=colorbar; 
-clb.Label.String = '$\gamma c_s/R$';
+clb.Label.String = '$\gamma R/c_s$';
 clb.Label.Interpreter = 'latex';
 clb.Label.FontSize= 18;
 end
@@ -83,7 +79,7 @@ for i = 1:numel(d.s2)
     'color',colors_(i,:)); 
     hold on;
 end
-xlabel(d.s1name); ylabel('$\omega c_s/R$');title(d.title);
+xlabel(d.s1name); ylabel('$\omega R/c_s$');title(d.title);
 xlim([d.s1(1) d.s1(end)]);
 
 colormap(colors_);

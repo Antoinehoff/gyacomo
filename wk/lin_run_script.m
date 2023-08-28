@@ -32,10 +32,10 @@ EXECNAME = 'gyacomo23_sp'; % single precision
 run lin_ITG
 % run lin_KBM
 %% Change parameters
-EXBRATE = 0.0;              % Background ExB shear flow
-NY   = 40;
-NX   = 8;
-PMAX = 16;
+NY   = 2;
+NX   = 6;
+NZ   = 32;
+PMAX = 2;
 JMAX = PMAX/2;
 ky   = 0.05;
 LY   = 2*pi/ky;

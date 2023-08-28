@@ -47,6 +47,7 @@ SUBROUTINE init_outfile(comm,file0,file,fid)
   USE collision,       ONLY: coll_outputinputs
   USE initial_par,     ONLY: initial_outputinputs
   USE time_integration,ONLY: time_integration_outputinputs
+  USE parallel,        ONLY: parallel_outputinputs
   USE futils,          ONLY: creatf, creatg, creatd, attach, putfile
   IMPLICIT NONE
   !input
@@ -89,6 +90,7 @@ SUBROUTINE init_outfile(comm,file0,file,fid)
   CALL             coll_outputinputs(fid)
   CALL          initial_outputinputs(fid)
   CALL time_integration_outputinputs(fid)
+  CALL         parallel_outputinputs(fid)
   !  Save STDIN (input file) of this run
   IF(jobnum .LE. 99) THEN
      WRITE(str,'(a,i2.2)') "/files/STDIN.",jobnum
