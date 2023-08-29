@@ -38,6 +38,7 @@ if ADIAB_E; MODEL.ADIAB_E = '.true.'; else; MODEL.ADIAB_E = '.false.';end;
 if ADIAB_I; MODEL.ADIAB_I = '.true.'; else; MODEL.ADIAB_I = '.false.';end;
 if MHD_PD;  MODEL.MHD_PD  = '.true.'; else; MODEL.MHD_PD  = '.false.';end;
 MODEL.beta    = BETA;
+MODEL.ExBrate = EXBRATE;
 MODEL.mu_x    = MU_X;
 MODEL.mu_y    = MU_Y;
 MODEL.N_HD    = N_HD;

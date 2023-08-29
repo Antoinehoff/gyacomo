@@ -3,8 +3,8 @@ function [] = profiler(data)
 % filename = sprintf([BASIC.RESDIR,'outputs_%.2d.h5'],00);
 % outfilename = ['/misc/HeLaZ_outputs',filename(3:end)];
 CPUTI=[]; DTSIM=[]; RHSTC=[]; POITC=[]; SAPTC=[]; COLTC=[];
-GRATC=[]; NADTC=[];  ADVTC=[]; GHOTC=[]; CLOTC=[]; CHKTC=[];
-DIATC=[]; STETC=[]; TS0TC=[];
+GRATC=[]; NADTC=[]; ADVTC=[]; GHOTC=[]; CLOTC=[]; CHKTC=[];
+DIATC=[]; EXBTC=[]; STETC=[]; TS0TC=[];
 for i = 1:numel(data.outfilenames)
     outfilename = data.outfilenames{i};
     CPUTI = [ CPUTI; double(h5readatt(outfilename,'/data/input','cpu_time'))];
@@ -13,6 +13,11 @@ for i = 1:numel(data.outfilenames)
     RHSTC = [ RHSTC; h5read(outfilename,'/profiler/Tc_rhs')];
     POITC = [ POITC; h5read(outfilename,'/profiler/Tc_poisson')];
     SAPTC = [ SAPTC; h5read(outfilename,'/profiler/Tc_Sapj')];
+    try
+    EXBTC = [ EXBTC; h5read(outfilename,'/profiler/Tc_ExBshear')];
+    catch
+        EXBTC = 0.*SAPTC;
+    end
     COLTC = [ COLTC; h5read(outfilename,'/profiler/Tc_coll')];
     GRATC = [ GRATC; h5read(outfilename,'/profiler/Tc_grad')];
     NADTC = [ NADTC; h5read(outfilename,'/profiler/Tc_nadiab')];
@@ -26,14 +31,14 @@ for i = 1:numel(data.outfilenames)
 end
 CPUTI = CPUTI(end);
 DTSIM = mean(DTSIM);
-N_T          = 12;
+N_T          = 13;
 
-missing_Tc   = STETC - RHSTC - ADVTC - GHOTC - CLOTC ...
+missing_Tc   = STETC - RHSTC - ADVTC - GHOTC - CLOTC - EXBTC ...
               -COLTC - POITC - SAPTC - CHKTC - DIATC - GRATC - NADTC;
 total_Tc     = STETC;
 
 TIME_PER_FCT = [diff(RHSTC); diff(ADVTC); diff(GHOTC);...
-    diff(CLOTC); diff(COLTC); diff(POITC); diff(SAPTC); ...
+    diff(CLOTC); diff(COLTC); diff(POITC); diff(SAPTC); diff(EXBTC); ...
     diff(CHKTC); diff(DIATC); diff(GRATC); diff(NADTC); diff(missing_Tc)];
 TIME_PER_FCT = reshape(TIME_PER_FCT,[numel(TIME_PER_FCT)/N_T,N_T]);
 
@@ -47,6 +52,7 @@ clos_Ta       = mean(diff(CLOTC));
 coll_Ta       = mean(diff(COLTC));
 poisson_Ta    = mean(diff(POITC));
 Sapj_Ta       = mean(diff(SAPTC));
+ExB_Ta        = mean(diff(EXBTC));
 checkfield_Ta = mean(diff(CHKTC));
 grad_Ta       = mean(diff(GRATC));
 nadiab_Ta     = mean(diff(NADTC));
@@ -61,14 +67,15 @@ names = {...
     'Capj';
     'Pois';
     'Sapj';
+    'ExBs';
     'Chck';
     'Diag';
     'Grad';
     'napj';
     'Miss';
 };
-Ts_A = [rhs_Ta adv_field_Ta ghost_Ta clos_Ta coll_Ta...
-    poisson_Ta Sapj_Ta checkfield_Ta diag_Ta grad_Ta  nadiab_Ta miss_Ta];
+Ts_A = [rhs_Ta adv_field_Ta ghost_Ta clos_Ta coll_Ta poisson_Ta...
+     Sapj_Ta ExB_Ta checkfield_Ta diag_Ta grad_Ta  nadiab_Ta miss_Ta];
 NSTEP_PER_SAMP= mean(diff(TS0TC))/DTSIM;
 
 %% Plots

@@ -78,7 +78,7 @@ MODULE prec_const
       ! dp_r = range(b)
       ! dp_p = precision(b)
       
-      REAL(xp) :: c = 1_xp
+      REAL(xp) :: c = 1._xp
       xp_r = range(c)
       xp_p = precision(c)
 

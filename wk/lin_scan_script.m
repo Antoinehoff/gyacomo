@@ -30,6 +30,8 @@ run lin_JET_rho97
 
 %% Change parameters
 NY   = 2;
+EXBRATE = 0;
+% SIGMA_E  = 0.023;
 %% Scan parameters
 SIMID = [SIMID,'_scan'];
 P_a   = [2 4 6 8];

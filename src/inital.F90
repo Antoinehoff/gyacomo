@@ -308,10 +308,10 @@ SUBROUTINE init_phi_ppj
   INTEGER  :: ikx, iky, iz
   amp = 1.0_xp
     !**** ppj initialization *******************************************
-      DO ikx=1,total_nkx
-        kx = kxarray(ikx)
-        DO iky=1,local_nky
-          ky = kyarray(iky)
+      DO iky=1,local_nky
+        ky = kyarray(iky)
+        DO ikx=1,total_nkx
+          kx = kxarray(iky,ikx)
           DO iz=1,local_nz+ngz
             z = zarray(iz,ieven)
             IF (ky .NE. 0) THEN
@@ -381,7 +381,7 @@ SUBROUTINE initialize_blob
       DO iz=1+ngz/2,local_nz+ngz/2
         z  = zarray(iz,ieven)
         DO ikx=1,total_nkx
-          kx = kxarray(ikx) + z*shear*ky
+          kx = kxarray(iky,ikx) + z*shear*ky
           DO ip=1+ngp/2,local_np+ngp/2
             p = parray(ip)
             DO ij=1+ngj/2,local_nj+ngj/2
@@ -437,10 +437,10 @@ SUBROUTINE init_ppj
       DO ip=1,local_np+ngp
         DO ij=1,local_nj+ngj
           IF ( (ip .EQ. 1) .AND. (ij .EQ. 1) ) THEN
-            DO ikx=1,total_nkx
-              kx = kxarray(ikx)
-              DO iky=1,local_nky
-                ky = kyarray(iky)
+            DO iky=1,local_nky
+              ky = kyarray(iky)
+              DO ikx=1,total_nkx
+                kx = kxarray(iky,ikx)
                 DO iz=1,local_nz+ngz
                   z = zarray(iz,ieven)
                   IF (kx .EQ. 0) THEN

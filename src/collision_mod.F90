@@ -116,14 +116,14 @@ CONTAINS
   !******************************************************************************!
   SUBROUTINE compute_lenard_bernstein
     USE grid, ONLY: ias,iae, ips,ipe, ijs,ije, parray, jarray, &
-                    ikys,ikye, ikxs,ikxe, izs,ize, kparray, ngp, ngj, ngz
+                    ikys,ikye, ikxs,ikxe, izs,ize, kp2array, ngp, ngj, ngz
     USE species,          ONLY: sigma2_tau_o2, nu_ab
     USE time_integration, ONLY: updatetlevel
     USE array,            ONLY: Capj
     USE fields,           ONLY: moments
     IMPLICIT NONE
     COMPLEX(xp) :: TColl_
-    REAL(xp)    :: j_xp, p_xp, ba_2, kp
+    REAL(xp)    :: j_xp, p_xp, ba_2, kp2
     INTEGER     :: iz,ikx,iky,ij,ip,ia,eo,ipi,iji,izi
     DO iz = izs,ize; izi = iz + ngz/2
     DO ikx = ikxs, ikxe;
@@ -135,8 +135,8 @@ CONTAINS
       eo   = MODULO(parray(ipi),2)
       p_xp = REAL(parray(ipi),xp)
       j_xp = REAL(jarray(iji),xp)
-      kp   = kparray(iky,ikx,izi,eo)
-      ba_2 = kp**2 * sigma2_tau_o2(ia) ! this is (ba/2)^2
+      kp2  = kp2array(iky,ikx,izi,eo)
+      ba_2 = kp2 * sigma2_tau_o2(ia) ! this is (ba/2)^2
 
       !** Assembling collison operator **
       ! -nuee (p + 2j) Nepj
@@ -160,7 +160,7 @@ CONTAINS
     USE grid, ONLY: local_na, local_np, local_nj, parray, jarray, ngp, ngj, &
                     ip0, ip2, ij0, ij1, ieven, &
                     local_nky, local_nkx, local_nz, ngz,&
-                    kparray
+                    kp2array
     USE species,          ONLY: nu_ab, tau, q_tau
     USE time_integration, ONLY: updatetlevel
     USE array,            ONLY: Capj
@@ -169,12 +169,12 @@ CONTAINS
     IMPLICIT NONE
     COMPLEX(xp) :: Tmp
     INTEGER     :: iz,ikx,iky,ij,ip,ia, ipi,iji,izi
-    REAL(xp)    :: j_xp, p_xp, kp_xp
+    REAL(xp)    :: j_xp, p_xp, kp2_xp
     DO iz = 1,local_nz
       izi = iz + ngz/2
       DO ikx = 1,local_nkx
         DO iky = 1,local_nky 
-          kp_xp = kparray(iky,ikx,izi,ieven)
+          kp2_xp = kp2array(iky,ikx,izi,ieven)
           DO ij = 1,local_nj
             iji = ij + ngj/2 
             DO ip = 1,local_np
@@ -185,17 +185,17 @@ CONTAINS
                 j_xp      = REAL(jarray(iji),xp)
                 !** Assembling collison operator **
                 IF( (p_xp .EQ. 0._xp) .AND. (j_xp .EQ. 0._xp)) THEN !Ca00
-                  Tmp = tau(ia)**2 * kp_xp**4*(&
+                  Tmp = tau(ia)**2 * kp2_xp**2*(&
                     67_xp/120_xp      *moments(ia,ip0,ij0,iky,ikx,izi,updatetlevel)&
                    +67_xp*SQRT2/240_xp*moments(ia,ip2,ij0,iky,ikx,izi,updatetlevel)&
                    -67_xp/240_xp      *moments(ia,ip0,ij1,iky,ikx,izi,updatetlevel)&
                    -3_xp/10_xp        *q_tau(ia)*phi(iky,ikx,izi))
                 ELSEIF( (p_xp .EQ. 2._xp) .AND. (j_xp .EQ. 0._xp)) THEN ! Ca20
-                  Tmp = tau(ia) * kp_xp**2*(&
+                  Tmp = tau(ia) * kp2_xp*(&
                    -SQRT2*twothird*moments(ia,ip0,ij0,iky,ikx,izi,updatetlevel)&
                    -2._xp*twothird*moments(ia,ip2,ij0,iky,ikx,izi,updatetlevel))
                 ELSEIF( (p_xp .EQ. 0._xp) .AND. (j_xp .EQ. 1._xp)) THEN ! Ca01
-                  Tmp = tau(ia) * kp_xp**2*(&
+                  Tmp = tau(ia) * kp2_xp*(&
                     2._xp*twothird*moments(ia,ip0,ij0,iky,ikx,izi,updatetlevel)&
                    -2._xp*twothird*moments(ia,ip0,ij1,iky,ikx,izi,updatetlevel))
                 ELSE

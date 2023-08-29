@@ -17,14 +17,15 @@ MODULE model
   CHARACTER(len=16), &
   PUBLIC, PROTECTED ::   HYP_V = 'hypcoll'  ! hyperdiffusion model for velocity space ('none','hypcoll','dvpar4')
   INTEGER,  PUBLIC, PROTECTED ::      Na =  1         ! number of evolved species
+  LOGICAL,  PUBLIC            :: ADIAB_E =  .false.   ! adiabatic electron model
+  LOGICAL,  PUBLIC            :: ADIAB_I =  .false.   ! adiabatic ion model
+  REAL(xp), PUBLIC, PROTECTED ::   tau_i =  1.0       ! electron-ion temperature ratio for ion adiabatic model
   REAL(xp), PUBLIC, PROTECTED ::      nu =  0._xp     ! collision frequency parameter
   REAL(xp), PUBLIC, PROTECTED ::    k_gB =  1._xp     ! Magnetic gradient strength (L_ref/L_gB)
   REAL(xp), PUBLIC, PROTECTED ::    k_cB =  1._xp     ! Magnetic curvature strength (L_ref/L_cB)
   REAL(xp), PUBLIC, PROTECTED :: lambdaD =  0._xp     ! Debye length
   REAL(xp), PUBLIC, PROTECTED ::    beta =  0._xp     ! electron plasma Beta (8piNT_e/B0^2)
-  LOGICAL,  PUBLIC            :: ADIAB_E =  .false.   ! adiabatic electron model
-  LOGICAL,  PUBLIC            :: ADIAB_I =  .false.   ! adiabatic ion model
-  REAL(xp), PUBLIC, PROTECTED ::   tau_i =  1.0       ! electron-ion temperature ratio for ion adiabatic model
+  REAL(xp), PUBLIC, PROTECTED :: ExBrate =  0._xp     ! ExB background shearing rate (radially constant shear flow)
   ! Auxiliary variable
   LOGICAL,  PUBLIC, PROTECTED ::      EM =  .true.    ! Electromagnetic effects flag
   LOGICAL,  PUBLIC, PROTECTED ::  MHD_PD =  .true.    ! MHD pressure drift
@@ -40,14 +41,15 @@ CONTAINS
 
   SUBROUTINE model_readinputs
     !    Read the input parameters
-    USE basic,    ONLY: lu_in, speak
-    USE parallel, ONLY: num_procs_p
-    USE prec_const
+    USE basic,          ONLY: lu_in, speak
+    USE parallel,       ONLY: num_procs_p
+    USE prec_const,     ONLY: xp
     IMPLICIT NONE
 
     NAMELIST /MODEL_PAR/ KERN, LINEARITY, RM_LD_T_EQ, FORCE_SYMMETRY, MHD_PD, &
-                         mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, Na,&
-                         nu, k_gB, k_cB, lambdaD, beta, ADIAB_E, ADIAB_I, tau_i
+                         Na, ADIAB_E, ADIAB_I, tau_i, &
+                         mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, &
+                         nu, k_gB, k_cB, lambdaD, beta, ExBrate
 
     READ(lu_in,model_par)
 
