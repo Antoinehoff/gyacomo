@@ -53,7 +53,6 @@ CONTAINS
         ! shift all fields and correct the shift value
         DO iky = 1,local_Nky
             IF(shiftnow_ExB(iky)) THEN
-                print*, "SHIFT ARRAYS"
                 ! shift all fields
                 DO ikx = 1,total_nkx
                     ikx_s = ikx + jump_ExB(iky)
