@@ -45,6 +45,14 @@ SUBROUTINE inital
       CALL update_ghosts_moments
       CALL solve_EM_fields
       CALL update_ghosts_EM
+    ! set moments_00 (GC density) with a single kx0,ky0 mode
+    ! kx0 is setup but by the noise value and ky0 by the background value
+    CASE('mom00_single_mode')
+      CALL speak('Init noisy gyrocenter density')
+      CALL init_single_mode ! init single mode in gyrocenter density
+      CALL update_ghosts_moments
+      CALL solve_EM_fields
+      CALL update_ghosts_EM
     ! init all moments randomly (unadvised)
     CASE('allmom')
       CALL speak('Init noisy moments')
@@ -226,6 +234,57 @@ SUBROUTINE init_gyrodens
     ENDIF
   ENDDO
 END SUBROUTINE init_gyrodens
+!******************************************************************************!
+
+!******************************************************************************!
+!!!!!!! Initialize a single mode in the gyrocenter density
+!******************************************************************************!
+SUBROUTINE init_single_mode
+  USE grid,       ONLY: local_na, local_np, local_nj, total_nkx, local_nky, local_nz,&
+                        ngp, ngj, ngz, iky0, kxarray, kyarray, parray, jarray, &
+                        contains_ky0, deltakx, deltaky
+  USE fields,     ONLY: moments
+  USE prec_const, ONLY: xp
+  USE initial_par,ONLY: iseed, init_noiselvl, init_background
+  USE model,      ONLY: LINEARITY
+  USE parallel,   ONLY: my_id
+  IMPLICIT NONE
+
+  REAL(xp) :: amplitude
+  INTEGER  :: ia,ip,ij,ikx,iky,iz, ikxi, ikyi
+  INTEGER, DIMENSION(12) :: iseedarr
+
+  moments   = 0._xp
+  amplitude = 1._xp 
+  ! find the closest modes to be intialized
+  ikxi = -1;
+  DO ikx=1,total_nkx
+    if(abs(kxarray(ikx,1)-init_noiselvl) .LE. deltakx) &
+      ikxi = ikx
+  ENDDO
+  ikyi = -1;
+  DO iky=1,local_nky
+    if(abs(kyarray(iky)-init_background) .LE. deltaky) &
+      ikyi = ikyi
+  ENDDO
+    !****single mode initialization *******************************************
+  DO ia=1,local_na
+    DO ip=1+ngp/2,local_np+ngp/2
+      DO ij=1+ngj/2,local_nj+ngj/2
+        DO iz=1+ngz/2,local_nz+ngz/2
+          IF  ( ((parray(ip) .EQ. 0) .AND. (jarray(ij) .EQ. 0)) &
+          .AND. ((ikxi .NE. -1)      .AND. (ikyi .NE. -1))      ) &
+            moments(ia,ip,ij,ikyi,ikxi,iz,:) = amplitude
+        END DO
+        IF ( contains_ky0 ) THEN
+          DO ikx=2,total_nkx/2 !symmetry at ky = 0 for all z
+            moments(ia, ip,ij,iky0,ikx,:,:) = moments(ia, ip,ij,iky0,total_nkx+2-ikx,:,:)
+          END DO
+        ENDIF
+      END DO
+    END DO
+  ENDDO
+END SUBROUTINE init_single_mode
 !******************************************************************************!
 
 !******************************************************************************!
@@ -504,8 +563,8 @@ SUBROUTINE init_ricci
   USE initial_par,ONLY: iseed, init_noiselvl, init_background
   USE model,      ONLY: LINEARITY
   IMPLICIT NONE
-  COMPLEX(xp), DIMENSION(186,52) :: ricci_mat_real, ricci_mat_imag
-  COMPLEX(xp) :: scaling
+  REAL(xp), DIMENSION(186,94) :: ricci_mat_real, ricci_mat_imag
+  REAL(xp) :: scaling
   INTEGER  :: ia,ip,ij,ikx,iky,iz
   ! open data file
   ricci_mat_real = 0; ricci_mat_imag = 0
@@ -517,17 +576,17 @@ SUBROUTINE init_ricci
   close(2)
   scaling = 0.000002
   moments = 0._xp
-    !**** Broad noise initialization *******************************************
+    !**** initialization *******************************************
   DO ia=1,local_na
     DO ikx=1,total_nkx
       DO iky=1,local_nky
         DO ip=1+ngp/2,local_np+ngp/2
           DO ij=1+ngj/2,local_nj+ngj/2
             DO iz=1+ngz/2,local_nz+ngz/2
-              IF((ikx+local_nkx_offset .LE. 186) .AND. (iky+local_nky_offset .LE. 52)) THEN
+              IF((ikx+local_nkx_offset .LE. 186) .AND. (iky+local_nky_offset .LE. 94)) THEN
                 IF ( (parray(ip) .EQ. 0) .AND. (jarray(ij) .EQ. 0) ) THEN
                   moments(ia,ip,ij,iky,ikx,iz,:) = scaling*(ricci_mat_real(ikx+local_nkx_offset,iky+local_nky_offset)&
-                  + imagu*ricci_mat_imag(ikx+local_nkx_offset,iky+local_nky_offset))
+                  - imagu*ricci_mat_imag(ikx+local_nkx_offset,iky+local_nky_offset))
                 ELSE
                   moments(ia,ip,ij,iky,ikx,iz,:) = 0._xp
                 ENDIF
