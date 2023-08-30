@@ -6,14 +6,16 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 default_plots_options
 % Partition of the computer where the data have to be searched
 % PARTITION='/Users/ahoffmann/gyacomo/results/paper_3/';
-PARTITION='/misc/gyacomo23_outputs/paper_3/';
+% PARTITION='/misc/gyacomo23_outputs/paper_3/';
+PARITION = '';
 %% Paper 3
 % resdir = 'DTT_rho85/3x2x192x48x32';
 % resdir = 'DTT_rho85/3x2x192x48x32_NT';
 % resdir = 'DTT_rho98/3x2x192x48x32';
 % resdir = 'DTT_rho98/3x2x192x48x32_0.25grad';
 % resdir = 'LM_DIIID_rho95/5x3x512x92x32';
-resdir = 'LM_DIIID_rho95/3x2x512x92x32';
+% resdir = 'LM_DIIID_rho95/3x2x512x92x32';
+resdir = '../results/dev/ExB_SF';
  %%
 J0 = 00; J1 = 02;
 
@@ -22,10 +24,10 @@ DATADIR = [PARTITION,resdir,'/'];
 data    = {};
 data    = compile_results_low_mem(data,DATADIR,J0,J1);
 
-if 1
+if 0
 %% Plot transport and phi radial profile
 [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
-[data.PSI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'psi');
+% [data.PSI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'psi');
 options.TAVG_0   = 100;
 options.TAVG_1   = 1000;
 options.NCUT     = 5;              % Number of cuts for averaging and error estimation
@@ -37,7 +39,7 @@ options.RESOLUTION = 256;
 plot_radial_transport_and_spacetime(data,options);
 end
 
-if 0
+if 1
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
 % [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
@@ -45,6 +47,8 @@ if 0
 data.Ni00 = reshape(data.Na00(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 options.INTERP    = 1;
 options.POLARPLOT = 0;
+options.BWR       = 0; % bluewhitered plot or gray
+options.CLIMAUTO  = 1; % adjust the colormap auto
 % options.NAME      = '\phi';
 % options.NAME      = '\phi^{NZ}';
 % options.NAME      = '\omega_z';
@@ -54,7 +58,7 @@ options.NAME     = 'N_i^{00}';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
-options.PLAN      = 'kxky';
+options.PLAN      = 'xy';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 1;
@@ -74,18 +78,20 @@ if 0
 [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 data.Ni00 = reshape(data.Na00(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.AXISEQUAL = 0;
+options.AXISEQUAL = 1;
 options.NORMALIZE = 0;
-% options.NAME      = 'N_i^{00}';
-options.NAME      = '\phi';
+options.NAME      = 'N_i^{00}';
+% options.NAME      = '\phi';
 options.PLAN      = 'kxky';
 options.COMP      = 'avg';
-options.TIME      = [0 10 20 50];
+options.TIME      = [0];
 % options.TIME      = data.Ts3D(1:2:end);
 options.RESOLUTION = 256;
 fig = photomaton(data,options);
+colormap(gray)
+clim('auto')
 % save_figure(data,fig)
 end
 if 0
@@ -93,7 +99,7 @@ if 0
 profiler(data)
 end
 
-if 1
+if 0
 %% Hermite-Laguerre spectrum
 [data.Napjz, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Napjz');
 % [data.Napjz, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'Nipjz');

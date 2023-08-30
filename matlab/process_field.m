@@ -138,6 +138,7 @@ switch REALP
     case 1 % Real space plot
         INTERP = OPTIONS.INTERP;
         process = @(x) real(fftshift(ifourier_GENE(x)));
+        % process = @(x) real(fftshift(ifft2(x,sz(1),sz(2))));
         shift_x = @(x) x;
         shift_y = @(x) x;
     case 0 % Frequencies plot

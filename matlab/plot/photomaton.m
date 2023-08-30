@@ -30,7 +30,7 @@ FIGURE.fig = figure; %set(gcf, 'Position',  toplot.DIMENSIONS.*[1 1 Ncols Nrows]
                 pbaspect(toplot.ASPECT)
             end
             if ~strcmp(OPTIONS.PLAN,'kxky')
-                caxis([-1,1]*frame_max/scale);
+                clim([-1,1]*frame_max/scale);
                 colormap(bluewhitered);
                 if OPTIONS.INTERP
                     shading interp; 

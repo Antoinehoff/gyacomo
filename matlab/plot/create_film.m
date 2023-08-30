@@ -1,7 +1,7 @@
 function create_film(DATA,OPTIONS,format)
 %% Plot options
 FPS = 16; DELAY = 1/FPS;
-BWR = 1; NORMALIZED = 1;
+BWR = OPTIONS.BWR; NORMALIZED = 1;
 if ~strcmp(OPTIONS.PLAN,'sx')
     T = DATA.Ts3D;
 else
@@ -40,7 +40,12 @@ fig  = figure('Color','white');%,'Position', toplot.DIMENSIONS.*[0.5 0.5 1.0 1])
     if ~strcmp(OPTIONS.PLAN,'sx')
         pcolor(X,Y,FIELD(:,:,1)); % to set up
         if BWR
-        colormap(bluewhitered)
+            colormap(bluewhitered)
+        else
+            colormap(gray)
+        end
+        if OPTIONS.CLIMAUTO
+            clim('auto')
         end
         axis tight manual % this ensures that getframe() returns a consistent size
         if toplot.INTERP
@@ -72,7 +77,12 @@ fig  = figure('Color','white');%,'Position', toplot.DIMENSIONS.*[0.5 0.5 1.0 1])
             end
             set(pclr, 'edgecolor','none'); %pbaspect(toplot.ASPECT);
             if BWR
-            colormap(bluewhitered)
+                colormap(bluewhitered)
+            else
+                colormap(gray)
+            end
+            if OPTIONS.CLIMAUTO
+            clim('auto')
             end
         else % show velocity distr.
            contour(toplot.X,toplot.Y,FIELD(:,:,n)/scale,128);
