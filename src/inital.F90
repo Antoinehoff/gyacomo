@@ -257,33 +257,30 @@ SUBROUTINE init_single_mode
   moments   = 0._xp
   amplitude = 1._xp 
   ! find the closest modes to be intialized
-  ikxi = -1;
-  DO ikx=1,total_nkx
-    if(abs(kxarray(ikx,1)-init_noiselvl) .LE. deltakx) &
-      ikxi = ikx
-  ENDDO
-  ikyi = -1;
-  DO iky=1,local_nky
-    if(abs(kyarray(iky)-init_background) .LE. deltaky) &
-      ikyi = ikyi
-  ENDDO
-    !****single mode initialization *******************************************
-  DO ia=1,local_na
-    DO ip=1+ngp/2,local_np+ngp/2
-      DO ij=1+ngj/2,local_nj+ngj/2
-        DO iz=1+ngz/2,local_nz+ngz/2
-          IF  ( ((parray(ip) .EQ. 0) .AND. (jarray(ij) .EQ. 0)) &
-          .AND. ((ikxi .NE. -1)      .AND. (ikyi .NE. -1))      ) &
-            moments(ia,ip,ij,ikyi,ikxi,iz,:) = amplitude
-        END DO
-        IF ( contains_ky0 ) THEN
-          DO ikx=2,total_nkx/2 !symmetry at ky = 0 for all z
-            moments(ia, ip,ij,iky0,ikx,:,:) = moments(ia, ip,ij,iky0,total_nkx+2-ikx,:,:)
-          END DO
-        ENDIF
-      END DO
-    END DO
-  ENDDO
+  ikxi = NINT(init_noiselvl);
+  ikyi = NINT(init_background);
+  !****single mode initialization *******************************************
+  ! DO ia=1,local_na
+  !   DO ip=1+ngp/2,local_np+ngp/2
+  !     DO ij=1+ngj/2,local_nj+ngj/2
+  !       DO iz=1+ngz/2,local_nz+ngz/2
+  !         IF  ( ((parray(ip) .EQ. 0) .AND. (jarray(ij) .EQ. 0)) &
+  !         .AND. ((ikxi .NE. -1)      .AND. (ikyi .NE. -1))      ) &
+  !           moments(ia,ip,ij,ikyi,ikxi,iz,:) = amplitude
+  !       END DO
+  !       IF ( contains_ky0 ) THEN
+  !         DO ikx=2,total_nkx/2 !symmetry at ky = 0 for all z
+  !           moments(ia, ip,ij,iky0,total_nkx+2-ikx,:,:) = moments(ia, ip,ij,iky0,ikx,:,:)
+  !         END DO
+  !       ENDIF
+  !     END DO
+  !   END DO
+  ! ENDDO
+  moments(:,:,:,1,1,:,:) = amplitude
+  moments(:,:,:,2,2,:,:) = amplitude
+  moments(:,:,:,3,3,:,:) = amplitude
+  moments(:,:,:,4,4,:,:) = amplitude
+  moments(:,:,:,5,5,:,:) = amplitude
 END SUBROUTINE init_single_mode
 !******************************************************************************!
 
@@ -555,9 +552,12 @@ END SUBROUTINE init_ppj
 !!!!!!! Initialize Ricci density
 !******************************************************************************!
 SUBROUTINE init_ricci
+  USE basic,      ONLY: maindir
   USE grid,       ONLY: local_na, local_np, local_nj, total_nkx, local_nky, local_nz,&
-                        local_nkx_offset, local_nky_offset,&
-                        ngp, ngj, ngz, iky0, parray, jarray, contains_ky0, AA_x, AA_y
+                        local_nkx_offset, local_nky_offset, kxarray, kyarray, &
+                        ngp, ngj, ngz, iky0, ikx0, parray, jarray,&
+                        deltakx, deltaky, contains_ky0, contains_kx0,&
+                        AA_x, AA_y
   USE fields,     ONLY: moments
   USE prec_const, ONLY: xp, imagu
   USE initial_par,ONLY: iseed, init_noiselvl, init_background
@@ -565,16 +565,20 @@ SUBROUTINE init_ricci
   IMPLICIT NONE
   REAL(xp), DIMENSION(186,94) :: ricci_mat_real, ricci_mat_imag
   REAL(xp) :: scaling
-  INTEGER  :: ia,ip,ij,ikx,iky,iz
+  INTEGER  :: ia,ip,ij,ikx,iky,iz, LPFx, LPFy
+  CHARACTER(256) ::  filename
+
   ! open data file
   ricci_mat_real = 0; ricci_mat_imag = 0
-  open(unit = 1 , file = "/home/ahoffman/gyacomo/Gallery/fourier_ricci_real.txt")
+  filename = TRIM(maindir) // '/Gallery/fourier_ricci_real.txt'
+  open(unit = 1 , file = filename)
   read(1,*) ricci_mat_real
   close(1)
-  open(unit = 2 , file = "/home/ahoffman/gyacomo/Gallery/fourier_ricci_imag.txt")
+  filename = TRIM(maindir) // '/Gallery/fourier_ricci_imag.txt'
+  open(unit = 2 , file = filename)
   read(2,*) ricci_mat_imag
   close(2)
-  scaling = 0.000002
+  scaling = 0.000001_xp
   moments = 0._xp
     !**** initialization *******************************************
   DO ia=1,local_na
@@ -584,12 +588,12 @@ SUBROUTINE init_ricci
           DO ij=1+ngj/2,local_nj+ngj/2
             DO iz=1+ngz/2,local_nz+ngz/2
               IF((ikx+local_nkx_offset .LE. 186) .AND. (iky+local_nky_offset .LE. 94)) THEN
-                IF ( (parray(ip) .EQ. 0) .AND. (jarray(ij) .EQ. 0) ) THEN
+                ! IF ( (parray(ip) .EQ. 0) .AND. (jarray(ij) .EQ. 0) ) THEN
                   moments(ia,ip,ij,iky,ikx,iz,:) = scaling*(ricci_mat_real(ikx+local_nkx_offset,iky+local_nky_offset)&
                   - imagu*ricci_mat_imag(ikx+local_nkx_offset,iky+local_nky_offset))
-                ELSE
+                ! ELSE
                   moments(ia,ip,ij,iky,ikx,iz,:) = 0._xp
-                ENDIF
+                ! ENDIF
               ELSE
                 moments(ia,ip,ij,iky,ikx,iz,:) = 0._xp
               ENDIF
@@ -598,18 +602,6 @@ SUBROUTINE init_ricci
         END DO
       END DO
     END DO
-
-    IF ( contains_ky0 ) THEN
-      DO ip=1+ngp/2,local_np+ngp/2
-        DO ij=1+ngj/2,local_nj+ngj/2
-          DO iz=1+ngz/2,local_nz+ngz/2
-            DO ikx=2,total_nkx/2 !symmetry at ky = 0 for all z
-              moments(ia, ip,ij,iky0,ikx,:,:) = moments(ia, ip,ij,iky0,total_nkx+2-ikx,:,:)
-            END DO
-          END DO
-        END DO
-      END DO
-    ENDIF
     ! Putting to zero modes that are not in the 2/3 Orszag rule
     IF (LINEARITY .NE. 'linear') THEN
       DO ikx=1,total_nkx
@@ -625,5 +617,14 @@ SUBROUTINE init_ricci
       ENDDO
     ENDIF
   ENDDO
+  !! Play with some filtering
+  LPFx = 0
+  LPFy = 0
+    DO ikx=1,total_nkx
+      DO iky=1,local_nky
+        IF ( (abs(kxarray(ikx,iky)) .LT. LPFx*deltakx ) .AND. (abs(kyarray(iky)) .LT. LPFy*deltaky ) )&
+          moments(:,:,:,iky,ikx,:,:) = 0._xp
+      ENDDO
+    ENDDO
 END SUBROUTINE init_ricci
 !******************************************************************************!
