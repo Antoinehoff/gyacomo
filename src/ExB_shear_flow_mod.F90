@@ -46,22 +46,45 @@ CONTAINS
         USE fields,     ONLY: moments, phi, psi
         IMPLICIT NONE
         ! local var
-        INTEGER :: iky, ikx, ikx_s
+        INTEGER :: iky, ikx, ikx_s, i_, loopstart, loopend, increment
 
         CALL start_chrono(chrono_ExBs)
 
         ! shift all fields and correct the shift value
         DO iky = 1,local_Nky
             IF(shiftnow_ExB(iky)) THEN
-                ! shift all fields
-                DO ikx = 1,total_nkx
+                ! We shift the array from left to right or right to left according to the jump
+                ! This avoids to make copy
+                IF(jump_ExB(iky) .GT. 0) THEN
+                    loopstart = 1
+                    loopend   = total_nkx
+                    increment = 1
+                ELSE
+                    loopstart = total_nkx
+                    loopend   = 1
+                    increment = -1
+                ENDIF
+                !loop to go through the array in a monotonic kx order
+                ! Recall: the kx array is organized as
+                !   6   7   8   1   2   3   4   5 (indices ikx)
+                !  -3  -2  -1   0   1   2   3   4 (values in dkx)
+                ! so to go along the array in a monotonic way one must travel as
+                ! 67812345 or 54321678
+                DO i_ = loopstart, loopend, increment 
+                    IF (i_ .LT. total_nkx/2) THEN ! go to the negative kx region
+                        ikx = i_ + total_nkx/2 + 1
+                    ELSE ! positive
+                        ikx = i_ - total_nkx/2 + 1
+                    ENDIF
                     ikx_s = ikx + jump_ExB(iky)
                     ! We test if the shifted modes are still in contained in our resolution
                     ! IF( (kxarray(iky,ikx)-sky_ExB(iky) .GE. kx_min) .AND. (kxarray(iky,ikx)-sky_ExB(iky) .LE. kx_max) ) THEN
                     IF ( ((ikx_s .GT. 0 ) .AND. (ikx_s .LE. total_nkx )) .AND. &
                          (((ikx   .LE. (total_nkx/2+1)) .AND. (ikx_s .LE. (total_nkx/2+1))) .OR. &
                           ((ikx   .GT. (total_nkx/2+1)) .AND. (ikx_s .GT. (total_nkx/2+1)))) ) THEN
-                        moments(:,:,:,iky,ikx,:,:) = moments(:,:,:,iky,ikx_s,:,:)
+                            ! if(iky .EQ. 4) print*, 'iky=4, ikx=',ikx,'gets value from ikxs=',ikx_s
+                            ! if(iky .EQ. 4) print*, 'jump=',jump_ExB(iky)
+                            moments(:,:,:,iky,ikx,:,:) = moments(:,:,:,iky,ikx_s,:,:)
                         phi(iky,ikx,:)             = phi(iky,ikx_s,:)
                         psi(iky,ikx,:)             = psi(iky,ikx_s,:)
                     ELSE ! if it is not, it is lost (~dissipation for high modes)
@@ -79,9 +102,9 @@ CONTAINS
         CALL update_grids(sky_ExB,gxx,gxy,inv_hatB2)
 
         !   update the EM op., the kernels and the curvature op.
-        ! CALL evaluate_kernels
-        ! CALL evaluate_EM_op
-        ! CALL evaluate_magn_curv
+        CALL evaluate_kernels
+        CALL evaluate_EM_op
+        CALL evaluate_magn_curv
 
         CALL stop_chrono(chrono_ExBs)
     END SUBROUTINE Apply_ExB_shear_flow
