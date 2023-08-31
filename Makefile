@@ -129,6 +129,9 @@ $(OBJDIR)/processing_mod.o $(OBJDIR)/readinputs.o $(OBJDIR)/restarts_mod.o \
 $(OBJDIR)/solve_EM_fields.o $(OBJDIR)/species_mod.o $(OBJDIR)/stepon.o $(OBJDIR)/tesend.o \
 $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/CLA_mod.o
 
+# Add finally the definition of the Gyacomo directory
+# (helps if the code needs to load a file as for the init Ricci)
+ compile: F90FLAGS += -D__GYACDIR__=\"$(shell pwd)\"
 # To compile the executable
  compile: $(FOBJ)
 	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $(EXEC)
