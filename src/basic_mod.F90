@@ -43,6 +43,13 @@ MODULE basic
   ! This sets if the outputs is done through a large gather or using parallelization from futils
   !  it is recommended to set it to .true.
   LOGICAL, PUBLIC, PROTECTED :: GATHERV_OUTPUT = .true.
+  ! Store as a parameter the path to the main directory of the code 
+  ! (the path to gyacomo dir is stored during the compilation)
+#ifdef __GYACDIR__
+  CHARACTER(len=*), PUBLIC, PARAMETER :: maindir = __GYACDIR__
+#else
+  CHARACTER(len=*), PUBLIC, PARAMETER :: maindir = ""
+#endif
   ! Routines interfaces
   PUBLIC :: allocate_array, basic_outputinputs,basic_data,&
             speak, str, increase_step, increase_cstep, increase_time, display_h_min_s,&
