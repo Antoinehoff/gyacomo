@@ -82,11 +82,9 @@ CONTAINS
                     IF ( ((ikx_s .GT. 0 ) .AND. (ikx_s .LE. total_nkx )) .AND. &
                          (((ikx   .LE. (total_nkx/2+1)) .AND. (ikx_s .LE. (total_nkx/2+1))) .OR. &
                           ((ikx   .GT. (total_nkx/2+1)) .AND. (ikx_s .GT. (total_nkx/2+1)))) ) THEN
-                            ! if(iky .EQ. 4) print*, 'iky=4, ikx=',ikx,'gets value from ikxs=',ikx_s
-                            ! if(iky .EQ. 4) print*, 'jump=',jump_ExB(iky)
                             moments(:,:,:,iky,ikx,:,:) = moments(:,:,:,iky,ikx_s,:,:)
-                        phi(iky,ikx,:)             = phi(iky,ikx_s,:)
-                        psi(iky,ikx,:)             = psi(iky,ikx_s,:)
+                            phi(iky,ikx,:)             = phi(iky,ikx_s,:)
+                            psi(iky,ikx,:)             = psi(iky,ikx_s,:)
                     ELSE ! if it is not, it is lost (~dissipation for high modes)
                         moments(:,:,:,iky,ikx,:,:) = 0._xp
                         phi(iky,ikx,:)             = 0._xp
