@@ -44,7 +44,9 @@ FIGURE.fig = figure; %set(gcf, 'Position',  toplot.DIMENSIONS.*[1 1 Ncols Nrows]
         xlabel(toplot.XNAME); ylabel(toplot.YNAME);
 %         if i_ > 1; set(gca,'ytick',[]); end; 
         title([sprintf('$t c_s/R=%.0f$',tshot),', max = ',sprintf('%.1e',frame_max)]);
-
+        if OPTIONS.CLIMAUTO
+            clim('auto')
+        end
     end
     legend(['$',toplot.FIELDNAME,'$']);
     FIGURE.FIGNAME = [FNAME,'_snaps',TNAME];
