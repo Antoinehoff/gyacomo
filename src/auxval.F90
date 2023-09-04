@@ -1,14 +1,17 @@
 subroutine auxval
   !   Set auxiliary values, at beginning of simulation
 
-  USE basic
-  USE grid
-  USE array
-  USE model
+  USE basic,          ONLY: str, speak
+  USE grid,           ONLY: local_np, local_np_offset, total_np, local_nj, local_nj_offset, total_nj,&
+                            local_nky, local_nky_offset, total_nky, local_nkx, local_nkx_offset, dmax,&
+                            local_nz, local_nz_offset, total_nz, init_grids_data, set_grids
+  !USE array
+  USE model,          ONLY: Na, EM, LINEARITY, N_HD
   USE fourier,        ONLY: init_grid_distr_and_plans
-  use prec_const
-  USE numerics
-  USE geometry
+  use MPI,            ONLY: MPI_COMM_WORLD
+  USE numerics,       ONLY: build_dnjs_table, build_dv4Hp_table, compute_lin_coeff, &
+                            evaluate_EM_op, evaluate_kernels
+  USE geometry,       ONLY: Npol, shear, eval_magnetic_geometry
   USE closure,        ONLY: set_closure_model, hierarchy_closure
   USE parallel,       ONLY: init_parallel_var, my_id, num_procs, &
     num_procs_p, num_procs_z, num_procs_ky, rank_p, rank_ky, rank_z

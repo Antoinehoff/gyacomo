@@ -26,6 +26,8 @@ MODULE model
   REAL(xp), PUBLIC, PROTECTED :: lambdaD =  0._xp     ! Debye length
   REAL(xp), PUBLIC, PROTECTED ::    beta =  0._xp     ! electron plasma Beta (8piNT_e/B0^2)
   REAL(xp), PUBLIC, PROTECTED :: ExBrate =  0._xp     ! ExB background shearing rate (radially constant shear flow)
+  INTEGER,  PUBLIC, PROTECTED ::   ikxZF =  0         ! Background zonal mode wavenumber (acts in the nonlinear term)
+  REAL(xp), PUBLIC, PROTECTED ::   ZFamp =  200._xp   ! Amplitude of the background zonal mode
   ! Auxiliary variable
   LOGICAL,  PUBLIC, PROTECTED ::      EM =  .true.    ! Electromagnetic effects flag
   LOGICAL,  PUBLIC, PROTECTED ::  MHD_PD =  .true.    ! MHD pressure drift
@@ -46,12 +48,12 @@ CONTAINS
     USE prec_const,     ONLY: xp
     IMPLICIT NONE
 
-    NAMELIST /MODEL_PAR/ KERN, LINEARITY, RM_LD_T_EQ, FORCE_SYMMETRY, MHD_PD, &
+    NAMELIST /MODEL/ KERN, LINEARITY, RM_LD_T_EQ, FORCE_SYMMETRY, MHD_PD, &
                          Na, ADIAB_E, ADIAB_I, tau_i, &
                          mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, &
-                         nu, k_gB, k_cB, lambdaD, beta, ExBrate
+                         nu, k_gB, k_cB, lambdaD, beta, ExBrate, ikxZF, ZFamp
 
-    READ(lu_in,model_par)
+    READ(lu_in,model)
 
     IF (ADIAB_E .AND. ADIAB_I) &
       ERROR STOP '>> ERROR << cannot have both adiab e and adiab i models'

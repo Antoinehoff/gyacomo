@@ -1,6 +1,5 @@
 MODULE nonlinear
   USE array,       ONLY : dnjs, Sapj, kernel
-  USE initial_par, ONLY : ACT_ON_MODES
   USE fourier,     ONLY : bracket_sum_r, bracket_sum_c, planf, planb, poisson_bracket_and_sum
   USE fields,      ONLY : phi, psi, moments
   USE grid,        ONLY: local_na, &
@@ -8,8 +7,8 @@ MODULE nonlinear
                          local_nj,ngj,jarray,jmax, local_nj_offset, dmax,&
                          kyarray, AA_y, local_nky_ptr, local_nky_ptr_offset,inv_Ny,&
                          local_nkx_ptr,kxarray, AA_x, inv_Nx,&
-                         local_nz,ngz,zarray,nzgrid
-  USE model,       ONLY : LINEARITY, EM
+                         local_nz,ngz,zarray,nzgrid, deltakx, iky0, contains_kx0, contains_ky0
+  USE model,       ONLY : LINEARITY, EM, ikxZF, ZFamp
   USE closure,     ONLY : evolve_mom, nmaxarray
   USE prec_const,  ONLY : xp
   USE species,     ONLY : sqrt_tau_o_sigma
@@ -63,6 +62,7 @@ END SUBROUTINE compute_Sapj
 SUBROUTINE compute_nonlinear
   IMPLICIT NONE
   INTEGER :: iz,ij,ip,eo,ia,ikx,iky,izi,ipi,iji,ini,isi
+  INTEGER :: ikxExBp, ikxExBn ! Negative and positive ExB flow indices
   z:DO iz = 1,local_nz
     izi = iz + ngz/2
     j:DO ij = 1,local_nj ! Loop over Laguerre moments
@@ -82,7 +82,20 @@ SUBROUTINE compute_nonlinear
               ini = in+ngj/2
   !-----------!! ELECTROSTATIC CONTRIBUTION
               ! First convolution terms
-              F_cmpx(:,:) = phi(:,:,izi) * kernel(ia,ini,:,:,izi,eo)
+              DO ikx = 1,local_nkx_ptr
+                DO iky = 1,local_nky_ptr
+                  F_cmpx(iky,ikx) = phi(iky,ikx,izi) * kernel(ia,ini,iky,ikx,izi,eo)
+                ENDDO
+              ENDDO
+              ! Test to implement the ExB shearing as a additional zonal mode in the ES potential
+              IF(ikxZF .GT. 1) THEN
+                ikxExBp = ikxZF
+                ikxExBn = local_nkx_ptr - (ikxExBp-2)
+                IF(contains_kx0 .AND. contains_ky0) THEN
+                  F_cmpx(iky0,ikxExBp) = F_cmpx(iky0,ikxExBp) + ZFamp * kernel(ia,ini,iky0,ikxExBp,izi,eo)
+                  F_cmpx(iky0,ikxExBn) = F_cmpx(iky0,ikxExBn) + ZFamp * kernel(ia,ini,iky0,ikxExBn,izi,eo)
+                ENDIF
+              ENDIF
               ! Second convolution terms
               G_cmpx = 0._xp ! initialization of the sum
               smax   = MIN( jarray(ini)+jarray(iji), jmax );
@@ -91,7 +104,7 @@ SUBROUTINE compute_nonlinear
                 G_cmpx(:,:) = G_cmpx(:,:) + &
                   dnjs(in,ij,is) * moments(ia,ipi,isi,:,:,izi,updatetlevel)
               ENDDO s1
-              ! this function add its result to bracket_sum_r
+              ! this function adds its result to bracket_sum_r
                 CALL poisson_bracket_and_sum(kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,local_nky_ptr,local_nkx_ptr,F_cmpx,G_cmpx,bracket_sum_r)
   !-----------!! ELECTROMAGNETIC CONTRIBUTION -sqrt(tau)/sigma*{Sum_s dnjs [sqrt(p+1)Nap+1s + sqrt(p)Nap-1s], Kernel psi}
               IF(EM) THEN
@@ -105,7 +118,7 @@ SUBROUTINE compute_nonlinear
                     dnjs(in,ij,is) * (sqrt_pp1*moments(ia,ipi+1,isi,:,:,izi,updatetlevel)&
                                     +sqrt_p  *moments(ia,ipi-1,isi,:,:,izi,updatetlevel))
                 ENDDO s2
-                ! this function add its result to bracket_sum_r
+                ! this function adds its result to bracket_sum_r
                 CALL poisson_bracket_and_sum(kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,local_nky_ptr,local_nkx_ptr,F_cmpx,G_cmpx,bracket_sum_r)
               ENDIF
             ENDDO n

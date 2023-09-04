@@ -39,8 +39,8 @@ while(CONTINUE)
             CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
             DT_SIM    = h5readatt(filename,'/data/input/basic','dt');
             [Parray, Jarray, kx, ky, z] = load_grid_data(filename);
-            W_GAMMA   = strcmp(h5readatt(filename,'/data/input/diag_par','write_gamma'),'y');
-            W_HF      = strcmp(h5readatt(filename,'/data/input/diag_par','write_hf'   ),'y');
+            W_GAMMA   = strcmp(h5readatt(filename,'/data/input/diagnostics','write_gamma'),'y');
+            W_HF      = strcmp(h5readatt(filename,'/data/input/diagnostics','write_hf'   ),'y');
             KIN_E     = strcmp(h5readatt(filename,'/data/input/model',     'ADIAB_E' ),'n');
             BETA      = h5readatt(filename,'/data/input/model','beta');
 

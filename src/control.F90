@@ -4,9 +4,11 @@ SUBROUTINE control
   use basic,      ONLY: str,daytim,speak,basic_data,&
                         nlend,step,increase_step,increase_time,increase_cstep,&
                         chrono_runt,chrono_step, chrono_diag, start_chrono, stop_chrono
-  use prec_const, ONLY: xp, stdout
-  USE parallel,   ONLY: ppinit
-  USE mpi
+  use prec_const,  ONLY: xp, stdout
+  USE parallel,    ONLY: ppinit
+  USE initial,     ONLY: initialize
+  USE mpi,         ONLY: MPI_COMM_WORLD
+  USE diagnostics, ONLY: diagnose
   IMPLICIT NONE
   REAL(xp) :: t_init_diag_0, t_init_diag_1
   INTEGER  :: ierr
@@ -41,7 +43,7 @@ SUBROUTINE control
   
   !                   1.5     Initial conditions
   CALL speak( 'Create initial state...')
-  CALL inital
+  CALL initialize
   ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   CALL speak('...initial state created')
   

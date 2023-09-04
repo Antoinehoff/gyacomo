@@ -17,8 +17,8 @@ CONTAINS
 SUBROUTINE closure_readinputs
   USE basic, ONLY: lu_in
   IMPLICIT NONE
-  NAMELIST /CLOSURE_PAR/ hierarchy_closure, dmax, nonlinear_closure, nmax
-  READ(lu_in,closure_par)
+  NAMELIST /CLOSURE/ hierarchy_closure, dmax, nonlinear_closure, nmax
+  READ(lu_in,closure)
 END SUBROUTINE
 
 SUBROUTINE set_closure_model

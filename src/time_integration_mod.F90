@@ -44,10 +44,10 @@ CONTAINS
     USE prec_const
     USE basic, ONLY : lu_in
     IMPLICIT NONE
-    NAMELIST /TIME_INTEGRATION_PAR/ numerical_scheme
-    namelist /TIME_INTEGRATION_PAR/ adaptive_safety, adaptive_error_atol, adaptive_error_rtol
+    NAMELIST /TIME_INTEGRATION/ numerical_scheme
+    namelist /TIME_INTEGRATION/ adaptive_safety, adaptive_error_atol, adaptive_error_rtol
 
-    READ(lu_in,time_integration_par)
+    READ(lu_in,time_integration)
     CALL set_numerical_scheme
   END SUBROUTINE time_integration_readinputs
 

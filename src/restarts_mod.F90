@@ -7,11 +7,14 @@ USE grid, ONLY: local_Na,local_Na_offset,local_np,local_np_offset,&
   local_nz,local_nz_offset,ngp,ngj,ngz, deltap,&
   total_Na,total_Np,total_Nj,total_Nky,total_Nkx,total_Nz,ieven,&
   kyarray_full,kxarray_full,zarray, zarray_full, local_zmin, local_zmax ! for z interp
-USE fields
-USE diagnostics_par
-USE time_integration
-USE prec_const, ONLY : xp,dp,sp
+USE fields,          ONLY: moments, phi, psi
+!USE time_integration
+USE prec_const,      ONLY : xp,dp,sp,PI
+USE MPI,             ONLY: MPI_COMM_WORLD
 IMPLICIT NONE
+
+CHARACTER(len=256), PUBLIC :: rstfile ! restart result file
+INTEGER, PUBLIC            :: fidrst  ! FID for restart file
 
 PUBLIC :: load_moments!, write_restart
 
@@ -39,7 +42,7 @@ CONTAINS
     COMPLEX(xp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: moments_cp
     CALL cpu_time(timer_tot_1)
     ! Checkpoint filename
-    WRITE(rstfile,'(a,a1,i2.2,a3)') TRIM(resfile0),'_',job2load,'.h5'
+    WRITE(rstfile,'(a,i2.2,a3)') 'outputs_',job2load,'.h5'
     CALL speak("Resume from "//rstfile)
     ! Open file
     IF(xp .EQ. dp) THEN

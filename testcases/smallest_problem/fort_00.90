@@ -23,7 +23,7 @@
   eps    = 0.18
   parallel_bc = 'dirichlet'
 /
-&OUTPUT_PAR
+&DIAGNOSTICS
   nsave_0d = 50
   nsave_1d = -1
   nsave_2d = -1
@@ -39,7 +39,7 @@
   write_temp  = .t.
   job2load    = -1
 /
-&MODEL_PAR
+&MODEL
   ! Collisionality
   CLOS    = 0
   NL_CLOS = -1
@@ -65,19 +65,19 @@
   K_Ti    = 4!2.22
   beta    = 0.1
 /
-&COLLISION_PAR
+&COLLISION
   collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
   gyrokin_CO      = .t.
   interspecies    = .true.
   mat_file        = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /
-&INITIAL_CON
+&INITIAL
   INIT_OPT    = 'blob'
   ACT_ON_MODES       = 'donothing'
   init_background  = 1.0
   init_noiselvl = 0.0
   iseed         = 42
 /
-&TIME_INTEGRATION_PAR
+&TIME_INTEGRATION
   numerical_scheme = 'RK4'
 /

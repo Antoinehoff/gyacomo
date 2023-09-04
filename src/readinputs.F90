@@ -2,11 +2,11 @@ SUBROUTINE readinputs
   ! Additional data specific for a new run
 
   USE grid,             ONLY: grid_readinputs
-  USE diagnostics_par,  ONLY: diag_par_readinputs
+  USE diagnostics,      ONLY: diag_readinputs
   USE collision,        ONLY: collision_readinputs
   USE model,            ONLY: model_readinputs
   USE species,          ONLY: species_readinputs
-  USE initial_par,      ONLY: initial_readinputs
+  USE initial,          ONLY: initial_readinputs
   USE time_integration, ONLY: time_integration_readinputs
   USE geometry,         ONLY: geometry_readinputs
   USE closure,          ONLY: closure_readinputs
@@ -25,7 +25,7 @@ SUBROUTINE readinputs
   CALL geometry_readinputs
 
   ! Load diagnostic options from input file
-  CALL diag_par_readinputs
+  CALL diag_readinputs
 
   ! Load model parameters from input file
   CALL model_readinputs

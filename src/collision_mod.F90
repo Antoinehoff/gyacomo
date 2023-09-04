@@ -27,8 +27,8 @@ CONTAINS
     ! Read the input parameters
     USE basic, ONLY: lu_in
     IMPLICIT NONE
-    NAMELIST /COLLISION_PAR/ collision_model, GK_CO, INTERSPECIES, mat_file, collision_kcut
-    READ(lu_in,collision_par)
+    NAMELIST /COLLISION/ collision_model, GK_CO, INTERSPECIES, mat_file, collision_kcut
+    READ(lu_in,collision)
     SELECT CASE(collision_model)
       ! Lenhard bernstein
       CASE   ('LB','lenhard-bernstein','Lenhard-Bernstein')

@@ -28,7 +28,7 @@
   shift_y = 0
   Npol    = 1
 /
-&OUTPUT_PAR
+&DIAGNOSTICS
   dtsave_0d = 1
   dtsave_1d = -1
   dtsave_2d = -1
@@ -43,7 +43,7 @@
   write_dens  = .true.
   write_temp  = .true.
 /
-&MODEL_PAR
+&MODEL
 LINEARITY = 'linear'
 RM_LD_T_EQ= .false.
   Na      = 2
@@ -61,7 +61,7 @@ RM_LD_T_EQ= .false.
   beta    = 0.03
   ADIAB_E = .false.
 /
-&CLOSURE_PAR
+&CLOSURE
   hierarchy_closure='truncation'
   dmax             =-1
   nonlinear_closure='truncation'
@@ -82,19 +82,19 @@ RM_LD_T_EQ= .false.
   K_N_   = 3
   K_T_   = 4.5
 /
-&COLLISION_PAR
+&COLLISION
   collision_model = 'DG'
   GK_CO      = .false.
   INTERSPECIES    = .true.
   mat_file        = '/home/ahoffman/gyacomo/wk/benchmark_and_scan_scripts/oiCa/null'
   collision_kcut  = 1
 /
-&INITIAL_CON
+&INITIAL
   INIT_OPT      = 'phi'
   init_background  = 1e-05
   init_noiselvl = 0
   iseed         = 42
 /
-&TIME_INTEGRATION_PAR
+&TIME_INTEGRATION
   numerical_scheme = 'RK4'
 /

@@ -40,7 +40,7 @@ fprintf(fid,['  Npol    = ', num2str(GEOM.Npol),'\n']);
 fprintf(fid,['  PB_PHASE= ', GEOM.PB_PHASE,'\n']);
 fprintf(fid,'/\n');
 
-fprintf(fid,'&OUTPUT_PAR\n');
+fprintf(fid,'&DIAGNOSTICS\n');
 fprintf(fid,['  dtsave_0d = ', num2str(OUTPUTS.dtsave_0d),'\n']);
 fprintf(fid,['  dtsave_1d = ', num2str(OUTPUTS.dtsave_1d),'\n']);
 fprintf(fid,['  dtsave_2d = ', num2str(OUTPUTS.dtsave_2d),'\n']);
@@ -56,7 +56,7 @@ fprintf(fid,['  write_dens  = ', OUTPUTS.write_dens,'\n']);
 fprintf(fid,['  write_temp  = ', OUTPUTS.write_temp,'\n']);
 fprintf(fid,'/\n');
 
-fprintf(fid,'&MODEL_PAR\n');
+fprintf(fid,'&MODEL\n');
 fprintf(fid,['LINEARITY = ', MODEL.LINEARITY,'\n']);
 fprintf(fid,['RM_LD_T_EQ= ', MODEL.RM_LD_T_EQ,'\n']);
 fprintf(fid,['  Na      = ', num2str(MODEL.Na),'\n']);
@@ -79,7 +79,7 @@ fprintf(fid,['  tau_i   = ', num2str(MODEL.tau_i),'\n']);
 fprintf(fid,['  MHD_PD  = ', MODEL.MHD_PD,'\n']);
 fprintf(fid,'/\n');
 
-fprintf(fid,'&CLOSURE_PAR\n');
+fprintf(fid,'&CLOSURE\n');
 fprintf(fid,['  hierarchy_closure=',CLOSURE.hierarchy_closure,'\n']);
 fprintf(fid,['  dmax             =',num2str(CLOSURE.dmax),'\n']);
 fprintf(fid,['  nonlinear_closure=',CLOSURE.nonlinear_closure,'\n']);
@@ -107,7 +107,7 @@ if(strcmp(MODEL.ADIAB_E,'.false.'))
     fprintf(fid,'/\n'); 
 end
 
-fprintf(fid,'&COLLISION_PAR\n');
+fprintf(fid,'&COLLISION\n');
 fprintf(fid,['  collision_model = ', COLL.collision_model,'\n']);
 fprintf(fid,['  GK_CO      = ', COLL.GK_CO,'\n']);
 fprintf(fid,['  INTERSPECIES    = ', COLL.INTERSPECIES,'\n']);
@@ -116,14 +116,14 @@ fprintf(fid,['  collision_kcut  = ', num2str(COLL.coll_kcut),'\n']);
 fprintf(fid,'/\n');
 
 
-fprintf(fid,'&INITIAL_CON\n');
+fprintf(fid,'&INITIAL\n');
 fprintf(fid,['  INIT_OPT      = ', INITIAL.INIT_OPT,'\n']);
 fprintf(fid,['  init_background  = ', num2str(INITIAL.init_background),'\n']);
 fprintf(fid,['  init_noiselvl = ', num2str(INITIAL.init_noiselvl),'\n']);
 fprintf(fid,['  iseed         = ', num2str(INITIAL.iseed),'\n']);
 fprintf(fid,'/\n');
 
-fprintf(fid,'&TIME_INTEGRATION_PAR\n');
+fprintf(fid,'&TIME_INTEGRATION\n');
 fprintf(fid,['  numerical_scheme = ', TIME_INTEGRATION.numerical_scheme,'\n']);
 fprintf(fid,'/\n');
 

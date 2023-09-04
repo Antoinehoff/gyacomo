@@ -30,7 +30,7 @@
   parallel_bc = 'shearless'
   shift_y= 0.0
 /
-&OUTPUT_PAR
+&DIAGNOSTICS
   dtsave_0d = 1
   dtsave_1d = -1
   dtsave_2d = -1
@@ -46,7 +46,7 @@
   write_fvel  = .t.
   write_temp  = .t.
 /
-&MODEL_PAR
+&MODEL
   LINEARITY = 'nonlinear'
   Na      = 1 ! number of species
   mu_x    = 0.0
@@ -61,7 +61,7 @@
   ADIAB_E = .t.
   tau_e   = 1.0
 /
-&CLOSURE_PAR
+&CLOSURE
   !hierarchy_closure='truncation'
   hierarchy_closure='max_degree'
   dmax = 2
@@ -86,19 +86,19 @@
  k_N_  = 1.6
  k_T_  = 0.4
 /
-&COLLISION_PAR
+&COLLISION
   collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
   GK_CO           = .t.
   INTERSPECIES    = .true.
   mat_file       = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /
-&INITIAL_CON
+&INITIAL
   INIT_OPT         = 'blob' !(phi,blob)
   ACT_ON_MODES     = 'donothing'
   init_background  = 0.0
   init_noiselvl    = 0.005
   iseed            = 42
 /
-&TIME_INTEGRATION_PAR
+&TIME_INTEGRATION
   numerical_scheme = 'RK4'
 /

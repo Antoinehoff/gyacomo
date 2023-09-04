@@ -32,7 +32,7 @@
   Npol    = 1
   PB_PHASE= .false.
 /
-&OUTPUT_PAR
+&DIAGNOSTICS
   dtsave_0d = 1
   dtsave_1d = -1
   dtsave_2d = -1
@@ -47,7 +47,7 @@
   write_dens  = .false.
   write_temp  = .true.
 /
-&MODEL_PAR
+&MODEL
 LINEARITY = 'linear'
 RM_LD_T_EQ= .false.
   Na      = 2
@@ -68,7 +68,7 @@ RM_LD_T_EQ= .false.
   tau_i   = 1
   MHD_PD  = .false.
 /
-&CLOSURE_PAR
+&CLOSURE
   hierarchy_closure='truncation'
   dmax             =-1
   nonlinear_closure='truncation'
@@ -90,19 +90,19 @@ RM_LD_T_EQ= .false.
   K_N_   = 2.22
   K_T_   = 6.96
 /
-&COLLISION_PAR
+&COLLISION
   collision_model = 'DG'
   GK_CO      = .false.
   INTERSPECIES    = .true.
   mat_file        = '/home/ahoffman/gyacomo/wk/paper_2_scripts_and_resuliCa/null'
   collision_kcut  = 1.75
 /
-&INITIAL_CON
+&INITIAL
   INIT_OPT      = 'phi'
   init_background  = 0
   init_noiselvl = 1e-05
   iseed         = 42
 /
-&TIME_INTEGRATION_PAR
+&TIME_INTEGRATION
   numerical_scheme = 'RK4'
 /
