@@ -1,6 +1,6 @@
 MODULE utility
   IMPLICIT NONE
-  PUBLIC :: is_nan, is_inf!. checkfield, checkelem
+  PUBLIC :: is_nan, is_inf, decomp1D!. checkfield, checkelem
 CONTAINS
 
   FUNCTION is_nan(x,str) RESULT(isn)
@@ -42,6 +42,21 @@ CONTAINS
     END IF
 
   END FUNCTION is_inf
+
+  ! Distribute data among processes in a balanced way
+  SUBROUTINE decomp1D( n, numprocs, myid, is, ie )
+    INTEGER, INTENT(IN)  :: n, numprocs, myid
+    INTEGER, INTENT(OUT) :: is, ie
+    INTEGER :: nlocal
+    INTEGER :: deficit
+    nlocal   = n / numprocs
+    is        = myid * nlocal + 1
+    deficit  = MOD(n,numprocs)
+    is        = is + MIN(myid,deficit)
+    IF (myid .LT. deficit) nlocal = nlocal + 1
+    ie = is + nlocal - 1
+    IF ((ie .GT. n) .OR. (myid .EQ. numprocs-1)) ie = n
+  END SUBROUTINE decomp1D
 
   ! FUNCTION checkfield(n1,n2,n3,field,str) RESULT(mlend)
   !   use prec_const, ONLY: xp

@@ -1,6 +1,5 @@
 SUBROUTINE readinputs
   ! Additional data specific for a new run
-
   USE grid,             ONLY: grid_readinputs
   USE diagnostics,      ONLY: diag_readinputs
   USE collision,        ONLY: collision_readinputs

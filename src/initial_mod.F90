@@ -26,23 +26,19 @@ CONTAINS
 
   SUBROUTINE initial_readinputs
     ! Read the input parameters
-
     USE basic, ONLY : lu_in
     USE prec_const
     IMPLICIT NONE
 
     NAMELIST /INITIAL/ INIT_OPT,ACT_ON_MODES,&
-        init_amp,init_background,init_noiselvl,iseed
-
+                       init_amp,init_background,init_noiselvl,iseed
     READ(lu_in,initial)
-
   END SUBROUTINE initial_readinputs
 
   !******************************************************************************!
   !!!!!! initialize the moments and load/build coeff tables
   !******************************************************************************!
   SUBROUTINE initialize
-
     USE basic,            ONLY: speak
     USE time_integration, ONLY: set_updatetlevel
     USE collision,        ONLY: init_collision
@@ -53,9 +49,7 @@ CONTAINS
     USE model,            ONLY: LINEARITY
     USE nonlinear,        ONLY: compute_Sapj, nonlinear_init
     IMPLICIT NONE
-
     CALL set_updatetlevel(1)
-
     !!!!!! Set the moments arrays Nepj, Nipj and phi!!!!!!
     ! through loading a previous state
     IF ( job2load .GE. 0 ) THEN
@@ -129,23 +123,18 @@ CONTAINS
     CALL update_ghosts_moments
     CALL update_ghosts_EM
     !! End of phi and moments initialization
-
     ! Init collision operator
     CALL init_collision
-
     !! Preparing auxiliary arrays at initial state
     ! particle density, fluid velocity and temperature (used in diagnose)
     CALL speak('Computing fluid moments and transport')
     CALL compute_fluid_moments
     CALL compute_radial_transport
     CALL compute_radial_heatflux
-
     ! init auxval for nonlinear
     CALL nonlinear_init
     ! compute nonlinear for t=0 diagnostic
     CALL compute_Sapj ! compute S_0 = S(phi_0,N_0)
-
-
   END SUBROUTINE initialize
   !******************************************************************************!
 
@@ -591,8 +580,8 @@ CONTAINS
             DO ij=1+ngj/2,local_nj+ngj/2
               DO iz=1+ngz/2,local_nz+ngz/2
                 IF((ikx+local_nkx_offset .LE. 186) .AND. (iky+local_nky_offset .LE. 94)) THEN
-                  IF (.TRUE.) THEN
-                  ! IF ( (parray(ip) .EQ. 0) .AND. (jarray(ij) .EQ. 0) ) THEN
+                  !IF (.TRUE.) THEN
+                  IF ( (parray(ip) .EQ. 0) .AND. (jarray(ij) .EQ. 0) ) THEN
                     moments(ia,ip,ij,iky,ikx,iz,:) = scaling*(ricci_mat_real(ikx+local_nkx_offset,iky+local_nky_offset)&
                     - imagu*ricci_mat_imag(ikx+local_nkx_offset,iky+local_nky_offset))
                   ELSE
