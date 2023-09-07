@@ -1,27 +1,25 @@
 MODULE grid
   ! Grid module for spatial discretization
-  USE prec_const
-  USE basic
-  USE parallel, ONLY: my_id, comm_ky
+  USE prec_const, ONLY: xp
+  USE basic,      ONLY: allocate_array, speak
+  USE parallel,   ONLY: my_id, comm_ky
   USE iso_c_binding
   IMPLICIT NONE
   PRIVATE
 
-  !   GRID Input
-  INTEGER,  PUBLIC, PROTECTED :: pmax  = 1      ! The maximal Hermite-moment computed
+  !   GRID parameters
+  INTEGER,  PUBLIC, PROTECTED :: pmax  = 2      ! The maximal Hermite-moment computed
   INTEGER,  PUBLIC, PROTECTED :: jmax  = 1      ! The maximal Laguerre-moment computed
-  INTEGER,  PUBLIC, PROTECTED :: maxj  = 1      ! The maximal Laguerre-moment
-  INTEGER,  PUBLIC, PROTECTED :: dmax  = 1      ! The maximal full GF set of i-moments v^dmax
-  INTEGER,  PUBLIC, PROTECTED :: Nx    = 4      ! Number of total internal grid points in x
+  INTEGER,  PUBLIC, PROTECTED :: dmax  = 2      ! The maximal full GF set of i-moments v^dmax
+  INTEGER,  PUBLIC, PROTECTED :: Nx    = 64     ! Number of total internal grid points in x
   REAL(xp), PUBLIC, PROTECTED :: Lx    = 120_xp ! horizontal length of the spatial box
   INTEGER,  PUBLIC, PROTECTED :: Nexc  = 1      ! factor to increase Lx when shear>0 (Lx = Nexc/kymin/shear)
-  INTEGER,  PUBLIC, PROTECTED :: Ny    = 4      ! Number of total internal grid points in y
+  INTEGER,  PUBLIC, PROTECTED :: Ny    = 64     ! Number of total internal grid points in y
   REAL(xp), PUBLIC, PROTECTED :: Ly    = 120_xp ! vertical length of the spatial box
-  INTEGER,  PUBLIC, PROTECTED :: Nz    = 4      ! Number of total perpendicular planes
-  INTEGER,  PUBLIC, PROTECTED :: Odz   = 4      ! order of z interp and derivative schemes
+  INTEGER,  PUBLIC, PROTECTED :: Nz    = 1      ! Number of total perpendicular planes
+  !   Modes number (determined from Nx and Ny)
   INTEGER,  PUBLIC, PROTECTED :: Nkx            ! Number of total internal grid points in kx
   INTEGER,  PUBLIC, PROTECTED :: Nky            ! Number of total internal grid points in ky
-  REAL(xp), PUBLIC, PROTECTED :: kpar  = 0_xp   ! parallel wave vector component
   ! Grid arrays
   INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: parray,  parray_full
   INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: jarray,  jarray_full
@@ -108,13 +106,17 @@ MODULE grid
   ! 1D Antialiasing arrays (2/3 rule)
   REAL(xp), DIMENSION(:), ALLOCATABLE, PUBLIC,PROTECTED :: AA_x
   REAL(xp), DIMENSION(:), ALLOCATABLE, PUBLIC,PROTECTED :: AA_y
+  ! 2D fft routines or 1D methods (for ExBshear simulations, 1D is required)
+  ! The 2D fft is using fftw mpi optimization
+  ! The 1D is not using mpi and does a data transfer with redundant computations
+  !   (each process computes the convolution)
+  LOGICAL, PUBLIC, PROTECTED :: FFT2D = .TRUE.
 
   ! Public Functions
-  PUBLIC :: init_1Dgrid_distr, init_grids_data
-  PUBLIC :: set_grids, set_kxgrid, set_kparray
+  PUBLIC :: init_grids_data, set_grids, update_grids
+  PUBLIC :: set_kxgrid, set_kparray ! Can be called from geometry to include shear effects
   PUBLIC :: grid_readinputs, grid_outputinputs
   PUBLIC :: bar
-  PUBLIC :: update_grids ! Update the kx and kperp grids for ExB shear flow
 
   ! Precomputations
   real(xp), PUBLIC, PROTECTED    :: pmax_xp, jmax_xp
@@ -126,7 +128,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER :: lun   = 90              ! File duplicated from STDIN
-    NAMELIST /GRID/ pmax, jmax, Nx, Lx, Ny, Ly, Nz, SG, Nexc
+    NAMELIST /GRID/ pmax, jmax, Nx, Lx, Ny, Ly, Nz, SG, Nexc, FFT2D
     READ(lun,grid)
     IF(Nz .EQ. 1) & ! overwrite SG option if Nz = 1 for safety of use
       SG      = .FALSE.
@@ -141,7 +143,8 @@ CONTAINS
   !! Init the local and global number of points in all directions
   SUBROUTINE init_grids_data(Na,EM,LINEARITY) 
     USE fourier,  ONLY: init_grid_distr_and_plans
-    USE parallel, ONLY: num_procs_p, rank_p, num_procs_z, rank_z
+    USE parallel, ONLY: num_procs_p, rank_p, num_procs_ky, rank_ky, num_procs_z, rank_z
+    USE utility,  ONLY: decomp1D
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: Na        ! number of species coming from the model module
     LOGICAL, INTENT(IN) :: EM        ! electromagnetic effects (to skip odd Hermite or not)
@@ -193,10 +196,13 @@ CONTAINS
     !! Parallel distribution of kx ky grid
     IF (LINEARITY .NE. 'linear') THEN ! we let FFTW distribute if we use it
       IF (my_id .EQ. 0) write(*,*) 'FFTW3 y-grid distribution'
-      CALL init_grid_distr_and_plans(Nx,Ny,comm_ky,local_nkx_ptr,local_nkx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
+      CALL init_grid_distr_and_plans(FFT2D,Nx,Ny,comm_ky,local_nkx_ptr,local_nkx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
     ELSE ! otherwise we distribute equally
       IF (my_id .EQ. 0) write(*,*) 'Manual y-grid distribution'
-      CALL init_1Dgrid_distr
+      ! balanced distribution among the processes
+      CALL  decomp1D( Ny/2+1, num_procs_ky, rank_ky, ikys, ikye )
+      local_nky_ptr        = ikye - ikys + 1
+      local_nky_ptr_offset = ikys - 1
     ENDIF
     !!----------------- BINORMAL KY INDICES (parallelized)
     Nky       = Ny/2+1 ! Defined only on positive kx since fields are real
@@ -290,15 +296,6 @@ CONTAINS
     CALL set_kxgrid(shear,Npol,1._xp,LINEARITY,N_HD) ! this will be redone after geometry if Cyq0_x0 .NE. 1
     CALL set_zgrid (Npol)
   END SUBROUTINE set_grids
-
-  SUBROUTINE init_1Dgrid_distr
-    USE parallel, ONLY: num_procs_ky, rank_ky
-    ! write(*,*) Nx
-    local_nky_ptr        = (Ny/2+1)/num_procs_ky
-    ! write(*,*) local_nkx_ptr
-    local_nky_ptr_offset = rank_ky*local_nky_ptr
-    if (rank_ky .EQ. num_procs_ky-1) local_nky_ptr = (Ny/2+1)-local_nky_ptr_offset
-  END SUBROUTINE init_1Dgrid_distr
 
   SUBROUTINE set_agrid(Na) ! you're a sorcerer harry
     IMPLICIT NONE
@@ -689,19 +686,5 @@ CONTAINS
     INTEGER :: bar, p_, j_
     bar = (jmax+1)*p_ + j_ + 1
   END FUNCTION
-
-  SUBROUTINE decomp1D( n, numprocs, myid, is, ie )
-      INTEGER :: n, numprocs, myid, is, ie
-      INTEGER :: nlocal
-      INTEGER :: deficit
-
-      nlocal   = n / numprocs
-      is        = myid * nlocal + 1
-      deficit  = MOD(n,numprocs)
-      is        = is + MIN(myid,deficit)
-      IF (myid .LT. deficit) nlocal = nlocal + 1
-      ie = is + nlocal - 1
-      IF ((ie .GT. n) .OR. (myid .EQ. numprocs-1)) ie = n
-  END SUBROUTINE decomp1D
 
 END MODULE grid
