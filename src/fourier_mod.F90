@@ -270,7 +270,8 @@ END SUBROUTINE fft1D_plans
         IMPLICIT NONE
         INTEGER(C_INTPTR_T),                  INTENT(IN)    :: local_nkx_ptr,local_nky_ptr
         REAL(xp),                             INTENT(IN)    :: inv_Nx, inv_Ny
-        REAL(xp), DIMENSION(local_nky_ptr),   INTENT(IN)    :: ky_, AA_y, AA_x
+        REAL(xp), DIMENSION(local_nky_ptr),   INTENT(IN)    :: ky_, AA_y
+        REAL(xp), DIMENSION(local_nkx_ptr),   INTENT(IN)    :: AA_x
         REAL(xp), DIMENSION(local_nky_ptr,local_nkx_ptr), INTENT(IN) :: kx_
         COMPLEX(c_xp_c), DIMENSION(local_nky_ptr,local_nkx_ptr), &
                                             INTENT(IN)      :: F_, G_
