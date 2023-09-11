@@ -2,15 +2,17 @@ MODULE ExB_shear_flow
     ! This module contains the necessary tools to implement ExB shearing flow effects.
     ! The algorithm is taken from the presentation of Hammett et al. 2006 (APS) and
     ! it the one used in GS2.
-    USE prec_const, ONLY: xp
+    USE prec_const, ONLY: xp, imagu
 
     IMPLICIT NONE
     ! Variables
-    REAL(xp), PUBLIC, PROTECTED :: gamma_E = 0._xp ! ExB background shearing rate \gamma_E
-    REAL(xp), DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: sky_ExB      ! shift of the kx modes, kx* = kx + s(ky)
-    INTEGER,  DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: jump_ExB     ! jump to do to shift the kx grids
-    LOGICAL,  DIMENSION(:), ALLOCATABLE, PUBLIC, PROTECTED :: shiftnow_ExB ! Indicates if there is a line to shift
-
+    REAL(xp),   PUBLIC, PROTECTED :: gamma_E = 0._xp     ! ExB background shearing rate \gamma_E
+    REAL(xp),   PUBLIC, PROTECTED :: t0, inv_t0 = 0._xp  ! charact. shear time
+    REAL(xp),   DIMENSION(:),   ALLOCATABLE, PUBLIC, PROTECTED :: sky_ExB      ! shift of the kx modes, kx* = kx + s(ky)
+    INTEGER,    DIMENSION(:),   ALLOCATABLE, PUBLIC, PROTECTED :: jump_ExB     ! jump to do to shift the kx grids
+    LOGICAL,    DIMENSION(:),   ALLOCATABLE, PUBLIC, PROTECTED :: shiftnow_ExB ! Indicates if there is a line to shift
+    COMPLEX(xp),DIMENSION(:,:), ALLOCATABLE, PUBLIC, PROTECTED :: ExB_NL_factor! factor for nonlinear term
+    COMPLEX(xp),DIMENSION(:,:), ALLOCATABLE, PUBLIC, PROTECTED :: inv_ExB_NL_factor
     ! Routines
     PUBLIC :: Setup_ExB_shear_flow, Apply_ExB_shear_flow, Update_ExB_shear_flow
 
@@ -18,7 +20,8 @@ CONTAINS
 
     ! Setup the variables for the ExB shear
     SUBROUTINE Setup_ExB_shear_flow
-        USE grid,       ONLY : local_nky
+        USE grid,  ONLY : total_nkx, local_nky, deltakx, deltaky
+        USE model, ONLY : ExBrate  
         IMPLICIT NONE
 
         ! Setup the ExB shift
@@ -30,6 +33,20 @@ CONTAINS
         jump_ExB     = 0
         ALLOCATE(shiftnow_ExB(local_nky))
         shiftnow_ExB = .FALSE.
+
+        ! Setup nonlinear factor
+        ALLOCATE(    ExB_NL_factor(total_nkx,local_nky))
+        ALLOCATE(inv_ExB_NL_factor(total_nkx,local_nky))
+            ExB_NL_factor = 1._xp
+        inv_ExB_NL_factor = 1._xp
+        IF(ExBrate .NE. 0) THEN
+            t0     = deltakx/deltaky/ExBrate
+            inv_t0 = 1._xp/t0
+        ELSE ! avoid 1/0 division (t0 is killed anyway in this case)
+            t0     = 0._xp
+            inv_t0 = 0._xp
+        ENDIF
+
     END SUBROUTINE Setup_ExB_shear_flow
 
     ! Update according to the current ExB shear value
@@ -109,12 +126,14 @@ CONTAINS
 
     ! update the ExB shear value for the next time step
     SUBROUTINE Update_ExB_shear_flow
-        USE basic,      ONLY: dt, chrono_ExBs, start_chrono, stop_chrono
-        USE grid,       ONLY: local_nky, kyarray, inv_dkx
+        USE basic,      ONLY: dt, time, chrono_ExBs, start_chrono, stop_chrono
+        USE grid,       ONLY: local_nky, kyarray, inv_dkx, xarray,&
+                              local_nkx, ikyarray, inv_ikyarray, deltakx, deltaky, deltax
         USE model,      ONLY: ExBrate
         IMPLICIT NONE
         ! local var
-        INTEGER :: iky
+        INTEGER :: iky, ix
+        REAL(xp):: dtExBshear
         CALL start_chrono(chrono_ExBs)
         ! update the ExB shift, jumps and flags
         shiftnow_ExB = .FALSE.
@@ -125,6 +144,12 @@ CONTAINS
             ! in shiftnow_ExB and will use it in Shift_fields to avoid
             ! zero-shiftings that may be majoritary.
             shiftnow_ExB(iky) = (abs(jump_ExB(iky)) .GT. 0)
+            ! Update the ExB nonlinear factor
+            dtExBshear = time - t0*inv_ikyarray(iky)*ANINT(ikyarray(iky)*time*inv_t0,xp)
+            DO ix = 1,local_nkx
+                ExB_NL_factor(ix,iky) = EXP(-imagu*xarray(ix)*ExBrate*ikyarray(iky)*dtExBshear)
+            inv_ExB_NL_factor(ix,iky) = 1._xp/ExB_NL_factor(ix,iky)
+            ENDDO
         ENDDO
         CALL stop_chrono(chrono_ExBs)
     END SUBROUTINE Update_ExB_shear_flow

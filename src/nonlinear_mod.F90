@@ -1,18 +1,20 @@
 MODULE nonlinear
   USE array,       ONLY : dnjs, Sapj, kernel
-  USE fourier,     ONLY : bracket_sum_r, bracket_sum_c, planf, planb, poisson_bracket_and_sum
+  USE fourier,     ONLY : bracket_sum_r, bracket_sum_c, planf, planb, poisson_bracket_and_sum,&
+                          apply_inv_ExB_NL_factor
   USE fields,      ONLY : phi, psi, moments
-  USE grid,        ONLY: local_na, &
+  USE grid,        ONLY : local_na, &
                          local_np,ngp,parray,pmax,&
                          local_nj,ngj,jarray,jmax, local_nj_offset, dmax,&
                          kyarray, AA_y, local_nky_ptr, local_nky_ptr_offset,inv_Ny,&
                          local_nkx_ptr,kxarray, AA_x, inv_Nx,&
                          local_nz,ngz,zarray,nzgrid, deltakx, iky0, contains_kx0, contains_ky0
-  USE model,       ONLY : LINEARITY, EM, ikxZF, ZFamp
+  USE model,       ONLY : LINEARITY, EM, ikxZF, ZFamp, ExB
   USE closure,     ONLY : evolve_mom, nmaxarray
   USE prec_const,  ONLY : xp
   USE species,     ONLY : sqrt_tau_o_sigma
   USE time_integration, ONLY : updatetlevel
+  USE ExB_shear_flow,   ONLY : ExB_NL_factor, inv_ExB_NL_factor
   use, intrinsic :: iso_c_binding
 
   IMPLICIT NONE
@@ -20,8 +22,6 @@ MODULE nonlinear
   INCLUDE 'fftw3-mpi.f03'
 
   COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: F_cmpx, G_cmpx
-  COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: Fx_cmpx, Gy_cmpx
-  COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: Fy_cmpx, Gx_cmpx, F_conv_G
   INTEGER :: in, is, p_int, j_int, n_int
   INTEGER :: smax
   REAL(xp):: sqrt_p, sqrt_pp1
@@ -33,13 +33,6 @@ SUBROUTINE nonlinear_init
   IMPLICIT NONE
   ALLOCATE( F_cmpx(local_nky_ptr,local_nkx_ptr))
   ALLOCATE( G_cmpx(local_nky_ptr,local_nkx_ptr))
-
-  ALLOCATE(Fx_cmpx(local_nky_ptr,local_nkx_ptr))
-  ALLOCATE(Gy_cmpx(local_nky_ptr,local_nkx_ptr))
-  ALLOCATE(Fy_cmpx(local_nky_ptr,local_nkx_ptr))
-  ALLOCATE(Gx_cmpx(local_nky_ptr,local_nkx_ptr))
-
-  ALLOCATE(F_conv_G(local_nky_ptr,local_nkx_ptr))
 END SUBROUTINE nonlinear_init
 
 SUBROUTINE compute_Sapj
@@ -105,7 +98,9 @@ SUBROUTINE compute_nonlinear
                   dnjs(in,ij,is) * moments(ia,ipi,isi,:,:,izi,updatetlevel)
               ENDDO s1
               ! this function adds its result to bracket_sum_r
-                CALL poisson_bracket_and_sum(kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,local_nky_ptr,local_nkx_ptr,F_cmpx,G_cmpx,bracket_sum_r)
+                CALL poisson_bracket_and_sum( kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,&
+                                              local_nky_ptr,local_nkx_ptr,F_cmpx,G_cmpx,&
+                                              ExB, ExB_NL_factor, bracket_sum_r)
   !-----------!! ELECTROMAGNETIC CONTRIBUTION -sqrt(tau)/sigma*{Sum_s dnjs [sqrt(p+1)Nap+1s + sqrt(p)Nap-1s], Kernel psi}
               IF(EM) THEN
                 ! First convolution terms
@@ -119,9 +114,15 @@ SUBROUTINE compute_nonlinear
                                     +sqrt_p  *moments(ia,ipi-1,isi,:,:,izi,updatetlevel))
                 ENDDO s2
                 ! this function adds its result to bracket_sum_r
-                CALL poisson_bracket_and_sum(kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,local_nky_ptr,local_nkx_ptr,F_cmpx,G_cmpx,bracket_sum_r)
+                CALL poisson_bracket_and_sum( kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,&
+                                              local_nky_ptr,local_nkx_ptr,F_cmpx,G_cmpx,&
+                                              ExB, ExB_NL_factor,bracket_sum_r)
               ENDIF
             ENDDO n
+            ! Apply the ExB shearing rate factor before going back to k-space
+            IF (ExB) THEN
+              CALL apply_inv_ExB_NL_factor(bracket_sum_r,inv_ExB_NL_factor)
+            ENDIF
             ! Put the real nonlinear product back into k-space
 #ifdef SINGLE_PRECISION
             call fftwf_mpi_execute_dft_r2c(planf, bracket_sum_r, bracket_sum_c)

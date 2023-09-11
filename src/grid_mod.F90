@@ -25,7 +25,9 @@ MODULE grid
   INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: jarray,  jarray_full
   REAL(xp), DIMENSION(:,:), ALLOCATABLE, PUBLIC,PROTECTED :: kxarray ! ExB shear makes it ky dependant
   REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: kxarray_full
+  REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: xarray
   REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: kyarray, kyarray_full
+  REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: ikyarray, inv_ikyarray !mode indices arrays
   REAL(xp), DIMENSION(:,:), ALLOCATABLE, PUBLIC,PROTECTED :: zarray
   REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: zarray_full
   REAL(xp), DIMENSION(:,:,:,:), ALLOCATABLE, PUBLIC,PROTECTED :: kparray !kperp
@@ -72,7 +74,7 @@ MODULE grid
   integer(C_INTPTR_T), PUBLIC,PROTECTED :: local_nkx_ptr_offset, local_nky_ptr_offset
   ! Grid spacing and limits
   REAL(xp), PUBLIC, PROTECTED ::  deltap, deltaz, inv_deltaz, inv_dkx
-  REAL(xp), PUBLIC, PROTECTED ::  deltakx, deltaky, kx_max, ky_max, kx_min, ky_min!, kp_max
+  REAL(xp), PUBLIC, PROTECTED ::  deltakx, deltaky, deltax, kx_max, ky_max, kx_min, ky_min!, kp_max
   INTEGER , PUBLIC, PROTECTED ::  local_pmin,  local_pmax
   INTEGER , PUBLIC, PROTECTED ::  local_jmin,  local_jmax
   REAL(xp), PUBLIC, PROTECTED ::  local_kymin, local_kymax
@@ -214,6 +216,8 @@ CONTAINS
     local_nky_offset = local_nky_ptr_offset
     ALLOCATE(kyarray_full(Nky))
     ALLOCATE(kyarray(local_nky))
+    ALLOCATE(ikyarray(local_nky))
+    ALLOCATE(inv_ikyarray(local_nky))
     ALLOCATE(AA_y(local_nky))
     !!---------------- RADIAL KX INDICES (not parallelized)
     Nkx       = Nx
@@ -223,8 +227,9 @@ CONTAINS
     local_nkx_ptr = ikxe - ikxs + 1
     local_nkx     = ikxe - ikxs + 1
     local_nkx_offset = ikxs - 1
-    ALLOCATE(kxarray(local_nky,local_Nkx))
     ALLOCATE(kxarray_full(total_nkx))
+    ALLOCATE(kxarray(local_nky,local_Nkx))
+    ALLOCATE(xarray(total_nkx))
     ALLOCATE(AA_x(local_nkx))
     !!---------------- PARALLEL Z GRID (parallelized)
     total_nz = Nz
@@ -432,10 +437,17 @@ CONTAINS
       ! indexation (|1 2 3||1 2 3|... local_nky|)
       IF(Ny .EQ. 1) THEN
         kyarray(iky)      = deltaky
+        kyarray(iky)      = iky-1        
         kyarray_full(iky) = deltaky
         SINGLE_KY         = .TRUE.
       ELSE
-        kyarray(iky) = kyarray_full(iky+local_nky_offset)
+        kyarray(iky)      = kyarray_full(iky+local_nky_offset)
+        ikyarray(iky)     = REAL((iky+local_nky_offset)-1,xp)
+        IF(ikyarray(iky) .GT. 0) THEN
+          inv_ikyarray(iky) = 1._xp/ikyarray(iky)
+        ELSE
+          inv_ikyarray(iky) = 0._xp
+        ENDIF
       ENDIF
       ! Finding kx=0
       IF (kyarray(iky) .EQ. 0) THEN
@@ -490,12 +502,14 @@ CONTAINS
       Lx = Lx_adapted*Nexc
     ENDIF
     deltakx = 2._xp*PI/Lx
-    inv_dkx = 1._xp/deltakx   
+    inv_dkx = 1._xp/deltakx 
+    deltax  = Lx/REAL(Nx,xp) ! periodic donc pas Lx/(Nx-1)  
     IF(MODULO(total_nkx,2) .EQ. 0) THEN ! Even number of kx (-2 -1 0 1 2 3)
       ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
       DO ikx = 1,total_nkx
         kxarray_full(ikx) = deltakx*REAL(MODULO(ikx-1,total_nkx/2)-(total_nkx/2)*FLOOR(2.*real(ikx-1)/real(total_nkx)),xp)
         IF (ikx .EQ. total_nkx/2+1) kxarray_full(ikx) = -kxarray_full(ikx)
+        xarray(ikx) = REAL(ikx-1,xp)*deltax
       END DO
       kx_max = MAXVAL(kxarray_full)!(total_nkx/2)*deltakx
       kx_min = MINVAL(kxarray_full)!-kx_max+deltakx

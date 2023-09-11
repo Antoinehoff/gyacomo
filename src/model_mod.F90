@@ -31,6 +31,7 @@ MODULE model
   ! Auxiliary variable
   LOGICAL,  PUBLIC, PROTECTED ::      EM =  .true.    ! Electromagnetic effects flag
   LOGICAL,  PUBLIC, PROTECTED ::  MHD_PD =  .true.    ! MHD pressure drift
+  LOGICAL,  PUBLIC, PROTECTED ::     ExB =  .false.   ! presence of ExB background shearing rate
   ! Removes Landau damping in temperature and higher equation (Ivanov 2022)
   LOGICAL,  PUBLIC, PROTECTED :: RM_LD_T_EQ = .false.
   ! Flag to force the reality condition symmetry for the kx at ky=0
@@ -76,6 +77,10 @@ CONTAINS
       EM = .TRUE.
     ELSE
       EM = .FALSE.
+    ENDIF
+
+    IF(ExBrate .GT. 0) THEN
+      ExB = .TRUE.
     ENDIF
 
   END SUBROUTINE model_readinputs
