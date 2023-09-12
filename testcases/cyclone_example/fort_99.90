@@ -8,9 +8,9 @@
 &GRID
   pmax   = 2
   jmax   = 1
-  Nx     = 64
+  Nx     = 8
   Lx     = 120
-  Ny     = 48
+  Ny     = 6
   Ly     = 120
   Nz     = 16
   SG     = .f.
@@ -60,7 +60,6 @@
   nu      = 0.05
   beta    = 0.0
   ADIAB_E = .t.
-  tau_e   = 1.0
 /
 &CLOSURE
   hierarchy_closure='truncation'
