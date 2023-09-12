@@ -20,7 +20,7 @@ CONTAINS
 
     ! Setup the variables for the ExB shear
     SUBROUTINE Setup_ExB_shear_flow
-        USE grid,  ONLY : total_nkx, local_nky, deltakx, deltaky
+        USE grid,  ONLY : Nx, local_nky, local_nx, Ny, deltakx, deltaky
         USE model, ONLY : ExBrate  
         IMPLICIT NONE
 
@@ -35,8 +35,8 @@ CONTAINS
         shiftnow_ExB = .FALSE.
 
         ! Setup nonlinear factor
-        ALLOCATE(    ExB_NL_factor(total_nkx,local_nky))
-        ALLOCATE(inv_ExB_NL_factor(total_nkx,local_nky))
+        ALLOCATE(    ExB_NL_factor(Nx,local_nky))
+        ALLOCATE(inv_ExB_NL_factor(Ny/2+1,local_nx))
             ExB_NL_factor = 1._xp
         inv_ExB_NL_factor = 1._xp
         IF(ExBrate .NE. 0) THEN
@@ -127,13 +127,14 @@ CONTAINS
     ! update the ExB shear value for the next time step
     SUBROUTINE Update_ExB_shear_flow
         USE basic,      ONLY: dt, time, chrono_ExBs, start_chrono, stop_chrono
-        USE grid,       ONLY: local_nky, kyarray, inv_dkx, xarray,&
-                              local_nkx, ikyarray, inv_ikyarray, deltakx, deltaky, deltax
+        USE grid,       ONLY: local_nky, local_nky_offset, kyarray, kyarray_full, inv_dkx, xarray, Nx, Ny, &
+                              local_nx,  local_nx_offset, deltax, &
+                              ikyarray, inv_ikyarray, deltakx, deltaky
         USE model,      ONLY: ExBrate
         IMPLICIT NONE
         ! local var
         INTEGER :: iky, ix
-        REAL(xp):: dtExBshear
+        REAL(xp):: dtExBshear, ky, kx, J_dp, inv_J, x
         CALL start_chrono(chrono_ExBs)
         ! update the ExB shift, jumps and flags
         shiftnow_ExB = .FALSE.
@@ -144,11 +145,35 @@ CONTAINS
             ! in shiftnow_ExB and will use it in Shift_fields to avoid
             ! zero-shiftings that may be majoritary.
             shiftnow_ExB(iky) = (abs(jump_ExB(iky)) .GT. 0)
-            ! Update the ExB nonlinear factor
-            dtExBshear = time - t0*inv_ikyarray(iky)*ANINT(ikyarray(iky)*time*inv_t0,xp)
-            DO ix = 1,local_nkx
-                ExB_NL_factor(ix,iky) = EXP(-imagu*xarray(ix)*ExBrate*ikyarray(iky)*dtExBshear)
-            inv_ExB_NL_factor(ix,iky) = 1._xp/ExB_NL_factor(ix,iky)
+        ENDDO
+
+        ! Update the ExB nonlinear factor...
+        DO iky = 1,local_Nky
+            ! for readability
+            ky    = kyarray_full(iky+local_nky_offset)
+            J_dp  = ikyarray(iky+local_nky_offset)
+            inv_J = inv_ikyarray(iky+local_nky_offset)
+            ! compute dt factor
+            dtExBshear = time - t0*inv_J*ANINT(J_dp*time*inv_t0,xp)
+            DO ix = 1,Nx
+                x = xarray(ix)
+                 ! assemble the ExB nonlin factor
+                ExB_NL_factor(ix,iky) = EXP(-imagu*x*ExBrate*ky*dtExBshear)
+            ENDDO
+        ENDDO
+         ! ... and the inverse
+        DO iky = 1,Ny/2+1
+            ! for readability
+            ky    = kyarray_full(iky)
+            J_dp  = ikyarray(iky)
+            inv_J = inv_ikyarray(iky)
+            ! compute dt factor
+            dtExBshear = time - t0*inv_J*ANINT(J_dp*time*inv_t0,xp)
+            ky = REAL(iky-1,xp)*deltaky
+            DO ix = 1,local_nx
+                x = xarray(ix+local_nx_offset)
+                ! assemble the inverse ExB nonlin factor
+                inv_ExB_NL_factor(iky,ix) = EXP(imagu*x*ExBrate*ky*dtExBshear)
             ENDDO
         ENDDO
         CALL stop_chrono(chrono_ExBs)
