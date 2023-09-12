@@ -26,7 +26,7 @@ MODULE fourier
     type(C_PTR) ,        PUBLIC :: planf, planb
     integer(C_INTPTR_T)         :: i, ix, iy
     integer(C_INTPTR_T), PUBLIC :: alloc_local_1, alloc_local_2
-    integer(C_INTPTR_T)         :: NX_, NY_, NY_halved, local_nky_ 
+    integer(C_INTPTR_T)         :: NX_, NY_, NY_halved, local_nky_, local_nx_ 
     real   (c_xp_r), pointer, PUBLIC :: real_data_f(:,:), real_data_g(:,:), bracket_sum_r(:,:)
     complex(c_xp_c), pointer, PUBLIC :: cmpx_data_f(:,:), cmpx_data_g(:,:), bracket_sum_c(:,:)
     REAL(xp),                 PUBLIC :: inv_Nx_, inv_Ny_
@@ -37,40 +37,43 @@ MODULE fourier
     type(C_PTR), PUBLIC :: plan_x2kx_c2c ! transform from ( x,ky) to (kx,ky) (complex to complex)
     COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: f_kxky_l ! working arrays
     COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: f_xky_l  ! temp. 1D ifft algo stage (local mpi)
-    REAL(xp),    DIMENSION(:,:), ALLOCATABLE :: bracket_sum_xy_g   ! poisson bracket sum in real space
-    COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: bracket_sum_xky_g  ! final poisson bracket in complex space
+    REAL(xp),    DIMENSION(:,:), ALLOCATABLE :: bracket_sum_yx_g   ! poisson bracket sum in real space
+    COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: bracket_sum_kyx_g  ! final poisson bracket in complex space
 
     CONTAINS
     !******************************************************************************!
     !------------- Initialize the grid distribution and plans -------------
     ! If we use the 2D fftw routines, the fftw library decides the best data distribution
     SUBROUTINE init_grid_distr_and_plans(FFT2D,Nx,Ny,communicator,&
-                    local_nkx_ptr,local_nkx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
+            local_nx_ptr,local_nx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
         USE basic, ONLY: speak
         IMPLICIT NONE
         LOGICAL, INTENT(IN)  :: FFT2D
         INTEGER, INTENT(IN)  :: Nx,Ny, communicator
-        INTEGER(C_INTPTR_T), INTENT(OUT) :: local_nkx_ptr,local_nkx_ptr_offset
+        INTEGER(C_INTPTR_T), INTENT(OUT) :: local_nx_ptr,local_nx_ptr_offset
         INTEGER(C_INTPTR_T), INTENT(OUT) :: local_nky_ptr,local_nky_ptr_offset
         NX_        = Nx; NY_ = Ny
-        inv_Nx_    = 1._xp/NX_
-        inv_Ny_    = 1._xp/NY_        
+        inv_Nx_    = 1._xp/REAL(NX_,xp)
         NY_halved  = NY_/2 + 1
+        inv_Ny_    = 1._xp/REAL(2*NY_halved,xp)     
         ! Call FFTW 2D mpi routines to distribute the data and init 2D MPI FFTW plans
         CALL fft2D_distr_and_plans(Nx,Ny,communicator,&
-                local_nkx_ptr,local_nkx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
+                local_nx_ptr,local_nx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
+        local_nx_  = local_nx_ptr  ! store number of local x  in the module
         local_nky_ = local_nky_ptr ! store number of local ky in the module
-        ! Init 1D MPI FFTW plans for ExB rate correction factor
+                ! Init 1D MPI FFTW plans for ExB rate correction factor
         CALL fft1D_plans
         ! store data distr. in the module for the poisson_bracket function
     END SUBROUTINE init_grid_distr_and_plans
 
     !------------- 2D fft initialization and mpi distribution
     SUBROUTINE fft2D_distr_and_plans(Nx,Ny,communicator,&
-                local_nkx_ptr,local_nkx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
+                local_nx_ptr,local_nx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
         IMPLICIT NONE
         INTEGER, INTENT(IN)  :: Nx,Ny, communicator
-        INTEGER(C_INTPTR_T), INTENT(OUT) :: local_nkx_ptr,local_nkx_ptr_offset
+        ! Distribution in the real space along x
+        INTEGER(C_INTPTR_T), INTENT(OUT) :: local_nx_ptr, local_nx_ptr_offset
+        ! Distribution in the fourier space along ky
         INTEGER(C_INTPTR_T), INTENT(OUT) :: local_nky_ptr,local_nky_ptr_offset
         !! Complex arrays F, G
         ! Compute the room to allocate
@@ -98,7 +101,7 @@ MODULE fourier
         !! Real arrays iFFT(F), iFFT(G)
         ! Compute the room to allocate
         alloc_local_2 = fftw_mpi_local_size_2d(NX_,NY_halved,communicator,&
-                local_nkx_ptr, local_nkx_ptr_offset)
+                local_nx_ptr, local_nx_ptr_offset)
         ! Initalize pointers to this room
 #ifdef SINGLE_PRECISION
         cdatar_f = fftwf_alloc_real(2*alloc_local_2)
@@ -110,9 +113,9 @@ MODULE fourier
         cdatar_c = fftw_alloc_real(2*alloc_local_2)
 #endif
         ! Initalize the arrays with the rooms pointed
-        call c_f_pointer(cdatar_f,   real_data_f, [2*(NY_/2 + 1),local_nkx_ptr])
-        call c_f_pointer(cdatar_g,   real_data_g, [2*(NY_/2 + 1),local_nkx_ptr])
-        call c_f_pointer(cdatar_c, bracket_sum_r, [2*(NY_/2 + 1),local_nkx_ptr])
+        call c_f_pointer(cdatar_f,   real_data_f, [2*(NY_/2 + 1),local_nx_ptr])
+        call c_f_pointer(cdatar_g,   real_data_g, [2*(NY_/2 + 1),local_nx_ptr])
+        call c_f_pointer(cdatar_c, bracket_sum_r, [2*(NY_/2 + 1),local_nx_ptr])
         ! Plan Creation (out-of-place forward and backward FFT)
 #ifdef SINGLE_PRECISION
         planf = fftwf_mpi_plan_dft_r2c_2D(NX_,NY_,real_data_f,cmpx_data_f,communicator, &
@@ -126,7 +129,7 @@ MODULE fourier
                                             ior(FFTW_MEASURE, FFTW_MPI_TRANSPOSED_IN))
 #endif
         if ((.not. c_associated(planf)) .OR. (.not. c_associated(planb))) then
-            ERROR STOP '>> ERROR << plan creation error!!'
+            ERROR STOP '>> ERROR << 2D MPI plan creation error!!'
         end if
     END SUBROUTINE fft2D_distr_and_plans
     !******************************************************************************!
@@ -202,61 +205,66 @@ MODULE fourier
 #endif
 
         !----------- 2: FFTy and inv through global ky data
-        ! 2.1 (x,y) -> (x,ky), R -> C, transforms (bplan_y in GENE)
+        ! 2.1 (y,x) -> (ky,x), R -> C, transforms (bplan_y in GENE)
         ! in:
-        ALLOCATE(bracket_sum_xy_g(NX_,NY_))
+        ALLOCATE(bracket_sum_yx_g(2*NY_halved,local_nx_))
         ! out:
-        ALLOCATE(bracket_sum_xky_g(NX_,NY_/2+1))
+        ALLOCATE(bracket_sum_kyx_g(NY_halved+1,local_nx_))
         ! transform parameters
         rank    = 1              ! 1D transform
-        n       = NY_             ! all y
-        howmany = NX_             ! all x
-        inembed = NY_             ! all y must be used
-        onembed = NY_/2+1         ! to all ky
-        idist   = 1              ! distance between two slice to transforms (y row)
-        odist   = 1
+        n       = 2*NY_halved    ! all y
+        howmany = local_nx_      ! all x
+        inembed = 2*NY_halved    ! all y must be used
         istride = 1              ! contiguous data
+        idist   = 2*NY_halved    ! distance between two slice to transforms (y row)
+        onembed = NY_halved+1
         ostride = 1
+        odist   = NY_halved+1
 #ifdef SINGLE_PRECISION
         CALL sfftw_plan_many_dft_r2c(plan_y2ky_r2c, rank, n, howmany,&
-                             bracket_sum_xy_g, 0, 1, NY_,&
-                            bracket_sum_xky_g, 0, 1, NY_/2+1,& 
+                             bracket_sum_yx_g, inembed, istride, idist,&
+                            bracket_sum_kyx_g, onembed, ostride, odist,& 
                                     FFTW_PATIENT)                
 #else
         CALL dfftw_plan_many_dft_r2c(plan_y2ky_r2c, rank, n, howmany,&
-                             bracket_sum_xy_g, 0, 1, NY_,&
-                            bracket_sum_xky_g, 0, 1, NY_/2+1,& 
+                             bracket_sum_yx_g, inembed, istride, idist,&
+                            bracket_sum_kyx_g, onembed, ostride, odist,& 
                                     FFTW_PATIENT)    
 #endif
         !-----------
         ! 2.2 (x,ky) -> (x,y), C -> R, transforms (fplan_y in GENE)
-        ! in:  bracket_sum_xky_g
-        ! out: bracket_sum_xy_g
+        ! in:  bracket_sum_kyx_g
+        ! out: bracket_sum_yx_g
         ! transform parameters
         rank    = 1               ! 1D transform
-        n       = NY_             ! all y
-        howmany = NX_             ! all x
-        inembed = NY_/2+1         ! all y must be used
-        onembed = NY_             ! to all ky
-        idist   = 1               ! distance between two slice to transforms (y row)
-        odist   = 1
-        istride = NX_             ! non contiguous data
-        ostride = NX_
+        n       = 2*NY_halved     ! all ky
+        howmany = local_nx_       ! all x
+        inembed = NY_halved+1     ! all ky must be used
+        istride = 1               ! contiguous data
+        idist   = NY_halved+1     ! distance between two slice to transforms (y row)
+        onembed = 2*NY_halved     ! to all y
+        ostride = 1
+        odist   = 2*NY_halved
 #ifdef SINGLE_PRECISION
         CALL sfftw_plan_many_dft_c2r(plan_ky2y_c2r, rank, n, howmany,&
-                            bracket_sum_xky_g, 0, 1, NY_/2+1,&
-                             bracket_sum_xy_g, 0, 1, odist,& 
+                            bracket_sum_kyx_g, inembed, istride, idist,&
+                             bracket_sum_yx_g, onembed, ostride, odist,& 
                                     FFTW_PATIENT)                
 #else
         CALL dfftw_plan_many_dft_c2r(plan_ky2y_c2r, rank, n, howmany,&
-                            bracket_sum_xky_g, 0, 1, NY_/2+1,&
-                             bracket_sum_xy_g, 0, 1, NY_,& 
+                            bracket_sum_kyx_g, inembed, istride, idist,&
+                             bracket_sum_yx_g, onembed, ostride, odist,& 
                                     FFTW_PATIENT)    
 #endif
-
+    if ((.not. c_associated(plan_ky2y_c2r)) .OR. &
+        (.not. c_associated(plan_y2ky_r2c)) .OR. &
+        (.not. c_associated(plan_kx2x_c2c)) .OR. &
+        (.not. c_associated(plan_x2kx_c2c))) then
+        ERROR STOP '>> ERROR << 1D plan creation error!!'
+    end if
     ! Free mem (optional)
     DEALLOCATE(f_xky_l,f_kxky_l)
-    DEALLOCATE(bracket_sum_xky_g,bracket_sum_xy_g)
+    DEALLOCATE(bracket_sum_kyx_g,bracket_sum_yx_g)
 END SUBROUTINE fft1D_plans
     !******************************************************************************!
 
@@ -264,30 +272,29 @@ END SUBROUTINE fft1D_plans
     !!! Compute the poisson bracket to real space and sum it to the bracket_sum_r
     !   module variable (convolution theorem)
     SUBROUTINE poisson_bracket_and_sum( ky_, kx_, inv_Ny, inv_Nx, AA_y, AA_x,&
-                                        local_nky_ptr, local_nkx_ptr, F_, G_,&
+                                        local_nky, total_nkx, F_, G_,&
                                         ExB, ExB_NL_factor, sum_real_)
         USE parallel, ONLY: my_id, num_procs_ky, comm_ky, rank_ky
         IMPLICIT NONE
-        INTEGER(C_INTPTR_T),                  INTENT(IN)    :: local_nkx_ptr,local_nky_ptr
+        INTEGER(C_INTPTR_T),                  INTENT(IN)    :: local_nky,total_nkx
         REAL(xp),                             INTENT(IN)    :: inv_Nx, inv_Ny
-        REAL(xp), DIMENSION(local_nky_ptr),   INTENT(IN)    :: ky_, AA_y
-        REAL(xp), DIMENSION(local_nkx_ptr),   INTENT(IN)    :: AA_x
-        REAL(xp), DIMENSION(local_nky_ptr,local_nkx_ptr), INTENT(IN) :: kx_
-        COMPLEX(c_xp_c), DIMENSION(local_nky_ptr,local_nkx_ptr), &
+        REAL(xp), DIMENSION(local_nky),   INTENT(IN)    :: ky_, AA_y
+        REAL(xp), DIMENSION(total_nkx),       INTENT(IN)    :: AA_x
+        REAL(xp), DIMENSION(local_nky,total_nkx), INTENT(IN) :: kx_
+        COMPLEX(c_xp_c), DIMENSION(local_nky,total_nkx), &
                                             INTENT(IN)      :: F_, G_
-        COMPLEX(xp), DIMENSION(local_nkx_ptr,local_nky_ptr), &
+        COMPLEX(xp), DIMENSION(total_nkx,local_nky), &
                                             INTENT(IN)      :: ExB_NL_factor
         LOGICAL, INTENT(IN) :: ExB
         real(c_xp_r), pointer,              INTENT(INOUT)   :: sum_real_(:,:)
         ! local variables
         INTEGER :: ikx,iky
-        COMPLEX(xp), DIMENSION(local_nkx_ptr,local_nky_ptr) :: ikxF, ikyG, ikyF, ikxG
-        REAL(xp),    DIMENSION(NX_,2*(NY_/2 + 1)) :: ddxf, ddyg, ddyf, ddxg
+        COMPLEX(xp), DIMENSION(total_nkx,local_nky) :: ikxF, ikyG, ikyF, ikxG
         
         ! Build the fields to convolve
         ! Store df/dx, dg/dy and df/dy, dg/dx
-        DO ikx = 1,local_nkx_ptr
-        DO iky = 1,local_nky_ptr
+        DO ikx = 1,total_nkx
+        DO iky = 1,local_nky
             ikxF(ikx,iky) = imagu*kx_(iky,ikx)*F_(iky,ikx)*AA_y(iky)*AA_x(ikx)
             ikyG(ikx,iky) = imagu*ky_(iky)    *G_(iky,ikx)*AA_y(iky)*AA_x(ikx)
             ikyF(ikx,iky) = imagu*ky_(iky)    *F_(iky,ikx)*AA_y(iky)*AA_x(ikx)
@@ -325,7 +332,7 @@ END SUBROUTINE fft1D_plans
     !******************************************************************************!
 
     !******************************************************************************!
-    ! Apply the exp(xkySJdt) factor to the Poisson bracket fields 
+    ! Apply the exp(-i*x*ky*S*J*dt) factor to the Poisson bracket fields (ikxF, ikyG, ...) 
     ! (see Mcmillan et al. 2019)
     SUBROUTINE apply_ExB_NL_factor(fkxky,ExB_NL_factor)
         IMPLICIT NONE
@@ -338,22 +345,37 @@ END SUBROUTINE fft1D_plans
         CALL FFT_xky_to_kxky(fxky,fkxky)
     END SUBROUTINE apply_ExB_NL_factor
 
-    SUBROUTINE apply_inv_ExB_NL_factor(fxy,inv_ExB_NL_factor)
+    ! Apply the exp(i*x*ky*S*J*dt) factor to the real Poisson Bracket sum [f,g]
+    SUBROUTINE apply_inv_ExB_NL_factor(fyx,inv_ExB_NL_factor)
         IMPLICIT NONE
-        !REAL(xp),    DIMENSION(NX_,2*(NY_/2+1)), INTENT(INOUT) :: fxy
-        real(c_xp_r), pointer,                   INTENT(INOUT) :: fxy(:,:)
-        COMPLEX(xp), DIMENSION(NX_,local_nky_),  INTENT(IN)    :: inv_ExB_NL_factor
+        real(c_xp_r), pointer,                  INTENT(INOUT) :: fyx(:,:)
+        COMPLEX(xp), DIMENSION(NY_halved,local_nx_),  INTENT(IN)    :: inv_ExB_NL_factor
         ! local variables
-        COMPLEX(xp), DIMENSION(NX_,local_nky_) :: fxky
-        bracket_sum_xy_g = fxy
-        CALL FFT_xy_to_xky(bracket_sum_xy_g,fxky)
-        fxky = fxky*inv_ExB_NL_factor
-        CALL iFFT_xky_to_xy(fxky,bracket_sum_xy_g)
-        fxy = bracket_sum_xy_g
+        REAL(xp),    DIMENSION(2*NY_halved,local_nx_) :: buffer_1, buffer_2
+        COMPLEX(xp), DIMENSION(NY_halved+1,local_nx_) :: fkyx
+        INTEGER :: ix, iy
+        ! print*, SIZE(fyx), SIZE(buffer_1)
+        DO ix = 1,local_nx_
+            DO iy = 1,2*NY_halved
+                buffer_1(iy,ix) = fyx(iy,ix)
+            ENDDO
+        ENDDO
+        ! print*, SUM(fyx), SUM(buffer_1)
+        CALL FFT_yx_to_kyx(buffer_1,fkyx)
+        fkyx = fkyx*inv_ExB_NL_factor
+        CALL iFFT_kyx_to_yx(fkyx,buffer_2)
+        DO ix = 1,local_nx_
+            DO iy = 1,2*NY_halved
+                fyx(iy,ix) = buffer_2(iy,ix)*inv_Ny_
+            ENDDO
+        ENDDO
+        ! print*, SUM(fyx)
+        ! stop
     END SUBROUTINE apply_inv_ExB_NL_factor
 
     !******************************************************************************!
     ! High level FFT routines
+    ! 1D inverse Fourier transform from (kx,ky) to (x,ky), complex to complex
     SUBROUTINE iFFT_kxky_to_xky(in_kxky,out_xky)
         IMPLICIT NONE
         COMPLEX(xp), DIMENSION(NX_,local_nky_), INTENT(IN)  :: in_kxky
@@ -364,7 +386,7 @@ END SUBROUTINE fft1D_plans
         CALL dfftw_execute_dft(plan_kx2x_c2c, in_kxky, out_xky)
 #endif
     END SUBROUTINE iFFT_kxky_to_xky
-
+    ! 1D Fourier transform from kx,ky) to (kx,ky), complex to complex
     SUBROUTINE FFT_xky_to_kxky(in_xky,out_kxky)
         IMPLICIT NONE
         COMPLEX(xp), DIMENSION(NX_,local_nky_), INTENT(IN)  :: in_xky
@@ -375,30 +397,28 @@ END SUBROUTINE fft1D_plans
         CALL dfftw_execute_dft(plan_x2kx_c2c, in_xky, out_kxky)
 #endif
     END SUBROUTINE FFT_xky_to_kxky
-
-    SUBROUTINE FFT_xy_to_xky(in_xy,out_xky)
+    ! 1D Fourier transform from (y,x) to (ky,x), real to complex
+    SUBROUTINE FFT_yx_to_kyx(in_yx,out_kyx)
         IMPLICIT NONE
-        REAL(xp),    DIMENSION(NX_,NY_),     INTENT(IN)  :: in_xy
-        !real(c_xp_r), pointer,               INTENT(IN)  :: in_xy(:,:)
-        COMPLEX(xp), DIMENSION(NX_,NY_/2+1), INTENT(OUT) :: out_xky
+        REAL(xp),    DIMENSION(2*NY_halved,local_nx_), INTENT(IN)  :: in_yx
+        COMPLEX(xp), DIMENSION(NY_halved+1,local_nx_), INTENT(OUT) :: out_kyx
 #ifdef SINGLE_PRECISION
-        CALL sfftw_execute_dft_r2c(plan_y2ky_r2c, in_xy, out_xky)
+        CALL sfftw_execute_dft_r2c(plan_y2ky_r2c, in_yx, out_kyx)
 #else 
-        CALL dfftw_execute_dft_r2c(plan_y2ky_r2c, in_xy, out_xky)
+        CALL dfftw_execute_dft_r2c(plan_y2ky_r2c, in_yx, out_kyx)
 #endif
-    END SUBROUTINE FFT_xy_to_xky
-
-    SUBROUTINE iFFT_xky_to_xy(in_xky,out_xy)
+    END SUBROUTINE FFT_yx_to_kyx
+    ! 1D Fourier transform from (ky,x) to (y,x), complex to real
+    SUBROUTINE iFFT_kyx_to_yx(in_kyx,out_yx)
         IMPLICIT NONE
-        COMPLEX(xp), DIMENSION(NX_,NY_/2+1), INTENT(IN)  :: in_xky
-        REAL(xp),    DIMENSION(NX_,NY_),     INTENT(OUT) :: out_xy
-        !real(c_xp_r), pointer,               INTENT(OUT) :: out_xy(:,:)
+        COMPLEX(xp), DIMENSION(NY_halved+1,local_nx_), INTENT(IN)  :: in_kyx
+        REAL(xp),    DIMENSION(2*NY_halved,local_nx_), INTENT(OUT) :: out_yx
 #ifdef SINGLE_PRECISION
-        CALL sfftw_execute_dft_c2r(plan_ky2y_c2r, in_xky, out_xy)
+        CALL sfftw_execute_dft_c2r(plan_ky2y_c2r, in_kyx, out_yx)
 #else 
-        CALL dfftw_execute_dft_c2r(plan_ky2y_c2r, in_xky, out_xy)
+        CALL dfftw_execute_dft_c2r(plan_ky2y_c2r, in_kyx, out_yx)
 #endif
-    END SUBROUTINE iFFT_xky_to_xy
+    END SUBROUTINE iFFT_kyx_to_yx
 
     !******************************************************************************!
 
