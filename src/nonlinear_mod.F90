@@ -7,7 +7,7 @@ MODULE nonlinear
                          local_np,ngp,parray,pmax,&
                          local_nj,ngj,jarray,jmax, local_nj_offset, dmax,&
                          kyarray, AA_y, local_nky_ptr, local_nky_ptr_offset,inv_Ny,&
-                         local_nkx_ptr,kxarray, AA_x, inv_Nx,&
+                         total_nkx,kxarray, AA_x, inv_Nx,&
                          local_nz,ngz,zarray,nzgrid, deltakx, iky0, contains_kx0, contains_ky0
   USE model,       ONLY : LINEARITY, EM, ikxZF, ZFamp, ExB
   USE closure,     ONLY : evolve_mom, nmaxarray
@@ -31,8 +31,8 @@ CONTAINS
 
 SUBROUTINE nonlinear_init
   IMPLICIT NONE
-  ALLOCATE( F_cmpx(local_nky_ptr,local_nkx_ptr))
-  ALLOCATE( G_cmpx(local_nky_ptr,local_nkx_ptr))
+  ALLOCATE( F_cmpx(local_nky_ptr,total_nkx))
+  ALLOCATE( G_cmpx(local_nky_ptr,total_nkx))
 END SUBROUTINE nonlinear_init
 
 SUBROUTINE compute_Sapj
@@ -75,7 +75,7 @@ SUBROUTINE compute_nonlinear
               ini = in+ngj/2
   !-----------!! ELECTROSTATIC CONTRIBUTION
               ! First convolution terms
-              DO ikx = 1,local_nkx_ptr
+              DO ikx = 1,total_nkx
                 DO iky = 1,local_nky_ptr
                   F_cmpx(iky,ikx) = phi(iky,ikx,izi) * kernel(ia,ini,iky,ikx,izi,eo)
                 ENDDO
@@ -83,7 +83,7 @@ SUBROUTINE compute_nonlinear
               ! Test to implement the ExB shearing as a additional zonal mode in the ES potential
               IF(ikxZF .GT. 1) THEN
                 ikxExBp = ikxZF
-                ikxExBn = local_nkx_ptr - (ikxExBp-2)
+                ikxExBn = total_nkx - (ikxExBp-2)
                 IF(contains_kx0 .AND. contains_ky0) THEN
                   F_cmpx(iky0,ikxExBp) = F_cmpx(iky0,ikxExBp) + ZFamp * kernel(ia,ini,iky0,ikxExBp,izi,eo)
                   F_cmpx(iky0,ikxExBn) = F_cmpx(iky0,ikxExBn) + ZFamp * kernel(ia,ini,iky0,ikxExBn,izi,eo)
@@ -99,7 +99,7 @@ SUBROUTINE compute_nonlinear
               ENDDO s1
               ! this function adds its result to bracket_sum_r
                 CALL poisson_bracket_and_sum( kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,&
-                                              local_nky_ptr,local_nkx_ptr,F_cmpx,G_cmpx,&
+                                              local_nky_ptr,total_nkx,F_cmpx,G_cmpx,&
                                               ExB, ExB_NL_factor, bracket_sum_r)
   !-----------!! ELECTROMAGNETIC CONTRIBUTION -sqrt(tau)/sigma*{Sum_s dnjs [sqrt(p+1)Nap+1s + sqrt(p)Nap-1s], Kernel psi}
               IF(EM) THEN
@@ -115,12 +115,13 @@ SUBROUTINE compute_nonlinear
                 ENDDO s2
                 ! this function adds its result to bracket_sum_r
                 CALL poisson_bracket_and_sum( kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,&
-                                              local_nky_ptr,local_nkx_ptr,F_cmpx,G_cmpx,&
+                                              local_nky_ptr,total_nkx,F_cmpx,G_cmpx,&
                                               ExB, ExB_NL_factor,bracket_sum_r)
               ENDIF
             ENDDO n
             ! Apply the ExB shearing rate factor before going back to k-space
             IF (ExB) THEN
+              ! print*, SUM(bracket_sum_r)
               CALL apply_inv_ExB_NL_factor(bracket_sum_r,inv_ExB_NL_factor)
             ENDIF
             ! Put the real nonlinear product back into k-space
@@ -130,7 +131,7 @@ SUBROUTINE compute_nonlinear
             call  fftw_mpi_execute_dft_r2c(planf, bracket_sum_r, bracket_sum_c)
 #endif
             ! Retrieve convolution in input format and apply anti aliasing
-            DO ikx = 1,local_nkx_ptr
+            DO ikx = 1,total_nkx
               DO iky = 1,local_nky_ptr
                 Sapj(ia,ip,ij,iky,ikx,iz) = bracket_sum_c(ikx,iky)*AA_x(ikx)*AA_y(iky)
               ENDDO
