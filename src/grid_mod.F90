@@ -57,7 +57,8 @@ MODULE grid
   INTEGER, PUBLIC, PROTECTED :: local_np
   INTEGER, PUBLIC, PROTECTED :: local_nj
   INTEGER, PUBLIC, PROTECTED :: local_nky
-  INTEGER, PUBLIC, PROTECTED :: local_nkx
+  INTEGER, PUBLIC, PROTECTED :: local_nkx  ! = total_Nkx = Nx, not parallel
+  INTEGER, PUBLIC, PROTECTED :: local_nx   ! = local_nx_ptr from FFTW (used only for Fourier)
   INTEGER, PUBLIC, PROTECTED :: local_nz
   INTEGER, PUBLIC, PROTECTED :: local_nkp
   INTEGER, PUBLIC, PROTECTED :: ngp, ngj, ngx, ngy, ngz ! number of ghosts points
@@ -68,10 +69,11 @@ MODULE grid
   INTEGER, PUBLIC, PROTECTED :: local_nj_offset
   INTEGER, PUBLIC, PROTECTED :: local_nky_offset
   INTEGER, PUBLIC, PROTECTED :: local_nkx_offset
+  INTEGER, PUBLIC, PROTECTED :: local_nx_offset
   INTEGER, PUBLIC, PROTECTED :: local_nz_offset
   ! C-pointer type for FFTW3
-  integer(C_INTPTR_T), PUBLIC,PROTECTED :: local_nkx_ptr, local_nky_ptr
-  integer(C_INTPTR_T), PUBLIC,PROTECTED :: local_nkx_ptr_offset, local_nky_ptr_offset
+  integer(C_INTPTR_T), PUBLIC,PROTECTED :: local_nx_ptr, local_nky_ptr
+  integer(C_INTPTR_T), PUBLIC,PROTECTED :: local_nx_ptr_offset, local_nky_ptr_offset
   ! Grid spacing and limits
   REAL(xp), PUBLIC, PROTECTED ::  deltap, deltaz, inv_deltaz, inv_dkx
   REAL(xp), PUBLIC, PROTECTED ::  deltakx, deltaky, deltax, kx_max, ky_max, kx_min, ky_min!, kp_max
@@ -198,7 +200,7 @@ CONTAINS
     !! Parallel distribution of kx ky grid
     IF (LINEARITY .NE. 'linear') THEN ! we let FFTW distribute if we use it
       IF (my_id .EQ. 0) write(*,*) 'FFTW3 y-grid distribution'
-      CALL init_grid_distr_and_plans(FFT2D,Nx,Ny,comm_ky,local_nkx_ptr,local_nkx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
+      CALL init_grid_distr_and_plans(FFT2D,Nx,Ny,comm_ky,local_nx_ptr,local_nx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
     ELSE ! otherwise we distribute equally
       IF (my_id .EQ. 0) write(*,*) 'Manual y-grid distribution'
       ! balanced distribution among the processes
@@ -207,30 +209,32 @@ CONTAINS
       local_nky_ptr_offset = ikys - 1
     ENDIF
     !!----------------- BINORMAL KY INDICES (parallelized)
-    Nky       = Ny/2+1 ! Defined only on positive kx since fields are real
-    total_nky = Nky
-    Ngy = 0 ! no ghosts cells in ky
-    ikys = local_nky_ptr_offset + 1
-    ikye = ikys + local_nky_ptr - 1
-    local_nky = ikye - ikys + 1
+    Nky              = Ny/2+1 ! Defined only on positive kx since fields are real
+    total_nky        = Nky
+    Ngy              = 0 ! no ghosts cells in ky
+    ikys             = local_nky_ptr_offset + 1
+    ikye             = ikys + local_nky_ptr - 1
+    local_nky        = ikye - ikys + 1
     local_nky_offset = local_nky_ptr_offset
     ALLOCATE(kyarray_full(Nky))
     ALLOCATE(kyarray(local_nky))
-    ALLOCATE(ikyarray(local_nky))
-    ALLOCATE(inv_ikyarray(local_nky))
+    ALLOCATE(ikyarray(Nky))
+    ALLOCATE(inv_ikyarray(Nky))
     ALLOCATE(AA_y(local_nky))
     !!---------------- RADIAL KX INDICES (not parallelized)
-    Nkx       = Nx
-    total_nkx = Nx
-    ikxs = 1
-    ikxe = total_nkx
-    local_nkx_ptr = ikxe - ikxs + 1
-    local_nkx     = ikxe - ikxs + 1
+    Nkx              = Nx
+    total_nkx        = Nx
+    ikxs             = 1
+    ikxe             = total_nkx
+    local_nkx        = ikxe - ikxs + 1
     local_nkx_offset = ikxs - 1
     ALLOCATE(kxarray_full(total_nkx))
     ALLOCATE(kxarray(local_nky,local_Nkx))
-    ALLOCATE(xarray(total_nkx))
     ALLOCATE(AA_x(local_nkx))
+    !!---------------- RADIAL X GRID (only for Fourier routines)
+    local_nx        = local_nx_ptr
+    local_nx_offset = local_nx_ptr_offset
+    ALLOCATE(xarray(Nx))
     !!---------------- PARALLEL Z GRID (parallelized)
     total_nz = Nz
     IF (SG) THEN
@@ -299,6 +303,7 @@ CONTAINS
     CALL set_jgrid
     CALL set_kygrid(LINEARITY,N_HD)
     CALL set_kxgrid(shear,Npol,1._xp,LINEARITY,N_HD) ! this will be redone after geometry if Cyq0_x0 .NE. 1
+    CALL set_xgrid
     CALL set_zgrid (Npol)
   END SUBROUTINE set_grids
 
@@ -428,6 +433,13 @@ CONTAINS
     ! Build the full grids on process 0 to diagnose it without comm
     DO iky = 1,Nky
      kyarray_full(iky) = REAL(iky-1,xp) * deltaky
+     ! full indices grid (for ExB NL factor)
+     ikyarray(iky)     = REAL((iky)-1,xp)
+     IF(ikyarray(iky) .GT. 0) THEN
+       inv_ikyarray(iky) = 1._xp/ikyarray(iky)
+     ELSE
+       inv_ikyarray(iky) = 0._xp
+     ENDIF
     END DO
     local_kymax = 0._xp
     ! Creating a grid ordered as dk*(0 1 2 3)
@@ -442,12 +454,6 @@ CONTAINS
         SINGLE_KY         = .TRUE.
       ELSE
         kyarray(iky)      = kyarray_full(iky+local_nky_offset)
-        ikyarray(iky)     = REAL((iky+local_nky_offset)-1,xp)
-        IF(ikyarray(iky) .GT. 0) THEN
-          inv_ikyarray(iky) = 1._xp/ikyarray(iky)
-        ELSE
-          inv_ikyarray(iky) = 0._xp
-        ENDIF
       ENDIF
       ! Finding kx=0
       IF (kyarray(iky) .EQ. 0) THEN
@@ -503,13 +509,11 @@ CONTAINS
     ENDIF
     deltakx = 2._xp*PI/Lx
     inv_dkx = 1._xp/deltakx 
-    deltax  = Lx/REAL(Nx,xp) ! periodic donc pas Lx/(Nx-1)  
     IF(MODULO(total_nkx,2) .EQ. 0) THEN ! Even number of kx (-2 -1 0 1 2 3)
       ! Creating a grid ordered as dk*(0 1 2 3 -2 -1)
       DO ikx = 1,total_nkx
         kxarray_full(ikx) = deltakx*REAL(MODULO(ikx-1,total_nkx/2)-(total_nkx/2)*FLOOR(2.*real(ikx-1)/real(total_nkx)),xp)
         IF (ikx .EQ. total_nkx/2+1) kxarray_full(ikx) = -kxarray_full(ikx)
-        xarray(ikx) = REAL(ikx-1,xp)*deltax
       END DO
       kx_max = MAXVAL(kxarray_full)!(total_nkx/2)*deltakx
       kx_min = MINVAL(kxarray_full)!-kx_max+deltakx
@@ -554,6 +558,20 @@ CONTAINS
     ENDIF
   END SUBROUTINE set_kxgrid
 
+  !----------- Radial x grid
+  ! used only for the computation  of the ExB shear NL factor
+  SUBROUTINE set_xgrid
+    USE prec_const
+    IMPLICIT NONE
+    INTEGER :: ix
+    deltax  = Lx/REAL(Nx,xp) ! periodic donc pas Lx/(Nx-1)  
+    ! full xgrid
+    DO ix = 1,Nx
+      xarray(ix) = REAL(ix-1,xp)*deltax
+    ENDDO
+  END SUBROUTINE set_xgrid
+
+  !----------- Parallel z grid
   SUBROUTINE set_zgrid(Npol)
     USE prec_const
     IMPLICIT NONE
