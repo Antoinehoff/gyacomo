@@ -276,10 +276,10 @@ END SUBROUTINE fft1D_plans
                                         ExB, ExB_NL_factor, sum_real_)
         USE parallel, ONLY: my_id, num_procs_ky, comm_ky, rank_ky
         IMPLICIT NONE
-        INTEGER(C_INTPTR_T),                  INTENT(IN)    :: local_nky,total_nkx
-        REAL(xp),                             INTENT(IN)    :: inv_Nx, inv_Ny
-        REAL(xp), DIMENSION(local_nky),   INTENT(IN)    :: ky_, AA_y
-        REAL(xp), DIMENSION(total_nkx),       INTENT(IN)    :: AA_x
+        INTEGER,                                  INTENT(IN) :: local_nky,total_nkx
+        REAL(xp),                                 INTENT(IN) :: inv_Nx, inv_Ny
+        REAL(xp), DIMENSION(local_nky),           INTENT(IN) :: ky_, AA_y
+        REAL(xp), DIMENSION(total_nkx),           INTENT(IN) :: AA_x
         REAL(xp), DIMENSION(local_nky,total_nkx), INTENT(IN) :: kx_
         COMPLEX(c_xp_c), DIMENSION(local_nky,total_nkx), &
                                             INTENT(IN)      :: F_, G_

@@ -6,15 +6,15 @@ MODULE nonlinear
   USE grid,        ONLY : local_na, &
                          local_np,ngp,parray,pmax,&
                          local_nj,ngj,jarray,jmax, local_nj_offset, dmax,&
-                         kyarray, AA_y, local_nky_ptr, local_nky_ptr_offset,inv_Ny,&
+                         kyarray, AA_y, local_nky, inv_Ny,&
                          total_nkx,kxarray, AA_x, inv_Nx,&
                          local_nz,ngz,zarray,nzgrid, deltakx, iky0, contains_kx0, contains_ky0
-  USE model,       ONLY : LINEARITY, EM, ikxZF, ZFamp, ExB
+  USE model,       ONLY : LINEARITY, EM, ikxZF, ZFamp
   USE closure,     ONLY : evolve_mom, nmaxarray
   USE prec_const,  ONLY : xp
   USE species,     ONLY : sqrt_tau_o_sigma
   USE time_integration, ONLY : updatetlevel
-  USE ExB_shear_flow,   ONLY : ExB_NL_factor, inv_ExB_NL_factor
+  USE ExB_shear_flow,   ONLY : ExB_NL_factor, inv_ExB_NL_factor, ExB
   use, intrinsic :: iso_c_binding
 
   IMPLICIT NONE
@@ -31,8 +31,8 @@ CONTAINS
 
 SUBROUTINE nonlinear_init
   IMPLICIT NONE
-  ALLOCATE( F_cmpx(local_nky_ptr,total_nkx))
-  ALLOCATE( G_cmpx(local_nky_ptr,total_nkx))
+  ALLOCATE( F_cmpx(local_nky,total_nkx))
+  ALLOCATE( G_cmpx(local_nky,total_nkx))
 END SUBROUTINE nonlinear_init
 
 SUBROUTINE compute_Sapj
@@ -76,7 +76,7 @@ SUBROUTINE compute_nonlinear
   !-----------!! ELECTROSTATIC CONTRIBUTION
               ! First convolution terms
               DO ikx = 1,total_nkx
-                DO iky = 1,local_nky_ptr
+                DO iky = 1,local_nky
                   F_cmpx(iky,ikx) = phi(iky,ikx,izi) * kernel(ia,ini,iky,ikx,izi,eo)
                 ENDDO
               ENDDO
@@ -99,7 +99,7 @@ SUBROUTINE compute_nonlinear
               ENDDO s1
               ! this function adds its result to bracket_sum_r
                 CALL poisson_bracket_and_sum( kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,&
-                                              local_nky_ptr,total_nkx,F_cmpx,G_cmpx,&
+                                              local_nky,total_nkx,F_cmpx,G_cmpx,&
                                               ExB, ExB_NL_factor, bracket_sum_r)
   !-----------!! ELECTROMAGNETIC CONTRIBUTION -sqrt(tau)/sigma*{Sum_s dnjs [sqrt(p+1)Nap+1s + sqrt(p)Nap-1s], Kernel psi}
               IF(EM) THEN
@@ -115,7 +115,7 @@ SUBROUTINE compute_nonlinear
                 ENDDO s2
                 ! this function adds its result to bracket_sum_r
                 CALL poisson_bracket_and_sum( kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,&
-                                              local_nky_ptr,total_nkx,F_cmpx,G_cmpx,&
+                                              local_nky,total_nkx,F_cmpx,G_cmpx,&
                                               ExB, ExB_NL_factor,bracket_sum_r)
               ENDIF
             ENDDO n
@@ -132,7 +132,7 @@ SUBROUTINE compute_nonlinear
 #endif
             ! Retrieve convolution in input format and apply anti aliasing
             DO ikx = 1,total_nkx
-              DO iky = 1,local_nky_ptr
+              DO iky = 1,local_nky
                 Sapj(ia,ip,ij,iky,ikx,iz) = bracket_sum_c(ikx,iky)*AA_x(ikx)*AA_y(iky)
               ENDDO
             ENDDO
