@@ -6,7 +6,7 @@ subroutine auxval
                             local_nky, local_nky_offset, total_nky, local_nkx, local_nkx_offset, dmax,&
                             local_nz, local_nz_offset, total_nz, init_grids_data, set_grids
   !USE array
-  USE model,          ONLY: Na, EM, LINEARITY, N_HD
+  USE model,          ONLY: Na, EM, LINEARITY, N_HD, ExBrate
   USE fourier,        ONLY: init_grid_distr_and_plans
   use MPI,            ONLY: MPI_COMM_WORLD
   USE numerics,       ONLY: build_dnjs_table, build_dv4Hp_table, compute_lin_coeff, &
@@ -48,7 +48,7 @@ subroutine auxval
   ! set the closure scheme in use
   CALL set_closure_model   
   ! Setup ExB shear variables
-  CALL Setup_ExB_shear_flow
+  CALL Setup_ExB_shear_flow(ExBrate)
 #ifdef TEST_SVD
   ! If we want to test SVD decomposition etc.
   CALL init_CLA(local_nky,local_np*local_nj)
