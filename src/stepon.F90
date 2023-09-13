@@ -2,7 +2,8 @@ SUBROUTINE stepon
    !   Advance one time step, (num_step=4 for Runge Kutta 4 scheme)
    USE advance_field_routine, ONLY: advance_time_level, advance_moments
    USE basic,                 ONLY: nlend, chrono_advf, chrono_pois,&
-      chrono_chck, chrono_clos, chrono_ghst, start_chrono, stop_chrono
+      chrono_chck, chrono_clos, chrono_ghst, chrono_ExBs,&
+      start_chrono, stop_chrono
    USE closure,               ONLY: apply_closure_model
    USE ghosts,                ONLY: update_ghosts_moments, update_ghosts_EM
    use mpi,                   ONLY: MPI_COMM_WORLD
@@ -23,7 +24,9 @@ SUBROUTINE stepon
    !  - the kernel, poisson op. and ampere op update
    !  - kx-shift of the fields at required ky values
    !  - the ExB shear value (s(ky)) update for the next time step
-   CALL Apply_ExB_shear_flow
+   CALL start_chrono(chrono_ExBs)
+      CALL Apply_ExB_shear_flow
+   CALL stop_chrono(chrono_ExBs)
 
    DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
       !----- BEFORE: All fields+ghosts are updated for step = n
@@ -80,7 +83,9 @@ SUBROUTINE stepon
    END DO
 
    ! Update the ExB shear flow for the next step
-   CALL Update_ExB_shear_flow
+   CALL start_chrono(chrono_ExBs)
+      CALL Update_ExB_shear_flow
+   CALL stop_chrono(chrono_ExBs)   
 
 CONTAINS
 !!!! Basic structure to simplify stepon
