@@ -23,15 +23,17 @@ MODULE grid
   ! Grid arrays
   INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: parray,  parray_full
   INTEGER,  DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: jarray,  jarray_full
-  REAL(xp), DIMENSION(:,:), ALLOCATABLE, PUBLIC,PROTECTED :: kxarray ! ExB shear makes it ky dependant
+  REAL(xp), DIMENSION(:,:), ALLOCATABLE, PUBLIC,PROTECTED :: kxarray  ! moving kx grid (ExB)
+  REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: kxarray0 ! inirial kyarray
   REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: kxarray_full
   REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: xarray
   REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: kyarray, kyarray_full
   REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: ikyarray, inv_ikyarray !mode indices arrays
   REAL(xp), DIMENSION(:,:), ALLOCATABLE, PUBLIC,PROTECTED :: zarray
   REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: zarray_full
-  REAL(xp), DIMENSION(:,:,:,:), ALLOCATABLE, PUBLIC,PROTECTED :: kparray !kperp
-  REAL(xp), DIMENSION(:,:,:,:), ALLOCATABLE, PUBLIC,PROTECTED :: kp2array !kperp^2
+  REAL(xp), DIMENSION(:,:,:,:), ALLOCATABLE, PUBLIC,PROTECTED :: kparray  !moving kperp grid 
+  REAL(xp), DIMENSION(:,:,:,:), ALLOCATABLE, PUBLIC,PROTECTED :: kparray0 !initial kperp grid
+  REAL(xp), DIMENSION(:,:,:,:), ALLOCATABLE, PUBLIC,PROTECTED :: kp2array !moving kperp^2 grid
   ! Kronecker delta for p=0, p=1, p=2, j=0, j=1
   REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: kroneck_p0, kroneck_p1, kroneck_p2, kroneck_p3
   REAL(xp), DIMENSION(:),   ALLOCATABLE, PUBLIC,PROTECTED :: kroneck_j0, kroneck_j1
@@ -229,6 +231,7 @@ CONTAINS
     local_nkx        = ikxe - ikxs + 1
     local_nkx_offset = ikxs - 1
     ALLOCATE(kxarray_full(total_nkx))
+    ALLOCATE(kxarray0(local_Nkx))
     ALLOCATE(kxarray(local_nky,local_Nkx))
     ALLOCATE(AA_x(local_nkx))
     !!---------------- RADIAL X GRID (only for Fourier routines)
@@ -281,6 +284,7 @@ CONTAINS
     ENDDO
     !!---------------- Kperp grid
     CALL allocate_array( kparray, 1,local_nky, 1,local_nkx, 1,local_nz+ngz, 1,nzgrid)
+    CALL allocate_array(kparray0, 1,local_nky, 1,local_nkx, 1,local_nz+ngz, 1,nzgrid)
     CALL allocate_array(kp2array, 1,local_nky, 1,local_nkx, 1,local_nz+ngz, 1,nzgrid)
   END SUBROUTINE
   !!!! GRID REPRESENTATION
@@ -521,6 +525,7 @@ CONTAINS
       local_kxmax = 0._xp
       DO iky = 1,local_nky
         DO ikx = 1,local_nkx
+          kxarray0(ikx)    = kxarray_full(ikx+local_nkx_offset)
           kxarray(iky,ikx) = kxarray_full(ikx+local_nkx_offset)
           ! Finding kx=0
           IF (kxarray(1,ikx) .EQ. 0) THEN
@@ -561,10 +566,12 @@ CONTAINS
   !----------- Radial x grid
   ! used only for the computation  of the ExB shear NL factor
   SUBROUTINE set_xgrid
-    USE prec_const
+    USE prec_const, ONLY: xp, pi
     IMPLICIT NONE
     INTEGER :: ix
-    deltax  = Lx/REAL(Nx,xp) ! periodic donc pas Lx/(Nx-1)  
+    REAL    :: L_
+    L_     = 2._xp*pi/deltakx
+    deltax = L_/REAL(Nx,xp)
     ! full xgrid
     DO ix = 1,Nx
       xarray(ix) = REAL(ix-1,xp)*deltax
@@ -651,36 +658,36 @@ CONTAINS
             ! this factor comes from $b_a$ argument in the Bessel. Kperp is not used otherwise.
             kp2array(iky, ikx, iz, eo) = &
               (gxx(iz,eo)*kx**2 + 2._xp*gxy(iz,eo)*kx*ky + gyy(iz,eo)*ky**2)*inv_hatB2(iz,eo)
-            kparray(iky, ikx, iz, eo)  = SQRT(kp2array(iky, ikx, iz, eo))
-          ENDDO
+
+            kparray (iky, ikx, iz, eo)  = SQRT(kp2array(iky, ikx, iz, eo))
+            kparray0(iky, ikx, iz, eo)  = SQRT(kp2array(iky, ikx, iz, eo))
+            ENDDO
         ENDDO
       ENDDO
     ENDDO
     two_third_kpmax = 2._xp/3._xp * MAXVAL(kparray)
   END SUBROUTINE
 
-  SUBROUTINE update_grids (sky,gxx,gxy,inv_hatB2)
+  SUBROUTINE update_grids (dkx_ExB,gxx,gxy,gyy,inv_hatB2)
     IMPLICIT NONE
-    REAL(xp), DIMENSION(local_nky),INTENT(IN) :: sky ! ExB grid shift
-    REAL(xp), DIMENSION(local_nz+ngz,nzgrid), INTENT(IN) :: gxx,gxy,inv_hatB2
+    REAL(xp), DIMENSION(local_nky),INTENT(IN) :: dkx_ExB ! ExB correction dkx = gamma_E ky dtshift
+    REAL(xp), DIMENSION(local_nz+ngz,nzgrid), INTENT(IN) :: gxx,gxy,gyy,inv_hatB2
     INTEGER     :: eo,iz,iky,ikx
     REAL(xp)    :: kx, ky, skp2
     ! Update the kx grid
     DO iky = 1,local_nky
-      DO ikx = 1,local_nkx
-        kxarray(iky,ikx) = kxarray(iky,ikx) + sky(iky)
+      DO ikx = 1,total_Nkx
+        kxarray(iky,ikx) = kxarray0(ikx) + dkx_ExB(iky)
       ENDDO
     ENDDO
     ! Update the kperp grid
     DO eo = 1,nzgrid
       DO iz = 1,local_nz+ngz
-        DO iky = 1,local_nky
-          ky = kyarray(iky)
-          DO ikx = 1,local_nkx
-            kx   = kxarray(iky,ikx)
-            ! shift in kp obtained from kp2* = kp2 + skp2
-            skp2 = sky(iky)*inv_hatB2(iz,eo)*(gxx(iz,eo)*(2._xp*kx+sky(iky)) +gxy(iz,eo)*ky)
-            kp2array(iky, ikx, iz, eo) = kp2array(iky, ikx, iz, eo) + skp2
+        DO ikx = 1,local_nkx
+          DO iky = 1,local_nky
+            ky = kyarray(iky)
+            kx = kxarray(iky,ikx)
+            kp2array(iky,ikx,iz,eo) = (gxx(iz,eo)*kx**2 + 2._xp*gxy(iz,eo)*kx*ky + gyy(iz,eo)*ky**2)*inv_hatB2(iz,eo)
           ENDDO
         ENDDO
       ENDDO
