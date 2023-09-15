@@ -271,16 +271,16 @@ END SUBROUTINE fft1D_plans
     !******************************************************************************!
     !!! Compute the poisson bracket to real space and sum it to the bracket_sum_r
     !   module variable (convolution theorem)
-    SUBROUTINE poisson_bracket_and_sum( ky_, kx_, inv_Ny, inv_Nx, AA_y, AA_x,&
+    SUBROUTINE poisson_bracket_and_sum( ky_array, kx_array, inv_Ny, inv_Nx, AA_y, AA_x,&
                                         local_nky, total_nkx, F_, G_,&
-                                        ExB, ExB_NL_factor, sum_real_)
+                                        ExB, ExB_NL_factor, dkx_ExB, sum_real_)
         USE parallel, ONLY: my_id, num_procs_ky, comm_ky, rank_ky
         IMPLICIT NONE
         INTEGER,                                  INTENT(IN) :: local_nky,total_nkx
         REAL(xp),                                 INTENT(IN) :: inv_Nx, inv_Ny
-        REAL(xp), DIMENSION(local_nky),           INTENT(IN) :: ky_, AA_y
+        REAL(xp), DIMENSION(local_nky),           INTENT(IN) :: ky_array, AA_y, dkx_ExB
         REAL(xp), DIMENSION(total_nkx),           INTENT(IN) :: AA_x
-        REAL(xp), DIMENSION(local_nky,total_nkx), INTENT(IN) :: kx_
+        REAL(xp), DIMENSION(local_nky,total_nkx), INTENT(IN) :: kx_array
         COMPLEX(c_xp_c), DIMENSION(local_nky,total_nkx), &
                                             INTENT(IN)      :: F_, G_
         COMPLEX(xp), DIMENSION(total_nkx,local_nky), &
@@ -290,16 +290,19 @@ END SUBROUTINE fft1D_plans
         ! local variables
         INTEGER :: ikx,iky
         COMPLEX(xp), DIMENSION(total_nkx,local_nky) :: ikxF, ikyG, ikyF, ikxG
+        REAL(xp):: kxs, ky
         
         ! Build the fields to convolve
         ! Store df/dx, dg/dy and df/dy, dg/dx
-        DO ikx = 1,total_nkx
         DO iky = 1,local_nky
-            ikxF(ikx,iky) = imagu*kx_(iky,ikx)*F_(iky,ikx)*AA_y(iky)*AA_x(ikx)
-            ikyG(ikx,iky) = imagu*ky_(iky)    *G_(iky,ikx)*AA_y(iky)*AA_x(ikx)
-            ikyF(ikx,iky) = imagu*ky_(iky)    *F_(iky,ikx)*AA_y(iky)*AA_x(ikx)
-            ikxG(ikx,iky) = imagu*kx_(iky,ikx)*G_(iky,ikx)*AA_y(iky)*AA_x(ikx)
-        ENDDO
+                DO ikx = 1,total_nkx
+                        ky  = ky_array(iky)
+                        kxs = kx_array(iky,ikx)
+                        ikxF(ikx,iky) = imagu*kxs*F_(iky,ikx)*AA_y(iky)*AA_x(ikx)
+                        ikyG(ikx,iky) = imagu*ky *G_(iky,ikx)*AA_y(iky)*AA_x(ikx)
+                        ikyF(ikx,iky) = imagu*ky *F_(iky,ikx)*AA_y(iky)*AA_x(ikx)
+                        ikxG(ikx,iky) = imagu*kxs*G_(iky,ikx)*AA_y(iky)*AA_x(ikx)
+                ENDDO
         ENDDO
         IF(ExB) THEN 
             ! Apply the ExB shear correction factor exp(ixkySJdT)
