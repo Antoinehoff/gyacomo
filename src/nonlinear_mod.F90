@@ -100,7 +100,7 @@ SUBROUTINE compute_nonlinear
               ! this function adds its result to bracket_sum_r
                 CALL poisson_bracket_and_sum( kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,&
                                               local_nky,total_nkx,F_cmpx,G_cmpx,&
-                                              ExB, ExB_NL_factor, dkx_ExB, bracket_sum_r)
+                                              ExB, ExB_NL_factor, bracket_sum_r)
   !-----------!! ELECTROMAGNETIC CONTRIBUTION -sqrt(tau)/sigma*{Sum_s dnjs [sqrt(p+1)Nap+1s + sqrt(p)Nap-1s], Kernel psi}
               IF(EM) THEN
                 ! First convolution terms
@@ -116,7 +116,7 @@ SUBROUTINE compute_nonlinear
                 ! this function adds its result to bracket_sum_r
                 CALL poisson_bracket_and_sum( kyarray,kxarray,inv_Ny,inv_Nx,AA_y,AA_x,&
                                               local_nky,total_nkx,F_cmpx,G_cmpx,&
-                                              ExB, ExB_NL_factor, dkx_ExB, bracket_sum_r)
+                                              ExB, ExB_NL_factor, bracket_sum_r)
               ENDIF
             ENDDO n
             ! Apply the ExB shearing rate factor before going back to k-space

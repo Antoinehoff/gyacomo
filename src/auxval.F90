@@ -2,9 +2,9 @@ subroutine auxval
   !   Set auxiliary values, at beginning of simulation
 
   USE basic,          ONLY: str, speak
-  USE grid,           ONLY: local_np, local_np_offset, total_np, local_nj, local_nj_offset, total_nj,&
+  USE grid,           ONLY: local_np, local_np_offset, total_np, local_nj, local_nj_offset,&
                             local_nky, local_nky_offset, total_nky, local_nkx, local_nkx_offset, dmax,&
-                            local_nz, local_nz_offset, total_nz, init_grids_data, set_grids
+                            local_nz, local_nz_offset, init_grids_data, set_grids
   !USE array
   USE model,          ONLY: Na, EM, LINEARITY, N_HD, ExBrate
   USE fourier,        ONLY: init_grid_distr_and_plans

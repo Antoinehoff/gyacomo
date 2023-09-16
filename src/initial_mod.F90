@@ -46,7 +46,6 @@ CONTAINS
     USE ghosts,           ONLY: update_ghosts_moments, update_ghosts_EM
     USE restarts,         ONLY: load_moments, job2load
     USE processing,       ONLY: compute_fluid_moments, compute_radial_heatflux, compute_radial_transport
-    USE model,            ONLY: LINEARITY
     USE nonlinear,        ONLY: compute_Sapj, nonlinear_init
     IMPLICIT NONE
     CALL set_updatetlevel(1)
@@ -266,19 +265,10 @@ CONTAINS
   !!!!!!! Initialize a single mode in the gyrocenter density
   !******************************************************************************!
   SUBROUTINE init_single_mode
-    USE grid,       ONLY: local_na, local_np, local_nj, total_nkx, local_nky, local_nz,&
-                          ngp, ngj, ngz, iky0, kxarray, kyarray, parray, jarray, &
-                          contains_ky0, deltakx, deltaky
     USE fields,     ONLY: moments
     USE prec_const, ONLY: xp
-    USE model,      ONLY: LINEARITY
     USE parallel,   ONLY: my_id
     IMPLICIT NONE
-
-    REAL(xp) :: amplitude
-    INTEGER  :: ia,ip,ij,ikx,iky,iz, ikxi, ikyi
-    INTEGER, DIMENSION(12) :: iseedarr
-
     moments   = 0._xp
     IF (my_id .EQ. 0) THEN
       moments(:,:,:,2,2,:,:) = init_amp
@@ -470,7 +460,7 @@ CONTAINS
     USE fields,     ONLY: moments
     USE prec_const, ONLY: xp, pi
     USE model,      ONLY: LINEARITY
-    USE geometry,   ONLY: Jacobian, iInt_Jacobian, shear
+    USE geometry,   ONLY: Jacobian, iInt_Jacobian
     IMPLICIT NONE
     REAL(xp) :: kx, ky, sigma_z, z
     INTEGER :: ia,iky,ikx,iz,ip,ij
@@ -548,8 +538,8 @@ CONTAINS
     USE basic,      ONLY: maindir
     USE grid,       ONLY: local_na, local_np, local_nj, total_nkx, local_nky, local_nz,&
                           local_nkx_offset, local_nky_offset, kxarray, kyarray, &
-                          ngp, ngj, ngz, iky0, ikx0, parray, jarray,&
-                          deltakx, deltaky, contains_ky0, contains_kx0,&
+                          ngp, ngj, ngz, parray, jarray,&
+                          deltakx, deltaky,&
                           AA_x, AA_y
     USE fields,     ONLY: moments
     USE prec_const, ONLY: xp, imagu

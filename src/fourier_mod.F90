@@ -44,11 +44,10 @@ MODULE fourier
     !******************************************************************************!
     !------------- Initialize the grid distribution and plans -------------
     ! If we use the 2D fftw routines, the fftw library decides the best data distribution
-    SUBROUTINE init_grid_distr_and_plans(FFT2D,Nx,Ny,communicator,&
+    SUBROUTINE init_grid_distr_and_plans(Nx,Ny,communicator,&
             local_nx_ptr,local_nx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
         USE basic, ONLY: speak
         IMPLICIT NONE
-        LOGICAL, INTENT(IN)  :: FFT2D
         INTEGER, INTENT(IN)  :: Nx,Ny, communicator
         INTEGER(C_INTPTR_T), INTENT(OUT) :: local_nx_ptr,local_nx_ptr_offset
         INTEGER(C_INTPTR_T), INTENT(OUT) :: local_nky_ptr,local_nky_ptr_offset
@@ -57,7 +56,7 @@ MODULE fourier
         NY_halved  = NY_/2 + 1
         inv_Ny_    = 1._xp/REAL(2*NY_halved,xp)     
         ! Call FFTW 2D mpi routines to distribute the data and init 2D MPI FFTW plans
-        CALL fft2D_distr_and_plans(Nx,Ny,communicator,&
+        CALL fft2D_distr_and_plans(communicator,&
                 local_nx_ptr,local_nx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
         local_nx_  = local_nx_ptr  ! store number of local x  in the module
         local_nky_ = local_nky_ptr ! store number of local ky in the module
@@ -67,10 +66,10 @@ MODULE fourier
     END SUBROUTINE init_grid_distr_and_plans
 
     !------------- 2D fft initialization and mpi distribution
-    SUBROUTINE fft2D_distr_and_plans(Nx,Ny,communicator,&
+    SUBROUTINE fft2D_distr_and_plans(communicator,&
                 local_nx_ptr,local_nx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
         IMPLICIT NONE
-        INTEGER, INTENT(IN)  :: Nx,Ny, communicator
+        INTEGER, INTENT(IN)  :: communicator
         ! Distribution in the real space along x
         INTEGER(C_INTPTR_T), INTENT(OUT) :: local_nx_ptr, local_nx_ptr_offset
         ! Distribution in the fourier space along ky
@@ -138,18 +137,14 @@ MODULE fourier
     !------------- 1D initialization with balanced data distribution
     SUBROUTINE fft1D_plans
         USE utility,  ONLY: decomp1D
-        USE parallel, ONLY: num_procs_ky, rank_ky
         IMPLICIT NONE
         ! local var
         integer(C_INTPTR_T) :: rank     ! rank of each 1D fourier transforms
         integer(C_INTPTR_T) :: n        ! size of the data to fft
         integer(C_INTPTR_T) :: howmany  ! howmany 1D fourier transforms
-        COMPLEX, DIMENSION(:,:), ALLOCATABLE:: in, out
         integer(C_INTPTR_T) :: inembed, onembed
         integer(C_INTPTR_T) :: istride, ostride
         integer(C_INTPTR_T) :: idist, odist
-        integer(C_INTPTR_T) :: sign
-        integer(C_INTPTR_T) :: flags
 
         !! Plan of the 4 1D many transforms required
         !----------- 1: FFTx and inv through local ky data
@@ -273,12 +268,11 @@ END SUBROUTINE fft1D_plans
     !   module variable (convolution theorem)
     SUBROUTINE poisson_bracket_and_sum( ky_array, kx_array, inv_Ny, inv_Nx, AA_y, AA_x,&
                                         local_nky, total_nkx, F_, G_,&
-                                        ExB, ExB_NL_factor, dkx_ExB, sum_real_)
-        USE parallel, ONLY: my_id, num_procs_ky, comm_ky, rank_ky
+                                        ExB, ExB_NL_factor, sum_real_)
         IMPLICIT NONE
         INTEGER,                                  INTENT(IN) :: local_nky,total_nkx
         REAL(xp),                                 INTENT(IN) :: inv_Nx, inv_Ny
-        REAL(xp), DIMENSION(local_nky),           INTENT(IN) :: ky_array, AA_y, dkx_ExB
+        REAL(xp), DIMENSION(local_nky),           INTENT(IN) :: ky_array, AA_y
         REAL(xp), DIMENSION(total_nkx),           INTENT(IN) :: AA_x
         REAL(xp), DIMENSION(local_nky,total_nkx), INTENT(IN) :: kx_array
         COMPLEX(c_xp_c), DIMENSION(local_nky,total_nkx), &
@@ -298,10 +292,10 @@ END SUBROUTINE fft1D_plans
                 DO ikx = 1,total_nkx
                         ky  = ky_array(iky)
                         kxs = kx_array(iky,ikx)
-                        ikxF(ikx,iky) = imagu*kxs*F_(iky,ikx)*AA_y(iky)*AA_x(ikx)
-                        ikyG(ikx,iky) = imagu*ky *G_(iky,ikx)*AA_y(iky)*AA_x(ikx)
-                        ikyF(ikx,iky) = imagu*ky *F_(iky,ikx)*AA_y(iky)*AA_x(ikx)
-                        ikxG(ikx,iky) = imagu*kxs*G_(iky,ikx)*AA_y(iky)*AA_x(ikx)
+                        ikxF(ikx,iky) = imagu*kxs*F_(iky,ikx)
+                        ikyG(ikx,iky) = imagu*ky *G_(iky,ikx)
+                        ikyF(ikx,iky) = imagu*ky *F_(iky,ikx)
+                        ikxG(ikx,iky) = imagu*kxs*G_(iky,ikx)
                 ENDDO
         ENDDO
         IF(ExB) THEN 
@@ -311,6 +305,13 @@ END SUBROUTINE fft1D_plans
             CALL apply_ExB_NL_factor(ikyF,ExB_NL_factor)
             CALL apply_ExB_NL_factor(ikxG,ExB_NL_factor)
         ENDIF
+        ! Anti Aliasing
+        DO iky = 1,local_nky
+                ikxF(:,iky) = ikxF(:,iky)*AA_y(iky)*AA_x(:)
+                ikyG(:,iky) = ikyG(:,iky)*AA_y(iky)*AA_x(:)
+                ikyF(:,iky) = ikyF(:,iky)*AA_y(iky)*AA_x(:)
+                ikxG(:,iky) = ikxG(:,iky)*AA_y(iky)*AA_x(:)
+        ENDDO
         !-------------------- First term df/dx x dg/dy --------------------
 #ifdef SINGLE_PRECISION
         call fftwf_mpi_execute_dft_c2r(planb, ikxF, real_data_f)
@@ -342,38 +343,63 @@ END SUBROUTINE fft1D_plans
         COMPLEX(xp), DIMENSION(NX_,local_nky_), INTENT(INOUT)  :: fkxky
         COMPLEX(xp), DIMENSION(NX_,local_nky_), INTENT(IN)     :: ExB_NL_factor
         ! local variables
-        COMPLEX(xp), DIMENSION(NX_,local_nky_) :: fxky
-        CALL iFFT_kxky_to_xky(fkxky,fxky)
-        fxky = fxky*ExB_NL_factor*inv_Nx_
-        CALL FFT_xky_to_kxky(fxky,fkxky)
+        COMPLEX(xp), DIMENSION(NX_,local_nky_) :: tmp_kxky, tmp_xky
+        INTEGER :: ix,ikx,iky
+        ! Fill the buffer
+        DO iky = 1,local_nky_
+                DO ikx = 1,NX_
+                        tmp_kxky(ikx,iky) = fkxky(ikx,iky)
+                ENDDO
+        ENDDO
+        ! go to x,ky
+        CALL iFFT_kxky_to_xky(tmp_kxky,tmp_xky)
+        ! multiply result by NL factor
+        DO iky = 1,local_nky_
+            DO ix = 1,NX_
+                tmp_xky(ix,iky) = inv_Nx_*tmp_xky(ix,iky)*ExB_NL_factor(ix,iky)
+            ENDDO
+        ENDDO
+        ! back to kx,ky
+        CALL FFT_xky_to_kxky(tmp_xky,tmp_kxky)
+        ! fill output array
+        DO iky = 1,local_nky_
+                DO ikx = 1,NX_
+                        fkxky(ikx,iky) = tmp_kxky(ikx,iky)
+                ENDDO
+        ENDDO
     END SUBROUTINE apply_ExB_NL_factor
 
     ! Apply the exp(i*x*ky*S*J*dt) factor to the real Poisson Bracket sum [f,g]
     SUBROUTINE apply_inv_ExB_NL_factor(fyx,inv_ExB_NL_factor)
         IMPLICIT NONE
-        real(c_xp_r), pointer,                  INTENT(INOUT) :: fyx(:,:)
+        real(c_xp_r), pointer,                        INTENT(INOUT) :: fyx(:,:)
         COMPLEX(xp), DIMENSION(NY_halved,local_nx_),  INTENT(IN)    :: inv_ExB_NL_factor
         ! local variables
-        REAL(xp),    DIMENSION(2*NY_halved,local_nx_) :: buffer_1, buffer_2
-        COMPLEX(xp), DIMENSION(NY_halved+1,local_nx_) :: fkyx
-        INTEGER :: ix, iy
-        ! print*, SIZE(fyx), SIZE(buffer_1)
+        REAL(xp),    DIMENSION(2*NY_halved,local_nx_) :: tmp_yx_1, tmp_yx_2
+        COMPLEX(xp), DIMENSION(NY_halved+1,local_nx_) :: tmp_kyx
+        INTEGER :: ix, iy, iky
+        ! Fill buffer
         DO ix = 1,local_nx_
             DO iy = 1,2*NY_halved
-                buffer_1(iy,ix) = fyx(iy,ix)
+                tmp_yx_1(iy,ix) = fyx(iy,ix)
             ENDDO
         ENDDO
-        ! print*, SUM(fyx), SUM(buffer_1)
-        CALL FFT_yx_to_kyx(buffer_1,fkyx)
-        fkyx = fkyx*inv_ExB_NL_factor
-        CALL iFFT_kyx_to_yx(fkyx,buffer_2)
+        ! Fourier real to complex on the second buffer (first buffer is now unusable)
+        CALL FFT_yx_to_kyx(tmp_yx_1,tmp_kyx)
+        ! Treat the result with the ExB NL factor
+        DO iky = 1,NY_halved
+                DO ix = 1,local_nx_
+                        tmp_kyx(iky,ix) = tmp_kyx(iky,ix)*inv_ExB_NL_factor(iky,ix)
+                ENDDO
+        ENDDO
+        ! Back to Fourier space in the third buffer
+        CALL iFFT_kyx_to_yx(tmp_kyx,tmp_yx_2)
+        ! Fill the result array with normalization of iFFT
         DO ix = 1,local_nx_
             DO iy = 1,2*NY_halved
-                fyx(iy,ix) = buffer_2(iy,ix)*inv_Ny_
+                fyx(iy,ix) = tmp_yx_2(iy,ix)*inv_Ny_
             ENDDO
         ENDDO
-        ! print*, SUM(fyx)
-        ! stop
     END SUBROUTINE apply_inv_ExB_NL_factor
 
     !******************************************************************************!

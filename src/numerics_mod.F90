@@ -63,6 +63,7 @@ SUBROUTINE build_dv4Hp_table
    !we scale it w.r.t. to the max degree since
    !D_4^{v}\sim (\Delta v/2)^4 and \Delta v \sim 2pi/kvpar = pi/\sqrt{2P}
    ! dv4_Hp_coeff = dv4_Hp_coeff*(1._xp/2._xp/SQRT(REAL(pmax,xp)))**4
+  IF(pmax .GT. 0) &
    dv4_Hp_coeff = dv4_Hp_coeff*(PI/2._xp/SQRT(2._xp*REAL(pmax,xp)))**4
 END SUBROUTINE build_dv4Hp_table
 !******************************************************************************!

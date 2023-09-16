@@ -120,7 +120,7 @@ CONTAINS
 
   SUBROUTINE diagnose(kstep)
     !   Diagnostics, writing simulation state to disk
-    USE basic,           ONLY: lu_in, chrono_runt, cstep, dt, time, tmax, display_h_min_s
+    USE basic,           ONLY: lu_in, chrono_runt, cstep, time, display_h_min_s
     USE processing,      ONLY: pflux_x, hflux_x
     USE parallel,        ONLY: my_id
     IMPLICIT NONE
@@ -159,7 +159,7 @@ CONTAINS
     USE basic,           ONLY: speak,chrono_runt,&
                                cstep,iframe0d,iframe3d,iframe5d,crashed
     USE grid,            ONLY: &
-      parray_full,pmax,jarray_full,jmax, kparray, &
+      parray_full,jarray_full, kparray, &
       kyarray_full,kxarray_full,zarray_full, ngz, total_nz, local_nz, ieven,&
       local_Nky, total_nky, local_nkx, total_nkx
     USE geometry, ONLY: gxx, gxy, gxz, gyy, gyz, gzz, &
@@ -390,7 +390,6 @@ CONTAINS
     USE futils, ONLY: append, attach, getatt, creatd
     USE prec_const
     USE processing
-    USE model,   ONLY: Na
     IMPLICIT NONE
     ! Time measurement data
     CALL append(fidres, "/profiler/Tc_rhs",       REAL(chrono_mrhs%ttot,dp),ionode=0)
@@ -436,7 +435,6 @@ CONTAINS
     USE CLA, ONLY: Sf
 #endif
     IMPLICIT NONE
-    CHARACTER(50) :: dset_name
     iframe2d=iframe2d+1
     CALL append(fidres,"/data/var2d/time", REAL(time,dp), ionode=0)
     CALL append(fidres,"/data/var2d/cstep",REAL(cstep,dp),ionode=0)

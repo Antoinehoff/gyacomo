@@ -1,14 +1,16 @@
 SUBROUTINE control
   !   Control the run
 
-  use basic,      ONLY: str,daytim,speak,basic_data,&
+  use basic,          ONLY: str,daytim,speak,basic_data,&
                         nlend,step,increase_step,increase_time,increase_cstep,&
-                        chrono_runt,chrono_step, chrono_diag, start_chrono, stop_chrono
-  use prec_const,  ONLY: xp, stdout
-  USE parallel,    ONLY: ppinit
-  USE initial,     ONLY: initialize
-  USE mpi,         ONLY: MPI_COMM_WORLD
-  USE diagnostics, ONLY: diagnose
+                        chrono_runt,chrono_step, chrono_diag, chrono_ExBs,&
+                        start_chrono, stop_chrono
+  use prec_const,     ONLY: xp, stdout
+  USE parallel,       ONLY: ppinit
+  USE initial,        ONLY: initialize
+  USE mpi,            ONLY: MPI_COMM_WORLD
+  USE diagnostics,    ONLY: diagnose
+  USE ExB_shear_flow, ONLY: Array_shift_ExB_shear_flow, Update_ExB_shear_flow
   IMPLICIT NONE
   REAL(xp) :: t_init_diag_0, t_init_diag_1
   INTEGER  :: ierr
@@ -69,6 +71,18 @@ SUBROUTINE control
     ! Test if the stopping requirements are met (update nlend)
     CALL tesend
     IF( nlend ) EXIT ! exit do loop
+
+    ! Update the ExB shear flow for the next step
+    ! This call includes :
+    !  - the ExB shear value (s(ky)) update for the next time step
+    !  - the kx grid update
+    !  - the ExB NL correction factor update (exp(+/- ixkySdts))
+    !  - (optional) the kernel, poisson op. and ampere op update
+    CALL start_chrono(chrono_ExBs)
+      CALL Update_ExB_shear_flow
+    ! Shift the arrays if the shear value sky is too high
+      CALL Array_shift_ExB_shear_flow
+    CALL stop_chrono(chrono_ExBs)
 
     ! Increment steps and csteps (private in basic module)
     CALL increase_step

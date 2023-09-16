@@ -112,11 +112,6 @@ MODULE grid
   ! 1D Antialiasing arrays (2/3 rule)
   REAL(xp), DIMENSION(:), ALLOCATABLE, PUBLIC,PROTECTED :: AA_x
   REAL(xp), DIMENSION(:), ALLOCATABLE, PUBLIC,PROTECTED :: AA_y
-  ! 2D fft routines or 1D methods (for ExBshear simulations, 1D is required)
-  ! The 2D fft is using fftw mpi optimization
-  ! The 1D is not using mpi and does a data transfer with redundant computations
-  !   (each process computes the convolution)
-  LOGICAL, PUBLIC, PROTECTED :: FFT2D = .TRUE.
 
   ! Public Functions
   PUBLIC :: init_grids_data, set_grids, update_grids
@@ -134,7 +129,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER :: lun   = 90              ! File duplicated from STDIN
-    NAMELIST /GRID/ pmax, jmax, Nx, Lx, Ny, Ly, Nz, SG, Nexc, FFT2D
+    NAMELIST /GRID/ pmax, jmax, Nx, Lx, Ny, Ly, Nz, SG, Nexc
     READ(lun,grid)
     IF(Nz .EQ. 1) & ! overwrite SG option if Nz = 1 for safety of use
       SG      = .FALSE.
@@ -202,7 +197,7 @@ CONTAINS
     !! Parallel distribution of kx ky grid
     IF (LINEARITY .NE. 'linear') THEN ! we let FFTW distribute if we use it
       IF (my_id .EQ. 0) write(*,*) 'FFTW3 y-grid distribution'
-      CALL init_grid_distr_and_plans(FFT2D,Nx,Ny,comm_ky,local_nx_ptr,local_nx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
+      CALL init_grid_distr_and_plans(Nx,Ny,comm_ky,local_nx_ptr,local_nx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
     ELSE ! otherwise we distribute equally
       IF (my_id .EQ. 0) write(*,*) 'Manual y-grid distribution'
       ! balanced distribution among the processes
@@ -453,7 +448,6 @@ CONTAINS
       ! indexation (|1 2 3||1 2 3|... local_nky|)
       IF(Ny .EQ. 1) THEN
         kyarray(iky)      = deltaky
-        kyarray(iky)      = iky-1        
         kyarray_full(iky) = deltaky
         SINGLE_KY         = .TRUE.
       ELSE
@@ -543,7 +537,7 @@ CONTAINS
       ERROR STOP "Gyacomo is safer with an even Kx number"
     ENDIF
     ! Orszag 2/3 filter
-    two_third_kxmax = 2._xp/3._xp*kx_max;
+    two_third_kxmax = 2._xp/3._xp*(kx_max-deltakx);
     ! Antialiasing filter
     DO iky = 1,local_nky
       DO ikx = 1,local_nkx
@@ -673,11 +667,11 @@ CONTAINS
     REAL(xp), DIMENSION(local_nky),INTENT(IN) :: dkx_ExB ! ExB correction dkx = gamma_E ky dtshift
     REAL(xp), DIMENSION(local_nz+ngz,nzgrid), INTENT(IN) :: gxx,gxy,gyy,inv_hatB2
     INTEGER     :: eo,iz,iky,ikx
-    REAL(xp)    :: kx, ky, skp2
+    REAL(xp)    :: kx, ky
     ! Update the kx grid
-    DO iky = 1,local_nky
-      DO ikx = 1,total_Nkx
-        kxarray(iky,ikx) = kxarray0(ikx) + dkx_ExB(iky)
+    DO ikx = 1,total_Nkx
+      DO iky = 1,local_nky
+        kxarray(iky,ikx) = kxarray0(ikx) - dkx_ExB(iky)
       ENDDO
     ENDDO
     ! Update the kperp grid

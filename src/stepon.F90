@@ -2,14 +2,13 @@ SUBROUTINE stepon
    !   Advance one time step, (num_step=4 for Runge Kutta 4 scheme)
    USE advance_field_routine, ONLY: advance_time_level, advance_moments
    USE basic,                 ONLY: nlend, chrono_advf, chrono_pois,&
-      chrono_chck, chrono_clos, chrono_ghst, chrono_ExBs,&
+      chrono_chck, chrono_clos, chrono_ghst,&
       start_chrono, stop_chrono
    USE closure,               ONLY: apply_closure_model
    USE ghosts,                ONLY: update_ghosts_moments, update_ghosts_EM
    use mpi,                   ONLY: MPI_COMM_WORLD
    USE time_integration,      ONLY: ntimelevel
    USE prec_const,            ONLY: xp
-   USE ExB_shear_flow,        ONLY: Apply_ExB_shear_flow, Update_ExB_shear_flow
 #ifdef TEST_SVD
    USE CLA,                  ONLY: test_svd,filter_sv_moments_ky_pj
 #endif
@@ -18,17 +17,7 @@ SUBROUTINE stepon
    INTEGER :: num_step, ierr
    LOGICAL :: mlend
 
-   ! Update the ExB backg. shear flow before the step
-   ! This call includes :
-   !  - the kx grid update
-   !  - the kernel, poisson op. and ampere op update
-   !  - kx-shift of the fields at required ky values
-   !  - the ExB shear value (s(ky)) update for the next time step
-   CALL start_chrono(chrono_ExBs)
-      CALL Apply_ExB_shear_flow
-   CALL stop_chrono(chrono_ExBs)
-
-   DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
+   SUBSTEPS:DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
       !----- BEFORE: All fields+ghosts are updated for step = n
       ! Compute right hand side from current fields
       ! N_rhs(N_n, nadia_n, phi_n, S_n, Tcoll_n)
@@ -80,12 +69,7 @@ SUBROUTINE stepon
       CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
       !----- AFTER: All fields are updated for step = n+1
 
-   END DO
-
-   ! Update the ExB shear flow for the next step
-   CALL start_chrono(chrono_ExBs)
-      CALL Update_ExB_shear_flow
-   CALL stop_chrono(chrono_ExBs)   
+   END DO SUBSTEPS
 
 CONTAINS
 !!!! Basic structure to simplify stepon
