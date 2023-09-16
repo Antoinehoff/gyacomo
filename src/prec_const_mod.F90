@@ -7,17 +7,8 @@ MODULE prec_const
                                            stdout=>output_unit, &
                                            stderr=>error_unit
   use, intrinsic :: iso_c_binding
-
-  ! Define single and double precision
-  INTEGER, PARAMETER :: sp = REAL32 !Single precision
-  INTEGER, PARAMETER :: dp = REAL64 !Double precision  
-  INTEGER, private :: dp_r, dp_p !Range and Aprecision of doubles
-  INTEGER, private :: sp_r, sp_p !Range and precision of singles
-  INTEGER, private :: MPI_SP !Single precision for MPI
-  INTEGER, private :: MPI_DP !Double precision in MPI
-  INTEGER, private :: MPI_SUM_DP !Sum reduction operation for DP datatype
-  INTEGER, private :: MPI_MAX_DP !Max reduction operation for DP datatype
-  INTEGER, private :: MPI_MIN_DP !Min reduction operation for DP datatype
+  INTEGER, PARAMETER :: sp = REAL32
+  INTEGER, PARAMETER :: dp = REAL64
 
   ! Define a generic precision parameter for the entire program
 #ifdef SINGLE_PRECISION
@@ -36,10 +27,6 @@ MODULE prec_const
   ! Auxiliary variables (unused)
   INTEGER, private   :: xp_r, xp_p !Range and precision of single
   INTEGER, private   :: MPI_XP     !Double precision in MPI
-  INTEGER, private   :: MPI_SUM_XP !Sum reduction operation for xp datatype
-  INTEGER, private   :: MPI_MAX_XP !Max reduction operation for xp datatype
-  INTEGER, private   :: MPI_MIN_XP !Min reduction operation for xp datatype
-
 
   ! Some useful constants, to avoid recomputing them too often
   REAL(xp),    PARAMETER :: PI=3.141592653589793238462643383279502884197_xp
@@ -70,14 +57,7 @@ MODULE prec_const
       IMPLICIT NONE
       integer :: ierr,me
 
-      ! REAL(sp) :: a = 1_sp
-      ! REAL(dp) :: b = 1_dp
-      !Get range and precision of ISO FORTRAN sizes
-      ! sp_r = range(a)
-      ! sp_p = precision(a)
-      ! dp_r = range(b)
-      ! dp_p = precision(b)
-      
+      !Get range and precision of ISO FORTRAN sizes      
       REAL(xp) :: c = 1._xp
       xp_r = range(c)
       xp_p = precision(c)
@@ -85,8 +65,6 @@ MODULE prec_const
       CALL mpi_comm_rank(MPI_COMM_WORLD,me,ierr)
 
       !Create MPI datatypes that support the specific size
-      ! CALL MPI_Type_create_f90_real(sp_p,sp_r,MPI_sp,ierr)
-      ! CALL MPI_Type_create_f90_real(dp_p,dp_r,MPI_xp,ierr)
       CALL MPI_Type_create_f90_real(xp_p,xp_r,MPI_xp,ierr)
 
     END SUBROUTINE INIT_PREC_CONST

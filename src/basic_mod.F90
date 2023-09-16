@@ -222,20 +222,20 @@ CONTAINS
     secs = FLOOR(time);
 
     IF ( days .GT. 0 ) THEN !display day h min s
-      hours = (time/3600./24. - days) * 24
-      mins  = (time/3600. - days*24. - hours) * 60
-      secs  = (time/60. - days*24.*60 - hours*60 - mins) * 60
+      hours = NINT((time/3600./24. - days) * 24)
+      mins  = NINT((time/3600. - days*24. - hours) * 60)
+      secs  = NINT((time/60. - days*24.*60 - hours*60 - mins) * 60)
       IF (my_id .EQ. 0) WRITE(*,*) 'CPU Time = ', days, '[day]', hours, '[h]', mins, '[min]', secs, '[s]'
       IF (my_id .EQ. 0) WRITE(*,*) '(',time,'[s])'
 
     ELSEIF ( hours .GT. 0 ) THEN !display h min s
-      mins  = (time/3600. - hours) * 60
-      secs  = (time/60. - hours*60 - mins) * 60
+      mins  = NINT((time/3600. - hours) * 60)
+      secs  = NINT((time/60. - hours*60 - mins) * 60)
       IF (my_id .EQ. 0) WRITE(*,*) 'CPU Time = ', hours, '[h]', mins, '[min]', secs, '[s]'
       IF (my_id .EQ. 0) WRITE(*,*) '(',time,'[s])'
 
     ELSEIF ( mins .GT. 0 ) THEN !display min s
-      secs  = (time/60. - mins) * 60
+      secs  = NINT((time/60. - mins) * 60)
       IF (my_id .EQ. 0) WRITE(*,*) 'CPU Time = ', mins, '[min]', secs, '[s]'
       IF (my_id .EQ. 0) WRITE(*,*) '(',time,'[s])'
 
@@ -325,7 +325,7 @@ CONTAINS
     COMPLEX(xp), DIMENSION(:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1
     ALLOCATE(a(is1:ie1))
-    a=CMPLX(0.0_xp,0.0_xp)
+    a=CMPLX(0.,0.,xp)
   END SUBROUTINE allocate_array_dc1
 
   SUBROUTINE allocate_array_dc2(a,is1,ie1,is2,ie2)
@@ -333,7 +333,7 @@ CONTAINS
     COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2
     ALLOCATE(a(is1:ie1,is2:ie2))
-    a=CMPLX(0.0_xp,0.0_xp)
+    a=CMPLX(0.,0.,xp)
   END SUBROUTINE allocate_array_dc2
 
   SUBROUTINE allocate_array_dc3(a,is1,ie1,is2,ie2,is3,ie3)
@@ -341,7 +341,7 @@ CONTAINS
     COMPLEX(xp), DIMENSION(:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3))
-    a=CMPLX(0.0_xp,0.0_xp)
+    a=CMPLX(0.,0.,xp)
   END SUBROUTINE allocate_array_dc3
 
   SUBROUTINE allocate_array_dc4(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4)
@@ -349,7 +349,7 @@ CONTAINS
     COMPLEX(xp), DIMENSION(:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4))
-    a=CMPLX(0.0_xp,0.0_xp)
+    a=CMPLX(0.,0.,xp)
   END SUBROUTINE allocate_array_dc4
 
   SUBROUTINE allocate_array_dc5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
@@ -357,7 +357,7 @@ CONTAINS
     COMPLEX(xp), DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
-    a=CMPLX(0.0_xp,0.0_xp)
+    a=CMPLX(0.,0.,xp)
   END SUBROUTINE allocate_array_dc5
 
   SUBROUTINE allocate_array_dc6(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6)
@@ -365,7 +365,7 @@ CONTAINS
     COMPLEX(xp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5,is6:ie6))
-    a=CMPLX(0.0_xp,0.0_xp)
+    a=CMPLX(0.,0.,xp)
   END SUBROUTINE allocate_array_dc6
 
   SUBROUTINE allocate_array_dc7(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6,is7,ie7)
@@ -373,7 +373,7 @@ CONTAINS
     COMPLEX(xp), DIMENSION(:,:,:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
     INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5,is6,ie6,is7,ie7
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5,is6:ie6,is7:ie7))
-    a=CMPLX(0.0_xp,0.0_xp)
+    a=CMPLX(0.,0.,xp)
   END SUBROUTINE allocate_array_dc7
   !========================================
 
@@ -409,14 +409,6 @@ CONTAINS
     a=0
   END SUBROUTINE allocate_array_i4
 
-  SUBROUTINE allocate_array_i5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
-    IMPLICIT NONE
-    INTEGER, DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
-    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
-    ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
-    a=0
-  END SUBROUTINE allocate_array_i5
-
   !========================================
 
   SUBROUTINE allocate_array_l1(a,is1,ie1)
@@ -450,13 +442,5 @@ CONTAINS
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4))
     a=.false.
   END SUBROUTINE allocate_array_l4
-
-  SUBROUTINE allocate_array_l5(a,is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5)
-    IMPLICIT NONE
-    LOGICAL, DIMENSION(:,:,:,:,:), ALLOCATABLE, INTENT(INOUT) :: a
-    INTEGER, INTENT(IN) :: is1,ie1,is2,ie2,is3,ie3,is4,ie4,is5,ie5
-    ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4,is5:ie5))
-    a=.false.
-  END SUBROUTINE allocate_array_l5
 
 END MODULE basic

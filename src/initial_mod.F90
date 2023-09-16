@@ -545,12 +545,13 @@ CONTAINS
     USE prec_const, ONLY: xp, imagu
     USE model,      ONLY: LINEARITY
     IMPLICIT NONE
-    REAL(xp), DIMENSION(186,94) :: ricci_mat_real, ricci_mat_imag
+    REAL(xp), DIMENSION(:,:), ALLOCATABLE :: ricci_mat_real, ricci_mat_imag
     REAL(xp) :: scaling
     INTEGER  :: ia,ip,ij,ikx,iky,iz, LPFx, LPFy
     CHARACTER(256) ::  filename
 
-    ! open data file
+    ! load picture from data file
+    ALLOCATE(ricci_mat_real(186,94),ricci_mat_imag(186,94))
     ricci_mat_real = 0; ricci_mat_imag = 0
     filename = TRIM(maindir) // '/Gallery/fourier_ricci_real.txt'
     OPEN(unit = 1 , file = filename)
@@ -609,6 +610,7 @@ CONTAINS
             moments(:,:,:,iky,ikx,:,:) = 0._xp
         ENDDO
       ENDDO
+    DEALLOCATE(ricci_mat_real,ricci_mat_imag)
   END SUBROUTINE init_ricci
   !******************************************************************************!
 

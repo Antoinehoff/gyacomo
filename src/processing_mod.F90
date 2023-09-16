@@ -246,8 +246,8 @@ CONTAINS
                ENDDO
             ENDIF
          ELSE
-            gflux_x(ia) = gflux_local
-            pflux_x(ia) = pflux_local
+            gflux_x(ia) = REAL(gflux_local,xp)
+            pflux_x(ia) = REAL(pflux_local,xp)
          ENDIF
       ENDDO
    END SUBROUTINE compute_radial_transport
@@ -332,7 +332,7 @@ CONTAINS
                ENDDO
             ENDIF
          ELSE
-            hflux_x(ia) = hflux_local
+            hflux_x(ia) = REAL(hflux_local,xp)
          ENDIF
       ENDDO
    END SUBROUTINE compute_radial_heatflux
@@ -355,8 +355,8 @@ CONTAINS
          DO ij  = 1,local_nj
          DO ip  = 1,local_np
             local_sum(ip,ij,iz)  = local_sum(ip,ij,iz)  + &
-               (moments(ia,ip+Ngp/2,ij+Ngj/2,iky,ikx,iz+Ngz/2,updatetlevel) &
-               * CONJG(moments(ia,ip+Ngp/2,ij+Ngj/2,iky,ikx,iz+Ngz/2,updatetlevel)))
+               REAL(moments(ia,ip+Ngp/2,ij+Ngj/2,iky,ikx,iz+Ngz/2,updatetlevel) &
+               * CONJG(moments(ia,ip+Ngp/2,ij+Ngj/2,iky,ikx,iz+Ngz/2,updatetlevel)),xp)
          ENDDO
          ENDDO
          ENDDO

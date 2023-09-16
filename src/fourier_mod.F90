@@ -19,12 +19,10 @@ MODULE fourier
     PUBLIC :: init_grid_distr_and_plans, poisson_bracket_and_sum, finalize_plans, apply_inv_ExB_NL_factor
 
     !! Module variables
-    CHARACTER(2)                :: FFT_ALGO ! use of 2D or 1D routines
     !! 2D fft specific variables (C interface)
     type(C_PTR)                 :: cdatar_f, cdatar_g, cdatar_c
     type(C_PTR)                 :: cdatac_f, cdatac_g, cdatac_c
     type(C_PTR) ,        PUBLIC :: planf, planb
-    integer(C_INTPTR_T)         :: i, ix, iy
     integer(C_INTPTR_T), PUBLIC :: alloc_local_1, alloc_local_2
     integer(C_INTPTR_T)         :: NX_, NY_, NY_halved, local_nky_, local_nx_ 
     real   (c_xp_r), pointer, PUBLIC :: real_data_f(:,:), real_data_g(:,:), bracket_sum_r(:,:)
@@ -344,7 +342,7 @@ END SUBROUTINE fft1D_plans
         COMPLEX(xp), DIMENSION(NX_,local_nky_), INTENT(IN)     :: ExB_NL_factor
         ! local variables
         COMPLEX(xp), DIMENSION(NX_,local_nky_) :: tmp_kxky, tmp_xky
-        INTEGER :: ix,ikx,iky
+        integer(C_INTPTR_T) :: ix,ikx,iky
         ! Fill the buffer
         DO iky = 1,local_nky_
                 DO ikx = 1,NX_
@@ -377,7 +375,7 @@ END SUBROUTINE fft1D_plans
         ! local variables
         REAL(xp),    DIMENSION(2*NY_halved,local_nx_) :: tmp_yx_1, tmp_yx_2
         COMPLEX(xp), DIMENSION(NY_halved+1,local_nx_) :: tmp_kyx
-        INTEGER :: ix, iy, iky
+        integer(C_INTPTR_T) :: ix, iy, iky
         ! Fill buffer
         DO ix = 1,local_nx_
             DO iy = 1,2*NY_halved

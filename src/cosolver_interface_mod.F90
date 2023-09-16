@@ -135,7 +135,7 @@ CONTAINS
       REAL(xp), DIMENSION(:,:,:,:),   ALLOCATABLE :: Caa__kp         ! To store the coeff that will be used along kperp
       REAL(xp), DIMENSION(:,:,:,:,:), ALLOCATABLE :: CabF_kp,CabT_kp ! ''
       REAL(xp), DIMENSION(:),         ALLOCATABLE :: kp_grid_mat     ! kperp grid of the matrices
-      REAL(xp), DIMENSION(2) :: dims
+      INTEGER,  DIMENSION(2) :: dims
       ! Indices for row and columns of the COSOlver matrix (4D compressed 2D matrices)
       INTEGER  :: irow_sub, irow_full, icol_sub, icol_full
       INTEGER  :: fid                                       ! file indexation

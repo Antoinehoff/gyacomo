@@ -566,9 +566,8 @@ CONTAINS
     USE grid,   ONLY:total_np, total_nj, total_nky, total_nkx, total_nz, &
                      local_np, local_nj, local_nky, local_nkx, local_nz, &
                      ngp, ngj, ngz, total_na
-    USE prec_const, ONLY: xp,dp
+    USE prec_const, ONLY: xp, dp
     IMPLICIT NONE
-  
     CALL append(fidres,  "/data/var5d/time",  REAL(time,dp),ionode=0)
     CALL append(fidres, "/data/var5d/cstep", REAL(cstep,dp),ionode=0)
     CALL getatt(fidres,      "/data/var5d/",       "frames",iframe5d)
@@ -632,6 +631,7 @@ CONTAINS
        CALL gather_xyz(phi(:,:,(1+Ngz/2):(local_nz+Ngz/2)), field_to_check,local_nky,total_nky,total_nkx,local_nz,total_nz)
        IF(my_id.EQ. 0) THEN
          WRITE(check_filename,'(a16)') 'check_phi.out'
+         fid_check = 0
          OPEN(fid_check, file=check_filename, form='formatted')
          WRITE(*,*) 'Check file found -> output phi ..'
          WRITE(fid_check,*) total_nky, total_nkx, total_nz

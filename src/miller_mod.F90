@@ -21,7 +21,6 @@ MODULE miller
   real(xp) :: rho, kappa, delta, s_kappa, s_delta, drR, drZ, zeta, s_zeta
   real(xp) :: thetaShift
   real(xp) :: thetak, thetad
-  INTEGER  :: ierr
 CONTAINS
 
   !>Set defaults for miller parameters

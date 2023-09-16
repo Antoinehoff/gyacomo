@@ -29,7 +29,7 @@ MODULE species
   REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q2_tau             ! factor of the gammaD sum
   REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q_o_sqrt_tau_sigma ! For psi field terms
   REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: sqrt_tau_o_sigma   ! For Ampere eq
-  REAL(xp), PUBLIC, PROTECTED :: Ptot = 0._dp ! total pressure
+  REAL(xp), PUBLIC, PROTECTED :: Ptot = 0._xp ! total pressure
   !! Accessible routines
   PUBLIC :: species_readinputs, species_outputinputs
 CONTAINS
@@ -84,7 +84,7 @@ CONTAINS
         ADIAB_I = .FALSE.
       END SELECT
     ENDDO
-    IF (.NOT. MHD_PD) Ptot = 0._dp
+    IF (.NOT. MHD_PD) Ptot = 0._xp
     !! Set collision frequency tensor
     IF (nu .EQ. 0) THEN
       nu_ab = 0

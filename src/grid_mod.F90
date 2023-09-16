@@ -77,7 +77,8 @@ MODULE grid
   integer(C_INTPTR_T), PUBLIC,PROTECTED :: local_nx_ptr, local_nky_ptr
   integer(C_INTPTR_T), PUBLIC,PROTECTED :: local_nx_ptr_offset, local_nky_ptr_offset
   ! Grid spacing and limits
-  REAL(xp), PUBLIC, PROTECTED ::  deltap, deltaz, inv_deltaz, inv_dkx
+  INTEGER , PUBLIC, PROTECTED ::  deltap
+  REAL(xp), PUBLIC, PROTECTED ::  deltaz, inv_deltaz, inv_dkx
   REAL(xp), PUBLIC, PROTECTED ::  deltakx, deltaky, deltax, kx_max, ky_max, kx_min, ky_min!, kp_max
   INTEGER , PUBLIC, PROTECTED ::  local_pmin,  local_pmax
   INTEGER , PUBLIC, PROTECTED ::  local_jmin,  local_jmax
@@ -209,10 +210,10 @@ CONTAINS
     Nky              = Ny/2+1 ! Defined only on positive kx since fields are real
     total_nky        = Nky
     Ngy              = 0 ! no ghosts cells in ky
-    ikys             = local_nky_ptr_offset + 1
-    ikye             = ikys + local_nky_ptr - 1
+    ikys             = INT(local_nky_ptr_offset + 1)
+    ikye             = INT(ikys + local_nky_ptr - 1)
     local_nky        = ikye - ikys + 1
-    local_nky_offset = local_nky_ptr_offset
+    local_nky_offset = INT(local_nky_ptr_offset)
     ALLOCATE(kyarray_full(Nky))
     ALLOCATE(kyarray(local_nky))
     ALLOCATE(ikyarray(Nky))
@@ -230,8 +231,8 @@ CONTAINS
     ALLOCATE(kxarray(local_nky,local_Nkx))
     ALLOCATE(AA_x(local_nkx))
     !!---------------- RADIAL X GRID (only for Fourier routines)
-    local_nx        = local_nx_ptr
-    local_nx_offset = local_nx_ptr_offset
+    local_nx        = INT(local_nx_ptr)
+    local_nx_offset = INT(local_nx_ptr_offset)
     ALLOCATE(xarray(Nx))
     !!---------------- PARALLEL Z GRID (parallelized)
     total_nz = Nz
@@ -563,7 +564,7 @@ CONTAINS
     USE prec_const, ONLY: xp, pi
     IMPLICIT NONE
     INTEGER :: ix
-    REAL    :: L_
+    REAL(xp):: L_
     L_     = 2._xp*pi/deltakx
     deltax = L_/REAL(Nx,xp)
     ! full xgrid

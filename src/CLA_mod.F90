@@ -35,7 +35,7 @@ CONTAINS
       REAL(xp), DIMENSION(Jmax+2,Jmax+2) :: LL, iLL   ! Laguerre matrix to invert (+1 dim for j=0 and +1 dim for coeff J+1)
       INTEGER :: i,n
       ! Hermite
-      HH = 0._dp
+      HH = 0._xp
       DO i = 1,Pmax+3
          n = i-1 !poly. degree
          HH(1:i,i) = get_hermite_coeffs(n)
@@ -43,7 +43,7 @@ CONTAINS
       CALL inverse_triangular(Pmax+3,HH,iHH)
 
       ! Laguerre
-      LL = 0._dp
+      LL = 0._xp
       DO i = 1,Jmax+2
          n = i-1 !poly. degree
          LL(1:i,i) = get_laguerre_coeffs(n)

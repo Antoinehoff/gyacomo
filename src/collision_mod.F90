@@ -186,10 +186,10 @@ CONTAINS
                 !** Assembling collison operator **
                 IF( (p_xp .EQ. 0._xp) .AND. (j_xp .EQ. 0._xp)) THEN !Ca00
                   Tmp = tau(ia)**2 * kp2_xp**2*(&
-                    67_xp/120_xp      *moments(ia,ip0,ij0,iky,ikx,izi,updatetlevel)&
-                   +67_xp*SQRT2/240_xp*moments(ia,ip2,ij0,iky,ikx,izi,updatetlevel)&
-                   -67_xp/240_xp      *moments(ia,ip0,ij1,iky,ikx,izi,updatetlevel)&
-                   -3_xp/10_xp        *q_tau(ia)*phi(iky,ikx,izi))
+                    67._xp/120._xp      *moments(ia,ip0,ij0,iky,ikx,izi,updatetlevel)&
+                   +67._xp*SQRT2/240._xp*moments(ia,ip2,ij0,iky,ikx,izi,updatetlevel)&
+                   -67._xp/240._xp      *moments(ia,ip0,ij1,iky,ikx,izi,updatetlevel)&
+                   -3._xp/10._xp        *q_tau(ia)*phi(iky,ikx,izi))
                 ELSEIF( (p_xp .EQ. 2._xp) .AND. (j_xp .EQ. 0._xp)) THEN ! Ca20
                   Tmp = tau(ia) * kp2_xp*(&
                    -SQRT2*twothird*moments(ia,ip0,ij0,iky,ikx,izi,updatetlevel)&

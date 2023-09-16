@@ -8,7 +8,7 @@ SUBROUTINE stepon
    USE ghosts,                ONLY: update_ghosts_moments, update_ghosts_EM
    use mpi,                   ONLY: MPI_COMM_WORLD
    USE time_integration,      ONLY: ntimelevel
-   USE prec_const,            ONLY: xp
+   USE prec_const,            ONLY: xp, sp
 #ifdef TEST_SVD
    USE CLA,                  ONLY: test_svd,filter_sv_moments_ky_pj
 #endif
@@ -114,14 +114,14 @@ CONTAINS
       USE model,            ONLY: LINEARITY, FORCE_SYMMETRY
       IMPLICIT NONE
       LOGICAL :: checkf_
-      REAL    :: sum_
+      REAL(sp):: sum_
       ! filtering
       IF(LINEARITY .NE. 'linear') CALL anti_aliasing    ! ensure 0 mode for 2/3 rule
       IF(FORCE_SYMMETRY)          CALL enforce_symmetry ! Enforcing symmetry on kx = 0 (looks useless)
 
       mlend=.FALSE.
       IF(.NOT.nlend) THEN
-         sum_    = SUM(ABS(phi))
+         sum_    = REAL(SUM(ABS(phi)),sp)
          checkf_ = (is_nan(sum_,'phi') .OR. is_inf(sum_,'phi'))
          mlend   = (mlend .or. checkf_)
          CALL MPI_ALLREDUCE(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierr)

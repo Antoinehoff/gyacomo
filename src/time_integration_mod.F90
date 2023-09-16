@@ -35,7 +35,9 @@ MODULE time_integration
   integer, public, protected :: updatetlevel_rhs = 1 !< time level to be updated for rhs
   !!---- end
 
-  PUBLIC :: set_updatetlevel, time_integration_readinputs, time_integration_outputinputs
+  PUBLIC :: set_updatetlevel, time_integration_readinputs, time_integration_outputinputs, &
+            adaptive_time_scheme_setup, adaptive_set_error, adaptive_must_recompute_step, &
+            set_updatetlevel_rhs
 
 CONTAINS
 

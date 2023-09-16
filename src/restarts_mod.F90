@@ -9,7 +9,7 @@ USE grid, ONLY: local_Na,local_Na_offset,local_np,local_np_offset,&
   kyarray_full,kxarray_full,zarray, zarray_full, local_zmin, local_zmax ! for z interp
 USE fields,          ONLY: moments, phi, psi
 !USE time_integration
-USE prec_const,      ONLY : xp,dp,sp,PI
+USE prec_const,      ONLY : xp,PI
 USE MPI,             ONLY: MPI_COMM_WORLD
 IMPLICIT NONE
 
@@ -45,11 +45,11 @@ CONTAINS
     WRITE(rstfile,'(a,i2.2,a3)') 'outputs_',job2load,'.h5'
     CALL speak("Resume from "//rstfile)
     ! Open file
-    IF(xp .EQ. dp) THEN
-      CALL openf(rstfile, fidrst, mode='r', real_prec='d', mpicomm=comm0)
-    ELSE
-      CALL openf(rstfile, fidrst, mode='r', mpicomm=comm0)
-    ENDIF
+#ifdef SINGLE_PRECISION
+    CALL openf(rstfile, fidrst, mode='r', mpicomm=comm0)
+#else
+    CALL openf(rstfile, fidrst, mode='r', real_prec='d', mpicomm=comm0)
+#endif
     ! Get the dimensions of the checkpoint moments
     CALL getatt(fidrst,"/data/input/model",  "Na", Na_cp)
     CALL getatt(fidrst,"/data/input/grid" ,  "Np", Np_cp)

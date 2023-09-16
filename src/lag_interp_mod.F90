@@ -89,11 +89,11 @@ CONTAINS
 
   !> Third order lagrange interpolation for complex arrays
   SUBROUTINE lag3interp_complex(y_in,x_in,n_in,y_out,x_out,n_out)
-    INTEGER, INTENT(IN) :: n_in,n_out
-    COMPLEX, DIMENSION(n_in), INTENT(IN) :: y_in
-    REAL(xp), DIMENSION(n_in), INTENT(IN) :: x_in
-    COMPLEX, DIMENSION(n_out), INTENT(OUT) :: y_out
-    REAL(xp), DIMENSION(n_out), INTENT(IN) :: x_out
+    INTEGER,     INTENT(IN) :: n_in,n_out
+    COMPLEX(xp), DIMENSION(n_in),  INTENT(IN) :: y_in
+    REAL(xp),    DIMENSION(n_in),  INTENT(IN) :: x_in
+    COMPLEX(xp), DIMENSION(n_out), INTENT(OUT):: y_out
+    REAL(xp),    DIMENSION(n_out), INTENT(IN) :: x_out
 
     REAL(xp) :: x,aintm,aint0,aint1,aint2,xm,x0,x1,x2
     INTEGER :: j,jm,j0,j1,j2
