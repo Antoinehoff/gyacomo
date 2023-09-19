@@ -292,8 +292,8 @@ CONTAINS
   ! The other grids are simply
   ! |_|_|_|_|
   !  1 2 3 4
-  SUBROUTINE set_grids(shear,Npol,LINEARITY,N_HD,EM,Na)
-    REAL(xp), INTENT(IN) :: shear, Npol
+  SUBROUTINE set_grids(shear,ExBrate,Npol,LINEARITY,N_HD,EM,Na)
+    REAL(xp), INTENT(IN) :: shear, ExBrate, Npol
     CHARACTER(len=*), INTENT(IN) :: LINEARITY
     INTEGER, INTENT(IN)  :: N_HD
     LOGICAL, INTENT(IN)  :: EM
@@ -302,7 +302,7 @@ CONTAINS
     CALL set_pgrid(EM)
     CALL set_jgrid
     CALL set_kygrid(LINEARITY,N_HD)
-    CALL set_kxgrid(shear,Npol,1._xp,LINEARITY,N_HD) ! this will be redone after geometry if Cyq0_x0 .NE. 1
+    CALL set_kxgrid(shear,ExBrate,Npol,1._xp,LINEARITY,N_HD) ! this will be redone after geometry if Cyq0_x0 .NE. 1
     CALL set_xgrid
     CALL set_zgrid (Npol)
   END SUBROUTINE set_grids
@@ -486,10 +486,10 @@ CONTAINS
     ENDIF
   END SUBROUTINE set_kygrid
 
-  SUBROUTINE set_kxgrid(shear,Npol,Cyq0_x0,LINEARITY,N_HD)
-    USE prec_const
+  SUBROUTINE set_kxgrid(shear,ExBrate,Npol,Cyq0_x0,LINEARITY,N_HD)
+    USE prec_const, ONLY: xp, pi
     IMPLICIT NONE
-    REAL(xp), INTENT(IN) :: shear, Npol, Cyq0_x0
+    REAL(xp), INTENT(IN) :: shear, Npol, Cyq0_x0, ExBrate
     CHARACTER(len=*), INTENT(IN) ::LINEARITY
     INTEGER, INTENT(IN)  :: N_HD
     INTEGER :: ikx, iky
@@ -538,7 +538,13 @@ CONTAINS
       ERROR STOP "Gyacomo is safer with an even Kx number"
     ENDIF
     ! Orszag 2/3 filter
-    two_third_kxmax = 2._xp/3._xp*(kx_max-deltakx);
+    ! We remove one point more if ExB is on since the moving grid
+    ! can go up to kx=+-(kx_max+deltakx/2)
+    IF (ABS(ExBrate) .GT. 0) THEN
+      two_third_kxmax = 2._xp/3._xp*(kx_max-deltakx)
+    ELSE
+      two_third_kxmax = 2._xp/3._xp*kx_max
+    ENDIF
     ! Antialiasing filter
     DO iky = 1,local_nky
       DO ikx = 1,local_nkx
@@ -663,16 +669,16 @@ CONTAINS
     two_third_kpmax = 2._xp/3._xp * MAXVAL(kparray)
   END SUBROUTINE
 
-  SUBROUTINE update_grids (dkx_ExB,gxx,gxy,gyy,inv_hatB2)
+  SUBROUTINE update_grids (sky_ExB,gxx,gxy,gyy,inv_hatB2)
     IMPLICIT NONE
-    REAL(xp), DIMENSION(local_nky),INTENT(IN) :: dkx_ExB ! ExB correction dkx = gamma_E ky dtshift
+    REAL(xp), DIMENSION(local_nky),INTENT(IN) :: sky_ExB ! ExB correction dkx = gamma_E ky dtshift
     REAL(xp), DIMENSION(local_nz+ngz,nzgrid), INTENT(IN) :: gxx,gxy,gyy,inv_hatB2
     INTEGER     :: eo,iz,iky,ikx
     REAL(xp)    :: kx, ky
     ! Update the kx grid
     DO ikx = 1,total_Nkx
       DO iky = 1,local_nky
-        kxarray(iky,ikx) = kxarray0(ikx) - dkx_ExB(iky)
+        kxarray(iky,ikx) = kxarray0(ikx) - sky_ExB(iky)
       ENDDO
     ENDDO
     ! Update the kperp grid

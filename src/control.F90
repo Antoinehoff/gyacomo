@@ -10,7 +10,7 @@ SUBROUTINE control
   USE initial,        ONLY: initialize
   USE mpi,            ONLY: MPI_COMM_WORLD
   USE diagnostics,    ONLY: diagnose
-  USE ExB_shear_flow, ONLY: Array_shift_ExB_shear_flow, Update_ExB_shear_flow
+  USE ExB_shear_flow, ONLY: Update_ExB_shear_flow
   IMPLICIT NONE
   REAL(xp) :: t_init_diag_0, t_init_diag_1
   INTEGER  :: ierr
@@ -67,10 +67,14 @@ SUBROUTINE control
   !              2.   Main loop
   DO
     CALL start_chrono(chrono_step) ! Measuring time per step
-    
+
     ! Test if the stopping requirements are met (update nlend)
     CALL tesend
     IF( nlend ) EXIT ! exit do loop
+
+    ! Increment steps and csteps (private in basic module)
+    CALL increase_step
+    CALL increase_cstep
 
     ! Update the ExB shear flow for the next step
     ! This call includes :
@@ -79,14 +83,8 @@ SUBROUTINE control
     !  - the ExB NL correction factor update (exp(+/- ixkySdts))
     !  - (optional) the kernel, poisson op. and ampere op update
     CALL start_chrono(chrono_ExBs)
-      CALL Update_ExB_shear_flow
-    ! Shift the arrays if the shear value sky is too high
-      CALL Array_shift_ExB_shear_flow
+      CALL Update_ExB_shear_flow(1)
     CALL stop_chrono(chrono_ExBs)
-
-    ! Increment steps and csteps (private in basic module)
-    CALL increase_step
-    CALL increase_cstep
 
     ! Do a full RK step (e.g. 4 substeps for ERK4)
     CALL stepon

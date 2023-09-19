@@ -2,7 +2,7 @@ MODULE ExB_shear_flow
     ! This module contains the necessary tools to implement ExB shearing flow effects.
     ! The algorithm is taken from the presentation of Hammett et al. 2006 (APS) and
     ! it the one used in GS2.
-    USE prec_const, ONLY: xp, imagu
+    USE prec_const, ONLY: xp, imagu, pi
 
     IMPLICIT NONE
     ! Variables
@@ -23,9 +23,12 @@ CONTAINS
 
     ! Setup the variables for the ExB shear
     SUBROUTINE Setup_ExB_shear_flow(ExBrate)
-        USE grid,     ONLY: Nx, local_nky, total_nky, local_nx, Ny, deltakx, deltaky
+        USE grid,     ONLY: Nx, local_nky, total_nky, local_nx, Ny, deltakx, deltaky,&
+                            kyarray, kyarray_full
         USE geometry, ONLY: Cyq0_x0
+        USE basic,    ONLY: dt
         IMPLICIT NONE
+        INTEGER :: iky
         REAL(xp), INTENT(IN) :: ExBrate
 
         ! Setup the ExB shearing rate and aux var
@@ -42,9 +45,20 @@ CONTAINS
 
         ! Setup the ExB shift array
         ALLOCATE(sky_ExB(local_nky))
+        ! consider no initial shift (maybe changed if restart)
         sky_ExB = 0._xp
-        ALLOCATE(sky_ExB_full(total_nky))
+        ! Midpoint init
+        DO iky = 1,local_nky
+            sky_ExB(iky) = sky_ExB(iky) !+ 0.5_xp*kyarray(iky)*gamma_E*dt
+        ENDDO
+
+        ALLOCATE(sky_ExB_full(total_nky+1))
+        ! consider no initial shift (maybe changed if restart)
         sky_ExB_full = 0._xp
+        ! Midpoint init
+        DO iky = 1,total_nky+1
+            sky_ExB_full(iky) = sky_ExB_full(iky) !+ 0.5_xp*REAL(iky-1,xp)*deltaky*gamma_E*dt
+        ENDDO
 
         ! Setup the kx correction array
         ALLOCATE(dkx_ExB(local_nky))
@@ -60,27 +74,74 @@ CONTAINS
 
         ! Setup nonlinear factor
         ALLOCATE(    ExB_NL_factor(Nx,local_nky))
-        ALLOCATE(inv_ExB_NL_factor(Ny/2+1,local_nx))
+        ALLOCATE(inv_ExB_NL_factor(Ny/2+2,local_nx))
             ExB_NL_factor = 1._xp
         inv_ExB_NL_factor = 1._xp
 
     END SUBROUTINE Setup_ExB_shear_flow
 
-    ! Update according to the current ExB shear value
-    ! -shift the grids
-    ! -the spatial operators
-    ! -the fields by imposing a shift on kx
+    ! update the ExB shear value for the next time step
+    SUBROUTINE Update_ExB_shear_flow(step_number)
+        USE basic,      ONLY: dt,time
+        USE grid,       ONLY: local_nky, total_nky, kyarray, inv_dkx, kyarray_full, update_grids, deltaky
+        USE geometry,   ONLY: gxx,gxy,gyy,inv_hatB2, evaluate_magn_curv
+        USE numerics,   ONLY: evaluate_EM_op, evaluate_kernels
+        USE model,      ONLY: LINEARITY
+        USE time_integration, ONLY: c_E
+        IMPLICIT NONE
+        INTEGER, INTENT(IN) :: step_number
+        ! local var
+        INTEGER :: iky
+        REAL(xp):: tnext
+
+        ! tnext = time + c_E(step_number)*dt
+        tnext = time + 0._xp*dt
+        ! do nothing if no ExB
+        IF(ExB) THEN
+            ! Update new shear value
+            DO iky = 1,local_nky
+                !! This must be done incrementely to be able to pull it back
+                !  when a grid shift occurs                
+                sky_ExB(iky)      = sky_ExB(iky) - kyarray(iky)*gamma_E*dt
+                jump_ExB(iky)     = NINT(sky_ExB(iky)*inv_dkx)
+                ! If the jump is 1 or more for a given ky, we flag the index
+                ! in shiftnow_ExB and will use it in Shift_fields to avoid
+                ! zero-shiftings that may be majoritary.
+                shiftnow_ExB(iky) = (abs(jump_ExB(iky)) .GT. 0)
+            ENDDO
+            ! Update the full skyExB array too
+            DO iky = 1,total_nky+1
+                sky_ExB_full(iky) = sky_ExB_full(iky) - REAL(iky-1,xp)*deltaky*gamma_E*dt
+            ENDDO
+            ! Shift the arrays if the shear value sky is too high
+            CALL Array_shift_ExB_shear_flow
+
+            ! We update the operators and grids
+            !   update the grids  
+            CALL update_grids(sky_ExB,gxx,gxy,gyy,inv_hatB2)
+            !   update the EM op., the kernels and the curvature op.
+            CALL evaluate_kernels
+            CALL evaluate_EM_op
+            CALL evaluate_magn_curv
+            !   update the ExB nonlinear factor...
+            IF(LINEARITY .EQ. 'nonlinear') &
+             CALL update_nonlinear_ExB_factors
+        ENDIF
+    END SUBROUTINE Update_ExB_shear_flow
+
+    ! According to the current ExB shear value we update
+    ! the fields by imposing a shift on kx
     SUBROUTINE Array_shift_ExB_shear_flow
-        USE grid,       ONLY: local_nky, update_grids, &
-            total_nkx, deltakx, kx_min, kx_max, kxarray0
+        USE grid,       ONLY: local_nky, total_nky, update_grids, &
+            total_nkx, deltakx, kx_min, kx_max, kxarray0, inv_dkx
         USE prec_const, ONLY: PI
         USE fields,     ONLY: moments, phi, psi
         USE numerics,   ONLY: evaluate_EM_op, evaluate_kernels
         IMPLICIT NONE
         ! local var
-        INTEGER :: iky, ikx, ikx_s, i_, loopstart, loopend, increment
+        INTEGER :: iky, ikx, ikx_s, i_, loopstart, loopend, increment, jump_
         IF(ExB) THEN
-            ! shift all fields and correct the shift value
+            ! shift all local fields and correct the local shift value
             DO iky = 1,local_Nky
                 IF(shiftnow_ExB(iky)) THEN
                     ! We shift the array from left to right or right to left according to the jump
@@ -107,15 +168,12 @@ CONTAINS
                             ikx = i_ - total_nkx/2 + 1
                         ENDIF
                         ikx_s = ikx + jump_ExB(iky)
-                        ! adjust the shift according
+                        ! adjust the shift accordingly
                         IF (ikx_s .LE. 0) &
                             ikx_s = ikx_s + total_nkx
                         IF (ikx_s .GT. total_nkx) &
                             ikx_s = ikx_s - total_nkx
-                        ! We test if the shifted modes are still in contained in our resolution
-                        ! IF ( ((ikx_s .GT. 0 )              .AND. (ikx_s .LE. total_nkx )) .AND. &
-                        !     (((ikx   .LE. (total_nkx/2+1)) .AND. (ikx_s .LE. (total_nkx/2+1))) .OR. &
-                        !      ((ikx   .GT. (total_nkx/2+1)) .AND. (ikx_s .GT. (total_nkx/2+1)))) ) THEN
+                        ! Then we test if the shifted modes are still in contained in our resolution
                         IF ( (kxarray0(ikx)+jump_ExB(iky)*deltakx .LE. kx_max) .AND. &
                              (kxarray0(ikx)+jump_ExB(iky)*deltakx .GE. kx_min)) THEN
                                 moments(:,:,:,iky,ikx,:,:) = moments(:,:,:,iky,ikx_s,:,:)
@@ -129,73 +187,66 @@ CONTAINS
                     ENDDO
                     ! correct the shift value s(ky) for this row
                     sky_ExB(iky) = sky_ExB(iky) - jump_ExB(iky)*deltakx
+                    ! reset the flag
+                    shiftnow_ExB(iky) = .FALSE.
                 ENDIF
             ENDDO
         ENDIF
+        ! Check the global shift values
+        DO iky = 1,total_nky+1
+            jump_ = NINT(sky_ExB_full(iky)*inv_dkx)
+            IF (ABS(jump_) .GT. 0) &
+                sky_ExB_full(iky) = sky_ExB_full(iky) - jump_*deltakx
+        ENDDO
+
     END SUBROUTINE Array_shift_ExB_shear_flow
 
-    ! update the ExB shear value for the next time step
-    SUBROUTINE Update_ExB_shear_flow
-        USE basic,      ONLY: dt, time
-        USE grid,       ONLY: local_nky, local_nky_offset, kyarray, inv_dkx, xarray, Nx, Ny, &
-                              local_nx,  local_nx_offset, kyarray_full,&
-                              ikyarray, inv_ikyarray, deltaky, update_grids
-        USE geometry,   ONLY: gxx,gxy,gyy,inv_hatB2, evaluate_magn_curv
-        USE numerics,   ONLY: evaluate_EM_op, evaluate_kernels
+    SUBROUTINE Update_nonlinear_ExB_factors
+        USE grid,  ONLY: local_nky, local_nky_offset, xarray, Nx, Ny, local_nx, deltakx,&
+                         local_nx_offset, ikyarray, inv_ikyarray, deltaky, update_grids
+        USE basic, ONLY: time, dt
         IMPLICIT NONE
-        ! local var
         INTEGER :: iky, ix
-        REAL(xp):: dt_ExB, J_dp, inv_J, x
-        ! do nothing if no ExB
-        IF(ExB) THEN
-            ! reset the ExB shift, jumps and flags
-            shiftnow_ExB = .FALSE.
-            DO iky = 1,local_Nky
-                sky_ExB(iky)      = sky_ExB(iky) - kyarray(iky)*gamma_E*dt
-                jump_ExB(iky)     = NINT(sky_ExB(iky)*inv_dkx)
-                ! If the jump is 1 or more for a given ky, we flag the index
-                ! in shiftnow_ExB and will use it in Shift_fields to avoid
-                ! zero-shiftings that may be majoritary.
-                shiftnow_ExB(iky) = (abs(jump_ExB(iky)) .GT. 0)
+        REAL(xp):: dt_ExB, J_xp, inv_J, xval, tnext
+        tnext = time + dt
+        DO iky = 1,local_nky ! WARNING: Local indices ky loop
+            ! for readability
+            ! J_xp  = ikyarray(iky+local_nky_offset)
+            ! inv_J = inv_ikyarray(iky+local_nky_offset)
+            J_xp   = REAL(iky-1,xp)
+            IF(J_xp .GT. 0._xp) THEN
+                inv_J  = 1._xp/J_xp
+            ELSE
+                inv_J  = 0._xp
+            ENDIF
+            ! compute dt factor
+            dt_ExB = (tnext - t0*inv_J*ANINT(J_xp*tnext*inv_t0,xp))
+            DO ix = 1,Nx
+                xval = 2._xp*pi/deltakx*REAL(ix-1,xp)/REAL(Nx,xp)!xarray(ix)
+                ! assemble the ExB nonlin factor
+                ! ExB_NL_factor(ix,iky) = EXP(-imagu*x*gamma_E*J_xp*deltaky*dt_ExB)
+                ExB_NL_factor(ix,iky) = EXP(-imagu*sky_ExB(iky)*xval)               
+                ! ExB_NL_factor(ix,iky) = EXP(-imagu*sky_ExB_full(iky+local_nky_offset)*xval)               
             ENDDO
-            ! Update the full skyExB array too
-            sky_ExB_full = sky_ExB_full - kyarray_full*gamma_E*dt
-            ! Update the ExB nonlinear factor...
-            DO iky = 1,local_Nky ! WARNING: Local indices ky loop
-                ! for readability
-                J_dp    = ikyarray(iky+local_nky_offset)
-                inv_J   = inv_ikyarray(iky+local_nky_offset)
-                ! compute dt factor
-                dt_ExB       = (time - t0*inv_J*ANINT(J_dp*time*inv_t0,xp))
-                dkx_ExB(iky) = gamma_E*J_dp*deltaky*dt_ExB
-                DO ix = 1,Nx
-                    x = xarray(ix)
-                    ! assemble the ExB nonlin factor
-                    !ExB_NL_factor(ix,iky) = EXP(imagu*x*dkx_ExB(iky))
-                    ExB_NL_factor(ix,iky) = EXP(imagu*x*sky_ExB(iky)) !GENE does that???
-                ENDDO
+        ENDDO
+        ! ... and the inverse
+        DO iky = 1,Ny/2+2 ! WARNING: Global indices ky loop
+            ! for readability
+            J_xp   = REAL(iky-1,xp)
+            IF(J_xp .GT. 0._xp) THEN
+                inv_J  = 1._xp/J_xp
+            ELSE
+                inv_J  = 0._xp
+            ENDIF
+            ! compute dt factor
+            dt_ExB = (tnext - t0*inv_J*ANINT(J_xp*tnext*inv_t0,xp))
+            DO ix = 1,local_nx
+                xval = 2._xp*pi/deltakx*REAL(ix-1,xp)/REAL(Nx,xp)!xarray(ix+local_nx_offset)
+                ! assemble the inverse ExB nonlin factor
+                ! inv_ExB_NL_factor(iky,ix) = EXP(imagu*x*gamma_E*J_xp*deltaky*dt_ExB)
+                inv_ExB_NL_factor(iky,ix) = EXP(imagu*sky_ExB_full(iky)*xval)
             ENDDO
-            ! ... and the inverse
-            DO iky = 1,Ny/2+1 ! WARNING: Global indices ky loop
-                ! for readability
-                J_dp  = ikyarray(iky)
-                inv_J = inv_ikyarray(iky)
-                ! compute dt factor
-                dt_ExB = (time - t0*inv_J*ANINT(J_dp*time*inv_t0,xp))
-                DO ix = 1,local_nx
-                    x = xarray(ix+local_nx_offset)
-                    ! assemble the inverse ExB nonlin factor
-                    ! inv_ExB_NL_factor(iky,ix) = EXP(-imagu*x*gamma_E*J_dp*deltaky*dt_ExB)
-                    inv_ExB_NL_factor(iky,ix) = EXP(-imagu*x*sky_ExB_full(iky)) !GENE does that???
-                ENDDO
-            ENDDO
-        ENDIF
-        ! We update the operators and grids
-        !   update the grids  
-        CALL update_grids(dkx_ExB,gxx,gxy,gyy,inv_hatB2)
-        !   update the EM op., the kernels and the curvature op.
-        CALL evaluate_kernels
-        CALL evaluate_EM_op
-        CALL evaluate_magn_curv
-    END SUBROUTINE Update_ExB_shear_flow
+        ENDDO
+    END SUBROUTINE Update_nonlinear_ExB_factors
+
 END MODULE ExB_shear_flow

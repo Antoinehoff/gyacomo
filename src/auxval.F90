@@ -25,7 +25,7 @@ subroutine auxval
   CALL speak('=== Set auxiliary values ===')
   ! Init the grids
   CALL init_grids_data(Na,EM,LINEARITY) 
-  CALL set_grids(shear,Npol,LINEARITY,N_HD,EM,Na) 
+  CALL set_grids(shear,ExBrate,Npol,LINEARITY,N_HD,EM,Na) 
   ! Allocate memory for global arrays
   CALL memory
   ! Initialize displacement and receive arrays

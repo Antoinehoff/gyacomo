@@ -104,7 +104,7 @@ CONTAINS
     USE miller,   ONLY: set_miller_parameters, get_miller
     USE circular, ONLY: get_circ
     USE calculus, ONLY: simpson_rule_z
-    USE model,    ONLY: beta, LINEARITY, N_HD
+    USE model,    ONLY: beta, ExBrate, LINEARITY, N_HD
     USE species,  ONLY: Ptot
     ! evalute metrix, elementwo_third_kpmaxts, jacobian and gradient
     implicit none
@@ -127,6 +127,7 @@ CONTAINS
           IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for s-alpha geometry"
           IF(MODULO(FLOOR(Npol),2) .EQ. 0)   ERROR STOP "Npol must be odd for s-alpha"
           call eval_salpha_geometry
+          C_y     = 1._xp
           Cyq0_x0 = 1._xp
         CASE('z-pinch','Z-pinch','zpinch','Zpinch')
           CALL speak('Z-pinch geometry')
@@ -136,6 +137,7 @@ CONTAINS
           q0      = 0._xp
           eps     = 0._xp
           kappa   = 1._xp
+          C_y     = 1._xp
           Cyq0_x0 = 1._xp
         CASE('miller','Miller')
           CALL speak('Miller geometry')
@@ -165,7 +167,7 @@ CONTAINS
     ! inv squared of the magnetic gradient bckg amplitude (for fast kperp update)
     inv_hatB2 = 1/hatB/hatB
     ! Reset kx grid (to account for Cyq0_x0 factor)
-    CALL set_kxgrid(shear,Npol,Cyq0_x0,LINEARITY,N_HD) 
+    CALL set_kxgrid(shear,ExBrate,Npol,Cyq0_x0,LINEARITY,N_HD) 
     !
     ! Evaluate perpendicular wavenumber
     !  k_\perp^2 = g^{xx} k_x^2 + 2 g^{xy}k_x k_y + k_y^2 g^{yy}

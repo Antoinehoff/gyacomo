@@ -266,7 +266,7 @@ END SUBROUTINE fft1D_plans
     !   module variable (convolution theorem)
     SUBROUTINE poisson_bracket_and_sum( ky_array, kx_array, inv_Ny, inv_Nx, AA_y, AA_x,&
                                         local_nky, total_nkx, F_, G_,&
-                                        ExB, ExB_NL_factor, sum_real_)
+                                        ExB, ExB_NL_factor,sky_ExB,sum_real_)
         IMPLICIT NONE
         INTEGER,                                  INTENT(IN) :: local_nky,total_nkx
         REAL(xp),                                 INTENT(IN) :: inv_Nx, inv_Ny
@@ -274,11 +274,12 @@ END SUBROUTINE fft1D_plans
         REAL(xp), DIMENSION(total_nkx),           INTENT(IN) :: AA_x
         REAL(xp), DIMENSION(local_nky,total_nkx), INTENT(IN) :: kx_array
         COMPLEX(c_xp_c), DIMENSION(local_nky,total_nkx), &
-                                            INTENT(IN)      :: F_, G_
+                                                  INTENT(IN) :: F_, G_
         COMPLEX(xp), DIMENSION(total_nkx,local_nky), &
-                                            INTENT(IN)      :: ExB_NL_factor
+                                                  INTENT(IN) :: ExB_NL_factor
         LOGICAL, INTENT(IN) :: ExB
-        real(c_xp_r), pointer,              INTENT(INOUT)   :: sum_real_(:,:)
+        REAL(xp),DIMENSION(local_nky),            INTENT(IN) :: sky_ExB
+        real(c_xp_r), pointer,                 INTENT(INOUT) :: sum_real_(:,:)
         ! local variables
         INTEGER :: ikx,iky
         COMPLEX(xp), DIMENSION(total_nkx,local_nky) :: ikxF, ikyG, ikyF, ikxG
@@ -330,6 +331,7 @@ END SUBROUTINE fft1D_plans
         call fftw_mpi_execute_dft_c2r(planb, ikxG, real_data_g)
 #endif
         sum_real_ = sum_real_ - real_data_f*real_data_g*inv_Ny*inv_Nx
+
     END SUBROUTINE poisson_bracket_and_sum
     !******************************************************************************!
 
@@ -371,7 +373,7 @@ END SUBROUTINE fft1D_plans
     SUBROUTINE apply_inv_ExB_NL_factor(fyx,inv_ExB_NL_factor)
         IMPLICIT NONE
         real(c_xp_r), pointer,                        INTENT(INOUT) :: fyx(:,:)
-        COMPLEX(xp), DIMENSION(NY_halved,local_nx_),  INTENT(IN)    :: inv_ExB_NL_factor
+        COMPLEX(xp), DIMENSION(NY_halved+1,local_nx_),  INTENT(IN)  :: inv_ExB_NL_factor
         ! local variables
         REAL(xp),    DIMENSION(2*NY_halved,local_nx_) :: tmp_yx_1, tmp_yx_2
         COMPLEX(xp), DIMENSION(NY_halved+1,local_nx_) :: tmp_kyx
@@ -385,7 +387,7 @@ END SUBROUTINE fft1D_plans
         ! Fourier real to complex on the second buffer (first buffer is now unusable)
         CALL FFT_yx_to_kyx(tmp_yx_1,tmp_kyx)
         ! Treat the result with the ExB NL factor
-        DO iky = 1,NY_halved
+        DO iky = 1,NY_halved+1
                 DO ix = 1,local_nx_
                         tmp_kyx(iky,ix) = tmp_kyx(iky,ix)*inv_ExB_NL_factor(iky,ix)
                 ENDDO
