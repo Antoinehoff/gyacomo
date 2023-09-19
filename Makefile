@@ -79,7 +79,7 @@ gfdp: compile
 
 # gfortran version, compile with gfortran
 gdebug: F90 = mpif90
-gdebug: F90FLAGS = -C -g -std=legacy -ffree-line-length-0
+gdebug: F90FLAGS = -C -g -Wall -std=legacy -ffree-line-length-0
 gdebug: EXTMOD   = -J $(MODDIR)
 gdebug: EXEC = $(BINDIR)/gyacomo23_debug
 gdebug: dirs src/srcinfo.h
