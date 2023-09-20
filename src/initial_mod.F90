@@ -18,6 +18,8 @@ MODULE initial
   REAL(xp), PUBLIC, PROTECTED :: init_noiselvl   = 1E-6_xp
   ! Initialization for random number generator
   INTEGER,  PUBLIC, PROTECTED :: iseed=42
+  ! Single mode initialization
+  INTEGER,  PUBLIC, PROTECTED :: ikx_init,iky_init
 
   PUBLIC :: initial_outputinputs, initial_readinputs, initialize
 
@@ -31,7 +33,8 @@ CONTAINS
     IMPLICIT NONE
 
     NAMELIST /INITIAL/ INIT_OPT,ACT_ON_MODES,&
-                       init_amp,init_background,init_noiselvl,iseed
+                       init_amp,init_background,init_noiselvl,iseed,&
+                       ikx_init,iky_init
     READ(lu_in,initial)
   END SUBROUTINE initial_readinputs
 
@@ -271,10 +274,11 @@ CONTAINS
     IMPLICIT NONE
     moments   = 0._xp
     IF (my_id .EQ. 0) THEN
-      moments(:,:,:,2,2,:,:) = init_amp
-      moments(:,:,:,3,3,:,:) = init_amp
-      moments(:,:,:,4,4,:,:) = init_amp
-      moments(:,:,:,5,5,:,:) = init_amp
+      moments(:,:,:,iky_init,ikx_init,:,:) = init_amp
+      ! moments(:,:,:,2,2,:,:) = init_amp
+      ! moments(:,:,:,4,3,:,:) = init_amp
+      ! moments(:,:,:,4,4,:,:) = init_amp
+      ! moments(:,:,:,5,5,:,:) = init_amp
     ENDIF
   END SUBROUTINE init_single_mode
   !******************************************************************************!
