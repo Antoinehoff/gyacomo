@@ -1,0 +1,98 @@
+&BASIC
+  nrun       = 100000000
+  dt         = 0.00075
+  tmax       = 0.5
+  maxruntime = 356400
+  job2load   = -1
+/
+&GRID
+  pmax  = 0
+  jmax  = 0
+  Nx     = 186
+  Lx     = 100
+  Ny     = 186
+  Ly     = 100
+  Nz     = 1
+  SG     = .false.
+  Nexc   = 1
+/
+&GEOMETRY
+  geom   = 'zpinch'!'miller'
+  q0     = 1.0
+  shear  = 0.0
+  eps    = 0.0
+  kappa  = 1
+  s_kappa  = 0
+  delta  = 0
+  s_delta  = 0
+  zeta   = 0
+  s_zeta   = 0
+  parallel_bc = 'dirichlet'
+  shift_y = 0
+  Npol    = 1
+  PB_PHASE= .false.
+/
+&DIAGNOSTICS
+  dtsave_0d = 0.01
+  dtsave_1d = -1
+  dtsave_2d = -1
+  dtsave_3d = 0.01
+  dtsave_5d = 100
+  write_doubleprecision = .true.
+  write_gamma = .true.
+  write_hf    = .true.
+  write_phi   = .true.
+  write_Na00  = .true.
+  write_Napj  = .true.
+  write_dens  = .true.
+  write_temp  = .true.
+/
+&MODEL
+LINEARITY = 'linear'
+RM_LD_T_EQ= .false.
+  Na      = 1
+  mu_x    = 1
+  mu_y    = 1
+  N_HD    = 4
+  mu_z    = 0
+  HYP_V   = 'hypcoll'
+  mu_p    = 0
+  mu_j    = 0
+  nu      = 1
+  k_gB    = 0
+  k_cB    = 0
+  lambdaD = 0
+  beta    = 0.0
+  ExBrate = 5.0
+  ADIAB_E = .true.
+  ADIAB_I = .false.
+  tau_i   = 1
+  MHD_PD  = .false.
+/
+&CLOSURE
+  hierarchy_closure='truncation'
+  dmax             =-1
+  nonlinear_closure='truncation'
+  nmax             =0
+/
+&SPECIES
+  name_  = 'ions' 
+  tau_   = 1
+  sigma_ = 1
+  q_     = 1
+  K_N_   = 0
+  K_T_   = 0
+/
+&COLLISION
+  collision_model = 'DG'
+  GK_CO      = .false.
+  INTERSPECIES    = .true.
+  mat_file        = '/home/ahoffman/gyacomo/iCa/null'
+  collision_kcut  = 1
+/
+&INITIAL
+  INIT_OPT = 'ricci'
+/
+&TIME_INTEGRATION
+  numerical_scheme = 'RK4'
+/
