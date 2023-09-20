@@ -92,10 +92,7 @@ CONTAINS
         INTEGER, INTENT(IN) :: step_number
         ! local var
         INTEGER :: iky
-        REAL(xp):: tnext
 
-        ! tnext = time + c_E(step_number)*dt
-        tnext = time + 0._xp*dt
         ! do nothing if no ExB
         IF(ExB) THEN
             ! Update new shear value
@@ -125,7 +122,7 @@ CONTAINS
             CALL evaluate_magn_curv
             !   update the ExB nonlinear factor...
             IF(LINEARITY .EQ. 'nonlinear') &
-             CALL update_nonlinear_ExB_factors
+             CALL update_nonlinear_ExB_factors(step_number)
         ENDIF
     END SUBROUTINE Update_ExB_shear_flow
 
@@ -201,14 +198,18 @@ CONTAINS
 
     END SUBROUTINE Array_shift_ExB_shear_flow
 
-    SUBROUTINE Update_nonlinear_ExB_factors
+    SUBROUTINE Update_nonlinear_ExB_factors(step_number)
         USE grid,  ONLY: local_nky, local_nky_offset, xarray, Nx, Ny, local_nx, deltakx,&
                          local_nx_offset, ikyarray, inv_ikyarray, deltaky, update_grids
         USE basic, ONLY: time, dt
+        USE time_integration, ONLY: c_E
         IMPLICIT NONE
+        INTEGER, INTENT(IN) :: step_number        
         INTEGER :: iky, ix
-        REAL(xp):: dt_ExB, J_xp, inv_J, xval, tnext
-        tnext = time + dt
+        REAL(xp):: dt_ExB, J_xp, inv_J, xval, tnow
+
+        tnow = time + c_E(step_number)*dt
+
         DO iky = 1,local_nky ! WARNING: Local indices ky loop
             ! for readability
             ! J_xp  = ikyarray(iky+local_nky_offset)
@@ -220,12 +221,12 @@ CONTAINS
                 inv_J  = 0._xp
             ENDIF
             ! compute dt factor
-            dt_ExB = (tnext - t0*inv_J*ANINT(J_xp*tnext*inv_t0,xp))
+            dt_ExB = (tnow - t0*inv_J*ANINT(J_xp*tnow*inv_t0,xp))
             DO ix = 1,Nx
                 xval = 2._xp*pi/deltakx*REAL(ix-1,xp)/REAL(Nx,xp)!xarray(ix)
                 ! assemble the ExB nonlin factor
-                ! ExB_NL_factor(ix,iky) = EXP(-imagu*x*gamma_E*J_xp*deltaky*dt_ExB)
-                ExB_NL_factor(ix,iky) = EXP(-imagu*sky_ExB(iky)*xval)               
+                ExB_NL_factor(ix,iky) = EXP(-imagu*xval*gamma_E*J_xp*deltaky*dt_ExB)
+                ! ExB_NL_factor(ix,iky) = EXP(-imagu*sky_ExB(iky)*xval)               
                 ! ExB_NL_factor(ix,iky) = EXP(-imagu*sky_ExB_full(iky+local_nky_offset)*xval)               
             ENDDO
         ENDDO
@@ -239,14 +240,17 @@ CONTAINS
                 inv_J  = 0._xp
             ENDIF
             ! compute dt factor
-            dt_ExB = (tnext - t0*inv_J*ANINT(J_xp*tnext*inv_t0,xp))
+            dt_ExB = (tnow - t0*inv_J*ANINT(J_xp*tnow*inv_t0,xp))
             DO ix = 1,local_nx
                 xval = 2._xp*pi/deltakx*REAL(ix-1,xp)/REAL(Nx,xp)!xarray(ix+local_nx_offset)
                 ! assemble the inverse ExB nonlin factor
-                ! inv_ExB_NL_factor(iky,ix) = EXP(imagu*x*gamma_E*J_xp*deltaky*dt_ExB)
-                inv_ExB_NL_factor(iky,ix) = EXP(imagu*sky_ExB_full(iky)*xval)
+                inv_ExB_NL_factor(iky,ix) = EXP(imagu*gamma_E*J_xp*deltaky*dt_ExB*xval)
+                ! inv_ExB_NL_factor(iky,ix) = EXP(imagu*sky_ExB_full(iky)*xval)
             ENDDO
         ENDDO
+        ! Cancel the additional point
+        inv_ExB_NL_factor(Ny/2+1,:) = 0._xp
+        inv_ExB_NL_factor(Ny/2+2,:) = 0._xp
     END SUBROUTINE Update_nonlinear_ExB_factors
 
 END MODULE ExB_shear_flow
