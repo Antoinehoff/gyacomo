@@ -3,17 +3,24 @@ function [FIGURE, kykx, wkykx, ekykx] = mode_growth_meter(DATA,OPTIONS)
 NORMALIZED = OPTIONS.NORMALIZED;
 Nma   = OPTIONS.NMA; %Number moving average
 d     = OPTIONS.fftz.flag;  % To add spectral evolution of z (useful for 3d zpinch)
-
-if numel(size(DATA.PHI)) == 3
-        field = squeeze(DATA.PHI);
+switch OPTIONS.FIELD
+    case 'Ni00'
+        FIELD = DATA.Ni00;
+        fname = 'N^{00}';
+    case 'phi'
+        FIELD = DATA.PHI;
+        fname = '\phi';
+end
+if numel(size(FIELD)) == 3
+        field = squeeze(FIELD);
         zstrcomp = 'z=0';
 else
     switch OPTIONS.iz
         case 'avg'
-            field = reshape(mean(DATA.PHI,3),DATA.grids.Nky,DATA.grids.Nkx,numel(DATA.Ts3D));
+            field = reshape(mean(FIELD,3),DATA.grids.Nky,DATA.grids.Nkx,numel(DATA.Ts3D));
             zstrcomp = 'z-avg';
         otherwise
-            field = reshape(DATA.PHI(:,:,OPTIONS.iz,:),DATA.grids.Nky,DATA.grids.Nkx,numel(DATA.Ts3D));
+            field = reshape(FIELD(:,:,OPTIONS.iz,:),DATA.grids.Nky,DATA.grids.Nkx,numel(DATA.Ts3D));
             zstrcomp = ['z=',num2str(DATA.grids.z(OPTIONS.iz))];
     end
 end
@@ -31,7 +38,7 @@ TW = [OPTIONS.KY_TW; OPTIONS.KX_TW];
 [~,ikzf] = max(mean(squeeze(abs(field(1,:,FRAMES))),2));
 
 % Amplitude ratio method to measure growth rates and freq.
-[wkykx, ekykx] = compute_growth_rates(DATA.PHI(:,:,:,FRAMES),DATA.Ts3D(FRAMES));
+[wkykx, ekykx] = compute_growth_rates(FIELD(:,:,:,FRAMES),DATA.Ts3D(FRAMES));
 kykx = meshgrid(DATA.grids.ky,DATA.grids.kx)';
 
 FIGURE.fig = figure; %set(gcf, 'Position',  [100 100 1200 700])
@@ -131,7 +138,7 @@ for i = 1:2
         plot(t(it1)*[1 1],[1e-10 1],'--k')
         plot(t(it2)*[1 1],[1e-10 1],'--k')
         xlim([t(1) t(end)]); %ylim([1e-5 1])
-        xlabel('$t c_s /R_0$'); ylabel(['$|\phi_{',kstr,'}|$']);
+        xlabel('$t c_s /R_0$'); ylabel(['$|',fname,'_{',kstr,'}|$']);
         title('Measure time window')
 
 %     subplot(2+d,3,3+3*(i-1))
@@ -174,10 +181,10 @@ end
 if d
     [~,ikx] = min(abs(DATA.grids.kx-OPTIONS.fftz.kx));
     [~,iky] = min(abs(DATA.grids.ky-OPTIONS.fftz.ky));
-    sz_=size(DATA.PHI);nkz = sz_(3)/2;
+    sz_=size(FIELD);nkz = sz_(3)/2;
     k = [(0:nkz/2), (-nkz/2+1):-1]/DATA.grids.Npol;
     % Spectral treatment of z-dimension
-    Y = fft(DATA.PHI(iky,ikx,:,:),[],3);
+    Y = fft(FIELD(iky,ikx,:,:),[],3);
     phi = squeeze(Y(1,1,2:2:end,:)); 
     
     gamma = zeros(nkz);

@@ -7,7 +7,7 @@ default_plots_options
 % Partition of the computer where the data have to be searched
 % PARTITION='/Users/ahoffmann/gyacomo/results/paper_3/';
 % PARTITION='/misc/gyacomo23_outputs/paper_3/';
-PARITION = '';
+PARTITION = '';
 %% Paper 3
 % resdir = 'DTT_rho85/3x2x192x48x32';
 % resdir = 'DTT_rho85/3x2x192x48x32_NT';
@@ -15,7 +15,8 @@ PARITION = '';
 % resdir = 'DTT_rho98/3x2x192x48x32_0.25grad';
 % resdir = 'LM_DIIID_rho95/5x3x512x92x32';
 % resdir = 'LM_DIIID_rho95/3x2x512x92x32';
-resdir = '../results/dev/ExB_SF';
+% resdir = '../testcases/cyclone_example';
+% resdir = '../testcases/CBC_ExBshear';
  %%
 J0 = 00; J1 = 02;
 
@@ -39,10 +40,10 @@ options.RESOLUTION = 256;
 plot_radial_transport_and_spacetime(data,options);
 end
 
-if 1
+if 0
 %% MOVIES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Options
-% [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
+[data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 [data.Na00, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Na00');
 data.Ni00 = reshape(data.Na00(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 options.INTERP    = 1;
@@ -58,7 +59,7 @@ options.NAME     = 'N_i^{00}';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 1;
@@ -112,19 +113,24 @@ options.TAVG_2D_CTR= 0; %make it contour plot
 fig = show_moments_spectrum(data,options);
 end
 
-if 0
+if 1
 %% Mode evolution
 [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
+[data.Na00, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Na00');
+data.Ni00 = reshape(data.Na00(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 
 options.NORMALIZED = 0;
-options.TIME   = [000:9000];
-options.KX_TW  = [30 40]; %kx Growth rate time window
-options.KY_TW  = [10 20];  %ky Growth rate time window
+options.TIME   = data.Ts3D;
+options.KX_TW  = [ 0 2]; %kx Growth rate time window
+options.KY_TW  = [ 0 2];  %ky Growth rate time window
 options.NMA    = 1;
 options.NMODES = 800;
 options.iz     = 'avg'; % avg or index
-options.ik     = 1; % sum, max or index
+options.ik     = 'sum'; % sum, max or index
 options.fftz.flag = 0;
+options.FIELD  = 'Ni00';
+% options.FIELD  = 'phi';
+options.GOK2   = 0;
 fig = mode_growth_meter(data,options);
 % save_figure(data,fig,'.png')
 end
