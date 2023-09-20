@@ -1,17 +1,36 @@
-resdir = '/Users/ahoffmann/gyacomo/results/dev/ExB_SF/shearing_picture/';
+resdir = '../testcases/ExB_shear_atomic_tests/';
 MVIN  = ['cd ',resdir];
-% RUN   = './gyacomo23_dp 0';
+curdir = pwd;
+MVOUT = ['cd ',curdir];
+%------
+% MPIRUN = '/opt/homebrew/bin/mpirun';
+MPIRUN   = 'mpirun';
+%------
+EXECDIR  = '/home/ahoffman/gyacomo/bin/';
+EXECNAME = 'gyacomo23_dp_O1';
+% EXECNAME = 'gyacomo23_dp';
+% EXECNAME = 'gyacomo23_sp';
+% EXECNAME = 'gyacomo23_debug';
+%------
+% NP = '1'; PARA = '1 1 1';
+% NP = '2'; PARA = '1 2 1';
+NP = '6'; PARA = '1 6 1';
+%------
 % Picture, const. zonal mode in phi in nonlin term
-% RUN   = ['/opt/homebrew/bin/mpirun -np 6 ./gyacomo23_dp 1 6 1 0'];
+% INNAME = '0';
 % Picture, bckg ExB shear
-% RUN   = '/opt/homebrew/bin/mpirun -np 6 ./gyacomo23_dp 1 6 1 1';
-% RUN   = '/opt/homebrew/bin/mpirun -np 1 ./gyacomo23_dp 1 1 1 1';
-% Test with parallel modes initialization (should not trigger nonlinear
-% coupling)
-% RUN   = '/opt/homebrew/bin/mpirun -np 6 ./gyacomo23_dp 1 6 1 3';
-RUN   = '/opt/homebrew/bin/mpirun -np 1 ./gyacomo23_dp 1 1 1 3';
-% RUN   = '/opt/homebrew/bin/mpirun -np 1 ./gyacomo23_debug 1 1 1 3';
-MVOUT = 'cd /Users/ahoffmann/gyacomo/wk';
+% INNAME = '1';
+% Linear with parallel modes initialization + ExB shear
+% INNAME = '2';
+% NL with parallel modes initialization no ExB shear
+INNAME = '3';
+% Ultra reduced NL with parallel modes and 8x8 grid no shear
+% INNAME = '4';
+% NL with parallel modes initialization + ExB shear
+% INNAME = '5';
+
+%-------
+RUN   = [MPIRUN,' -np ',NP,' ',EXECDIR,EXECNAME,' ',PARA,' ',INNAME];
 system([MVIN,'; ',RUN,'; ',MVOUT]);
 %%
 fast_analysis
