@@ -271,15 +271,18 @@ CONTAINS
     USE fields,     ONLY: moments
     USE prec_const, ONLY: xp
     USE parallel,   ONLY: my_id
+    USE grid,       ONLY: local_nkx, local_nkx_offset, local_nky, local_nky_offset
     IMPLICIT NONE
+    INTEGER :: ikx,iky
     moments   = 0._xp
-    IF (my_id .EQ. 0) THEN
-      moments(:,:,:,iky_init,ikx_init,:,:) = init_amp
-      ! moments(:,:,:,2,2,:,:) = init_amp
-      ! moments(:,:,:,4,3,:,:) = init_amp
-      ! moments(:,:,:,4,4,:,:) = init_amp
-      ! moments(:,:,:,5,5,:,:) = init_amp
-    ENDIF
+    DO ikx=1,local_nkx
+      DO iky=1,local_nky
+        IF ( (ikx+local_nkx_offset .EQ. ikx_init) .AND. &
+             (iky+local_nky_offset .EQ. iky_init) ) THEN
+          moments(:,:,:,iky,ikx,:,:) = init_amp
+        ENDIF
+      ENDDO
+    ENDDO
   END SUBROUTINE init_single_mode
   !******************************************************************************!
 
