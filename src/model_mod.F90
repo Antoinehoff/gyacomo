@@ -35,6 +35,8 @@ MODULE model
   LOGICAL,  PUBLIC, PROTECTED :: RM_LD_T_EQ = .false.
   ! Flag to force the reality condition symmetry for the kx at ky=0
   LOGICAL,  PUBLIC, PROTECTED :: FORCE_SYMMETRY = .false.
+  ! Add or remove the ExB nonlinear correction (Mcmillan 2019)
+  LOGICAL,  PUBLIC, PROTECTED :: ExB_NL_CORRECTION = .true.
 
   ! Module's routines
   PUBLIC :: model_readinputs, model_outputinputs
@@ -51,7 +53,8 @@ CONTAINS
     NAMELIST /MODEL/ KERN, LINEARITY, RM_LD_T_EQ, FORCE_SYMMETRY, MHD_PD, &
                          Na, ADIAB_E, ADIAB_I, tau_i, &
                          mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, &
-                         nu, k_gB, k_cB, lambdaD, beta, ExBrate, ikxZF, ZFamp
+                         nu, k_gB, k_cB, lambdaD, beta, ExBrate, ExB_NL_CORRECTION,&
+                         ikxZF, ZFamp
 
     READ(lu_in,model)
 
@@ -77,6 +80,9 @@ CONTAINS
     ELSE
       EM = .FALSE.
     ENDIF
+
+    IF(abs(ExBrate) .LT. epsilon(ExBrate))&
+      ExB_NL_CORRECTION = .false.
 
   END SUBROUTINE model_readinputs
 
@@ -106,6 +112,7 @@ CONTAINS
     CALL attach(fid, TRIM(str),   "lambdaD", lambdaD)
     CALL attach(fid, TRIM(str),    "MHD_PD",  MHD_PD)
     CALL attach(fid, TRIM(str),      "beta",    beta)
+    CALL attach(fid, TRIM(str),   "ExBrate", ExBrate)
     CALL attach(fid, TRIM(str),   "ADIAB_E", ADIAB_E)
     CALL attach(fid, TRIM(str),   "ADIAB_I", ADIAB_I)
     CALL attach(fid, TRIM(str),     "tau_i",   tau_i)

@@ -266,7 +266,7 @@ END SUBROUTINE fft1D_plans
     !   module variable (convolution theorem)
     SUBROUTINE poisson_bracket_and_sum( ky_array, kx_array, inv_Ny, inv_Nx, AA_y, AA_x,&
                                         local_nky, total_nkx, F_, G_,&
-                                        ExB, ExB_NL_factor,sky_ExB,sum_real_)
+                                        ExB_NL_CORRECTION, ExB_NL_factor,sky_ExB,sum_real_)
         IMPLICIT NONE
         INTEGER,                                  INTENT(IN) :: local_nky,total_nkx
         REAL(xp),                                 INTENT(IN) :: inv_Nx, inv_Ny
@@ -277,7 +277,7 @@ END SUBROUTINE fft1D_plans
                                                   INTENT(IN) :: F_, G_
         COMPLEX(xp), DIMENSION(total_nkx,local_nky), &
                                                   INTENT(IN) :: ExB_NL_factor
-        LOGICAL, INTENT(IN) :: ExB
+        LOGICAL, INTENT(IN) :: ExB_NL_CORRECTION
         REAL(xp),DIMENSION(local_nky),            INTENT(IN) :: sky_ExB
         real(c_xp_r), pointer,                 INTENT(INOUT) :: sum_real_(:,:)
         ! local variables
@@ -297,7 +297,7 @@ END SUBROUTINE fft1D_plans
                         ikxG(ikx,iky) = imagu*kxs*G_(iky,ikx)
                 ENDDO
         ENDDO
-        IF(ExB) THEN 
+        IF(ExB_NL_CORRECTION) THEN 
             ! Apply the ExB shear correction factor exp(ixkySJdT)
             CALL apply_ExB_NL_factor(ikxF,ExB_NL_factor)
             CALL apply_ExB_NL_factor(ikyG,ExB_NL_factor)
