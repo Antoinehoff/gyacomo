@@ -3,12 +3,13 @@ MVIN  = ['cd ',resdir];
 curdir = pwd;
 MVOUT = ['cd ',curdir];
 %------
-% MPIRUN = '/opt/homebrew/bin/mpirun';
-MPIRUN   = 'mpirun';
+MPIRUN = '/opt/homebrew/bin/mpirun';
+% MPIRUN   = 'mpirun';
 %------
-EXECDIR  = '/home/ahoffman/gyacomo/bin/';
-EXECNAME = 'gyacomo23_dp_O1';
-% EXECNAME = 'gyacomo23_dp';
+% EXECDIR  = '/home/ahoffman/gyacomo/bin/';
+EXECDIR  = '/Users/ahoffmann/gyacomo/bin/';
+% EXECNAME = 'gyacomo23_dp_O1';
+EXECNAME = 'gyacomo23_dp';
 % EXECNAME = 'gyacomo23_sp';
 % EXECNAME = 'gyacomo23_debug';
 %------
@@ -20,12 +21,12 @@ NP = '6'; PARA = '1 6 1';
 % INNAME = '0';
 % Picture, bckg ExB shear
 % INNAME = '1';
-% Linear with parallel modes initialization + ExB shear
+% NL with padrallel modes initialization no ExB shear
 % INNAME = '2';
-% NL with parallel modes initialization no ExB shear
-INNAME = '3';
-% Ultra reduced NL with parallel modes and 8x8 grid no shear
-% INNAME = '4';
+% NL with parallel modes initialization with ExB shear, no with factor
+% INNAME = '3';
+% NL with parallel modes initialization with ExB shear, with factor
+INNAME = '4';
 % NL with parallel modes initialization + ExB shear
 % INNAME = '5';
 

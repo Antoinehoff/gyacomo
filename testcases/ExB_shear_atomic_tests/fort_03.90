@@ -1,7 +1,7 @@
 &BASIC
   nrun       = 100000000
   dt         = 0.001
-  tmax       = 5.0
+  tmax       = 2.0
   maxruntime = 356400
   job2load   = -1
 /
@@ -36,7 +36,7 @@
   dtsave_0d = 0.05
   dtsave_1d = -1
   dtsave_2d = -1
-  dtsave_3d = 0.05
+  dtsave_3d = 0.02
   dtsave_5d = 100
   write_doubleprecision = .true.
   write_gamma = .true.
@@ -63,7 +63,8 @@ RM_LD_T_EQ= .false.
   k_cB    = 0
   lambdaD = 0
   beta    = 0.0
-  ExBrate = 0.0
+  ExBrate = 2.0
+  ExB_NL_CORRECTION = .false.
   ADIAB_E = .true.
   ADIAB_I = .false.
   tau_i   = 1
@@ -92,9 +93,9 @@ RM_LD_T_EQ= .false.
 /
 &INITIAL
   INIT_OPT      = 'mom00_single_mode'
-  init_amp      = 100
-  ikx_init      = 2
-  iky_init      = 2
+  init_amp      = 1000
+  ikx_init      = 3
+  iky_init      = 3
 /
 &TIME_INTEGRATION
   numerical_scheme = 'RK4'
