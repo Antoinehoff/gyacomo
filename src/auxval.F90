@@ -1,6 +1,6 @@
 subroutine auxval
   !   Set auxiliary values, at beginning of simulation
-
+  USE, intrinsic :: iso_fortran_env, ONLY: OUTPUT_UNIT
   USE basic,          ONLY: str, speak
   USE grid,           ONLY: local_np, local_np_offset, total_np, local_nj, local_nj_offset,&
                             local_nky, local_nky_offset, total_nky, local_nkx, local_nkx_offset, dmax,&
@@ -79,8 +79,8 @@ subroutine auxval
       IF (my_id .EQ. num_procs-1) WRITE(*,*) '------------------------------------------'
     ENDIF
   ENDDO
+  CALL FLUSH(OUTPUT_UNIT)
   CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-
   SELECT CASE(hierarchy_closure)
   CASE('truncation')
     CALL speak('Truncation closure')
