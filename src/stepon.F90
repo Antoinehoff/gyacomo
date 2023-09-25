@@ -20,13 +20,13 @@ SUBROUTINE stepon
 
    SUBSTEPS:DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
 !----- TEST !-----
-      ! Update the ExB shear flow for the next step
-      ! This call includes :
-      !  - the ExB shear value (s(ky)) update for the next time step
-      !  - the kx grid update
-      !  - the ExB NL correction factor update (exp(+/- ixkySdts))
-      !  - (optional) the kernel, poisson op. and ampere op update
-      CALL Update_ExB_shear_flow(num_step)
+      ! ! Update the ExB shear flow for the next step
+      ! ! This call includes :
+      ! !  - the ExB shear value (s(ky)) update for the next time step
+      ! !  - the kx grid update
+      ! !  - the ExB NL correction factor update (exp(+/- ixkySdts))
+      ! !  - (optional) the kernel, poisson op. and ampere op update
+      ! CALL Update_ExB_shear_flow(num_step)
 !-----END TEST !-----
       !----- BEFORE: All fields+ghosts are updated for step = n
       ! Compute right hand side from current fields

@@ -74,7 +74,7 @@ CONTAINS
 
         ! Setup nonlinear factor
         ALLOCATE(    ExB_NL_factor(Nx,local_nky))
-        ALLOCATE(inv_ExB_NL_factor(Ny/2+2,local_nx))
+        ALLOCATE(inv_ExB_NL_factor(Ny/2+1,local_nx))
             ExB_NL_factor = 1._xp
         inv_ExB_NL_factor = 1._xp
 
@@ -231,7 +231,7 @@ CONTAINS
             ENDDO
         ENDDO
         ! ... and the inverse
-        DO iky = 1,Ny/2+2 ! WARNING: Global indices ky loop
+        DO iky = 1,Ny/2+1 ! WARNING: Global indices ky loop
             ! for readability
             J_xp   = REAL(iky-1,xp)
             IF(J_xp .GT. 0._xp) THEN
@@ -248,9 +248,6 @@ CONTAINS
                 ! inv_ExB_NL_factor(iky,ix) = EXP(imagu*sky_ExB_full(iky)*xval)
             ENDDO
         ENDDO
-        ! Cancel the additional point
-        inv_ExB_NL_factor(Ny/2+1,:) = 0._xp
-        inv_ExB_NL_factor(Ny/2+2,:) = 0._xp
     END SUBROUTINE Update_nonlinear_ExB_factors
 
 END MODULE ExB_shear_flow

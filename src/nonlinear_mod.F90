@@ -7,7 +7,7 @@ MODULE nonlinear
                          local_np,ngp,parray,pmax,&
                          local_nj,ngj,jarray,jmax, local_nj_offset, dmax,&
                          kyarray, AA_y, local_nky, inv_Ny,&
-                         total_nkx,kxarray, AA_x, inv_Nx,&
+                         total_nkx,kxarray, AA_x, inv_Nx,local_nx, Ny, &
                          local_nz,ngz,zarray,nzgrid, deltakx, iky0, contains_kx0, contains_ky0
   USE model,       ONLY : LINEARITY, EM, ikxZF, ZFamp, ExB_NL_CORRECTION
   USE closure,     ONLY : evolve_mom, nmaxarray
@@ -56,6 +56,7 @@ SUBROUTINE compute_nonlinear
   IMPLICIT NONE
   INTEGER :: iz,ij,ip,eo,ia,ikx,iky,izi,ipi,iji,ini,isi
   INTEGER :: ikxExBp, ikxExBn ! Negative and positive ExB flow indices
+  COMPLEX(xp), DIMENSION(Ny/2+1,local_nx) :: invinvfactor ! TEST
   z:DO iz = 1,local_nz
     izi = iz + ngz/2
     j:DO ij = 1,local_nj ! Loop over Laguerre moments
@@ -122,6 +123,8 @@ SUBROUTINE compute_nonlinear
             ! Apply the ExB shearing rate factor before going back to k-space
             IF (ExB_NL_CORRECTION) THEN
               CALL apply_inv_ExB_NL_factor(bracket_sum_r,inv_ExB_NL_factor)
+              ! invinvfactor = 1._xp/inv_ExB_NL_factor
+              ! CALL apply_inv_ExB_NL_factor(bracket_sum_r,invinvfactor)
             ENDIF
             ! Put the real nonlinear product back into k-space
 #ifdef SINGLE_PRECISION
