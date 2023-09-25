@@ -3,12 +3,14 @@ SUBROUTINE ppexit
 
   USE basic
   USE fourier, ONLY : finalize_plans
+  USE model,   ONLY : LINEARITY
 
   use prec_const
   IMPLICIT NONE
   INTEGER :: ierr
 
-  CALL finalize_plans
+  IF (LINEARITY .EQ. 'nonlinear') &
+   CALL finalize_plans
   CALL MPI_BARRIER(MPI_COMM_WORLD, ierr)
   CALL MPI_FINALIZE(ierr)
 
