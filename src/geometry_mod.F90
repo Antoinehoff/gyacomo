@@ -167,7 +167,9 @@ CONTAINS
     ! inv squared of the magnetic gradient bckg amplitude (for fast kperp update)
     inv_hatB2 = 1/hatB/hatB
     ! Reset kx grid (to account for Cyq0_x0 factor)
+    CALL speak('--Reset kx grid according to Cyq0_x0 factor--')
     CALL set_kxgrid(shear,ExBrate,Npol,Cyq0_x0,LINEARITY,N_HD) 
+    CALL speak('-- done --')
     !
     ! Evaluate perpendicular wavenumber
     !  k_\perp^2 = g^{xx} k_x^2 + 2 g^{xy}k_x k_y + k_y^2 g^{yy}
