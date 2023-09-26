@@ -344,13 +344,6 @@ END SUBROUTINE fft1D_plans
             CALL apply_ExB_NL_factor(ikyG,ExB_NL_factor)
             CALL apply_ExB_NL_factor(ikyF,ExB_NL_factor)
             CALL apply_ExB_NL_factor(ikxG,ExB_NL_factor)
-        !     ! TEST apply inverse to test the identity
-        !     invfactor = 1._xp/ExB_NL_factor
-        !     CALL apply_ExB_NL_factor(ikxF,invfactor)
-        !     CALL apply_ExB_NL_factor(ikyG,invfactor)
-        !     CALL apply_ExB_NL_factor(ikyF,invfactor)
-        !     CALL apply_ExB_NL_factor(ikxG,invfactor)
-        !     ! END TEST
         ENDIF
         ! Anti Aliasing
         DO iky = 1,local_nky
@@ -508,7 +501,7 @@ END SUBROUTINE fft1D_plans
         ! Treat the result with the ExB NL factor
         DO iky = 1,NY_/2+1
                 DO ix = 1,local_nx_
-                        tmp_kyx(iky,ix) = tmp_kyx(iky,ix)!*inv_ExB_NL_factor(iky,ix)
+                        tmp_kyx(iky,ix) = tmp_kyx(iky,ix)*inv_ExB_NL_factor(iky,ix)
                 ENDDO
         ENDDO
         ! Back to Fourier space in the third buffer
