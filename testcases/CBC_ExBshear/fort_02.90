@@ -1,9 +1,9 @@
 &BASIC
   nrun       = 99999999
   dt         = 0.01
-  tmax       = 50
+  tmax       = 150
   maxruntime = 72000
-  job2load   = -1
+  job2load   = 1
 /
 &GRID
   pmax   = 2
@@ -57,10 +57,11 @@
   HYP_V   = 'hypcoll'
   mu_p    = 0.0
   mu_j    = 0.0
-  nu      = 1.00
+  nu      = 1.0
   beta    = 0.0
   ADIAB_E = .t.
-  ExBrate = 0.0
+  ExBrate = 0.5
+  ExB_NL_CORRECTION = .false.
 /
 &CLOSURE
   hierarchy_closure='truncation'

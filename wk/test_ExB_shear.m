@@ -3,19 +3,22 @@ MVIN  = ['cd ',resdir];
 curdir = pwd;
 MVOUT = ['cd ',curdir];
 %------
-MPIRUN = '/opt/homebrew/bin/mpirun';
-% MPIRUN   = 'mpirun';
+if strcmp(curdir(1:5),'/home')
+    MPIRUN   = 'mpirun';
+else
+    MPIRUN = '/opt/homebrew/bin/mpirun';
+end
 %------
-% EXECDIR  = '/home/ahoffman/gyacomo/bin/';
-EXECDIR  = '/Users/ahoffmann/gyacomo/bin/';
+EXECDIR  = [curdir(1:end-2),'bin/'];
 % EXECNAME = 'gyacomo23_dp_O1';
-EXECNAME = 'gyacomo23_dp';
+% EXECNAME = 'gyacomo23_dp';
 % EXECNAME = 'gyacomo23_sp';
+EXECNAME = 'gyacomo23_test';
 % EXECNAME = 'gyacomo23_debug';
-%------
-% NP = '1'; PARA = '1 1 1';
+% ------
+NP = '1'; PARA = '1 1 1';
 % NP = '2'; PARA = '1 2 1';
-NP = '6'; PARA = '1 6 1';
+% NP = '6'; PARA = '1 6 1';
 %------
 % Picture, const. zonal mode in phi in nonlin term
 % INNAME = '0';
@@ -23,13 +26,14 @@ NP = '6'; PARA = '1 6 1';
 % INNAME = '1';
 % NL with padrallel modes initialization no ExB shear
 % INNAME = '2';
-% NL with parallel modes initialization with ExB shear, no with factor
+% NL with parallel modes initialization with ExB shear, no  factor
 % INNAME = '3';
 % NL with parallel modes initialization with ExB shear, with factor
-INNAME = '4';
-% NL with parallel modes initialization + ExB shear
-% INNAME = '5';
-
+% INNAME = '4';
+% Mcmillan et al. 2019 no correction
+% INNAME = '5'; 
+% Mcmillan et al. 2019 correction
+INNAME = '6';
 %-------
 RUN   = [MPIRUN,' -np ',NP,' ',EXECDIR,EXECNAME,' ',PARA,' ',INNAME];
 system([MVIN,'; ',RUN,'; ',MVOUT]);

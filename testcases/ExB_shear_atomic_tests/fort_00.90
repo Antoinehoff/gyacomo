@@ -94,7 +94,6 @@ RM_LD_T_EQ= .false.
 /
 &INITIAL
   INIT_OPT = 'ricci'
-  init_amp = 0.1
 /
 &TIME_INTEGRATION
   numerical_scheme = 'RK4'

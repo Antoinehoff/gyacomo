@@ -1,17 +1,17 @@
 &BASIC
   nrun       = 100000000
   dt         = 0.001
-  tmax       = 2.0
+  tmax       = 1.0
   maxruntime = 356400
   job2load   = -1
 /
 &GRID
   pmax  = 0
   jmax  = 0
-  Nx     = 96
-  Lx     = 100
-  Ny     = 64
-  Ly     = 100
+  Nx     = 32
+  Lx     = 120
+  Ny     = 16
+  Ly     = 80
   Nz     = 1
   SG     = .false.
   Nexc   = 1
@@ -92,10 +92,13 @@ RM_LD_T_EQ= .false.
   collision_kcut  = 1
 /
 &INITIAL
-  INIT_OPT      = 'mom00_single_mode'
-  init_amp      = 1000
-  ikx_init      = 3
-  iky_init      = 3
+  INIT_OPT      = 'mom00_modes'
+  Nmodes = 1
+/
+&MODE
+  I_   = 2
+  J_   = 2
+  amp_ = 1000
 /
 &TIME_INTEGRATION
   numerical_scheme = 'RK4'
