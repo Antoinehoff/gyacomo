@@ -77,9 +77,9 @@ subroutine auxval
        '         local_nz   = ', local_nz  , ', offset = ', local_nz_offset
       IF (my_id .NE. num_procs-1) WRITE (*,*) ''
       IF (my_id .EQ. num_procs-1) WRITE(*,*) '------------------------------------------'
+      IF (my_id .EQ. num_procs-1) CALL FLUSH(OUTPUT_UNIT)
     ENDIF
   ENDDO
-  CALL FLUSH(OUTPUT_UNIT)
   CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   SELECT CASE(hierarchy_closure)
   CASE('truncation')
