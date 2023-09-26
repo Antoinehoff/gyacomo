@@ -488,6 +488,7 @@ CONTAINS
 
   SUBROUTINE set_kxgrid(shear,ExBrate,Npol,Cyq0_x0,LINEARITY,N_HD)
     USE prec_const, ONLY: xp, pi
+    USE basic, ONLY: speak, str
     IMPLICIT NONE
     REAL(xp), INTENT(IN) :: shear, Npol, Cyq0_x0, ExBrate
     CHARACTER(len=*), INTENT(IN) ::LINEARITY
@@ -495,16 +496,17 @@ CONTAINS
     INTEGER :: ikx, iky
     REAL(xp):: Lx_adapted
     IF(shear .GT. 0) THEN
-      IF(my_id.EQ.0) write(*,*) 'Magnetic shear detected: set up sheared kx grid..'
+      CALL speak('Magnetic shear detected: set up sheared kx grid..')
       ! mininal size of box in x to respect dkx = 2pi shear dky
       Lx_adapted = Ly/(2._xp*pi*shear*Npol*Cyq0_x0)
       ! Put Nexc to 0 so that it is computed from a target value Lx
       IF(Nexc .EQ. 0) THEN
         Nexc = CEILING(0.9 * Lx/Lx_adapted)
-        IF(my_id.EQ.0) write(*,*) 'Adapted Nexc =', Nexc
+        CALL speak('Adapted Nexc ='//str(Nexc))
       ENDIF
       ! x length is adapted
       Lx = Lx_adapted*Nexc
+      CALL speak('Simulation Lx ='//str(Lx))
     ENDIF
     deltakx = 2._xp*PI/Lx
     inv_dkx = 1._xp/deltakx 
@@ -541,7 +543,7 @@ CONTAINS
     ! We remove one point more if ExB is on since the moving grid
     ! can go up to kx=+-(kx_max+deltakx/2)
     IF (ABS(ExBrate) .GT. 0) THEN
-      two_third_kxmax = 2._xp/3._xp*(kx_max-deltakx)
+      two_third_kxmax = 2._xp/3._xp*(kx_max)
     ELSE
       two_third_kxmax = 2._xp/3._xp*kx_max
     ENDIF
@@ -678,7 +680,8 @@ CONTAINS
     ! Update the kx grid
     DO ikx = 1,total_Nkx
       DO iky = 1,local_nky
-        kxarray(iky,ikx) = kxarray0(ikx) - sky_ExB(iky)
+        ! For positive ExBrate, sky_ExB is negative
+        kxarray(iky,ikx) = kxarray0(ikx) + sky_ExB(iky)
       ENDDO
     ENDDO
     ! Update the kperp grid
