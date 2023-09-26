@@ -13,6 +13,10 @@ Nframes= numel(FRAMES);
 Nrows  = ceil(Nframes/4);
 Ncols  = ceil(Nframes/Nrows);
 %
+if OPTIONS.LOGSCALE
+    toplot.FIELD = max(abs(toplot.FIELD),1e-20);
+    toplot.FIELD = log(toplot.FIELD);
+end
 TNAME = [];
 FIGURE.fig = figure; %set(gcf, 'Position',  toplot.DIMENSIONS.*[1 1 Ncols Nrows])
     for i_ = 1:numel(FRAMES)

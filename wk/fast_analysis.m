@@ -17,8 +17,9 @@ PARTITION = '';
 % resdir = 'LM_DIIID_rho95/3x2x512x92x32';
 % resdir = '../testcases/cyclone_example';
 % resdir = '../testcases/CBC_ExBshear';
+% resdir = '../results/paper_3/HM_DTT_rho98/3x2x128x64x64';
  %%
-J0 = 00; J1 = 02;
+J0 = 00; J1 = 10;
 
 % Load basic info (grids and time traces)
 DATADIR = [PARTITION,resdir,'/'];
@@ -48,7 +49,7 @@ if 0
 data.Ni00 = reshape(data.Na00(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.BWR       = 0; % bluewhitered plot or gray
+options.BWR       = 1; % bluewhitered plot or gray
 options.CLIMAUTO  = 1; % adjust the colormap auto
 % options.NAME      = '\phi';
 % options.NAME      = '\phi^{NZ}';
@@ -62,7 +63,7 @@ options.NAME     = 'N_i^{00}';
 options.PLAN      = 'kxky';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
-options.COMP      = 1;
+options.COMP      = 'avg';
 % options.TIME      = data.Ts5D(end-30:end);
 options.TIME      =  data.Ts3D(1:1:end);
 % options.TIME      = [0:1500];
@@ -72,7 +73,7 @@ options.RESOLUTION = 256;
 create_film(data,options,'.gif')
 end
 
-if 0
+if 1
 %% field snapshots
 % Options
 [data.Na00, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Na00');
@@ -81,13 +82,14 @@ data.Ni00 = reshape(data.Na00(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grid
 
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.AXISEQUAL = 1;
+options.AXISEQUAL = 0;
 options.NORMALIZE = 0;
-options.NAME      = 'N_i^{00}';
-% options.NAME      = '\phi';
+options.LOGSCALE  = 1;
+% options.NAME      = 'N_i^{00}';
+options.NAME      = '\phi';
 options.PLAN      = 'kxky';
 options.COMP      = 'avg';
-options.TIME      = [0];
+options.TIME      = [0 10 50 100 500];
 % options.TIME      = data.Ts3D(1:2:end);
 options.RESOLUTION = 256;
 fig = photomaton(data,options);
@@ -113,7 +115,7 @@ options.TAVG_2D_CTR= 0; %make it contour plot
 fig = show_moments_spectrum(data,options);
 end
 
-if 1
+if 0
 %% Mode evolution
 [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 [data.Na00, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Na00');
@@ -121,12 +123,12 @@ data.Ni00 = reshape(data.Na00(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grid
 
 options.NORMALIZED = 0;
 options.TIME   = data.Ts3D;
-options.KX_TW  = [ 0 2]; %kx Growth rate time window
-options.KY_TW  = [ 0 2];  %ky Growth rate time window
+options.KX_TW  = [ 0 20]; %kx Growth rate time window
+options.KY_TW  = [ 0 50];  %ky Growth rate time window
 options.NMA    = 1;
-options.NMODES = 800;
+options.NMODES = 3;
 options.iz     = 'avg'; % avg or index
-options.ik     = 'sum'; % sum, max or index
+options.ik     = 9; % sum, max or index
 options.fftz.flag = 0;
 options.FIELD  = 'Ni00';
 % options.FIELD  = 'phi';
