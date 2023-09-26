@@ -280,12 +280,5 @@ CONTAINS
                 ! inv_ExB_NL_factor(iky,ix) = 1._xp + (imagu*kxExB*xval)
             ENDDO
         ENDDO
-        ! test
-        DO iky = 1,Ny/2+1
-            DO ix = 1,Nx
-                write(42,*) REAL(inv_ExB_NL_factor(iky,ix) * ExB_NL_factor(ix,iky))
-            ENDDO
-        ENDDO
-    stop
  END SUBROUTINE Update_nonlinear_ExB_factors
 END MODULE ExB_shear_flow
