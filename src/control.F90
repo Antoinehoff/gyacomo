@@ -83,7 +83,7 @@ SUBROUTINE control
     !  - the ExB NL correction factor update (exp(+/- ixkySdts))
     !  - (optional) the kernel, poisson op. and ampere op update
     CALL start_chrono(chrono_ExBs)
-      CALL Update_ExB_shear_flow(1)
+      CALL Update_ExB_shear_flow(-1)
     CALL stop_chrono(chrono_ExBs)
 
     ! Do a full RK step (e.g. 4 substeps for ERK4)
