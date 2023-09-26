@@ -543,9 +543,9 @@ CONTAINS
     ! We remove one point more if ExB is on since the moving grid
     ! can go up to kx=+-(kx_max+deltakx/2)
     IF (ABS(ExBrate) .GT. 0) THEN
-      two_third_kxmax = 2._xp/3._xp*(kx_max)
+      two_third_kxmax = 2._xp/3._xp*abs(kx_min)
     ELSE
-      two_third_kxmax = 2._xp/3._xp*kx_max
+      two_third_kxmax = 2._xp/3._xp*abs(kx_min)
     ENDIF
     ! Antialiasing filter
     DO iky = 1,local_nky
