@@ -123,8 +123,6 @@ SUBROUTINE compute_nonlinear
             ! Apply the ExB shearing rate factor before going back to k-space
             IF (ExB_NL_CORRECTION) THEN
               CALL apply_inv_ExB_NL_factor(bracket_sum_r,inv_ExB_NL_factor)
-              ! invinvfactor = 1._xp/inv_ExB_NL_factor
-              ! CALL apply_inv_ExB_NL_factor(bracket_sum_r,invinvfactor)
             ENDIF
             ! Put the real nonlinear product back into k-space
 #ifdef SINGLE_PRECISION
