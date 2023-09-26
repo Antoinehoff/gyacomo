@@ -10,16 +10,18 @@ MODULE initial
   ! Act on modes artificially (keep/wipe, zonal, non zonal, entropy mode etc.)
   ! REMOVED FEATURE (only here for retrocompatibility)
   CHARACTER(len=32),  PUBLIC, PROTECTED :: ACT_ON_MODES = 'nothing'
-  ! Initial amplitude (for specific modes or image init.)
-  REAL(xp), PUBLIC, PROTECTED :: init_amp        = 1._xp
   ! Initial background level (in addition to noise init)
   REAL(xp), PUBLIC, PROTECTED :: init_background = 0._xp
+  REAL(xp), PUBLIC, PROTECTED :: init_amp        = 0._xp
   ! Initial noise amplitude (for noise init)
   REAL(xp), PUBLIC, PROTECTED :: init_noiselvl   = 1E-6_xp
   ! Initialization for random number generator
   INTEGER,  PUBLIC, PROTECTED :: iseed=42
-  ! Single mode initialization
-  INTEGER,  PUBLIC, PROTECTED :: ikx_init,iky_init
+  ! Multiple mode init
+  INTEGER,  PUBLIC, PROTECTED :: Nmodes = 1
+  INTEGER,  PUBLIC, PROTECTED :: I_, J_, amp_
+  INTEGER,  PUBLIC, PROTECTED, ALLOCATABLE :: ikx_init(:),iky_init(:)
+  REAL(xp), PUBLIC, PROTECTED, ALLOCATABLE :: mode_amp(:)
 
   PUBLIC :: initial_outputinputs, initial_readinputs, initialize
 
@@ -31,11 +33,33 @@ CONTAINS
     USE basic, ONLY : lu_in
     USE prec_const
     IMPLICIT NONE
-
+    ! Local var
+    INTEGER :: im, ikx_, iky_, amp_
     NAMELIST /INITIAL/ INIT_OPT,ACT_ON_MODES,&
                        init_amp,init_background,init_noiselvl,iseed,&
-                       ikx_init,iky_init
+                       Nmodes
+    NAMELIST /MODE/ I_, J_, amp_
+    
     READ(lu_in,initial)
+    
+    ALLOCATE(ikx_init(Nmodes))
+    ALLOCATE(iky_init(Nmodes))
+    ALLOCATE(mode_amp(Nmodes))
+
+        ! expected namelist in the input file
+    DO im = 1,Nmodes
+      ! default parameters
+      I_   = 1 ! kx mode number
+      J_   = 1 ! ky mode number
+      amp_ = 1._xp
+      ! read input
+      READ(lu_in,mode)
+      ! place values found in the arrays
+      ikx_init(im) = I_
+      iky_init(im) = J_
+      mode_amp(im) = amp_
+      ! We treat and make check only in the initialize routine (when grid attributes are set)
+    ENDDO
   END SUBROUTINE initial_readinputs
 
   !******************************************************************************!
@@ -82,9 +106,9 @@ CONTAINS
         CALL update_ghosts_EM
       ! set moments_00 (GC density) with a single kx0,ky0 mode
       ! kx0 is setup but by the noise value and ky0 by the background value
-      CASE('mom00_single_mode')
-        CALL speak('Init noisy gyrocenter density')
-        CALL init_single_mode ! init single mode in gyrocenter density
+      CASE('mom00_modes','mom00_mode')
+        CALL speak('Init modes in the gyrocenter density')
+        CALL init_modes ! init single mode in gyrocenter density
         CALL update_ghosts_moments
         CALL solve_EM_fields
         CALL update_ghosts_EM
@@ -115,6 +139,8 @@ CONTAINS
         CALL update_ghosts_moments
         CALL solve_EM_fields
         CALL update_ghosts_EM
+      CASE DEFAULT
+        ERROR STOP "Initialization mode not recognized"
     END SELECT
     ENDIF
     ! closure of j>J, p>P and j<0, p<0 moments
@@ -267,23 +293,59 @@ CONTAINS
   !******************************************************************************!
   !!!!!!! Initialize a single mode in the gyrocenter density
   !******************************************************************************!
-  SUBROUTINE init_single_mode
+  SUBROUTINE init_modes
     USE fields,     ONLY: moments
     USE prec_const, ONLY: xp
     USE parallel,   ONLY: my_id
-    USE grid,       ONLY: local_nkx, local_nkx_offset, local_nky, local_nky_offset
+    USE model,      ONLY: LINEARITY
+    USE grid,       ONLY: total_nkx, local_nkx_offset, local_nky, local_nky_offset,&
+                          kxarray_full, kyarray, kx_max, kx_min, ky_max
     IMPLICIT NONE
-    INTEGER :: ikx,iky
+    INTEGER :: ikx,iky, im, I_, J_
+    REAL(xp):: maxkx, minkx, maxky, kx_, ky_, A_
+    ! Init with 0 only
     moments   = 0._xp
-    DO ikx=1,local_nkx
-      DO iky=1,local_nky
-        IF ( (ikx+local_nkx_offset .EQ. ikx_init) .AND. &
-             (iky+local_nky_offset .EQ. iky_init) ) THEN
-          moments(:,:,:,iky,ikx,:,:) = init_amp
-        ENDIF
-      ENDDO
+    ! Set upper and lower limits for modes
+    IF(LINEARITY .EQ. 'nonlinear') THEN
+      maxkx = 2._xp/3._xp*kx_max
+      minkx = 2._xp/3._xp*kx_min
+      maxky = 2._xp/3._xp*ky_max
+    ELSE
+      maxkx = kx_max
+      minkx = kx_min
+      maxky = ky_max
+    ENDIF   
+    DO im = 1,Nmodes
+      I_ = ikx_init(im)
+      J_ = iky_init(im)
+      A_ = mode_amp(im)
+      ! Ajust the modes 
+      IF(I_ .LT. 0) THEN
+        I_ = I_ + total_nkx
+      ENDIF
+      I_ = I_ + 1 ! array indices start at 1
+      J_ = J_ + 1
+      ! Check the validity of the modes
+      kx_ = kxarray_full(I_)
+      ky_ = kyarray(J_)
+      IF( ((kx_ .LE. maxkx) .AND. (kx_ .LE. maxkx)) .AND. &
+          ((ky_ .GE. 0._xp) .AND. (ky_ .LE. maxky)) ) THEN
+            ! Init the mode
+          DO ikx=1,total_nkx
+            DO iky=1,local_nky
+              IF ( (ikx+local_nkx_offset .EQ. I_) .AND. &
+                    (iky+local_nky_offset .EQ. J_) ) THEN
+                ! WRITE(*,'(A10,F4.2,A,F4.2,A,F4.2)') '-init (kx=',kx_,',ky=',ky_,') at Amp=',A_               
+                WRITE(*,'(A,F5.3,A,F5.3,A,G8.2)') '-init (kx=',kx_,',ky=',ky_,') with Amp= ',A_
+                moments(:,:,:,iky,ikx,:,:) = A_
+              ENDIF
+            ENDDO
+          ENDDO
+      ELSE
+        ERROR STOP "The initialized mode is not contained in the resolution"
+      ENDIF
     ENDDO
-  END SUBROUTINE init_single_mode
+  END SUBROUTINE init_modes
   !******************************************************************************!
 
   !******************************************************************************!
