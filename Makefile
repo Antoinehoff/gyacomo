@@ -25,6 +25,13 @@ fast: EXEC = $(BINDIR)/gyacomo23_fast
 fast: dirs src/srcinfo.h
 fast: compile
 
+# test exec name
+test: F90 = mpif90
+test: F90FLAGS = -O1
+test: EXEC = $(BINDIR)/gyacomo23_test
+test: dirs src/srcinfo.h
+test: compile
+
 # Debug version with all flags
 debug: F90 = mpif90
 debug: F90FLAGS = -C -g -traceback -warn all -check all -debug all -init=zero,snan -fpe0
