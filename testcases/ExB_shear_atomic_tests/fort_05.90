@@ -1,7 +1,7 @@
 &BASIC
   nrun       = 100000000
   dt         = 0.2
-  tmax       = 100
+  tmax       = 300
   maxruntime = 356400
   job2load   = -1
 /
