@@ -70,6 +70,9 @@ CONTAINS
     use parallel, ONLY: my_id
     IMPLICIT NONE
     SELECT CASE (numerical_scheme)
+    ! Order 1 method
+    CASE ('EE')
+      CALL EE
     ! Order 2 methods
     CASE ('RK2')
       CALL RK2
@@ -94,6 +97,22 @@ CONTAINS
     END SELECT
     IF (my_id .EQ. 0) WRITE(*,*) " Time integration with ", numerical_scheme
   END SUBROUTINE set_numerical_scheme
+
+  !!! first order time schemes
+  SUBROUTINE EE
+    ! Butcher coeff for Euler Explicit scheme
+    USE basic
+    USE prec_const
+    IMPLICIT NONE
+    INTEGER,PARAMETER :: nbstep = 1
+    CALL allocate_array(c_E,1,nbstep)
+    CALL allocate_array(b_E,1,nbstep,1,1)
+    CALL allocate_array(A_E,1,nbstep,1,nbstep)
+    ntimelevel = 1
+    c_E(1)   = 0._xp
+    b_E(1,1) = 1._xp
+    A_E(1,1) = 0._xp
+  END SUBROUTINE EE
 
   !!! second order time schemes
   SUBROUTINE RK2
