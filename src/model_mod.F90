@@ -27,7 +27,7 @@ MODULE model
   REAL(xp), PUBLIC, PROTECTED ::    beta =  0._xp     ! electron plasma Beta (8piNT_e/B0^2)
   REAL(xp), PUBLIC, PROTECTED :: ExBrate =  0._xp     ! ExB background shearing rate (radially constant shear flow)
   INTEGER,  PUBLIC, PROTECTED ::   ikxZF =  0         ! Background zonal mode wavenumber (acts in the nonlinear term)
-  REAL(xp), PUBLIC, PROTECTED ::   ZFamp =  200._xp   ! Amplitude of the background zonal mode
+  REAL(xp), PUBLIC, PROTECTED ::   ZFamp =  0._xp   ! Amplitude of the background zonal mode
   ! Auxiliary variable
   LOGICAL,  PUBLIC, PROTECTED ::      EM =  .true.    ! Electromagnetic effects flag
   LOGICAL,  PUBLIC, PROTECTED ::  MHD_PD =  .true.    ! MHD pressure drift
