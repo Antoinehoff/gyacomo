@@ -12,13 +12,13 @@ MODULE initial
   CHARACTER(len=32),  PUBLIC, PROTECTED :: ACT_ON_MODES = 'nothing'
   ! Initial background level (in addition to noise init)
   REAL(xp), PUBLIC, PROTECTED :: init_background = 0._xp
-  REAL(xp), PUBLIC, PROTECTED :: init_amp        = 0._xp
+  REAL(xp), PUBLIC, PROTECTED :: init_amp        = 1._xp
   ! Initial noise amplitude (for noise init)
   REAL(xp), PUBLIC, PROTECTED :: init_noiselvl   = 1E-6_xp
   ! Initialization for random number generator
   INTEGER,  PUBLIC, PROTECTED :: iseed=42
   ! Multiple mode init
-  INTEGER,  PUBLIC, PROTECTED :: Nmodes = 1
+  INTEGER,  PUBLIC, PROTECTED :: Nmodes = -1
   INTEGER,  PUBLIC, PROTECTED :: I_, J_, amp_
   INTEGER,  PUBLIC, PROTECTED, ALLOCATABLE :: ikx_init(:),iky_init(:)
   REAL(xp), PUBLIC, PROTECTED, ALLOCATABLE :: mode_amp(:)
@@ -42,24 +42,25 @@ CONTAINS
     
     READ(lu_in,initial)
     
-    ALLOCATE(ikx_init(Nmodes))
-    ALLOCATE(iky_init(Nmodes))
-    ALLOCATE(mode_amp(Nmodes))
-
-        ! expected namelist in the input file
-    DO im = 1,Nmodes
-      ! default parameters
-      I_   = 1 ! kx mode number
-      J_   = 1 ! ky mode number
-      amp_ = 1._xp
-      ! read input
-      READ(lu_in,mode)
-      ! place values found in the arrays
-      ikx_init(im) = I_
-      iky_init(im) = J_
-      mode_amp(im) = amp_
-      ! We treat and make check only in the initialize routine (when grid attributes are set)
-    ENDDO
+    IF(Nmodes .GT. 0) THEN
+      ALLOCATE(ikx_init(Nmodes))
+      ALLOCATE(iky_init(Nmodes))
+      ALLOCATE(mode_amp(Nmodes))
+      ! expected namelist in the input file
+      DO im = 1,Nmodes
+        ! default parameters
+        I_   = 1 ! kx mode number
+        J_   = 1 ! ky mode number
+        amp_ = 1._xp
+        ! read input
+        READ(lu_in,mode)
+        ! place values found in the arrays
+        ikx_init(im) = I_
+        iky_init(im) = J_
+        mode_amp(im) = amp_
+        ! We treat and make check only in the initialize routine (when grid attributes are set)
+      ENDDO
+    ENDIF
   END SUBROUTINE initial_readinputs
 
   !******************************************************************************!
@@ -675,7 +676,7 @@ CONTAINS
     LPFy = 0
       DO ikx=1,total_nkx
         DO iky=1,local_nky
-          IF ( (abs(kxarray(ikx,iky)) .LT. LPFx*deltakx ) .AND. (abs(kyarray(iky)) .LT. LPFy*deltaky ) )&
+          IF ( (abs(kxarray(iky,ikx)) .LT. LPFx*deltakx ) .AND. (abs(kyarray(iky)) .LT. LPFy*deltaky ) )&
             moments(:,:,:,iky,ikx,:,:) = 0._xp
         ENDDO
       ENDDO
