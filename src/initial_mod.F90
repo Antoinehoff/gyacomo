@@ -34,7 +34,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     ! Local var
-    INTEGER :: im, ikx_, iky_, amp_
+    INTEGER :: im, amp_
     NAMELIST /INITIAL/ INIT_OPT,ACT_ON_MODES,&
                        init_amp,init_background,init_noiselvl,iseed,&
                        Nmodes
@@ -297,7 +297,6 @@ CONTAINS
   SUBROUTINE init_modes
     USE fields,     ONLY: moments
     USE prec_const, ONLY: xp
-    USE parallel,   ONLY: my_id
     USE model,      ONLY: LINEARITY
     USE grid,       ONLY: total_nkx, local_nkx_offset, local_nky, local_nky_offset,&
                           kxarray_full, kyarray, kx_max, kx_min, ky_max
@@ -337,7 +336,7 @@ CONTAINS
               IF ( (ikx+local_nkx_offset .EQ. I_) .AND. &
                     (iky+local_nky_offset .EQ. J_) ) THEN
                 ! WRITE(*,'(A10,F4.2,A,F4.2,A,F4.2)') '-init (kx=',kx_,',ky=',ky_,') at Amp=',A_               
-                WRITE(*,'(A,F5.3,A,F5.3,A,G8.2)') '-init (kx=',kx_,',ky=',ky_,') with Amp= ',A_
+                WRITE(*,'(A,F5.3,A,F5.3,A,G9.2)') '-init (kx=',kx_,',ky=',ky_,') with Amp= ',A_
                 moments(:,:,:,iky,ikx,:,:) = A_
               ENDIF
             ENDDO

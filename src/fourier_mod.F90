@@ -418,7 +418,7 @@ END SUBROUTINE fft1D_plans
         COMPLEX(xp), DIMENSION(NX_,local_nky_), INTENT(IN)  :: in_kxky
         COMPLEX(xp), DIMENSION(NX_,local_nky_), INTENT(OUT) :: out_xky
         ! local variables
-        COMPLEX(xp), DIMENSION(NX_) :: in_kx, out_x
+        ! COMPLEX(xp), DIMENSION(NX_) :: in_kx, out_x
         INTEGER :: iky
 #ifdef SINGLE_PRECISION
         !plan many 1D transforms
@@ -451,7 +451,7 @@ END SUBROUTINE fft1D_plans
         COMPLEX(xp), DIMENSION(NX_,local_nky_), INTENT(IN)  :: in_xky
         COMPLEX(xp), DIMENSION(NX_,local_nky_), INTENT(OUT) :: out_kxky
         ! local variables
-        COMPLEX(xp), DIMENSION(NX_) :: in_x, out_kx
+        ! COMPLEX(xp), DIMENSION(NX_) :: in_x, out_kx
         INTEGER :: iky
 #ifdef SINGLE_PRECISION
         CALL sfftw_execute_dft(plan_many_x2kx_c2c, in_xky, out_kxky)
@@ -520,8 +520,8 @@ END SUBROUTINE fft1D_plans
         REAL(xp),    DIMENSION(NY_,    local_nx_), INTENT(IN)  :: in_yx
         COMPLEX(xp), DIMENSION(NY_/2+1,local_nx_), INTENT(OUT) :: out_kyx
         ! local var.
-        REAL(xp),    DIMENSION(NY_)     :: in_y
-        COMPLEX(xp), DIMENSION(NY_/2+1) :: out_ky
+        ! REAL(xp),    DIMENSION(NY_)     :: in_y
+        ! COMPLEX(xp), DIMENSION(NY_/2+1) :: out_ky
         ! COMPLEX(xp), DIMENSION(NY_halved+1,local_nx_) :: out_kyx_test
         INTEGER :: ix, iy, iky
 #ifdef SINGLE_PRECISION
@@ -559,9 +559,9 @@ END SUBROUTINE fft1D_plans
         COMPLEX(xp), DIMENSION(NY_/2+1,local_nx_), INTENT(IN)  :: in_kyx
         REAL(xp),    DIMENSION(NY_    ,local_nx_), INTENT(OUT) :: out_yx
         ! local var.
-        COMPLEX(xp), DIMENSION(Ny_/2+1) :: in_ky
-        REAL(xp),    DIMENSION(NY_)     :: out_y
-        REAL(xp),    DIMENSION(NY_,local_nx_) :: out_yx_test
+        ! COMPLEX(xp), DIMENSION(Ny_/2+1) :: in_ky
+        ! REAL(xp),    DIMENSION(NY_)     :: out_y
+        ! REAL(xp),    DIMENSION(NY_,local_nx_) :: out_yx_test
         INTEGER :: ix, iy, iky
 #ifdef SINGLE_PRECISION
         CALL sfftw_execute_dft_c2r(plan_many_ky2y_c2r, in_kyx, out_yx)

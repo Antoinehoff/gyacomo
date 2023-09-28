@@ -56,7 +56,7 @@ SUBROUTINE compute_nonlinear
   IMPLICIT NONE
   INTEGER :: iz,ij,ip,eo,ia,ikx,iky,izi,ipi,iji,ini,isi
   INTEGER :: ikxExBp, ikxExBn ! Negative and positive ExB flow indices
-  COMPLEX(xp), DIMENSION(Ny/2+1,local_nx) :: invinvfactor ! TEST
+  ! COMPLEX(xp), DIMENSION(Ny/2+1,local_nx) :: invinvfactor ! TEST
   z:DO iz = 1,local_nz
     izi = iz + ngz/2
     j:DO ij = 1,local_nj ! Loop over Laguerre moments

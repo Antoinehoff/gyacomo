@@ -24,9 +24,9 @@ CONTAINS
     ! Setup the variables for the ExB shear
     SUBROUTINE Setup_ExB_shear_flow(ExBrate)
         USE grid,     ONLY: Nx, local_nky, total_nky, local_nx, Ny, deltakx, deltaky,&
-                            kyarray, kyarray_full, kx_max, kx_min
+                            kx_max, kx_min !kyarray, kyarray_full
         USE geometry, ONLY: Cyq0_x0, C_y
-        USE basic,    ONLY: dt
+        ! USE basic,    ONLY: dt
         USE model,    ONLY: LINEARITY
         IMPLICIT NONE
         INTEGER :: iky
@@ -90,12 +90,12 @@ CONTAINS
 
     ! update the ExB shear value for the next time step
     SUBROUTINE Update_ExB_shear_flow(step_number)
-        USE basic,      ONLY: dt,time
-        USE grid,       ONLY: local_nky, total_nky, kyarray, inv_dkx, kyarray_full, update_grids, deltaky
+        USE basic,      ONLY: dt!,time
+        USE grid,       ONLY: local_nky, total_nky, kyarray, inv_dkx, update_grids, deltaky!,kyarray_full
         USE geometry,   ONLY: gxx,gxy,gyy,inv_hatB2, evaluate_magn_curv
         USE numerics,   ONLY: evaluate_EM_op, evaluate_kernels
         USE model,      ONLY: LINEARITY
-        USE time_integration, ONLY: c_E, ntimelevel
+        USE time_integration, ONLY: c_E!, ntimelevel
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: step_number
         ! local var
@@ -148,7 +148,7 @@ CONTAINS
     ! the fields by imposing a shift on kx
     SUBROUTINE Array_shift_ExB_shear_flow
         USE grid,       ONLY: local_nky, total_nky, update_grids, &
-            total_nkx, deltakx, kx_min, kx_max, kxarray0, inv_dkx
+            total_nkx, deltakx, kxarray0, inv_dkx!,kx_min, kx_max
         USE prec_const, ONLY: PI
         USE fields,     ONLY: moments, phi, psi
         USE numerics,   ONLY: evaluate_EM_op, evaluate_kernels
@@ -218,10 +218,10 @@ CONTAINS
     END SUBROUTINE Array_shift_ExB_shear_flow
 
     SUBROUTINE Update_nonlinear_ExB_factors(dt_sub)
-        USE grid,  ONLY: local_nky, local_nky_offset, xarray, Nx, Ny, local_nx, deltakx,&
-                         local_nx_offset, ikyarray, inv_ikyarray, deltaky, update_grids
-        USE basic, ONLY: time, dt
-        USE time_integration, ONLY: c_E
+        USE grid,  ONLY: local_nky, local_nky_offset, Nx, Ny, local_nx, deltakx,&
+                         local_nx_offset, deltaky, update_grids!,xarray, ikyarray, inv_ikyarray
+        USE basic, ONLY: time!, dt
+        ! USE time_integration, ONLY: c_E
         IMPLICIT NONE
         REAL(xp), INTENT(IN) :: dt_sub        
         INTEGER :: iky, ix
