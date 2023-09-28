@@ -80,7 +80,9 @@ SUBROUTINE set_closure_model
         nmaxarray(ij) = jmax - jarray(ij+ngj/2)
       ENDDO
     ELSE
-      nmaxarray(:) = nmax
+      DO ij = 1,local_nj
+        nmaxarray(ij) = MIN(nmax,jmax)
+      ENDDO
     ENDIF
   CASE('anti_laguerre_aliasing')
     DO ij = 1,local_nj
