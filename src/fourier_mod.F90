@@ -306,7 +306,7 @@ END SUBROUTINE fft1D_plans
     !   module variable (convolution theorem)
     SUBROUTINE poisson_bracket_and_sum( ky_array, kx_array, inv_Ny, inv_Nx, AA_y, AA_x,&
                                         local_nky, total_nkx, F_, G_,&
-                                        ExB_NL_CORRECTION, ExB_NL_factor,sky_ExB,sum_real_)
+                                        ExB_NL_CORRECTION,ExB_NL_factor,sum_real_)
         IMPLICIT NONE
         INTEGER,                                  INTENT(IN) :: local_nky,total_nkx
         REAL(xp),                                 INTENT(IN) :: inv_Nx, inv_Ny
@@ -318,12 +318,10 @@ END SUBROUTINE fft1D_plans
         COMPLEX(xp), DIMENSION(total_nkx,local_nky), &
                                                   INTENT(IN) :: ExB_NL_factor
         LOGICAL, INTENT(IN) :: ExB_NL_CORRECTION
-        REAL(xp),DIMENSION(local_nky),            INTENT(IN) :: sky_ExB
         real(c_xp_r), pointer,                 INTENT(INOUT) :: sum_real_(:,:)
         ! local variables
         INTEGER :: ikx,iky
         COMPLEX(xp), DIMENSION(total_nkx,local_nky) :: ikxF, ikyG, ikyF, ikxG
-        COMPLEX(xp), DIMENSION(total_nkx,local_nky) :: invfactor !TEST
         REAL(xp):: kxs, ky
         
         ! Build the fields to convolve
@@ -347,10 +345,12 @@ END SUBROUTINE fft1D_plans
         ENDIF
         ! Anti Aliasing
         DO iky = 1,local_nky
-                ikxF(:,iky) = ikxF(:,iky)*AA_y(iky)*AA_x(:)
-                ikyG(:,iky) = ikyG(:,iky)*AA_y(iky)*AA_x(:)
-                ikyF(:,iky) = ikyF(:,iky)*AA_y(iky)*AA_x(:)
-                ikxG(:,iky) = ikxG(:,iky)*AA_y(iky)*AA_x(:)
+                DO ikx = 1,total_nkx
+                        ikxF(ikx,iky) = ikxF(ikx,iky)*AA_y(iky)*AA_x(ikx)
+                        ikyG(ikx,iky) = ikyG(ikx,iky)*AA_y(iky)*AA_x(ikx)
+                        ikyF(ikx,iky) = ikyF(ikx,iky)*AA_y(iky)*AA_x(ikx)
+                        ikxG(ikx,iky) = ikxG(ikx,iky)*AA_y(iky)*AA_x(ikx)
+                ENDDO
         ENDDO
         !-------------------- First term df/dx x dg/dy --------------------
 #ifdef SINGLE_PRECISION
@@ -372,7 +372,6 @@ END SUBROUTINE fft1D_plans
         call fftw_mpi_execute_dft_c2r(planb, ikxG, real_data_g)
 #endif
         sum_real_ = sum_real_ - real_data_f*real_data_g*inv_Ny*inv_Nx
-
     END SUBROUTINE poisson_bracket_and_sum
     !******************************************************************************!
     !******************************************************************************!
