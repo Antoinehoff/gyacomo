@@ -14,7 +14,7 @@ Nrows  = ceil(Nframes/4);
 Ncols  = ceil(Nframes/Nrows);
 %
 if OPTIONS.LOGSCALE
-    toplot.FIELD = max(abs(toplot.FIELD),1e-20);
+    toplot.FIELD = max(abs(toplot.FIELD),1e-40);
     toplot.FIELD = log(toplot.FIELD);
 end
 TNAME = [];

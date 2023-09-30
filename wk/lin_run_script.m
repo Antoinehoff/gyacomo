@@ -15,34 +15,33 @@ addpath(genpath([gyacomodir,'matlab/load']))    % Add load folder
 addpath(genpath([gyacomodir,'wk/parameters']))  % Add parameters folder
 
 %% Setup run or load an executable
-RUN = 0; % To run or just to load
+RUN = 1; % To run or just to load
 default_plots_options
 % EXECNAME = 'gyacomo23_sp_save'; % single precision
-EXECNAME = 'gyacomo23_sp'; % single precision
-% EXECNAME = 'gyacomo23_dp'; % double precision
+% EXECNAME = 'gyacomo23_sp'; % single precision
+EXECNAME = 'gyacomo23_dp'; % double precision
 % EXECNAME = 'gyacomo23_debug'; % double precision
 
 %% Setup parameters
 % run lin_DTT_HM_rho85
 % run lin_DTT_HM_rho98
-% run lin_DTT_LM_rho90
-% run lin_DTT_LM_rho95
+run lin_DIIID_LM_rho90
+% run lin_DIIID_LM_rho95
 % run lin_JET_rho97
 % run lin_Entropy
-run lin_ITG
+% run lin_ITG
 % run lin_KBM
 %% Change parameters
 EXBRATE = 0.0;              % Background ExB shear flow
-NY   = 40;
-NX   = 8;
-PMAX = 16;
-JMAX = PMAX/2;
-ky   = 0.05;
-LY   = 2*pi/ky;
-DT   = 5e-3;
-TMAX = 50;
-% % SIGMA_E = 0.04;
-% TMAX     = 10;
+NY   = 2;
+NX   = 4;
+% PMAX = 4;
+% JMAX = PMAX/2;
+ky   = 0.8; LY   = 2*pi/ky;
+DT   = 1e-4;
+TAU  = 2.1;
+% SIGMA_E = 0.02;
+% TMAX = 50;
 % DTSAVE0D = 200*DT;
 % DTSAVE3D = TMAX/50;
 %%-------------------------------------------------------------------------
@@ -53,8 +52,8 @@ setup
 if RUN
     MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
     % RUN  =['time ',mpirun,' -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
-   % RUN  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
-     RUN  =['time ',mpirun,' -np 8 ',gyacomodir,'bin/',EXECNAME,' 2 2 2 0;'];
+   RUN  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
+     % RUN  =['time ',mpirun,' -np 8 ',gyacomodir,'bin/',EXECNAME,' 2 2 2 0;'];
     % RUN  =['time ',mpirun,' -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
       % RUN = ['./../../../bin/gyacomo23_sp 0;'];
     MVOUT='cd ../../../wk;';
@@ -88,6 +87,7 @@ options.iz     = 'avg'; % Compressing z
 options.ik     = 1; %
 options.GOK2   = 0; % plot gamma/k^2
 options.fftz.flag = 0; % Set fftz.flag option to 0
+options.FIELD = 'phi';
 [fig, kykx, wkykx, ekykx] = mode_growth_meter(data,options); % Call the function mode_growth_meter with data and options as input arguments, and store the result in fig
 end
 
@@ -98,7 +98,7 @@ if data.inputs.BETA > 0
 [data.PSI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'psi');
 end
 options.time_2_plot = [120];
-options.kymodes     = [0.25];
+options.kymodes     = [0.2 0.3 0.4];
 options.normalized  = 1;
 options.PLOT_KP     = 0;
 % options.field       = 'phi';

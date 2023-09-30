@@ -1,4 +1,3 @@
-
 function S = read_namelist(filename)
 %   S = READ_NAMELIST(FILENAME) returns the struct S containg namelists and
 %   variables in the file FILENAME organised in hierachical way:
@@ -80,11 +79,7 @@ while i < c;
             nmlst_bdy = [nmlst_bdy ' ' line];
         end
         % Parse current namelist (set of variables)
-        switch namelst
-            case 'info'
-            otherwise
-            S.(namelst) = parse_namelist(nmlst_bdy);        
-        end
+        S.(namelst) = parse_namelist(nmlst_bdy);        
     end
 end
 function S = parse_namelist(strng)
@@ -126,9 +121,7 @@ for k = 1:nvars,
     if k > 1, arg_end(k - 1) = i; end    
     vars{k} = ['S.' strng(i + 1: j)];
 end
-if numel(arg_end) > 0
 arg_end(end) = length(strng);
-end
 % This variables are used in the eval function to evaluate True/False, 
 % so don't remove it!
 T = '.true.';
@@ -137,6 +130,7 @@ F = '.false.';
 for k = 1:nvars,    
     arg = strng(arg_start(k):arg_end(k));
     arglit = islit(arg_start(k):arg_end(k))';
+    
     % Remove commas in non literal string...
     commas = ~arglit & arg == ',';
     if any(commas)

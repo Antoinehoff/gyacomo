@@ -1,12 +1,13 @@
 function [ fig ] = imagesc_custom( XX,YY,FF)
 % CUSTOM IMAGESC this custom function is meant to be used exaclty as pcolor
 % but plotting array values in pixels (like imagesc) and not in vertices (like pcolor).
-
-fig = imagesc( XX(1,:), YY(:,1), FF);
+x = reshape(XX(1,:),[numel(XX(1,:)), 1]);
+y = reshape(YY(:,1),[numel(YY(:,1)), 1]);
+fig = imagesc( x, y, FF);
 set(gca,'YDir','normal')        
-xticks(XX(1,:));
-xticklabels(num2str(XX(1,:)));
-yticks(YY(:,1));
-yticklabels(num2str(YY(:,1)));
+xticks(x);
+xticklabels(num2str(x));
+yticks(y);
+yticklabels(num2str(y));
 end
 

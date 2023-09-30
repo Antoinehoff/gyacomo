@@ -13,15 +13,15 @@ EXECDIR  = [curdir(1:end-2),'bin/'];
 % EXECNAME = 'gyacomo23_dp_O1';
 % EXECNAME = 'gyacomo23_dp';
 % EXECNAME = 'gyacomo23_sp';
-% EXECNAME = 'gyacomo23_test';
-EXECNAME = 'gyacomo23_debug';
+EXECNAME = 'gyacomo23_test';
+% EXECNAME = 'gyacomo23_debug';
 % ------
-NP = '1'; PARA = '1 1 1';
+% NP = '1'; PARA = '1 1 1';
 % NP = '2'; PARA = '1 2 1';
-% NP = '6'; PARA = '1 6 1';
+NP = '6'; PARA = '1 6 1';
 %------
 % Picture, const. zonal mode in phi in nonlin term
-% INNAME = '0';
+INNAME = '0';
 % Picture, bckg ExB shear
 % INNAME = '1';
 % NL with padrallel modes initialization no ExB shear
@@ -35,7 +35,7 @@ NP = '1'; PARA = '1 1 1';
 % Mcmillan et al. 2019 correction
 % INNAME = '6';
 % Single mode single step
-INNAME = '7';
+% INNAME = '7';
 %-------
 RUN   = [MPIRUN,' -np ',NP,' ',EXECDIR,EXECNAME,' ',PARA,' ',INNAME];
 system([MVIN,'; ',RUN,'; ',MVOUT]);
