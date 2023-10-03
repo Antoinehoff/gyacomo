@@ -1,7 +1,7 @@
 % Get the current directory (wk)
 curdir  = pwd;
-% parition= '/misc/gyacomo23_outputs/paper_3/';
-partition= '../results/paper_3/';
+partition= '/misc/gyacomo23_outputs/paper_3/';
+% partition= '../results/paper_3/';
 % Get the scan directory
 switch 3
     case 1 % delta kappa scan
@@ -15,10 +15,10 @@ switch 3
     nml1 = 'GEOMETRY'; pnam1 = '$\hat s$'; attr1 = 'shear'; pref1 = 3.63;
     nml2 = 'GEOMETRY'; pnam2 = '$q_0$';    attr2 = 'q0';    pref2 =-2.15;
     case 3
-    % scandir = 'DTT_rho85_geom_scan/P2_J1_delta_nuDGGK_scan/';
+    scandir = 'DTT_rho85_geom_scan/P2_J1_delta_nuDGGK_scan/';
     % scandir = 'DTT_rho85_geom_scan/P4_J2_delta_nuDGGK_scan/';
     % scandir = 'DTT_rho85_geom_scan/P2_J1_delta_nuSGGK_scan/';
-    scandir = 'DTT_rho85_geom_scan/P4_J2_delta_nuSGGK_scan/';
+    % scandir = 'DTT_rho85_geom_scan/P4_J2_delta_nuSGGK_scan/';
     % scandir = 'DTT_rho85_geom_scan/P2_J1_delta_nuLDGK_scan/';
     % scandir = 'DTT_rho85_geom_scan/P4_J2_delta_nuLDGK_scan/';
     nml1 = 'GEOMETRY'; pnam1 = '$\delta$'; attr1 = 'delta'; pref1 = 0.23;
