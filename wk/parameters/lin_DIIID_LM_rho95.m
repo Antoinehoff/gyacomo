@@ -1,7 +1,7 @@
 %% Reference values
 % See Neiser et al. 2019 Gyrokinetic GENE simulations of DIII-D near-edge L-mode plasmas
 %% Set simulation parameters
-SIMID   = 'lin_DTT_HM_rho90';  % Name of the simulation
+SIMID   = 'lin_DIIID_HM_rho90';  % Name of the simulation
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
 NU = 1.0; %(0.00235 in GENE)
@@ -20,7 +20,7 @@ P = 2;
 J = P/2;%P/2;
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
-NX = 16;                    % real space x-gridpoints
+NX = 6;                    % real space x-gridpoints
 NY = 2;                     % real space y-gridpoints
 LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
 LY = 2*pi/0.3;             % Size of the squared frequency domain in y direction
@@ -46,7 +46,7 @@ NPOL   = 1;       % Number of poloidal turns
 PB_PHASE = 0;
 %% TIME PARAMETERS
 TMAX     = 15;  % Maximal time unit
-DT       = 1e-3;   % Time step
+DT       = 1e-4;   % Time step
 DTSAVE0D = 0.5;      % Sampling time for 0D arrays
 DTSAVE2D = -1;     % Sampling time for 2D arrays
 DTSAVE3D = 0.5;      % Sampling time for 3D arrays

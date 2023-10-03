@@ -21,11 +21,12 @@ MODULE miller
   real(xp) :: rho, kappa, delta, s_kappa, s_delta, drR, drZ, zeta, s_zeta
   real(xp) :: thetaShift
   real(xp) :: thetak, thetad
+  real(xp) :: asurf, theta1, theta2, theta3, delta2, delta3, Raxis, Zaxis
 CONTAINS
 
   !>Set defaults for miller parameters
-  subroutine set_miller_parameters(kappa_,s_kappa_,delta_,s_delta_,zeta_,s_zeta_)
-    real(xp), INTENT(IN) :: kappa_,s_kappa_,delta_,s_delta_,zeta_,s_zeta_
+  subroutine set_miller_parameters(kappa_,s_kappa_,delta_,s_delta_,zeta_,s_zeta_,theta1_,theta2_)
+    real(xp), INTENT(IN) :: kappa_,s_kappa_,delta_,s_delta_,zeta_,s_zeta_,theta1_,theta2_
     rho     = -1._xp
     kappa   = kappa_
     s_kappa = s_kappa_
@@ -36,15 +37,24 @@ CONTAINS
     drR     = 0._xp
     drZ     = 0._xp
     thetak  = 0._xp
-    thetad = 0._xp
+    thetad  = 0._xp
+    asurf   = 0.54_xp
+    theta1  = theta1_
+    theta2  = theta2_
+    theta3  = 0._xp
+    delta2  = 1._xp
+    delta3  = 1._xp
+    Raxis   = 1._xp
+    Zaxis   = 0._xp
 
   end subroutine set_miller_parameters
 
   !>Get Miller metric, magnetic field, jacobian etc.
-  subroutine get_miller(trpeps,major_R,major_Z,q0,shat,Npol,amhd,edge_opt,&
+  subroutine get_miller(geom,trpeps,major_R,major_Z,q0,shat,Npol,amhd,edge_opt,&
        C_y,C_xy,Cyq0_x0,xpdx_pm_geom,gxx_,gxy_,gxz_,gyy_,gyz_,gzz_,dBdx_,dBdy_,dBdz_,&
        Bfield_,jacobian_,R_hat_,Z_hat_,dxdR_,dxdZ_)
     !!!!!!!!!!!!!!!! GYACOMO INTERFACE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    CHARACTER(len=16), INTENT(IN) :: geom
     real(xp), INTENT(INOUT) :: trpeps          ! eps in gyacomo (inverse aspect ratio)
     real(xp), INTENT(INOUT) :: major_R         ! major radius
     real(xp), INTENT(INOUT) :: major_Z         ! major Z
@@ -73,8 +83,8 @@ CONTAINS
     real(xp), dimension(500*(Npol+2)):: dtdtZcirc, dtdtZelong, dtdtZelongTilt, dtdtZtri, dtdtZtriTilt, dtRcirc, dtRelong
     real(xp), dimension(500*(Npol+2)):: dtRelongTilt, dtRtri, dtRtriTilt, dtZcirc, dtZelong, dtZelongTilt, dtZtri, dtZtriTilt
     real(xp), dimension(500*(Npol+2)):: Rcirc, Relong, RelongTilt, Rtri, RtriTilt, Zcirc, Zelong, ZelongTilt, Ztri, ZtriTilt
-    ! real(xp), dimension(500*(Npol+2)):: drrShape, drrAng, drxAng, dryAng, dtdtrShape, dtdtrAng, dtdtxAng
-    ! real(xp), dimension(500*(Npol+2)):: dtdtyAng, dtrShape, dtrAng, dtxAng, dtyAng, rShape, rAng, xAng, yAng
+    real(xp), dimension(500*(Npol+2)):: drrShape, drrAng, drxAng, dryAng, dtdtrShape, dtdtrAng, dtdtxAng
+    real(xp), dimension(500*(Npol+2)):: dtdtyAng, dtrShape, dtrAng, dtxAng, dtyAng, rShape, rAng, xAng, yAng
     real(xp), dimension(500*(Npol+2)):: theta, thAdj, J_r, B, Bp, D0, D1, D2, D3, nu, chi, psi1, nu1
     real(xp), dimension(500*(Npol+2)):: tmp_reverse, theta_reverse, tmp_arr
 
@@ -91,9 +101,9 @@ CONTAINS
     real(xp), dimension(1:total_nz+ngz):: gxx_out,gxy_out,gxz_out,gyy_out,gyz_out,gzz_out,Bfield_out,jacobian_out, dBdx_out, dBdz_out, chi_out
     real(xp), dimension(1:total_nz+ngz):: R_out, Z_out, dxdR_out, dxdZ_out
     real(xp):: d_inv, drPsi, dxPsi, dq_dx, dq_dpsi, R0, Z0, B0, F, D0_full, D1_full, D2_full, D3_full
-    !real(xp) :: Lnorm, Psi0 ! currently module-wide defined anyway
+    real(xp) :: Lnorm, Psi0 ! currently module-wide defined anyway
     real(xp):: pprime, ffprime, D0_mid, D1_mid, D2_mid, D3_mid, dx_drho, pi, mu_0, dzprimedz
-    ! real(xp):: rho_a, psiN, drpsiN, CN2, CN3, Rcenter, Zcenter, drRcenter, drZcenter
+    real(xp):: rho_a, psiN, drpsiN, CN2, CN3, Rcenter, Zcenter, drRcenter, drZcenter
     logical:: bMaxShift
     integer:: i, k, iBmax
 
@@ -124,76 +134,156 @@ CONTAINS
     do while (bMaxShift)
       !flux surface parametrization
       thAdj = theta + thetaShift
-      if (zeta/=0._xp .or. s_zeta/=0._xp) then
-        R = R0 + rho*Cos(thAdj + d_inv*Sin(thAdj))
-        Z = Z0 + kappa*rho*Sin(thAdj + zeta*Sin(2*thAdj))
+      SELECT CASE (geom)
+      CASE('Miller','miller')
+        if (zeta/=0._xp .or. s_zeta/=0._xp) then
+          R = R0 + rho*Cos(thAdj + d_inv*Sin(thAdj))
+          Z = Z0 + kappa*rho*Sin(thAdj + zeta*Sin(2*thAdj))
 
-        R_rho = drR + Cos(thAdj + d_inv*Sin(thAdj)) - s_delta*Sin(thAdj)*Sin(thAdj + d_inv*Sin(thAdj))
-        Z_rho = drZ + kappa*s_zeta*Cos(thAdj + zeta*Sin(2*thAdj))*Sin(2*thAdj) &
-              + kappa*Sin(thAdj + zeta*Sin(2*thAdj)) + kappa*s_kappa*Sin(thAdj + zeta*Sin(2*thAdj))
+          R_rho = drR + Cos(thAdj + d_inv*Sin(thAdj)) - s_delta*Sin(thAdj)*Sin(thAdj + d_inv*Sin(thAdj))
+          Z_rho = drZ + kappa*s_zeta*Cos(thAdj + zeta*Sin(2*thAdj))*Sin(2*thAdj) &
+                + kappa*Sin(thAdj + zeta*Sin(2*thAdj)) + kappa*s_kappa*Sin(thAdj + zeta*Sin(2*thAdj))
 
-        R_theta = -(rho*(1 + d_inv*Cos(thAdj))*Sin(thAdj + d_inv*Sin(thAdj)))
-        Z_theta = kappa*rho*(1 + 2*zeta*Cos(2*thAdj))*Cos(thAdj + zeta*Sin(2*thAdj))
+          R_theta = -(rho*(1 + d_inv*Cos(thAdj))*Sin(thAdj + d_inv*Sin(thAdj)))
+          Z_theta = kappa*rho*(1 + 2*zeta*Cos(2*thAdj))*Cos(thAdj + zeta*Sin(2*thAdj))
 
-        R_theta_theta = -(rho*(1 + d_inv*Cos(thAdj))**2*Cos(thAdj + d_inv*Sin(thAdj))) &
-              + d_inv*rho*Sin(thAdj)*Sin(thAdj + d_inv*Sin(thAdj))
-        Z_theta_theta = -4*kappa*rho*zeta*Cos(thAdj + zeta*Sin(2*thAdj))*Sin(2*thAdj) &
-              - kappa*rho*(1 + 2*zeta*Cos(2*thAdj))**2*Sin(thAdj + zeta*Sin(2*thAdj))
-      else
-        Rcirc = rho*Cos(thAdj - thetad + thetak)
-        Zcirc = rho*Sin(thAdj - thetad + thetak)
-        Relong = Rcirc
-        Zelong = Zcirc + (-1 + kappa)*rho*Sin(thAdj - thetad + thetak)
-        RelongTilt = Relong*Cos(thetad - thetak) - Zelong*Sin(thetad - thetak)
-        ZelongTilt = Zelong*Cos(thetad - thetak) + Relong*Sin(thetad - thetak)
-        Rtri = RelongTilt - rho*Cos(thAdj) + rho*Cos(thAdj + delta*Sin(thAdj))
-        Ztri = ZelongTilt
-        RtriTilt = Rtri*Cos(thetad) + Ztri*Sin(thetad)
-        ZtriTilt = Ztri*Cos(thetad) - Rtri*Sin(thetad)
-        R = R0 + RtriTilt
-        Z = Z0 + ZtriTilt
+          R_theta_theta = -(rho*(1 + d_inv*Cos(thAdj))**2*Cos(thAdj + d_inv*Sin(thAdj))) &
+                + d_inv*rho*Sin(thAdj)*Sin(thAdj + d_inv*Sin(thAdj))
+          Z_theta_theta = -4*kappa*rho*zeta*Cos(thAdj + zeta*Sin(2*thAdj))*Sin(2*thAdj) &
+                - kappa*rho*(1 + 2*zeta*Cos(2*thAdj))**2*Sin(thAdj + zeta*Sin(2*thAdj))
+        else
+          Rcirc = rho*Cos(thAdj - thetad + thetak)
+          Zcirc = rho*Sin(thAdj - thetad + thetak)
+          Relong = Rcirc
+          Zelong = Zcirc + (-1 + kappa)*rho*Sin(thAdj - thetad + thetak)
+          RelongTilt = Relong*Cos(thetad - thetak) - Zelong*Sin(thetad - thetak)
+          ZelongTilt = Zelong*Cos(thetad - thetak) + Relong*Sin(thetad - thetak)
+          Rtri = RelongTilt - rho*Cos(thAdj) + rho*Cos(thAdj + delta*Sin(thAdj))
+          Ztri = ZelongTilt
+          RtriTilt = Rtri*Cos(thetad) + Ztri*Sin(thetad)
+          ZtriTilt = Ztri*Cos(thetad) - Rtri*Sin(thetad)
+          R = R0 + RtriTilt
+          Z = Z0 + ZtriTilt
 
-        drRcirc = Cos(thAdj - thetad + thetak)
-        drZcirc = Sin(thAdj - thetad + thetak)
-        drRelong = drRcirc
-        drZelong = drZcirc - (1 - kappa - kappa*s_kappa)*Sin(thAdj - thetad + thetak)
-        drRelongTilt = drRelong*Cos(thetad - thetak) - drZelong*Sin(thetad - thetak)
-        drZelongTilt = drZelong*Cos(thetad - thetak) + drRelong*Sin(thetad - thetak)
-        drRtri = drRelongTilt - Cos(thAdj) + Cos(thAdj + delta*Sin(thAdj)) &
-              - s_delta*Sin(thAdj)*Sin(thAdj + delta*Sin(thAdj))
-        drZtri = drZelongTilt
-        drRtriTilt = drRtri*Cos(thetad) + drZtri*Sin(thetad)
-        drZtriTilt = drZtri*Cos(thetad) - drRtri*Sin(thetad)
-        R_rho = drR + drRtriTilt
-        Z_rho = drZ + drZtriTilt
+          drRcirc = Cos(thAdj - thetad + thetak)
+          drZcirc = Sin(thAdj - thetad + thetak)
+          drRelong = drRcirc
+          drZelong = drZcirc - (1 - kappa - kappa*s_kappa)*Sin(thAdj - thetad + thetak)
+          drRelongTilt = drRelong*Cos(thetad - thetak) - drZelong*Sin(thetad - thetak)
+          drZelongTilt = drZelong*Cos(thetad - thetak) + drRelong*Sin(thetad - thetak)
+          drRtri = drRelongTilt - Cos(thAdj) + Cos(thAdj + delta*Sin(thAdj)) &
+                - s_delta*Sin(thAdj)*Sin(thAdj + delta*Sin(thAdj))
+          drZtri = drZelongTilt
+          drRtriTilt = drRtri*Cos(thetad) + drZtri*Sin(thetad)
+          drZtriTilt = drZtri*Cos(thetad) - drRtri*Sin(thetad)
+          R_rho = drR + drRtriTilt
+          Z_rho = drZ + drZtriTilt
 
-        dtRcirc = -(rho*Sin(thAdj - thetad + thetak))
-        dtZcirc = rho*Cos(thAdj - thetad + thetak)
-        dtRelong = dtRcirc
-        dtZelong = dtZcirc + (-1 + kappa)*rho*Cos(thAdj - thetad + thetak)
-        dtRelongTilt = dtRelong*Cos(thetad - thetak) - dtZelong*Sin(thetad - thetak)
-        dtZelongTilt = dtZelong*Cos(thetad - thetak) + dtRelong*Sin(thetad - thetak)
-        dtRtri = dtRelongTilt + rho*Sin(thAdj) - rho*(1 + delta*Cos(thAdj))*Sin(thAdj + delta*Sin(thAdj))
-        dtZtri = dtZelongTilt
-        dtRtriTilt = dtRtri*Cos(thetad) + dtZtri*Sin(thetad)
-        dtZtriTilt = dtZtri*Cos(thetad) - dtRtri*Sin(thetad)
-        R_theta = dtRtriTilt
-        Z_theta = dtZtriTilt
+          dtRcirc = -(rho*Sin(thAdj - thetad + thetak))
+          dtZcirc = rho*Cos(thAdj - thetad + thetak)
+          dtRelong = dtRcirc
+          dtZelong = dtZcirc + (-1 + kappa)*rho*Cos(thAdj - thetad + thetak)
+          dtRelongTilt = dtRelong*Cos(thetad - thetak) - dtZelong*Sin(thetad - thetak)
+          dtZelongTilt = dtZelong*Cos(thetad - thetak) + dtRelong*Sin(thetad - thetak)
+          dtRtri = dtRelongTilt + rho*Sin(thAdj) - rho*(1 + delta*Cos(thAdj))*Sin(thAdj + delta*Sin(thAdj))
+          dtZtri = dtZelongTilt
+          dtRtriTilt = dtRtri*Cos(thetad) + dtZtri*Sin(thetad)
+          dtZtriTilt = dtZtri*Cos(thetad) - dtRtri*Sin(thetad)
+          R_theta = dtRtriTilt
+          Z_theta = dtZtriTilt
 
-        dtdtRcirc = -(rho*Cos(thAdj - thetad + thetak))
-        dtdtZcirc = -(rho*Sin(thAdj - thetad + thetak))
-        dtdtRelong = dtdtRcirc
-        dtdtZelong = dtdtZcirc - (-1 + kappa)*rho*Sin(thAdj - thetad + thetak)
-        dtdtRelongTilt = dtdtRelong*Cos(thetad - thetak) - dtdtZelong*Sin(thetad - thetak)
-        dtdtZelongTilt = dtdtZelong*Cos(thetad - thetak) + dtdtRelong*Sin(thetad - thetak)
-        dtdtRtri = dtdtRelongTilt + rho*Cos(thAdj) - rho*(1 + delta*Cos(thAdj))**2*Cos(thAdj + delta*Sin(thAdj)) &
-              + delta*rho*Sin(thAdj)*Sin(thAdj + delta*Sin(thAdj))
-        dtdtZtri = dtdtZelongTilt
-        dtdtRtriTilt = dtdtRtri*Cos(thetad) + dtdtZtri*Sin(thetad)
-        dtdtZtriTilt = dtdtZtri*Cos(thetad) - dtdtRtri*Sin(thetad)
-        R_theta_theta = dtdtRtriTilt
-        Z_theta_theta = dtdtZtriTilt
-      endif
+          dtdtRcirc = -(rho*Cos(thAdj - thetad + thetak))
+          dtdtZcirc = -(rho*Sin(thAdj - thetad + thetak))
+          dtdtRelong = dtdtRcirc
+          dtdtZelong = dtdtZcirc - (-1 + kappa)*rho*Sin(thAdj - thetad + thetak)
+          dtdtRelongTilt = dtdtRelong*Cos(thetad - thetak) - dtdtZelong*Sin(thetad - thetak)
+          dtdtZelongTilt = dtdtZelong*Cos(thetad - thetak) + dtdtRelong*Sin(thetad - thetak)
+          dtdtRtri = dtdtRelongTilt + rho*Cos(thAdj) - rho*(1 + delta*Cos(thAdj))**2*Cos(thAdj + delta*Sin(thAdj)) &
+                + delta*rho*Sin(thAdj)*Sin(thAdj + delta*Sin(thAdj))
+          dtdtZtri = dtdtZelongTilt
+          dtdtRtriTilt = dtdtRtri*Cos(thetad) + dtdtZtri*Sin(thetad)
+          dtdtZtriTilt = dtdtZtri*Cos(thetad) - dtdtRtri*Sin(thetad)
+          R_theta_theta = dtdtRtriTilt
+          Z_theta_theta = dtdtZtriTilt
+        endif
+      CASE('Miller_global','miller_global')
+        rho_a = rho/aSurf
+
+        CN2 = (-1._xp + Delta2**2)/(1._xp + Delta2**2)
+        CN3 = (-1._xp + Delta3**2)/(1._xp + Delta3**3)
+
+        psiN = rho_a**2 + CN2*rho_a**2 + CN3*rho_a**3
+        drpsiN = 2._xp*rho_a + 2._xp*CN2*rho_a + 3._xp*CN3*rho_a**2
+
+        xAng = 2*(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))**3 - 27._xp*CN3**2*Cos(3._xp*(thAdj + theta3))**2*psiN
+        drxAng = -27._xp*CN3**2*Cos(3._xp*(thAdj + theta3))**2*drpsiN
+        dtxAng = -12._xp*CN2*(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))**2*Sin(2._xp*(thAdj + theta2)) &
+             + 162._xp*CN3**2*Cos(3._xp*(thAdj + theta3))*psiN*Sin(3._xp*(thAdj + theta3))
+        dtdtxAng = 486._xp*CN3**2*Cos(6._xp*(thAdj + theta3))*psiN + 24._xp*CN2*(1._xp + CN2*Cos(2._xp*(thAdj + theta2))) &
+             *(-(Cos(2._xp*(thAdj + theta2))*(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))) + 2._xp*CN2*Sin(2._xp*(thAdj + theta2))**2)
+
+        yAng = 3._xp*Sqrt(3._xp)*CN3*Cos(3._xp*(thAdj + theta3))*Sqrt(psiN)*Sqrt(2._xp*(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))**3 + xAng)
+        dryAng = (yAng*(drpsiN/psiN + drxAng/(2._xp*(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))**3 + xAng)))/2._xp
+        dtyAng = yAng*(-3._xp*Tan(3._xp*(thAdj + theta3)) &
+             + (-12._xp*CN2*(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))**2*Sin(2._xp*(thAdj + theta2)) + dtxAng) &
+             /(2._xp*(2*(1._xp + CN2*Cos(2*(thAdj + theta2)))**3 + xAng)))
+        dtdtyAng = dtyAng**2/yAng + yAng*(-9._xp/Cos(3._xp*(thAdj + theta3))**2 &
+             - (-12._xp*CN2*(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))**2*Sin(2._xp*(thAdj + theta2)) + dtxAng)**2 &
+             /(2._xp*(2._xp*(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))**3 + xAng)**2) &
+             + (-24._xp*CN2*Cos(2._xp*(thAdj + theta2))*(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))**2 &
+             + 48._xp*CN2**2*(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))*Sin(2._xp*(thAdj + theta2))**2 + dtdtxAng) &
+             /(2._xp*(2._xp*(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))**3 + xAng)))
+
+        rAng = atan2(yAng,xAng)/3.
+        drrAng = (-(yAng*drxAng) + xAng*dryAng)/(3._xp*(xAng**2 + yAng**2))
+        dtrAng = (-(yAng*dtxAng) + xAng*dtyAng)/(3._xp*(xAng**2 + yAng**2))
+        dtdtrAng = (-6._xp*dtrAng**2*yAng)/xAng &
+             + ((2._xp*yAng*dtxAng**2)/xAng - 2._xp*dtxAng*dtyAng - yAng*dtdtxAng + xAng*dtdtyAng)/(3._xp*(xAng**2 + yAng**2))
+
+        rShape = (aSurf*(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))/Cos(3._xp*(thAdj + theta3))*&
+             &(-1._xp + Cos(rAng) + Sqrt(3._xp)*Sin(rAng)))/(3._xp*CN3)
+        drrShape = (aSurf*(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))/Cos(3._xp*(thAdj + theta3))*&
+             &(Sqrt(3._xp)*Cos(rAng) - Sin(rAng))*drrAng)/(3._xp*CN3)
+        dtrShape = rShape*((-2._xp*CN2*Sin(2._xp*(thAdj + theta2)))/(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))&
+             &+ 3._xp*Tan(3._xp*(thAdj + theta3)) &
+             &+ ((Sqrt(3._xp)*Cos(rAng) - Sin(rAng))*dtrAng)/(-1._xp + Cos(rAng) + Sqrt(3._xp)*Sin(rAng)))
+        dtdtrShape = dtrShape**2/rShape + rShape*(9._xp - (4._xp*CN2*Cos(2._xp*(thAdj + theta2)))/(1._xp + CN2*Cos(2._xp*(thAdj + theta2))) &
+             - (4._xp*CN2**2*Sin (2._xp*(thAdj + theta2))**2)/(1._xp + CN2*Cos(2._xp*(thAdj + theta2)))**2 + 9._xp*Tan (3._xp*(thAdj + theta3))**2 &
+             + ((-4._xp + Cos(rAng) + Sqrt(3._xp)*Sin(rAng))*dtrAng**2)/(-1._xp + Cos(rAng) + Sqrt(3._xp)*Sin(rAng))**2 &
+             + ((Sqrt(3._xp)*Cos(rAng) - Sin(rAng))*dtdtrAng)/(-1._xp + Cos(rAng) + Sqrt(3._xp)*Sin(rAng)))
+
+        do i=1._xp,np
+           if (abs(CN3*cos(3._xp*(thAdj(i)+theta3)))<1e-8) then
+              rShape(i) = aSurf*Sqrt(psiN/(1._xp + CN2*Cos(2*(thAdj(i) + theta2))))
+              drrShape(i) = (rShape(i)*drpsiN)/(2._xp*psiN)
+              dtrShape(i) = (CN2*rShape(i)*Sin(2._xp*(thAdj(i) + theta2)))/(1._xp + CN2*Cos(2._xp*(thAdj(i) + theta2)))
+              dtdtrShape(i) = dtrShape(i)**2/rShape(i) &
+                   + (2*(CN2**2 + CN2*Cos(2._xp*(thAdj(i) + theta2)))*rShape(i))/(1._xp + CN2*Cos(2._xp*(thAdj(i) + theta2)))**2
+           endif
+
+           if (abs(1._xp + CN2*Cos(2._xp*(thAdj(i) + theta2)))<1e-8) then
+              rShape(i) = aSurf*Sqrt(psiN)
+              drrShape(i) = 1._xp
+              dtrShape(i) = 0._xp
+              dtdtrShape(i) = 0._xp
+           endif
+        enddo
+
+        Rcenter = Raxis - (-R0 + Raxis)*rho_a**2
+        Zcenter = Zaxis - rho_a**2*(-Z0 + Zaxis)
+        drRcenter = -2._xp*(-R0 + Raxis)*rho_a
+        drZcenter = -2._xp*rho_a*(-Z0 + Zaxis)
+
+        R = Rcenter + Cos(thAdj)*rShape
+        Z = rShape*Sin(thAdj) + Zcenter
+        R_rho = (drRcenter + Cos(thAdj)*drrShape)/aSurf ! Adjust for rho deriv, not rho_a deriv
+        Z_rho = (drZcenter + Sin(thAdj)*drrShape)/aSurf ! Adjust for rho deriv, not rho_a deriv
+        R_theta = -(rShape*Sin(thAdj)) + Cos(thAdj)*dtrShape
+        Z_theta = Cos(thAdj)*rShape + Sin(thAdj)*dtrShape
+        R_theta_theta = -(Cos(thAdj)*rShape) - 2._xp*Sin(thAdj)*dtrShape + Cos(thAdj)*dtdtrShape
+        Z_theta_theta = -(rShape*Sin(thAdj)) + 2._xp*Cos(thAdj)*dtrShape + Sin(thAdj)*dtdtrShape
+
+      END SELECT
 
       !dl/dtheta
       dlp=(R_theta**2+Z_theta**2)**0.5_xp
