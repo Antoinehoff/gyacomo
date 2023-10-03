@@ -18,6 +18,8 @@ implicit none
   REAL(xp),    PUBLIC, PROTECTED :: s_delta   = 0._xp ! '' sdelta = r/sqrt(1-delta2) ddelta/dr
   REAL(xp),    PUBLIC, PROTECTED :: zeta      = 0._xp ! squareness
   REAL(xp),    PUBLIC, PROTECTED :: s_zeta    = 0._xp ! '' szeta = r dzeta/dr
+  REAL(xp),    PUBLIC, PROTECTED :: theta1    = 0._xp ! for Miller global
+  REAL(xp),    PUBLIC, PROTECTED :: theta2    = 0._xp !
   ! to apply shift in the parallel z-BC if shearless
   REAL(xp),    PUBLIC, PROTECTED :: shift_y   = 0._xp ! for Arno <3
   REAL(xp),    PUBLIC, PROTECTED :: Npol      = 1._xp ! number of poloidal turns (real for 3D zpinch studies)
@@ -80,7 +82,8 @@ CONTAINS
     ! Read the input parameters
     IMPLICIT NONE
     NAMELIST /GEOMETRY/ geom, q0, shear, eps,&
-      kappa, s_kappa,delta, s_delta, zeta, s_zeta,& ! For miller
+      kappa, s_kappa,delta, s_delta, zeta, s_zeta,& ! For Miller
+      theta1, theta2,& ! for Miller global
       parallel_bc, shift_y, Npol, PB_PHASE
     READ(lu_in,geometry)
     PB_PHASE = .false.
@@ -139,15 +142,15 @@ CONTAINS
           kappa   = 1._xp
           C_y     = 1._xp
           Cyq0_x0 = 1._xp
-        CASE('miller','Miller')
+        CASE('miller','Miller','Miller_global','miller_global')
           CALL speak('Miller geometry')
           IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for Miller geometry"
           IF(MODULO(FLOOR(Npol),2) .EQ. 0)   THEN
             write(*,*) "Npol must be odd for Miller, (Npol = ",Npol,")"
             ERROR STOP
           ENDIF
-          call set_miller_parameters(kappa,s_kappa,delta,s_delta,zeta,s_zeta)
-          call get_miller(eps,major_R,major_Z,q0,shear,FLOOR(Npol),alpha_MHD,edge_opt,&
+          call set_miller_parameters(kappa,s_kappa,delta,s_delta,zeta,s_zeta,theta1,theta2)
+          call get_miller(geom,eps,major_R,major_Z,q0,shear,FLOOR(Npol),alpha_MHD,edge_opt,&
                           C_y,C_xy,Cyq0_x0,xpdx_pm_geom,gxx,gxy,gxz,gyy,gyz,gzz,&
                           dBdx,dBdy,dBdz,hatB,jacobian,hatR,hatZ,dxdR,dxdZ)
         CASE('circular','circ')
