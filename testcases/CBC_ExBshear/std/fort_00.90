@@ -1,9 +1,9 @@
 &BASIC
   nrun       = 99999999
   dt         = 0.01
-  tmax       = 100
+  tmax       = 50
   maxruntime = 72000
-  job2load   = 0
+  job2load   = -1
 /
 &GRID
   pmax   = 2

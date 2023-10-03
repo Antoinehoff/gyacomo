@@ -25,23 +25,26 @@ EXECNAME = 'gyacomo23_dp'; % double precision
 %% Setup parameters
 % run lin_DTT_HM_rho85
 % run lin_DTT_HM_rho98
-run lin_DIIID_LM_rho90
+% run lin_DIIID_LM_rho90
 % run lin_DIIID_LM_rho95
 % run lin_JET_rho97
 % run lin_Entropy
-% run lin_ITG
+run lin_ITG
 % run lin_KBM
 %% Change parameters
-EXBRATE = 0.0;              % Background ExB shear flow
-NY   = 2;
-NX   = 4;
-% PMAX = 4;
-% JMAX = PMAX/2;
-ky   = 0.8; LY   = 2*pi/ky;
-DT   = 1e-4;
-TAU  = 2.1;
+% EXBRATE = 0.0;              % Background ExB shear flow
+NU   = 0.1;
+CO   = 'SG';
+GKCO = 1;
+NY   = 16;
+NX   = 2;
+PMAX = 4;
+JMAX = PMAX/2;
+ky   = 0.1; LY   = 2*pi/ky;
+% DT   = 1e-4;
+% TAU  = 2.1;
 % SIGMA_E = 0.02;
-% TMAX = 50;
+TMAX = 25;
 % DTSAVE0D = 200*DT;
 % DTSAVE3D = TMAX/50;
 %%-------------------------------------------------------------------------
@@ -52,7 +55,8 @@ setup
 if RUN
     MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
     % RUN  =['time ',mpirun,' -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
-   RUN  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
+   % RUN  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
+   RUN  =['time ',mpirun,' -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 6 1 0;'];
      % RUN  =['time ',mpirun,' -np 8 ',gyacomodir,'bin/',EXECNAME,' 2 2 2 0;'];
     % RUN  =['time ',mpirun,' -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
       % RUN = ['./../../../bin/gyacomo23_sp 0;'];

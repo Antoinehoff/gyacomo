@@ -57,10 +57,10 @@
   HYP_V   = 'hypcoll'
   mu_p    = 0.0
   mu_j    = 0.0
-  nu      = 1.00
+  nu      = 1.0
   beta    = 0.0
   ADIAB_E = .t.
-  ExBrate = 0.0
+  ExBrate = 0.01
 /
 &CLOSURE
   hierarchy_closure='truncation'
