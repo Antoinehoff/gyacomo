@@ -92,7 +92,7 @@ CONTAINS
       DO ia = 1,Na
         DO ib = 1,Na
           !! We use the ion-ion collision as normalization with definition
-          !   nu_ii = 4 sqrt(pi)/3 T_i^(-3/2) m_i^(-1/2) q^4 n_i0 ln(Lambda)
+          !   nu_ii = 4 sqrt(pi)/3 q^4 n_i0 ln(Lambda)/(c_s T_i^(3/2) m_i^(1/2))
           SELECT CASE (name(ia))
           CASE ('electrons','e','electron') ! e-e and e-i collision
             nu_ab(ia,ib) = nu/sigma(ia) * (tau(ia))**(3._xp/2._xp)  ! (where already multiplied by 0.532)
