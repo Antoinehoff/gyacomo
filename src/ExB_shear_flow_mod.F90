@@ -128,6 +128,7 @@ CONTAINS
                     sky_ExB_full(iky) = sky_ExB_full(iky) - REAL(iky-1,xp)*deltaky*gamma_E*dt_sub
                 ENDDO
                 ! Shift the arrays if the shear value sky is too high
+                IF(LINEARITY .EQ. 'nonlinear') &
                 CALL Array_shift_ExB_shear_flow
 
                 ! We update the operators and grids
