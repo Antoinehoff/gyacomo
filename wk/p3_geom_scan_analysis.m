@@ -3,7 +3,7 @@ curdir  = pwd;
 partition= '/misc/gyacomo23_outputs/paper_3/';
 % partition= '../results/paper_3/';
 % Get the scan directory
-switch 1
+switch 2
     case 1 % delta kappa scan
     scandir = 'DTT_rho85_geom_scan/P2_J1_delta_kappa_scan/';
     % scandir = 'DTT_rho85_geom_scan/P4_J2_delta_kappa_scan/';
@@ -15,21 +15,24 @@ switch 1
     nml1 = 'GEOMETRY'; pnam1 = '$\hat s$'; attr1 = 'shear'; pref1 = 3.63;
     nml2 = 'GEOMETRY'; pnam2 = '$q_0$';    attr2 = 'q0';    pref2 =-2.15;
     case 3
-    % scandir = 'DTT_rho85_geom_scan/P2_J1_delta_nuDGGK_scan/';
+    scandir = 'DTT_rho85_geom_scan/P2_J1_delta_nuDGGK_scan/';
     % scandir = 'DTT_rho85_geom_scan/P4_J2_delta_nuDGGK_scan/';
+    % scandir = 'DTT_rho85_geom_scan/P8_J4_delta_nuDGGK_conv_test/';
     % scandir = 'DTT_rho85_geom_scan/P2_J1_delta_nuSGGK_scan/';
     % scandir = 'DTT_rho85_geom_scan/P4_J2_delta_nuSGGK_scan/';
+    % scandir = 'DTT_rho85_geom_scan/P8_J4_delta_nuSGGK_conv_test/';
+    % scandir = 'DTT_rho85_geom_scan/P4_J2_delta_nuSGGKii_scan/';
     % scandir = 'DTT_rho85_geom_scan/P2_J1_delta_nuLDGK_scan/';
-    scandir = 'DTT_rho85_geom_scan/P4_J2_delta_nuLDGK_scan/';
+    % scandir = 'DTT_rho85_geom_scan/P4_J2_delta_nuLDGK_scan/';
     nml1 = 'GEOMETRY'; pnam1 = '$\delta$'; attr1 = 'delta'; pref1 = 0.23;
-    nml2 = 'MODEL';    pnam2 = '$\nu$';    attr2 = 'nu';    pref2 = 999;%0.5;
+    nml2 = 'MODEL';    pnam2 = '$\nu$';    attr2 = 'nu';    pref2 = 0.5;
 end 
 scandir = [partition,scandir]; 
 % Get a list of all items in the current directory
 contents = dir(scandir);
 
 % give ref value and param names
-REFVAL= 1;
+REFVAL= 0;
 % normalize to the max
 NORMAL= 0;
 % Get and plot the fluxsurface
@@ -50,7 +53,7 @@ for i = 1:length(contents)
         para2 = [para2 param.(nml2).(attr2)];        
         % Now you are in the subdirectory. You can perform operations here.
         [t_all, Pxi_all, Qxi_all, Pxe_all, Qxe_all] = read_flux_out_XX(subdir);
-        if(t_all(end) > 100)
+        if(t_all(end) > 50)
             [fullAvg,sliceAvg,sliceErr] = sliceAverage(Qxi_all+Qxe_all,3);
             Qxavg = [Qxavg fullAvg];
             Qxerr = [Qxerr mean(sliceErr)];
@@ -126,7 +129,7 @@ if REFVAL
     xref  = XX(iref1,iref2);
     yref  = YY(iref1,iref2);
     Qxref = Zavg(iref1,iref2);
-    % Qrefname = ['$Q_{ref}=$',num2str(Qxref)];
+    Qrefname = ['$Q_{ref}=$',num2str(Qxref(1,1))];
 else
     Qxname = '$\langle Q_{tot} \rangle_t$';
 end
@@ -148,9 +151,10 @@ else
     imagesc_custom(xx_,yy_,Zavg'); hold on
     CLIM = 'auto';
 end
-% if REFVAL
-%     plot(xref,yref,'xk','MarkerSize',14,'DisplayName',Qrefname)
-% end
+if REFVAL && ~((pref1==999) || (pref2==999))
+    plot(xref(1,1),yref(1,1),'xk','MarkerSize',14,'DisplayName',Qrefname)
+    legend('show')
+end
 xlabel(pnam1); ylabel(pnam2);
 title(Qxname)
 colormap(bluewhitered); colorbar; clim(CLIM);
@@ -163,9 +167,9 @@ for i = 1:N2
         'DisplayName',[pnam2,'=',num2str(para2(1,i))]);
     hold on;
 end
-% if REFVAL
-%     plot(xref,0,'xk','MarkerSize',14,'DisplayName',Qrefname)
-% end
+if REFVAL && ~((pref1==999) || (pref2==999))
+    plot(xref(1,1),0,'xk','MarkerSize',14,'DisplayName',Qrefname)
+end
 grid on
 xlabel(pnam1); ylabel('$\langle Q_{tot} \rangle_t$');
 legend('show','Location','northwest');

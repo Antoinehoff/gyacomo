@@ -4,8 +4,8 @@
 % for benchmarking and debugging purposes since it makes Matlab "busy".
 
 %% Set up the paths for the necessary Matlab modules
-gyacomodir = pwd;
-gyacomodir = gyacomodir(1:end-2);
+wkdir = pwd;
+gyacomodir = wkdir(1:end-2);
 mpirun     = 'mpirun';
 % mpirun     = '/opt/homebrew/bin/mpirun'; % for macos
 addpath(genpath([gyacomodir,'matlab']))         % Add matlab folder
@@ -18,26 +18,34 @@ addpath(genpath([gyacomodir,'wk/parameters']))  % Add parameters folder
 RUN     = 1; % To run or just to load
 RERUN   = 0; % rerun if the  data does not exist
 default_plots_options
-EXECNAME = 'gyacomo23_sp'; % single precision
-%EXECNAME = 'gyacomo23_dp'; % double precision
+% EXECNAME = 'gyacomo23_sp'; % single precision
+EXECNAME = 'gyacomo23_dp'; % double precision
 
 %% Setup parameters
 % run lin_DTT_AB_rho85
 % run lin_DTT_AB_rho98
-run lin_JET_rho97
+% run lin_JET_rho97
 % run lin_Entropy
 % run lin_ITG
+% run lin_RHT
+rho  = 0.95; TRIANG = 'NT'; READPROF = 1; 
+% prof_folder = ['parameters/profiles/DIIID_Austin_et_al_2019/',TRIANG,'/'];
+% prof_folder = ['parameters/profiles/DIIID_Oak_Nelson/',TRIANG,'/'];
+prof_folder = ['parameters/profiles/DIIID_Oak_Nelson_high_density/',TRIANG,'/'];
+run lin_DIIID_data
 
 %% Change parameters
+NU   = 1;
+TAU  = 1;
 NY   = 2;
 EXBRATE = 0;
-% SIGMA_E  = 0.023;
+SIGMA_E  = 0.023;
 %% Scan parameters
 SIMID = [SIMID,'_scan'];
-P_a   = [2 4 6 8];
+P_a   = [2 4];
 % P_a   = 2;
-ky_a  = logspace(-1.5,1.5,30);
-CO    = 'SG';
+ky_a  = [0.01 0.02 0.05 0.1 0.2 0.5 1.0 2.0 5.0 10.0];
+CO    = 'LD';
 %% Scan loop
 % arrays for the result
 g_ky = zeros(numel(ky_a),numel(P_a));
@@ -50,10 +58,10 @@ for PMAX = P_a
     i = 1;
     for ky = ky_a
         LY   = 2*pi/ky;
-        DT   = 1e-5;%/(1+log(ky/0.05));%min(1e-2,1e-3/ky);
+        DT   = 2e-4;%/(1+log(ky/0.05));%min(1e-2,1e-3/ky);
         TMAX = 20;%min(10,1.5/ky);
         DTSAVE0D = 0.1;
-        DTSAVE3D = 0.1;
+        DTSAVE3D = 0.01;
         %% RUN
         setup
         % naming
@@ -68,13 +76,13 @@ for PMAX = P_a
             data_.outfilenames = [];
         end
         if RUN && (RERUN || isempty(data_.outfilenames) || (Ntime < 10))
-            MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
+            MVIN =['cd ',LOCALDIR,';'];
             % RUNG  =['time ',mpirun,' -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
             RUNG  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
             % RUNG  =['time ',mpirun,' -np 8 ',gyacomodir,'bin/',EXECNAME,' 2 2 2 0;'];
             % RUNG  =['time ',mpirun,' -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
             % RUNG = ['./../../../bin/gyacomo23_sp 0;'];
-            MVOUT='cd ../../../wk;';
+            MVOUT=['cd ',wkdir,';'];
             system([MVIN,RUNG,MVOUT]);
         end
         data_    = compile_results_low_mem(data_,LOCALDIR,00,00);
@@ -95,11 +103,11 @@ for PMAX = P_a
             [~,it1] = min(abs(data_.Ts3D-0.5*data_.Ts3D(end))); % start of the measurement time window
             [~,it2] = min(abs(data_.Ts3D-1.0*data_.Ts3D(end))); % end of ...
             [wkykx,ekykx] = compute_growth_rates(data_.PHI(:,:,:,it1:it2),data_.Ts3D(it1:it2));
-            g_ky (i,j) = real(wkykx(2,1,end));
+            g_ky (i,j) = real(wkykx(2,1));
             g_std(i,j) = real(ekykx(2,1));
-            w_ky (i,j) = imag(wkykx(2,1,end));
+            w_ky (i,j) = imag(wkykx(2,1));
             w_std(i,j) = imag(ekykx(2,1));
-            [gmax, ikmax] = max(g_ky(i,j,:));
+            [gmax, ikmax] = max(g_ky(i,j));
     
             msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,data_.grids.ky(ikmax)); disp(msg);
         end

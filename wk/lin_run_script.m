@@ -29,24 +29,51 @@ EXECNAME = 'gyacomo23_dp'; % double precision
 % run lin_DIIID_LM_rho95
 % run lin_JET_rho97
 % run lin_Entropy
-run lin_ITG
+% run lin_ITG
 % run lin_KBM
+% run lin_RHT
+rho  = 0.95; TRIANG = 'NT'; READPROF = 0; 
+prof_folder = ['parameters/profiles/DIIID_Austin_et_al_2019/',TRIANG,'/'];
+% prof_folder = ['parameters/profiles/DIIID_Oak_Nelson/',TRIANG,'/'];
+% prof_folder = ['parameters/profiles/DIIID_Oak_Nelson_high_density/',TRIANG,'/'];
+run lin_DIIID_data
+% run lin_STEP_EC_HD_psi71
+% run lin_STEP_EC_HD_psi49
+if 1
+% Plot the profiles
+ plot_params_vs_rho(geom,prof_folder,rho,0.5,1.1,Lref,mref,Bref,READPROF);
+end
 %% Change parameters
 % EXBRATE = 0.0;              % Background ExB shear flow
-NU   = 0.1;
-CO   = 'SG';
+% K_Ti = 5.3;
+% NU   = 0.001;
+CO   = 'LD';
 GKCO = 1;
-NY   = 16;
-NX   = 2;
-PMAX = 4;
+kymin= 0.3; LY   = 2*pi/kymin;
+NY   = 2;
+NX   = 4;
+NZ   = 32;
+PMAX = 2;
 JMAX = PMAX/2;
-ky   = 0.1; LY   = 2*pi/ky;
-% DT   = 1e-4;
-% TAU  = 2.1;
-% SIGMA_E = 0.02;
-TMAX = 25;
+DT   =  20e-4;
+EXBRATE = 0;
+% EPS = 0.25;
+% KAPPA = 1.0;
+S_DELTA = min(2.0,S_DELTA);
+% DELTA = -DELTA;
+% PT parameters
+% TAU  = 5.45;
+% K_Ne = 0; %vs 2.79
+% K_Ni = 0;  
+% K_Te = 9.6455;%vs 17.3
+% K_Ti = 3.3640;%vs 5.15
+% BETA = 7.9e-4;
+% NU   = 0.1;
+MU_X = 0.0; MU_Y = 0.0;
+SIGMA_E = 0.04;
+TMAX = 1;
 % DTSAVE0D = 200*DT;
-% DTSAVE3D = TMAX/50;
+DTSAVE3D = 0.1;
 %%-------------------------------------------------------------------------
 %% RUN
 setup
@@ -55,8 +82,8 @@ setup
 if RUN
     MVIN =['cd ../results/',SIMID,'/',PARAMS,'/;'];
     % RUN  =['time ',mpirun,' -np 2 ',gyacomodir,'bin/',EXECNAME,' 1 2 1 0;'];
-   % RUN  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
-   RUN  =['time ',mpirun,' -np 6 ',gyacomodir,'bin/',EXECNAME,' 1 6 1 0;'];
+   RUN  =['time ',mpirun,' -np 4 ',gyacomodir,'bin/',EXECNAME,' 1 2 2 0;'];
+   % RUN  =['time ',mpirun,' -np 6 ',gyacomodir,'bin/',EXECNAME,' 3 2 1 0;'];
      % RUN  =['time ',mpirun,' -np 8 ',gyacomodir,'bin/',EXECNAME,' 2 2 2 0;'];
     % RUN  =['time ',mpirun,' -np 1 ',gyacomodir,'bin/',EXECNAME,' 1 1 1 0;'];
       % RUN = ['./../../../bin/gyacomo23_sp 0;'];
@@ -75,16 +102,15 @@ data = {}; % Initialize data as an empty cell array
 % load grids, inputs, and time traces
 data = compile_results_low_mem(data,LOCALDIR,J0,J1); 
 
-
-if 1 % Activate or not
+if 0 % Activate or not
 %% plot mode evolution and growth rates
 % Load phi
 [data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');
 options.NORMALIZED = 0; 
 options.TIME   = data.Ts3D;
  % Time window to measure the growth of kx/ky modes
-options.KX_TW  = [0.2 1]*data.Ts3D(end);
-options.KY_TW  = [0.2 1]*data.Ts3D(end);
+options.KY_TW  = [0.5 1.0]*data.Ts3D(end);
+options.KX_TW  = [0.5 1.0]*data.Ts3D(end);
 options.NMA    = 1; % Set NMA option to 1
 options.NMODES = 999; % Set how much modes we study
 options.iz     = 'avg'; % Compressing z
@@ -92,20 +118,85 @@ options.ik     = 1; %
 options.GOK2   = 0; % plot gamma/k^2
 options.fftz.flag = 0; % Set fftz.flag option to 0
 options.FIELD = 'phi';
+options.SHOWFIG  = 1;
 [fig, kykx, wkykx, ekykx] = mode_growth_meter(data,options); % Call the function mode_growth_meter with data and options as input arguments, and store the result in fig
 end
 
-if (1 && NZ>4)
+if (0 && NZ>4)
 %% Ballooning plot
 [data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');
 if data.inputs.BETA > 0
 [data.PSI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'psi');
 end
 options.time_2_plot = [120];
-options.kymodes     = [0.2 0.3 0.4];
+options.kymodes     = [100];
 options.normalized  = 1;
 options.PLOT_KP     = 0;
 % options.field       = 'phi';
-fig = plot_ballooning(data,options);
+options.SHOWFIG  = 1;
+[fig, chi, phib, psib, ~] = plot_ballooning(data,options);
 end
 
+if 0
+%% RH TEST
+[data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');
+ikx = 2; iky = 1; t0 = 1; t1 = data.Ts3D(end);
+[~, it0] = min(abs(t0-data.Ts3D));[~, it1] = min(abs(t1-data.Ts3D));
+plt = @(x) squeeze(mean(real(x(iky,ikx,:,it0:it1)),3))./squeeze(mean(real(x(iky,ikx,:,it0)),3));
+t_ = data.Ts3D(it0:it1);
+% TH = 1.635*EPS^1.5 + 0.5*EPS^2+0.35*EPS^2.5; theory = 1/(1+Q0^2*TH/EPS^2);
+clr_ = lines(20);
+figure
+plot(t_, plt(data.PHI)); hold on;
+plot(t_,0.5* exp(-t_*NU)+theory,'--k');
+plot([t_(1) t_(end)],theory*[1 1],'-k');
+plot([t_(1) t_(end)],mean(plt(data.PHI))*[1 1],'-g');
+xlabel('$t$'); ylabel('$\phi_z(t)/\phi_z(0)$')
+title(sprintf('$k_x=$%2.2f, $k_y=$%2.2f',data.grids.kx(ikx),data.grids.ky(iky)))
+end
+
+if 0
+    %% Geometry
+    plot_metric(data);
+end
+
+if 1
+    %% Compiled plot for lin EM analysis
+    [data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');
+    if data.inputs.BETA > 0
+    [data.PSI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'psi');
+    end
+    options.time_2_plot = [120];
+    options.kymodes     = [100];
+    options.normalized  = 1;
+    options.PLOT_KP     = 0;
+    options.SHOWFIG     = 0;
+    options.NORMALIZED = 0; 
+    options.TIME   = data.Ts3D;
+     % Time window to measure the growth of kx/ky modes
+    options.KX_TW  = [0.5 1]*data.Ts3D(end);
+    options.KY_TW  = [0.5 1]*data.Ts3D(end);
+    options.NMA    = 1; % Set NMA option to 1
+    options.NMODES = 999; % Set how much modes we study
+    options.iz     = 'avg'; % Compressing z
+    options.ik     = 1; %
+    options.GOK2   = 0; % plot gamma/k^2
+    options.fftz.flag = 0; % Set fftz.flag option to 0
+    options.FIELD = 'phi';
+    options.SHOWFIG  = 0;
+    [~, chi, phib, psib, ~] = plot_ballooning(data,options);
+    [~, kykx, wkykx, ekykx] = mode_growth_meter(data,options); % Call the function mode_growth_meter with data and options as input arguments, and store the result in fig
+    [~,~,R,Z] = plot_metric(data,options);
+    figure;
+    subplot(3,2,1); plot(chi,real(phib),'-b'); hold on; 
+                    plot(chi,imag(phib),'-r'); xlabel('$\chi$'); ylabel('$\phi$')
+    subplot(3,2,3); plot(chi,real(psib),'-b'); hold on; 
+                    plot(chi,imag(psib),'-r'); xlabel('$\chi$'); ylabel('$\psi$')
+    subplot(3,2,5); plot(squeeze(kykx(:,1)),squeeze(real(wkykx(:,1))),'o--');  hold on;
+                    plot(squeeze(kykx(:,1)),squeeze(imag(wkykx(:,1))),'o--');
+                    xlabel('$k_y\rho_s$'); ylabel('$\gamma,\omega$');
+    R = R*geom.R0; Z = Z*geom.R0;
+    subplot(1,2,2); plot(R,Z,'-k'); xlabel('$R$'); ylabel('$Z$');
+    axis equal
+    title(data.paramshort);
+end

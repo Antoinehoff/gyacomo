@@ -1,5 +1,5 @@
-function [ fig, arrays ] = plot_metric( data, options )
-
+function [ fig, arrays, R, Z ] = plot_metric( data, options )
+fig = 0;
 % names = {'Jacobian','gradxB','gradyB','gradzB','gradz_coeff',...
 %          'gxx','gxy','gxz','gyy','gyz','gzz','hatB','hatR','hatZ'};
 names = {'gxx','gxy','gxz','gyy','gyz','gzz',...
@@ -50,5 +50,13 @@ if NPLOT > 0
 end
 %outputs
 arrays = squeeze(geo_arrays(:,:));
+R = [geo_arrays(:,12);geo_arrays(1,12)];
+Z = [geo_arrays(:,13);geo_arrays(1,13)];
+try
+    if ~options.SHOWFIG
+        close
+    end
+catch
+end
 end
 

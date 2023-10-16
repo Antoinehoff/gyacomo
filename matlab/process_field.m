@@ -238,7 +238,7 @@ switch OPTIONS.NAME
 %                 tmp(:,:,iz) = abs(fftshift((squeeze(fft2(gx_,DATA.Ny,DATA.Nx))),2));
                 tmp(:,:,iz) = abs((squeeze(fft2(gx_,DATA.Ny,DATA.Nx))));
             end
-            FLD_(:,:,it)= squeeze(compr(tmp(1:DATA.Nky,1:DATA.Nkx,:)));
+            FLD_(:,:,it)= squeeze(compr(tmp(1:DATA.grids.Nky,1:DATA.grids.Nkx,:)));
         end   
     case 'Q_x' % ion heat flux
         NAME = 'Qx';
@@ -254,7 +254,7 @@ switch OPTIONS.NAME
 %                 tmp(:,:,iz) = abs(fftshift((squeeze(fft2(gx_,DATA.Ny,DATA.Nx))),2));
                 tmp(:,:,iz) = abs((squeeze(fft2(qx_,DATA.Ny,DATA.Nx))));
             end
-            FLD_(:,:,it)= squeeze(compr(tmp(1:DATA.Nky,1:DATA.Nkx,:)));
+            FLD_(:,:,it)= squeeze(compr(tmp(1:DATA.grids.Nky,1:DATA.grids.Nkx,:)));
         end     
     case 'f_i'
         SKIP_COMP = 1;
@@ -293,7 +293,7 @@ else
     if REALP
         tmp = zeros(Ny,Nx,Nz);
     else
-        tmp = zeros(DATA.Nky,DATA.Nkx,Nz);
+        tmp = zeros(DATA.grids.Nky,DATA.grids.Nkx,Nz);
     end
     for it = 1:numel(FRAMES)
         for iz = 1:numel(DATA.grids.z)

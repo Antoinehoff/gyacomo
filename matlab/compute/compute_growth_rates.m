@@ -1,4 +1,4 @@
-function [w,e,t] = compute_growth_rates(field,time)
+function [wavg, eavg, w, t] = compute_growth_rates(field,time)
 % compute_growth_rates compute the linear growth rates using the amplitude
 % ratio method
 % see B.J. Frei et al. flux-tube paper
@@ -10,7 +10,8 @@ N1 = sz(1); N2 = sz(2); Nz = sz(3); Nt = sz(4);
 
 
 w = zeros(N1,N2,Nt-1);
-e = zeros(N1,N2);
+wavg = zeros(N1,N2);
+eavg = zeros(N1,N2);
 for i1 = 1:N1
     for i2 = 1:N2
     to_measure = reshape(field(i1,i2,:,:),Nz,Nt);
@@ -25,12 +26,17 @@ for i1 = 1:N1
             w(i1,i2,it) = squeeze(sum(wl.*phi_nm1,1)./ZS);
         end
         % error estimation
-        wavg = mean(w(i1,i2,ceil(Nt/2):end));
-        wend = w(i1,i2,end);
-        e(i1,i2) = abs(wend-wavg)/abs(wavg);
+        inputArray = real(squeeze(w(i1,i2,:)));
+        n          = 5;
+        [avg_real, ~, sliceerr_real] = sliceAverage(inputArray, n);
+        inputArray = imag(squeeze(w(i1,i2,:)));
+        n          = 5;
+        [avg_imag, ~, sliceerr_imag] = sliceAverage(inputArray, n);
+        wavg(i1,i2) = avg_real + 1i*avg_imag;
+        eavg(i1,i2) = mean(sliceerr_real) + 1i*mean(sliceerr_imag);
     end
 end
 
-t = time(2:Nt);
+t = time(1:Nt);
 
 end

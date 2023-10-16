@@ -38,9 +38,13 @@ TW = [OPTIONS.KY_TW; OPTIONS.KX_TW];
 [~,ikzf] = max(mean(squeeze(abs(field(1,:,FRAMES))),2));
 
 % Amplitude ratio method to measure growth rates and freq.
-[wkykx, ekykx] = compute_growth_rates(FIELD(:,:,:,FRAMES),DATA.Ts3D(FRAMES));
+[~,it1] = min(abs(t-TW(1,1)));
+[~,it2] = min(abs(t-TW(1,2)));
+[wkykx, ekykx] = compute_growth_rates(FIELD(:,:,:,it1:it2),DATA.Ts3D(it1:it2));
 kykx = meshgrid(DATA.grids.ky,DATA.grids.kx)';
 
+FIGURE = struct();
+if OPTIONS.SHOWFIG
 FIGURE.fig = figure; %set(gcf, 'Position',  [100 100 1200 700])
 FIGURE.FIGNAME = 'mode_growth_meter';
 for i = 1:2
@@ -54,17 +58,17 @@ for i = 1:2
             case 'sum'
                 plt_ = @(f,ik) movmean(squeeze(sum(abs((f(:,ik,FRAMES))),1)),Nma);
                 MODESTR = '$\sum_{k_y}$';
-                omega= @(ik) wkykx(1,:,end);
+                omega= @(ik) wkykx(1,:);
                 err  = @(ik) ekykx(1,:);
             case 'max'
                 plt_ = @(f,ik) movmean(squeeze(max(abs((f(:,ik,FRAMES))),[],1)),Nma);
                 MODESTR = '$\max_{k_y}$';
-                omega= @(ik) wkykx(1,:,end);
+                omega= @(ik) wkykx(1,:);
                 err  = @(ik) ekykx(1,:);
             otherwise
                 plt_ = @(f,ik) movmean(abs(squeeze(f(OPTIONS.ik,ik,FRAMES))),Nma);
                 MODESTR = ['$k_y=$',num2str(DATA.grids.ky(OPTIONS.ik))];
-                omega= @(ik) wkykx(OPTIONS.ik,:,end);
+                omega= @(ik) wkykx(OPTIONS.ik,:);
                 err  = @(ik) ekykx(OPTIONS.ik,:);
         end
         kstr = 'k_x';
@@ -76,17 +80,17 @@ for i = 1:2
             case 'sum'
                 plt_ = @(x,ik) movmean(squeeze(sum(abs((x(ik,:,FRAMES))),2)),Nma);
                 MODESTR = '$\sum_{k_x}$';
-                omega= @(ik) wkykx(:,1,end);
+                omega= @(ik) wkykx(:,1);
                 err  = @(ik) ekykx(:,1);
             case 'max'
                 plt_ = @(x,ik) movmean(squeeze(max(abs((x(ik,:,FRAMES))),[],2)),Nma);
                 MODESTR = '$\max_{k_x}$';
-                omega= @(ik) wkykx(:,1,end);
+                omega= @(ik) wkykx(:,1);
                 err  = @(ik) ekykx(:,1);
             otherwise
                 plt_ = @(x,ik) movmean(abs(squeeze(x(ik,OPTIONS.ik,FRAMES))),Nma);
                 MODESTR = ['$k_x=$',num2str(DATA.grids.kx(OPTIONS.ik))];
-                omega= @(ik) wkykx(:,OPTIONS.ik,end);
+                omega= @(ik) wkykx(:,OPTIONS.ik);
                 err  = @(ik) ekykx(:,OPTIONS.ik);
        end
         kstr = 'k_y';
@@ -233,4 +237,5 @@ if d
     
 end
 top_title(DATA.paramshort)
+end
 end

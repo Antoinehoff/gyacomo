@@ -82,8 +82,8 @@ switch CO
     case 'LR'
         COLL.mat_file = 'gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5';
     case 'LD'
-        % COLL.mat_file = 'gk_landau_P10_J5_dk_5e-2_km_2.0_NFLR_12.h5';
-        COLL.mat_file = 'gk_landauii_P16_J9_dk_5e-2_km_2.0_NFLR_8.h5';
+        COLL.mat_file = 'gk_landau_P10_J5_dk_5e-2_km_2.0_NFLR_12.h5';
+        % COLL.mat_file = 'gk_landauii_P16_J9_dk_5e-2_km_2.0_NFLR_8.h5';
         % COLL.mat_file = 'gk_landau_P11_J7_dk_5e-2_km_2.0_NFLR_16.h5';
         % COLL.mat_file = 'gk_coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5';
 %         COLL.mat_file = 'LDGKii_P10_J5_dk_5e-2_km_5_NFLR_12_k2trunc.h5';

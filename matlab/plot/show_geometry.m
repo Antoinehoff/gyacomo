@@ -3,7 +3,7 @@ function [ FIGURE ] = show_geometry(DATA,OPTIONS)
 if DATA.grids.Nz > 1 % Torus flux tube geometry
     Nturns = floor(abs(DATA.grids.z(1)/pi));
     Nptor  = ceil(DATA.grids.Nz*2/Nturns); Tgeom = 1;
-    a      = DATA.EPS; % Torus minor radius
+    a      = DATA.inputs.EPS; % Torus minor radius
     R      = 1.; % Torus major radius
     q      = (DATA.grids.Nz>1)*DATA.inputs.Q0; % Flux tube safety factor
     theta  = linspace(-pi, pi, Nptor)   ; % Poloidal angle

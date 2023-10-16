@@ -5,21 +5,13 @@ addpath(genpath([gyacomodir,'matlab'])) % ... add
 addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
 addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0';
-
-% datafname = 'lin_KBM/12x24_ky_0.05_0.75_P_2_16_DGGK_0.01_be_0.03.mat';
-% datafname = 'lin_KBM/12x24_ky_0.05_0.75_P_2_16_DGGK_0.01_be_0.03.mat';
-% datafname = 'lin_AUG_scan/12x24_ky_0.05_0.75_P_2_16_DGGK_0.01_be_0.000152.mat';
-% datafname = 'lin_Entropy_scan/2x1_ky_0.05_0.75_P_2_8_DGDK_0_be_0.mat';
-% datafname = 'lin_DTT_AB_rho85_PT_scan/16x24_ky_0.1_0.5_P_2_8_DGGK_0.05_be_0.0034.mat';
-% datafname = 'lin_DTT_AB_rho85_PT_scan/16x24_ky_0.1_0.5_P_2_8_DGGK_0.05_be_0.0039.mat';
-% datafname = 'lin_DTT_AB_rho85_PT_scan/16x24_ky_0.1_1_P_2_8_DGGK_0.05_be_0.0039.mat';
-% datafname = 'lin_DTT_AB_rho85_PT_scan/16x24_ky_0.1_0.9_P_2_8_kN_1.33_DGGK_0.56901_be_0.0039.mat';
-% datafname = 'lin_DTT_AB_rho85_PT_scan/8x24_ky_0.05_1.5_P_2_8_kN_1.33_DGGK_0.1_be_0.0039.mat';
-% datafname = 'lin_JET_rho97_scan/4x32_ky_0.01_10_P_2_8_kN_10_DGGK_0.1_be_0.0031.mat';
-% datafname = 'lin_JET_rho97_scan/4x32_ky_0.01_10_P_2_8_kN_10_DGGK_0.05_be_0.0031.mat';
-% datafname = 'lin_JET_rho97_scan/8x32_ky_0.01_10_P_2_8_kN_10_DGGK_0.05_be_0.0031.mat';
-% datafname = 'lin_JET_rho97_scan/8x32_ky_0.01_10_P_2_2_kN_10_DGGK_0.05_be_0.0031.mat';
-datafname = 'lin_JET_rho97_scan/8x32_ky_0.031623_31.6228_P_2_8_kN_10_DGGK_0.1_be_0.0031.mat';
+% high density DIII-D
+% rho = 0.9
+% datafname = 'lin_DIIID_Oak_Nelson_high_density_PT_scan/6x32_ky_0.01_10_P_2_8_kN_0.32141_LDGK_0.0038027_be_0.0060039.mat';
+% datafname = 'lin_DIIID_Oak_Nelson_high_density_NT_scan/6x32_ky_0.01_10_P_2_8_kN_1.0883_LDGK_0.0080915_be_0.0015991.mat';
+% rho = 0.95
+% datagname = 'lin_DIIID_Oak_Nelson_high_density_PT_scan/6x32_ky_0.01_10_P_2_8_kN_0.62888_LDGK_0.0046858_be_0.0048708.mat';
+datafname = 'lin_DIIID_Oak_Nelson_high_density_NT_scan/6x32_ky_0.01_10_P_2_8_kN_1.6989_LDGK_0.0167_be_0.00075879.mat';
 %% Chose if we filter gamma>0.05
 FILTERGAMMA = 1;
 

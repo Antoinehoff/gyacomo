@@ -6,8 +6,8 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 default_plots_options
 % Partition of the computer where the data have to be searched
 % PARTITION='/Users/ahoffmann/gyacomo/results/paper_3/';
-% PARTITION='/misc/gyacomo23_outputs/paper_3/';
-PARTITION = '';
+PARTITION='/misc/gyacomo23_outputs/paper_3/';
+% PARTITION = '';
 %% Paper 3
 % resdir = 'DTT_rho85/3x2x192x48x32';
 % resdir = 'DTT_rho85/3x2x192x48x32_NT';
@@ -15,8 +15,11 @@ PARTITION = '';
 % resdir = 'DTT_rho98/3x2x192x48x32_0.25grad';
 % resdir = 'LM_DIIID_rho95/5x3x512x92x32';
 % resdir = 'LM_DIIID_rho95/3x2x512x92x32';
+% resdir = 'DIIID_LM_rho90/3x2x256x128x32';
+% resdir = 'DTT_rho85_geom_scan/P8_J4_delta_nuDGGK_conv_test/delta_-0.3_nu_0.9';
+resdir = 'NT_DIIID_Austin2019_rho95/3x2x256x64x32';
 % resdir = '../testcases/cyclone_example';
-resdir = '../testcases/CBC_ExBshear/std';
+% resdir = '../testcases/CBC_ExBshear/std';
 % resdir = '../results/paper_3/HM_DTT_rho98/3x2x128x64x64';
  %%
 J0 = 00; J1 = 10;
@@ -26,7 +29,7 @@ DATADIR = [PARTITION,resdir,'/'];
 data    = {};
 data    = compile_results_low_mem(data,DATADIR,J0,J1);
 
-if 0
+if 1
 %% Plot transport and phi radial profile
 [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 % [data.PSI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'psi');
@@ -60,7 +63,7 @@ options.NAME     = 'N_i^{00}';
 % options.NAME      = 'Q_x';
 % options.NAME      = 'n_i';
 % options.NAME      = 'n_i-n_e';
-options.PLAN      = 'xy';
+options.PLAN      = 'kxky';
 % options.NAME      = 'f_i';
 % options.PLAN      = 'sx';
 options.COMP      = 'avg';
@@ -73,24 +76,25 @@ options.RESOLUTION = 256;
 create_film(data,options,'.gif')
 end
 
-if 1
+if 0
 %% field snapshots
 % Options
-[data.Na00, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Na00');
-[data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
+[data.Na00, data.Ts3D] = compile_results_3Da(data.folder,J0,J1,'Na00');
+[data.PHI, data.Ts3D] = compile_results_3D(data.folder,J0,J1,'phi');
 data.Ni00 = reshape(data.Na00(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 
-options.INTERP    = 1;
+options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 0;
 options.NORMALIZE = 0;
-options.LOGSCALE  = 1;
+options.LOGSCALE  = 0;
 options.CLIMAUTO  = 1;
 options.NAME      = 'N_i^{00}';
+% options.NAME      = 's_{Ey}';
 % options.NAME      = '\phi';
-options.PLAN      = 'kxky';
+options.PLAN      = 'yz';
 options.COMP      = 'avg';
-options.TIME      = [0 100];
+options.TIME      = [50 100];
 % options.TIME      = data.Ts3D(1:2:end);
 options.RESOLUTION = 256;
 fig = photomaton(data,options);
@@ -127,12 +131,12 @@ options.TIME   = data.Ts3D;
 options.KX_TW  = [ 0 20]; %kx Growth rate time window
 options.KY_TW  = [ 0 50];  %ky Growth rate time window
 options.NMA    = 1;
-options.NMODES = 3;
+options.NMODES = 50;
 options.iz     = 'avg'; % avg or index
 options.ik     = 9; % sum, max or index
 options.fftz.flag = 0;
-options.FIELD  = 'Ni00';
-% options.FIELD  = 'phi';
+% options.FIELD  = 'Ni00';
+options.FIELD  = 'phi';
 options.GOK2   = 0;
 fig = mode_growth_meter(data,options);
 % save_figure(data,fig,'.png')
