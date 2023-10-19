@@ -23,6 +23,7 @@ DATA.outfilenames = {};
 ii = 1;
 while(CONTINUE)
     filename = sprintf([DIRECTORY,'outputs_%.2d.h5'],JOBNUM);
+    fortname = sprintf([DIRECTORY,'fort_%.2d.90'],JOBNUM);
     % Check presence and jobnummax
     if (exist(filename, 'file') == 2 && JOBNUM <= JOBNUMMAX)
         DATA.outfilenames{ii} = filename;
@@ -35,6 +36,9 @@ while(CONTINUE)
         if openable
             %% load results %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             fprintf('Loading ID %.2d (%s)\n',JOBNUM,filename);
+            % loading input parameters
+            DATA.(sprintf('fort_%.2d',JOBNUM)) = struct();
+            DATA.(sprintf('fort_%.2d',JOBNUM)) = read_namelist(fortname);
             % Loading from output file
             CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
             DT_SIM    = h5readatt(filename,'/data/input/basic','dt');
