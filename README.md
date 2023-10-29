@@ -18,7 +18,7 @@ Author: Antoine C.D. Hoffmann
 
 Contact: antoine.hoffmann@epfl.ch (do not hesitate!)
 
-# Citing GYACOMO
+##### Citing GYACOMO
 If you use GYACOMO in your work, please cite (at least) one of the following paper: 
 
 Hoffmann, A., Frei, B., & Ricci, P. (2023). Gyrokinetic simulations of plasma turbulence in a Z-pinch using a moment-based approach and advanced collision operators. Journal of Plasma Physics, 89(2), 905890214. doi:10.1017/S0022377823000284
