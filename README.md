@@ -8,29 +8,48 @@
 GYACOMO (Gyrokinetic Advanced Collision Moment solver, 2021)
 Copyright (C) 2022 EPFL
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 Author: Antoine C.D. Hoffmann
 
 # Citing GYACOMO
-If you use GYACOMO in your work, please cite the following paper: 
+If you use GYACOMO in your work, please cite (at least) one of the following paper: 
 
 Hoffmann, A., Frei, B., & Ricci, P. (2023). Gyrokinetic simulations of plasma turbulence in a Z-pinch using a moment-based approach and advanced collision operators. Journal of Plasma Physics, 89(2), 905890214. doi:10.1017/S0022377823000284
 
+Hoffmann, A., Frei, B., & Ricci, P. (2023). Gyrokinetic moment-based simulations of the
+Dimits shift https://arxiv.org/abs/2308.01016
+
+# What is GYACOMO ?
+
+GYACOMO is the Gyrokinetic Advanced Collision Moment solver which solves the gyrokinetic Boltzmann equation in the delta-f flux-tube limit based on a projection of the velocity distribution function onto a Hermite-Laguerre velocity basis.
+
+It can be coupled with precomputed matrices from the code Cosolver (B.J. Frei) to incorporate advanced collision operators up to the gyro-averaged linearized exact coulomb interaction (GK Landau operator).
+
+This repository contains the solver source code (in /src) but also my personnal post-processing Matlab scripts, which are less documented. I would recommend the user to write their own post-processing scripts based on the H5 files the code outputs.
+
+#### GYACOMO can
+- evolve kinetic electrons and ions
+- use an adiabatic electrons model
+- include perpendicular magnetic perturbation (Ampere's law)
+- use Z-pinch and s-alpha geometry
+- use the Miller geometry framework (elongation, triangularity etc.)
+- use various experimental closures for the linear and nonlinear terms
+- add background ExB shear flow
+
+#### GYACOMO cannot (yet)
+- include parallel magnetic fluctuations
+- use an adiabatic ion model
+- include finite rhostar effects
+- study stellarator geometries
+
 # How to compile and run GYACOMO
 
-A tutorial is present on the code's wiki https://gitlab.epfl.ch/ahoffman/gyacomo/-/wikis/home.
+A tutorial is now on the code's wiki https://gitlab.epfl.ch/ahoffman/gyacomo/-/wikis/home.
 
 (older guideline)
 To compile and run GYACOMO, follow these steps:
@@ -50,6 +69,8 @@ Note: For some collision operators (Sugama and Full Coulomb), you will need to r
 # Changelog
 
 ### 4.x GYACOMO
+
+>4.11 background ExB shear is implemented
 
 >4.1 Miller geometry is added and benchmarked for CBC adiabatic electrons
 

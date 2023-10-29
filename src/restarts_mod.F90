@@ -133,8 +133,8 @@ CONTAINS
                     zjp1_cp = z_cp_stretched(z_idx_mapping(izg)+1)
                     zerotoone = (zi - zj_cp)/(zjp1_cp-zj_cp) ! weight for interpolation
                     moments(ia,ipi,iji,iky,ikx,izi,:) = &
-                      zerotoone       *moments_cp(iacp,ipcp,ijcp,iycp,ixcp,z_idx_mapping(izg))&
-                    +(1._xp-zerotoone)*moments_cp(iacp,ipcp,ijcp,iycp,ixcp,z_idx_mapping(izg+1))
+                    (1._xp-zerotoone) *moments_cp(iacp,ipcp,ijcp,iycp,ixcp,z_idx_mapping(izg))&
+                    +       zerotoone *moments_cp(iacp,ipcp,ijcp,iycp,ixcp,z_idx_mapping(izg+1))
                   ELSE ! copy on all planes
                     moments(ia,ipi,iji,iky,ikx,izi,:) = moments_cp(iacp,ipcp,ijcp,iycp,ixcp,1)
                   ENDIF
@@ -177,35 +177,45 @@ CONTAINS
       REAL(xp), DIMENSION(Nz_cp+1) , INTENT(OUT) :: z_cp_stretched
       ! local variables
       INTEGER :: iz_new, jz_cp
-      REAL(xp):: zi, zj_cp, dz_s
+      REAL(xp):: zi, zj_cp, dz_s, dz_new
       LOGICAL :: in_interval
       ! stretched checkpoint grid interval 
       dz_s  = (zarray_new(Nz_new)-zarray_new(1))/(Nz_cp-1) 
-      ! We loop over each new z grid points 
-      DO iz_new = 1,Nz_new
-        zi = zarray_new(iz_new) ! current position
-        ! Loop over the stretched checkpoint grid to find the right interval
-        zj_cp = zarray_new(1) ! init cp grid position
-        jz_cp = 1             ! init cp grid index
-        in_interval = .FALSE. ! flag to check if we stand in the interval
-        DO WHILE (.NOT. in_interval)
-          in_interval = (zi .GE. zj_cp) .AND. (zi .LT. zj_cp+dz_s)
-          ! Increment
-          zj_cp = zj_cp + dz_s
-          jz_cp = jz_cp + 1
-          IF(jz_cp .GT. Nz_cp+1) ERROR STOP "STOP: could not adapt grid .."
-        ENDDO ! per construction the while loop should always top
-        z_idx_mapping(iz_new) = jz_cp-1 ! The last index was one too much so we store the one before
-      ENDDO
-      ! we build explicitly the stretched cp grid for output and double check
-      DO jz_cp = 1,Nz_cp
-        z_cp_stretched(jz_cp) = zarray_new(1) + (jz_cp-1)*dz_s
-      ENDDO
-      ! Periodicity
-      z_cp_stretched(Nz_cp+1) = z_cp_stretched(1)
-      z_idx_mapping (Nz_new+1) = z_idx_mapping (1)
-      ! Check that the start and the end of the grids are the same
-      IF(.NOT.(abs(z_cp_stretched(1)-zarray_new(1)) .LT. 1e-3).AND.(abs(z_cp_stretched(Nz_cp)-zarray_new(Nz_new)).LT.1e-3)) &
-        ERROR STOP "Failed to stretch the cp grid"
+      dz_new= (zarray_new(Nz_new)-zarray_new(1))/(Nz_new-1) 
+      IF(ABS(dz_s-dz_new) .LT. EPSILON(dz_s)) THEN
+        DO iz_new = 1,Nz_new
+          z_cp_stretched(iz_new) = zarray_new(iz_new)
+          z_idx_mapping(iz_new)  = iz_new
+        ENDDO
+        z_cp_stretched(Nz_new+1) = zarray_new(1)
+        z_idx_mapping(Nz_new+1)  = 1
+      ELSE ! Strech the grid
+        ! We loop over each new z grid points 
+        DO iz_new = 1,Nz_new
+          zi = zarray_new(iz_new) ! current position
+          ! Loop over the stretched checkpoint grid to find the right interval
+          zj_cp = zarray_new(1) ! init cp grid position
+          jz_cp = 1             ! init cp grid index
+          in_interval = .FALSE. ! flag to check if we stand in the interval
+          DO WHILE (.NOT. in_interval)
+            in_interval = (zi .GE. zj_cp) .AND. (zi .LT. zj_cp+dz_s)
+            ! Increment
+            zj_cp = zj_cp + dz_s
+            jz_cp = jz_cp + 1
+            IF(jz_cp .GT. Nz_cp+1) ERROR STOP "STOP: could not adapt grid .."
+          ENDDO ! per construction the while loop should always top
+          z_idx_mapping(iz_new) = jz_cp-1 ! The last index was one too much so we store the one before
+        ENDDO
+        ! we build explicitly the stretched cp grid for output and double check
+        DO jz_cp = 1,Nz_cp
+          z_cp_stretched(jz_cp) = zarray_new(1) + (jz_cp-1)*dz_s
+        ENDDO
+        ! Periodicity
+        z_cp_stretched(Nz_cp+1) = z_cp_stretched(1)
+        z_idx_mapping (Nz_new+1) = z_idx_mapping(1)
+        ! Check that the start and the end of the grids are the same
+        IF(.NOT.(abs(z_cp_stretched(1)-zarray_new(1)) .LT. 1e-3).AND.(abs(z_cp_stretched(Nz_cp)-zarray_new(Nz_new)).LT.1e-3)) &
+          ERROR STOP "Failed to stretch the cp grid"
+      ENDIF
     END SUBROUTINE z_grid_mapping
 END MODULE restarts

@@ -85,7 +85,6 @@ CONTAINS
       CALL apply_closure_model
       CALL update_ghosts_moments
       CALL solve_EM_fields ! compute phi_0=phi(N_0)
-      CALL update_ghosts_EM
     ! through initialization
     ELSE
       SELECT CASE (INIT_OPT)
@@ -93,18 +92,15 @@ CONTAINS
       CASE ('phi')
         CALL speak('Init noisy phi')
         CALL init_phi
-        CALL update_ghosts_EM
       CASE ('phi_ppj')
         CALL speak('Init noisy phi')
         CALL init_phi_ppj
-        CALL update_ghosts_EM
       ! set moments_00 (GC density) with noise and compute phi afterwards
       CASE('mom00')
         CALL speak('Init noisy gyrocenter density')
         CALL init_gyrodens ! init only gyrocenter density
         CALL update_ghosts_moments
         CALL solve_EM_fields
-        CALL update_ghosts_EM
       ! set moments_00 (GC density) with a single kx0,ky0 mode
       ! kx0 is setup but by the noise value and ky0 by the background value
       CASE('mom00_modes','mom00_mode')
@@ -112,37 +108,32 @@ CONTAINS
         CALL init_modes ! init single mode in gyrocenter density
         CALL update_ghosts_moments
         CALL solve_EM_fields
-        CALL update_ghosts_EM
       ! init all moments randomly (unadvised)
       CASE('allmom')
         CALL speak('Init noisy moments')
         CALL init_moments ! init all moments
         CALL update_ghosts_moments
         CALL solve_EM_fields
-        CALL update_ghosts_EM
       ! init a gaussian blob in gyrodens
       CASE('blob')
         CALL speak('--init a blob')
         CALL initialize_blob
         CALL update_ghosts_moments
         CALL solve_EM_fields
-        CALL update_ghosts_EM
       ! init moments 00 with a power law similarly to GENE
       CASE('ppj')
         CALL speak('ppj init ~ GENE')
         call init_ppj
         CALL update_ghosts_moments
         CALL solve_EM_fields
-        CALL update_ghosts_EM
       CASE('ricci')
         CALL speak('Init Ricci')
         CALL init_ricci ! init only gyrocenter density
         CALL update_ghosts_moments
         CALL solve_EM_fields
-        CALL update_ghosts_EM
       CASE DEFAULT
         ERROR STOP "Initialization mode not recognized"
-    END SELECT
+      END SELECT
     ENDIF
     ! closure of j>J, p>P and j<0, p<0 moments
     CALL speak('Apply closure')
@@ -460,7 +451,7 @@ CONTAINS
   !******************************************************************************!
   SUBROUTINE initialize_blob
     USE grid,       ONLY: local_na, local_np, local_nj, total_nkx, local_nky, local_nz, total_nz,&
-                          AA_x, AA_y, parray, jarray,&
+                          AA_x, AA_y, parray, jarray, two_third_kxmax, two_third_kymax,&
                           ngp,ngj,ngz, iky0, ieven, kxarray, kyarray, zarray
     USE fields,     ONLY: moments
     USE prec_const, ONLY: xp
@@ -469,13 +460,11 @@ CONTAINS
     IMPLICIT NONE
     REAL(xp) ::kx, ky, z, sigma_x, sigma_y, gain
     INTEGER :: ia,iky,ikx,iz,ip,ij, p, j
-    sigma_y = 0.5
-    sigma_x = sigma_y
+    sigma_y = two_third_kymax/2._xp
+    sigma_x = two_third_kxmax/2._xp
     gain  = 1.0
     ! One can increase the gain if we run 3D sim
     IF(total_nz .GT. 1) THEN
-      sigma_y = 1.0
-      sigma_x = sigma_y
       gain = 10.0
     ENDIF
 
