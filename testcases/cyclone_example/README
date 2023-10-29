@@ -1,4 +1,4 @@
-This is an example to run a cyclone base case (see Dimits et al. 2000) with the GYACOMO code.
+This is an example to run a cyclone base case (see Dimits et al. 2000, Hoffmann et al. 2023) with the GYACOMO code.
 
 you can run it sequentially in single precision typing : ./gyacomo23_sp 0
 or in parallel (here double precision) : mpirun -np 6 ./gyacomo23_sp 1 6 1 0
