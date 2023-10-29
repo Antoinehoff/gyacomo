@@ -1,0 +1,103 @@
+&BASIC
+  nrun       = 100000000
+  dt         = 0.025
+  tmax       = 300
+  maxruntime = 43000
+  job2load   = -1
+/
+&GRID
+  pmax  = 2
+  jmax  = 1
+  Nx    = 128
+  Lx    = 300
+  Ny    = 32
+  Ly    = 150
+  Nz    = 32
+  SG    = .false.
+  Nexc  = 0
+/
+&GEOMETRY
+  geom     = 'miller'
+  q0       = 4.8
+  shear    = 2.55
+  eps      = 0.3
+  kappa    = 1.57
+  s_kappa  = 0.48
+  delta    =-0.40
+  s_delta  =-0.25
+  zeta     = 0.00
+  s_zeta   = 0.00
+  parallel_bc = 'dirichlet'
+  shift_y = 0
+  Npol    = 1
+/
+&DIAGNOSTICS
+  dtsave_0d = 0.5
+  dtsave_1d = -1
+  dtsave_2d = -1
+  dtsave_3d = 2.0
+  dtsave_5d = 20
+  write_doubleprecision = .false.
+  write_gamma = .true.
+  write_hf    = .true.
+  write_phi   = .true.
+  write_Na00  = .true.
+  write_Napj  = .true.
+  write_dens  = .true.
+  write_temp  = .true.
+/
+&MODEL
+LINEARITY = 'nonlinear'
+RM_LD_T_EQ= .false.
+  Na      = 1
+  ADIAB_E = .t.
+  mu_x    = 1.0
+  mu_y    = 1.0
+  N_HD    = 4
+  mu_z    = 5.0
+  HYP_V   = 'hypcoll'
+  mu_p    = 0
+  mu_j    = 0
+  nu      = 1.0
+  beta    = 0.00
+  ExBrate = 0
+  MHD_PD  = .true.
+/
+&CLOSURE
+  hierarchy_closure='truncation'
+  dmax             =-1
+  nonlinear_closure='truncation'
+  nmax             =-1
+/
+&SPECIES
+  name_  = 'ions' 
+  tau_   = 1
+  sigma_ = 1
+  q_     = 1.0
+  K_N_   = 00!2.79
+  K_T_   = 5.15
+/
+&SPECIES
+  name_  = 'electrons' 
+  tau_   = 1
+  sigma_ = 0.023
+  q_     = -1
+  K_N_   = 2.79
+  K_T_   = 17.3
+/
+&COLLISION
+  collision_model = 'DG'
+  GK_CO      = .true.
+  INTERSPECIES    = .true.
+  mat_file        = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
+  collision_kcut  = 1
+/
+&INITIAL
+  INIT_OPT      = 'blob'
+  init_background  = 0
+  init_noiselvl = 1e-05
+  iseed         = 42
+/
+&TIME_INTEGRATION
+  numerical_scheme = 'RK4'
+/
