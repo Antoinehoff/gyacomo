@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 Author: Antoine C.D. Hoffmann
 
-Contact: antoine.hoffmann@epfl.ch (do not hesitate!)
+Contact: antoine.hoffmann@epfl.ch
 
 ##### Citing GYACOMO
 If you use GYACOMO in your work, please cite (at least) one of the following paper: 
