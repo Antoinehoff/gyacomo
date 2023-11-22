@@ -1,0 +1,6 @@
+This is an example to run an edge DIII-D L-mode negative triangularity in the hot electrons limit with the GYACOMO code.
+
+You can run it sequentially in single precision typing : ./gyacomo23_sp 0
+or in parallel (here double precision) : mpirun -np 6 ./gyacomo23_sp 1 6 1 0
+
+The code has to be compiled before and the executable should be located in the /gyacomo/bin/ folder.
