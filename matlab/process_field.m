@@ -230,31 +230,31 @@ switch OPTIONS.NAME
         FLD_ = 0.*DATA.PHI(:,:,:,FRAMES);
         OPE_ = 1;   
         for it = 1:numel(FRAMES)
-            tmp = zeros(DATA.Ny,DATA.Nx,Nz);
-            for iz = 1:DATA.Nz
+            tmp = zeros(DATA.grids.Ny,DATA.grids.Nx,Nz);
+            for iz = 1:DATA.grids.Nz
                 vx_ = real((ifourier_GENE(-1i*KY.*(DATA.PHI   (:,:,iz,FRAMES(it))))));
                 ni_ = real((ifourier_GENE(         DATA.DENS_I(:,:,iz,FRAMES(it)))));
                 gx_ = vx_.*ni_;
-%                 tmp(:,:,iz) = abs(fftshift((squeeze(fft2(gx_,DATA.Ny,DATA.Nx))),2));
-                tmp(:,:,iz) = abs((squeeze(fft2(gx_,DATA.Ny,DATA.Nx))));
+%                 tmp(:,:,iz) = abs(fftshift((squeeze(fft2(gx_,DATA.grids.Ny,DATA.grids.Nx))),2));
+                tmp(:,:,iz) = abs((squeeze(fft2(gx_,DATA.grids.Ny,DATA.grids.Nx))));
             end
             FLD_(:,:,it)= squeeze(compr(tmp(1:DATA.grids.Nky,1:DATA.grids.Nkx,:)));
         end   
     case 'Q_x' % ion heat flux
         NAME = 'Qx';
-        FLD_ = 0.*DATA.PHI(:,:,:,FRAMES);
+        % FLD_ = 0.*DATA.PHI(:,:,:,FRAMES);
         OPE_ = 1;   
         for it = 1:numel(FRAMES)
-            tmp = zeros(DATA.Ny,DATA.Nx,Nz);
-            for iz = 1:DATA.Nz
+            tmp = zeros(DATA.grids.Ny,DATA.grids.Nx,Nz);
+            for iz = 1:DATA.grids.Nz
                 vx_ = real((ifourier_GENE(-1i*KY.*(DATA.PHI   (:,:,iz,FRAMES(it))))));
                 ni_ = real((ifourier_GENE(         DATA.DENS_I(:,:,iz,FRAMES(it)))));
                 Ti_ = real((ifourier_GENE(         DATA.TEMP_I(:,:,iz,FRAMES(it)))));
                 qx_ = vx_.*ni_.*Ti_;
-%                 tmp(:,:,iz) = abs(fftshift((squeeze(fft2(gx_,DATA.Ny,DATA.Nx))),2));
-                tmp(:,:,iz) = abs((squeeze(fft2(qx_,DATA.Ny,DATA.Nx))));
+%                 tmp(:,:,iz) = abs(fftshift((squeeze(fft2(gx_,DATA.grids.Ny,DATA.grids.Nx))),2));
+                tmp(:,:,iz) = abs((squeeze(fft2(qx_,DATA.grids.Ny,DATA.grids.Nx))));
             end
-            FLD_(:,:,it)= squeeze(compr(tmp(1:DATA.grids.Nky,1:DATA.grids.Nkx,:)));
+            FLD_(:,:,:,it)= squeeze(tmp(1:DATA.grids.Nky,1:DATA.grids.Nkx,:));
         end     
     case 'f_i'
         SKIP_COMP = 1;

@@ -35,4 +35,7 @@ end
     params.BETA   = 403.0E-5*n_e*T_e/(Bref*Bref);
     cref= sqrt(T_e*1000*1.6e-19/mref);
     params.EXBRATE= K_w*wExB*1000*Lref/cref;
+    params.ne = n_e;
+    params.Te = T_e;
+    params.Ti = T_i;
 end
