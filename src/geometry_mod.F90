@@ -88,6 +88,10 @@ CONTAINS
     READ(lu_in,geometry)
     PB_PHASE = .false.
     IF(shear .GT. 0._xp) SHEARED = .TRUE.
+    SELECT CASE(geom)
+    CASE('z-pinch','Z-pinch','zpinch','Zpinch')
+      parallel_bc = 'shearless'
+    END SELECT
     SELECT CASE(parallel_bc)
       CASE ('dirichlet')
       CASE ('periodic')
