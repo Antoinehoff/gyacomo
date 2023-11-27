@@ -1,19 +1,19 @@
 %% Reference values
-% See Neiser et al. 2019 Gyrokinetic GENE simulations of DIII-D near-edge L-mode plasmas
+% See Staebler et al. 2023
 %% Set simulation parameters
-SIMID   = 'lin_DIIID_LM_rho90';  % Name of the simulation
+SIMID   = 'lin_GASTD';  % Name of the simulation
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-NU = 1.0; %(0.00235 in GENE)
-TAU = 0.281/0.0831;               % i/e temperature ratio
-K_Ne    = 2.91;             % ele Density '''
-K_Te    = 7.32;             % ele Temperature '''
-K_Ni    = K_Ne;             % ion Density gradient drive
-K_Ti    = 2.68;             % ion Temperature '''
-SIGMA_E = 0.0233380/sqrt(2);        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+NU = 0.05; %(0.00235 in GENE)
+TAU = 1;               % i/e temperature ratio
+K_Ne    = 1;             % ele Density '''
+K_Te    = 3;             % ele Temperature '''
+K_Ni    = 1;             % ion Density gradient drive
+K_Ti    = 3;             % ion Temperature '''
+SIGMA_E = 0.0233380;%/sqrt(2);        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 NA      = 2;          % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
-BETA    = 2.52e-2*0.01;           % electron plasma beta in prct
+BETA    = 0;           % electron plasma beta in prct
 MHD_PD  = 1;
 %% Set up grid parameters
 P = 2;
@@ -23,33 +23,33 @@ JMAX = J;                   % Laguerre basis size
 NX = 4;                    % real space x-gridpoints
 NY = 2;                     % real space y-gridpoints
 LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
-LY = 2*pi/0.3;             % Size of the squared frequency domain in y direction
-NZ = 32;                    % number of perpendicular planes (parallel grid)
+LY = 2*pi/0.5;             % Size of the squared frequency domain in y direction
+NZ = 16;                    % number of perpendicular planes (parallel grid)
 SG = 0;                     % Staggered z grids option
 NEXC = 1;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 
 %% GEOMETRY
 % GEOMETRY= 's-alpha';
 GEOMETRY= 'miller';
-Q0      = 3.69;    % safety factor
-SHEAR   = 2.98;    % magnetic shear
-EPS     = 0.28;    % inverse aspect ratio
-KAPPA   = 1.53;    % elongation
-S_KAPPA = 0.77;
-DELTA   = 0.23;    % triangularity
-S_DELTA = 1.05;
-ZETA    =-0.01;    % squareness
-S_ZETA  =-0.17;
+Q0      = 2;    % safety factor
+SHEAR   = 1;    % magnetic shear
+EPS     = 1/3;    % inverse aspect ratio
+KAPPA   = 1.0;    % elongation
+S_KAPPA = 0;
+DELTA   = 0;    % triangularity
+S_DELTA = 0;
+ZETA    = 0;    % squareness
+S_ZETA  = 0;
 PARALLEL_BC = 'dirichlet'; % Boundary condition for parallel direction ('dirichlet','periodic','shearless','disconnected')
 SHIFT_Y = 0.0;    % Shift in the periodic BC in z
 NPOL   = 1;       % Number of poloidal turns
 PB_PHASE = 0;
 %% TIME PARAMETERS
-TMAX     = 10;  % Maximal time unit
-DT       = 5e-4;   % Time step
-DTSAVE0D = 0.1;      % Sampling time for 0D arrays
+TMAX     = 20;  % Maximal time unit
+DT       = 1e-2;   % Time step
+DTSAVE0D = 1.0;      % Sampling time for 0D arrays
 DTSAVE2D = -1;     % Sampling time for 2D arrays
-DTSAVE3D = 0.1;      % Sampling time for 3D arrays
+DTSAVE3D = 1.0;      % Sampling time for 3D arrays
 DTSAVE5D = 100;     % Sampling time for 5D arrays
 JOB2LOAD = -1;     % Start a new simulation serie
 
