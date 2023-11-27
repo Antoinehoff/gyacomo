@@ -59,7 +59,7 @@ subroutine auxval
     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
     IF (my_id .EQ. i_) THEN
       IF (my_id .EQ. 0) WRITE(*,*) ''
-      IF (my_id .EQ. 0) WRITE(*,*) '--------- Parallel environement ----------'
+      IF (my_id .EQ. 0) WRITE(*,*) '--------- Parallel environment ----------'
       IF (my_id .EQ. 0) WRITE(*,'(A12,I3)') 'n_procs ', num_procs
       IF (my_id .EQ. 0) WRITE(*,'(A12,I3,A14,I3,A14,I3)') 'num_procs_p   = ', num_procs_p, ', num_procs_ky   = ', num_procs_ky, ', num_procs_z   = ', num_procs_z
       IF (my_id .EQ. 0) WRITE(*,*) ''
