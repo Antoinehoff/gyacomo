@@ -46,6 +46,8 @@ Bref = abs(geom.Bref);
 mref = m_i;
 % Get values at a given location :
 [params,profiles] = get_param_from_profiles(prof_folder,rho,Lref,mref,Bref,READPROF);
+params.NUeff_e = params.nuGENE*16/3/sqrt(pi)*geom.q0/geom.trpeps^(3/2);
+params.NUeff_i = params.nuGENE*8/3*sqrt(2)/sqrt(pi)*geom.q0/geom.trpeps^(3/2);
 K_Ne   = params.K_Ne;
 K_Ni   = params.K_Ne;
 K_Te   = params.K_Te;
