@@ -1,5 +1,6 @@
 function [FIG, b_angle, phib, psib, ky_] = plot_ballooning(DATA,OPTIONS)
     FIG.fig = figure; iplot = 1;
+    psib = 0;
     [~,it0] = min(abs(DATA.Ts3D - OPTIONS.time_2_plot(1)));
     [~,it1] = min(abs(DATA.Ts3D - OPTIONS.time_2_plot(end)));
     [~,ikyarray] = min(abs(DATA.grids.ky - OPTIONS.kymodes));

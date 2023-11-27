@@ -51,7 +51,7 @@ CONTAINS
             ! Adiabatic charge density (linked to flux surface averaged phi)
             ! We compute the flux surface average solving a flux surface averaged
             ! Poisson equation, i.e.
-            ! [qi^2(1-sum_j K_j^2)/tau_i] <phi>_psi = <q_i n_i >_psi
+            ! [qi^2/taui (1-sum_j K_j^2)/tau_i] <phi>_psi = <q_i n_i >_psi
             !       inv_pol_ion^-1         fsa_phi  = simpson(Jacobian rho_i ) * iInt_Jacobian
             IF (ADIAB_E) THEN
               fsa_phi = 0._xp

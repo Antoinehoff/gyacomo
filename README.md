@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 Author: Antoine C.D. Hoffmann
 
-Contact: antoine.hoffmann@epfl.ch (do not hesitate!)
+Contact: antoine.hoffmann@epfl.ch
 
 ##### Citing GYACOMO
 If you use GYACOMO in your work, please cite (at least) one of the following paper: 
@@ -60,7 +60,7 @@ To compile and run GYACOMO, follow these steps:
 
 1. Make sure the correct library paths are set in local/dirs.inc. Refer to INSTALATION.txt for instructions on installing the required libraries.
 2. Go to the /gyacomo directory and run make to compile the code. The resulting binary will be located in /gyacomo/bin. You can also compile a debug version by running make dbg.
-3. Once the compilation is done, you can test the executable in the directory /testcases/cyclone_example (see README there).
+3. Once the compilation is done, you can test the executable in the directory /testcases/cyclone_example (see README there) or /testcases/zpinch_example (see wiki).
 4. To stop the simulation without corrupting the output file, create a blank file called "mystop" using $touch mystop in the directory where the simulation is running. The code looks for this file every 100 time steps and the file will be removed once the simulation is stopped.
 5. It is possible to chain simulations by using the parameter "Job2load" in the fort_XX.90 file. For example, to restart a simulation from the latest 5D state saved in outputs_00.h5, create a new fort.90 file called fort_01.90 and set "Job2load" to 0. Then run GYACOMO with the command ./gyacomo 0 or mpirun -np N ./gyacomo Np Ny Nz 0. This will create a new output file called output_01.h5.
 6. To generate plots and gifs using the simulation results, use the script gyacomo/wk/gyacomo_analysis.m and specify the directory where the results are located. Note that this script is not currently a function.

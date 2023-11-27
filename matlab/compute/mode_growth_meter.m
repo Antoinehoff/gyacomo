@@ -1,4 +1,4 @@
-function [FIGURE, kykx, wkykx, ekykx] = mode_growth_meter(DATA,OPTIONS)
+function [FIGURE, wkykx, ekykx] = mode_growth_meter(DATA,OPTIONS)
 
 NORMALIZED = OPTIONS.NORMALIZED;
 Nma   = OPTIONS.NMA; %Number moving average
@@ -41,7 +41,6 @@ TW = [OPTIONS.KY_TW; OPTIONS.KX_TW];
 [~,it1] = min(abs(t-TW(1,1)));
 [~,it2] = min(abs(t-TW(1,2)));
 [wkykx, ekykx] = compute_growth_rates(FIELD(:,:,:,it1:it2),DATA.Ts3D(it1:it2));
-kykx = meshgrid(DATA.grids.ky,DATA.grids.kx)';
 
 FIGURE = struct();
 if OPTIONS.SHOWFIG
