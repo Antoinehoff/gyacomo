@@ -30,7 +30,7 @@ implicit none
   !  'disconnected' : Connect all kx to 0
   !  'shearless'    : Connect all kx to itself
   CHARACTER(len=256), &
-               PUBLIC, PROTECTED :: parallel_bc
+               PUBLIC, PROTECTED :: parallel_bc = 'dirichlet'
 
   ! GENE unused additional parameters for miller_mod
   REAL(xp), PUBLIC, PROTECTED :: edge_opt      = 0.0_xp ! meant to redistribute the points in z
