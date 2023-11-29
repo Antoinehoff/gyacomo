@@ -1,0 +1,269 @@
+ MPI initialized
+Start at  13/11/2023 13:25:50.674
+ Load basic data...
+ Reading input fort_00.90                      ...
+ ...basic data loaded.
+ Read input parameters...
+ Parallel BC : shearless                                                                                                                                                                                                                                                       
+  Time integration with RK4       
+ ...input parameters read
+ Calculate auxval...
+ === Set auxiliary values ===
+ FFTW3 y-grid distribution
+ Z-pinch geometry
+ --Reset kx grid according to Cyq0_x0 factor--
+ -- done --
+ 
+ --------- Parallel environement ----------
+    n_procs   4
+num_procs_p   1, num_procs_ky  4, num_procs_z   1
+ 
+my_id  =   0, rank_p    0, rank_ky   0, rank_z   0
+         local_np   =   2, offset =   0
+         local_nj   =   2, offset =   0
+         local_nkx  = 128, offset =   0
+         local_nky  =   7, offset =   0
+         local_nz   =   1, offset =   0
+ 
+my_id  =   1, rank_p    0, rank_ky   1, rank_z   0
+         local_np   =   2, offset =   0
+         local_nj   =   2, offset =   0
+         local_nkx  = 128, offset =   0
+         local_nky  =   7, offset =   7
+         local_nz   =   1, offset =   0
+ 
+my_id  =   2, rank_p    0, rank_ky   2, rank_z   0
+         local_np   =   2, offset =   0
+         local_nj   =   2, offset =   0
+         local_nkx  = 128, offset =   0
+         local_nky  =   7, offset =  14
+         local_nz   =   1, offset =   0
+ 
+my_id  =   3, rank_p    0, rank_ky   3, rank_z   0
+         local_np   =   2, offset =   0
+         local_nj   =   2, offset =   0
+         local_nkx  = 128, offset =   0
+         local_nky  =   4, offset =  21
+ Truncation closure
+ ...auxval calculated
+ Create initial state...
+         local_nz   =   1, offset =   0
+ ------------------------------------------
+ Init noisy phi
+ Apply closure
+ Ghosts communication
+ Computing fluid moments and transport
+ ...initial state created
+ Initial diagnostics...
+ outputs_00.h5 created
+|t =     0.00| Pxi =   0.00    | Qxi =   0.00    | Pxe =   0.00    | Qxe =   0.00    |
+ ...initial diagnostics done
+ (0.24E-01  [s])
+ Time integration loop..
+|t =     1.00| Pxi =  0.163E-07| Qxi =  0.876E-08| Pxe =  0.163E-07| Qxe =  0.184E-08|
+|t =     2.00| Pxi =  0.151E-07| Qxi =  0.132E-07| Pxe =  0.151E-07| Qxe =  0.124E-07|
+|t =     3.00| Pxi =  0.229E-07| Qxi =  0.175E-07| Pxe =  0.229E-07| Qxe =  0.163E-07|
+|t =     4.00| Pxi =  0.445E-07| Qxi =  0.330E-07| Pxe =  0.445E-07| Qxe =  0.332E-07|
+|t =     5.00| Pxi =  0.102E-06| Qxi =  0.729E-07| Pxe =  0.102E-06| Qxe =  0.655E-07|
+|t =     6.00| Pxi =  0.251E-06| Qxi =  0.177E-06| Pxe =  0.251E-06| Qxe =  0.174E-06|
+|t =     7.00| Pxi =  0.650E-06| Qxi =  0.448E-06| Pxe =  0.650E-06| Qxe =  0.421E-06|
+|t =     8.00| Pxi =  0.176E-05| Qxi =  0.120E-05| Pxe =  0.176E-05| Qxe =  0.116E-05|
+|t =     9.00| Pxi =  0.488E-05| Qxi =  0.329E-05| Pxe =  0.488E-05| Qxe =  0.313E-05|
+|t =    10.00| Pxi =  0.139E-04| Qxi =  0.932E-05| Pxe =  0.139E-04| Qxe =  0.890E-05|
+|t =    11.00| Pxi =  0.400E-04| Qxi =  0.266E-04| Pxe =  0.400E-04| Qxe =  0.256E-04|
+|t =    12.00| Pxi =  0.117E-03| Qxi =  0.773E-04| Pxe =  0.117E-03| Qxe =  0.736E-04|
+|t =    13.00| Pxi =  0.345E-03| Qxi =  0.227E-03| Pxe =  0.345E-03| Qxe =  0.218E-03|
+|t =    14.00| Pxi =  0.103E-02| Qxi =  0.673E-03| Pxe =  0.103E-02| Qxe =  0.644E-03|
+|t =    15.00| Pxi =  0.308E-02| Qxi =  0.201E-02| Pxe =  0.308E-02| Qxe =  0.192E-02|
+|t =    16.00| Pxi =  0.928E-02| Qxi =  0.604E-02| Pxe =  0.928E-02| Qxe =  0.578E-02|
+|t =    17.00| Pxi =  0.281E-01| Qxi =  0.182E-01| Pxe =  0.281E-01| Qxe =  0.175E-01|
+|t =    18.00| Pxi =  0.853E-01| Qxi =  0.552E-01| Pxe =  0.853E-01| Qxe =  0.529E-01|
+|t =    19.00| Pxi =  0.259    | Qxi =  0.167    | Pxe =  0.259    | Qxe =  0.160    |
+|t =    20.00| Pxi =  0.774    | Qxi =  0.498    | Pxe =  0.774    | Qxe =  0.478    |
+|t =    21.00| Pxi =   2.24    | Qxi =   1.44    | Pxe =   2.24    | Qxe =   1.38    |
+|t =    22.00| Pxi =   6.08    | Qxi =   3.88    | Pxe =   6.08    | Qxe =   3.77    |
+|t =    23.00| Pxi =   14.3    | Qxi =   9.12    | Pxe =   14.3    | Qxe =   9.09    |
+|t =    24.00| Pxi =   19.3    | Qxi =   11.6    | Pxe =   19.3    | Qxe =   12.7    |
+|t =    25.00| Pxi =   4.82    | Qxi = -0.381    | Pxe =   4.82    | Qxe = -0.306    |
+|t =    26.00| Pxi =   4.80    | Qxi =   1.28    | Pxe =   4.80    | Qxe =   3.10    |
+|t =    27.00| Pxi =   4.29    | Qxi =   1.78    | Pxe =   4.29    | Qxe =   1.91    |
+|t =    28.00| Pxi =   3.90    | Qxi =   1.07    | Pxe =   3.90    | Qxe =  0.951    |
+|t =    29.00| Pxi =   4.03    | Qxi =   1.75    | Pxe =   4.03    | Qxe =   1.00    |
+|t =    30.00| Pxi =   4.49    | Qxi =   1.73    | Pxe =   4.49    | Qxe =   3.18    |
+|t =    31.00| Pxi =   4.76    | Qxi =   2.19    | Pxe =   4.76    | Qxe =   2.06    |
+|t =    32.00| Pxi =   4.87    | Qxi =   2.03    | Pxe =   4.87    | Qxe =   2.74    |
+|t =    33.00| Pxi =   5.12    | Qxi =   1.94    | Pxe =   5.12    | Qxe =   2.43    |
+|t =    34.00| Pxi =   6.45    | Qxi =   3.07    | Pxe =   6.45    | Qxe =   2.96    |
+|t =    35.00| Pxi =   6.58    | Qxi =   2.94    | Pxe =   6.58    | Qxe =   3.00    |
+|t =    36.00| Pxi =   7.07    | Qxi =   4.19    | Pxe =   7.07    | Qxe =   3.47    |
+|t =    37.00| Pxi =   6.96    | Qxi =   4.33    | Pxe =   6.96    | Qxe =   2.97    |
+|t =    38.00| Pxi =   6.78    | Qxi =   2.85    | Pxe =   6.78    | Qxe =   4.07    |
+|t =    39.00| Pxi =   7.06    | Qxi =   3.88    | Pxe =   7.06    | Qxe =   3.67    |
+|t =    40.00| Pxi =   6.97    | Qxi =   3.76    | Pxe =   6.97    | Qxe =   2.82    |
+|t =    41.00| Pxi =   6.26    | Qxi =   3.08    | Pxe =   6.26    | Qxe =   3.69    |
+|t =    42.00| Pxi =   7.02    | Qxi =   3.57    | Pxe =   7.02    | Qxe =   2.95    |
+|t =    43.00| Pxi =   7.22    | Qxi =   3.04    | Pxe =   7.22    | Qxe =   4.63    |
+|t =    44.00| Pxi =   6.33    | Qxi =   2.54    | Pxe =   6.33    | Qxe =   2.90    |
+|t =    45.00| Pxi =   6.21    | Qxi =   2.86    | Pxe =   6.21    | Qxe =   1.71    |
+|t =    46.00| Pxi =   7.62    | Qxi =   3.21    | Pxe =   7.62    | Qxe =   4.90    |
+|t =    47.00| Pxi =   7.26    | Qxi =   3.11    | Pxe =   7.26    | Qxe =   2.62    |
+|t =    48.00| Pxi =   6.49    | Qxi =   2.37    | Pxe =   6.49    | Qxe =   2.49    |
+|t =    49.00| Pxi =   7.72    | Qxi =   3.69    | Pxe =   7.72    | Qxe =   4.04    |
+|t =    50.00| Pxi =   7.81    | Qxi =   4.44    | Pxe =   7.81    | Qxe =   3.32    |
+|t =    51.00| Pxi =   8.21    | Qxi =   3.52    | Pxe =   8.21    | Qxe =   3.73    |
+|t =    52.00| Pxi =   7.03    | Qxi =   3.55    | Pxe =   7.03    | Qxe =   4.35    |
+|t =    53.00| Pxi =   6.04    | Qxi =   2.35    | Pxe =   6.04    | Qxe =   1.55    |
+|t =    54.00| Pxi =   6.24    | Qxi =   2.01    | Pxe =   6.24    | Qxe =   2.82    |
+|t =    55.00| Pxi =   6.51    | Qxi =   3.18    | Pxe =   6.51    | Qxe =   2.80    |
+|t =    56.00| Pxi =   5.90    | Qxi =   1.27    | Pxe =   5.90    | Qxe =   2.76    |
+|t =    57.00| Pxi =   6.91    | Qxi =   2.90    | Pxe =   6.91    | Qxe =   4.31    |
+|t =    58.00| Pxi =   7.17    | Qxi =   5.24    | Pxe =   7.17    | Qxe =   2.57    |
+|t =    59.00| Pxi =   6.35    | Qxi =   2.14    | Pxe =   6.35    | Qxe =   4.83    |
+|t =    60.00| Pxi =   6.50    | Qxi =   2.33    | Pxe =   6.50    | Qxe =   4.34    |
+|t =    61.00| Pxi =   5.97    | Qxi =   3.87    | Pxe =   5.97    | Qxe =  0.586    |
+|t =    62.00| Pxi =   5.63    | Qxi =   2.31    | Pxe =   5.63    | Qxe =   3.13    |
+|t =    63.00| Pxi =   5.25    | Qxi =   2.25    | Pxe =   5.25    | Qxe =   2.77    |
+|t =    64.00| Pxi =   5.71    | Qxi =   2.95    | Pxe =   5.71    | Qxe =   2.54    |
+|t =    65.00| Pxi =   6.11    | Qxi =   3.00    | Pxe =   6.11    | Qxe =   2.73    |
+|t =    66.00| Pxi =   6.35    | Qxi =   2.38    | Pxe =   6.35    | Qxe =   3.55    |
+|t =    67.00| Pxi =   6.61    | Qxi =   3.65    | Pxe =   6.61    | Qxe =   2.94    |
+|t =    68.00| Pxi =   6.68    | Qxi =   3.22    | Pxe =   6.68    | Qxe =   3.86    |
+|t =    69.00| Pxi =   6.97    | Qxi =   4.14    | Pxe =   6.97    | Qxe =   3.85    |
+|t =    70.00| Pxi =   6.33    | Qxi =   2.67    | Pxe =   6.33    | Qxe =   2.45    |
+|t =    71.00| Pxi =   6.14    | Qxi =   2.88    | Pxe =   6.14    | Qxe =   3.12    |
+|t =    72.00| Pxi =   5.69    | Qxi =   2.27    | Pxe =   5.69    | Qxe =   4.53    |
+|t =    73.00| Pxi =   5.68    | Qxi =   2.89    | Pxe =   5.68    | Qxe =   2.65    |
+|t =    74.00| Pxi =   4.70    | Qxi =   2.76    | Pxe =   4.70    | Qxe =  0.886    |
+|t =    75.00| Pxi =   4.78    | Qxi =   3.50    | Pxe =   4.78    | Qxe =   2.52    |
+|t =    76.00| Pxi =   4.28    | Qxi =  0.496    | Pxe =   4.28    | Qxe =   3.08    |
+|t =    77.00| Pxi =   3.70    | Qxi =   1.47    | Pxe =   3.70    | Qxe =   1.36    |
+|t =    78.00| Pxi =   4.39    | Qxi =   2.20    | Pxe =   4.39    | Qxe =   2.26    |
+|t =    79.00| Pxi =   4.93    | Qxi =   2.29    | Pxe =   4.93    | Qxe =   2.30    |
+|t =    80.00| Pxi =   4.57    | Qxi =   1.92    | Pxe =   4.57    | Qxe =   2.65    |
+|t =    81.00| Pxi =   4.79    | Qxi =   2.16    | Pxe =   4.79    | Qxe =   2.45    |
+|t =    82.00| Pxi =   5.21    | Qxi =   2.51    | Pxe =   5.21    | Qxe =   2.56    |
+|t =    83.00| Pxi =   5.17    | Qxi =   2.46    | Pxe =   5.17    | Qxe =   2.18    |
+|t =    84.00| Pxi =   5.19    | Qxi =   2.36    | Pxe =   5.19    | Qxe =   3.05    |
+|t =    85.00| Pxi =   5.68    | Qxi =   3.19    | Pxe =   5.68    | Qxe =   2.89    |
+|t =    86.00| Pxi =   5.72    | Qxi =   2.55    | Pxe =   5.72    | Qxe =   3.90    |
+|t =    87.00| Pxi =   4.65    | Qxi =   2.13    | Pxe =   4.65    | Qxe =   2.02    |
+|t =    88.00| Pxi =   5.72    | Qxi =   3.85    | Pxe =   5.72    | Qxe =   1.97    |
+|t =    89.00| Pxi =   4.95    | Qxi =   1.87    | Pxe =   4.95    | Qxe =   3.61    |
+|t =    90.00| Pxi =   5.20    | Qxi =   2.99    | Pxe =   5.20    | Qxe =   3.88    |
+|t =    91.00| Pxi =   4.72    | Qxi =   2.45    | Pxe =   4.72    | Qxe =  0.507    |
+|t =    92.00| Pxi =   4.59    | Qxi =   2.33    | Pxe =   4.59    | Qxe =   3.29    |
+|t =    93.00| Pxi =   3.94    | Qxi =   1.86    | Pxe =   3.94    | Qxe =   2.40    |
+|t =    94.00| Pxi =   4.34    | Qxi =   2.22    | Pxe =   4.34    | Qxe =   2.84    |
+|t =    95.00| Pxi =   4.55    | Qxi =   1.50    | Pxe =   4.55    | Qxe =   2.25    |
+|t =    96.00| Pxi =   4.69    | Qxi =   2.92    | Pxe =   4.69    | Qxe =   1.89    |
+|t =    97.00| Pxi =   5.43    | Qxi =   3.13    | Pxe =   5.43    | Qxe =   3.40    |
+|t =    98.00| Pxi =   4.79    | Qxi =  0.838    | Pxe =   4.79    | Qxe =   3.10    |
+|t =    99.00| Pxi =   4.76    | Qxi =   3.13    | Pxe =   4.76    | Qxe =   2.42    |
+|t =   100.00| Pxi =   5.52    | Qxi =   3.18    | Pxe =   5.52    | Qxe =   2.63    |
+|t =   101.00| Pxi =   5.19    | Qxi =   2.73    | Pxe =   5.19    | Qxe =   4.06    |
+|t =   102.00| Pxi =   4.80    | Qxi =   2.41    | Pxe =   4.80    | Qxe =   2.14    |
+|t =   103.00| Pxi =   5.26    | Qxi =   2.33    | Pxe =   5.26    | Qxe =   4.30    |
+|t =   104.00| Pxi =   5.42    | Qxi =   1.90    | Pxe =   5.42    | Qxe =   1.53    |
+|t =   105.00| Pxi =   3.92    | Qxi =   2.38    | Pxe =   3.92    | Qxe = -0.235    |
+|t =   106.00| Pxi =   5.71    | Qxi =   3.59    | Pxe =   5.71    | Qxe =   4.21    |
+|t =   107.00| Pxi =   5.87    | Qxi =   3.09    | Pxe =   5.87    | Qxe =   2.81    |
+|t =   108.00| Pxi =   5.46    | Qxi =   2.97    | Pxe =   5.46    | Qxe =   2.71    |
+|t =   109.00| Pxi =   4.19    | Qxi =   2.15    | Pxe =   4.19    | Qxe =   2.06    |
+|t =   110.00| Pxi =   4.63    | Qxi =   2.52    | Pxe =   4.63    | Qxe =   1.48    |
+|t =   111.00| Pxi =   4.94    | Qxi =   1.41    | Pxe =   4.94    | Qxe =   3.37    |
+|t =   112.00| Pxi =   5.08    | Qxi =   2.97    | Pxe =   5.08    | Qxe =   2.83    |
+|t =   113.00| Pxi =   5.18    | Qxi =   2.66    | Pxe =   5.18    | Qxe =   2.51    |
+|t =   114.00| Pxi =   4.42    | Qxi =   2.25    | Pxe =   4.42    | Qxe =   1.01    |
+|t =   115.00| Pxi =   5.20    | Qxi =   2.33    | Pxe =   5.20    | Qxe =   3.05    |
+|t =   116.00| Pxi =   4.71    | Qxi =   2.31    | Pxe =   4.71    | Qxe =   2.36    |
+|t =   117.00| Pxi =   4.62    | Qxi =   2.69    | Pxe =   4.62    | Qxe =   2.34    |
+|t =   118.00| Pxi =   4.69    | Qxi =   2.81    | Pxe =   4.69    | Qxe =   2.03    |
+|t =   119.00| Pxi =   4.13    | Qxi =   1.68    | Pxe =   4.13    | Qxe =   4.04    |
+|t =   120.00| Pxi =   4.84    | Qxi =   3.03    | Pxe =   4.84    | Qxe =   2.44    |
+|t =   121.00| Pxi =   4.02    | Qxi =   1.91    | Pxe =   4.02    | Qxe =   2.66    |
+|t =   122.00| Pxi =   4.25    | Qxi =   1.79    | Pxe =   4.25    | Qxe =   2.68    |
+|t =   123.00| Pxi =   3.98    | Qxi =   1.51    | Pxe =   3.98    | Qxe =   1.99    |
+|t =   124.00| Pxi =   4.14    | Qxi =   2.24    | Pxe =   4.14    | Qxe =  0.104E-01|
+|t =   125.00| Pxi =   4.21    | Qxi =   2.29    | Pxe =   4.21    | Qxe =   2.53    |
+|t =   126.00| Pxi =   4.68    | Qxi =   2.01    | Pxe =   4.68    | Qxe =   4.78    |
+|t =   127.00| Pxi =   5.24    | Qxi =   3.25    | Pxe =   5.24    | Qxe =   1.81    |
+|t =   128.00| Pxi =   5.14    | Qxi =   2.48    | Pxe =   5.14    | Qxe =   2.64    |
+|t =   129.00| Pxi =   5.18    | Qxi =   2.80    | Pxe =   5.18    | Qxe =   3.31    |
+|t =   130.00| Pxi =   4.08    | Qxi =   2.55    | Pxe =   4.08    | Qxe =   1.45    |
+|t =   131.00| Pxi =   5.24    | Qxi =   2.29    | Pxe =   5.24    | Qxe =   2.97    |
+|t =   132.00| Pxi =   4.43    | Qxi =   1.99    | Pxe =   4.43    | Qxe =   3.02    |
+|t =   133.00| Pxi =   4.38    | Qxi =   2.49    | Pxe =   4.38    | Qxe =   2.46    |
+|t =   134.00| Pxi =   3.68    | Qxi =   1.94    | Pxe =   3.68    | Qxe =   1.67    |
+|t =   135.00| Pxi =   3.49    | Qxi =   1.79    | Pxe =   3.49    | Qxe =   1.63    |
+|t =   136.00| Pxi =   3.57    | Qxi =   2.30    | Pxe =   3.57    | Qxe =   2.20    |
+|t =   137.00| Pxi =   3.72    | Qxi =   2.03    | Pxe =   3.72    | Qxe =   2.80    |
+|t =   138.00| Pxi =   3.60    | Qxi =   1.71    | Pxe =   3.60    | Qxe =  0.847    |
+|t =   139.00| Pxi =   3.97    | Qxi =   2.70    | Pxe =   3.97    | Qxe =   2.86    |
+|t =   140.00| Pxi =   3.89    | Qxi =   2.07    | Pxe =   3.89    | Qxe =   2.56    |
+|t =   141.00| Pxi =   3.31    | Qxi =   1.46    | Pxe =   3.31    | Qxe =  0.825    |
+|t =   142.00| Pxi =   3.44    | Qxi =   1.96    | Pxe =   3.44    | Qxe =   2.38    |
+|t =   143.00| Pxi =   3.88    | Qxi =   1.73    | Pxe =   3.88    | Qxe =   1.87    |
+|t =   144.00| Pxi =   3.09    | Qxi =   1.34    | Pxe =   3.09    | Qxe =   1.71    |
+|t =   145.00| Pxi =   3.86    | Qxi =   2.22    | Pxe =   3.86    | Qxe =   2.42    |
+|t =   146.00| Pxi =   3.71    | Qxi =   1.92    | Pxe =   3.71    | Qxe =   2.63    |
+|t =   147.00| Pxi =   3.77    | Qxi =   1.72    | Pxe =   3.77    | Qxe =   2.84    |
+|t =   148.00| Pxi =   2.82    | Qxi =   1.80    | Pxe =   2.82    | Qxe =  0.738    |
+|t =   149.00| Pxi =   2.77    | Qxi =  0.745    | Pxe =   2.77    | Qxe =   1.94    |
+|t =   150.00| Pxi =   3.22    | Qxi =   2.26    | Pxe =   3.22    | Qxe =   1.37    |
+|t =   151.00| Pxi =   3.16    | Qxi =   1.28    | Pxe =   3.16    | Qxe =   2.01    |
+|t =   152.00| Pxi =   3.09    | Qxi =   1.28    | Pxe =   3.09    | Qxe =  0.613    |
+|t =   153.00| Pxi =   3.21    | Qxi =   1.47    | Pxe =   3.21    | Qxe =   2.99    |
+|t =   154.00| Pxi =   3.57    | Qxi =   1.55    | Pxe =   3.57    | Qxe =   1.70    |
+|t =   155.00| Pxi =   2.93    | Qxi =   1.13    | Pxe =   2.93    | Qxe =   1.22    |
+|t =   156.00| Pxi =   3.67    | Qxi =   1.35    | Pxe =   3.67    | Qxe =   1.71    |
+|t =   157.00| Pxi =   3.34    | Qxi =   1.61    | Pxe =   3.34    | Qxe =   2.86    |
+|t =   158.00| Pxi =   3.89    | Qxi =   2.08    | Pxe =   3.89    | Qxe =   1.86    |
+|t =   159.00| Pxi =   3.08    | Qxi =   2.09    | Pxe =   3.08    | Qxe =   2.59    |
+|t =   160.00| Pxi =   3.79    | Qxi =  0.866    | Pxe =   3.79    | Qxe =   1.80    |
+|t =   161.00| Pxi =   3.67    | Qxi =   2.71    | Pxe =   3.67    | Qxe =   3.36    |
+|t =   162.00| Pxi =   3.83    | Qxi =   1.11    | Pxe =   3.83    | Qxe =   1.75    |
+|t =   163.00| Pxi =   3.16    | Qxi =   1.59    | Pxe =   3.16    | Qxe =   1.39    |
+|t =   164.00| Pxi =   3.65    | Qxi =   1.35    | Pxe =   3.65    | Qxe =   2.76    |
+|t =   165.00| Pxi =   3.65    | Qxi =   2.01    | Pxe =   3.65    | Qxe =   1.79    |
+|t =   166.00| Pxi =   4.17    | Qxi =   1.74    | Pxe =   4.17    | Qxe =   2.69    |
+|t =   167.00| Pxi =   3.35    | Qxi =   1.71    | Pxe =   3.35    | Qxe =   1.60    |
+|t =   168.00| Pxi =   4.62    | Qxi =   2.89    | Pxe =   4.62    | Qxe =   2.95    |
+|t =   169.00| Pxi =   3.93    | Qxi =   1.68    | Pxe =   3.93    | Qxe =   2.37    |
+|t =   170.00| Pxi =   3.88    | Qxi =   1.63    | Pxe =   3.88    | Qxe =   1.50    |
+|t =   171.00| Pxi =   3.33    | Qxi =   1.02    | Pxe =   3.33    | Qxe =   1.62    |
+|t =   172.00| Pxi =   3.61    | Qxi =   1.69    | Pxe =   3.61    | Qxe =   2.33    |
+|t =   173.00| Pxi =   3.26    | Qxi =   2.55    | Pxe =   3.26    | Qxe =   1.11    |
+|t =   174.00| Pxi =   2.91    | Qxi =  0.667    | Pxe =   2.91    | Qxe =   2.88    |
+|t =   175.00| Pxi =   2.49    | Qxi =   1.54    | Pxe =   2.49    | Qxe =  0.862    |
+|t =   176.00| Pxi =   2.67    | Qxi =   1.17    | Pxe =   2.67    | Qxe =   2.33    |
+|t =   177.00| Pxi =   2.89    | Qxi =   1.21    | Pxe =   2.89    | Qxe =   2.12    |
+|t =   178.00| Pxi =   2.22    | Qxi =   1.61    | Pxe =   2.22    | Qxe =   1.47    |
+|t =   179.00| Pxi =   2.27    | Qxi =  0.856    | Pxe =   2.27    | Qxe =   1.32    |
+|t =   180.00| Pxi =   2.61    | Qxi =   1.70    | Pxe =   2.61    | Qxe =   1.18    |
+|t =   181.00| Pxi =   2.34    | Qxi =   1.04    | Pxe =   2.34    | Qxe =   2.03    |
+|t =   182.00| Pxi =   2.48    | Qxi =   1.61    | Pxe =   2.48    | Qxe =   1.52    |
+|t =   183.00| Pxi =   2.14    | Qxi =   1.00    | Pxe =   2.14    | Qxe =   1.71    |
+|t =   184.00| Pxi =   2.16    | Qxi =   1.29    | Pxe =   2.16    | Qxe =   1.51    |
+|t =   185.00| Pxi =   2.12    | Qxi =  0.581    | Pxe =   2.12    | Qxe =   1.55    |
+|t =   186.00| Pxi =   1.95    | Qxi =   1.36    | Pxe =   1.95    | Qxe =  0.803    |
+|t =   187.00| Pxi =   2.16    | Qxi =   1.21    | Pxe =   2.16    | Qxe =   1.39    |
+|t =   188.00| Pxi =   2.09    | Qxi =   1.04    | Pxe =   2.09    | Qxe =   1.75    |
+|t =   189.00| Pxi =   2.12    | Qxi =   1.22    | Pxe =   2.12    | Qxe =  0.723    |
+|t =   190.00| Pxi =   1.84    | Qxi =  0.581    | Pxe =   1.84    | Qxe =   1.64    |
+|t =   191.00| Pxi =   1.84    | Qxi =   1.32    | Pxe =   1.84    | Qxe =   1.02    |
+|t =   192.00| Pxi =   2.29    | Qxi =  0.372    | Pxe =   2.29    | Qxe =   1.65    |
+|t =   193.00| Pxi =   1.94    | Qxi =   1.26    | Pxe =   1.94    | Qxe =  0.479    |
+|t =   194.00| Pxi =   2.37    | Qxi =  0.841    | Pxe =   2.37    | Qxe =   2.07    |
+|t =   195.00| Pxi =   2.38    | Qxi =   1.13    | Pxe =   2.38    | Qxe =   1.07    |
+|t =   196.00| Pxi =   2.31    | Qxi =  0.608    | Pxe =   2.31    | Qxe =   1.73    |
+|t =   197.00| Pxi =   2.84    | Qxi =   1.57    | Pxe =   2.84    | Qxe =   1.60    |
+|t =   198.00| Pxi =   2.68    | Qxi =   1.23    | Pxe =   2.68    | Qxe =   1.19    |
+|t =   199.00| Pxi =   2.71    | Qxi =   1.85    | Pxe =   2.71    | Qxe =   1.92    |
+|t =   200.00| Pxi =   2.73    | Qxi =  0.721    | Pxe =   2.73    | Qxe =   2.06    |
+ TMAX reached
+ ...time integration done
+ CPU Time =           22 [s]
+ Saving last state
+    Normal exit
+Done at  13/11/2023 13:26:13.144
+ ..plan Destruction.

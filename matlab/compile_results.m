@@ -62,7 +62,7 @@ while(CONTINUE)
         % Loading from output file
         % CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
         % DT_SIM    = h5readatt(filename,'/data/input','dt');
-        [Pe, Je, Pi, Ji, kx, ky, z] = load_grid_data(filename);
+        [P, J, kx, ky, z] = load_grid_data(filename);
         W_GAMMA   = strcmp(h5readatt(filename,'/data/input','write_gamma'),'y');
         W_HF      = strcmp(h5readatt(filename,'/data/input','write_hf'   ),'y');
         W_PHI     = strcmp(h5readatt(filename,'/data/input','write_phi'  ),'y');
@@ -78,8 +78,8 @@ while(CONTINUE)
             BETA = 0;
         end
         % Check polynomials degrees
-        Pe_new= numel(Pe); Je_new= numel(Je);
-        Pi_new= numel(Pi); Ji_new= numel(Ji);
+        Pe_new= numel(P); Je_new= numel(J);
+        Pi_new= numel(P); Ji_new= numel(J);
         if(Pe_max < Pe_new); Pe_max = Pe_new; end;
         if(Je_max < Je_new); Je_max = Je_new; end;
         if(Pi_max < Pi_new); Pi_max = Pi_new; end;
@@ -305,13 +305,13 @@ else
     DATA.PSI  = PSI_; 
     DATA.KIN_E=KIN_E;
     % grids
-    DATA.Pe = Pe; DATA.Pi = Pi; 
-    DATA.Je = Je; DATA.Ji = Ji; 
+    DATA.Pe = P; DATA.Pi = P; 
+    DATA.Je = J; DATA.Ji = J; 
     DATA.kx = kx; DATA.ky = ky; DATA.z = z; DATA.Npol = -z(1)/pi;
     DATA.x  = x;  DATA.y  = y;
     DATA.ikx0 = ikx0; DATA.iky0 = iky0;
     DATA.Nx = Nx; DATA.Ny = Ny; DATA.Nz = Nz; DATA.Nkx = Nkx; DATA.Nky = Nky; 
-    DATA.Pmaxe = numel(Pe); DATA.Pmaxi = numel(Pi); DATA.Jmaxe = numel(Je); DATA.Jmaxi = numel(Ji);
+    DATA.Pmaxe = numel(P); DATA.Pmaxi = numel(P); DATA.Jmaxe = numel(J); DATA.Jmaxi = numel(J);
     DATA.dir      = DIRECTORY;
     DATA.localdir = DIRECTORY;
     DATA.param_title=['$\nu_{',DATA.CONAME,'}=$', num2str(DATA.NU), ...

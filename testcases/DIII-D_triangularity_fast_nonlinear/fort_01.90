@@ -1,9 +1,9 @@
 &BASIC
   nrun       = 100000000
-  dt         = 0.03
-  tmax       = 100
+  dt         = 0.05
+  tmax       = 150
   maxruntime = 43000
-  job2load   = -1
+  job2load   = 0
 /
 &GRID
   pmax  = 2
@@ -64,18 +64,20 @@ RM_LD_T_EQ= .false.
   MHD_PD  = .true.
 /
 &CLOSURE
-  hierarchy_closure='truncation'
-  dmax             =-1
+  !hierarchy_closure='truncation'
+  !dmax             =-1
+  hierarchy_closure='max_degree'
+  dmax             = 2
   nonlinear_closure='truncation'
   nmax             =-1
 /
 &SPECIES
   name_  = 'ions' 
-  tau_   = 1
+  tau_   = 0.001!1
   sigma_ = 1
   q_     = 1.0
   K_N_   = 00!2.79
-  K_T_   = 5.15
+  K_T_   = 1400!5.15
 /
 &SPECIES
   name_  = 'electrons' 
@@ -99,5 +101,5 @@ RM_LD_T_EQ= .false.
   iseed         = 42
 /
 &TIME_INTEGRATION
-  numerical_scheme = 'RK4'
+  numerical_scheme = 'RK3'
 /
