@@ -9,6 +9,7 @@ OPTLEVEL = O
 
 F90FLAGS =
 CFLAGS =
+LDFLAGS = -ld_classic
 
 ifeq ($(OPTLEVEL), O) #optimized
      ifeq ($(COMPTYPE), i) #intel
