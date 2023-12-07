@@ -157,7 +157,7 @@ CONTAINS
   
   SUBROUTINE diagnose_full(kstep)
     USE basic,           ONLY: speak,chrono_runt,&
-                               cstep,iframe0d,iframe3d,iframe5d,crashed
+                               cstep,iframe0d,iframe2d,iframe3d,iframe5d,crashed
     USE grid,            ONLY: &
       parray_full,jarray_full, kparray, &
       kyarray_full,kxarray_full,zarray_full, ngz, total_nz, local_nz, ieven,&
@@ -256,13 +256,21 @@ CONTAINS
        CALL attach(fidres,"/data/var0d/" , "frames", iframe0d)
       END IF
       !  var2d group (gyro transport)
-      IF (nsave_0d .GT. 0) THEN
+      IF (nsave_2d .GT. 0) THEN
         CALL creatg(fidres, "/data/var2d", "2d profiles")
         CALL creatd(fidres, rank, dims,  "/data/var2d/time",     "Time t*c_s/R")
         CALL creatd(fidres, rank, dims, "/data/var2d/cstep", "iteration number")
+        IF (write_phi)  CALL creatg(fidres, "/data/var2d/phi_obmp", "phi out board midplane")
+  IF (write_phi.AND.EM) CALL creatg(fidres, "/data/var2d/psi_obmp", "psi out board midplane")
+        IF (write_Na00) CALL creatg(fidres, "/data/var2d/Na00_obmp", "gyrocenter density out board midplane")
+        IF (write_Na00) CALL creatg(fidres, "/data/var2d/Napj_obmp", "p,j moment spectrum out board midplane")
+        IF (write_dens) CALL creatg(fidres, "/data/var2d/dens_obmp", "density out board midplane")
+        IF (write_fvel) CALL creatg(fidres, "/data/var2d/upar_obmp", "parallel velocity out board midplane")
+        IF (write_temp) CALL creatg(fidres, "/data/var2d/temp_obmp", "temperature out board midplane")
 #ifdef TEST_SVD
         CALL creatg(fidres, "/data/var2d/sv_ky_pj", "singular values of the moment ky/pj cut")
 #endif
+        CALL attach(fidres,"/data/var2d/" , "frames", iframe2d)
       ENDIF
       !  var3d group (phi,psi, fluid moments, Ni00, Napjz)
       IF (nsave_3d .GT. 0) THEN
@@ -430,19 +438,112 @@ CONTAINS
   SUBROUTINE diagnose_2d
     USE prec_const
     USE basic
-    USE futils, ONLY: putarr, append
+    USE fields, ONLY: phi, psi, moments
+    USE array,  ONLY: Napjz,dens,upar,temp
+    USE futils, ONLY: append, getatt, attach, putarr
+    USE grid, ONLY: CONTAINSp0, ip0,ij0, local_na, total_na,&
+         total_np, total_nj, total_nky, total_nkx, total_nz, &
+         local_np, local_nky, local_nkx, local_nz, &
+         ngz, iz_obmp
+    USE time_integration, ONLY: updatetlevel
+    USE prec_const
+    USE processing, ONLY: compute_fluid_moments, compute_Napjz_spectrum
+    USE model,      ONLY: EM
+    USE parallel,   ONLY: manual_3D_bcast
 #ifdef TEST_SVD
     USE CLA, ONLY: Sf
 #endif
     IMPLICIT NONE
+    COMPLEX(xp), DIMENSION(local_na,local_nky,local_nkx,local_nz) :: Na00_
     iframe2d=iframe2d+1
+    CALL attach(fidres,"/data/var2d/" , "frames", iframe2d)
     CALL append(fidres,"/data/var2d/time", REAL(time,dp), ionode=0)
     CALL append(fidres,"/data/var2d/cstep",REAL(cstep,dp),ionode=0)
 #ifdef TEST_SVD
     WRITE(dset_name, "(A, '/', i6.6)") "/data/var2d/sv_ky_pj/", iframe2d
     CALL putarr(fidres, dset_name, Sf, ionode=0)
 #endif
-  END SUBROUTINE
+    ! Write current EM fields
+    IF (write_phi)        CALL write_field2d_kykx_obmp(phi (:,:,(1+ngz/2):(local_nz+ngz/2)), 'phi_obmp')
+    IF (write_phi.AND.EM) CALL write_field2d_kykx_obmp(psi (:,:,(1+ngz/2):(local_nz+ngz/2)), 'psi_obmp')
+    IF (write_Na00) THEN
+      CALL compute_Napjz_spectrum
+      IF (CONTAINSp0) THEN
+        ! gyrocenter density
+        Na00_    = moments(:,ip0,ij0,:,:,(1+ngz/2):(local_nz+ngz/2),updatetlevel)
+      ELSE
+        Na00_    = 0._xp
+      ENDIF
+      CALL write_field2da_kykx_obmp(Na00_, 'Na00_obmp')
+      ! <<Napj>x>y spectrum
+      CALL write_field2da_pj_obmp(Napjz, 'Napj_obmp')
+    ENDIF
+    !! Fuid moments
+    IF (write_dens .OR. write_fvel .OR. write_temp) &
+    CALL compute_fluid_moments
+    IF (write_dens) CALL write_field2da_kykx_obmp(dens, 'dens_obmp')
+    IF (write_fvel) CALL write_field2da_kykx_obmp(upar, 'upar_obmp')
+    IF (write_temp) CALL write_field2da_kykx_obmp(temp, 'temp_obmp')
+    CONTAINS
+      SUBROUTINE write_field2d_kykx_obmp(field, text)
+        USE parallel, ONLY : gather_xyz, num_procs
+        IMPLICIT NONE
+        COMPLEX(xp), DIMENSION(:,:,:), INTENT(IN) :: field
+        CHARACTER(*), INTENT(IN) :: text
+        COMPLEX(xp), DIMENSION(total_nky,total_nkx,total_nz) :: field_full
+        CHARACTER(50) :: dset_name
+        field_full = 0;
+        WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var2d", TRIM(text), iframe2d
+        IF (num_procs .EQ. 1) THEN ! no data distribution
+          CALL putarr(fidres, dset_name, field(:,:,iz_obmp), ionode=0)
+        ELSE
+          CALL gather_xyz(field,field_full,local_nky,total_nky,total_nkx,local_nz,total_nz)
+          CALL putarr(fidres, dset_name, field_full(:,:,iz_obmp), ionode=0)
+        ENDIF
+        END SUBROUTINE write_field2d_kykx_obmp
+  
+        SUBROUTINE write_field2da_kykx_obmp(field, text)
+          USE parallel, ONLY : gather_xyz, num_procs
+          IMPLICIT NONE
+          COMPLEX(xp), DIMENSION(:,:,:,:), INTENT(IN) :: field
+          CHARACTER(*), INTENT(IN) :: text
+          COMPLEX(xp), DIMENSION(total_na,total_nky,total_nkx,total_nz) :: field_full
+          COMPLEX(xp), DIMENSION(local_nky,total_nkx,local_nz) :: buff_local
+          COMPLEX(xp), DIMENSION(total_nky,total_nkx,total_nz) :: buff_full
+          CHARACTER(50) :: dset_name
+          INTEGER :: ia
+          field_full = 0;
+          WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var2d", TRIM(text), iframe2d
+          IF (num_procs .EQ. 1) THEN ! no data distribution
+            CALL putarr(fidres, dset_name, field(:,:,:,iz_obmp), ionode=0)
+          ELSE
+            DO ia = 1,total_Na
+              buff_local = field(ia,:,:,:)
+              CALL gather_xyz(buff_local,buff_full,local_nky,total_nky,total_nkx,local_nz,total_nz)
+              field_full(ia,:,:,:) = buff_full
+            ENDDO
+            CALL putarr(fidres, dset_name, field_full(:,:,:,iz_obmp), ionode=0)
+          ENDIF
+          END SUBROUTINE write_field2da_kykx_obmp
+  
+      SUBROUTINE write_field2da_pj_obmp(field, text)
+        USE parallel, ONLY : gather_pjz, num_procs
+        IMPLICIT NONE
+        COMPLEX(xp), DIMENSION(:,:,:,:), INTENT(IN) :: field
+        CHARACTER(*), INTENT(IN) :: text
+        COMPLEX(xp), DIMENSION(total_na,total_np,total_nj,total_nz) :: field_full
+        CHARACTER(LEN=50) :: dset_name
+        field_full = 0;
+        WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var2d", TRIM(text), iframe2d
+        IF (num_procs .EQ. 1) THEN ! no data distribution
+          CALL putarr(fidres, dset_name, field(:,:,:,iz_obmp), ionode=0)
+        ELSE
+          CALL gather_pjz(field,field_full,total_na,local_np,total_np,total_nj,local_nz,total_nz)
+          CALL putarr(fidres, dset_name, field_full(:,:,:,iz_obmp), ionode=0)
+        ENDIF
+        CALL attach(fidres, dset_name, "time", time)
+      END SUBROUTINE write_field2da_pj_obmp
+  END SUBROUTINE diagnose_2d
   
   SUBROUTINE diagnose_3d
     USE basic

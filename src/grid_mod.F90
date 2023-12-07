@@ -45,8 +45,11 @@ MODULE grid
   INTEGER,  PUBLIC, PROTECTED ::  ikxs,ikxe ! Fourier x mode
   INTEGER,  PUBLIC, PROTECTED ::  izs ,ize  ! z-grid
   INTEGER,  PUBLIC, PROTECTED ::  ieven, iodd ! indices for the staggered grids
-  INTEGER,  PUBLIC, PROTECTED ::  ip0, ip1, ip2, ip3, ij0, ij1, pp2
+  INTEGER,  PUBLIC, PROTECTED ::  ip0, ip1, ip2, ip3 ! p=0,1,2,3 indices
+  INTEGER,  PUBLIC, PROTECTED ::  ij0, ij1  ! j=0,1 indices
+  INTEGER,  PUBLIC, PROTECTED ::  pp2       ! p+2 index jump
   INTEGER,  PUBLIC, PROTECTED ::  ikx0, iky0, ikx_max, iky_max ! Indices of k-grid origin and max
+  INTEGER,  PUBLIC, PROTECTED ::  iz_obmp   ! outboard midplane index
   ! Total numbers of points for Hermite and Laguerre
   INTEGER, PUBLIC, PROTECTED :: total_na
   INTEGER, PUBLIC, PROTECTED :: total_np
@@ -592,6 +595,8 @@ CONTAINS
     ! Z stepping (#interval = #points since periodic)
     deltaz        = Lz/REAL(Nz,xp)
     inv_deltaz    = 1._xp/deltaz
+    ! Index of the outboard midplane
+    iz_obmp = Nz/2+1 ! we use the fact that 1/2 in integer gives 0
     ! Parallel hyperdiffusion coefficient
     diff_dz_coeff = (deltaz/2._xp)**4 ! adaptive fourth derivative (~GENE)
     IF (SG) THEN
@@ -601,7 +606,7 @@ CONTAINS
     ENDIF
     ! Build the full grids on process 0 to diagnose it without comm   
     IF (Nz .EQ. 1) &
-      Npol = 0._xp
+      Npol   = 0._xp
     zmax = 0; zmin = 0;
     DO iz = 1,total_nz ! z in [-pi pi-dz] x Npol
       zarray_full(iz) = REAL(iz-1,xp)*deltaz - Lz/2._xp
