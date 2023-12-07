@@ -101,7 +101,7 @@ CONTAINS
     real(xp), dimension(1:total_nz+ngz):: gxx_out,gxy_out,gxz_out,gyy_out,gyz_out,gzz_out,Bfield_out,jacobian_out, dBdx_out, dBdz_out, chi_out
     real(xp), dimension(1:total_nz+ngz):: R_out, Z_out, dxdR_out, dxdZ_out
     real(xp):: d_inv, drPsi, dxPsi, dq_dx, dq_dpsi, R0, Z0, B0, F, D0_full, D1_full, D2_full, D3_full
-    real(xp) :: Lnorm, Psi0 ! currently module-wide defined anyway
+    ! real(xp) :: Lnorm, Psi0 ! currently module-wide defined anyway
     real(xp):: pprime, ffprime, D0_mid, D1_mid, D2_mid, D3_mid, dx_drho, pi, mu_0, dzprimedz
     real(xp):: rho_a, psiN, drpsiN, CN2, CN3, Rcenter, Zcenter, drRcenter, drZcenter
     logical:: bMaxShift
