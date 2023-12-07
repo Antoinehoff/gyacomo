@@ -9,7 +9,6 @@ OPTLEVEL = O
 
 F90FLAGS =
 CFLAGS =
-LDFLAGS = -ld_classic
 
 ifeq ($(OPTLEVEL), O) #optimized
      ifeq ($(COMPTYPE), i) #intel
@@ -114,7 +113,8 @@ endif
 ifeq ($(ENVTYPE), Marconi) #Linux env.
      EXTLIBS   = $(LDIRS) -Wl,--start-group $(LIBS) -Wl,--end-group
 endif
-ifeq ($(ENVTYPE), MacOS) #Linux env.
+ifeq ($(ENVTYPE), MacOS) #MacOS (tested for Sonoma 14)
+     LDFLAGS = -ld_classic
      EXTLIBS   = $(LDIRS) $(LIBS)
 endif
 
