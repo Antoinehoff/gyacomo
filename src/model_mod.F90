@@ -20,6 +20,7 @@ MODULE model
   LOGICAL,  PUBLIC            :: ADIAB_E =  .false.   ! adiabatic electron model
   LOGICAL,  PUBLIC            :: ADIAB_I =  .false.   ! adiabatic ion model
   REAL(xp), PUBLIC, PROTECTED ::   tau_i =  1.0       ! electron-ion temperature ratio for ion adiabatic model
+  REAL(xp), PUBLIC, PROTECTED ::     q_i =  1.0       ! ion charge for ion adiabatic model
   REAL(xp), PUBLIC, PROTECTED ::      nu =  0._xp     ! collision frequency parameter
   REAL(xp), PUBLIC, PROTECTED ::    k_gB =  1._xp     ! Magnetic gradient strength (L_ref/L_gB)
   REAL(xp), PUBLIC, PROTECTED ::    k_cB =  1._xp     ! Magnetic curvature strength (L_ref/L_cB)
@@ -51,7 +52,7 @@ CONTAINS
     IMPLICIT NONE
 
     NAMELIST /MODEL/ KERN, LINEARITY, RM_LD_T_EQ, FORCE_SYMMETRY, MHD_PD, &
-                         Na, ADIAB_E, ADIAB_I, tau_i, &
+                         Na, ADIAB_E, ADIAB_I, q_i, tau_i, &
                          mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, &
                          nu, k_gB, k_cB, lambdaD, beta, ExBrate, ExB_NL_CORRECTION,&
                          ikxZF, ZFamp
