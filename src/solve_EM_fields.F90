@@ -22,7 +22,7 @@ CONTAINS
                                 ip0, total_nj, ngj
     USE calculus,         ONLY: simpson_rule_z
     USE parallel,         ONLY: manual_3D_bcast
-    USE model,            ONLY: lambdaD, ADIAB_E , tau_i
+    USE model,            ONLY: lambdaD, ADIAB_E, ADIAB_I, q_i, tau_i
     use species,          ONLY: q
     USE processing,       ONLY: compute_density
     USE geometry,         ONLY: iInt_Jacobian, Jacobian
@@ -66,6 +66,15 @@ CONTAINS
               ENDIF
               rho = rho + fsa_phi
             ENDIF
+            !!!!!!!!!!!!!!! adiabatic ion model
+            ! Candy et al. 2007, rho_i = -q_i/tau_i phi
+            IF (ADIAB_I) THEN
+              DO iz = 1,local_nz
+                izi = iz+ngz/2
+                rho(iz) = rho(iz) - 0*q_i/tau_i * phi(iky,ikx,izi)
+              ENDDO
+            ENDIF
+
             !!!!!!!!!!!!!!! Inverting the poisson equation
             DO iz = 1,local_nz
               izi = iz+ngz/2

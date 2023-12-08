@@ -162,14 +162,12 @@ SUBROUTINE evaluate_poisson_op
   USE grid,    ONLY : local_na, local_nkx, local_nky, local_nz,&
                       kxarray, kyarray, local_nj, ngj, ngz, ieven
   USE species, ONLY : q2_tau
-  USE model,   ONLY : ADIAB_E, ADIAB_I, tau_i
+  USE model,   ONLY : ADIAB_E, ADIAB_I, tau_i, q_i
   USE prec_const, ONLY: xp
   IMPLICIT NONE
   REAL(xp)    :: pol_tot, operator_ion
   INTEGER     :: in,ikx,iky,iz,ia
-  REAL(xp)    :: sumker, q_i, sigma_i
-  q_i     = 1._xp ! we assume single charge ions for adiab. ion model
-  sigma_i = 1._xp ! trivial singe sigma_a = sqrt(m_a/m_i)
+  REAL(xp)    :: sumker
   ! This term has no staggered grid dependence. It is evalued for the
   ! even z grid since poisson uses p=0 moments and phi only.
   kxloop: DO ikx = 1,local_nkx
@@ -194,13 +192,8 @@ SUBROUTINE evaluate_poisson_op
     IF(ADIAB_E) & ! Adiabatic electron model
       pol_tot = pol_tot + 1._xp
 
-    IF(ADIAB_I) THEN ! adiabatic ions model (add ions polarisation)
-      sumker  = 0._xp  ! sum of ion polarisation term
-      DO in=1,local_nj
-        sumker = sumker + q_i**2/tau_i * kernel_i(in+ngj/2,iky,ikx,iz+ngz/2,ieven)**2 ! ... sum recursively ...
-      END DO
-      pol_tot = pol_tot + q_i**2/tau_i - sumker
-    ENDIF
+    IF(ADIAB_I) & ! adiabatic ions model, kernel_i = 0 and -q_i/tau_i*phi = rho_i
+      pol_tot = pol_tot + q_i**2/tau_i
       
     inv_poisson_op(iky, ikx, iz) =  1._xp/pol_tot
     inv_pol_ion   (iky, ikx, iz) =  1._xp/operator_ion
@@ -246,7 +239,7 @@ SUBROUTINE evaluate_ampere_op
       END DO a
       IF(ADIAB_I) THEN ! Add ion contribution on the polarisation
         DO in=1,total_nj
-          sum_jpol = sum_jpol  + q_i**2/(sigma_i**2)*kernel_i(in+ngj/2,iky,ikx,iz+ngz/2,iodd)**2 ! ... sum recursively ...
+          sum_jpol = sum_jpol  + 0*q_i**2/(sigma_i**2)*kernel_i(in+ngj/2,iky,ikx,iz+ngz/2,iodd)**2 ! ... sum recursively ...
       END DO
       ENDIF
       operator = 2._xp*kperp2*hatB(iz+ngz/2,iodd)**2 + beta*sum_jpol
