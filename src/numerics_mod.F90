@@ -4,7 +4,6 @@
 MODULE numerics
   USE prec_const, ONLY: xp
     implicit none
-    REAL(xp), PUBLIC, PROTECTED, ALLOCATABLE, DIMENSION(:,:,:,:,:) :: kernel_i
     PUBLIC :: build_dnjs_table, evaluate_kernels, evaluate_EM_op
     PUBLIC :: compute_lin_coeff, build_dv4Hp_table
 
@@ -78,7 +77,6 @@ SUBROUTINE evaluate_kernels
   USE grid,    ONLY : local_na, local_nj,ngj, local_nkx, local_nky, local_nz, ngz, jarray, kp2array,&
                       nzgrid
   USE species, ONLY : sigma2_tau_o2
-  USE model,   ONLY : ADIAB_I, tau_i
   IMPLICIT NONE
   INTEGER    :: j_int, ia, eo, ikx, iky, iz, ij
   REAL(xp)   :: j_xp, y_, factj, sigma_i
@@ -105,29 +103,6 @@ DO ia  = 1,local_na
     ENDDO
   ENDDO
 
-  !! ion kernels if we use adiabatic ions
-  IF(ADIAB_I) THEN
-    ALLOCATE(kernel_i(local_nj + ngj,local_nky,local_nkx,local_nz + ngz,nzgrid))
-    DO eo  = 1,nzgrid
-      DO ikx = 1,local_nkx
-        DO iky = 1,local_nky
-          DO iz  = 1,local_nz + ngz
-            DO ij = 1,local_nj + ngj
-              j_int = jarray(ij)
-              j_xp  = REAL(j_int,xp)
-              y_    =  sigma_i**2*tau_i/2._xp * kp2array(iky,ikx,iz,eo)
-              IF(j_int .LT. 0) THEN !ghosts values
-                kernel_i(ij,iky,ikx,iz,eo) = 0._xp
-              ELSE
-                factj = REAL(GAMMA(j_xp+1._xp),xp)
-                kernel_i(ij,iky,ikx,iz,eo) = y_**j_int*EXP(-y_)/factj
-              ENDIF
-            ENDDO
-          ENDDO
-        ENDDO
-      ENDDO
-    ENDDO
-  ENDIF
   ! !! Correction term for the evaluation of the heat flux
   ! HF_phi_correction_operator(:,:,:) = &
   !        2._xp * Kernel(ia,1,:,:,:,1) &
@@ -237,10 +212,8 @@ SUBROUTINE evaluate_ampere_op
           sum_jpol = sum_jpol  + q(ia)**2/(sigma(ia)**2)*kernel(ia,in+ngj/2,iky,ikx,iz+ngz/2,iodd)**2 ! ... sum recursively ...
         END DO 
       END DO a
-      IF(ADIAB_I) THEN ! Add ion contribution on the polarisation
-        DO in=1,total_nj
-          sum_jpol = sum_jpol  + 0*q_i**2/(sigma_i**2)*kernel_i(in+ngj/2,iky,ikx,iz+ngz/2,iodd)**2 ! ... sum recursively ...
-      END DO
+      IF(ADIAB_I) THEN 
+        ! no ion contribution
       ENDIF
       operator = 2._xp*kperp2*hatB(iz+ngz/2,iodd)**2 + beta*sum_jpol
       inv_ampere_op(iky, ikx, iz) =  1._xp/operator
