@@ -1,0 +1,2 @@
+This is a example run for Gyacomo in the hot electron limit (tau=1e-3) that mimics the reduced fluid model of Ivanov et al. 2020. The one-to-one equivalency is shown in Hoffmann et al. 2024. 
+One can observe a ZF dominated regime at K_T_~500 and the upshift of the turbulence at K_T_~600. The 2D limit makes the K_T_~1000 simulations unstable since no parallel damping exists.
