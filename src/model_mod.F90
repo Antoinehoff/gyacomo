@@ -28,7 +28,8 @@ MODULE model
   REAL(xp), PUBLIC, PROTECTED ::    beta =  0._xp     ! electron plasma Beta (8piNT_e/B0^2)
   REAL(xp), PUBLIC, PROTECTED :: ExBrate =  0._xp     ! ExB background shearing rate (radially constant shear flow)
   INTEGER,  PUBLIC, PROTECTED ::   ikxZF =  0         ! Background zonal mode wavenumber (acts in the nonlinear term)
-  REAL(xp), PUBLIC, PROTECTED ::   ZFamp =  0._xp   ! Amplitude of the background zonal mode
+  REAL(xp), PUBLIC, PROTECTED ::  ZFrate =  0._xp     ! Shearing rate of the background zonal mode
+  LOGICAL,  PUBLIC, PROTECTED :: ZF_ONLY =  .false.   ! Cancels the nonlinear term excepts the background ZF contribution
   ! Auxiliary variable
   LOGICAL,  PUBLIC, PROTECTED ::      EM =  .true.    ! Electromagnetic effects flag
   LOGICAL,  PUBLIC, PROTECTED ::  MHD_PD =  .true.    ! MHD pressure drift
@@ -55,7 +56,7 @@ CONTAINS
                          Na, ADIAB_E, ADIAB_I, q_i, tau_i, &
                          mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, &
                          nu, k_gB, k_cB, lambdaD, beta, ExBrate, ExB_NL_CORRECTION,&
-                         ikxZF, ZFamp
+                         ikxZF, ZFrate, ZF_ONLY
 
     READ(lu_in,model)
 
@@ -114,6 +115,8 @@ CONTAINS
     CALL attach(fid, TRIM(str),    "MHD_PD",  MHD_PD)
     CALL attach(fid, TRIM(str),      "beta",    beta)
     CALL attach(fid, TRIM(str),   "ExBrate", ExBrate)
+    CALL attach(fid, TRIM(str),     "ikxZF",   ikxZF)
+    CALL attach(fid, TRIM(str),    "ZFrate",  ZFrate)
     CALL attach(fid, TRIM(str),   "ADIAB_E", ADIAB_E)
     CALL attach(fid, TRIM(str),   "ADIAB_I", ADIAB_I)
     CALL attach(fid, TRIM(str),     "tau_i",   tau_i)

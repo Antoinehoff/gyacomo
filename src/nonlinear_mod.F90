@@ -8,10 +8,10 @@ MODULE nonlinear
                          local_nj,ngj,jarray,jmax, local_nj_offset, dmax,&
                          kyarray, AA_y, local_nky, inv_Ny,&
                          total_nkx,kxarray, AA_x, inv_Nx,local_nx, Ny, &
-                         local_nz,ngz,zarray,nzgrid, deltakx, iky0, contains_kx0, contains_ky0
-  USE model,       ONLY : LINEARITY, EM, ikxZF, ZFamp, ExB_NL_CORRECTION
+                         local_nz,ngz,zarray,nzgrid, deltakx, deltaky, iky0, contains_kx0, contains_ky0
+  USE model,       ONLY : LINEARITY, EM, ikxZF, ZFrate, ZF_ONLY, ExB_NL_CORRECTION
   USE closure,     ONLY : evolve_mom, nmaxarray
-  USE prec_const,  ONLY : xp
+  USE prec_const,  ONLY : xp, imagu
   USE species,     ONLY : sqrt_tau_o_sigma
   USE time_integration, ONLY : updatetlevel
   USE ExB_shear_flow,   ONLY : ExB_NL_factor, inv_ExB_NL_factor
@@ -24,7 +24,7 @@ MODULE nonlinear
   COMPLEX(xp), DIMENSION(:,:), ALLOCATABLE :: F_cmpx, G_cmpx
   INTEGER :: in, is, p_int, j_int, n_int
   INTEGER :: smax
-  REAL(xp):: sqrt_p, sqrt_pp1
+  REAL(xp):: sqrt_p, sqrt_pp1, inv_kx_ZF
   PUBLIC  :: compute_Sapj, nonlinear_init
 
 CONTAINS
@@ -33,6 +33,7 @@ SUBROUTINE nonlinear_init
   IMPLICIT NONE
   ALLOCATE( F_cmpx(local_nky,total_nkx))
   ALLOCATE( G_cmpx(local_nky,total_nkx))
+  inv_kx_ZF = ikxZF/deltakx
 END SUBROUTINE nonlinear_init
 
 SUBROUTINE compute_Sapj
@@ -81,13 +82,14 @@ SUBROUTINE compute_nonlinear
                   F_cmpx(iky,ikx) = phi(iky,ikx,izi) * kernel(ia,ini,iky,ikx,izi,eo)
                 ENDDO
               ENDDO
-              ! Test to implement the ExB shearing as a additional zonal mode in the ES potential
-              IF(ikxZF .GT. 1) THEN
-                ikxExBp = ikxZF
-                ikxExBn = total_nkx - (ikxExBp-2)
+              ! ExB shearing as a additional zonal mode in the ES potential
+              IF(abs(ZFrate) .GT. 0) THEN
+                ikxExBp = ikxZF + 1
+                ikxExBn = total_nkx - (ikxExBp - 2)
+                IF(ZF_ONLY) F_cmpx = 0._xp
                 IF(contains_kx0 .AND. contains_ky0) THEN
-                  F_cmpx(iky0,ikxExBp) = F_cmpx(iky0,ikxExBp) + ZFamp * kernel(ia,ini,iky0,ikxExBp,izi,eo)
-                  F_cmpx(iky0,ikxExBn) = F_cmpx(iky0,ikxExBn) + ZFamp * kernel(ia,ini,iky0,ikxExBn,izi,eo)
+                  F_cmpx(iky0,ikxExBp) = F_cmpx(iky0,ikxExBp) + 8._xp*ZFrate*inv_kx_ZF * kernel(ia,ini,iky0,ikxExBp,izi,eo)
+                  F_cmpx(iky0,ikxExBn) = F_cmpx(iky0,ikxExBn) + 8._xp*ZFrate*inv_kx_ZF * kernel(ia,ini,iky0,ikxExBn,izi,eo)
                 ENDIF
               ENDIF
               ! Second convolution terms
