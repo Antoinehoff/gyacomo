@@ -26,7 +26,7 @@ CONTAINS
         USE grid,     ONLY: Nx, local_nky, total_nky, local_nx, Ny, deltakx, deltaky,&
                             kx_max, kx_min !kyarray, kyarray_full
         USE geometry, ONLY: Cyq0_x0, C_y
-        ! USE basic,    ONLY: dt
+        USE basic,    ONLY: speak
         USE model,    ONLY: LINEARITY
         IMPLICIT NONE
         INTEGER :: iky
@@ -36,6 +36,7 @@ CONTAINS
         ! In GENE, there is a minus sign here...
         gamma_E = ExBrate*C_y*abs(Cyq0_x0/C_y)
         IF(abs(gamma_E) .GT. EPSILON(gamma_E)) THEN
+            CALL speak('-ExB background flow detected-')
             ExB    = .TRUE.
             t0     = deltakx/deltaky/gamma_E
             inv_t0 = 1._xp/t0
@@ -70,7 +71,7 @@ CONTAINS
         ALLOCATE(shiftnow_ExB(local_nky))
         shiftnow_ExB = .FALSE.
 
-        ! Setup nonlinear factor
+        ! Setup nonlinear factor (McMillan 2019)
         ALLOCATE(    ExB_NL_factor(Nx,local_nky))
         ALLOCATE(inv_ExB_NL_factor(Ny/2+1,local_nx))
             ExB_NL_factor = 1._xp
@@ -128,7 +129,6 @@ CONTAINS
                     sky_ExB_full(iky) = sky_ExB_full(iky) - REAL(iky-1,xp)*deltaky*gamma_E*dt_sub
                 ENDDO
                 ! Shift the arrays if the shear value sky is too high
-                IF(LINEARITY .EQ. 'nonlinear') &
                 CALL Array_shift_ExB_shear_flow
 
                 ! We update the operators and grids
@@ -139,8 +139,8 @@ CONTAINS
                 CALL evaluate_EM_op
                 CALL evaluate_magn_curv
                 !   update the ExB nonlinear factor...
-                IF(LINEARITY .EQ. 'nonlinear') &
-                CALL update_nonlinear_ExB_factors(dt_sub)
+                ! IF(LINEARITY .EQ. 'nonlinear') &
+                ! CALL Update_nonlinear_ExB_factors(dt_sub)
             ENDIF
         ENDIF
     END SUBROUTINE Update_ExB_shear_flow
