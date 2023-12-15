@@ -115,7 +115,7 @@ CONTAINS
         CALL update_ghosts_moments
         CALL solve_EM_fields
       ! init a gaussian blob in gyrodens
-      CASE('blob')
+      CASE('blob','blob_nokx')
         CALL speak('--init a blob')
         CALL initialize_blob
         CALL update_ghosts_moments
@@ -290,7 +290,7 @@ CONTAINS
     USE prec_const, ONLY: xp
     USE model,      ONLY: LINEARITY
     USE grid,       ONLY: total_nkx, local_nkx_offset, local_nky, local_nky_offset,&
-                          kxarray_full, kyarray, kx_max, kx_min, ky_max
+                          kxarray_full, kyarray_full, kx_max, kx_min, ky_max
     IMPLICIT NONE
     INTEGER :: ikx,iky, im, I_, J_
     REAL(xp):: maxkx, minkx, maxky, kx_, ky_, A_
@@ -318,8 +318,8 @@ CONTAINS
       J_ = J_ + 1
       ! Check the validity of the modes
       kx_ = kxarray_full(I_)
-      ky_ = kyarray(J_)
-      IF( ((kx_ .LE. maxkx) .AND. (kx_ .LE. maxkx)) .AND. &
+      ky_ = kyarray_full(J_)
+      IF( ((kx_ .GE. minkx) .AND. (kx_ .LE. maxkx)) .AND. &
           ((ky_ .GE. 0._xp) .AND. (ky_ .LE. maxky)) ) THEN
             ! Init the mode
           DO ikx=1,total_nkx
@@ -485,6 +485,9 @@ CONTAINS
                     * AA_x(ikx)*AA_y(iky)* &
                     (Jacobian(iz,ieven)*iInt_Jacobian)**2!&
                     ! * exp(sigmai2_taui_o2*(kx**2+ky**2))
+                    if((INIT_OPT .EQ. 'blob_nokx') .and. (abs(kx) .GT. EPSILON(kx))) THEN
+                      moments(ia,ip,ij,iky,ikx,iz, :) = 0._xp
+                    ENDIF
                 ENDIF
               ENDDO
             ENDDO
