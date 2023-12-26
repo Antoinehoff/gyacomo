@@ -81,6 +81,20 @@ while i < c;
         % Parse current namelist (set of variables)
         S.(namelst) = parse_namelist(nmlst_bdy);        
     end
+    if isfield(S,'GRID')
+        if isfield(S.GRID,'nx')
+            S.GRID.Nx = S.GRID.nx;
+            S.GRID = rmfield(S.GRID,'nx');
+        end
+        if isfield(S.GRID,'ny')
+            S.GRID.Ny = S.GRID.ny;
+            S.GRID = rmfield(S.GRID,'ny');
+        end
+        if isfield(S.GRID,'nz')
+            S.GRID.Nz = S.GRID.nz;
+            S.GRID = rmfield(S.GRID,'nz');
+        end
+    end
 end
 function S = parse_namelist(strng)
 % Internal function to parse the body text of a namelist section.
@@ -150,6 +164,7 @@ for k = 1:nvars,
     % Eval the modified syntax in Matlab
     eval([vars{k} ' = ' arg]);
 end
+
 function [strng, is_lit] = parse_literal_strings(strng)
 % Parse the literal declarations of strings and change to Matlab syntax
 len = length(strng);
