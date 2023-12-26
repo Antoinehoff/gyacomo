@@ -1,42 +1,48 @@
-% DIR = '/misc/gyacomo23_outputs/scaling/strong/17x9x256x256x32/'; scaling='strong';
+DIR = '/misc/gyacomo23_outputs/scaling/strong/17x9x256x256x32/'; scaling='strong';
 % DIR = '/misc/gyacomo23_outputs/scaling/strong/9x5x768x192x32/'; scaling='strong';
 % DIR = '/misc/gyacomo23_outputs/scaling/strong/3x2x768x192x32/'; scaling='strong';
 % DIR = '/misc/gyacomo23_outputs/scaling/weak/Np_5x2x128x64x32/'; scaling='weak';
 % DIR = '/misc/gyacomo23_outputs/scaling/weak/Ny_3x2x768x8x32/'; scaling='weak';
 % DIR = '/misc/gyacomo23_outputs/scaling/weak/Nz_3x2x768x32x8/'; scaling='weak';
 % DIR = '/misc/gyacomo23_outputs/scaling/weak/Nz_5x2x128x64x8/'; scaling='weak';
-DIR = '/misc/gyacomo23_outputs/scaling/weak/Npyz_4x2x32x16x16/'; scaling='weak';
+% DIR = '/misc/gyacomo23_outputs/scaling/weak/Npyz_4x2x32x16x16/'; scaling='weak';
 
 % Get a list of all items in the current directory
 contents = dir(DIR);
 Ncont = length(contents);
 
 % Iterate through the contents to take valid dirs
-dirs_ = {}; Ndirs = 0;
+dirs_ = {};
+outp_ = {}; Noutp = 0;
 for i = 1:Ncont
     subdir = [DIR,contents(i).name];
     filename = [subdir,'/outputs_00.h5'];
+    dirs_{i} = subdir;
     try
         Np = h5readatt(filename,'/data/input/parallel','num_procs_p');
-        Ndirs  = Ndirs + 1;
-        dirs_{Ndirs} = filename;
+        Noutp  = Noutp + 1;
+        outp_{Noutp} = filename;
     catch
     end
 end
 
-Np     = 0*(1:Ndirs);
-Ny     = 0*(1:Ndirs);
-Nz     = 0*(1:Ndirs);
-Rt_avg = 0*(1:Ndirs);
-Rt_std = 0*(1:Ndirs);
+Np     = 0*(1:Noutp);
+Ny     = 0*(1:Noutp);
+Nz     = 0*(1:Noutp);
+Nvar   = 0*(1:Noutp);
+Rt_avg = 0*(1:Noutp);
+Rt_std = 0*(1:Noutp);
 
 % Iterate through the contents
-for i = 1:Ndirs
+for i = 1:Noutp
     % Get and display the name of the subdirectory
-    filename = dirs_{i};
-    Np(i) = h5readatt(filename,'/data/input/parallel','num_procs_p');
-    Ny(i) = h5readatt(filename,'/data/input/parallel','num_procs_ky');
-    Nz(i) = h5readatt(filename,'/data/input/parallel','num_procs_z');
+    filename = outp_{i};
+    Np(i)  = h5readatt(filename,'/data/input/parallel','num_procs_p');
+    Ny(i)  = h5readatt(filename,'/data/input/parallel','num_procs_ky');
+    Nz(i)  = h5readatt(filename,'/data/input/parallel','num_procs_z');
+
+    inp    = read_namelist([dirs_{i},'/fort_00.90']);
+    Nvar(i)= (inp.GRID.pmax+1)*(inp.GRID.jmax+1)*inp.GRID.Nx*inp.GRID.Ny*inp.GRID.Nz;
 
     CPUTI = double(h5readatt(filename,'/data/input','cpu_time'));
     DTSIM = h5readatt(filename,'/data/input/basic','dt');
@@ -73,7 +79,7 @@ Np1Nz1 = logical((Np==1).*(Nz==1));
 Np2Nz1 = logical((Np==2).*(Nz==1));
 Np1Nz2 = logical((Np==1).*(Nz==2));
 Np1Nz4 = logical((Np==1).*(Nz==4));
-
+%%
 figure;  hold on;
 xlabel('Number of cores');
 switch scaling
@@ -92,7 +98,7 @@ case 'strong'
     % title('Strong scaling speedup')
 case 'weak'
     hold on;
-    filt = logical((Np==1).*(Ny>1).*(Nz==1));
+    filt = logical((Np==2).*(Ny>=1).*(Nz>=1));
     plot(Np_tot(filt),Rt_ref./Rt_avg(filt),...
         'o','DisplayName','Effective');
     plot(1:MaxN,ones(1,MaxN),'--k','DisplayName','Ideal');
