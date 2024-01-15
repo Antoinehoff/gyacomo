@@ -1,12 +1,12 @@
 &BASIC
   nrun       = 99999999
   dt         = 0.01
-  tmax       = 50
+  tmax       = 5
   maxruntime = 72000
   job2load   = -1
 /
 &GRID
-  pmax   = 2
+  pmax   = 4
   jmax   = 1
   Nx     = 64
   Lx     = 120
@@ -32,7 +32,7 @@
   shift_y= 0.0
 /
 &DIAGNOSTICS
-  dtsave_0d = 1
+  dtsave_0d = 0.1
   dtsave_1d = -1
   dtsave_2d = -1
   dtsave_3d = 1
@@ -91,6 +91,6 @@
   iseed            = 42
 /
 &TIME_INTEGRATION
-  !numerical_scheme = 'RK4'
-  numerical_scheme = 'SSP_RK3'
+  numerical_scheme = 'RK4'
+  !numerical_scheme = 'SSP_RK3'
 /
