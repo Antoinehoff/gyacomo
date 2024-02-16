@@ -289,8 +289,8 @@ CONTAINS
     USE fields,     ONLY: moments
     USE prec_const, ONLY: xp
     USE model,      ONLY: LINEARITY
-    USE grid,       ONLY: total_nkx, local_nkx_offset, local_nky, local_nky_offset,&
-                          kxarray_full, kyarray_full, kx_max, kx_min, ky_max
+    USE grid,       ONLY: total_nkx, local_nkx_offset, local_nky, local_nky_offset, iky0,&
+                          kxarray_full, kyarray_full, kx_max, kx_min, ky_max, deltakx, deltaky
     IMPLICIT NONE
     INTEGER :: ikx,iky, im, I_, J_
     REAL(xp):: maxkx, minkx, maxky, kx_, ky_, A_
@@ -314,19 +314,16 @@ CONTAINS
       IF(I_ .LT. 0) THEN
         I_ = I_ + total_nkx
       ENDIF
-      I_ = I_ + 1 ! array indices start at 1
-      J_ = J_ + 1
       ! Check the validity of the modes
-      kx_ = kxarray_full(I_)
-      ky_ = kyarray_full(J_)
+      kx_ = I_*deltakx
+      ky_ = J_*deltaky
       IF( ((kx_ .GE. minkx) .AND. (kx_ .LE. maxkx)) .AND. &
           ((ky_ .GE. 0._xp) .AND. (ky_ .LE. maxky)) ) THEN
             ! Init the mode
           DO ikx=1,total_nkx
             DO iky=1,local_nky
-              IF ( (ikx+local_nkx_offset .EQ. I_) .AND. &
-                    (iky+local_nky_offset .EQ. J_) ) THEN
-                ! WRITE(*,'(A10,F4.2,A,F4.2,A,F4.2)') '-init (kx=',kx_,',ky=',ky_,') at Amp=',A_               
+              IF ( (kxarray_full(ikx+local_nkx_offset) .EQ. kx_) .AND. &
+                   (kyarray_full(iky+local_nky_offset) .EQ. ky_) ) THEN
                 WRITE(*,'(A,F5.3,A,F5.3,A,G9.2)') '-init (kx=',kx_,',ky=',ky_,') with Amp= ',A_
                 moments(:,:,:,iky,ikx,:,:) = A_
               ENDIF
