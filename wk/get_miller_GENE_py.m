@@ -2,7 +2,7 @@ function [variables] = get_miller_GENE_py(prof_folder,rho)
 
 filePath = [prof_folder,'/equilibrium.txt'];
 
-command = ['python extract_miller_from_eqdsk.py ',...
+command = ['python3 extract_miller_from_eqdsk.py ',...
             filePath,' ',num2str(rho),' > tmp.txt'];
 system(command);
 

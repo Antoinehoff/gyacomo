@@ -3,12 +3,12 @@ SIMID = 'lin_Ivanov'; % Name of the simulation
 
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-TAU = 1e-3;                  % e/i temperature ratio
-NU = 0.1/TAU;                 % Collision frequency
+TAU = 0.001;                  % e/i temperature ratio
+NU = 1.0*3/2/TAU/4;                 % Collision frequency
 K_Ne = 0*2.22;              % ele Density
 K_Te = 0*6.96;              % ele Temperature
 K_Ni = 0*2.22;              % ion Density gradient drive
-K_Ti = 0.36*2/TAU;              % ion Temperature
+K_Ti = 1.0*2/TAU+0*5*TAU;     % ion Temperature
 SIGMA_E = 0.0233380;        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 NA = 1;                     % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
@@ -20,9 +20,9 @@ J = 1;%P/2;
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
 NX = 2;                     % real space x-gridpoints
-NY = 40;                    % real space y-gridpoints
+NY = 120;                    % real space y-gridpoints
 LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
-LY = 2*pi/0.15;              % Size of the squared frequency domain in y direction
+LY = 2*pi/0.05;              % Size of the squared frequency domain in y direction
 NZ = 1;                    % number of perpendicular planes (parallel grid)
 SG = 0;                     % Staggered z grids option
 NEXC = 0;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
@@ -34,15 +34,18 @@ EPS     = 0.0;   % inverse aspect ratio
 Q0      = 0.0;    % safety factor
 SHEAR   = 0.0;    % magnetic shear
 KAPPA   = 1.0;    % elongation
+S_KAPPA = 0.0;
 DELTA   = 0.0;    % triangularity
+S_DELTA = 0.0;
 ZETA    = 0.0;    % squareness
+S_ZETA  = 0.0;
 PARALLEL_BC = 'dirichlet'; % Boundary condition for parallel direction ('dirichlet','periodic','shearless','disconnected')
 SHIFT_Y = 0.0;    % Shift in the periodic BC in z
 NPOL   = 1;       % Number of poloidal turns
 
 %% TIME PARAMETERS
 TMAX     = 50;  % Maximal time unit
-DT       = 1e-2;   % Time step
+DT       = 1e-3;   % Time step
 DTSAVE0D = 1;      % Sampling time for 0D arrays
 DTSAVE2D = -1;     % Sampling time for 2D arrays
 DTSAVE3D = 1;      % Sampling time for 3D arrays
@@ -51,12 +54,12 @@ JOB2LOAD = -1;     % Start a new simulation serie
 
 %% OPTIONS
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
-CO        = 'SG';       % Collision operator (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-GKCO      = 0;          % Gyrokinetic operator
+CO        = 'DG';       % Collision operator (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
+GKCO      = 1;          % Gyrokinetic operator
 ABCO      = 1;          % INTERSPECIES collisions
 INIT_ZF   = 0;          % Initialize zero-field quantities
 % HRCY_CLOS = 'max_degree';   % Closure model for higher order moments
-HRCY_CLOS = 'truncation';   % Closure model for higher order moments
+HRCY_CLOS = 'max_degree';   % Closure model for higher order moments
 DMAX      = -1;
 NLIN_CLOS = 'truncation';   % Nonlinear closure model for higher order moments
 NMAX      = 0;
@@ -93,3 +96,7 @@ BCKGD0  = 0.0;    % Initial background
 k_gB   = 1.0;     % Magnetic gradient strength
 k_cB   = 1.0;     % Magnetic curvature strength
 COLL_KCUT = 1.0; % Cutoff for collision operator
+PB_PHASE = 0.0;
+ADIAB_I = 0;
+MHD_PD  = 0;
+EXBRATE = 0;

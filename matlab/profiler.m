@@ -1,23 +1,19 @@
-function [] = profiler(data)
+function [] = profiler(DATADIR,JID)
 %% load profiling
 % filename = sprintf([BASIC.RESDIR,'outputs_%.2d.h5'],00);
 % outfilename = ['/misc/HeLaZ_outputs',filename(3:end)];
 CPUTI=[]; DTSIM=[]; RHSTC=[]; POITC=[]; SAPTC=[]; COLTC=[];
 GRATC=[]; NADTC=[]; ADVTC=[]; GHOTC=[]; CLOTC=[]; CHKTC=[];
 DIATC=[]; EXBTC=[]; STETC=[]; TS0TC=[];
-for i = 1:numel(data.outfilenames)
-    outfilename = data.outfilenames{i};
+% for i = 1:numel(data.outfilenames)
+    outfilename = [DATADIR,'/',sprintf('outputs_%02d.h5',JID)];
     CPUTI = [ CPUTI; double(h5readatt(outfilename,'/data/input','cpu_time'))];
     DTSIM = [ DTSIM; h5readatt(outfilename,'/data/input/basic','dt')];
 
     RHSTC = [ RHSTC; h5read(outfilename,'/profiler/Tc_rhs')];
     POITC = [ POITC; h5read(outfilename,'/profiler/Tc_poisson')];
     SAPTC = [ SAPTC; h5read(outfilename,'/profiler/Tc_Sapj')];
-    try
     EXBTC = [ EXBTC; h5read(outfilename,'/profiler/Tc_ExBshear')];
-    catch
-        EXBTC = 0.*SAPTC;
-    end
     COLTC = [ COLTC; h5read(outfilename,'/profiler/Tc_coll')];
     GRATC = [ GRATC; h5read(outfilename,'/profiler/Tc_grad')];
     NADTC = [ NADTC; h5read(outfilename,'/profiler/Tc_nadiab')];
@@ -28,18 +24,18 @@ for i = 1:numel(data.outfilenames)
     DIATC = [ DIATC; h5read(outfilename,'/profiler/Tc_diag')];
     STETC = [ STETC; h5read(outfilename,'/profiler/Tc_step')];
     TS0TC = [ TS0TC; h5read(outfilename,'/profiler/time')];
-end
-CPUTI = CPUTI(end);
+% end
+CPUTI = sum(CPUTI);
 DTSIM = mean(DTSIM);
 N_T          = 13;
 
-missing_Tc   = STETC - RHSTC - ADVTC - GHOTC - CLOTC - EXBTC ...
+MISTC   = STETC - RHSTC - ADVTC - GHOTC - CLOTC - EXBTC ...
               -COLTC - POITC - SAPTC - CHKTC - DIATC - GRATC - NADTC;
 total_Tc     = STETC;
 
 TIME_PER_FCT = [diff(RHSTC); diff(ADVTC); diff(GHOTC);...
     diff(CLOTC); diff(COLTC); diff(POITC); diff(SAPTC); diff(EXBTC); ...
-    diff(CHKTC); diff(DIATC); diff(GRATC); diff(NADTC); diff(missing_Tc)];
+    diff(CHKTC); diff(DIATC); diff(GRATC); diff(NADTC); diff(MISTC)];
 TIME_PER_FCT = reshape(TIME_PER_FCT,[numel(TIME_PER_FCT)/N_T,N_T]);
 
 TIME_PER_STEP = sum(TIME_PER_FCT,2);
@@ -57,7 +53,7 @@ checkfield_Ta = mean(diff(CHKTC));
 grad_Ta       = mean(diff(GRATC));
 nadiab_Ta     = mean(diff(NADTC));
 diag_Ta       = mean(diff(DIATC));
-miss_Ta       = mean(diff(missing_Tc));
+miss_Ta       = mean(diff(MISTC));
 total_Ta      = mean(diff(total_Tc));
 names = {...
     'Mrhs';
@@ -79,9 +75,10 @@ Ts_A = [rhs_Ta adv_field_Ta ghost_Ta clos_Ta coll_Ta poisson_Ta...
 NSTEP_PER_SAMP= mean(diff(TS0TC))/DTSIM;
 
 %% Plots
-if 1
-    %% Area plot
 fig = figure;
+if 1
+    % subplot(121)
+    %% Area plot
 % colors = rand(N_T,3);
 % colors = lines(N_T);
 colors = distinguishable_colors(N_T);
@@ -100,21 +97,21 @@ for i = 2:numel(x_)
     yy_(2*i-1,:) = y_(i,:)/(dx/DTSIM);
     yy_(2*i  ,:) = y_(i,:)/(dx/DTSIM);
 end
-p1 = area(xx_,yy_,'LineStyle','none');
+p1 = area(xx_/DTSIM,yy_,'LineStyle','none');
 for i = 1:N_T; p1(i).FaceColor = colors(i,:);
 %     LEGEND{i} = sprintf('%s t=%1.1e[s] (%0.1f %s)',names{i},Ts_A(i),Ts_A(i)/total_Tc(end)*100,'\%');
     LEGEND{i} = [names{i},' $\hat t=$',sprintf('%1.1e[s] (%0.1f %s)',Ts_A(i)/NSTEP_PER_SAMP,Ts_A(i)/total_Ta*100,'\%')];
-end;
+end
 legend(LEGEND,'Location','bestoutside');
 % legend('Compute RHS','Adv. fields','ghosts comm', 'closure', 'collision','Poisson','Nonlin','Check+sym', 'Diagnos.', 'Process', 'Missing')
-xlabel('Sim. Time [$\rho_s/c_s$]'); ylabel('Step Comp. Time [s]')
-xlim([TS0TC(2),TS0TC(end)]);
-ylim([0, 1.1*CPUTI/(TS0TC(end)/DTSIM)])
+xlabel('Simulation step'); ylabel('Comp. time per step [s]')
+xlim([TS0TC(2),TS0TC(end)]./DTSIM);
+ylim([0, 1.5*total_Ta/(dx/DTSIM)])
 h_ = floor(CPUTI/3600);
 m_ = floor(floor(CPUTI/60)-60*h_);
 s_ = CPUTI - 3600*h_ - 60*m_;
-title(sprintf('Gyacomo 2 (%.0f [h] ~%.0f [min] ~%.0f [s])',...
-    h_,m_,s_))
+title([DATADIR,sprintf(' (%.0f [h] ~%.0f [min] ~%.0f [s])',...
+    h_,m_,s_)])
 hold on
 FIGNAME = 'profiler';
 % save_figure
@@ -145,20 +142,21 @@ FIGNAME = 'profiler';
 end
 
 if 0
+    subplot(122)
     %% Histograms
-fig = figure;
-histogram(diff(rhs_Tc)/NSTEP_PER_SAMP,'Normalization','probability');hold on
-histogram(diff(adv_field_Tc)/NSTEP_PER_SAMP,'Normalization','probability');hold on
-histogram(diff(ghost_Tc)/NSTEP_PER_SAMP,'Normalization','probability');hold on
-histogram(diff(clos_Tc)/NSTEP_PER_SAMP,'Normalization','probability');hold on
-histogram(diff(coll_Tc)/NSTEP_PER_SAMP,'Normalization','probability');hold on
-histogram(diff(poisson_Tc)/NSTEP_PER_SAMP,'Normalization','probability');hold on
-histogram(diff(Sapj_Tc)/NSTEP_PER_SAMP,'Normalization','probability');hold on
-histogram(diff(process_Tc)/NSTEP_PER_SAMP,'Normalization','probability');hold on
-histogram(diff(checkfield_Tc)/NSTEP_PER_SAMP,'Normalization','probability');hold on
-histogram(diff(diag_Tc)/NSTEP_PER_SAMP,'Normalization','probability');hold on
+% fig = figure;
+histogram(diff(RHSTC)/NSTEP_PER_SAMP,'Normalization','probability');hold on
+histogram(diff(ADVTC)/NSTEP_PER_SAMP,'Normalization','probability');hold on
+histogram(diff(GHOTC)/NSTEP_PER_SAMP,'Normalization','probability');hold on
+histogram(diff(CLOTC)/NSTEP_PER_SAMP,'Normalization','probability');hold on
+histogram(diff(COLTC)/NSTEP_PER_SAMP,'Normalization','probability');hold on
+histogram(diff(POITC)/NSTEP_PER_SAMP,'Normalization','probability');hold on
+histogram(diff(SAPTC)/NSTEP_PER_SAMP,'Normalization','probability');hold on
+histogram(diff(CHKTC)/NSTEP_PER_SAMP,'Normalization','probability');hold on
+histogram(diff(DIATC)/NSTEP_PER_SAMP,'Normalization','probability');hold on
+histogram(diff(MISTC)/NSTEP_PER_SAMP,'Normalization','probability');hold on
 grid on;
-legend('Compute RHS','Adv. fields','Ghosts comm', 'closure', 'collision','Poisson','Nonlin','Process','Check+sym', 'Diagnos.', 'Missing')
+legend('Compute RHS','Adv. fields','Ghosts comm', 'closure', 'collision','Poisson','Nonlin','Check+sym', 'Diagnos.', 'Missing')
 xlabel('Step Comp. Time [s]'); ylabel('')
 set(gca,'Xscale','log')
 FIGNAME = 'profiler';

@@ -14,7 +14,7 @@ GETFLUXSURFACE = 0;
 
 % partition= '../results/paper_3/';
 % Get the scan directory
-switch 5
+switch 6
     case 1 % delta kappa scan
         casename = 'DTT rho85';
         partition= '/misc/gyacomo23_outputs/paper_3/DTT_rho85_geom_scan/';
@@ -56,20 +56,21 @@ switch 5
         t1 = 50; t2 = 150;
     case 5 % delta K_T tau=1
         casename = 'DIIID rho95 $\tau=1$';
-        partition= '/misc/gyacomo23_outputs/paper_3/DIIID_tau_1_rho95_geom_scan/';  
-        scandir = '3x2x192x48x32_delta_RT_scan'; scanname= '(2,1)';
+        partition= '../results/paper_3/DIIID_tau_1_rho95_geom_scan/';  
+        % scandir = '3x2x192x48x32_delta_RT_scan'; scanname= '(2,1)';
+        scandir = '2_1_delta_RT_scan'; scanname= '(2,1)';
         % scandir = '5x3x192x48x32_delta_RT_scan'; scanname= '(4,2)';
         % scandir = 'delta_RT_scan_PJ_21'; scanname= '(2,1)';
         nml1 = 'GEOMETRY'; pnam1 = '$\delta$'; attr1 = 'delta'; pref1 = 0; scale1 =1.0;
         nml2 = 'SPECIES'; pnam2 = '$R_0/L_T\times T_i/T_e$'; attr2 = 'K_T_'; pref2 = 0.8; scale2 =1.0;
-        t1 = 200; t2 = 800;
+        t1 = 200; t2 = 500;
     case 6 % delta K_T cold ions
         casename = 'DIIID rho95 $\tau=10^{-3}$';
-        partition= '/misc/gyacomo23_outputs/paper_3/DIIID_cold_ions_rho95_geom_scan/'; 
+        partition= '../results/paper_3/DIIID_cold_ions_rho95_geom_scan/'; 
         scandir = '3x2x192x48x32_delta_RT_scan'; scanname= '(2,1)';
         nml1 = 'GEOMETRY'; pnam1 = '$\delta$'; attr1 = 'delta'; pref1 = 0; scale1 =1.0;
-        nml2 = 'SPECIES'; pnam2 = '$R_0/L_T\times T_i/T_e$'; attr2 = 'K_T_'; pref2 = 0.8; scale2 =1e3;
-        t1 = 200; t2 = 480;
+        nml2 = 'SPECIES'; pnam2 = '$R_0/L_T\times T_i/T_e$'; attr2 = 'K_T_'; pref2 = 0.8; scale2 =1e3/2;
+        t1 = 150; t2 = 280;
    case 7 % delta s_delta
         casename = 'DIIID rho95 $\tau=10^{-3}$';
         partition= '/misc/gyacomo23_outputs/paper_3/DIIID_cold_ions_rho95_geom_scan/';

@@ -1,14 +1,24 @@
-Nsim = 32;
+gyacomodir = pwd; gyacomodir = gyacomodir(1:end-2); % get code directory
+addpath(genpath([gyacomodir,'matlab'])) % ... add
+addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
+addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
+addpath(genpath([gyacomodir,'matlab/load'])) % ... add
+addpath(genpath([gyacomodir,'wk/parameters'])) % ... add
+
+Nsim = 48;
 gr_  = zeros(61,Nsim);
 i = 1;
 
-tau_a = logspace(0,-3,Nsim);
+tau_a = logspace(0,-3.5,Nsim);
 for i = 1:Nsim
     run lin_Ivanov;
     TAU  = tau_a(i);
     NU   = 0.1*3/2/TAU/4;                 % Collision frequency
     K_Ti = 0.35*2/TAU;     % ion Temperature
-    DT   = 1e-2;
+    DT   = 5e-3;
+    PMAX = 2; JMAX = 1;
+    % PMAX = 2; JMAX = 0;
+    % PMAX = 0; JMAX = 1;
     run fast_run;
     % growth rates
     [data.PHI, data.Ts3D] = compile_results_3D(LOCALDIR,J0,J1,'phi');

@@ -8,13 +8,13 @@ default_plots_options
 
 Nx     = 128;
 Ny     = 128;
-Nz     = 64;
 Nturns = 1;
+Nz     = 128;
 x      = linspace(-60,60,Nx)*0.001;
 y      = linspace(-60,60,Ny)*0.001;
 FIELD  = ones(Nx,Ny,Nz);
 z      = linspace(-Nturns*pi,Nturns*pi,Nz);
-N_field_lines    = 120;
+N_field_lines    = 2;
 N_magn_flux_surf = 1;
 openangle        = pi/3;
 phi0 = openangle/2; phi1= 2*pi-openangle/2;
@@ -28,9 +28,9 @@ select = 3;
 switch select
     case 1
     % CBC
-    rho    = 0.50; drho = 0.1;% Torus minor radius
+    rho    = 0.3; drho = 0.1;% Torus minor radius
     eps    = 0.3;
-    q0     = 0.000001; % Flux tube safety factor
+    q0     = 1.4; % Flux tube safety factor
     shear  = 0.8;
     kappa  = 1.0;
     s_kappa= 0.0;
@@ -171,7 +171,7 @@ figure; set(gcf, 'Position',  DIMENSIONS)
     end
     %plot field lines
     if N_field_lines > 0
-        theta  = linspace(-Nturns*pi, Nturns*pi, 256)   ; % Poloidal angle
+        theta  = linspace(-Nturns*pi, Nturns*pi, Nturns*256)   ; % Poloidal angle
         vecfl = Rvec(theta);
         plot3(vecfl(1,:),vecfl(2,:),vecfl(3,:),'-b'); hold on;
         % Multiple field lines
@@ -183,7 +183,7 @@ figure; set(gcf, 'Position',  DIMENSIONS)
             y_ = [y_ sin(t)*vecfl(1,:) + cos(t)*vecfl(2,:)];
             z_ = [z_ vecfl(3,:)];
         end
-        plot3(x_,y_,z_,'.','color',[1.0 0.6 0.6]*0.8); hold on;
+        plot3(x_,y_,z_,'-','color',[1.0 0.6 0.6]*0.8); hold on;
     end
     %plot fluxe tube
     if PLT_FTUBE
