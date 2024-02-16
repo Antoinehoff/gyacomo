@@ -12,7 +12,7 @@
   Lx     = 80
   Ny     = 64
   Ly     = 80
-  Nz     = 1
+  Nz     = 24
   SG     = .t.
   Nexc   = 1
 /
@@ -29,6 +29,7 @@
   s_zeta = 0.0
   parallel_bc = 'shearless'
   shift_y= 0.0
+  Npol   = 1
 /
 &DIAGNOSTICS
   dtsave_0d = 1
@@ -52,7 +53,7 @@
   mu_x    = 1.0
   mu_y    = 1.0
   N_HD    = 4
-  mu_z    = 0.0
+  mu_z    = 1.0
   HYP_V   = 'hypcoll'
   mu_p    = 0.0
   mu_j    = 0.0

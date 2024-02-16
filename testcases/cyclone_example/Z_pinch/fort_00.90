@@ -1,41 +1,42 @@
 &BASIC
   nrun       = 99999999
   dt         = 0.01
-  tmax       = 500
+  tmax       = 50
   maxruntime = 72000
   job2load   = -1
 /
 &GRID
-  pmax   = 2
+  pmax   = 4
   jmax   = 1
-  Nx     = 128
-  Lx     = 80
-  Ny     = 64
-  Ly     = 80
-  Nz     = 1
-  SG     = .t.
-  Nexc   = 1
+  Nx     = 64
+  Lx     = 120
+  Ny     = 48
+  Ly     = 120
+  Nz     = 16
+  SG     = .f.
+  Nexc   = 0
 /
 &GEOMETRY
   geom   = 'Z-pinch'
-  q0     = 0.0
-  shear  = 0.0 
-  eps    = 0.0
+  !geom   = 'miller'
+  q0     = 100!1.4
+  shear  = 0.0!0.8
+  eps    = 0.001!0.18
   kappa  = 1.0
   s_kappa= 0.0
   delta  = 0.0
   s_delta= 0.0
   zeta   = 0.0
   s_zeta = 0.0
-  parallel_bc = 'shearless'
+  parallel_bc = 'dirichlet'
   shift_y= 0.0
 /
 &DIAGNOSTICS
-  dtsave_0d = 1
+  dtsave_0d = 0.1
   dtsave_1d = -1
   dtsave_2d = -1
-  dtsave_3d = 0.5
-  dtsave_5d = 50
+  dtsave_3d = 1
+  dtsave_5d = 20
   write_doubleprecision = .f.
   write_gamma = .t.
   write_hf    = .t.
@@ -49,10 +50,10 @@
 &MODEL
   LINEARITY = 'nonlinear'
   Na      = 1 ! number of species
-  mu_x    = 1.0
-  mu_y    = 1.0
+  mu_x    = 0.0
+  mu_y    = 0.0
   N_HD    = 4
-  mu_z    = 0.0
+  mu_z    = 1.0
   HYP_V   = 'hypcoll'
   mu_p    = 0.0
   mu_j    = 0.0
@@ -61,11 +62,10 @@
   ADIAB_E = .t.
 /
 &CLOSURE
-  !hierarchy_closure='truncation'
-  hierarchy_closure='max_degree'
-  dmax = 2
-  nonlinear_closure='anti_laguerre_aliasing' !(truncation,full_sum,anti_laguerre_aliasing)
-  nmax = 1
+  hierarchy_closure='truncation'
+  dmax = -1
+  nonlinear_closure='truncation'
+  nmax = 0
 /
 &SPECIES
  ! ions
@@ -73,18 +73,10 @@
  tau_  = 1.0
  sigma_= 1.0
  q_    = 1.0
- k_N_  = 0.0
+ k_N_  = 2.22
  k_T_  = 6.96
 /
-&SPECIES
- ! electrons
- name_ = 'electrons'
- tau_  = 1.0
- sigma_= 0.023338
- q_    =-1.0
- k_N_  = 1.6
- k_T_  = 0.4
-/
+
 &COLLISION
   collision_model = 'DG' !DG/SG/PA/LD (dougherty, sugama, pitch angle, landau)
   GK_CO           = .f.
@@ -92,7 +84,7 @@
   mat_file       = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'
 /
 &INITIAL
-  INIT_OPT         = 'blob' !(phi,blob)
+  INIT_OPT         = 'blob'
   ACT_ON_MODES     = 'donothing'
   init_background  = 0.0
   init_noiselvl    = 0.005
@@ -100,4 +92,5 @@
 /
 &TIME_INTEGRATION
   numerical_scheme = 'RK4'
+  !numerical_scheme = 'SSP_RK3'
 /
