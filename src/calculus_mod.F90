@@ -3,13 +3,13 @@ MODULE calculus
   USE prec_const, ONLY: xp
   IMPLICIT NONE
   REAL(xp), dimension(-2:2) :: dz_usu = &
-   (/  1._xp/12._xp, -2._xp/3._xp, 0._xp, 2._xp/3._xp, -1._xp/12._xp /) ! fd4 centered stencil
+   (/  1._xp/12._xp, -2._xp/3._xp, 0._xp, 2._xp/3._xp, -1._xp/12._xp /) ! 1st derivative, 4th order, centered stencil
   REAL(xp), dimension(-2:1) :: dz_o2e = &
-   (/ 1._xp/24._xp,-9._xp/8._xp, 9._xp/8._xp,-1._xp/24._xp /) ! fd4 odd to even stencil
+   (/ 1._xp/24._xp,-9._xp/8._xp, 9._xp/8._xp,-1._xp/24._xp /) ! 1st derivative, 4th order, odd to even stencil
   REAL(xp), dimension(-1:2) :: dz_e2o = &
-   (/ 1._xp/24._xp,-9._xp/8._xp, 9._xp/8._xp,-1._xp/24._xp /) ! fd4 odd to even stencil
+   (/ 1._xp/24._xp,-9._xp/8._xp, 9._xp/8._xp,-1._xp/24._xp /) ! 1st derivative, 4th order, even to odd stencil
    REAL(xp), dimension(-2:2) :: dz2_usu = &
-   (/-1._xp/12._xp, 4._xp/3._xp, -5._xp/2._xp, 4._xp/3._xp, -1._xp/12._xp /)! 2th derivative, 4th order (for parallel hypdiff)
+   (/-1._xp/12._xp, 4._xp/3._xp, -5._xp/2._xp, 4._xp/3._xp, -1._xp/12._xp /)! 2nd derivative, 4th order (for parallel hypdiff)
    REAL(xp), dimension(-2:2) :: dz4_usu = &
    (/  1._xp, -4._xp, 6._xp, -4._xp, 1._xp /) ! 4th derivative, 2nd order (for parallel hypdiff)
    REAL(xp), dimension(-2:1) :: iz_o2e = &
