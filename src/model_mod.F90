@@ -4,7 +4,6 @@ MODULE model
   IMPLICIT NONE
   PRIVATE
   ! INPUTS
-  INTEGER,  PUBLIC, PROTECTED ::    KERN =  0         ! Kernel model
   CHARACTER(len=16), &
             PUBLIC, PROTECTED ::LINEARITY= 'linear'   ! To turn on non linear bracket term
   REAL(xp), PUBLIC, PROTECTED ::    mu_x =  0._xp     ! spatial    x-Hyperdiffusivity coefficient (for num. stability)
@@ -39,6 +38,11 @@ MODULE model
   LOGICAL,  PUBLIC, PROTECTED :: FORCE_SYMMETRY = .false.
   ! Add or remove the ExB nonlinear correction (Mcmillan 2019)
   LOGICAL,  PUBLIC, PROTECTED :: ExB_NL_CORRECTION = .true.
+  CHARACTER(len=16), &
+  PUBLIC, PROTECTED           :: KN_MODEL  =  'std'   ! Kernel model
+  INTEGER,  PUBLIC, PROTECTED :: ORDER     = 1        ! order for Taylor expansion
+  INTEGER,  PUBLIC, PROTECTED :: ORDER_NUM = 2        ! numerator order for Pade approx
+  INTEGER,  PUBLIC, PROTECTED :: ORDER_DEN = 4        ! denominator order for Pade approx
 
   ! Module's routines
   PUBLIC :: model_readinputs, model_outputinputs
@@ -52,11 +56,11 @@ CONTAINS
     USE prec_const,     ONLY: xp
     IMPLICIT NONE
 
-    NAMELIST /MODEL/ KERN, LINEARITY, RM_LD_T_EQ, FORCE_SYMMETRY, MHD_PD, &
+    NAMELIST /MODEL/     LINEARITY, RM_LD_T_EQ, FORCE_SYMMETRY, MHD_PD, &
                          Na, ADIAB_E, ADIAB_I, q_i, tau_i, &
                          mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, &
                          nu, k_gB, k_cB, lambdaD, beta, ExBrate, ExB_NL_CORRECTION,&
-                         ikxZF, ZFrate, ZF_ONLY
+                         ikxZF, ZFrate, ZF_ONLY, KN_MODEL, ORDER, ORDER_NUM, ORDER_DEN
 
     READ(lu_in,model)
 
@@ -96,7 +100,6 @@ CONTAINS
     CHARACTER(len=256)  :: str
     WRITE(str,'(a)') '/data/input/model'
     CALL creatd(fid, 0,(/0/),TRIM(str),'Model Input')
-    CALL attach(fid, TRIM(str),      "KERN",    KERN)
     CALL attach(fid, TRIM(str), "LINEARITY", LINEARITY)
     CALL attach(fid, TRIM(str),"RM_LD_T_EQ",RM_LD_T_EQ)
     CALL attach(fid, TRIM(str),      "mu_x",    mu_x)
@@ -120,6 +123,10 @@ CONTAINS
     CALL attach(fid, TRIM(str),   "ADIAB_E", ADIAB_E)
     CALL attach(fid, TRIM(str),   "ADIAB_I", ADIAB_I)
     CALL attach(fid, TRIM(str),     "tau_i",   tau_i)
+    CALL attach(fid, TRIM(str),"kern model",KN_MODEL)
+    CALL attach(fid, TRIM(str), "order den",ORDER_DEN)
+    CALL attach(fid, TRIM(str), "order num",ORDER_NUM)
+    CALL attach(fid, TRIM(str),     "order",   ORDER)
   END SUBROUTINE model_outputinputs
 
 END MODULE model
