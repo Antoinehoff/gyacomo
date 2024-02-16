@@ -69,10 +69,7 @@ CONTAINS
             !!!!!!!!!!!!!!! adiabatic ion model
             ! Candy et al. 2007, rho_i = -q_i/tau_i phi
             IF (ADIAB_I) THEN
-              DO iz = 1,local_nz
-                izi = iz+ngz/2
-                rho(iz) = rho(iz) - 0*q_i/tau_i * phi(iky,ikx,izi)
-              ENDDO
+              ! No ion contribution
             ENDIF
 
             !!!!!!!!!!!!!!! Inverting the poisson equation
