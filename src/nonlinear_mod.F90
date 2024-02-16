@@ -94,6 +94,7 @@ SUBROUTINE compute_nonlinear
               ENDIF
               ! Second convolution terms
               G_cmpx = 0._xp ! initialization of the sum
+              ! We set smax as min(n+j,Jmax) for safety reason but nmaxarray may prevent it as well (see anti-Laguerre-aliasing truncation)
               smax   = MIN( jarray(ini)+jarray(iji), jmax );
               s1:DO is = 1, smax+1 ! sum truncation on number of moments
                 isi = is + ngj/2
