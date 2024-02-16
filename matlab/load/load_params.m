@@ -51,12 +51,19 @@ function [DATA] = load_params(DATA,filename)
     catch 
         DATA.inputs.ADIAB_I = 0;
     end
-    DATA.inputs.W_GAMMA   = h5readatt(filename,'/data/input/diagnostics','write_gamma') == 'y';
-    DATA.inputs.W_PHI     = h5readatt(filename,'/data/input/diagnostics','write_phi')   == 'y';
-    DATA.inputs.W_NA00    = h5readatt(filename,'/data/input/diagnostics','write_Na00')  == 'y';
-    DATA.inputs.W_NAPJ    = h5readatt(filename,'/data/input/diagnostics','write_Napj')  == 'y';
-    DATA.inputs.W_SAPJ    = h5readatt(filename,'/data/input/diagnostics','write_Sapj')  == 'y';
-
+    try
+        DATA.inputs.W_GAMMA   = h5readatt(filename,'/data/input/diagnostics','write_gamma') == 'y';
+        DATA.inputs.W_PHI     = h5readatt(filename,'/data/input/diagnostics','write_phi')   == 'y';
+        DATA.inputs.W_NA00    = h5readatt(filename,'/data/input/diagnostics','write_Na00')  == 'y';
+        DATA.inputs.W_NAPJ    = h5readatt(filename,'/data/input/diagnostics','write_Napj')  == 'y';
+        DATA.inputs.W_SAPJ    = h5readatt(filename,'/data/input/diagnostics','write_Sapj')  == 'y';
+    catch
+        DATA.inputs.W_GAMMA   = h5readatt(filename,'/data/input/diag_par','write_gamma') == 'y';
+        DATA.inputs.W_PHI     = h5readatt(filename,'/data/input/diag_par','write_phi')   == 'y';
+        DATA.inputs.W_NA00    = h5readatt(filename,'/data/input/diag_par','write_Na00')  == 'y';
+        DATA.inputs.W_NAPJ    = h5readatt(filename,'/data/input/diag_par','write_Napj')  == 'y';
+        DATA.inputs.W_SAPJ    = h5readatt(filename,'/data/input/diag_par','write_Sapj')  == 'y';
+    end
     % Species dependent parameters
     DATA.inputs.sigma = zeros(1,DATA.inputs.Na);
     DATA.inputs.tau   = zeros(1,DATA.inputs.Na);

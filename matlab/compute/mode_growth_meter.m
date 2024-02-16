@@ -6,10 +6,16 @@ d     = OPTIONS.fftz.flag;  % To add spectral evolution of z (useful for 3d zpin
 switch OPTIONS.FIELD
     case 'Ni00'
         FIELD = DATA.Ni00;
-        fname = 'N^{00}';
+        fname = 'Ni^{00}';
+    case 'Ne00'
+        FIELD = DATA.Ne00;
+        fname = 'Ne^{00}';
     case 'phi'
         FIELD = DATA.PHI;
         fname = '\phi';
+   case 'T_i'
+        FIELD = DATA.TEMP_I;
+        fname = 'T_i';
 end
 if numel(size(FIELD)) == 3
         field = squeeze(FIELD);
@@ -121,8 +127,13 @@ for i = 1:2
     %plot
 %     subplot(2+d,3,1+3*(i-1))
     FIGURE.axes(1+3*(i-1)) = subplot(2+d,3,1+3*(i-1),'parent',FIGURE.fig);
+    if MODES_SELECTOR == 2
         [YY,XX] = meshgrid(t,fftshift(k));
         pclr = pcolor(XX,YY,abs(plt(fftshift(field,MODES_SELECTOR),1:numel(k))));set(pclr, 'edgecolor','none');  hold on;
+    else
+        [YY,XX] = meshgrid(t,(k));
+        pclr = pcolor(XX,YY,abs(plt((field),1:numel(k))));set(pclr, 'edgecolor','none');  hold on;
+    end
         set(gca,'YDir','normal')
     %     xlim([t(1) t(end)]); %ylim([1e-5 1])
         xlabel(['$',kstr,'\rho_s$']); ylabel('$t c_s /R_0$');
@@ -138,10 +149,10 @@ for i = 1:2
             semilogy(t,plt(field,ikzf),'--k');
         end
         %plot the time window where the gr are measured
-        plot(t(it1)*[1 1],[1e-10 1],'--k')
-        plot(t(it2)*[1 1],[1e-10 1],'--k')
-        xlim([t(1) t(end)]); %ylim([1e-5 1])
+        xline(t(it1),'--k')
+        xline(t(it2),'--k')
         xlabel('$t c_s /R_0$'); ylabel(['$|',fname,'_{',kstr,'}|$']);
+        axis tight
         title('Measure time window')
 
 %     subplot(2+d,3,3+3*(i-1))

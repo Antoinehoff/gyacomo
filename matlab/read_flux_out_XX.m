@@ -1,4 +1,4 @@
-function [t_all, Pxi_all, Qxi_all, Pxe_all, Qxe_all] = read_flux_out_XX(folderPath,PLOT)
+function [out] = read_flux_out_XX(folderPath,PLOT)
     % Check if the prompt_string is provided as an argument
     if nargin < 1
         % If not provided, prompt the user for input
@@ -90,4 +90,11 @@ function [t_all, Pxi_all, Qxi_all, Pxe_all, Qxe_all] = read_flux_out_XX(folderPa
     legend('show');
     title('Radial heat flux')
     end
+
+
+    out.t   = t_all;
+    out.Pxi = Pxi_all;
+    out.Qxi = Qxi_all;
+    out.Pxe = Pxe_all;
+    out.Qxe = Qxe_all;
 end
