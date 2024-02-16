@@ -10,6 +10,7 @@ MODULE species
   REAL(xp)          :: q_                  ! Charge
   REAL(xp)          :: k_N_                ! density drive (L_ref/L_Ni)
   REAL(xp)          :: k_T_                ! temperature drive (L_ref/L_Ti)
+  REAL(xp)          :: mu_                 ! species-wise hyperdiffusion (not tested)
   !! Arrays to store all species features
   CHARACTER(len=32),&
             ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: name               ! name of the species
@@ -19,6 +20,7 @@ MODULE species
   REAL(xp), ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: k_N                ! density drive (L_ref/L_Ni)
   REAL(xp), ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: k_T                ! temperature drive (L_ref/L_Ti)
   REAL(xp), ALLOCATABLE, DIMENSION(:,:),PUBLIC, PROTECTED :: nu_ab              ! Collision frequency tensor
+  REAL(xp), ALLOCATABLE, DIMENSION(:),  PUBLIC, PROTECTED :: mu                 ! Hyperdiffusion
   !! Auxiliary variables to store precomputation
   REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: tau_q              ! factor of the magnetic moment coupling
   REAL(xp), ALLOCATABLE, DIMENSION(:),PUBLIC, PROTECTED :: q_tau              ! charge/temp ratio
@@ -43,7 +45,7 @@ CONTAINS
     INTEGER :: ia,ib
     ! expected namelist in the input file
     NAMELIST /SPECIES/ &
-      name_, tau_, sigma_, q_, k_N_, k_T_
+      name_, tau_, sigma_, q_, k_N_, k_T_, mu_
     ! allocate the arrays of species parameters
     CALL species_allocate
     ! loop over the species namelists in the input file
@@ -56,6 +58,7 @@ CONTAINS
       q_     = 1._xp
       k_N_   = 2.22_xp
       k_T_   = 6.96_xp
+      mu_    = 0._xp
       ! read input
       READ(lu_in,species)
       ! place values found in the arrays
@@ -66,6 +69,7 @@ CONTAINS
       k_N(ia)                = k_N_
       k_T(ia)                = k_T_
       tau_q(ia)              = tau_/q_
+      mu(ia)                 = mu_
       ! precompute factors
       q_tau(ia)              = q_/tau_
       sqrtTau_q(ia)          = sqrt(tau_)/q_
@@ -130,6 +134,7 @@ CONTAINS
       CALL attach(fid, TRIM(str),       "q",     q(ia))
       CALL attach(fid, TRIM(str),      "k_N",  k_N(ia))
       CALL attach(fid, TRIM(str),      "k_T",  k_T(ia))
+      CALL attach(fid, TRIM(str),       "mu",   mu(ia))
     ENDDO
   END SUBROUTINE species_outputinputs
 
@@ -144,6 +149,7 @@ CONTAINS
       ALLOCATE(                 q(Na))
       ALLOCATE(               k_N(Na))
       ALLOCATE(               k_T(Na))
+      ALLOCATE(                mu(Na))
       ALLOCATE(             tau_q(Na))
       ALLOCATE(             q_tau(Na))
       ALLOCATE(         sqrtTau_q(Na))
