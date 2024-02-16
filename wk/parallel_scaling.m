@@ -1,11 +1,12 @@
-DIR = '/misc/gyacomo23_outputs/scaling/strong/17x9x256x256x32/'; scaling='strong';
+% DIR = '/misc/gyacomo23_outputs/scaling/strong/17x9x256x256x32/'; scaling='strong';
 % DIR = '/misc/gyacomo23_outputs/scaling/strong/9x5x768x192x32/'; scaling='strong';
-% DIR = '/misc/gyacomo23_outputs/scaling/strong/3x2x768x192x32/'; scaling='strong';
+DIR = '/misc/gyacomo23_outputs/scaling/strong/3x2x768x192x32/'; scaling='strong';
 % DIR = '/misc/gyacomo23_outputs/scaling/weak/Np_5x2x128x64x32/'; scaling='weak';
 % DIR = '/misc/gyacomo23_outputs/scaling/weak/Ny_3x2x768x8x32/'; scaling='weak';
 % DIR = '/misc/gyacomo23_outputs/scaling/weak/Nz_3x2x768x32x8/'; scaling='weak';
 % DIR = '/misc/gyacomo23_outputs/scaling/weak/Nz_5x2x128x64x8/'; scaling='weak';
-% DIR = '/misc/gyacomo23_outputs/scaling/weak/Npyz_4x2x32x16x16/'; scaling='weak';
+% DIR = '/misc/gyacomo23_outputs/scaling/weak/Npyz_4x2x32x16x8/'; scaling='weak';
+% DIR = '/misc/gyacomo23_outputs/scaling/weak/Npyz_8x2x32x32x4/'; scaling='weak';
 
 % Get a list of all items in the current directory
 contents = dir(DIR);
@@ -76,31 +77,52 @@ Rt_ref = Rt_avg(Np_tot==1);
 Np_ref = 1;
 MaxN  = max(Np_tot);
 Np1Nz1 = logical((Np==1).*(Nz==1));
-Np2Nz1 = logical((Np==2).*(Nz==1));
 Np1Nz2 = logical((Np==1).*(Nz==2));
 Np1Nz4 = logical((Np==1).*(Nz==4));
+Np2Nz1 = logical((Np==2).*(Nz==1));
+Np2Nz2 = logical((Np==2).*(Nz==2));
+Np2Nz4 = logical((Np==2).*(Nz==4));
+Np4Nz1 = logical((Np==4).*(Nz==1));
+Np4Nz2 = logical((Np==4).*(Nz==2));
+Np4Nz4 = logical((Np==4).*(Nz==4));
 %%
-figure;  hold on;
+figure;  hold on; msz = 8;
 xlabel('Number of cores');
+clr_ = lines(3);
 switch scaling
 case 'strong'
-    plot(Np_tot(Np1Nz1),Rt_ref./Rt_avg(Np1Nz1),...
-        'o','DisplayName','$N_{pp}=1, N_{pz}=1$');
-    plot(Np_tot(Np2Nz1),Rt_ref./Rt_avg(Np2Nz1), ...
-        'o','DisplayName','$N_{pp}=2, N_{pz}=1$');
-    plot(Np_tot(Np1Nz2),Rt_ref./Rt_avg(Np1Nz2), ...
-        'o','DisplayName','$N_{pp}=1, N_{pz}=2$');
-    plot(Np_tot(Np1Nz4),Rt_ref./Rt_avg(Np1Nz4), ...
-        'o','DisplayName','$N_{pp}=1, N_{pz}=4$');
-    plot(1:MaxN,(1:MaxN)/Np_ref,'--k','DisplayName','Ideal');
+    plot(Np_tot(Np1Nz1),Rt_ref./Rt_avg(Np1Nz1),'o', ...
+        'Color',clr_(1,:),'DisplayName','$N_{pp}=1, N_{pz}=1$','MarkerSize',msz);
+    plot(Np_tot(Np1Nz2),Rt_ref./Rt_avg(Np1Nz2),'o',...
+        'Color',clr_(2,:),'DisplayName','$N_{pp}=1, N_{pz}=2$','MarkerSize',msz);
+    plot(Np_tot(Np1Nz4),Rt_ref./Rt_avg(Np1Nz4),'o', ...
+        'Color',clr_(3,:),'DisplayName','$N_{pp}=1, N_{pz}=4$','MarkerSize',msz);
+    plot(Np_tot(Np2Nz1),Rt_ref./Rt_avg(Np2Nz1),'x', ...
+        'Color',clr_(1,:),'DisplayName','$N_{pp}=2, N_{pz}=1$','MarkerSize',msz);
+    plot(Np_tot(Np2Nz2),Rt_ref./Rt_avg(Np2Nz2),'x', ...
+        'Color',clr_(2,:),'DisplayName','$N_{pp}=2, N_{pz}=2$','MarkerSize',msz);
+    plot(Np_tot(Np2Nz4),Rt_ref./Rt_avg(Np2Nz4),'x', ...
+        'Color',clr_(3,:),'DisplayName','$N_{pp}=2, N_{pz}=4$','MarkerSize',msz);   
+    plot(Np_tot(Np4Nz1),Rt_ref./Rt_avg(Np4Nz1),'+', ...
+        'Color',clr_(1,:),'DisplayName','$N_{pp}=4, N_{pz}=1$','MarkerSize',msz);
+    plot(Np_tot(Np4Nz2),Rt_ref./Rt_avg(Np4Nz2),'+', ...
+        'Color',clr_(2,:),'DisplayName','$N_{pp}=4, N_{pz}=2$','MarkerSize',msz);
+    plot(Np_tot(Np4Nz4),Rt_ref./Rt_avg(Np4Nz4),'+', ...
+        'Color',clr_(3,:),'DisplayName','$N_{pp}=4, N_{pz}=4$','MarkerSize',msz);   
+    plot(Np_tot,Rt_ref./Rt_avg,...
+        '.k','DisplayName','Strong scaling');
+    plot([1 1000],[1 1000],'--k','DisplayName','Ideal');
+    axis equal
     set(gca,'XScale','log'); set(gca,'YScale','log');
     ylabel('Speedup');
     % title('Strong scaling speedup')
 case 'weak'
     hold on;
-    filt = logical((Np==2).*(Ny>=1).*(Nz>=1));
-    plot(Np_tot(filt),Rt_ref./Rt_avg(filt),...
-        'o','DisplayName','Effective');
+    % for n = [1 2 4 8 12]
+        filt = logical((Np>=1).*(Ny>=1).*(Nz>=1));
+        plot(Np_tot(filt),Rt_ref./Rt_avg(filt),...
+            'o','DisplayName','Effective');
+    % end
     plot(1:MaxN,ones(1,MaxN),'--k','DisplayName','Ideal');
     ylim([0 1]);
     set(gca,'XScale','log')

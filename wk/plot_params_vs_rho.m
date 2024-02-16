@@ -3,6 +3,7 @@ function [ ] = plot_params_vs_rho(geom,prof_folder,rho,rho_min,rho_max,Lref,mref
 if FROMPROFILE
     % profiles = read_DIIID_profile([prof_folder,'/profiles.txt']);
     [params,profiles] = get_param_from_profiles(prof_folder,rho,Lref,mref,Bref,FROMPROFILE);
+    rho_a  = profiles.ne.x;
     m_e    = 9.11e-31;
     sigma  = sqrt(m_e/mref);
     TAU_a  = profiles.ti.y./profiles.te.y;
@@ -42,12 +43,15 @@ if FROMPROFILE
 else
     rho_a = linspace(rho_min,rho_max,100);
     
-    NU_a   = zeros(size(rho_a));
-    BETA_a = zeros(size(rho_a));
-    K_Ne_a = zeros(size(rho_a));
-    K_Ti_a = zeros(size(rho_a));
-    K_Te_a = zeros(size(rho_a));
-    
+    NU_a    = zeros(size(rho_a));
+    BETA_a  = zeros(size(rho_a));
+    K_Ne_a  = zeros(size(rho_a));
+    K_Ti_a  = zeros(size(rho_a));
+    K_Te_a  = zeros(size(rho_a));
+    Kappa_a = zeros(size(rho_a));
+    Delta_a = zeros(size(rho_a));
+    Zeta_a  = zeros(size(rho_a));
+    geom_a  = cell(size(rho_a));
     for i = 1:numel(rho_a)
         rho_ = rho_a(i);
         [params,profiles] = get_param_from_profiles(prof_folder,rho_,Lref,mref,Bref,FROMPROFILE);
@@ -56,6 +60,12 @@ else
         K_Ne_a(i) = params.K_Ne;
         K_Ti_a(i) = params.K_Ti;
         K_Te_a(i) = params.K_Te;
+
+        geom_      = get_miller_GENE_py(prof_folder,rho_);
+        Kappa_a(i) = geom_.kappa;
+        Delta_a(i) = geom_.delta;
+        Zeta_a(i)  = geom_.zeta;
+        geom_a{i}  = geom_;
     end
     figure
     subplot(231)
@@ -88,8 +98,15 @@ else
         grid on
 end
     subplot(133)
-    [R,Z] = plot_miller(geom,rho,32,0);
-    plot(R,Z,'-b');
+    [R,Z] = plot_miller(geom,rho,128,0);
+    plot(R,Z,'-b'); hold on
+    % rhos = linspace(0.09,0.99,6);
+    % for i = 1:numel(rhos)
+    %     rho_ = rhos(i);
+    %     geom_      = get_miller_GENE_py(prof_folder,rho_);
+    %     [R,Z] = plot_miller(geom_,rho_,128,0);
+    %     plot(R,Z,'-k');        
+    % end
     xlabel('R [m]');
     ylabel('Z [m]');
     axis tight

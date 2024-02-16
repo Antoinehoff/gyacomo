@@ -6,12 +6,12 @@ function [FIG, b_angle, phib, psib, ky_] = plot_ballooning(DATA,OPTIONS)
     [~,ikyarray] = min(abs(DATA.grids.ky - OPTIONS.kymodes));
     ikyarray = unique(ikyarray);
     dz = DATA.grids.z(2) - DATA.grids.z(1);
-    phi_real=real(DATA.PHI(:,:,:,it1));
-    phi_imag=imag(DATA.PHI(:,:,:,it1));
+    phi_real=mean(real(DATA.PHI(:,:,:,it0:it1)),4);
+    phi_imag=mean(imag(DATA.PHI(:,:,:,it0:it1)),4);
     ncol = 1;
     if DATA.inputs.BETA > 0
-        psi_real=real(DATA.PSI(:,:,:,it1));
-        psi_imag=imag(DATA.PSI(:,:,:,it1)); 
+        psi_real=mean(real(DATA.PSI(:,:,:,it0:it1)),4);
+        psi_imag=mean(imag(DATA.PSI(:,:,:,it0:it1)),4); 
         ncol = 2;
     end
     if OPTIONS.PLOT_KP
@@ -50,12 +50,12 @@ function [FIG, b_angle, phib, psib, ky_] = plot_ballooning(DATA,OPTIONS)
         title(['$k_y=',sprintf('%2.2f',DATA.grids.ky(iky)),...
                ',t_{avg}\in [',sprintf('%1.1f',DATA.Ts3D(it0)),',',sprintf('%1.1f',DATA.Ts3D(it1)),']$']);
         % z domain start end point
-        for i_ = 2*[1:DATA.grids.Nkx-1]-(DATA.grids.Nkx+1)
-            xline(DATA.grids.Npol*(i_),'HandleVisibility','off'); hold on;
-        end
-        for i_ = 2*[2:DATA.grids.Nkx]-(DATA.grids.Nkx+1)
-            xline(DATA.grids.Npol*(i_)-dz/pi,'HandleVisibility','off'); hold on;
-        end
+        % for i_ = 2*[1:DATA.grids.Nkx-1]-(DATA.grids.Nkx+1)
+        %     xline(DATA.grids.Npol*(i_),'HandleVisibility','off'); hold on;
+        % end
+        % for i_ = 2*[2:DATA.grids.Nkx]-(DATA.grids.Nkx+1)
+        %     xline(DATA.grids.Npol*(i_)-dz/pi,'HandleVisibility','off'); hold on;
+        % end
         if DATA.inputs.BETA > 0         
             [psib_real,b_angle] = ballooning_representation(psi_real,DATA.inputs.SHEAR,DATA.grids.Npol,DATA.grids.kx,iky,DATA.grids.ky,DATA.grids.z);
             [psib_imag,~]       = ballooning_representation(psi_imag,DATA.inputs.SHEAR,DATA.grids.Npol,DATA.grids.kx,iky,DATA.grids.ky,DATA.grids.z);
@@ -71,12 +71,12 @@ function [FIG, b_angle, phib, psib, ky_] = plot_ballooning(DATA,OPTIONS)
 
             legend('real','imag','norm')
             % z domain start end point
-            for i_ = 2*[1:DATA.grids.Nkx-1]-(DATA.grids.Nkx+1)
-                xline(DATA.grids.Npol*(i_),'HandleVisibility','off'); hold on;
-            end
-            for i_ = 2*[2:DATA.grids.Nkx]-(DATA.grids.Nkx+1)
-                xline(DATA.grids.Npol*(i_)-dz/pi,'HandleVisibility','off'); hold on;
-            end
+            % for i_ = 2*[1:DATA.grids.Nkx-1]-(DATA.grids.Nkx+1)
+            %     xline(DATA.grids.Npol*(i_),'HandleVisibility','off'); hold on;
+            % end
+            % for i_ = 2*[2:DATA.grids.Nkx]-(DATA.grids.Nkx+1)
+            %     xline(DATA.grids.Npol*(i_)-dz/pi,'HandleVisibility','off'); hold on;
+            % end
             xlabel('$\chi / \pi$')
             ylabel('$\psi_B (\chi)$');
             title(['$k_y=',sprintf('%2.2f',DATA.grids.ky(iky)),...
@@ -89,12 +89,12 @@ function [FIG, b_angle, phib, psib, ky_] = plot_ballooning(DATA,OPTIONS)
             subplot(numel(ikyarray),ncol,ncol*(iplot-1)+3)
             plot(b_angle/pi, kperpb,'-k'); hold on;
             % z domain start end point
-            for i_ = 2*[1:DATA.grids.Nkx-1]-(DATA.grids.Nkx+1)
-                xline(DATA.grids.Npol*(i_),'HandleVisibility','off'); hold on;
-            end
-            for i_ = 2*[2:DATA.grids.Nkx]-(DATA.grids.Nkx+1)
-                xline(DATA.grids.Npol*(i_)-dz/pi,'HandleVisibility','off'); hold on;
-            end
+            % for i_ = 2*[1:DATA.grids.Nkx-1]-(DATA.grids.Nkx+1)
+            %     xline(DATA.grids.Npol*(i_),'HandleVisibility','off'); hold on;
+            % end
+            % for i_ = 2*[2:DATA.grids.Nkx]-(DATA.grids.Nkx+1)
+            %     xline(DATA.grids.Npol*(i_)-dz/pi,'HandleVisibility','off'); hold on;
+            % end
             xlabel('$\chi / \pi$')
             ylabel('$k_\perp (\chi)$');
             title(['$k_y=',sprintf('%2.2f',DATA.grids.ky(iky)),...

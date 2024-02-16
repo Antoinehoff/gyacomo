@@ -29,7 +29,7 @@ while(CONTINUE)
         DATA.outfilenames{ii} = filename;
         %test if it is corrupted or currently running
         try
-            openable = ~isempty(h5read(filename,'/data/var3d/time'));
+            openable = ~isempty(h5read(filename,'/data/var0d/time'));
         catch
             openable = 0;
         end
@@ -38,13 +38,25 @@ while(CONTINUE)
             fprintf('Loading ID %.2d (%s)\n',JOBNUM,filename);
             % loading input parameters
             DATA.(sprintf('fort_%.2d',JOBNUM)) = struct();
-            DATA.(sprintf('fort_%.2d',JOBNUM)) = read_namelist(fortname);
+            % cp the STDIN.XX from the output file to the directory to load
+            tmpfort = [fortname,'.tmp'];
+            fid = fopen(tmpfort,'wt');
+            input_string = h5read(filename,sprintf('/files/STDIN.%.2d',JOBNUM));
+            fprintf(fid, input_string);
+            fclose(fid);
+            DATA.(sprintf('fort_%.2d',JOBNUM)) = read_namelist(tmpfort);
+            system(['rm ',tmpfort]); % clean it
             % Loading from output file
             CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
             DT_SIM    = h5readatt(filename,'/data/input/basic','dt');
             [Parray, Jarray, kx, ky, z] = load_grid_data(filename);
-            W_GAMMA   = strcmp(h5readatt(filename,'/data/input/diagnostics','write_gamma'),'y');
-            W_HF      = strcmp(h5readatt(filename,'/data/input/diagnostics','write_hf'   ),'y');
+            try
+                W_GAMMA   = strcmp(h5readatt(filename,'/data/input/diagnostics','write_gamma'),'y');
+                W_HF      = strcmp(h5readatt(filename,'/data/input/diagnostics','write_hf'   ),'y');
+            catch
+                W_GAMMA   = strcmp(h5readatt(filename,'/data/input/diag_par','write_gamma'),'y');
+                W_HF      = strcmp(h5readatt(filename,'/data/input/diag_par','write_hf'   ),'y');
+           end
             KIN_E     = strcmp(h5readatt(filename,'/data/input/model',     'ADIAB_E' ),'n');
             BETA      = h5readatt(filename,'/data/input/model','beta');
 

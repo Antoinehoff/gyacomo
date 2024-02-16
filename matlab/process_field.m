@@ -8,45 +8,44 @@ for i = 1:numel(OPTIONS.TIME)
     [~,FRAMES(i)] =min(abs(OPTIONS.TIME(i)-DATA.Ts3D));
 end
 FRAMES = unique(FRAMES);
+TIME   = DATA.Ts3D(FRAMES);
 %% Setup the plot geometry
 [KX, KY] = meshgrid(DATA.grids.kx, DATA.grids.ky);
 directions = {'y','x','z'};
 Nx = DATA.grids.Nx; Ny = DATA.grids.Ny; Nz = DATA.grids.Nz; Nt = numel(FRAMES);
-POLARPLOT = OPTIONS.POLARPLOT;
 LTXNAME = OPTIONS.NAME;
+SKIP_COMP = 0; % Turned on only for kin. distr. func. plot;
+Z = 0;
 switch OPTIONS.PLAN
     case 'xy'
-        XNAME = '$x$'; YNAME = '$y$';
+        XNAME = '$x/\rho_s$'; YNAME = '$y/\rho_s$';
         [X,Y] = meshgrid(DATA.grids.x,DATA.grids.y);
         REALP = 1; COMPDIM = 3; POLARPLOT = 0; SCALE = 1;
     case 'xz'
-        XNAME = '$x$'; YNAME = '$z$';
+        XNAME = '$x/\rho_s$'; YNAME = '$z/L_\parallel$';
         [Y,X] = meshgrid(DATA.grids.z,DATA.grids.x);
-        REALP = 1; COMPDIM = 1; SCALE = 0;
+        REALP = 1; COMPDIM = 1; SCALE = 0; POLARPLOT = 0;
     case 'yz'
-        XNAME = '$y$'; YNAME = '$z$'; 
+        XNAME = '$y/\rho_s$'; YNAME = '$z/L_\parallel$'; 
         [Y,X] = meshgrid(DATA.grids.z,DATA.grids.y);
-        REALP = 1; COMPDIM = 2; SCALE = 0;
+        REALP = 1; COMPDIM = 2; POLARPLOT = 0; SCALE = 0;
     case 'kxky'
-        XNAME = '$k_x$'; YNAME = '$k_y$';
+        XNAME = '$k_x\rho_s$'; YNAME = '$k_y\rho_s$';
         [X,Y] = meshgrid(DATA.grids.kx,DATA.grids.ky);
         REALP = 0; COMPDIM = 3; POLARPLOT = 0; SCALE = 1;
     case 'kxz'
-        XNAME = '$k_x$'; YNAME = '$z$';
+        XNAME = '$k_x\rho_s$'; YNAME = '$z/L_\parallel$';
         [Y,X] = meshgrid(DATA.grids.z,DATA.grids.kx);
         REALP = 0; COMPDIM = 1; POLARPLOT = 0; SCALE = 0;
     case 'kyz'
-        XNAME = '$k_y$'; YNAME = '$z$';
+        XNAME = '$k_y\rho_s$'; YNAME = '$z/L_\parallel$';
         [Y,X] = meshgrid(DATA.grids.z,DATA.grids.ky);
         REALP = 0; COMPDIM = 2; POLARPLOT = 0; SCALE = 0;
-    case 'sx'
-        XNAME = '$v_\parallel$'; YNAME = '$\mu$';
-        [Y,X] = meshgrid(OPTIONS.XPERP,OPTIONS.SPAR);
-        REALP = 1; COMPDIM = 3; POLARPLOT = 0; SCALE = 0;
-        for i = 1:numel(OPTIONS.TIME)
-            [~,FRAMES(i)] =min(abs(OPTIONS.TIME(i)-DATA.Ts5D));
-        end
-        FRAMES = unique(FRAMES); Nt = numel(FRAMES);
+    case 'xyz'
+        XNAME = '$x/\rho_s$'; YNAME = '$y/\rho_s$';
+        [X,Y] = meshgrid(DATA.grids.x,DATA.grids.y);
+        REALP = 1; COMPDIM = 3; POLARPLOT = 0; SCALE = 1;
+        SKIP_COMP = 1; OPTIONS.COMP = 3;
 end
 Xmax_ = max(max(abs(X))); Ymax_ = max(max(abs(Y)));
 Lmin_ = min([Xmax_,Ymax_]);
@@ -73,29 +72,6 @@ else
     FIELD = zeros(sz(1),sz(2),Nt);
 end
 %% Process the field to plot
-% short term writing --
-% b_e = DATA.sigma_e*sqrt(2*DATA.tau_e)*sqrt(KX.^2+KY.^2);
-% adiab_e = kernel(0,b_e);
-% pol_e        = kernel(0,b_e).^2;
-% for n = 1:DATA.Jmaxe
-%     adiab_e = adiab_e + kernel(n,b_e).^2;
-%     pol_e   = pol_e + kernel(n,b_e).^2;
-% end
-% adiab_e = DATA.q_e/DATA.tau_e .* adiab_e;
-% pol_e   = DATA.q_e^2/DATA.tau_e * (1 - pol_e);
-% 
-% b_i = DATA.sigma_i*sqrt(2*DATA.tau_i)*sqrt(KX.^2+KY.^2);
-% adiab_i = kernel(0,b_i);
-% pol_i        = kernel(0,b_i).^2;
-% for n = 1:DATA.Jmaxi
-%     adiab_i = adiab_i + kernel(n,b_i).^2;
-%     pol_i   = pol_i + kernel(n,b_i).^2;
-% end
-% pol_i      = DATA.q_i^2/DATA.tau_i * (1 - pol_i);
-% adiab_i    = DATA.q_i/DATA.tau_i .* adiab_i;
-% poisson_op = (pol_i + pol_e);
-adiab_e =0; adiab_i =0; poisson_op=1;
-SKIP_COMP = 0; % Turned on only for kin. distr. func. plot
 % --
 switch OPTIONS.COMP
     case 'avg'
@@ -112,18 +88,18 @@ switch OPTIONS.COMP
             i = OPTIONS.COMP;
             compr = @(x) x(i,:,:);
             if REALP
-                COMPNAME = sprintf(['y=','%2.1f'],DATA.grids.x(i));
+                COMPNAME = sprintf(['y=','%2.1f'],DATA.grids.y(i));
             else
-                COMPNAME = sprintf(['k_y=','%2.1f'],DATA.grids.kx(i));
+                COMPNAME = sprintf(['k_y=','%2.1f'],DATA.grids.ky(i));
             end
             FIELDNAME = [LTXNAME,'(',COMPNAME,')'];
         case 2
             i = OPTIONS.COMP;
             compr = @(x) x(:,i,:);
             if REALP
-                COMPNAME = sprintf(['x=','%2.1f'],DATA.grids.y(i));
+                COMPNAME = sprintf(['x=','%2.1f'],DATA.grids.x(i));
             else
-                COMPNAME = sprintf(['k_x=','%2.1f'],DATA.grids.ky(i));
+                COMPNAME = sprintf(['k_x=','%2.1f'],DATA.grids.kx(i));
             end
             FIELDNAME = [LTXNAME,'(',COMPNAME,')'];
         case 3
@@ -188,6 +164,10 @@ switch OPTIONS.NAME
         NAME = 'sx';
         FLD_ = DATA.PHI(:,:,:,FRAMES);
         OPE_ = KY.^2; 
+   case 'w_{Ez}' % x-comp of ExB shear
+        NAME = 'wEz';
+        FLD_ = DATA.PHI(:,:,:,FRAMES);
+        OPE_ = (KX.^2+KY.^2).*(abs(KX)<=2).*(abs(KY)<=2); 
    case '\omega_z' % ES pot vorticity
         NAME = 'vorticity';
         FLD_ = DATA.PHI(:,:,:,FRAMES);
@@ -206,11 +186,11 @@ switch OPTIONS.NAME
         OPE_ = 1;
     case 'n_i' % ion density
         NAME = 'ni';
-        FLD_ = DATA.DENS_I(:,:,:,FRAMES) - adiab_i.* DATA.PHI(:,:,:,FRAMES);
+        FLD_ = DATA.DENS_I(:,:,:,FRAMES);
         OPE_ = 1;  
     case 'n_e' % electron density
         NAME = 'ne';
-        FLD_ = DATA.DENS_E(:,:,:,FRAMES) - adiab_e.* DATA.PHI(:,:,:,FRAMES);
+        FLD_ = DATA.DENS_E(:,:,:,FRAMES);
         OPE_ = 1;
     case 'k^2n_e' % electron vorticity
         NAME = 'k2ne';
@@ -219,11 +199,23 @@ switch OPTIONS.NAME
     case 'n_i-n_e' % polarisation
         NAME = 'pol';
         OPE_ = 1;
-        FLD_ = ((DATA.DENS_I(:,:,:,FRAMES)- adiab_i.* DATA.PHI(:,:,:,FRAMES))...
-              -(DATA.DENS_E(:,:,:,FRAMES)- adiab_e.* DATA.PHI(:,:,:,FRAMES)));
+        FLD_ = DATA.DENS_I(:,:,:,FRAMES)...
+              -DATA.DENS_E(:,:,:,FRAMES);
+    case 'u_i' % ion density
+        NAME = 'ui';
+        FLD_ = DATA.UPAR_I(:,:,:,FRAMES);
+        OPE_ = 1;  
+    case 'u_e' % electron density
+        NAME = 'ue';
+        FLD_ = DATA.UPAR_E(:,:,:,FRAMES);
+        OPE_ = 1;
     case 'T_i' % ion temperature
         NAME = 'Ti';
         FLD_ = DATA.TEMP_I(:,:,:,FRAMES);
+        OPE_ = 1; 
+    case 'T_e' % ion temperature
+        NAME = 'Te';
+        FLD_ = DATA.TEMP_E(:,:,:,FRAMES);
         OPE_ = 1; 
     case 'G_x' % ion particle flux
         NAME = 'Gx';
@@ -238,24 +230,55 @@ switch OPTIONS.NAME
 %                 tmp(:,:,iz) = abs(fftshift((squeeze(fft2(gx_,DATA.grids.Ny,DATA.grids.Nx))),2));
                 tmp(:,:,iz) = abs((squeeze(fft2(gx_,DATA.grids.Ny,DATA.grids.Nx))));
             end
-            FLD_(:,:,it)= squeeze(compr(tmp(1:DATA.grids.Nky,1:DATA.grids.Nkx,:)));
-        end   
-    case 'Q_x' % ion heat flux
-        NAME = 'Qx';
-        % FLD_ = 0.*DATA.PHI(:,:,:,FRAMES);
+            FLD_(:,:,:,it)= squeeze((tmp(1:DATA.grids.Nky,1:DATA.grids.Nkx,:)));
+        end  
+    case 'n_i T_i' % ion heat flux
+        NAME = 'niTi';
+        FLD_ = 0.*DATA.PHI(:,:,:,FRAMES);
         OPE_ = 1;   
         for it = 1:numel(FRAMES)
-            tmp = zeros(DATA.grids.Ny,DATA.grids.Nx,Nz);
+            qx_c = zeros(DATA.grids.Ny,DATA.grids.Nx,Nz);
             for iz = 1:DATA.grids.Nz
-                vx_ = real((ifourier_GENE(-1i*KY.*(DATA.PHI   (:,:,iz,FRAMES(it))))));
-                ni_ = real((ifourier_GENE(         DATA.DENS_I(:,:,iz,FRAMES(it)))));
-                Ti_ = real((ifourier_GENE(         DATA.TEMP_I(:,:,iz,FRAMES(it)))));
-                qx_ = vx_.*ni_.*Ti_;
-%                 tmp(:,:,iz) = abs(fftshift((squeeze(fft2(gx_,DATA.grids.Ny,DATA.grids.Nx))),2));
-                tmp(:,:,iz) = abs((squeeze(fft2(qx_,DATA.grids.Ny,DATA.grids.Nx))));
+                ni_  = real((ifourier_GENE(         DATA.DENS_I(:,:,iz,FRAMES(it)))));
+                Ti_  = real((ifourier_GENE(         DATA.TEMP_I(:,:,iz,FRAMES(it)))));
+                cx_r = ni_.*Ti_;
+                cx_ = fft(cx_r,[],1);
+                cx_c(:,:,iz) = fft(cx_ ,[],2);
             end
-            FLD_(:,:,:,it)= squeeze(tmp(1:DATA.grids.Nky,1:DATA.grids.Nkx,:));
-        end     
+            FLD_(:,:,:,it)= squeeze(cx_c(1:DATA.grids.Nky,1:DATA.grids.Nkx,:))./numel(qx_c);
+        end
+    case 'Q_{xi}' % ion heat flux
+        NAME = 'Qxi';
+        FLD_ = 0.*DATA.PHI(:,:,:,FRAMES);
+        OPE_ = 1;   
+        for it = 1:numel(FRAMES)
+            qx_c = zeros(DATA.grids.Ny,DATA.grids.Nx,Nz);
+            for iz = 1:DATA.grids.Nz
+                vx_  = real((ifourier_GENE(-1i*KY.*(DATA.PHI   (:,:,iz,FRAMES(it))))));
+                ni_  = real((ifourier_GENE(         DATA.DENS_I(:,:,iz,FRAMES(it)))));
+                Ti_  = real((ifourier_GENE(         DATA.TEMP_I(:,:,iz,FRAMES(it)))));
+                qx_r = vx_.*ni_.*Ti_;
+                qx_ = fft(qx_r,[],1);
+                qx_c(:,:,iz) = fft(qx_ ,[],2);
+            end
+            FLD_(:,:,:,it)= squeeze(qx_c(1:DATA.grids.Nky,1:DATA.grids.Nkx,:))./numel(qx_c);
+        end
+    case 'Q_{xe}' % electron heat flux
+        NAME = 'Qxe';
+        FLD_ = 0.*DATA.PHI(:,:,:,FRAMES);
+        OPE_ = 1;   
+        for it = 1:numel(FRAMES)
+            qx_c = zeros(DATA.grids.Ny,DATA.grids.Nx,Nz);
+            for iz = 1:DATA.grids.Nz
+                vx_  = real((ifourier_GENE(-1i*KY.*(DATA.PHI   (:,:,iz,FRAMES(it))))));
+                ne_  = real((ifourier_GENE(         DATA.DENS_E(:,:,iz,FRAMES(it)))));
+                Te_  = real((ifourier_GENE(         DATA.TEMP_E(:,:,iz,FRAMES(it)))));
+                qx_r = vx_.*ne_.*Te_;
+                qx_ = fft(qx_r,[],1);
+                qx_c(:,:,iz) = fft(qx_ ,[],2);
+            end
+            FLD_(:,:,:,it)= squeeze(qx_c(1:DATA.grids.Nky,1:DATA.grids.Nkx,:))./numel(qx_c);
+        end    
     case 'f_i'
         SKIP_COMP = 1;
         shift_x = @(x) x; shift_y = @(y) y;
@@ -284,29 +307,34 @@ switch OPTIONS.NAME
 end
 % Process the field according to the 2D plane and the space (real/cpx)
 if ~SKIP_COMP
-if COMPDIM == 3
-    for it = 1:numel(FRAMES)
-        tmp = squeeze(compr(OPE_.*FLD_(:,:,:,it)));
-        FIELD(:,:,it) = squeeze(process(tmp));
+    if COMPDIM == 3
+        for it = 1:numel(FRAMES)
+            tmp = squeeze(compr(OPE_.*FLD_(:,:,:,it)));
+            FIELD(:,:,it) = squeeze(process(tmp));
+        end
+    else
+        if REALP
+            tmp = zeros(Ny,Nx,Nz);
+        else
+            tmp = zeros(DATA.grids.Nky,DATA.grids.Nkx,Nz);
+        end
+        for it = 1:numel(FRAMES)
+            for iz = 1:numel(DATA.grids.z)
+                tmp(:,:,iz) = squeeze(process(OPE_.*FLD_(:,:,iz,it)));
+            end
+            FIELD(:,:,it) = squeeze(compr(tmp));
+        end                
     end
 else
-    if REALP
-        tmp = zeros(Ny,Nx,Nz);
-    else
-        tmp = zeros(DATA.grids.Nky,DATA.grids.Nkx,Nz);
-    end
-    for it = 1:numel(FRAMES)
-        for iz = 1:numel(DATA.grids.z)
-            tmp(:,:,iz) = squeeze(process(OPE_.*FLD_(:,:,iz,it)));
-        end
-        FIELD(:,:,it) = squeeze(compr(tmp));
-    end                
-end
+    clear FIELD;
+    FIELD = squeeze(process(FLD_));
 end
 TOPLOT.FIELD     = FIELD;
+TOPLOT.TIME      = TIME;
 TOPLOT.FRAMES    = FRAMES;
 TOPLOT.X         = shift_x(X);
 TOPLOT.Y         = shift_y(Y);
+TOPLOT.Z         = Z;
 TOPLOT.FIELDNAME = FIELDNAME;
 TOPLOT.XNAME     = XNAME;
 TOPLOT.YNAME     = YNAME;
@@ -315,5 +343,6 @@ TOPLOT.DIMENSIONS= DIMENSIONS;
 TOPLOT.ASPECT    = ASPECT;
 TOPLOT.FRAMES    = FRAMES;
 TOPLOT.INTERP    = INTERP;
+
 end
 

@@ -15,10 +15,8 @@ ADIAB_E = (NA==1);          % adiabatic electron model
 BETA    = 0.0;              % electron plasma beta
 EXBRATE = 0.0;              % Background ExB shear flow
 %% Set up grid parameters
-P = 4;
-J = 2;%P/2;
-PMAX = P;                   % Hermite basis size
-JMAX = J;                   % Laguerre basis size
+PMAX = 4;                   % Hermite basis size
+JMAX = 2;                   % Laguerre basis size
 NX = 8;                     % real space x-gridpoints
 NY = 12;                    % real space y-gridpoints
 LX = 2*pi/0.05;              % Size of the squared frequency domain in x direction

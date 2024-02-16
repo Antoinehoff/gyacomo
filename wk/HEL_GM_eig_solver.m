@@ -1,24 +1,33 @@
 % We formulate the linear system as dN/dt + A*N = 0
+% parameters
+q     = 1;                          % Safety factor
+Jxyz  = 1;                          % Jacobian
+hatB  = 1;                          % normalized B field
+dzlnB = 0;                          % B parallel derivative
+ddz   = 0;                          % parallel derivative operator
+tau   = 0.001;                      % ion-electron temperature ratio
+IVAN  = 0;                          % flag for Ivanov scaling
+kT    = 7;                       % scaled temperature gradient
+chi   = 0.16;                       % scaled collisionality
+kx_a  = 0;linspace(-2.0,2.0,256);   % radial fourier grid 
+ky_a  = linspace(0.01,5,256);       % binormal fourier grid
 
-q  = 1;
-Jxyz = 1; hatB = 1; dzlnB = 0;
-ddz  = 0;
-tau = 0.001;
-IVAN = 1;
+% translate into parameters in GM formulation
+RN = 0;
+RT = kT*2*q/tau;
+NU = chi*3/2/tau/(4-IVAN*2.25);
+MU = 0.0;
+
 %ordering
 O1_n    = 1;
 O1_u    = 1-IVAN;
 O1_Tpar = 1-IVAN;
 O1_Tper = 1-IVAN;
 
-RN = 0;
-RT = 1*2*q/tau;
-NU = 0.1*3/2/tau/(4-IVAN*2.25);
-MU = 0.0;
-
-kx_a = 0;linspace(-2.0,2.0,256);
-ky_a = linspace(0.01,3.5,256);
+% array of most unstable growth rates and corresponding frequencies
 g_a  = zeros(numel(kx_a),numel(ky_a)); w_a = g_a;
+
+% Evaluation of the matrices and solver
 for i = 1:numel(kx_a)
 for j = 1:numel(ky_a)
     kx    = kx_a(i);
@@ -116,26 +125,8 @@ for j = 1:numel(ky_a)
     CDG(4,3) =-2/3*sqrt(2)*K0*(K0-2*K1*O1_Tper);
     CDG(4,4) = 4/3*(K0-2*K1*O1_Tper)^2 + 2*tau*(K0-K1)^2*lperp*O1_Tper;
     CDG(4,5) =-2/3*q/tau*(K0-K1)*(3*tau*K0^2*lperp-K0*K1*(4+3*tau*lperp)+K1^2*(8+3*tau*lperp));
-    if 1
-        C = NU*(CLB + CDG);
-    else %to check
-        C = zeros(4,5);
-        C(1,1) = -2/3*tau*lperp*(4*tau*lperp);
-        C(1,3) = -2/3*tau*lperp*(sqrt(2)-2*sqrt(2)*tau*lperp);
-        C(1,4) = -2/3*tau*lperp*(1-tau*lperp);
-        C(1,5) = -2/3*tau*lperp*(5*q*lperp - 11*q*tau*lperp^2);
-        C(2,2) = -(1+2*tau*lperp);
-        C(3,1) = -2/3*(sqrt(2)*tau*lperp);
-        C(3,3) = -2/3*(2+5*tau*lperp);
-        C(3,4) = -2/3*(sqrt(2)-4*sqrt(2)*tau*lperp);
-        C(3,5) = -2/3*(2*sqrt(2)*q*lperp+8*sqrt(2)*q*tau*lperp^2);
-        C(4,1) = -2/3*(tau*lperp - tau^2*lperp^2);
-        C(4,3) = -2/3*(sqrt(2)*4*sqrt(2)*tau*lperp);
-        C(4,4) = -2/3*(1+12*tau*lperp);
-        C(4,5) = -2/3*(2*q*lperp+9*q*tau*lperp^2);
-        C      = NU*C;
+    C = NU*(CLB + CDG);
 
-    end
     % Numerical diffusion
     Diff = MU*lperp^2*eye(4);
 
@@ -166,7 +157,11 @@ for j = 1:numel(ky_a)
     gamma  =-real(lambda);
     omega  = imag(lambda);
     [g_a(i,j),idx] = max(gamma);
-    % w_a(i,j) = omega(idx);
+    % gsorted = sort(gamma);
+    % g_a(i,j) = gsorted(1);
+    w_a(i,j) = omega(idx);
+    % wsorted = sort(omega);
+    % g_a(i,j) = wsorted(1);
     w_a(i,j) = max(omega);
 end
 end

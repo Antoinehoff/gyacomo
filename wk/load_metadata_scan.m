@@ -11,7 +11,7 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0'
 % datafname = 'lin_DIIID_Oak_Nelson_high_density_NT_scan/6x32_ky_0.01_10_P_2_8_kN_1.0883_LDGK_0.0080915_be_0.0015991.mat';
 % rho = 0.95
 % datagname = 'lin_DIIID_Oak_Nelson_high_density_PT_scan/6x32_ky_0.01_10_P_2_8_kN_0.62888_LDGK_0.0046858_be_0.0048708.mat';
-datafname = 'lin_DIIID_Oak_Nelson_high_density_NT_scan/6x32_ky_0.01_10_P_2_8_kN_1.6989_LDGK_0.0167_be_0.00075879.mat';
+datafname = 'lin_DIIID_Oak_Nelson_high_density_PT_scan/6x32_ky_0.01_10_P_2_4_kN_0.62888_DGGK_0.0046858_be_0.0048708.mat';
 %% Chose if we filter gamma>0.05
 FILTERGAMMA = 1;
 

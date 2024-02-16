@@ -14,87 +14,38 @@ GETFLUXSURFACE = 0;
 
 % partition= '../results/paper_3/';
 % Get the scan directory
-switch 6
-    case 1 % delta kappa scan
-        casename = 'DTT rho85';
-        partition= '/misc/gyacomo23_outputs/paper_3/DTT_rho85_geom_scan/';
-        scandir = 'P2_J1_delta_kappa_scan'; scanname= '(2,1)';
-        % scandir = 'P4_J2_delta_kappa_scan'; scanname= '(4,2)';
-        nml1 = 'GEOMETRY'; pnam1 = '$\delta$'; attr1 = 'delta'; pref1 = 0.23; scale1 =1.0;
-        nml2 = 'GEOMETRY'; pnam2 = '$\kappa$'; attr2 = 'kappa'; pref2 = 1.53; scale2 =1.0;
-        t1 = 50; t2 = 150;
-    case 2 % shear safety factor scan
-        casename = 'DTT rho85';
-        partition= '/misc/gyacomo23_outputs/paper_3/DTT_rho85_geom_scan/';
-        scandir = 'P2_J1_PT_sfact_shear_scan'; scanname= '(2,1)';
-        % scandir = 'P2_J1_NT_sfact_shear_scan'; scanname= '(2,1)';
-        nml1 = 'GEOMETRY'; pnam1 = '$\hat s$'; attr1 = 'shear'; pref1 = 3.63; scale1 =1.0;
-        nml2 = 'GEOMETRY'; pnam2 = '$q_0$';    attr2 = 'q0';    pref2 =-2.15; scale2 =1.0;
-        t1 = 50; t2 = 150;
-    case 3
-        casename = 'DTT rho85';
-        partition= '/misc/gyacomo23_outputs/paper_3/DTT_rho85_geom_scan/';
-        % scandir = 'P2_J1_delta_nuDGGK_scan';       scanname= 'DG (2,1)';
-        % scandir = 'P4_J2_delta_nuDGGK_scan';      scanname= 'DG (4,2)';
-        % scandir = 'P8_J4_delta_nuDGGK_conv_test'; scanname= 'DG (8,4)';
-        % scandir = 'P2_J1_delta_nuSGGK_scan';      scanname= 'SG (2,1)';
-        % scandir = 'P4_J2_delta_nuSGGK_scan';      scanname= 'SG (4,2)';
-        % scandir = 'P8_J4_delta_nuSGGK_conv_test'; scanname= 'SG (8,4)';
-        % scandir = 'P4_J2_delta_nuSGGKii_scan';    scanname= 'SGii (4,2)';
-        scandir = 'P2_J1_delta_nuLDGK_scan';      scanname= 'LD (2,1)';
-        % scandir = 'P4_J2_delta_nuLDGK_scan';      scanname= 'LD (4,2)';
-        nml1 = 'GEOMETRY'; pnam1 = '$\delta$'; attr1 = 'delta'; pref1 = 0.23; scale1 =1.0;
-        nml2 = 'MODEL';    pnam2 = '$\nu$';    attr2 = 'nu';    pref2 = 0.5;  scale2 =1.0;
-        t1 = 50; t2 = 150;
-    case 4 % shear delta scan
-        casename = 'DIIID rho95';
-        partition= '/misc/gyacomo23_outputs/paper_3/DIIID_cold_ions_rho95_geom_scan/';
-        scandir = '3x2x192x48x32_RT_2500_delta_shear_scan'; scanname= 'CI DG RT 2500';
-        % scandir = '3x2x256x64x48_delta_shear_scan';
-        nml1 = 'GEOMETRY'; pnam1 = '$\delta$'; attr1 = 'delta'; pref1 = 0;   scale1 =1.0;
-        nml2 = 'GEOMETRY'; pnam2 = '$\hat s$'; attr2 = 'shear'; pref2 = 0.8; scale2 =1.0;
-        t1 = 50; t2 = 150;
-    case 5 % delta K_T tau=1
+switch 2
+    case 1 % delta K_T tau=1
         casename = 'DIIID rho95 $\tau=1$';
         partition= '../results/paper_3/DIIID_tau_1_rho95_geom_scan/';  
-        % scandir = '3x2x192x48x32_delta_RT_scan'; scanname= '(2,1)';
+        % % scandir = '3x2x192x48x32_nu_0.05_delta_RT_scan'; scanname= '(2,1)';
+        % scandir = '3x2x192x48x32_nu_0.1_delta_RT_scan'; scanname= '(2,1)';
+        % scandir = '3x2x192x48x24_nu_0.1_delta_RT_scan'; scanname= '(2,1)';
+        % scandir = '3x2x192x48x32_nu_1.0_delta_RT_scan'; scanname= '(2,1)';
         scandir = '2_1_delta_RT_scan'; scanname= '(2,1)';
-        % scandir = '5x3x192x48x32_delta_RT_scan'; scanname= '(4,2)';
+        % scandir = '5x3x192x48x32_nu_0.05_delta_RT_scan'; scanname= '(4,2)';
+        scandir = '5x3x192x48x32_nu_1.0_delta_RT_scan'; scanname= '(4,2)';
+        % scandir = '5x3x192x48x32_delta_RT_scan'; scanname= '(2,1)';
         % scandir = 'delta_RT_scan_PJ_21'; scanname= '(2,1)';
         nml1 = 'GEOMETRY'; pnam1 = '$\delta$'; attr1 = 'delta'; pref1 = 0; scale1 =1.0;
-        nml2 = 'SPECIES'; pnam2 = '$R_0/L_T\times T_i/T_e$'; attr2 = 'K_T_'; pref2 = 0.8; scale2 =1.0;
-        t1 = 200; t2 = 500;
-    case 6 % delta K_T cold ions
+        nml2 = 'SPECIES'; pnam2 = '$R_0/L_T\times T_i/T_e$'; attr2 = 'K_T_'; pref2 = 5; scale2 =1.0;
+        t1 = 300; t2 = 500; zfactor = 1;
+    case 2 % delta K_T cold ions
         casename = 'DIIID rho95 $\tau=10^{-3}$';
-        partition= '../results/paper_3/DIIID_cold_ions_rho95_geom_scan/'; 
-        scandir = '3x2x192x48x32_delta_RT_scan'; scanname= '(2,1)';
+        partition= '/misc/gyacomo23_outputs/paper_3/DIIID_cold_ions_rho95_geom_scan/'; 
+        % scandir = '3x2x192x48x32_nu_0_delta_RT_scan'; scanname= '(2,1)';
+        scandir = '3x2x192x48x32_nu_0.05_delta_RT_scan'; scanname= '(2,1)';
+        nml1 = 'GEOMETRY'; pnam1 = '$\delta$'; attr1 = 'delta'; pref1 = 0; scale1 =1;
+        nml2 = 'SPECIES'; pnam2 = '$\kappa_T$'; attr2 = 'K_T_'; pref2 = 5; scale2 =500;
+        t1 = 80; t2 = 400; zfactor = 2;
+    case 3 % delta K_T HEL, better resolution
+        casename = 'DIIID rho95 $\tau=1$';
+        % partition= '/misc/gyacomo23_outputs/paper_3/geom_scan_DIIID_HEL/NU_50/';  
+        partition= '/misc/gyacomo23_outputs/paper_3/geom_scan_DIIID_HEL/NU_20/';  
+        scandir = '.'; scanname= 'CBC HEL';
         nml1 = 'GEOMETRY'; pnam1 = '$\delta$'; attr1 = 'delta'; pref1 = 0; scale1 =1.0;
-        nml2 = 'SPECIES'; pnam2 = '$R_0/L_T\times T_i/T_e$'; attr2 = 'K_T_'; pref2 = 0.8; scale2 =1e3/2;
-        t1 = 150; t2 = 280;
-   case 7 % delta s_delta
-        casename = 'DIIID rho95 $\tau=10^{-3}$';
-        partition= '/misc/gyacomo23_outputs/paper_3/DIIID_cold_ions_rho95_geom_scan/';
-        scandir  = '3x2x192x48x32_RT_1000_delta_sdelta_scan'; scanname= 'RT=1000 (2,1)';
-        % scandir = '';
-        nml1 = 'GEOMETRY'; pnam1 = '$\delta$'; attr1 = 'delta'; pref1 = 0; scale1 =1.0;
-        nml2 = 'GEOMETRY'; pnam2 = '$s_\delta$'; attr2 = 's_delta';  pref2 = 0.8; scale2 =1.0;
-        t1 = 200; t2 = 295;
-    case 8 % eps q0
-        casename = 'DIIID rho95 $\tau=10^{-3}$';
-        partition= '/misc/gyacomo23_outputs/paper_3/DIIID_cold_ions_rho95_geom_scan/';
-        scandir  = '3x2x192x48x32_RT_1000_eps_q0_scan/PT'; scanname= 'PT, RT=1000 (2,1)';
-        % scandir  = '3x2x192x48x32_RT_1000_eps_q0_scan/NT'; scanname= 'NT, RT=1000 (2,1)';
-        % scandir = '';
-        nml1 = 'GEOMETRY'; pnam1 = '$\epsilon$'; attr1 = 'eps'; pref1 = 0; scale1 =1.0;
-        nml2 = 'GEOMETRY'; pnam2 = '$q_0$';      attr2 = 'q0';      pref2 = 0; scale2 =1.0;
-        t1 = 200; t2 = 400;
-    case 9 % CBC Dimits shift
-        casename = 'HEL CBC';
-        partition= '/misc/gyacomo23_outputs/paper_3/HEL_CBC/';
-        scandir  = '128x32x24'; scanname= 'CBC HEL';
-        nml1 = 'SPECIES'; pnam1 = '$R_T$'; attr1 = 'k_T_'; pref1 = 0; scale1 =1.0;
-        nml2 = 'SPECIES'; pnam2 = '$R_N$'; attr2 = 'k_N_'; pref2 = 0; scale2 =1.0;
-        t1 = 1000; t2 = 2000;
+        nml2 = 'SPECIES'; pnam2 = '$R_0/L_T\times T_i/T_e$'; attr2 = 'K_T_'; pref2 = 5; scale2 =500;
+        t1 = 100; t2 = 150; zfactor = 1;
 end 
 scanname= [casename scanname];
 scandir = [partition,scandir,'/']; 
@@ -116,11 +67,16 @@ for i = 1:length(contents)
         para1 = [para1 param.(nml1).(attr1)];
         para2 = [para2 param.(nml2).(attr2)];        
         % Now you are in the subdirectory. You can perform operations here.
-        [t_all, Pxi_all, Qxi_all, Pxe_all, Qxe_all] = read_flux_out_XX(subdir);
+        out = read_flux_out_XX(subdir);
+        t_all   = out.t;
+        Pxi_all = out.Pxi;
+        Qxi_all = out.Qxi;
+        Pxe_all = out.Pxe;
+        Qxe_all = out.Qxe;
         if(numel(Qxe_all) > 1)
-            Qxtot = Qxi_all+Qxe_all;
+            Qxtot = zfactor*(Qxi_all+Qxe_all);
         else
-            Qxtot = Qxi_all;
+            Qxtot = zfactor*(Qxi_all);
         end
         Qxt.(['dat_',num2str(i)])      = struct();
         Qxt.(['dat_',num2str(i)]).Qx   = Qxtot;
@@ -140,7 +96,7 @@ for i = 1:length(contents)
                 Qxerr = [Qxerr nan];
             end
         else
-                            Qxavg = [Qxavg nan];
+                Qxavg = [Qxavg nan];
                 Qxerr = [Qxerr nan];
         end
     end
@@ -159,7 +115,7 @@ attr = fieldnames(Qxt);
 Nsim = numel(attr);
 figure
 % compute growth at the begining
-tw = [10 40];
+tw = [5 20];
 gr = 1:Nsim; err = 1:Nsim;
 for i = 1:1:Nsim
     tmp_ = Qxt.(attr{i});
@@ -277,7 +233,7 @@ end
 if NCONTOUR <= 0
     imagesc_custom(xx_,yy_,toplot); hold on
 else
-    contourf(XX(:,1),YY(1,:),Zavg',NCONTOUR); hold on
+    contour(XX(:,1),YY(1,:),Zavg'); hold on
 end
 if REFVAL && ~((pref1==999) || (pref2==999))
     plot(xref(1,1),yref(1,1),'xk','MarkerSize',14,'DisplayName',Qrefname)
@@ -305,3 +261,40 @@ xlabel(pnam1); ylabel('$\langle Q_{tot} \rangle_t$');
 legend('show','Location','northwest');
 title([param.COLLISION.collision_model{1}, ...
     ', $(P,J)=(',num2str(param.GRID.pmax),',',num2str(param.GRID.jmax),')$'])
+
+if 0
+%% plot minimum
+idxmax = 1:numel(Zavg(1,:));
+idxmin = 1:numel(Zavg(1,:));
+xmax   = 1:numel(Zavg(1,:));
+xmin   = 1:numel(Zavg(1,:));
+ymax   = 1:numel(Zavg(1,:));
+ymin   = 1:numel(Zavg(1,:));
+err    = 1:numel(Zavg(1,:));
+
+x = linspace(min(p1),max(p1),128);
+for i=1:numel(Zavg(1,:))
+    [fit, dat] = polyfit(p1,Zavg(:,i)+0*Zerr(:,i),2);
+    [ymax(i),idx] = min(polyval(fit,x));
+    xmax(i) = x(idx);
+    [fit, dat] = polyfit(p1,Zavg(:,i)-0*Zerr(:,i),2);
+    [ymin(i),idx] = min(polyval(fit,x));
+    xmin(i) = x(idx);
+
+    [zmin,idx] = min(Zavg(:,i));
+    % err(i)  = abs(zmin-Zavg(idx+1,i))/abs(zmin)+abs(zmin-Zavg(idx-1,i))/abs(zmin);
+end
+err = min(err,1);
+xavg = 0.5*(xmax+xmin);
+xerr = 0.5*abs(xmax-xmin);
+
+fit = polyfit(p2,xavg,1);
+y = linspace(min(p2),max(p2),128);
+
+figure
+plot(xavg+xerr,p2); hold on
+plot(xavg-xerr,p2); hold on
+plot(polyval(fit,y),y)
+plot(polyval(fit,y),y)
+plot(polyval(fit,y),y)
+end

@@ -1,4 +1,4 @@
-function [SS,XX,FF] = compute_fa_2D(data, options)
+function [SS,XX,FF] = compute_fa_2D(data, species, s, x, T)
 %% Compute the dispersion function from the moment hierarchi decomp.
 % Normalized Hermite
 Hp = @(p,s) polyval(HermitePoly(p),s)./sqrt(2.^p.*factorial(p));
@@ -9,99 +9,90 @@ Lj = @(j,x) polyval(LaguerrePoly(j),x);
 FaM = @(s,x) exp(-s.^2-x);
 
 %meshgrid for efficient evaluation
-[SS, XX] = meshgrid(options.SPAR, options.XPERP);
+[SS, XX] = meshgrid(s, x);
 
-[~, ikx0] = min(abs(data.kx));
-[~, iky0] = min(abs(data.ky));
-kx_ = data.kx; ky_ = data.ky;
-
-switch options.SPECIES
+switch species
     case 'e'
-        Napj_     = data.Nepj;
-        parray    = double(data.Pe);
-        jarray    = double(data.Je);
-    case 'i'
-        Napj_     = data.Nipj;
-        parray    = double(data.Pi);
-        jarray    = double(data.Ji);
-end
+        Napj_     = data.Napjz(2,:,:,:,:);
 
-switch options.iz
-    case 'avg'
-        Napj_     = mean(Napj_,5);
-        phi_      = mean(data.PHI,3);
-    otherwise
-        iz        = options.iz; 
-        Napj_     = Napj_(:,:,:,:,iz,:);
-        phi_      = data.PHI(:,:,iz);
+    case 'i'
+        Napj_     = data.Napjz(1,:,:,:,:);
 end
+parray    = double(data.grids.Parray);
+jarray    = double(data.grids.Jarray);
+% switch options.iz
+    % case 'avg'
+    options.SHOW_FLUXSURF = 0;
+    options.SHOW_METRICS  = 0;
+    options.SHOW_CURVOP   = 0;
+    [~, geo_arrays] = plot_metric(data,options);
+    J  = geo_arrays.Jacobian;
+    Nz = data.grids.Nz;
+    tmp_ = 0;
+    for iz = 1:Nz
+        tmp_     =  tmp_ + J(iz)*Napj_(:,:,:,iz,:);
+    end
+    Napj_ = tmp_/sum(J(iz));
+    % Napj_     = mean(Napj_,4);
+        % Napj_     = Napj_(:,:,:,Nz/2+1,:);
+        % phi_      = mean(data.PHI,3);
+    % otherwise
+        % iz        = options.iz; 
+        % Napj_     = Napj_(:,:,:,:,iz,:);
+        % phi_      = data.PHI(:,:,iz);
+% end
 % Napj_ = squeeze(Napj_);
 
-frames = options.T;
-for it = 1:numel(options.T)
-    [~,frames(it)] = min(abs(options.T(it)-data.Ts5D)); 
+frames = T;
+for it = 1:numel(T)
+    [~,frames(it)] = min(abs(T(it)-data.Ts3D)); 
 end
 frames = unique(frames);
 
-Napj_     = mean(Napj_(:,:,:,:,frames),5);
+Napj_  = mean(Napj_(:,:,:,:,frames),5);
 
-% Napj_ = squeeze(Napj_);
+Napj_  = squeeze(Napj_);
 
 
 Np = numel(parray); Nj = numel(jarray);
 
-if options.non_adiab
-    for ij_ = 1:Nj
-        for ikx = 1:data.Nkx
-            for iky = 1:data.Nky    
-                kp_ = sqrt(kx_(ikx)^2 + ky_(iky)^2);
-                Napj_(1,ij_,iky,ikx) = Napj_(1,ij_,iky,ikx) + kernel(ij_,kp_)*phi_(iky,ikx);
-            end
-        end
-    end
-end
-
-if options.RMS
-    FF = zeros(data.Nky,data.Nkx,numel(options.XPERP),numel(options.SPAR));
+% if options.RMS
+    FF = zeros(numel(x),numel(s));
     FAM = FaM(SS,XX);
     for ip_ = 1:Np
         p_ = parray(ip_);
         HH = Hp(p_,SS);
         for ij_ = 1:Nj
-            j_ = jarray(ij_);
-            LL = Lj(j_,XX);
+            j_  = jarray(ij_);
+            LL  = Lj(j_,XX);
             HLF = HH.*LL.*FAM;
-            for ikx = 1:data.Nkx
-                for iky = 1:data.Nky
-                    FF(iky,ikx,:,:) = squeeze(FF(iky,ikx,:,:)) + Napj_(ip_,ij_,iky,ikx)*HLF;
-                end
-            end
+            FF  = FF + Napj_(ip_,ij_)*HLF;
        end
     end
-else
-    FF = zeros(numel(options.XPERP),numel(options.SPAR));
-    FAM = FaM(SS,XX);
-    for ip_ = 1:Np
-        p_ = parray(ip_);
-        HH = Hp(p_,SS);
-        for ij_ = 1:Nj
-            j_ = jarray(ij_);
-            LL = Lj(j_,XX);
-            FF = FF + squeeze(Napj_(ip_,ij_,ikx0,iky0))*HH.*LL.*FAM;
-        end
-    end
-end
+% else
+%     FF = zeros(numel(options.XPERP),numel(options.SPAR));
+%     FAM = FaM(SS,XX);
+%     for ip_ = 1:Np
+%         p_ = parray(ip_);
+%         HH = Hp(p_,SS);
+%         for ij_ = 1:Nj
+%             j_ = jarray(ij_);
+%             LL = Lj(j_,XX);
+%             FF = FF + squeeze(Napj_(ip_,ij_,ikx0,iky0))*HH.*LL.*FAM;
+%         end
+%     end
+% end
 FF = (FF.*conj(FF)); %|f_a|^2
 % FF = abs(FF); %|f_a|
-if options.RMS
+% if options.RMS
 %     FF = squeeze(mean(mean(sqrt(FF),1),2)); %sqrt(<|f_a|^2>kx,ky)
-    FF = sqrt(squeeze(mean(mean(FF,1),2))); %<|f_a|>kx,ky
-else
-    FF = sqrt(squeeze(FF)); %sqrt(<|f_a|>x,y)
-end
+    FF = sqrt(FF); %<|f_a|>kx,ky
+% else
+%     FF = sqrt(squeeze(FF)); %sqrt(<|f_a|>x,y)
+% end
 
-FF = FF./max(max(FF));
-FF = FF';
+% FF = FF./max(max(FF));
+% FF = FF';
 % FF = sqrt(FF);
 % FF = FF';
 end

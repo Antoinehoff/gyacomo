@@ -97,3 +97,4 @@ k_gB   = 1.0;     % Magnetic gradient strength
 k_cB   = 1.0;     % Magnetic curvature strength
 COLL_KCUT = 1; % Cutoff for collision operator
 ADIAB_I = 0;          % adiabatic ion model
+EXBRATE = 0;

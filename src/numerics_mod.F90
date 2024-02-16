@@ -77,31 +77,80 @@ SUBROUTINE evaluate_kernels
   USE grid,    ONLY : local_na, local_nj,ngj, local_nkx, local_nky, local_nz, ngz, jarray, kp2array,&
                       nzgrid
   USE species, ONLY : sigma2_tau_o2
+  USE model,    ONLY : KN_MODEL, ORDER, ORDER_NUM, ORDER_DEN
   IMPLICIT NONE
   INTEGER    :: j_int, ia, eo, ikx, iky, iz, ij
   REAL(xp)   :: j_xp, y_, factj, sigma_i
   sigma_i = 1._xp ! trivial singe sigma_a = sqrt(m_a/m_i)
 
-DO ia  = 1,local_na
-  DO eo  = 1,nzgrid
-    DO ikx = 1,local_nkx
-      DO iky = 1,local_nky
-        DO iz  = 1,local_nz + ngz
-          DO ij = 1,local_nj + ngj
-            j_int = jarray(ij)
-            j_xp  = REAL(j_int,xp)
-            y_    =  sigma2_tau_o2(ia) * kp2array(iky,ikx,iz,eo)
-            IF(j_int .LT. 0) THEN !ghosts values
-              kernel(ia,ij,iky,ikx,iz,eo) = 0._xp
-            ELSE
-              factj = REAL(GAMMA(j_xp+1._xp),xp)
-              kernel(ia,ij,iky,ikx,iz,eo) = y_**j_int*EXP(-y_)/factj
-            ENDIF
+  SELECT CASE (KN_MODEL)
+  CASE('taylor') ! developped with Leonhard Driever
+    ! Kernels based on the ORDER_NUM order Taylor series of J0
+    WRITE (*,*) 'Kernel approximation uses Taylor series with ', ORDER, ' powers of k'
+    DO ia  = 1,local_na
+      DO eo  = 1,nzgrid
+        DO ikx = 1,local_nkx
+          DO iky = 1,local_nky
+            DO iz  = 1,local_nz + ngz
+              DO ij = 1,local_nj + ngj
+                y_    =  sigma2_tau_o2(ia) * kp2array(iky,ikx,iz,eo)
+                j_int = jarray(ij)
+                IF (j_int > ORDER .OR. j_int < 0) THEN
+                  kernel(ia,ij,ikx,iky,iz,eo) = 0._xp
+                ELSE
+                  kernel(ia,ij,ikx,iky,iz,eo) = taylor_kernel_n(ORDER, j_int, y_)
+                ENDIF
+              ENDDO
+            ENDDO
           ENDDO
         ENDDO
       ENDDO
     ENDDO
-  ENDDO
+  CASE ('pade')
+    ! Kernels based on the ORDER_NUM / ORDER_DEN Pade approximation of the kernels
+    WRITE (*,*) 'Kernel approximation uses ', ORDER_NUM ,'/', ORDER_DEN, ' Pade approximation'
+    DO ia  = 1,local_na
+      DO eo  = 1,nzgrid
+        DO ikx = 1,local_nkx
+          DO iky = 1,local_nky
+            DO iz  = 1,local_nz + ngz
+              DO ij = 1,local_nj + ngj
+                y_    =  sigma2_tau_o2(ia) * kp2array(iky,ikx,iz,eo)
+                j_int = jarray(ij)
+                IF (j_int > ORDER_NUM .OR. j_int < 0) THEN
+                  kernel(ia,ij,ikx,iky,iz,eo) = 0._xp
+                ELSE
+                  kernel(ia,ij,ikx,iky,iz,eo) = pade_kernel_n(j_int, y_,ORDER_NUM,ORDER_DEN)
+                ENDIF
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDDO
+  CASE DEFAULT
+    DO ia  = 1,local_na
+      DO eo  = 1,nzgrid
+        DO ikx = 1,local_nkx
+          DO iky = 1,local_nky
+            DO iz  = 1,local_nz + ngz
+              DO ij = 1,local_nj + ngj
+                j_int = jarray(ij)
+                j_xp  = REAL(j_int,xp)
+                y_    =  sigma2_tau_o2(ia) * kp2array(iky,ikx,iz,eo)
+                IF(j_int .LT. 0) THEN !ghosts values
+                  kernel(ia,ij,iky,ikx,iz,eo) = 0._xp
+                ELSE
+                  factj = REAL(GAMMA(j_xp+1._xp),xp)
+                  kernel(ia,ij,iky,ikx,iz,eo) = y_**j_int*EXP(-y_)/factj
+                ENDIF
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDDO
+  END SELECT
 
   ! !! Correction term for the evaluation of the heat flux
   ! HF_phi_correction_operator(:,:,:) = &
@@ -117,7 +166,6 @@ DO ia  = 1,local_na
   !       -     (j_xp+1.0_xp) * Kernel(ia,ij+1,:,:,:,1) &
   !       -              j_xp * Kernel(ia,ij-1,:,:,:,1))
   ! ENDDO
-ENDDO
 END SUBROUTINE evaluate_kernels
 !******************************************************************************!
 
@@ -323,5 +371,124 @@ SUBROUTINE compute_lin_coeff
     ENDDO
   ENDDO
 END SUBROUTINE compute_lin_coeff
+
+
+!******************************************************************************!
+!!!!!!! Auxilliary kernel functions/subroutines (developped with Leonhard Driever)
+!******************************************************************************!
+REAL(xp) FUNCTION taylor_kernel_n(order, n, y)
+	IMPLICIT NONE
+	INTEGER, INTENT(IN) :: order
+	INTEGER, INTENT(IN) :: n
+	REAL(xp), INTENT(IN) :: y
+	REAL(xp) :: sum_variable
+	INTEGER  ::  m
+	REAL(xp) :: m_dp, n_dp
+
+	n_dp = REAL(n, xp)
+	sum_variable = 0._xp
+	
+	DO m = n, order
+	   m_dp = REAL(m, xp)
+	   sum_variable = sum_variable + (-1._xp)**(m - n) * y**m / (GAMMA(n_dp + 1._xp) * GAMMA(m_dp - n_dp + 1._xp)) ! Denominator of m C n
+    END DO
+	taylor_kernel_n = sum_variable
+END FUNCTION taylor_kernel_n
+
+
+REAL(xp) FUNCTION pade_kernel_n(n, y, N_NUM, N_DEN)
+	IMPLICIT NONE
+	INTEGER, INTENT(IN) :: n, N_NUM, N_DEN
+	REAL(xp), INTENT(IN) :: y
+	REAL(xp) :: pade_numerator_coeffs(N_NUM + 1), pade_denominator_coeffs(N_NUM + 1)
+	REAL(xp) :: numerator_sum
+	REAL(xp) :: denominator_sum
+	INTEGER  :: m
+	! If N_NUM == 0, then the approximation should be the same as the Taylor approx. of N_NUM:
+	IF (N_NUM == 0) THEN
+	    pade_kernel_n = taylor_kernel_n(N_NUM, n, y)
+	ELSE
+    CALL find_pade_coefficients(pade_numerator_coeffs, pade_denominator_coeffs, n, N_NUM, N_DEN)
+    numerator_sum = 0
+    denominator_sum = 0
+    DO m = 0, N_NUM
+      numerator_sum = numerator_sum + pade_numerator_coeffs(m + 1) * y ** m
+    END DO
+    DO m = 0, N_NUM
+      denominator_sum = denominator_sum + pade_denominator_coeffs(m + 1) * y ** m
+    END DO
+    pade_kernel_n = numerator_sum / denominator_sum
+	END IF
+END FUNCTION pade_kernel_n
+
+
+SUBROUTINE find_pade_coefficients(pade_num_coeffs, pade_denom_coeffs, n, N_NUM, N_DEN)
+	IMPLICIT NONE
+#ifdef SINGLE_PRECISION
+  EXTERNAL :: SGESV ! Use DGESV rather than SGESV for double precision
+#else
+	EXTERNAL :: DGESV ! Use DGESV rather than SGESV for double precision
+#endif
+	INTEGER, INTENT (IN) ::  n, N_NUM, N_DEN ! index of the considered Kernel
+	REAL(xp), INTENT(OUT) :: pade_num_coeffs(N_NUM + 1), pade_denom_coeffs(N_NUM + 1) ! OUT rather than INOUT to make sure no information is retained from previous Kernel computations
+	
+	REAL(xp) :: taylor_kernel_coeffs(N_NUM + N_NUM + 1), denom_matrix(N_NUM, N_NUM)
+	INTEGER  :: m, j
+	REAL(xp) :: m_dp, n_dp
+	INTEGER  :: return_code  ! for DGESV
+	REAL(xp) :: pivot(N_NUM) ! for DGESV
+
+	n_dp = REAL(n, xp)
+	
+	! First find the kernel Taylor expansion coefficients
+	DO m = 0, N_NUM + N_NUM ! m here counts the order of the derivatives
+	   m_dp = REAL(m, xp)
+
+	   IF (m < n) THEN
+	      taylor_kernel_coeffs(m + 1) = 0
+	   ELSE   
+	      taylor_kernel_coeffs(m + 1) = (-1)**(n + m) / (GAMMA(n_dp + 1._xp) * GAMMA(m_dp - n_dp + 1._xp))
+	   END IF
+	END DO
+
+	! Next construct the denominator solving matrix
+	DO m = 1, N_NUM
+	   DO j = 1, N_NUM
+	      IF (N_NUM + m - j < 0) THEN
+		denom_matrix(m, j) = 0
+	      ELSE
+	      	denom_matrix(m, j) = taylor_kernel_coeffs(N_NUM + m - j + 1)
+	      END IF
+	   END DO
+	END DO
+
+	! Then solve for the denominator coefficients, setting the first one to 1
+	!!!! SOLVER NOT YET IMPLEMENTED!!!!
+	pade_denom_coeffs(1) = 1
+	pade_denom_coeffs(2:) = - taylor_kernel_coeffs(N_NUM + 2 : N_NUM + N_NUM + 1) ! First acts as RHS vector for equation, is then transformed to solution by DGESV
+#ifdef SINGLE_PRECISION
+  CALL SGESV(N_NUM, 1, denom_matrix, N_NUM, pivot, pade_denom_coeffs(2:), N_NUM, return_code) ! LAPACK solver for matrix equation. Note that denom_matrix is now no longer as expected
+#else
+  CALL DGESV(N_NUM, 1, denom_matrix, N_NUM, pivot, pade_denom_coeffs(2:), N_NUM, return_code) ! LAPACK solver for matrix equation. Note that denom_matrix is now no longer as expected
+#endif
+
+
+	! Print an error message in case there was a problem with the solver
+	IF (return_code /= 0) THEN
+	   WRITE (*,*) 'An error occurred in the solving for the Pade denominator coefficients. The error code is: ', return_code
+	END IF
+
+	! Finally compute the numerator coefficients
+	DO m = 1, N_NUM + 1
+	   pade_num_coeffs(m) = 0 ! As the array is not automatically filled with zeros
+	   DO j = 1, m	
+      	      !num_matrix(m, j) = taylor_kernel_coeffs(m - j + 1)
+	      pade_num_coeffs(m) = pade_num_coeffs(m) + pade_denom_coeffs(j) * taylor_kernel_coeffs(m - j + 1)
+	   END DO
+	END DO
+
+END SUBROUTINE find_pade_coefficients
+!******************************************************************************!
+
 
 END MODULE numerics

@@ -1,97 +1,103 @@
-% MAT = results.iCa;
-% figure
-% suptitle('FCGK,P=6,J=3');
-% subplot(221)
-%     imagesc(log(abs(MAT))); 
-%     title('log abs')
-% subplot(222)
-%     imagesc(imag(MAT));  colormap(bluewhitered)
-%     title('imag'); colorbar
-% subplot(223)
-%     imagesc(imag(MAT)>0);
-%     title('imag$>$0');
-% subplot(224)
-%     imagesc(imag(MAT)<0);
-%     title('imag$<$0');
-%     
-%     
-    %% SGGK
-P_ = 20; J_ = 10;
-mat_file_name = '/home/ahoffman/HeLaZ/iCa/gk_sugama_P_20_J_10_N_150_kpm_8.0.h5';
-SGGK_self = h5read(mat_file_name,'/00000/Caapj/Ciipj');
-SGGK_ei = h5read(mat_file_name,'/00000/Ceipj/CeipjF')+h5read(mat_file_name,'/00000/Ceipj/CeipjT');
-SGGK_ie = h5read(mat_file_name,'/00000/Ciepj/CiepjF')+h5read(mat_file_name,'/00000/Ciepj/CiepjT');
+%% Coeff trajectory
+% matfilename = 'gk_landau_P10_J5_dk_5e-2_km_2.0_NFLR_12.h5'; JMAX = 5;
+% matfilename = 'gk_sugama_P_20_J_10_N_150_kpm_8.0.h5'; JMAX = 10;
+% matfilename = 'gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5'; JMAX = 10;
+matfilename = 'gk_landau_P16_J9_dk_5e-2_km_2.0_NFLR_8.h5'; JMAX = 10;
+P_ = 10; J_ = P_/2;
+n = 1:((P_+1)*(J_+1));
+for p_ = 0:P_
+    n((0:J_)+p_*(J_+1)+1) = (0:J_)+p_*(JMAX+1);
+end
+mat_file_name = ['/home/ahoffman/gyacomo/iCa/',matfilename];
+kp_a   = h5read(mat_file_name,'/coordkperp');
+coeff  = kp_a*0;
+gmax = kp_a*0;
 
+p1 = 0; j1 = 0;
+p2 = 0; j2 = 0;
+for ik = 1:numel(kp_a)
+    matidx = sprintf('%5.5i',ik-1);
+    M_self = h5read(mat_file_name,['/',matidx,'/Caapj/Ciipj']);
+    MAT  = M_self(n+1,n+1); 
+    ipj1 = n(j1+p1*(J_+1)+1);
+    ipj2 = n(j2+p2*(J_+1)+1);
+    coeff(ik)  = MAT(ipj1+1,ipj2+1);
+    gmax(ik) = -max((real(eig(MAT))));
+    
+end
 figure
-MAT = 1i*SGGK_self; suptitle('SGGK ii,P=20,J=10, k=0');
-% MAT = 1i*SGGK_ei; suptitle('SGGK ei,P=20,J=10');
-% MAT = 1i*SGGK_ie; suptitle('SGGK ie,P=20,J=10');
-subplot(221)
-    imagesc(abs(MAT));
-    title('log abs')
-subplot(222)
-    imagesc(imag(MAT)); colormap(bluewhitered)
-    title('imag'); colorbar
-subplot(223)
-    imagesc(imag(MAT)>0);
-    title('imag$>$0');
-subplot(224)
-    imagesc(imag(MAT)<0);
-    title('imag$<$0');
+plot(kp_a,gmax);
+    %% SGGK
+P_ = 10; J_ = 5;
+n = 1:((P_+1)*(J_+1));
+for p_ = 0:P_
+    n((0:J_)+p_*(J_+1)+1) = (0:J_)+p_*(10+1);
+end
+kp = 5.0;
+kp_a =  h5read(mat_file_name,'/coordkperp');
+[~,matidx] = min(abs(kp_a-kp));
+matidx = sprintf('%5.5i',matidx);
+mat_file_name = '/home/ahoffman/gyacomo/iCa/gk_sugama_P_20_J_10_N_150_kpm_8.0.h5';
+M_self = h5read(mat_file_name,['/',matidx,'/Caapj/Ciipj']);
+figure
+MAT = M_self; %suptitle('SGGK ii,P=20,J=10, k=0');
+imagesc((MAT(n+1,n+1)));
+title('Sugama')
+xlim('tight')
+ylim('tight')
+axis equal
+% clim(1*[-1 1])
+clim auto
+colormap(bluewhitered)
 
         %% PAGK
-P_ = 20; J_ = 10;
-mat_file_name = '/home/ahoffman/HeLaZ/iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5';
-PAGK_self = h5read(mat_file_name,'/00000/Caapj/Ceepj');
-% PAGK_ei = h5read(mat_file_name,'/00000/Ceipj/CeipjF')+h5read(mat_file_name,'/00000/Ceipj/CeipjT');
-% PAGK_ie = h5read(mat_file_name,'/00000/Ciepj/CiepjF')+h5read(mat_file_name,'/00000/Ciepj/CiepjT');
-
+P_ = 10; J_ = 5;
+n = 1:((P_+1)*(J_+1));
+for p_ = 0:P_
+    n((0:J_)+p_*(J_+1)+1) = (0:J_)+p_*(10+1);
+end
+kp = 1.0;
+kp_a =  h5read(mat_file_name,'/coordkperp');
+[~,matidx] = min(abs(kp_a-kp));
+matidx = sprintf('%5.5i',matidx);
+mat_file_name = '/home/ahoffman/gyacomo/iCa/gk_pitchangle_8_P_20_J_10_N_150_kpm_8.0.h5';
+PAGK_self = h5read(mat_file_name,['/',matidx,'/Caapj/Ciipj']);
 figure
-MAT = 1i*PAGK_self; suptitle('PAGK ii,P=20,J=10, k=0');
-
-subplot(221)
-    imagesc(abs(MAT));
-    title('log abs')
-subplot(222)
-    imagesc(imag(MAT)); colormap(bluewhitered)
-    title('imag'); colorbar
-subplot(223)
-    imagesc(imag(MAT)>0);
-    title('imag$>$0');
-subplot(224)
-    imagesc(imag(MAT)<0);
-    title('imag$<$0');
+PA_MAT = PAGK_self;
+    imagesc((PA_MAT(n+1,n+1)));
+    title('Lorentz')
+    xlim('tight')
+    ylim('tight')
+    axis equal
+    % clim(1*[-1 1])
+    clim auto
+    colormap(bluewhitered)
 
     
     %% FCGK
-P_ = 4; J_ = 2;
-mat_file_name = '/home/ahoffman/gyacomo/iCa/gk_coulomb_NFLR_12_P_4_J_2_N_50_kpm_4.0.h5';
-% mat_file_name = '/home/ahoffman/gyacomo/iCa/LDGK_P6_J3_dk_5e-2_km_2.5_NFLR_20.h5';
-% mat_file_name = '/home/ahoffman/gyacomo/iCa/LDGK_P10_J5_dk_5e-2_km_5_NFLR_12.h5';
-
-kp = 0.0;
+P_ = 10; J_ = 5;
+n = 1:((P_+1)*(J_+1));
+for p_ = 0:P_
+    n((0:J_)+p_*(J_+1)+1) = (0:J_)+p_*(5+1);
+end
+mat_file_name = '/home/ahoffman/gyacomo/iCa/gk_landau_P10_J5_dk_5e-2_km_2.0_NFLR_12.h5';
+kp = 1.0;
 kp_a =  h5read(mat_file_name,'/coordkperp');
 [~,matidx] = min(abs(kp_a-kp));
 matidx = sprintf('%5.5i',matidx);
 FCGK_self = h5read(mat_file_name,['/',matidx,'/Caapj/Ciipj']);
-FCGK_ei = h5read(mat_file_name,['/',matidx,'/Ceipj/CeipjF'])+h5read(mat_file_name,'/00000/Ceipj/CeipjT');
-FCGK_ie = h5read(mat_file_name,['/',matidx,'/Ciepj/CiepjF'])+h5read(mat_file_name,'/00000/Ciepj/CiepjT');
 figure
-MAT = 1i*FCGK_self; suptitle(['FCGK ii,P=6,J=3, k=',num2str(kp),' (',matidx,')']);
+FC_MAT = FCGK_self;
 % MAT = 1i*FCGK_ei; suptitle('FCGK ei,P=20,J=10');
 % MAT = 1i*FCGK_ie; suptitle('FCGK ie,P=20,J=10');
-subplot(221)
-    imagesc(abs(MAT));
-    title('log abs')
-subplot(222)
-    imagesc(imag(MAT)); colormap(bluewhitered)
-    title('imag'); colorbar
-subplot(223)
-    imagesc(imag(MAT)>0);
-    title('imag$>$0');
-subplot(224)
-    imagesc(imag(MAT)<0);
-    title('imag$<$0');
+    imagesc((FC_MAT(n+1,n+1)));
+    title('Landau')
+    xlim('tight')
+    ylim('tight')
+    axis equal
+    % clim(1*[-1 1])
+    clim auto
+   colormap(bluewhitered)
 
 %% Eigenvalue spectrum analysis    
 if 0
@@ -129,16 +135,19 @@ for j_ = 1:numel(mfns)
 %     kp_a = kp_a(kp_a<=3);
     gmax = zeros(size(kp_a));
     wmax = zeros(size(kp_a));
+    c44  = zeros(size(kp_a));
    for idx_ = 0:numel(kp_a)-1
         matidx = sprintf('%5.5i',idx_);
-        MAT = h5read(mat_file_name,['/',matidx,'/Caapj/Ciipj']);
-        gmax(idx_+1) = max((real(eig(MAT)))); 
-        wmax(idx_+1) = max((imag(eig(MAT)))); 
+        FC_MAT = h5read(mat_file_name,['/',matidx,'/Caapj/Ciipj']);
+        gmax(idx_+1) = max((real(eig(FC_MAT)))); 
+        wmax(idx_+1) = max((imag(eig(FC_MAT)))); 
+        c44 (idx_+1) = FC_MAT(4,4); 
    end
    subplot(121)
     plot(kp_a,gmax,'DisplayName',CONAME_A{j_}); hold on;
    subplot(122)
-    plot(kp_a,wmax,'DisplayName',CONAME_A{j_}); hold on;
+    % plot(kp_a,wmax,'DisplayName',CONAME_A{j_}); hold on;
+    plot(kp_a,c44,'DisplayName',CONAME_A{j_}); hold on;
 end
    subplot(121)
 legend('show'); grid on;
@@ -195,9 +204,9 @@ for j_ = 1:numel(mfns)
     kp_a          =  h5read(mat_file_name,'/coordkperp');
     [~,idx_]       = min(abs(kp_a-kperp));
     matidx        = sprintf('%5.5i',idx_);
-    MAT           = h5read(mat_file_name,['/',matidx,'/Caapj/Ciipj']);
-    grow{j_}  = real(eig(MAT))*TAU_A(j_); 
-    puls{j_}  = imag(eig(MAT))*TAU_A(j_); 
+    FC_MAT           = h5read(mat_file_name,['/',matidx,'/Caapj/Ciipj']);
+    grow{j_}  = real(eig(FC_MAT))*TAU_A(j_); 
+    puls{j_}  = imag(eig(FC_MAT))*TAU_A(j_); 
 end
 
 figure

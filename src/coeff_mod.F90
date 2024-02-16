@@ -1,7 +1,9 @@
 MODULE coeff
 
-! this module contains routines to compute normalization coefficients and velocity integrals
-!
+! this module contains routines to compute the Laguerre-Laguerre products coefficients
+! dnjs for the nonlinear term. ALL2L(n,j,s,0) = dnjs
+! Lpjl(p,j,l) returns the l-th coefficient of the j-th order associated Laguerre_{p-1/2} poynomial
+  ! the canonical basis (p=0) writes L_j(x) = sum_{l=0}^j c_l x^l
 
 USE PREC_CONST
 use BASIC

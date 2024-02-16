@@ -6,16 +6,8 @@ Ja = DATA.grids.Jarray;
 Time_ = DATA.Ts3D;
 FIGURE.fig = figure; FIGURE.FIGNAME = ['mom_spectrum_',DATA.params_string];
 % set(gcf, 'Position',  [100 50 1000 400])
-if OPTIONS.ST == 0
-    OPTIONS.LOGSCALE = 0;
-end
-if OPTIONS.LOGSCALE
-    logname = 'log';
-    compress = @(x,ia) log(sum(abs((x(ia,:,:,:,:))),4));
-else
-    logname = '';
-    compress = @(x,ia) sum(abs((x(ia,:,:,:,:))),4);
-end
+logname = '';
+compress = @(x,ia) sum(abs((x(ia,:,:,:,:))),4);
 for ia = 1:DATA.inputs.Na
     Napjz = compress(DATA.Napjz,ia);
     Napjz = reshape(Napjz,DATA.grids.Np,DATA.grids.Nj,numel(DATA.Ts3D)); 
@@ -71,8 +63,10 @@ for ia = 1:DATA.inputs.Na
     % plots
     % scaling
     if OPTIONS.TAVG_2D
-        nt_half    = ceil(numel(Time_)/2);        
-        Napjz_tavg = mean(Napjz(:,:,nt_half:end),3);
+        t0 = OPTIONS.TWINDOW(1); t1 = OPTIONS.TWINDOW(2);
+        [~,it0] = min(abs(DATA.Ts3D-t0));
+        [~,it1] = min(abs(DATA.Ts3D-t1)); 
+        Napjz_tavg = mean(Napjz(:,:,it0:it1),3);
         x_ = DATA.grids.Parray;
         y_ = DATA.grids.Jarray;
         if OPTIONS.TAVG_2D_CTR
@@ -84,7 +78,7 @@ for ia = 1:DATA.inputs.Na
             xlabel('$p$'); ylabel('$j$');
         end
         clb = colorbar; colormap(jet);
-        clb.Label.String = '$\log\langle E(p,j) \rangle_t$';
+        clb.Label.String = '$\langle E(p,j) \rangle_t$';
         clb.TickLabelInterpreter = 'latex';
         clb.Label.Interpreter = 'latex';
         clb.Label.FontSize= 18;
@@ -95,7 +89,7 @@ for ia = 1:DATA.inputs.Na
         plt = @(x,i) reshape(x(i,:),numel(p2j),numel(Time_));
         end
         Nlabelmax = 15;
-        nskip = floor(numel(p2j)/Nlabelmax);
+        nskip = max(1,floor(numel(p2j)/Nlabelmax));
         if OPTIONS.ST
             imagesc(Time_,p2j,plt(Na_ST,1:numel(p2j))); 
             set(gca,'YDir','normal')        
@@ -105,10 +99,13 @@ for ia = 1:DATA.inputs.Na
                 yticklabels(ticks_labels(1:nskip:end))
             end
                 if OPTIONS.FILTER
-                caxis([0 0.2]);
-                title('Relative fluctuation from the average');
+                    clim([0 0.2]);
+                    title('Relative fluctuation from the average');
                 end
                 colorbar
+                if OPTIONS.LOGSCALE
+                    set(gca,'ColorScale','log');
+                end
         else
             colors_ = jet(numel(p2j));
             for i = 1:numel(p2j)
@@ -120,6 +117,7 @@ for ia = 1:DATA.inputs.Na
         end
     end
 top_title(DATA.paramshort)
+        title(plotname)
 
 end
 

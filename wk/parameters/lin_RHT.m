@@ -15,15 +15,15 @@ ADIAB_E = (NA==1);          % adiabatic electron model
 BETA    = 0.0;              % electron plasma beta
 EXBRATE = 0.0;              % Background ExB shear flow
 %% Set up grid parameters
-P = 4;
-J = 2;%P/2;
+P = 256;
+J = 16;%P/2;
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
 NX = 2;                     % real space x-gridpoints
 NY = 2;                    % real space y-gridpoints
 LX = 2*pi/0.05;              % Size of the squared frequency domain in x direction
 LY = 2*pi/0.01;              % Size of the squared frequency domain in y direction
-NZ = 8;                    % number of perpendicular planes (parallel grid)
+NZ = 24;                    % number of perpendicular planes (parallel grid)
 SG = 0;                     % Staggered z grids option
 NEXC = 1;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 
@@ -42,7 +42,7 @@ NPOL   = 1;       % Number of poloidal turns
 
 %% TIME PARAMETERS
 TMAX     = 50;  % Maximal time unit
-DT       = 1e-3;   % Time step
+DT       = 5e-3;   % Time step
 DTSAVE0D = 1;      % Sampling time for 0D arrays
 DTSAVE2D = -1;     % Sampling time for 2D arrays
 DTSAVE3D = 0.1;      % Sampling time for 3D arrays

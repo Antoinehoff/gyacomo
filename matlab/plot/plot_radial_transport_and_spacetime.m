@@ -56,7 +56,8 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
     grid on; set(gca,'xticklabel',[]); 
     title({DATA.param_title,...
         ['$\Gamma^{\infty} = $',num2str(Gx_infty_avg),'$, Q^{\infty} = $',num2str(Qx_infty_avg)]});
-%% radial shear radial profile
+    axis tight
+    %% radial shear radial profile
     % computation
     Ns3D = numel(DATA.Ts3D);
     [KX, KY] = meshgrid(DATA.grids.kx, DATA.grids.ky);
@@ -68,18 +69,33 @@ mvm = @(x) movmean(x,OPTIONS.NMVA);
     OPTIONS.NAME = OPTIONS.ST_FIELD;
     OPTIONS.PLAN = 'xy';
     OPTIONS.COMP = 'avg';
+    OPTIONS.TAVG = 0;
     OPTIONS.TIME = DATA.Ts3D;
     OPTIONS.POLARPLOT = 0;
-    toplot = process_field(DATA,OPTIONS);
-    f2plot = toplot.FIELD;
+    try
+    if DATA.fort_00.DIAGNOSTICS.dtsave_2d > 0
+        opt_.PLAY = 0;
+       [MOVIE] = cinecita_2D(DATA.dir,OPTIONS.ST_FIELD,opt_);
+       f2plot = MOVIE.F;
+       TIME   = MOVIE.T;
+    else
+        toplot = process_field(DATA,OPTIONS);
+        f2plot = toplot.FIELD;
+        TIME   = DATA.Ts3D(toplot.FRAMES);
+    end
+    catch
+        toplot = process_field(DATA,OPTIONS);
+        f2plot = toplot.FIELD;
+        TIME   = DATA.Ts3D(toplot.FRAMES);
+    end
     dframe = ite3D - its3D;
-    clim = max(max(max(abs(plt(f2plot(:,:,:))))));
+    clim_ = max(max(max(abs(plt(f2plot(:,:,:))))));
     FIGURE.ax3 = subplot(2,1,2,'parent',FIGURE.fig);
-        [TY,TX] = meshgrid(DATA.grids.x,DATA.Ts3D(toplot.FRAMES));
+        [TY,TX] = meshgrid(DATA.grids.x,TIME);
         pclr = pcolor(TX,TY,squeeze(plt(f2plot))'); 
         set(pclr, 'edgecolor','none'); 
         legend(['$\langle ',OPTIONS.ST_FIELD,' \rangle_{y,z}$']) %colorbar;
-        caxis(clim*[-1 1]);
+        clim(clim_*[-1 1]);
         cmap = bluewhitered(256);
         colormap(cmap)
         xlabel('$t c_s/R$'), ylabel('$x/\rho_s$'); 

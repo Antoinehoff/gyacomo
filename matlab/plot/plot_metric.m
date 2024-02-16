@@ -96,9 +96,14 @@ if NPLOT > 0
     end
 end
 %outputs
-arrays = squeeze(geo_arrays(:,:));
+% arrays = squeeze(geo_arrays(:,:));
 R = [geo_arrays(:,12);geo_arrays(1,12)];
 Z = [geo_arrays(:,13);geo_arrays(1,13)];
+
+for i_ = 1:numel(names)
+    namae = names{i_};
+    arrays.(namae) = geo_arrays(:,i_);
+end
 try
     if ~options.SHOWFIG
         close

@@ -40,10 +40,10 @@ while ~feof(fid)
     line = fgetl(fid);
     % Remove comments if any on the line
     idx = find(line == '!');
-    if ~isempty(idx),
+    if ~isempty(idx)
         line = line(1:idx(1)-1);
     end
-    if ~isempty(line),
+    if ~isempty(line)
         c = c + 1;
         lines{c} = line;
     end
