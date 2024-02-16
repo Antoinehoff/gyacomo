@@ -4,11 +4,11 @@ SIMID = 'lin_Ivanov'; % Name of the simulation
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
 TAU = 1e-3;                  % e/i temperature ratio
-NU = 0.1/TAU;                 % Collision frequency
+NU = 0.1*3/8/TAU;                 % Collision frequency
 K_Ne = 0*2.22;              % ele Density
 K_Te = 0*6.96;              % ele Temperature
 K_Ni = 0*2.22;              % ion Density gradient drive
-K_Ti = 0.36*2/TAU;              % ion Temperature
+K_Ti = 1*2/TAU;              % ion Temperature
 SIGMA_E = 0.0233380;        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 NA = 1;                     % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
@@ -51,8 +51,8 @@ JOB2LOAD = -1;     % Start a new simulation serie
 
 %% OPTIONS
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
-CO        = 'SG';       % Collision operator (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-GKCO      = 0;          % Gyrokinetic operator
+CO        = 'DG';       % Collision operator (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
+GKCO      = 1;          % Gyrokinetic operator
 ABCO      = 1;          % INTERSPECIES collisions
 INIT_ZF   = 0;          % Initialize zero-field quantities
 % HRCY_CLOS = 'max_degree';   % Closure model for higher order moments
@@ -93,3 +93,10 @@ BCKGD0  = 0.0;    % Initial background
 k_gB   = 1.0;     % Magnetic gradient strength
 k_cB   = 1.0;     % Magnetic curvature strength
 COLL_KCUT = 1.0; % Cutoff for collision operator
+S_KAPPA = 0.0;
+S_DELTA = 0.0;
+S_ZETA  = 0.0;
+PB_PHASE= 0;
+ADIAB_I = 0;
+MHD_PD  = 0;
+EXBRATE = 0;

@@ -1,58 +1,62 @@
+%% Reference values
+% See Neiser et al. 2019 Gyrokinetic GENE simulations of DIII-D near-edge L-mode plasmas
 %% Set simulation parameters
-SIMID = 'lin_ITG'; % Name of the simulation
-
+SIMID   = 'lin_DIIID_HM_rho90';  % Name of the simulation
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-NU      = 0.005;            % Collision frequency
-TAU     = 1.0;              % e/i temperature ratio
-K_Ne    = 0;           % ele Density
-K_Te    = 0;           % ele Temperature
+NU = 50; %(0.00235 in GENE)
+TAU = 0.001;               % i/e temperature ratio
+K_Ne    = 0;             % ele Density '''
+K_Te    = 0;             % ele Temperature '''
 K_Ni    = 0;             % ion Density gradient drive
-K_Ti    = 0;             % ion Temperature
-SIGMA_E = 0.0233380;        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
-NA      = 1;                % number of kinetic species
+K_Ti    = 5.2256/2/TAU;             % ion Temperature '''
+SIGMA_E = 0.0233380/sqrt(2);        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+NA      = 1;          % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
-BETA    = 0.0;              % electron plasma beta
-EXBRATE = 0.0;              % Background ExB shear flow
+BETA    = 0;           % electron plasma beta in prct
+MHD_PD  = 1;
 %% Set up grid parameters
-P = 256;
-J = 16;%P/2;
+P = 2;
+J = P/2;%P/2;
 PMAX = P;                   % Hermite basis size
 JMAX = J;                   % Laguerre basis size
-NX = 2;                     % real space x-gridpoints
-NY = 2;                    % real space y-gridpoints
-LX = 2*pi/0.05;              % Size of the squared frequency domain in x direction
-LY = 2*pi/0.01;              % Size of the squared frequency domain in y direction
-NZ = 24;                    % number of perpendicular planes (parallel grid)
+NX = 8;                    % real space x-gridpoints
+NY = 2;                     % real space y-gridpoints
+LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
+LY = 2*pi/0.3;             % Size of the squared frequency domain in y direction
+NZ = 32;                    % number of perpendicular planes (parallel grid)
 SG = 0;                     % Staggered z grids option
 NEXC = 1;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 
 %% GEOMETRY
-GEOMETRY= 's-alpha';
-% GEOMETRY= 'miller';
-EPS     = 0.1;   % inverse aspect ratio
-Q0      = 1.4;    % safety factor
-SHEAR   = 0.0;    % magnetic shear
-KAPPA   = 1.0;    % elongation
-DELTA   = 0.0;    % triangularity
+% GEOMETRY= 's-alpha';
+GEOMETRY= 'miller';
+Q0      = 4.8;    % safety factor
+SHEAR   = 2.55;    % magnetic shear
+EPS     = 0.3;    % inverse aspect ratio
+KAPPA   = 1.57;    % elongation
+S_KAPPA = 0.48;
+DELTA   = 0.2;    % triangularity
+S_DELTA = 0.1;
 ZETA    = 0.0;    % squareness
+S_ZETA  = 0.0;
 PARALLEL_BC = 'dirichlet'; % Boundary condition for parallel direction ('dirichlet','periodic','shearless','disconnected')
 SHIFT_Y = 0.0;    % Shift in the periodic BC in z
 NPOL   = 1;       % Number of poloidal turns
-
+PB_PHASE = 0;
 %% TIME PARAMETERS
-TMAX     = 50;  % Maximal time unit
-DT       = 5e-3;   % Time step
-DTSAVE0D = 1;      % Sampling time for 0D arrays
+TMAX     = 15;  % Maximal time unit
+DT       = 1e-2;   % Time step
+DTSAVE0D = 0.5;      % Sampling time for 0D arrays
 DTSAVE2D = -1;     % Sampling time for 2D arrays
-DTSAVE3D = 0.1;      % Sampling time for 3D arrays
+DTSAVE3D = 0.5;      % Sampling time for 3D arrays
 DTSAVE5D = 100;     % Sampling time for 5D arrays
 JOB2LOAD = -1;     % Start a new simulation serie
 
 %% OPTIONS
 LINEARITY = 'linear';   % activate non-linearity (is cancelled if KXEQ0 = 1)
 CO        = 'DG';       % Collision operator (LB:L.Bernstein, DG:Dougherty, SG:Sugama, LR: Lorentz, LD: Landau)
-GKCO      = 0;          % Gyrokinetic operator
+GKCO      = 1;          % Gyrokinetic operator
 ABCO      = 1;          % INTERSPECIES collisions
 INIT_ZF   = 0;          % Initialize zero-field quantities
 HRCY_CLOS = 'truncation';   % Closure model for higher order moments
@@ -60,8 +64,8 @@ DMAX      = -1;
 NLIN_CLOS = 'truncation';   % Nonlinear closure model for higher order moments
 NMAX      = 0;
 KERN      = 0;   % Kernel model (0 : GK)
-INIT_OPT  = 'mom00';   % Start simulation with a noisy mom00/phi/allmom
-NUMERICAL_SCHEME = 'RK3'; % Numerical integration scheme (RK2,SSPx_RK2,RK3,SSP_RK3,SSPx_RK3,IMEX_SSP2,ARK2,RK4,DOPRI5)
+INIT_OPT  = 'phi';   % Start simulation with a noisy mom00/phi/allmom
+NUMERICAL_SCHEME = 'RK4'; % Numerical integration scheme (RK2,SSPx_RK2,RK3,SSP_RK3,SSPx_RK3,IMEX_SSP2,ARK2,RK4,DOPRI5)
 
 %% OUTPUTS
 W_DOUBLE = 1;     % Output flag for double moments
@@ -82,19 +86,15 @@ MU      = 0.0;    % Hyperdiffusivity coefficient
 MU_X    = MU;     % Hyperdiffusivity coefficient in x direction
 MU_Y    = MU;     % Hyperdiffusivity coefficient in y direction
 N_HD    = 4;      % Degree of spatial-hyperdiffusivity
-MU_Z    = 0.0;    % Hyperdiffusivity coefficient in z direction
+MU_Z    = 5.0;    % Hyperdiffusivity coefficient in z direction
 HYP_V   = 'hypcoll'; % Kinetic-hyperdiffusivity model
 MU_P    = 0.0;    % Hyperdiffusivity coefficient for Hermite
 MU_J    = 0.0;    % Hyperdiffusivity coefficient for Laguerre
 LAMBDAD = 0.0;    % Lambda Debye
-NOISE0  = 0.0e-5; % Initial noise amplitude
-BCKGD0  = 1.0;    % Initial background
+NOISE0  = 1.0e-5; % Initial noise amplitude
+BCKGD0  = 0.0e-5;    % Initial background
 k_gB   = 1.0;     % Magnetic gradient strength
 k_cB   = 1.0;     % Magnetic curvature strength
 COLL_KCUT = 1; % Cutoff for collision operator
-S_KAPPA = 0.0;
-S_DELTA = 0.0;
-S_ZETA  = 0.0;
-PB_PHASE= 0;
-ADIAB_I = 0;
-MHD_PD  = 0;
+ADIAB_I = 0;          % adiabatic ion model
+EXBRATE = 0;

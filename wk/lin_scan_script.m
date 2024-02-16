@@ -28,24 +28,29 @@ EXECNAME = 'gyacomo23_dp'; % double precision
 % run lin_Entropy
 % run lin_ITG
 % run lin_RHT
-rho  = 0.95; TRIANG = 'NT'; READPROF = 1; 
+rho  = 0.95; TRIANG = 'PT'; READPROF = 1; 
 % prof_folder = ['parameters/profiles/DIIID_Austin_et_al_2019/',TRIANG,'/'];
 % prof_folder = ['parameters/profiles/DIIID_Oak_Nelson/',TRIANG,'/'];
 prof_folder = ['parameters/profiles/DIIID_Oak_Nelson_high_density/',TRIANG,'/'];
 run lin_DIIID_data
 
 %% Change parameters
-NU   = 1;
-TAU  = 1;
+% NU   = 1;
+% TAU  = 1;
 NY   = 2;
 EXBRATE = 0;
+S_DELTA = min(2.0,S_DELTA);
 SIGMA_E  = 0.023;
+NEXC = 0;
+LX   = 120;
 %% Scan parameters
 SIMID = [SIMID,'_scan'];
 P_a   = [2 4];
 % P_a   = 2;
-ky_a  = [0.01 0.02 0.05 0.1 0.2 0.5 1.0 2.0 5.0 10.0];
-CO    = 'LD';
+ky_a  = [0.01 0.02 0.05 0.1  0.2  0.5  1.0  2.0  5.0  10.0];
+% ky_a  = 4.0;
+dt_a  = logspace(-2,-3,numel(ky_a));
+CO    = 'DG';
 %% Scan loop
 % arrays for the result
 g_ky = zeros(numel(ky_a),numel(P_a));
@@ -58,10 +63,10 @@ for PMAX = P_a
     i = 1;
     for ky = ky_a
         LY   = 2*pi/ky;
-        DT   = 2e-4;%/(1+log(ky/0.05));%min(1e-2,1e-3/ky);
-        TMAX = 20;%min(10,1.5/ky);
-        DTSAVE0D = 0.1;
-        DTSAVE3D = 0.01;
+        DT   = dt_a(i);%1e-3;%/(1+log(ky/0.05));%min(1e-2,1e-3/ky);
+        TMAX = DT*10000;%2;%min(10,1.5/ky);
+        DTSAVE0D = 100*DT;
+        DTSAVE3D =  10*DT;
         %% RUN
         setup
         % naming
@@ -94,21 +99,27 @@ for PMAX = P_a
     
             data_    = compile_results_low_mem(data_,LOCALDIR,00,00);
             [data_.PHI, data_.Ts3D] = compile_results_3D(LOCALDIR,00,00,'phi');
-    
-            % linear growth rate (adapted for 2D zpinch and fluxtube)
-            options.TRANGE = [0.5 1]*data_.Ts3D(end);
-            options.NPLOTS = 0; % 1 for only growth rate and error, 2 for omega local evolution, 3 for plot according to z
-            options.GOK    = 0; %plot 0: gamma 1: gamma/k 2: gamma^2/k^3
-    
-            [~,it1] = min(abs(data_.Ts3D-0.5*data_.Ts3D(end))); % start of the measurement time window
-            [~,it2] = min(abs(data_.Ts3D-1.0*data_.Ts3D(end))); % end of ...
-            [wkykx,ekykx] = compute_growth_rates(data_.PHI(:,:,:,it1:it2),data_.Ts3D(it1:it2));
+            options.NORMALIZED = 0; 
+            options.TIME   = data_.Ts3D;
+             % Time window to measure the growth of kx/ky modes
+            options.KY_TW  = [0.7 1.0]*data_.Ts3D(end);
+            options.KX_TW  = [0.7 1.0]*data_.Ts3D(end);
+            options.NMA    = 1; % Set NMA option to 1
+            options.NMODES = 999; % Set how much modes we study
+            options.iz     = 'avg'; % Compressing z
+            options.ik     = 1; %
+            options.GOK2   = 0; % plot gamma/k^2
+            options.fftz.flag = 0; % Set fftz.flag option to 0
+            options.FIELD = 'phi';
+            options.SHOWFIG = 0;
+            [fig, wkykx, ekykx] = mode_growth_meter(data_,options);
+            % [wkykx,ekykx] = compute_growth_rates(data_.PHI(:,:,:,it1:it2),data_.Ts3D(it1:it2));
             g_ky (i,j) = real(wkykx(2,1));
             g_std(i,j) = real(ekykx(2,1));
             w_ky (i,j) = imag(wkykx(2,1));
             w_std(i,j) = imag(ekykx(2,1));
             [gmax, ikmax] = max(g_ky(i,j));
-    
+
             msg = sprintf('gmax = %2.2f, kmax = %2.2f',gmax,data_.grids.ky(ikmax)); disp(msg);
         end
         i = i + 1;
