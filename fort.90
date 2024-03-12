@@ -6,8 +6,8 @@
   job2load   = -1
 /
 &GRID
-  pmax   = 4
-  jmax   = 2
+  pmax   = 2
+  jmax   = 1
   Nx     = 64
   Lx     = 200
   Ny     = 48
@@ -21,10 +21,6 @@
   q0     = 0.0
   shear  = 0.0
   eps    = 0.0
-  !geom   = 'miller'
-  !q0     = 1.4
-  !shear  = 0.8
-  !eps    = 0.18
   kappa  = 1.0
   s_kappa= 0.0
   delta  = 0.0
@@ -65,7 +61,11 @@
   nu      = 0.1
   beta    = 0.0
   ADIAB_E = .f.
-  tau_e   = 1.0
+  !KN_MODEL = 'taylor'
+  !ORDER = 1
+  !KN_MODEL = 'pade'
+  !ORDER_NUM = 2 
+  !ORDER_DEN = 2
 /
 &CLOSURE
   hierarchy_closure='truncation'
