@@ -41,7 +41,7 @@ debug: compile
 
 # For compiling on marconi
 marconi: F90 = mpiifort
-marconi: F90FLAGS = -O3 -xHOST
+marconi: F90FLAGS = -DNOLAPACK -O3 -xHOST
 marconi: EXEC = $(BINDIR)/gyacomo23_dp
 marconi: dirs src/srcinfo.h
 marconi: compile
