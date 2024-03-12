@@ -21,10 +21,9 @@ Contact: antoine.hoffmann@epfl.ch
 ##### Citing GYACOMO
 If you use GYACOMO in your work, please cite (at least) one of the following paper: 
 
-Hoffmann, A., Frei, B., & Ricci, P. (2023). Gyrokinetic simulations of plasma turbulence in a Z-pinch using a moment-based approach and advanced collision operators. Journal of Plasma Physics, 89(2), 905890214. doi:10.1017/S0022377823000284
+Hoffmann, A.C.D., Frei, B.J. & Ricci, P. (2023). Gyrokinetic simulations of plasma turbulence in a Z-pinch using a moment-based approach and advanced collision operators. Journal of Plasma Physics, 89(2), 905890214. doi:10.1017/S0022377823000284
 
-Hoffmann, A., Frei, B., & Ricci, P. (2023). Gyrokinetic moment-based simulations of the
-Dimits shift https://arxiv.org/abs/2308.01016
+Hoffmann, A.C.D., Frei, B.J. & Ricci, P. (2023). Gyrokinetic moment-based simulations of the Dimits shift. Journal of Plasma Physics, 89(6), 905890611. doi:10.1017/S0022377823001320
 
 # What is GYACOMO ?
 
@@ -36,20 +35,21 @@ This repository contains the solver source code (in /src) but also my personnal 
 
 #### GYACOMO can
 - run in parallel using MPI (mpirun -np N ./path_to_exec Np Ny Nz, where N = Np x Ny x Nz is the number of processes and Np Ny Nz are the parallel dimensions in Hermite polynomials, binormal direction, and parallel direction, respectively).
-- run in single precision (make gfsp).
+- run in single precision.
 - evolve kinetic electrons and ions.
 - use an adiabatic electrons model.
-- include perpendicular magnetic perturbation (Ampere's law).
-- use Z-pinch and s-alpha geometry.
-- use the Miller geometry framework (elongation, triangularity etc.).
+- include perpendicular magnetic fluctuations.
+- use Z-pinch, s-alpha, circular and Miller geometry model.
 - use various experimental closures for the linear and nonlinear terms.
-- add background ExB shear flow.
-
-#### GYACOMO cannot (yet)
-- include parallel magnetic fluctuations
-- use an adiabatic ion model
-- include finite rhostar effects
-- study stellarator geometries
+- use linear GK Landau, Sugama, Lorentz collision operators. (requires precomputed matrix files, ask them!)
+- add background ExB shear flow. (Hammett's method)
+- use an adiabatic ion model. (not verified)
+#### GYACOMO cannot (I wish it could...)
+- include parallel magnetic field fluctuations. (easy)
+- include finite rhostar effects. (hard)
+- run without the futils library. (easy but boring, ask the zip file!)
+- Use shared memory parallelization. (okish)
+- run global simulations. (for another code)
 
 # How to compile and run GYACOMO
 
