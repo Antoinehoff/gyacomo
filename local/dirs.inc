@@ -20,8 +20,6 @@ ifeq ($(ENVTYPE), Marconi) #Marconi env.
 	FMDIR      = $(LIBDIR)/FM
 	FUTILS_DIR = $(LIBDIR)/futils/src
 	FFTW3DIR   = $(FFTW_HOME)
-	LAPACKDIR  = $(LAPACK_HOME)
-	HDF5_LIB   = $(HDF5_ROOT)/lib
 endif
 ifeq ($(ENVTYPE), MacOS) #MacOS
 	FMDIR      = $(LIBDIR)/FM
