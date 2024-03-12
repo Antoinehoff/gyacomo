@@ -53,7 +53,7 @@ This repository contains the solver source code (in /src) but also my personnal 
 
 # How to compile and run GYACOMO
 
-A tutorial is now on the code's wiki https://gitlab.epfl.ch/ahoffman/gyacomo/-/wikis/home.
+Be sur to check the code's [wiki](https://gitlab.epfl.ch/ahoffman/gyacomo/-/wikis/home)! It contains is a more detailed tutorial.
 
 (shorter guideline)
 To compile and run GYACOMO, follow these steps:
