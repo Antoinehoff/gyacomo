@@ -21,9 +21,9 @@ Contact: antoine.hoffmann@epfl.ch
 ##### Citing GYACOMO
 If you use GYACOMO in your work, please cite (at least) one of the following paper: 
 
-Hoffmann, A.C.D., Frei, B.J. & Ricci, P. (2023). Gyrokinetic simulations of plasma turbulence in a Z-pinch using a moment-based approach and advanced collision operators. Journal of Plasma Physics, 89(2), 905890214. doi:10.1017/S0022377823000284
+Hoffmann, A.C.D., Frei, B.J. & Ricci, P. (2023). Gyrokinetic simulations of plasma turbulence in a Z-pinch using a moment-based approach and advanced collision operators. Journal of Plasma Physics, 89(2), 905890214. [doi:10.1017/S0022377823000284](https://doi.org/10.1017/S0022377823000284)
 
-Hoffmann, A.C.D., Frei, B.J. & Ricci, P. (2023). Gyrokinetic moment-based simulations of the Dimits shift. Journal of Plasma Physics, 89(6), 905890611. doi:10.1017/S0022377823001320
+Hoffmann, A.C.D., Frei, B.J. & Ricci, P. (2023). Gyrokinetic moment-based simulations of the Dimits shift. Journal of Plasma Physics, 89(6), 905890611. [doi:10.1017/S0022377823001320](https://doi.org/10.1017/S0022377823001320)
 
 # What is GYACOMO ?
 
@@ -53,7 +53,7 @@ This repository contains the solver source code (in /src) but also my personnal 
 
 # How to compile and run GYACOMO
 
-A tutorial is now on the code's wiki https://gitlab.epfl.ch/ahoffman/gyacomo/-/wikis/home.
+Be sur to check the code's [wiki](https://gitlab.epfl.ch/ahoffman/gyacomo/-/wikis/home)! It contains is a more detailed tutorial.
 
 (shorter guideline)
 To compile and run GYACOMO, follow these steps:
