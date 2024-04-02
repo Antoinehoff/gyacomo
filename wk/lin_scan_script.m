@@ -28,28 +28,31 @@ EXECNAME = 'gyacomo23_dp'; % double precision
 % run lin_Entropy
 % run lin_ITG
 % run lin_RHT
-rho  = 0.95; TRIANG = 'PT'; READPROF = 1; 
+% rho  = 0.95; TRIANG = 'PT'; READPROF = 1; 
 % prof_folder = ['parameters/profiles/DIIID_Austin_et_al_2019/',TRIANG,'/'];
 % prof_folder = ['parameters/profiles/DIIID_Oak_Nelson/',TRIANG,'/'];
-prof_folder = ['parameters/profiles/DIIID_Oak_Nelson_high_density/',TRIANG,'/'];
-run lin_DIIID_data
+% prof_folder = ['parameters/profiles/DIIID_Oak_Nelson_high_density/',TRIANG,'/'];
+% run lin_DIIID_data
+run lin_DIIID_LM_rho95
 
 %% Change parameters
 % NU   = 1;
 % TAU  = 1;
 NY   = 2;
-EXBRATE = 0;
-S_DELTA = min(2.0,S_DELTA);
-SIGMA_E  = 0.023;
-NEXC = 0;
+% EXBRATE = 0;
+% S_DELTA = min(2.0,S_DELTA);
+% SIGMA_E  = 0.023;
+% NEXC = 0;
 LX   = 120;
 %% Scan parameters
 SIMID = [SIMID,'_scan'];
-P_a   = [2 4];
+P_a   = [2 4]; J_a = [1 1];
 % P_a   = 2;
-ky_a  = [0.01 0.02 0.05 0.1  0.2  0.5  1.0  2.0  5.0  10.0];
+% ky_a  = [0.01 0.02 0.05 0.1  0.2  0.5  1.0  2.0  5.0  10.0];
+ky_a  = [0.025:0.025:1.1];
 % ky_a  = 4.0;
-dt_a  = logspace(-2,-3,numel(ky_a));
+% dt_a  = logspace(-2,-3,numel(ky_a));
+dt_a  = linspace(0.01,0.01,numel(ky_a));
 CO    = 'DG';
 %% Scan loop
 % arrays for the result
@@ -59,7 +62,7 @@ w_ky = g_ky*0;
 w_std= g_ky*0;
 j = 1;
 for PMAX = P_a
-    JMAX = P/2;
+    JMAX = J_a(j);
     i = 1;
     for ky = ky_a
         LY   = 2*pi/ky;

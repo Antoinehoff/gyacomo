@@ -1,25 +1,23 @@
 %% Reference values
 % See Neiser et al. 2019 Gyrokinetic GENE simulations of DIII-D near-edge L-mode plasmas
 %% Set simulation parameters
-SIMID   = 'lin_DIIID_HM_rho90';  % Name of the simulation
+SIMID   = 'lin_DIIID_LM_rho95';  % Name of the simulation
 %% Set up physical parameters
 CLUSTER.TIME = '99:00:00';  % Allocation time hh:mm:ss
-NU = 1.0; %(0.00235 in GENE)
-TAU = 0.281/0.0831;               % i/e temperature ratio
-K_Ne    = 7.05;             % ele Density '''
-K_Te    = 13.5;             % ele Temperature '''
+NU = 0.02; %(2x)
+TAU = 1.6;               % i/e temperature ratio
+K_Ne    = 1.7;             % ele Density '''
+K_Te    = 6.0;             % ele Temperature '''
 K_Ni    = K_Ne;             % ion Density gradient drive
-K_Ti    = 2.32;             % ion Temperature '''
-SIGMA_E = 0.0233380/sqrt(2);        % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
+K_Ti    = 5.2;             % ion Temperature '''
+SIGMA_E = sqrt(1/1000);%0.0233380/sqrt(2) % mass ratio sqrt(m_a/m_i) (correct = 0.0233380)
 NA      = 2;          % number of kinetic species
 ADIAB_E = (NA==1);          % adiabatic electron model
-BETA    = 1.32e-2*0.01;           % electron plasma beta in prct
+BETA    = 7.59e-4;           % electron plasma beta in prct
 MHD_PD  = 1;
 %% Set up grid parameters
-P = 2;
-J = P/2;%P/2;
-PMAX = P;                   % Hermite basis size
-JMAX = J;                   % Laguerre basis size
+PMAX = 4;                   % Hermite basis size
+JMAX = 1;                   % Laguerre basis size
 NX = 6;                    % real space x-gridpoints
 NY = 2;                     % real space y-gridpoints
 LX = 2*pi/0.1;              % Size of the squared frequency domain in x direction
@@ -31,15 +29,15 @@ NEXC = 1;                   % To extend Lx if needed (Lx = Nexc/(kymin*shear))
 %% GEOMETRY
 % GEOMETRY= 's-alpha';
 GEOMETRY= 'miller';
-Q0      = 5.18;    % safety factor
-SHEAR   = 4.47;    % magnetic shear
-EPS     = 0.28;    % inverse aspect ratio
-KAPPA   = 1.53;    % elongation
-S_KAPPA = 0.77;
-DELTA   = 0.23;    % triangularity
-S_DELTA = 1.05;
-ZETA    =-0.01;    % squareness
-S_ZETA  =-0.17;
+Q0      = 4.8;    % safety factor
+SHEAR   = 2.5;    % magnetic shear
+EPS     = 0.3;    % inverse aspect ratio
+KAPPA   = 1.6;    % elongation
+S_KAPPA = 0.5;
+DELTA   = 0.0;    % triangularity
+S_DELTA = 0.0;
+ZETA    = 0.0;    % squareness
+S_ZETA  = 0.0;
 PARALLEL_BC = 'dirichlet'; % Boundary condition for parallel direction ('dirichlet','periodic','shearless','disconnected')
 SHIFT_Y = 0.0;    % Shift in the periodic BC in z
 NPOL   = 1;       % Number of poloidal turns

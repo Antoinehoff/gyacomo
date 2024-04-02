@@ -1,4 +1,4 @@
-function [out] = read_flux_out_XX(folderPath,PLOT)
+function [out] = read_flux_out_XX(folderPath,PLOT,nmvm)
     % Check if the prompt_string is provided as an argument
     if nargin < 1
         % If not provided, prompt the user for input
@@ -6,8 +6,12 @@ function [out] = read_flux_out_XX(folderPath,PLOT)
         % Get the input from the user
         folderPath = input(prompt_string, 's');   
         PLOT = 1;
-    else if nargin == 1
+        nmvm = 1;
+    elseif nargin == 1
             PLOT = 0;
+            nmvm = 1;
+    elseif nargin == 2
+            nmvm = 1;
     end
 
     % Initialize empty arrays to store the values
@@ -74,17 +78,23 @@ function [out] = read_flux_out_XX(folderPath,PLOT)
     if PLOT
     figure
     subplot(211)
-    plot(t_all,Pxi_all,'r','DisplayName','ions'); hold on;
+    x_ = movmean(t_all,nmvm);
+    y_ = movmean(Pxi_all,nmvm);
+    plot(x_,y_,'r','DisplayName','ions'); hold on;
     if(numel(t_all)==numel(Pxe_all))
-        plot(t_all,Pxe_all,'-.b','DisplayName','electrons'); hold on;
+        y_ = movmean(Pxe_all,nmvm);
+        plot(x_,y_,'-.b','DisplayName','electrons'); hold on;
     end
     xlabel('$tc_s/R$'); ylabel('$\Gamma_{x}$');
     legend('show')
     title('Radial particle flux')
     subplot(212)
-    plot(t_all,Qxi_all,'r','DisplayName','ions'); hold on;
+    x_ = movmean(t_all,nmvm);
+    y_ = movmean(Qxi_all,nmvm);
+    plot(x_,y_,'r','DisplayName','ions'); hold on;
     if(numel(t_all)==numel(Qxe_all))
-        plot(t_all,Qxe_all,'-.b','DisplayName','electrons'); hold on;
+        y_ = movmean(Qxe_all,nmvm);
+        plot(x_,y_,'-.b','DisplayName','electrons'); hold on;
     end
     xlabel('$tc_s/R$'); ylabel('$Q_{x}$');
     legend('show');

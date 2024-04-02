@@ -26,7 +26,7 @@ EXECNAME = 'gyacomo23_dp'; % double precision
 % run lin_DTT_HM_rho85
 % run lin_DTT_HM_rho98
 % run lin_DIIID_LM_rho90
-% run lin_DIIID_LM_rho95
+run lin_DIIID_LM_rho95
 % run lin_DIIID_LM_rho95_HEL
 % run lin_JET_rho97
 % run lin_Entropy
@@ -34,30 +34,31 @@ EXECNAME = 'gyacomo23_dp'; % double precision
 % run lin_KBM
 % run lin_RHT
 % run lin_Ivanov
-rho  = 0.95; TRIANG = 'NT'; READPROF = 1; 
+% rho  = 0.95; TRIANG = 'NT'; READPROF = 1; 
 % prof_folder = ['parameters/profiles/DIIID_Austin_et_al_2019/',TRIANG,'/'];
 % prof_folder = ['parameters/profiles/DIIID_Oak_Nelson/',TRIANG,'/'];
-prof_folder = ['parameters/profiles/DIIID_Oak_Nelson_high_density/',TRIANG,'/'];
-run lin_DIIID_data
+% prof_folder = ['parameters/profiles/DIIID_Oak_Nelson_high_density/',TRIANG,'/'];
+% run lin_DIIID_data
 % run lin_STEP_EC_HD_psi71
 % run lin_STEP_EC_HD_psi49
-if 1
+if 0
 % Plot the profiles
  plot_params_vs_rho(geom,prof_folder,rho,0.5,1.1,Lref,mref,Bref,READPROF);
 end
 % SIMID = ['rho_scan_DIIID_AUSTIN_2019/3x2x192x96x32/rho',num2str(rho)];
 %% Change parameters
 % GEOMETRY = 's-alpha';
+PMAX  = 2; JMAX = 1;
 DELTA =0.0; 
-K_Ni = 0; K_Ne = 0;
+% K_Ni = 0; K_Ne = 0;
 % DELTA = 0.0; 
 % DELTA = 0.2; 
 S_DELTA = DELTA/2;
-LY   = 2*pi/0.25;
-TMAX = 20;
+LY   = 2*pi/0.05;
+TMAX = 40;
 NY   = 2;
 DT   = 0.01;
-TAU  = 1; NU = 0.05;
+% TAU  = 1; NU = 0.05;
 % TAU = 1e-3; K_Ti = K_Ti/2/TAU; NU = 3*NU/8/TAU; ADIAB_E = 1; NA = 1;
 % MU_X = 1; MU_Y = 1;
 %% RUN
