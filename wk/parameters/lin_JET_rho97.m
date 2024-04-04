@@ -127,7 +127,10 @@ HYP_V   = 'hypcoll'; % Kinetic-hyperdiffusivity model
 MU_P    = 0.0;    % Hyperdiffusivity coefficient for Hermite
 MU_J    = 0.0;    % Hyperdiffusivity coefficient for Laguerre
 LAMBDAD = 0.0;    % Lambda Debye
-k_gB   = 1.0;     % Magnetic gradient strength
-k_cB   = 1.0;     % Magnetic curvature strength
+K_gB   = 1.0;     % Magnetic gradient tuner  (1 is the real value)
+K_cB   = 1.0;     % Magnetic curvature tuner (1 is the real value)
+K_mB   = 1.0;     % mirror force tuner       (1 is the real value)
+K_tB   = 1.0;     % trapping term tuner      (1 is the real value)
+K_ldB  = 1.0;     % Landau damping tuner     (1 is the real value)
 ADIAB_I = 0;          % adiabatic ion model
 ADIAB_E = (NA==1);          % adiabatic electron model
