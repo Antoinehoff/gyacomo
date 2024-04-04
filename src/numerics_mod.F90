@@ -287,7 +287,7 @@ SUBROUTINE compute_lin_coeff
                     xphij, xphijp1, xphijm1,&
                     xpsij, xpsijp1, xpsijm1
   USE species, ONLY: k_T, k_N, tau, q, sqrt_tau_o_sigma
-  USE model,   ONLY: k_cB, k_gB
+  USE model,   ONLY: k_cB, k_gB, k_mB, k_tB, k_ldB
   USE prec_const, ONLY: xp, SQRT2, SQRT3
   USE grid,  ONLY: parray, jarray, local_na, local_np, local_nj, ngj, ngp
   INTEGER     :: ia,ip,ij,p_int, j_int ! polynom. dagrees
@@ -305,32 +305,32 @@ SUBROUTINE compute_lin_coeff
         xnapj(ia,ip,ij) = tau(ia)/q(ia)*(k_cB*(2._xp*p_xp + 1._xp) &
                                         +k_gB*(2._xp*j_xp + 1._xp))
         ! Mirror force terms
-        ynapp1j  (ia,ip,ij) = -sqrt_tau_o_sigma(ia) *      (j_xp+1._xp)*SQRT(p_xp+1._xp)
-        ynapm1j  (ia,ip,ij) = -sqrt_tau_o_sigma(ia) *      (j_xp+1._xp)*SQRT(p_xp)
-        ynapp1jm1(ia,ip,ij) = +sqrt_tau_o_sigma(ia) *              j_xp*SQRT(p_xp+1._xp)
-        ynapm1jm1(ia,ip,ij) = +sqrt_tau_o_sigma(ia) *              j_xp*SQRT(p_xp)
+        ynapp1j  (ia,ip,ij) = -sqrt_tau_o_sigma(ia) *      (j_xp+1._xp)*SQRT(p_xp+1._xp) * k_mB
+        ynapm1j  (ia,ip,ij) = -sqrt_tau_o_sigma(ia) *      (j_xp+1._xp)*SQRT(p_xp)       * k_mB
+        ynapp1jm1(ia,ip,ij) = +sqrt_tau_o_sigma(ia) *              j_xp*SQRT(p_xp+1._xp) * k_mB
+        ynapm1jm1(ia,ip,ij) = +sqrt_tau_o_sigma(ia) *              j_xp*SQRT(p_xp)       * k_mB
         ! Trapping terms
-        zNapm1j  (ia,ip,ij) = +sqrt_tau_o_sigma(ia) *(2._xp*j_xp+1._xp)*SQRT(p_xp)
-        zNapm1jp1(ia,ip,ij) = -sqrt_tau_o_sigma(ia) *      (j_xp+1._xp)*SQRT(p_xp)
-        zNapm1jm1(ia,ip,ij) = -sqrt_tau_o_sigma(ia) *              j_xp*SQRT(p_xp)
+        zNapm1j  (ia,ip,ij) = +sqrt_tau_o_sigma(ia) *(2._xp*j_xp+1._xp)*SQRT(p_xp) * k_tB
+        zNapm1jp1(ia,ip,ij) = -sqrt_tau_o_sigma(ia) *      (j_xp+1._xp)*SQRT(p_xp) * k_tB
+        zNapm1jm1(ia,ip,ij) = -sqrt_tau_o_sigma(ia) *              j_xp*SQRT(p_xp) * k_tB
       ENDDO
     ENDDO
     DO ip = 1,local_np
       p_int= parray(ip+ngp/2)   ! Hermite degree
       p_xp = REAL(p_int,xp) ! REAL of Hermite degree
       ! Landau damping coefficients (ddz napj term)
-      xnapp1j(ia,ip) = sqrt_tau_o_sigma(ia) * SQRT(p_xp+1._xp)
-      xnapm1j(ia,ip) = sqrt_tau_o_sigma(ia) * SQRT(p_xp)
+      xnapp1j(ia,ip) = sqrt_tau_o_sigma(ia) * SQRT(p_xp+1._xp) * k_ldB
+      xnapm1j(ia,ip) = sqrt_tau_o_sigma(ia) * SQRT(p_xp)       * k_ldB
       ! Magnetic curvature term
-      xnapp2j(ia,ip) = tau(ia)/q(ia) * k_cB * SQRT((p_xp+1._xp)*(p_xp + 2._xp))
-      xnapm2j(ia,ip) = tau(ia)/q(ia) * k_cB * SQRT( p_xp       *(p_xp - 1._xp))
+      xnapp2j(ia,ip) = tau(ia)/q(ia) * SQRT((p_xp+1._xp)*(p_xp + 2._xp)) * k_cB
+      xnapm2j(ia,ip) = tau(ia)/q(ia) * SQRT( p_xp       *(p_xp - 1._xp)) * k_cB
     ENDDO
     DO ij = 1,local_nj
       j_int= jarray(ij+ngj/2)   ! Laguerre degree
       j_xp = REAL(j_int,xp) ! REAL of Laguerre degree
       ! Magnetic gradient term
-      xnapjp1(ia,ij) = -tau(ia)/q(ia) * k_gB * (j_xp + 1._xp)
-      xnapjm1(ia,ij) = -tau(ia)/q(ia) * k_gB *  j_xp
+      xnapjp1(ia,ij) = -tau(ia)/q(ia) * (j_xp + 1._xp) * k_gB
+      xnapjm1(ia,ij) = -tau(ia)/q(ia) *  j_xp          * k_gB
     ENDDO
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! ES linear coefficients for moment RHS !!!!!!!!!!
