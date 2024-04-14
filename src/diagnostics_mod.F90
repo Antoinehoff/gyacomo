@@ -5,11 +5,16 @@ MODULE diagnostics
   IMPLICIT NONE
   PRIVATE
 
-  LOGICAL, PUBLIC, PROTECTED :: write_doubleprecision = .FALSE.
-  LOGICAL, PUBLIC, PROTECTED :: write_gamma, write_hf  ! output particle transport and heat flux
-  LOGICAL, PUBLIC, PROTECTED :: write_phi,  write_Na00
-  LOGICAL, PUBLIC, PROTECTED :: write_Napj, write_Sapj
-  LOGICAL, PUBLIC, PROTECTED :: write_dens, write_fvel, write_temp
+  LOGICAL, PUBLIC, PROTECTED :: write_doubleprecision = .TRUE.
+  LOGICAL, PUBLIC, PROTECTED :: write_gamma = .TRUE.  ! output particle transport and heat flux
+  LOGICAL, PUBLIC, PROTECTED :: write_hf    = .TRUE.   ! output particle transport and heat flux
+  LOGICAL, PUBLIC, PROTECTED :: write_phi   = .TRUE. 
+  LOGICAL, PUBLIC, PROTECTED :: write_Na00  = .TRUE. 
+  LOGICAL, PUBLIC, PROTECTED :: write_Napj  = .TRUE. 
+  LOGICAL, PUBLIC, PROTECTED :: write_Sapj  = .TRUE. 
+  LOGICAL, PUBLIC, PROTECTED :: write_dens  = .TRUE. 
+  LOGICAL, PUBLIC, PROTECTED :: write_fvel  = .TRUE. 
+  LOGICAL, PUBLIC, PROTECTED :: write_temp  = .TRUE. 
 
   INTEGER, PUBLIC, PROTECTED :: nsave_0d, nsave_1d, nsave_2d, nsave_3d, nsave_5d ! save data every n step
   REAL,    PUBLIC, PROTECTED :: dtsave_0d, dtsave_1d, dtsave_2d, dtsave_3d, dtsave_5d ! save data every dt time unit
