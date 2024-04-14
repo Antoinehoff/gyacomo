@@ -14,7 +14,7 @@ MODULE initial
   REAL(xp), PUBLIC, PROTECTED :: init_background = 0._xp
   REAL(xp), PUBLIC, PROTECTED :: init_amp        = 1._xp
   ! Initial noise amplitude (for noise init)
-  REAL(xp), PUBLIC, PROTECTED :: init_noiselvl   = 1E-6_xp
+  REAL(xp), PUBLIC, PROTECTED :: init_noiselvl   = 1E-5_xp
   ! Initialization for random number generator
   INTEGER,  PUBLIC, PROTECTED :: iseed=42
   ! Multiple mode init
