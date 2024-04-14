@@ -48,28 +48,22 @@ S_DELTA = DELTA/2;
 LX   = 120;
 %% Scan parameters
 SIMID = [SIMID,TRIANG,'_scan'];
-P_a   = [2]; J_a = [1];
-% P_a   = 2;
-% ky_a  = [0.01 0.02 0.05 0.1  0.2  0.5  1.0  2.0  5.0  10.0];
-ky_a  = linspace(0.1,1.1,25);
-% ky_a  = 4.0;
-% dt_a  = logspace(-2,-3,numel(ky_a));
-dt_a  = linspace(0.001,0.001,numel(ky_a));
+P_a   = [2 4 6 8]; 
+J_a   = [1 2 3 4];
+ky    = 0.3;
+DT    = 0.001; TMAX = 40;
 CO    = 'DG';
 %% Scan loop
 % arrays for the result
-g_ky = zeros(numel(ky_a),numel(P_a));
+g_ky = zeros(numel(P_a),numel(J_a));
 g_std= g_ky*0;
 w_ky = g_ky*0;
 w_std= g_ky*0;
 j = 1;
 for PMAX = P_a
-    JMAX = J_a(j);
     i = 1;
-    for ky = ky_a
+    for JMAX = J_a
         LY   = 2*pi/ky;
-        DT   = dt_a(i);%1e-3;%/(1+log(ky/0.05));%min(1e-2,1e-3/ky);
-        TMAX = DT*10000;%2;%min(10,1.5/ky);
         DTSAVE0D =  1.0;
         DTSAVE3D =  0.5;
         %% RUN
@@ -137,28 +131,73 @@ y_ = g_ky + 1i*w_ky;
 e_ = g_std+ 1i*w_std;
 
 %% Save scan results (gamma)
+metadata = {};
 if(numel(ky_a)>1 || numel(P_a)>1)
     pmin  = num2str(min(P_a));   pmax = num2str(max(P_a));
+    jmin  = num2str(min(J_a));   jmax = num2str(max(J_a));
     kymin = num2str(min(ky_a));  kymax= num2str(max(ky_a));
     filename = [num2str(NX),'x',num2str(NZ),...
-                '_ky_',kymin,'_',kymax,...
                 '_P_',pmin,'_',pmax,...
+                '_J_',jmin,'_',jmax,...
+                '_ky_',ky,...
                 '_kN_',num2str(K_Ni),...
                 '_',CONAME,'_',num2str(NU),'_be_',num2str(BETA),...,
                 '_d_',num2str(DELTA),'.mat'];
     metadata.name   = filename;
     metadata.kymin  = ky;
-    metadata.title  = ['$\nu_{',CONAME,'}=$',num2str(NU),'$\kappa_T=$',num2str(K_Ti),', $\kappa_N=$',num2str(K_Ni)];
+    metadata.title  = [...
+        '$k_y=$',num2str(ky),...
+        ', $\nu_{',CONAME,'}=$',num2str(NU),...
+        ', $\kappa_T=$',num2str(K_Ti),...
+        ', $\kappa_N=$',num2str(K_Ni)];
     metadata.par    = [num2str(NX),'x1x',num2str(NZ)];
     metadata.nscan  = 2;
-    metadata.s2name = '$P$';
-    metadata.s2     = P_a;
-    metadata.s1name = '$ky$';
-    metadata.s1     = ky_a;
+    metadata.s1name = '$P$';
+    metadata.s1     = P_a;
+    metadata.s2name = '$J$';
+    metadata.s2     = J_a;
     metadata.dname  = '$\gamma c_s/R$';
     metadata.data   = y_;
     metadata.err    = e_;
     save([SIMDIR,filename],'-struct','metadata');
     disp(['saved in ',SIMDIR,filename]);
-    clear metadata tosave
+if 1
+    gamma = real(metadata.data); g_err = real(metadata.err);
+    omega = imag(metadata.data); w_err = imag(metadata.err);
+    gamma = gamma.*(gamma>0.025);
+    figure
+    colors_ = jet(numel(metadata.s2));
+    subplot(121)
+    for i = 1:numel(metadata.s2)
+        errorbar(metadata.s1,gamma(:,i),0*g_err(:,i),'s-',...
+        'LineWidth',2.0,...
+        'DisplayName',[metadata.s2name,'=',num2str(metadata.s2(i))],...
+        'color',colors_(i,:)); 
+        hold on;
+    end
+    xlabel(metadata.s1name); ylabel(metadata.dname);title(metadata.title);
+    xlim([metadata.s1(1) metadata.s1(end)]);
+    
+    subplot(122)
+    for i = 1:numel(metadata.s2)
+        errorbar(metadata.s1,omega(:,i),w_err(:,i),'s-',...
+        'LineWidth',2.0,...
+        'DisplayName',[metadata.s2name,'=',num2str(metadata.s2(i))],...
+        'color',colors_(i,:)); 
+        hold on;
+    end
+    xlabel(metadata.s1name); ylabel('$\omega R/c_s$');title(metadata.title);
+    xlim([metadata.s1(1) metadata.s1(end)]);
+    
+    colormap(colors_);
+    clb = colorbar;
+    clim([1 numel(metadata.s2)+1]);
+    clb.Ticks=linspace(metadata.s2(1),metadata.s2(end),numel(metadata.s2));
+    clb.Ticks    =1.5:numel(metadata.s2)+1.5;
+    clb.TickLabels=metadata.s2;
+    clb.Label.String = metadata.s2name;
+    clb.Label.Interpreter = 'latex';
+    clb.Label.FontSize= 18;
+end
+    % clear metadata tosave
 end

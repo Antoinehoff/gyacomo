@@ -39,7 +39,7 @@ run lin_DIIID_LM_rho95
 % NU   = 1;
 % TAU  = 1;
 NY   = 2;
-DELTA = 0.0; TRIANG = '';
+DELTA =-0.2; TRIANG = 'NT';
 S_DELTA = DELTA/2;
 % EXBRATE = 0;
 % S_DELTA = min(2.0,S_DELTA);
@@ -48,14 +48,15 @@ S_DELTA = DELTA/2;
 LX   = 120;
 %% Scan parameters
 SIMID = [SIMID,TRIANG,'_scan'];
-P_a   = [2]; J_a = [1];
+P_a   = [2 4 6 8 16]; J_a = [1 2 3 4 8];
 % P_a   = 2;
 % ky_a  = [0.01 0.02 0.05 0.1  0.2  0.5  1.0  2.0  5.0  10.0];
-ky_a  = linspace(0.1,1.1,25);
+ky_a  = [0.05 linspace(0.1,1.1,16)]; ky_a = ky_a(1:end-2);
 % ky_a  = 4.0;
 % dt_a  = logspace(-2,-3,numel(ky_a));
-dt_a  = linspace(0.001,0.001,numel(ky_a));
+DT    = 0.0005;
 CO    = 'DG';
+DTSAVE3D = 0.002; TMAX = 40;
 %% Scan loop
 % arrays for the result
 g_ky = zeros(numel(ky_a),numel(P_a));
@@ -68,8 +69,6 @@ for PMAX = P_a
     i = 1;
     for ky = ky_a
         LY   = 2*pi/ky;
-        DT   = dt_a(i);%1e-3;%/(1+log(ky/0.05));%min(1e-2,1e-3/ky);
-        TMAX = DT*10000;%2;%min(10,1.5/ky);
         DTSAVE0D =  1.0;
         DTSAVE3D =  0.5;
         %% RUN
@@ -160,5 +159,43 @@ if(numel(ky_a)>1 || numel(P_a)>1)
     metadata.err    = e_;
     save([SIMDIR,filename],'-struct','metadata');
     disp(['saved in ',SIMDIR,filename]);
-    clear metadata tosave
+    % plot
+if 1
+    gamma = real(metadata.data); g_err = real(metadata.err);
+    omega = imag(metadata.data); w_err = imag(metadata.err);
+    gamma = gamma.*(gamma>0.025);
+    figure
+    colors_ = jet(numel(metadata.s2));
+    subplot(121)
+    for i = 1:numel(metadata.s2)
+        errorbar(metadata.s1,gamma(:,i),0*g_err(:,i),'s-',...
+        'LineWidth',2.0,...
+        'DisplayName',[metadata.s2name,'=',num2str(metadata.s2(i))],...
+        'color',colors_(i,:)); 
+        hold on;
+    end
+    xlabel(metadata.s1name); ylabel(metadata.dname);title(metadata.title);
+    xlim([metadata.s1(1) metadata.s1(end)]);
+    
+    subplot(122)
+    for i = 1:numel(metadata.s2)
+        errorbar(metadata.s1,omega(:,i),w_err(:,i),'s-',...
+        'LineWidth',2.0,...
+        'DisplayName',[metadata.s2name,'=',num2str(metadata.s2(i))],...
+        'color',colors_(i,:)); 
+        hold on;
+    end
+    xlabel(metadata.s1name); ylabel('$\omega R/c_s$');title(metadata.title);
+    xlim([metadata.s1(1) metadata.s1(end)]);
+    
+    colormap(colors_);
+    clb = colorbar;
+    clim([1 numel(metadata.s2)+1]);
+    clb.Ticks=linspace(metadata.s2(1),metadata.s2(end),numel(metadata.s2));
+    clb.Ticks    =1.5:numel(metadata.s2)+1.5;
+    clb.TickLabels=metadata.s2;
+    clb.Label.String = metadata.s2name;
+    clb.Label.Interpreter = 'latex';
+    clb.Label.FontSize= 18;
+end
 end

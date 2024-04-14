@@ -48,16 +48,18 @@ end
 % SIMID = ['rho_scan_DIIID_AUSTIN_2019/3x2x192x96x32/rho',num2str(rho)];
 %% Change parameters
 % GEOMETRY = 's-alpha';
-PMAX  = 2; JMAX = 1;
-DELTA =0.0; 
+PMAX  = 4; JMAX = 2;
+DELTA = 0.2; 
+% K_tB = 0; K_mB = 0; K_ldB = 0;
 % K_Ni = 0; K_Ne = 0;
-% DELTA = 0.0; 
+% K_Ti = 0; TAU = 1/3;
+DELTA = 0.0; 
 % DELTA = 0.2; 
 S_DELTA = DELTA/2;
-LY   = 2*pi/0.05;
+LY   = 2*pi/0.75;
 TMAX = 40;
 NY   = 2;
-DT   = 0.01;
+DT   = 0.0025;
 % TAU  = 1; NU = 0.05;
 % TAU = 1e-3; K_Ti = K_Ti/2/TAU; NU = 3*NU/8/TAU; ADIAB_E = 1; NA = 1;
 % MU_X = 1; MU_Y = 1;
@@ -114,29 +116,6 @@ gkxky = real(wkykx(2:end,1:data.grids.Nx/2))';
 gkxky(isnan(gkxky)) =0;
 gkxky(isinf(gkxky)) =0;
 figure; plot(ky,gkxky(1,:));
-% gkxky(gkxky<0)      =0;
-% % gkxky = imgaussfilt(gkxky,1);
-% %
-% wkxky = imag(wkykx(2:end,1:data.grids.Nx/2))';
-% wkxky(isnan(wkxky)) =0;
-% wkxky(isinf(wkxky)) =0;
-% % wkxky(wkxky<0)      =0;
-% % wkxky = imgaussfilt(wkxky,1.5);
-% %
-% figure; 
-% subplot(121)
-%     contourf(kx,ky,gkxky',10)
-%     % clim(0.5*[0 1]); 
-%     % colormap(bluewhitered); colorbar;
-%     xlim([0.025 1]);
-%     xlabel('$k_x\rho_s$'); ylabel('$k_y\rho_s$')
-% subplot(122)
-%     contourf(kx,ky,wkxky',10)
-%     % clim(1*[0 1]); 
-%     % colormap(bluewhitered); colorbar 
-%     xlim([0.025 1]);
-%     xlabel('$k_x\rho_s$'); ylabel('$k_y\rho_s$')
-% % save_figure(data,fig,'.png')
 end
 
 if (0 && NZ>4)

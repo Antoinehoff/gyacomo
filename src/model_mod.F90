@@ -21,8 +21,11 @@ MODULE model
   REAL(xp), PUBLIC, PROTECTED ::   tau_i =  1.0       ! electron-ion temperature ratio for ion adiabatic model
   REAL(xp), PUBLIC, PROTECTED ::     q_i =  1.0       ! ion charge for ion adiabatic model
   REAL(xp), PUBLIC, PROTECTED ::      nu =  0._xp     ! collision frequency parameter
-  REAL(xp), PUBLIC, PROTECTED ::    k_gB =  1._xp     ! Magnetic gradient strength (L_ref/L_gB)
-  REAL(xp), PUBLIC, PROTECTED ::    k_cB =  1._xp     ! Magnetic curvature strength (L_ref/L_cB)
+  REAL(xp), PUBLIC, PROTECTED ::    k_gB =  1._xp     ! artificial magnetic gradient tuner  (L_ref/L_gB)
+  REAL(xp), PUBLIC, PROTECTED ::    k_cB =  1._xp     ! artificial magnetic curvature tuner (L_ref/L_cB)
+  REAL(xp), PUBLIC, PROTECTED ::    k_mB =  1._xp     ! artificial mirror force tuner       (L_ref/L_cB)
+  REAL(xp), PUBLIC, PROTECTED ::    k_tB =  1._xp     ! artificial trapping term tuner      (L_ref/L_cB)
+  REAL(xp), PUBLIC, PROTECTED ::   k_ldB =  1._xp     ! artificial Landau damping tuner     (L_ref/L_cB)
   REAL(xp), PUBLIC, PROTECTED :: lambdaD =  0._xp     ! Debye length
   REAL(xp), PUBLIC, PROTECTED ::    beta =  0._xp     ! electron plasma Beta (8piNT_e/B0^2)
   REAL(xp), PUBLIC, PROTECTED :: ExBrate =  0._xp     ! ExB background shearing rate (radially constant shear flow)
@@ -59,7 +62,8 @@ CONTAINS
     NAMELIST /MODEL/     LINEARITY, RM_LD_T_EQ, FORCE_SYMMETRY, MHD_PD, &
                          Na, ADIAB_E, ADIAB_I, q_i, tau_i, &
                          mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, &
-                         nu, k_gB, k_cB, lambdaD, beta, ExBrate, ExB_NL_CORRECTION,&
+                         nu, k_gB, k_cB, k_mB, k_tB, k_ldB, &
+                         lambdaD, beta, ExBrate, ExB_NL_CORRECTION,&
                          ikxZF, ZFrate, ZF_ONLY, KN_MODEL, ORDER, ORDER_NUM, ORDER_DEN
 
     READ(lu_in,model)

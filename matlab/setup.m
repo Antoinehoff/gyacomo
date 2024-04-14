@@ -61,8 +61,16 @@ MODEL.K_Ni    = K_Ni;
 MODEL.K_Ne    = K_Ne;
 MODEL.K_Ti    = K_Ti;    
 MODEL.K_Te    = K_Te;    
-MODEL.k_gB   = k_gB;      % Magnetic gradient
-MODEL.k_cB   = k_cB;      % Magnetic curvature
+MODEL.K_gB   = K_gB;      % artificial magnetic gradient  tuner
+MODEL.K_cB   = K_cB;      % artificial magnetic curvature tuner
+try
+    K_mB; K_tB; K_ldB;
+catch
+    K_mB=1; K_tB=1; K_ldB=1;
+end
+MODEL.K_mB   = K_mB;      % artificial mirror force   tuner
+MODEL.K_tB   = K_tB;      % artificial trapping term  tuner
+MODEL.K_ldB  = K_ldB;     % artificial Landau damping tuner
 MODEL.lambdaD = LAMBDAD;
 % CLOSURE parameters
 CLOSURE.hierarchy_closure = ['''',HRCY_CLOS,''''];
