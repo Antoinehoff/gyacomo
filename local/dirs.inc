@@ -1,19 +1,21 @@
-#Local code, binaries, pputils library
-PREFIX   = $(HOME)/gyacomo
-SRCDIR   = $(PREFIX)/src
-BINDIR   = $(PREFIX)/bin
-OBJDIR   = $(PREFIX)/obj
-LIBDIR   = $(HOME)/lib
-MODDIR   = $(PREFIX)/mod
+# Variables for main path and libraries
+PREFIX   = $(HOME)/gyacomo # this must be the path to your /gyaomo folder
+LIBDIR   = $(HOME)/lib     # this is the path to the library folder
 
-#OS environment: Linux, Marconi or MacOS
+# OS environment: Linux, Marconi or MacOS (use Linux per default)
 ENVTYPE = Linux
+
+# Auxiliary variables
+SRCDIR   = $(PREFIX)/src   # this is the path to the /gyacomo/src
+BINDIR   = $(PREFIX)/bin   # this is the path to the /gyacomo/bin
+OBJDIR   = $(PREFIX)/obj   # this is the path to the /gyacomo/obj
+MODDIR   = $(PREFIX)/mod   # this is the path to the /gyacomo/src
 
 ifeq ($(ENVTYPE), Linux) #Linux env.
 	FMDIR      = $(LIBDIR)/FM
 	FUTILS_DIR = $(LIBDIR)/futils/src
 	FFTW3DIR   = $(LIBDIR)/fftw-3.3.10
-	LAPACKDIR  = $(HOME)/lib/lapack-3.10.0
+	#LAPACKDIR  = $(LIBDIR)/lapack-3.10.0
 	HDF5_LIB   = $(HDF5_ROOT)/lib
 endif
 ifeq ($(ENVTYPE), Marconi) #Marconi env.
