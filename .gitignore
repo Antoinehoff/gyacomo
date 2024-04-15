@@ -49,3 +49,5 @@ gyacomo_dbg
 gyacomo23*
 wk/parameters/profiles
 local/dirs.inc
+simulations
+__pycache__
