@@ -10,13 +10,27 @@ addpath(genpath([gyacomodir,'matlab/load'])) % ... add% EXECNAME = 'gyacomo_1.0'
 % datafname = 'lin_DIIID_Oak_Nelson_high_density_PT_scan/6x32_ky_0.01_10_P_2_8_kN_0.32141_LDGK_0.0038027_be_0.0060039.mat';
 % datafname = 'lin_DIIID_Oak_Nelson_high_density_NT_scan/6x32_ky_0.01_10_P_2_8_kN_1.0883_LDGK_0.0080915_be_0.0015991.mat';
 % rho = 0.95
-% datagname = 'lin_DIIID_Oak_Nelson_high_density_PT_scan/6x32_ky_0.01_10_P_2_8_kN_0.62888_LDGK_0.0046858_be_0.0048708.mat';
-% datafname = 'lin_DIIID_Oak_Nelson_high_density_PT_scan/6x32_ky_0.01_10_P_2_4_kN_0.62888_DGGK_0.0046858_be_0.0048708.mat';
-% datafname = 'lin_DIIID_LM_rho95_scan/6x32_ky_0.025_1.1_P_2_4_kN_1.7_DGGK_0.02_be_0.000759_d_0.0.mat';
-% datafname = 'lin_DIIID_LM_rho95_scan/6x32_ky_0.025_1.1_P_2_6_kN_1.7_DGGK_0.02_be_0.000759_d_0.mat';
-% datafname = 'lin_DIIID_LM_rho95_scan/6x32_ky_0.1_1.1_P_2_16_kN_1.7_DGGK_0.02_be_0.000759_d_0.mat';
+% KEM
 % datafname = 'lin_DIIID_LM_rho95_scan/6x32_ky_0.05_0.96667_P_2_16_kN_1.7_DGGK_0.02_be_0.000759_d_0.mat';
-datafname = 'lin_DIIID_LM_rho95PT_scan/6x32_ky_0.05_0.96667_P_2_16_kN_1.7_DGGK_0.02_be_0.000759_d_0.2.mat';
+% datafname = 'lin_DIIID_LM_rho95_scan/6x32_ky_0.05_0.96667_P_2_4_kN_1.7_DGGK_0.02_be_0.000759_d_0.mat';
+% datafname = 'lin_DIIID_LM_rho95PT_scan/6x32_ky_0.05_0.96667_P_2_16_kN_1.7_DGGK_0.02_be_0.000759_d_0.2.mat';
+% datafname = 'lin_DIIID_LM_rho95NT_scan/6x32_ky_0.05_0.96667_P_2_16_kN_1.7_DGGK_0.02_be_0.000759_d_-0.2.mat';
+% AEM
+% datafname = 'lin_DIIID_LM_rho95AE_scan/6x32_ky_0.05_0.96667_P_2_16_kN_1.7_DGGK_0.02_be_0.000759_d_0.mat';
+% datafname = 'lin_DIIID_LM_rho95PTAE_scan/6x32_ky_0.05_0.96667_P_2_16_kN_1.7_DGGK_0.02_be_0.000759_d_0.2.mat';
+% datafname = 'lin_DIIID_LM_rho95NTAE_scan/6x32_ky_0.05_0.96667_P_2_16_kN_1.7_DGGK_0.02_be_0.000759_d_-0.2.mat';
+% RFM
+% datafname = 'lin_DIIID_LM_rho95RFM_scan/6x32_ky_0.1_1.9333_P_2_2_kN_0_DGGK_7.5_be_0.000759_d_0.mat';
+%
+% no gradn
+% KEM
+% datafname = 'lin_DIIID_LM_rho95NT_scan/6x32_ky_0.05_0.96667_P_2_16_kN_0_DGGK_0.02_be_0.000759_d_-0.2.mat';
+% datafname = 'lin_DIIID_LM_rho95_scan/6x32_ky_0.05_0.96667_P_2_16_kN_0_DGGK_0.02_be_0.000759_d_0.mat';
+% datafname = 'lin_DIIID_LM_rho95PT_scan/6x32_ky_0.05_0.96667_P_2_16_kN_0_DGGK_0.02_be_0.000759_d_0.2.mat';
+% AEM
+% datafname = 'lin_DIIID_LM_rho95AE_scan/6x32_ky_0.05_0.96667_P_2_16_kN_0_DGGK_0.02_be_0.000759_d_0.mat';
+% RFM
+% datafname = '';
 %% Chose if we filter gamma>0.05
 FILTERGAMMA = 1;
 
@@ -26,7 +40,7 @@ d = load(fname);
 gamma = real(d.data); g_err = real(d.err);
 omega = imag(d.data); w_err = imag(d.err);
 if FILTERGAMMA
-    gamma = gamma.*(gamma>0.025);
+    gamma = gamma.*(gamma>0.005);
 end
 if 0
 %% Pcolor of the peak
@@ -53,8 +67,10 @@ figure
 colors_ = jet(numel(d.s2));
 subplot(121)
 for i = 1:numel(d.s2)
+    % toplot = ~isnan(gamma(:,i));
+    toplot = (gamma(:,i)-g_err(:,i)>0);
     % plot(d.s1,gamma(:,i),'s-',...
-    plot(d.s1(gamma(:,i)>0),gamma((gamma(:,i)>0),i),'s-',...
+    plot(d.s1(toplot),gamma(toplot,i),'s-',...
         'LineWidth',2.0,...
         'DisplayName',[d.s2name,'=',num2str(d.s2(i))],...
         'color',colors_(i,:)); 
@@ -69,7 +85,9 @@ xlim([d.s1(1) d.s1(end)]);
 
 subplot(122)
 for i = 1:numel(d.s2)
-    plot(d.s1,omega(:,i),'s-',...
+    toplot = ~isnan(gamma(:,i));
+    toplot = (gamma(:,i)-g_err(:,i)>0);
+    plot(d.s1(toplot),omega(toplot,i),'s-',...
         'LineWidth',2.0,...
         'DisplayName',[d.s2name,'=',num2str(d.s2(i))],...
         'color',colors_(i,:)); 

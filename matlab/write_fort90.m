@@ -54,6 +54,7 @@ fprintf(fid,['  write_Na00  = ', OUTPUTS.write_Na00,'\n']);
 fprintf(fid,['  write_Napj  = ', OUTPUTS.write_Napj,'\n']);
 fprintf(fid,['  write_dens  = ', OUTPUTS.write_dens,'\n']);
 fprintf(fid,['  write_temp  = ', OUTPUTS.write_temp,'\n']);
+fprintf(fid,['  write_fvel  = ', OUTPUTS.write_fvel,'\n']);
 fprintf(fid,'/\n');
 
 fprintf(fid,'&MODEL\n');

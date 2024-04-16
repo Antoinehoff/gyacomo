@@ -1,6 +1,6 @@
-function [ FIGURE ] = show_moments_spectrum( DATA, OPTIONS )
+function [ FIGURE, XX, YY, ZZ ] = show_moments_spectrum( DATA, OPTIONS )
 species_name = {'i','e'}; % hard coded because this list is not output yet
-
+XX = 0; YY = 0; ZZ = 0;
 Pa = DATA.grids.Parray;
 Ja = DATA.grids.Jarray;
 Time_ = DATA.Ts3D;
@@ -67,6 +67,9 @@ for ia = 1:DATA.inputs.Na
         [~,it0] = min(abs(DATA.Ts3D-t0));
         [~,it1] = min(abs(DATA.Ts3D-t1)); 
         Napjz_tavg = mean(Napjz(:,:,it0:it1),3);
+        if OPTIONS.NORMALIZED
+            Napjz_tavg = Napjz_tavg./max(Napjz_tavg(:));
+        end
         x_ = DATA.grids.Parray;
         y_ = DATA.grids.Jarray;
         if OPTIONS.TAVG_2D_CTR
@@ -77,7 +80,7 @@ for ia = 1:DATA.inputs.Na
             set(gca,'YDir','normal')        
             xlabel('$p$'); ylabel('$j$');
         end
-        clb = colorbar; colormap(jet);
+        clb = colorbar; colormap(parula);
         clb.Label.String = '$\langle E(p,j) \rangle_t$';
         clb.TickLabelInterpreter = 'latex';
         clb.Label.Interpreter = 'latex';
