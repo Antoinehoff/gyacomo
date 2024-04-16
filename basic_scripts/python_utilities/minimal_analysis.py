@@ -6,7 +6,6 @@ the following datasets:
 - 'data/var0d/hflux_x': Heat flux data
 - 'data/var0d/pflux_x': Particle flux data
 """
-import h5py
 import load_data as loader
 import matplotlib.pyplot as plt
 import numpy as np
