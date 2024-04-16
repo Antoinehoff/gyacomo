@@ -3,7 +3,7 @@ PREFIX   = $(HOME)/gyacomo
 LIBDIR   = $(HOME)/lib
 
 # OS environment: Linux, Marconi or MacOS (use Linux per default)
-ENVTYPE = MacOS
+ENVTYPE = Linux
 
 # Auxiliary variables
 SRCDIR   = $(PREFIX)/src
