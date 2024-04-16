@@ -1,15 +1,15 @@
 # Variables for main path and libraries
-PREFIX   = $(HOME)/gyacomo # this must be the path to your /gyaomo folder
-LIBDIR   = $(HOME)/lib     # this is the path to the library folder
+PREFIX   = $(HOME)/gyacomo
+LIBDIR   = $(HOME)/lib
 
 # OS environment: Linux, Marconi or MacOS (use Linux per default)
-ENVTYPE = Linux
+ENVTYPE = MacOS
 
 # Auxiliary variables
-SRCDIR   = $(PREFIX)/src   # this is the path to the /gyacomo/src
-BINDIR   = $(PREFIX)/bin   # this is the path to the /gyacomo/bin
-OBJDIR   = $(PREFIX)/obj   # this is the path to the /gyacomo/obj
-MODDIR   = $(PREFIX)/mod   # this is the path to the /gyacomo/src
+SRCDIR   = $(PREFIX)/src
+BINDIR   = $(PREFIX)/bin
+OBJDIR   = $(PREFIX)/obj
+MODDIR   = $(PREFIX)/mod
 
 ifeq ($(ENVTYPE), Linux) #Linux env.
 	FMDIR      = $(LIBDIR)/FM
