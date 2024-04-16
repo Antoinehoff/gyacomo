@@ -6,14 +6,14 @@ all: dp
 
 # Double precision version
 dp: F90 = mpif90
-dp: F90FLAGS = -O3 -xHOST
+dp: F90FLAGS = -DNOLAPACK -O3 -xHOST
 dp: EXEC = $(BINDIR)/gyacomo23_dp
 dp: dirs src/srcinfo.h
 dp: compile
 
 # Single precision version
 sp: F90 = mpif90
-sp: F90FLAGS = -DSINGLE_PRECISION -O3 -xHOST
+sp: F90FLAGS = -DNOLAPACK -DSINGLE_PRECISION -O3 -xHOST
 sp: EXEC = $(BINDIR)/gyacomo23_sp
 sp: dirs src/srcinfo.h
 sp: compile
