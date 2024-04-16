@@ -70,6 +70,7 @@ W_HF     = 1;     % Output flag for high-frequency potential energy
 W_PHI    = 1;     % Output flag for potential
 W_NA00   = 1;     % Output flag for nalpha00 (density of species alpha)
 W_DENS   = 1;     % Output flag for total density
+W_FVEL   = 1;     % Output flag for fluid velocity
 W_TEMP   = 1;     % Output flag for temperature
 W_NAPJ   = 1;     % Output flag for nalphaparallel (parallel momentum of species alpha)
 W_SAPJ   = 0;     % Output flag for saparallel (parallel current of species alpha)

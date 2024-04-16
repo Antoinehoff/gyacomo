@@ -4,7 +4,7 @@
 % tw = [3000 4000];
 % tw = [4000 4500];
 % tw = [4500 5000];
-tw = [00 1000];
+tw = [100 1000];
 
 fig = gcf;
 axObjs = fig.Children;
@@ -29,8 +29,11 @@ figure;
 plot(mvm(X_(n0:skip:n1)-shift),mvm(Y_(n0:skip:n1))); hold on;
 
 % t0 = ceil(numel(X_)*0.2); t1 = numel(X_);
-avg= mean(Y_(n0:n1)); dev = std(Y_(n0:n1));
+[avg, sliceav, sliceerr] = sliceAverage(mvm(Y_(n0:skip:n1)),10);
+dev = std(sliceav);
+% avg= mean(Y_(n0:n1)); dev = std(Y_(n0:n1));
   disp(['AVG =',sprintf('%4.4f',avg),'+-',sprintf('%4.4f',dev)]);
+  disp([sprintf('%4.4f',avg),',',sprintf('%4.4f',dev)]);
 % 
 % n1 = n0+1; n2 = min(n1 + 50000,numel(Y_));
 % avg_ = mean(Y_(n1:n2));

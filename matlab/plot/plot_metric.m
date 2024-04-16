@@ -104,11 +104,5 @@ for i_ = 1:numel(names)
     namae = names{i_};
     arrays.(namae) = geo_arrays(:,i_);
 end
-try
-    if ~options.SHOWFIG
-        close
-    end
-catch
-end
 end
 

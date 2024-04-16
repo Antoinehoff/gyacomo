@@ -4,72 +4,9 @@ addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
 addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 
-% folder = '/misc/gene_results/shearless_cyclone/miller_output_1.0/';
-% folder = '/misc/gene_results/shearless_cyclone/miller_output_0.8/';
-% folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_1.0/';
-% folder = '/misc/gene_results/shearless_cyclone/rm_corrections_HF/';
-% folder = '/misc/gene_results/shearless_cyclone/linear_s_alpha_CBC_100/';
-% folder = '/misc/gene_results/shearless_cyclone/s_alpha_output_0.5/';
-% folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_1.0/';
-% folder = '/misc/gene_results/shearless_cyclone/LD_s_alpha_output_0.8/';
-% folder = '/misc/gene_results/Z-pinch/HP_fig_2a_mu_1e-2/';
-% folder = '/misc/gene_results/Z-pinch/HP_fig_2a_gyroLES/';
-% folder = '/misc/gene_results/Z-pinch/HP_fig_2b_mu_5e-2/';
-% folder = '/misc/gene_results/Z-pinch/HP_fig_2c_mu_5e-2/';
-% folder = '/misc/gene_results/Z-pinch/HP_fig_2c_gyroLES/';
-% folder = '/misc/gene_results/Z-pinch/HP_fig_2c_mu_1e-2_muv_1e-1/';
-% folder = '/misc/gene_results/LD_zpinch_1.6/';
-% folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
-% folder = '/misc/gene_results/ZP_HP_kn_1.6_nuv_3.2/';
-% folder = '/misc/gene_results/Z-pinch/ZP_HP_kn_1.6_HRES/';
-% folder = '/misc/gene_results/ZP_kn_2.5_large_box/';
-% folder = '/misc/gene_results/Z-pinch/kN_2.0_HD_transport_spectrum_01/';
-% folder = '/misc/gene_results/Z-pinch/kN_2.5_HD_transport_spectrum_01/';
+folder = '/misc/gyacomo23_outputs/triangularity_paper/GENE_baseline/output/';
+% folder = '/misc/gyacomo23_outputs/triangularity_paper/GENE_output/';
 
-% folder = '/misc/gene_results/CBC/128x64x16x24x12/';
-% folder = '/misc/gene_results/CBC/196x96x20x32x16_01/';
-% folder = '/misc/gene_results/CBC/256x96x24x32x12/';
-% folder = '/misc/gene_results/CBC/128x64x16x6x4/';
-% folder = '/misc/gene_results/CBC/KT_5.3_128x64x16x24x12_01/';
-% folder = '/misc/gene_results/CBC/KT_4.5_128x64x16x24x12_01/';
-% folder = '/misc/gene_results/CBC/KT_9_128x64x16x24x12/';
-% folder = '/misc/gene_results/CBC/KT_13_large_box_128x64x16x24x12/';
-% folder = '/misc/gene_results/CBC/Lapillone_Fig6/';
-% folder = '/misc/gene_results/Z-pinch/HP_kN_1.6_adapt_mu_01/';
-% folder = '/misc/gene_results/miller/';
-% folder = '/misc/gene_results/CBC/KT_4.5_192x96x24x30x16_00/';
-% folder = '/misc/gene_results/CBC/KT_5.0_192x96x24x30x16_00/';
-% folder = '/misc/gene_results/CBC/KT_5.3_192x96x24x30x16_00/';
-% folder = '/misc/gene_results/CBC/196x96x20x32x16_01/';
-% folder = '/misc/gene_results/linear_miller_CBC/hdf5_miller_s0_adiabe/';
-% folder = '/misc/gene_results/linear_miller_CBC/hdf5_salpha_s0_adiabe/';
-
-%Paper 2
-% folder = '/misc/gene_results/CBC/KT_6.96_64x32x32x24x12_Nexc_5/';
-% folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x8x4_Nexc_5_00/';
-% folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x16x8_Nexc_5_00/';
-% folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x32x16_Nexc_5_00/';
-% folder = '/misc/gene_results/CBC/KT_6.96_128x64x24x32x16_Nexc_5_01/';
-
-% folder = '/misc/gene_results/CBC/KT_5.3_128x64x24x32x16_Nexc_5_00/';
-% folder = '/misc/gene_results/CBC/KT_4.5_192x96x24x30x16_00/';
-% folder = '/misc/gene_results/CBC/KT_5.0_192x96x24x30x16_00/';
-% folder = '/misc/gene_results/CBC/new_sim/KT_5.3_128x64x24x16x8_Nexc_5/';
-% folder = '/misc/gene_results/CBC/new_sim/KT_5.3_128x64x24x8x4_Nexc_5/';
-% folder = '/misc/gene_results/CBC/new_sim/KT_6.96_128x64x24x8x4_Nexc_5_smallvbox/';
-% folder = '/misc/gene_results/CBC/new_sim/KT_6.96_128x64x24x16x8_Nexc_5_largexbox/';
-% folder = '/misc/gene_results/CBC/KT_5.3_128x64x24x16x8_Muz_0.02/';
-% folder = '/misc/gene_results/kT_scan_nu0/30x16x128x64x24/kT_4.0/';
-% folder = '/misc/gene_results/kT_scan_nu0/42x24x128x64x24/kT_6.5/';
-% Miller CBC
-% folder = '/misc/gene_results/Miller_AUG/Npol_1/output/';
-% folder = '/misc/gene_results/Miller_AUG/Npol_5/output/';
-% folder = '/misc/gene_results/Miller_AUG/circ/';
-folder = '/misc/gene_results/Miller_AUG/linear/Npol_1/';
-
-% debug ? shearless
-% folder = '/misc/gene_results/CBC/shearless_CBC_128x64x24x24x12_00/';
-% folder = '/misc/gene_results/CBC/shearless_CBC_128x64x24x24x12_01/';
 if 1
 %% FULL DATA LOAD (LONG)
 gene_data = load_gene_data(folder);
@@ -163,14 +100,14 @@ options.NAME      = '\phi';
 options.PLAN      = 'xy';
 % options.NAME      = 'f_e';
 % options.PLAN      = 'sx';
-options.COMP      = 'avg';
+options.COMP      = 17;
 options.TIME      = gene_data.Ts3D;
 options.RESOLUTION= 256;
-gene_data.a = data.EPS * 2000;
+% gene_data.a = data.EPS * 2000;
 create_film(gene_data,options,'.gif')
 end
 
-if 1
+if 0
 %% Geometry
 names = {'$g^{xx}$','$g^{xy}$','$g^{xz}$','$g^{yy}$','$g^{yz}$','$g^{zz}$',...
          '$B_0$','$\partial_x B_0$','$\partial_y B_0$','$\partial_z B_0$',...

@@ -48,20 +48,26 @@ end
 % SIMID = ['rho_scan_DIIID_AUSTIN_2019/3x2x192x96x32/rho',num2str(rho)];
 %% Change parameters
 % GEOMETRY = 's-alpha';
-PMAX  = 4; JMAX = 2;
-DELTA = 0.2; 
-% K_tB = 0; K_mB = 0; K_ldB = 0;
-% K_Ni = 0; K_Ne = 0;
-% K_Ti = 0; TAU = 1/3;
+PMAX  = 8; JMAX = 4;
+% DELTA = 0.2; 
+% K_tB = 0; K_mB = 0; K_ldB = 1;
+% K_Ni = 0; 
+% K_Ne = 0;
+% K_Ti = 0; 
+% K_Te = 0; 
 DELTA = 0.0; 
 % DELTA = 0.2; 
 S_DELTA = DELTA/2;
-LY   = 2*pi/0.75;
+LY   = 2*pi/0.1;
 TMAX = 40;
-NY   = 2;
-DT   = 0.0025;
+NY   = 20;
+DT   = 0.001;
+CO   = 'DG';
 % TAU  = 1; NU = 0.05;
-% TAU = 1e-3; K_Ti = K_Ti/2/TAU; NU = 3*NU/8/TAU; ADIAB_E = 1; NA = 1;
+NA  = 1; ADIAB_E = 1; DT = 1e-2; DTSAVE3D = 1e-2; TMAX = 60;
+TAU = 1e-3; K_Ti = K_Ti/2/TAU; K_Ni = 0; 
+NU = 3*NU/8/TAU; PMAX = 2; JMAX = 1;
+% K_Ti = K_Ti/4;
 % MU_X = 1; MU_Y = 1;
 %% RUN
 setup
@@ -201,4 +207,19 @@ if 0
     subplot(1,2,2); plot(R,Z,'-k'); xlabel('$R$'); ylabel('$Z$');
     axis equal
     title(data.paramshort);
+end
+if 0
+%% Hermite-Laguerre spectrum
+[data.Napjz, data.Ts3D] = compile_results_3Da(LOCALDIR,J0,J1,'Napjz');
+% data.Napjz(1,3,1,:,:) = data.Napjz(1,3,1,:,:)*data.inputs.tau;
+% data.Napjz(1,1,2,:,:) = data.Napjz(1,1,2,:,:)*data.inputs.tau;
+% [data.Napjz, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'Nipjz');
+options.ST         = 1;
+options.NORMALIZED = 1;
+options.LOGSCALE   = 1;
+options.FILTER     = 0; %filter the 50% time-average of the spectrum from
+options.TAVG_2D    = 0; %Show a 2D plot of the modes, 50% time averaged
+options.TAVG_2D_CTR= 0; %make it contour plot
+options.TWINDOW    = [20 20];
+fig = show_moments_spectrum(data,options);
 end

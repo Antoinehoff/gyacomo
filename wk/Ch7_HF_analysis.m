@@ -1,22 +1,21 @@
-PARTITION = '/misc/gyacomo23_outputs/paper_3/';
-switch 3
+PARTITION = '/misc/gyacomo23_outputs/triangularity_paper/';
+switch 4
 case 1
     SIM_SET_NAME = 'Multi-scale';
     E_FLUX       = 1;
     FOLDER       = 'DIIID_fullphys_rho95_geom_scan/multi_scale/multi_scale_3x2x768x192x24';
-    % FOLDER       = 'DIIID_fullphys_rho95_geom_scan/multi_scale/multi_scale_5x2x768x192x24';
 case 2
-    SIM_SET_NAME = 'Ion-scale';
+    SIM_SET_NAME = 'KEM';
     E_FLUX       = 1;
-    FOLDER       = 'DIIID_fullphys_rho95_geom_scan/ion_scale/ion_scale_5x2x256x64x32_tau_1_RN_0';
+    FOLDER       = 'ion_scale/5x2x256x64x32';
 case 3
-    SIM_SET_NAME = 'Adiab. e.';
+    SIM_SET_NAME = 'AEM';
     E_FLUX       = 0;
-    FOLDER       = 'DIIID_adiab_e_rho95_geom_scan/5x2x256x64x32_tau_1_RN_0/';
+    FOLDER       = 'adiabatic_electrons/5x2x256x64x32';
 case 4
-    SIM_SET_NAME = 'Adiab. e.';
+    SIM_SET_NAME = 'RFM';
     E_FLUX       = 0;
-    FOLDER       = 'DIIID_adiab_e_rho95_geom_scan/5x2x256x64x32_tau_1_RN_0/';    
+    FOLDER       = 'hot_electrons/256x64x32';
 end
 
 GEOM = {'NT','0T','PT'};

@@ -5,28 +5,48 @@ addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add
 default_plots_options
 % Partition of the computer where the data have to be searched
-% PARTITION='/Users/ahoffmann/gyacomo/results/paper_3/';
+% PARTITION='/Users/ahoffmann/gyacomo/results/';
+PARTITION='/home/ahoffman/gyacomo/results/';
 % PARTITION='/misc/gyacomo23_outputs/paper_3/';
-% resdir = 'DIIID_rho_95_Tstudy/ion_scale/ion_scale_5x2x256x64x32_tau_1_RN_0/0T/';
-% resdir = 'DIIID_rho_95_Tstudy/adiab_e/5x2x256x64x32_tau_1_RN_0/0T/';
-%%
+% resdir = 'AE_3x2x128x32x24/PT';
+% resdir = 'AE_3x2x128x32x24/PT';
+% resdir = 'AE_5x3x128x32x24/NT';
+resdir = 'IS_5x3x128x32x24/PT';
+% Triangularity paper
 
 PARTITION = '/misc/gyacomo23_outputs/triangularity_paper/';
-
-% resdir = 'ion_scale/3x2x256x64x32/PT';
-% resdir = 'ion_scale/5x2x256x64x32/0T';
+% Nominal parameters
+% resdir = 'ion_scale/3x2x256x64x32/0T';
+% resdir = 'ion_scale/5x3x256x64x32/0T';
+% resdir = 'ion_scale/5x3x192x48x24/0T';
+resdir = 'ion_scale/9x5x256x64x32/0T';
+% resdir = 'ion_scale/restart/5x3x256x64x32/0T';
+% resdir = 'ion_scale/restart/9x5x192x48x24/0T';
 % resdir = 'adiabatic_electrons/5x2x256x64x32/0T';
-% resdir = 'adiabatic_electrons/5x2x192x48x24/NT';
+% resdir = 'adiabatic_electrons/5x2x192x48x24/0T';
 % resdir = 'hot_electrons/256x64x32/0T';
-% resdir = 'hot_electrons/L_300/256x64x32/0T';
-resdir = 'hot_electrons/L_300_gradN_scaled/256x64x32/0T';
 % resdir = 'hot_electrons/256x64x32/0T';
 % resdir = 'hot_electrons/512x64x32/0T';
-% PARTITION = '/misc/gyacomo23_outputs/paper_3/';
-% resdir = 'DIIID_HEL_rho95/PT';
+
+% No grad N
+% PARTITION = '/misc/gyacomo23_outputs/triangularity_paper/no_gradN';
+% resdir = '/ion_scale/3x2x256x64x24/0T';
+% resdir = '/ion_scale/5x2x256x64x24/0T';
+% resdir = '/ion_scale/9x5x128x32x24/0T';
+% resdir = '/adiabatic_electrons/3x2x256x64x24/0T';
+% resdir = '/adiabatic_electrons/5x2x256x64x24/0T';
+% resdir = '/hot_electrons/L_300/256x64x32/0T';
+
+% PARTITION = '/home/ahoffman/gyacomo/results/lin_DIIID_LM_rho95_scan/';
+% resdir   = '6x2x32_5x3_Lx_120_Ly_37.6991_q0_4.8_e_0.3_s_2.5_mil__kN_1.7_kT_5.2_nu_2.0e-02_DGGK/';
+% resdir   = '6x2x32_17x9_Lx_120_Ly_37.6991_q0_4.8_e_0.3_s_2.5_mil__kN_1.7_kT_5.2_nu_2.0e-02_DGGK/';
+% resdir   = '6x2x32_5x3_Lx_120_Ly_12.5664_q0_4.8_e_0.3_s_2.5_mil__kN_1.7_kT_5.2_nu_2.0e-02_DGGK/';
+% resdir   = '6x2x32_17x9_Lx_120_Ly_12.5664_q0_4.8_e_0.3_s_2.5_mil__kN_1.7_kT_5.2_nu_2.0e-02_DGGK/';
+% resdir   = '6x2x32_5x3_Lx_120_Ly_8.1955_q0_4.8_e_0.3_s_2.5_mil__kN_1.7_kT_5.2_nu_2.0e-02_DGGK/';
+% resdir   = '6x2x32_17x9_Lx_120_Ly_8.1955_q0_4.8_e_0.3_s_2.5_mil__kN_1.7_kT_5.2_nu_2.0e-02_DGGK/';
 
 DATADIR = [PARTITION,resdir,'/'];
-% read_flux_out_XX(DATADIR,1,5)
+read_flux_out_XX(DATADIR,1,1);
 %%
 J0 = 00; J1 = 10;
 
@@ -55,7 +75,7 @@ if data.inputs.Na > 1
     data.Ne00 = reshape(data.Na00(2,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 end
 end
-if 1
+if 0
 %% Plot transport and phi radial profile
 % [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 % [data.PSI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'psi');
@@ -79,7 +99,7 @@ options.RESOLUTION = 256;
 plot_radial_transport_and_spacetime(data,options);
 end
 
-if 1
+if 0
 %% 2D field snapshots
 % Options
 options.INTERP    = 0;
@@ -89,13 +109,13 @@ options.NORMALIZE = 0;
 options.LOGSCALE  = 0;
 options.CLIMAUTO  = 1;
 options.TAVG      = 1;
-% options.NAME      = ['N_i^{00}'];
+options.NAME      = ['N_i^{00}'];
 % options.NAME      = 'n_e';
 % options.NAME      = 'u_i';
 % options.NAME      = 'n_i';
 % options.NAME      = 'Q_{xi}';
 % options.NAME      = 'v_{Ey}';
-options.NAME      = 'w_{Ez}';
+% options.NAME      = 'w_{Ez}';
 % options.NAME      = '\omega_z';
 % options.NAME      = '\phi';
 % options.NAME      = 'n_i-n_e';
@@ -103,12 +123,12 @@ loc =11;
 [~,i_] = min(abs(loc - data.grids.y));
 options.COMP =i_;
 % options.PLAN      = '3D';  
-options.PLAN      = 'xy'; options.COMP =floor(data.grids.Nz/2)+1; 
-% options.PLAN      = 'xz'; options.COMP ='avg';
+% options.PLAN      = 'xy'; options.COMP =floor(data.grids.Nz/2)+1; 
+options.PLAN      = 'xz'; options.COMP ='avg';
 % options.COMP ='avg'; 
 options.XYZ  =[-11 20 0]; 
-options.TIME = [100 250 350 500]; options.TAVG = 0;
-% options.TIME = [100:250]; options.TAVG = 1;
+% options.TIME = [100 250 350 500]; options.TAVG = 0;
+options.TIME = [100:500]; options.TAVG = 1;
 options.RESOLUTION = 256;
 fig = photomaton(data,options);
 % colormap(gray)
@@ -120,7 +140,7 @@ if 0
 profiler(data)
 end
 
-if 1
+if 0
 %% Mode evolution
 % [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 % [data.Na00, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Na00');
@@ -129,8 +149,8 @@ if 1
 
 options.NORMALIZED = 0;
 options.TIME   = data.Ts3D;
-options.KX_TW  = [0.1 2.5]; %kx Growth rate time window
-options.KY_TW  = [0.1 2.5];  %ky Growth rate time window
+options.KX_TW  = [0.5 1]*data.Ts3D(end); %kx Growth rate time window
+options.KY_TW  = [0.5 1]*data.Ts3D(end);  %ky Growth rate time window
 options.NMA    = 1;
 options.NMODES = 64;
 options.iz     = 'avg'; % avg or index
@@ -173,19 +193,19 @@ options.SHOWFIG = 1;
 % % save_figure(data,fig,'.png')
 end
 
-if 1
+if 0
 %% Hermite-Laguerre spectrum
 [data.Napjz, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Napjz');
-data.Napjz(1,3,1,:,:) = data.Napjz(1,3,1,:,:)*data.inputs.tau;
-data.Napjz(1,1,2,:,:) = data.Napjz(1,1,2,:,:)*data.inputs.tau;
+data.Napjz(1,3,1,:,:) = data.Napjz(1,3,1,:,:)*data.inputs.tau(1);
+data.Napjz(1,1,2,:,:) = data.Napjz(1,1,2,:,:)*data.inputs.tau(1);
 % [data.Napjz, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'Nipjz');
 options.ST         = 1;
-options.NORMALIZED = 0;
-options.LOGSCALE   = 0;
+options.NORMALIZED = 1;
+options.LOGSCALE   = 1;
 options.FILTER     = 0; %filter the 50% time-average of the spectrum from
 options.TAVG_2D    = 0; %Show a 2D plot of the modes, 50% time averaged
 options.TAVG_2D_CTR= 0; %make it contour plot
-options.TWINDOW    = [6 20];
+options.TWINDOW    = [20 20];
 fig = show_moments_spectrum(data,options);
 end
 
@@ -204,15 +224,15 @@ options.SHOWFIG  = 1;
 [fig, chi, phib, psib, ~] = plot_ballooning(data,options);
 end
 
-if 1
+if 0
 %% 1D spectral plot
 options.TIME  = [100 300]; % averaging time window
-% options.NAME      = ['N_i^{00}'];
+options.NAME      = ['N_i^{00}'];
 % options.NAME      = 'n_i';
 % options.NAME      = 'T_i';
 % options.NAME      = 'Q_{xi}';
 % options.NAME      = 's_{Ey}';
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = '\psi';
 options.NORMALIZE = 0;
 [fig] = plot_spectrum(data,options);
@@ -231,7 +251,7 @@ if 0
 % data.DENS_I = reshape(data.DENS(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 % [data.TEMP, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'temp');
 % data.TEMP_I = reshape(data.TEMP(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
-options.INTERP    = 0;
+options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.BWR       = 1; % bluewhitered plot or gray
 options.CLIMAUTO  = 0; % adjust the colormap auto
@@ -240,8 +260,8 @@ options.CLIMAUTO  = 0; % adjust the colormap auto
 % options.NAME      = '\psi';
 % options.NAME      = 'n_i';
 % options.NAME      = '\phi^{NZ}';
+% options.NAME     = ['N_e^{00}'];
 options.NAME     = ['N_i^{00}'];
-% options.NAME     = ['N_i^{00}'];
 options.PLAN      = 'xy'; options.COMP =floor(data.grids.Nz/2)+1; 
 % options.PLAN      = 'xz'; options.COMP ='avg';
 % options.PLAN      = '3D';  
@@ -275,4 +295,10 @@ for i = 1:nSV
         'color',colors_(i,:),'DisplayName',['SV ',num2str(i)]);hold on
 end
 legend('show');
+end
+
+if 0
+%% Pseudo fluid analysis
+Time_window = [100 200];
+pseudo_fluid_analysis
 end

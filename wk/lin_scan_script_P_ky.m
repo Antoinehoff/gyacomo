@@ -39,7 +39,7 @@ run lin_DIIID_LM_rho95
 % NU   = 1;
 % TAU  = 1;
 NY   = 2;
-DELTA =-0.2; TRIANG = 'NT';
+DELTA =0.0; TRIANG = '';
 S_DELTA = DELTA/2;
 % EXBRATE = 0;
 % S_DELTA = min(2.0,S_DELTA);
@@ -48,15 +48,23 @@ S_DELTA = DELTA/2;
 LX   = 120;
 %% Scan parameters
 SIMID = [SIMID,TRIANG,'_scan'];
-P_a   = [2 4 6 8 16]; J_a = [1 2 3 4 8];
+P_a   = [2 4 8 16]; J_a = [1 2 4 8];
+% P_a   = [2 4]; J_a = [1 1];
 % P_a   = 2;
 % ky_a  = [0.01 0.02 0.05 0.1  0.2  0.5  1.0  2.0  5.0  10.0];
 ky_a  = [0.05 linspace(0.1,1.1,16)]; ky_a = ky_a(1:end-2);
 % ky_a  = 4.0;
 % dt_a  = logspace(-2,-3,numel(ky_a));
-DT    = 0.0005;
 CO    = 'DG';
-DTSAVE3D = 0.002; TMAX = 40;
+% KEM
+NA  = 2; ADIAB_E = 0; DT = 5e-4; DTSAVE3D = 5e-3; TMAX = 60;
+% AEM
+% NA  = 1; ADIAB_E = 1; DT = 1e-3; DTSAVE3D = 5e-2; TMAX = 60;
+%RFM
+% NA  = 1; ADIAB_E = 1; DT = 5e-3; DTSAVE3D = 1e-2; TMAX = 60;
+% TAU = 1e-3; K_Ti = K_Ti/2/TAU; K_Ni = 0; 
+% NU = 3*NU/8/TAU; P_a = 2; J_a = 1; ky_a = 2*ky_a;
+K_Ni = 0;
 %% Scan loop
 % arrays for the result
 g_ky = zeros(numel(ky_a),numel(P_a));
