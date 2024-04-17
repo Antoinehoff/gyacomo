@@ -49,6 +49,7 @@ cd futils/src
 ```bash
 sed -i '37s/.*/OPT = -O3/' Makefile
 ```
+**Note:** the Makefile is also assuming that the Hdf5 library path is located in a `$(HDF5)` variable and that the `mpif90` compiler is defined. If you are on Marconi HPCC, you may have to change line 34 to `F90 = mpiifort` and line 35 to `HDF5 = $(HDF5_HOME)` (having prealably loaded the Hdf5 module)
 
 2.4 - We can now compile the library.
 ```bash
