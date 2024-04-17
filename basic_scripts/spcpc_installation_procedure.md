@@ -42,7 +42,7 @@ git clone https://c4science.ch/diffusion/FUTILS/futils.git
 
 2.2 - Then, we navigate to the `src` directory.
 ```bash
-cd /futils/src
+cd futils/src
 ```
 
 2.3 - You have to adapt the makefile because some compilation options are not available with the intel compiler (we put a simple -O3 option).
