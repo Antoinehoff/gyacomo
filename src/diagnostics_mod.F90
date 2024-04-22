@@ -71,6 +71,7 @@ CONTAINS
     USE initial,         ONLY: initial_outputinputs
     USE time_integration,ONLY: time_integration_outputinputs
     USE parallel,        ONLY: parallel_outputinputs
+    USE units,           ONLY: units_outputinputs
     USE futils,          ONLY: creatf, creatg, creatd, attach, putfile
     IMPLICIT NONE
     !input
@@ -114,6 +115,7 @@ CONTAINS
     CALL          initial_outputinputs(fid)
     CALL time_integration_outputinputs(fid)
     CALL         parallel_outputinputs(fid)
+    CALL            units_outputinputs(fid)
     !  Save STDIN (input file) of this run
     IF(jobnum .LE. 99) THEN
        WRITE(str,'(a,i2.2)') "/files/STDIN.",jobnum
@@ -128,6 +130,7 @@ CONTAINS
     USE basic,           ONLY: lu_in, chrono_runt, cstep, time, display_h_min_s
     USE processing,      ONLY: pflux_x, hflux_x
     USE parallel,        ONLY: my_id
+    USE units,           ONLY: WRITE_MW, pow_ref
     IMPLICIT NONE
     INTEGER, INTENT(in) :: kstep
     !! Basic diagnose loop for reading input file, displaying advancement and ending
@@ -150,14 +153,25 @@ CONTAINS
   
     ! Terminal info
     IF ((kstep .GE. 0) .AND. (MOD(cstep, nsave_0d) == 0) .AND. (my_id .EQ. 0)) THEN
-      if(SIZE(pflux_x) .GT. 1) THEN
-        WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A8,G10.3,A8,G10.3,A)")&
-        '|t = ', time,'| Pxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'| Pxe = ',pflux_x(2),'| Qxe = ',hflux_x(2),'|'
-      else
-        WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A)")&
-        '|t = ', time,'| Px  = ',pflux_x(1),'| Qx  = ',hflux_x(1),'|'
-      endif
+      IF (WRITE_MW) THEN ! Display MW
+        if(SIZE(pflux_x) .GT. 1) THEN
+          WRITE(*,"(A,F8.2,A8,G10.3,A14,G10.3,A7)")&
+          '|t = ', time,'| Qxi = ',hflux_x(1)*pow_ref,' [MW] | Qxe = ',hflux_x(2)*pow_Ref,' [MW] |'
+        else
+          WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A)")&
+          '|t = ', time,'| Qxi = ',hflux_x(1)*pow_ref,' [MW]|'
+        endif
+      ELSE ! Display normalized code values
+          if(SIZE(pflux_x) .GT. 1) THEN
+            WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A8,G10.3,A8,G10.3,A)")&
+            '|t = ', time,'| Pxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'| Pxe = ',pflux_x(2),'| Qxe = ',hflux_x(2),'|'
+          else
+            WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A)")&
+            '|t = ', time,'| Pxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'|'
+          endif
+      ENDIF
     ENDIF
+
   END SUBROUTINE diagnose
   
   SUBROUTINE diagnose_full(kstep)

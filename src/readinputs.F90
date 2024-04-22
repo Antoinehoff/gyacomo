@@ -1,14 +1,15 @@
 SUBROUTINE readinputs
   ! Additional data specific for a new run
-  USE grid,             ONLY: grid_readinputs
-  USE diagnostics,      ONLY: diag_readinputs
+  USE closure,          ONLY: closure_readinputs
   USE collision,        ONLY: collision_readinputs
+  USE diagnostics,      ONLY: diag_readinputs
+  USE geometry,         ONLY: geometry_readinputs
+  USE grid,             ONLY: grid_readinputs
+  USE initial,          ONLY: initial_readinputs
   USE model,            ONLY: model_readinputs
   USE species,          ONLY: species_readinputs
-  USE initial,          ONLY: initial_readinputs
   USE time_integration, ONLY: time_integration_readinputs
-  USE geometry,         ONLY: geometry_readinputs
-  USE closure,          ONLY: closure_readinputs
+  USE units,            ONLY: units_readinputs
 
   USE prec_const
   IMPLICIT NONE
@@ -43,5 +44,8 @@ SUBROUTINE readinputs
 
   ! Load parameters for time integration from input file
   CALL time_integration_readinputs
+
+  ! Load reference profile data in phys. units
+  CALL units_readinputs
 
 END SUBROUTINE readinputs

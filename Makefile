@@ -6,14 +6,14 @@ all: dp
 
 # Double precision version
 dp: F90 = mpif90
-dp: F90FLAGS = -DNOLAPACK -O3 -xHOST
+dp: F90FLAGS = -O3 -xHOST
 dp: EXEC = $(BINDIR)/gyacomo23_dp
 dp: dirs src/srcinfo.h
 dp: compile
 
 # Single precision version
 sp: F90 = mpif90
-sp: F90FLAGS = -DNOLAPACK -DSINGLE_PRECISION -O3 -xHOST
+sp: F90FLAGS = -DSINGLE_PRECISION -O3 -xHOST
 sp: EXEC = $(BINDIR)/gyacomo23_sp
 sp: dirs src/srcinfo.h
 sp: compile
@@ -41,21 +41,21 @@ debug: compile
 
 # For compiling on marconi
 marconi: F90 = mpiifort
-marconi: F90FLAGS = -DNOLAPACK -O3 -xHOST
+marconi: F90FLAGS = -O3 -xHOST
 marconi: EXEC = $(BINDIR)/gyacomo23_dp
 marconi: dirs src/srcinfo.h
 marconi: compile
 
 # For compiling on marconi in single prec.
 marconi_sp: F90 = mpiifort
-marconi_sp: F90FLAGS = -DNOLAPACK -DSINGLE_PRECISION -O3 -xHOST
+marconi_sp: F90FLAGS = -DSINGLE_PRECISION -O3 -xHOST
 marconi_sp: EXEC = $(BINDIR)/gyacomo23_sp
 marconi_sp: dirs src/srcinfo.h
 marconi_sp: compile
 
 # For compiling on marconi in single prec.
 marconi_dbg: F90 = mpiifort
-marconi_dbg: F90FLAGS = -DNOLAPACK -DSINGLE_PRECISION -g -traceback -ftrapuv -warn all -debug all
+marconi_dbg: F90FLAGS = -DSINGLE_PRECISION -g -traceback -ftrapuv -warn all -debug all
 marconi_dbg: EXEC = $(BINDIR)/gyacomo23_dbg
 marconi_dbg: dirs src/srcinfo.h
 marconi_dbg: compile
@@ -93,8 +93,7 @@ gdebug: compile
 
 # test SVD
 test_svd: F90 = mpif90
-# test_svd: F90FLAGS = -DTEST_SVD -g -traceback -ftrapuv -warn all -debug all
-test_svd: F90FLAGS = -DTEST_SVD -O3
+test_svd: F90FLAGS = -DLAPACK -DTEST_SVD -O3
 test_svd: EXEC = $(BINDIR)/gyacomo23_test_svd
 test_svd: dirs src/srcinfo.h
 test_svd: compile
@@ -133,7 +132,8 @@ $(OBJDIR)/moments_eq_rhs_mod.o $(OBJDIR)/numerics_mod.o $(OBJDIR)/parallel_mod.o
 $(OBJDIR)/ppexit.o $(OBJDIR)/prec_const_mod.o \
 $(OBJDIR)/processing_mod.o $(OBJDIR)/readinputs.o $(OBJDIR)/restarts_mod.o \
 $(OBJDIR)/solve_EM_fields.o $(OBJDIR)/species_mod.o $(OBJDIR)/stepon.o $(OBJDIR)/tesend.o \
-$(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/CLA_mod.o
+$(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/units_mod.o \
+$(OBJDIR)/CLA_mod.o
 
 # Add finally the definition of the Gyacomo directory
 # (helps if the code needs to load a file as for the init Ricci)
@@ -206,7 +206,7 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/CLA_mod.o
  	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/processing_mod.o $(OBJDIR)/array_mod.o \
      $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o \
 	 $(OBJDIR)/grid_mod.o $(OBJDIR)/initial_mod.o $(OBJDIR)/model_mod.o \
-	 $(OBJDIR)/time_integration_mod.o $(OBJDIR)/parallel_mod.o
+	 $(OBJDIR)/time_integration_mod.o $(OBJDIR)/parallel_mod.o $(OBJDIR)/units_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/diagnostics_mod.F90 -o $@
 
  $(OBJDIR)/endrun.o : src/endrun.F90 \
@@ -307,7 +307,8 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/CLA_mod.o
 
  $(OBJDIR)/readinputs.o : src/readinputs.F90  \
    $(OBJDIR)/diagnostics_mod.o $(OBJDIR)/initial_mod.o $(OBJDIR)/model_mod.o  \
-  $(OBJDIR)/prec_const_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/time_integration_mod.o
+	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/time_integration_mod.o \
+  	 $(OBJDIR)/units_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/readinputs.F90 -o $@
 
  $(OBJDIR)/restarts_mod.o : src/restarts_mod.F90   \
@@ -327,7 +328,7 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/CLA_mod.o
 
  $(OBJDIR)/stepon.o : src/stepon.F90 \
  	 $(OBJDIR)/initial_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/advance_field_mod.o \
-   $(OBJDIR)/basic_mod.o $(OBJDIR)/nonlinear_mod.o $(OBJDIR)/grid_mod.o \
+     $(OBJDIR)/basic_mod.o $(OBJDIR)/nonlinear_mod.o $(OBJDIR)/grid_mod.o \
 	 $(OBJDIR)/array_mod.o $(OBJDIR)/numerics_mod.o $(OBJDIR)/fields_mod.o \
 	 $(OBJDIR)/ghosts_mod.o $(OBJDIR)/moments_eq_rhs_mod.o $(OBJDIR)/solve_EM_fields.o\
 	 $(OBJDIR)/utility_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/time_integration_mod.o \
@@ -345,6 +346,10 @@ $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/CLA_mod.o
  $(OBJDIR)/utility_mod.o : src/utility_mod.F90  \
    $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/time_integration_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/utility_mod.F90 -o $@
+
+ $(OBJDIR)/units_mod.o : src/units_mod.F90  \
+	$(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/geometry_mod.o 
+	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/units_mod.F90 -o $@
 
  $(OBJDIR)/CLA_mod.o : src/CLA_mod.F90  \
    $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/grid_mod.o \

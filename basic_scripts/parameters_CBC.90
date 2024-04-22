@@ -84,3 +84,13 @@
 &TIME_INTEGRATION
   numerical_scheme = 'RK4' ! numerical scheme for time integration (RK2,3,4 etc.)
 /
+
+&UNITS
+n_ref = 5.0 ! Electron density  (x1e19) [m-3]
+T_ref = 2.5 ! Electron temperature      [keV]
+R_ref = 1.7 ! Major Radius              [m]
+B_ref = 1.5 ! Magnetic field intensity  [T]
+m_ref = 1   ! Ion mass                  [proton mass]
+q_ref = 1   ! Ion charge                [elementary charge]
+WRITE_MW = .false. ! Write in std the power output in MW
+/
