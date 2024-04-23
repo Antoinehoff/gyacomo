@@ -4,7 +4,7 @@ MODULE processing
       local_na, local_np, local_nj, local_nky, local_nkx, local_nz, Ngz,Ngj,Ngp,nzgrid, &
       parray,pmax,ip0, iodd, ieven, total_nz, &
       CONTAINSp0,ip1,CONTAINSp1,ip2,CONTAINSp2,ip3,CONTAINSp3,&
-      jarray,jmax,ij0, dmax,&
+      jarray,jmax,ij0,&
       kyarray, AA_y,&
       kxarray, AA_x,&
       zarray, zweights_SR, ieven, iodd, inv_deltaz,&
@@ -16,7 +16,7 @@ MODULE processing
    USE geometry,         ONLY: Jacobian, iInt_Jacobian
    USE time_integration, ONLY: updatetlevel
    USE calculus,         ONLY: simpson_rule_z, grad_z, grad_z_5D, grad_z2, grad_z4, grad_z4_5D, interp_z
-   USE model,            ONLY: EM, beta, HDz_h
+   USE model,            ONLY: EM, beta, HDz_h, N_HDz
    USE species,          ONLY: tau,q_tau,q_o_sqrt_tau_sigma,sqrt_tau_o_sigma
    USE parallel,         ONLY: num_procs_ky, rank_ky, comm_ky
    USE mpi
@@ -97,9 +97,14 @@ CONTAINS
          CALL   grad_z(eo,local_nz,ngz,inv_deltaz,f_in,f_out)
          ddz_napj(ia,ip,ij,iky,ikx,:) = f_out
          ! Parallel numerical diffusion
-         IF (.NOT. HDz_h) &
+         IF (.NOT. HDz_h) & ! Do we apply diffusion on f or h ?
             f_in = moments(ia,ip,ij,iky,ikx,:,updatetlevel)
-         CALL  grad_z4(local_nz,ngz,inv_deltaz,f_in,f_out)
+         SELECT CASE(N_HDz) ! order of diffusion
+         CASE(2)
+            CALL  grad_z2(local_nz,ngz,inv_deltaz,f_in,f_out)
+         CASE(4)
+            CALL  grad_z4(local_nz,ngz,inv_deltaz,f_in,f_out)
+         END SELECT
          ! get output
          ddzND_Napj(ia,ip,ij,iky,ikx,:) = f_out
       ENDDO

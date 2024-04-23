@@ -125,7 +125,7 @@ CONTAINS
                       -mu_x*diff_kx_coeff*kx**N_HD*Napj &
                       -mu_y*diff_ky_coeff*ky**N_HD*Napj &
                       ! ! ! Numerical parallel hyperdiffusion "mu_z*ddz**4"  see Pueschel 2010 (eq 25)
-                      -mu_z*diff_dz_coeff*ddzND_napj(ia,ipi,iji,iky,ikx,iz)
+                      -mu_z*diff_dz_coeff*ddzND_Napj(ia,ipi,iji,iky,ikx,iz)
                   !! Velocity space dissipation (should be implemented somewhere else)
                   SELECT CASE(HYP_V)
                   CASE('hypcoll') ! GX like Hermite hypercollisions see Mandell et al. 2023 (eq 3.23), unadvised to use it

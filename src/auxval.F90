@@ -3,16 +3,16 @@ subroutine auxval
   USE, intrinsic :: iso_fortran_env, ONLY: OUTPUT_UNIT
   USE basic,          ONLY: str, speak
   USE grid,           ONLY: local_np, local_np_offset, total_np, local_nj, local_nj_offset,&
-                            local_nky, local_nky_offset, total_nky, local_nkx, local_nkx_offset, dmax,&
+                            local_nky, local_nky_offset, total_nky, local_nkx, local_nkx_offset,&
                             local_nz, local_nz_offset, init_grids_data, set_grids
   !USE array
-  USE model,          ONLY: Na, EM, LINEARITY, N_HD, ExBrate
+  USE model,          ONLY: Na, EM, LINEARITY, N_HD, N_HDz, ExBrate
   USE fourier,        ONLY: init_grid_distr_and_plans
   use MPI,            ONLY: MPI_COMM_WORLD
   USE numerics,       ONLY: build_dnjs_table, build_dv4Hp_table, compute_lin_coeff, &
                             evaluate_EM_op, evaluate_kernels
   USE geometry,       ONLY: Npol, shear, eval_magnetic_geometry
-  USE closure,        ONLY: set_closure_model, hierarchy_closure
+  USE closure,        ONLY: set_closure_model, hierarchy_closure, dmax
   USE parallel,       ONLY: init_parallel_var, my_id, num_procs, &
     num_procs_p, num_procs_z, num_procs_ky, rank_p, rank_ky, rank_z
   USE processing,     ONLY: init_process
@@ -25,7 +25,7 @@ subroutine auxval
   CALL speak('=== Set auxiliary values ===')
   ! Init the grids
   CALL init_grids_data(Na,EM,LINEARITY) 
-  CALL set_grids(shear,ExBrate,Npol,LINEARITY,N_HD,EM,Na) 
+  CALL set_grids(shear,ExBrate,Npol,LINEARITY,N_HD,N_HDz,EM,Na) 
   ! Allocate memory for global arrays
   CALL memory
   ! Initialize displacement and receive arrays
