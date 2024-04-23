@@ -3,9 +3,9 @@
 ! the beginng of a run. These routines do not need to be optimzed
 MODULE numerics
   USE prec_const, ONLY: xp
-    implicit none
-    PUBLIC :: build_dnjs_table, evaluate_kernels, evaluate_EM_op
-    PUBLIC :: compute_lin_coeff, build_dv4Hp_table
+  IMPLICIT NONE
+  PUBLIC :: build_dnjs_table, evaluate_kernels, evaluate_EM_op
+  PUBLIC :: compute_lin_coeff, build_dv4Hp_table
 
 CONTAINS
 
@@ -77,7 +77,10 @@ SUBROUTINE evaluate_kernels
   USE grid,    ONLY : local_na, local_nj,ngj, local_nkx, local_nky, local_nz, ngz, jarray, kp2array,&
                       nzgrid
   USE species, ONLY : sigma2_tau_o2
-  USE model,    ONLY : KN_MODEL, ORDER, ORDER_NUM, ORDER_DEN
+  USE model,    ONLY : KN_MODEL, ORDER
+#ifdef LAPACK
+  USE model,    ONLY : ORDER_NUM, ORDER_DEN
+#endif
   IMPLICIT NONE
   INTEGER    :: j_int, ia, eo, ikx, iky, iz, ij
   REAL(xp)   :: j_xp, y_, factj, sigma_i
@@ -107,9 +110,7 @@ SUBROUTINE evaluate_kernels
       ENDDO
     ENDDO
   CASE ('pade')
-#ifdef NOLAPACK
-    error stop "ERROR STOP: Pade kernels cannot be used when LAPACK is not included (marconi?)"
-#else
+#ifdef LAPACK
     ! Kernels based on the ORDER_NUM / ORDER_DEN Pade approximation of the kernels
     WRITE (*,*) 'Kernel approximation uses ', ORDER_NUM ,'/', ORDER_DEN, ' Pade approximation'
     DO ia  = 1,local_na
@@ -131,6 +132,8 @@ SUBROUTINE evaluate_kernels
         ENDDO
       ENDDO
     ENDDO
+#else
+    error stop "ERROR STOP: Pade kernels cannot be used when LAPACK is not included (marconi?)"
 #endif
   CASE DEFAULT
     DO ia  = 1,local_na
@@ -301,7 +304,7 @@ SUBROUTINE compute_lin_coeff
       DO ij = 1,local_nj
         j_int= jarray(ij+ngj/2)   ! Laguerre degree
         j_xp = REAL(j_int,xp) ! REAL of Laguerre degree
-        ! All Napj terms
+        ! All Napj terms related to magn. curvature and perp. gradient
         xnapj(ia,ip,ij) = tau(ia)/q(ia)*(k_cB*(2._xp*p_xp + 1._xp) &
                                         +k_gB*(2._xp*j_xp + 1._xp))
         ! Mirror force terms
@@ -328,7 +331,7 @@ SUBROUTINE compute_lin_coeff
     DO ij = 1,local_nj
       j_int= jarray(ij+ngj/2)   ! Laguerre degree
       j_xp = REAL(j_int,xp) ! REAL of Laguerre degree
-      ! Magnetic gradient term
+      ! Magnetic perp. gradient term
       xnapjp1(ia,ij) = -tau(ia)/q(ia) * (j_xp + 1._xp) * k_gB
       xnapjm1(ia,ij) = -tau(ia)/q(ia) *  j_xp          * k_gB
     ENDDO
@@ -399,8 +402,7 @@ REAL(xp) FUNCTION taylor_kernel_n(order, n, y)
 	taylor_kernel_n = sum_variable
 END FUNCTION taylor_kernel_n
 
-#ifdef NOLAPACK
-#else
+#ifdef LAPACK
 REAL(xp) FUNCTION pade_kernel_n(n, y, N_NUM, N_DEN)
 	IMPLICIT NONE
 	INTEGER, INTENT(IN) :: n, N_NUM, N_DEN

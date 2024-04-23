@@ -87,7 +87,7 @@ CONTAINS
       DO ip = 1,local_np+ngp
       DO ia = 1,local_na
          IF(nzgrid .GT. 1) THEN
-            p_int = parray(ip+ngp/2)
+            p_int = parray(ip)
             eo    = MODULO(p_int,2)+1 ! Indicates if we are on even or odd z grid
          ELSE
             eo = 0
@@ -276,9 +276,9 @@ CONTAINS
                   -Jacobian(izi,ieven)*tau(ia)*imagu*kyarray(iky)*phi(iky,ikx,izi)&
                   *kernel(ia,ini,iky,ikx,izi,ieven)*CONJG(&
                               0.5_xp*SQRT2*moments(ia,ip2,ini  ,iky,ikx,izi,updatetlevel)&
-                  +(2._xp*n_xp + 1.5_xp)*moments(ia,ip0,ini  ,iky,ikx,izi,updatetlevel)&
-                           -(n_xp+1._xp)*moments(ia,ip0,ini+1,iky,ikx,izi,updatetlevel)&
-                                    -n_xp*moments(ia,ip0,ini-1,iky,ikx,izi,updatetlevel))
+                    +(2._xp*n_xp + 1.5_xp)*moments(ia,ip0,ini  ,iky,ikx,izi,updatetlevel)&
+                             -(n_xp+1._xp)*moments(ia,ip0,ini+1,iky,ikx,izi,updatetlevel)&
+                                     -n_xp*moments(ia,ip0,ini-1,iky,ikx,izi,updatetlevel))
             ENDDO
             ENDDO
             ENDDO
@@ -298,11 +298,11 @@ CONTAINS
                integrant(iz) = integrant(iz) &
                      +Jacobian(izi,iodd)*tau(ia)*sqrt_tau_o_sigma(ia)*imagu*kyarray(iky)*CONJG(psi(iky,ikx,izi))&
                   *kernel(ia,ini,iky,ikx,izi,iodd)*(&
-                  0.5_xp*SQRT2*SQRT3*moments(ia,ip3,ini  ,iky,ikx,izi,updatetlevel)&
+                   0.5_xp*SQRT2*SQRT3*moments(ia,ip3,ini  ,iky,ikx,izi,updatetlevel)&
                               +1.5_xp*moments(ia,ip1,ini  ,iky,ikx,izi,updatetlevel)&
                   +(2._xp*n_xp+1._xp)*moments(ia,ip1,ini  ,iky,ikx,izi,updatetlevel)&
                         -(n_xp+1._xp)*moments(ia,ip1,ini+1,iky,ikx,izi,updatetlevel)&
-                                 -n_xp*moments(ia,ip1,ini-1,iky,ikx,izi,updatetlevel))
+                                -n_xp*moments(ia,ip1,ini-1,iky,ikx,izi,updatetlevel))
             ENDDO
             ENDDO
             ENDDO

@@ -95,7 +95,7 @@ CONTAINS
         USE grid,       ONLY: local_nky, total_nky, kyarray, inv_dkx, update_grids, deltaky!,kyarray_full
         USE geometry,   ONLY: gxx,gxy,gyy,inv_hatB2, evaluate_magn_curv
         USE numerics,   ONLY: evaluate_EM_op, evaluate_kernels
-        USE model,      ONLY: LINEARITY
+        ! USE model,      ONLY: LINEARITY
         USE time_integration, ONLY: c_E!, ntimelevel
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: step_number

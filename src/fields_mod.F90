@@ -10,7 +10,10 @@ MODULE fields
   ! Normalized electric potential: \hat{\phi} ! (kx,ky,z)
   COMPLEX(xp), DIMENSION(:,:,:), ALLOCATABLE :: phi
 
-!------------------Vector field part
+!------------------MAGNETIC VECTOR
+  ! Parallel component (A_\parallel)
   COMPLEX(xp), DIMENSION(:,:,:), ALLOCATABLE :: psi
+  ! delta B parallel (not implemeneted)
+  ! COMPLEX(xp), DIMENSION(:,:,:), ALLOCATABLE :: dBpar
 
 END MODULE fields

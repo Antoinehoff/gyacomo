@@ -55,10 +55,13 @@ SUBROUTINE update_ghosts_p_mom
   USE grid,     ONLY: local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
                               ngp,ngj,ngz
   IMPLICIT NONE
-  INTEGER :: ierr, first, last, count
+  !! buffer for data exchanges
+  ! COMPLEX(xp),DIMENSION(local_na,-Ngp/2:Ngp/2,local_nj+ngj,local_nky,local_nkx,local_nz+ngz) :: buff_jxyz
+  COMPLEX(xp),DIMENSION(local_na,local_nj+ngj,local_nky,local_nkx,local_nz+ngz) :: buff_jxyz_in, buff_jxyz_out
+  INTEGER :: ierr, first, last, count, ig
   first = 1 + ngp/2
   last  = local_np + ngp/2
-
+#if 0
   count = (ngp/2)*local_na*(local_nj+ngj)*local_nky*local_nkx*(local_nz+ngz) ! Number of elements to send
   !!!!!! Send to the right, receive from the left
   CALL mpi_sendrecv(moments(:,(last-(ngp/2-1)):(last),:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_R, 14, &
@@ -68,7 +71,39 @@ SUBROUTINE update_ghosts_p_mom
   CALL mpi_sendrecv(moments(:,(first):(first+(ngp/2-1)),:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_L, 16, &
                     moments(:,(last+1):(last+ngp/2)    ,:,:,:,:,updatetlevel), count, mpi_xp_c, nbr_R, 16, &
                     comm0, status, ierr)
+#else
+  !! Alternative version (explicit copy here, EXPERIMENTAL)
+  !! Send the last local moment to fill the -1 neighbour ghost
+  count = local_na*(local_nj+ngj)*local_nky*local_nkx*(local_nz+ngz) ! Number of elements to send
+  DO ig=1,ngp/2
+    buff_jxyz_out = moments(:,last-(ig-1),:,:,:,:,updatetlevel)
+    CALL mpi_sendrecv(buff_jxyz_out,count,mpi_xp_c,nbr_R,14+ig, & ! Send to Right the last
+                      buff_jxyz_in ,count,mpi_xp_c,nbr_L,14+ig, & ! Recieve from Left the first-1
+                      comm0, status, ierr)
+    moments(:,first-ig,:,:,:,:,updatetlevel) = buff_jxyz_in
+  ENDDO
+  ! !!!!!!! Send to the left, receive from the right
+  DO ig=1,ngp/2
+    buff_jxyz_out = moments(:,first+(ig-1),:,:,:,:,updatetlevel)
+    CALL mpi_sendrecv(buff_jxyz_out,count,mpi_xp_c,nbr_L,16+ig, & ! Send to Left the first
+                      buff_jxyz_in ,count,mpi_xp_c,nbr_R,16+ig, & ! Recieve from Right the last+1
+                      comm0, status, ierr)
+    moments(:,last+ig,:,:,:,:,updatetlevel) = buff_jxyz_in
+  ENDDO
+#endif
 END SUBROUTINE update_ghosts_p_mom
+
+! |t =     0.01| Px  = -0.608E-19| Qx  =  0.152E-01|
+! |t =     0.02| Px  = -0.336E-19| Qx  =  0.303E-01|
+! |t =     0.03| Px  =  0.683E-19| Qx  =  0.454E-01|
+! |t =     0.04| Px  = -0.122E-18| Qx  =  0.605E-01|
+! |t =     0.05| Px  =  0.322E-19| Qx  =  0.756E-01|
+! |t =     0.06| Px  = -0.905E-19| Qx  =  0.906E-01|
+! |t =     0.07| Px  =  0.833E-19| Qx  =  0.106    |
+! |t =     0.08| Px  =  0.276E-18| Qx  =  0.120    |
+! |t =     0.09| Px  = -0.889E-19| Qx  =  0.135    |
+! |t =     0.10| Px  =  0.284E-18| Qx  =  0.150    |
+
 
 !Communicate z+1, z+2 moments to left neighboor and z-1, z-2 moments to right one
 ! [a b|C D|e f] : proc n has moments a to f where a,b,e,f are ghosts
@@ -107,8 +142,8 @@ SUBROUTINE update_ghosts_z_mom
     ENDDO
     !!!!!!!!!!! Send ghost to down neighbour !!!!!!!!!!!!!!!!!!!!!!
     DO ig=1,ngz/2
-      CALL mpi_sendrecv(moments(:,:,:,:,:,first+(ig-1),updatetlevel),count,mpi_xp_c,nbr_D,26+ig, & ! Send to Up the last
-                                         buff_pjxy_zBC(:,:,:,:,:,ig),count,mpi_xp_c,nbr_U,26+ig, & ! Recieve from Down the first-1
+      CALL mpi_sendrecv(moments(:,:,:,:,:,first+(ig-1),updatetlevel),count,mpi_xp_c,nbr_D,26+ig, & ! Send to Down the first
+                                         buff_pjxy_zBC(:,:,:,:,:,ig),count,mpi_xp_c,nbr_U,26+ig, & ! Recieve from Up the last+1
                         comm0, status, ierr)
     ENDDO
   ELSE !No parallel (just copy)

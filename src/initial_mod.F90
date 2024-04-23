@@ -289,7 +289,7 @@ CONTAINS
     USE fields,     ONLY: moments
     USE prec_const, ONLY: xp
     USE model,      ONLY: LINEARITY
-    USE grid,       ONLY: total_nkx, local_nkx_offset, local_nky, local_nky_offset, iky0,&
+    USE grid,       ONLY: total_nkx, local_nkx_offset, local_nky, local_nky_offset,&
                           kxarray_full, kyarray_full, kx_max, kx_min, ky_max, deltakx, deltaky
     IMPLICIT NONE
     INTEGER :: ikx,iky, im, I_, J_
