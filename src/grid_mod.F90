@@ -10,7 +10,6 @@ MODULE grid
   !   GRID parameters
   INTEGER,  PUBLIC, PROTECTED :: pmax  = 2      ! The maximal Hermite-moment computed
   INTEGER,  PUBLIC, PROTECTED :: jmax  = 1      ! The maximal Laguerre-moment computed
-  INTEGER,  PUBLIC, PROTECTED :: dmax  = 2      ! The maximal full GF set of i-moments v^dmax
   INTEGER,  PUBLIC, PROTECTED :: Nx    = 64     ! Number of total internal grid points in x
   REAL(xp), PUBLIC, PROTECTED :: Lx    = 120_xp ! horizontal length of the spatial box
   INTEGER,  PUBLIC, PROTECTED :: Nexc  = 1      ! factor to increase Lx when shear>0 (Lx = Nexc/kymin/shear)
@@ -137,9 +136,6 @@ CONTAINS
     READ(lun,grid)
     IF(Nz .EQ. 1) & ! overwrite SG option if Nz = 1 for safety of use
       SG      = .FALSE.
-    !! Compute the maximal degree of full GF moments set
-    !   i.e. : all moments N_a^pj s.t. p+2j<=d are simulated (see GF closure)
-    dmax = min(pmax,2*jmax+1)
     ! Usefull precomputations
     inv_Nx = 1._xp/REAL(Nx,xp)
     inv_Ny = 1._xp/REAL(Ny,xp)
@@ -295,10 +291,10 @@ CONTAINS
   ! The other grids are simply
   ! |_|_|_|_|
   !  1 2 3 4
-  SUBROUTINE set_grids(shear,ExBrate,Npol,LINEARITY,N_HD,EM,Na)
+  SUBROUTINE set_grids(shear,ExBrate,Npol,LINEARITY,N_HD,N_HDz,EM,Na)
     REAL(xp), INTENT(IN) :: shear, ExBrate, Npol
     CHARACTER(len=*), INTENT(IN) :: LINEARITY
-    INTEGER, INTENT(IN)  :: N_HD
+    INTEGER, INTENT(IN)  :: N_HD, N_HDz
     LOGICAL, INTENT(IN)  :: EM
     INTEGER, INTENT(IN)  :: Na
     CALL set_agrid(Na)
@@ -307,7 +303,7 @@ CONTAINS
     CALL set_kygrid(LINEARITY,N_HD)
     CALL set_kxgrid(shear,ExBrate,Npol,1._xp,LINEARITY,N_HD) ! this will be redone after geometry if Cyq0_x0 .NE. 1
     CALL set_xgrid
-    CALL set_zgrid (Npol)
+    CALL set_zgrid (Npol,N_HDz)
   END SUBROUTINE set_grids
 
   SUBROUTINE set_agrid(Na) ! you're a sorcerer harry
@@ -585,9 +581,10 @@ CONTAINS
   END SUBROUTINE set_xgrid
 
   !----------- Parallel z grid
-  SUBROUTINE set_zgrid(Npol)
+  SUBROUTINE set_zgrid(Npol,N_HDz)
     USE prec_const
     IMPLICIT NONE
+    INTEGER , INTENT(IN) :: N_HDz
     REAL(xp):: grid_shift, Lz, zmax, zmin, Npol
     INTEGER :: iz, ig, eo
     ! Length of the flux tube (in ballooning angle)
@@ -598,7 +595,7 @@ CONTAINS
     ! Index of the outboard midplane
     iz_obmp = Nz/2+1 ! we use the fact that 1/2 in integer gives 0
     ! Parallel hyperdiffusion coefficient
-    diff_dz_coeff = (deltaz/2._xp)**4 ! adaptive fourth derivative (~GENE)
+    diff_dz_coeff = (deltaz/2._xp)**N_HDz ! adaptive fourth derivative (~GENE)
     IF (SG) THEN
       grid_shift = deltaz/2._xp
     ELSE
