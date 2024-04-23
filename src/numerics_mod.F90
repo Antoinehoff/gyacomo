@@ -384,37 +384,36 @@ END SUBROUTINE compute_lin_coeff
 !!!!!!! Auxilliary kernel functions/subroutines (developped with Leonhard Driever)
 !******************************************************************************!
 REAL(xp) FUNCTION taylor_kernel_n(order, n, y)
-	IMPLICIT NONE
-	INTEGER, INTENT(IN) :: order
-	INTEGER, INTENT(IN) :: n
-	REAL(xp), INTENT(IN) :: y
-	REAL(xp) :: sum_variable
-	INTEGER  ::  m
-	REAL(xp) :: m_dp, n_dp
+  INTEGER, INTENT(IN) :: order
+  INTEGER, INTENT(IN) :: n
+  REAL(xp), INTENT(IN) :: y
+  REAL(xp) :: sum_variable
+  INTEGER  ::  m
+  REAL(xp) :: m_dp, n_dp
 
-	n_dp = REAL(n, xp)
-	sum_variable = 0._xp
-	
-	DO m = n, order
-	   m_dp = REAL(m, xp)
-	   sum_variable = sum_variable + (-1._xp)**(m - n) * y**m / (GAMMA(n_dp + 1._xp) * GAMMA(m_dp - n_dp + 1._xp)) ! Denominator of m C n
+  n_dp = REAL(n, xp)
+  sum_variable = 0._xp
+
+  DO m = n, order
+      m_dp = REAL(m, xp)
+      sum_variable = sum_variable + (-1._xp)**(m - n) * y**m / (GAMMA(n_dp + 1._xp) * GAMMA(m_dp - n_dp + 1._xp)) ! Denominator of m C n
     END DO
-	taylor_kernel_n = sum_variable
+  taylor_kernel_n = sum_variable
 END FUNCTION taylor_kernel_n
 
 #ifdef LAPACK
 REAL(xp) FUNCTION pade_kernel_n(n, y, N_NUM, N_DEN)
-	IMPLICIT NONE
-	INTEGER, INTENT(IN) :: n, N_NUM, N_DEN
-	REAL(xp), INTENT(IN) :: y
-	REAL(xp) :: pade_numerator_coeffs(N_NUM + 1), pade_denominator_coeffs(N_NUM + 1)
-	REAL(xp) :: numerator_sum
-	REAL(xp) :: denominator_sum
-	INTEGER  :: m
-	! If N_NUM == 0, then the approximation should be the same as the Taylor approx. of N_NUM:
-	IF (N_NUM == 0) THEN
-	    pade_kernel_n = taylor_kernel_n(N_NUM, n, y)
-	ELSE
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: n, N_NUM, N_DEN
+  REAL(xp), INTENT(IN) :: y
+  REAL(xp) :: pade_numerator_coeffs(N_NUM + 1), pade_denominator_coeffs(N_NUM + 1)
+  REAL(xp) :: numerator_sum
+  REAL(xp) :: denominator_sum
+  INTEGER  :: m
+  ! If N_NUM == 0, then the approximation should be the same as the Taylor approx. of N_NUM:
+  IF (N_NUM == 0) THEN
+      pade_kernel_n = taylor_kernel_n(N_NUM, n, y)
+  ELSE
     CALL find_pade_coefficients(pade_numerator_coeffs, pade_denominator_coeffs, n, N_NUM, N_DEN)
     numerator_sum = 0
     denominator_sum = 0
@@ -425,18 +424,18 @@ REAL(xp) FUNCTION pade_kernel_n(n, y, N_NUM, N_DEN)
       denominator_sum = denominator_sum + pade_denominator_coeffs(m + 1) * y ** m
     END DO
     pade_kernel_n = numerator_sum / denominator_sum
-	END IF
+  END IF
 END FUNCTION pade_kernel_n
 
 
 SUBROUTINE find_pade_coefficients(pade_num_coeffs, pade_denom_coeffs, n, N_NUM, N_DEN)
-	IMPLICIT NONE
+  IMPLICIT NONE
 #ifdef SINGLE_PRECISION
   EXTERNAL :: SGESV ! Use DGESV rather than SGESV for double precision
 #else
-	EXTERNAL :: DGESV ! Use DGESV rather than SGESV for double precision
+  EXTERNAL :: DGESV ! Use DGESV rather than SGESV for double precision
 #endif
-	INTEGER, INTENT (IN) ::  n, N_NUM, N_DEN ! index of the considered Kernel
+  INTEGER, INTENT (IN) ::  n, N_NUM, N_DEN ! index of the considered Kernel
 	REAL(xp), INTENT(OUT) :: pade_num_coeffs(N_NUM + 1), pade_denom_coeffs(N_NUM + 1) ! OUT rather than INOUT to make sure no information is retained from previous Kernel computations
 	
 	REAL(xp) :: taylor_kernel_coeffs(N_NUM + N_NUM + 1), denom_matrix(N_NUM, N_NUM)
