@@ -55,11 +55,20 @@ SUBROUTINE set_closure_model
       DO ij = 1, local_nj+ngj
         evolve_mom(ip,ij) = ((parray(ip).GE.0) .AND. (jarray(ij).GE.0)) &
                       .AND. (parray(ip)+2*jarray(ij) .LE. dmax)
-        ! evolve_mom(ip,ij) = (parray(ip).GE.0) .AND. (jarray(ij).GE.0)
-        ! evolve_mom(ip,ij) = ((parray(ip)+2*jarray(ij)) .LE. dmax)
-        ! evolve_mom(ip,ij) = evolve_mom(ip,ij) .AND. ((parray(ip)+2*jarray(ij)) .LE. dmax)
       ENDDO
     ENDDO  
+  CASE('hot_electrons')
+    !! Evolve moments only up to the maximal degree MIN(pmax,2*jmax+1)
+    dmax = MIN(pmax,2*jmax+1)
+    DO ip = 1,local_np+ngp
+      DO ij = 1, local_nj+ngj
+        evolve_mom(ip,ij) = ((parray(ip).GE.0) .AND. (jarray(ij).GE.0)) &
+                    .AND. (parray(ip)+2*jarray(ij) .LE. dmax)
+      ENDDO
+    ENDDO  
+    !! Change the linear matrix coefficients to remove coupling
+    ! in the higher order GM equations
+    CALL asymptotic_tau_closure
   CASE DEFAULT
     ERROR STOP "closure scheme not recognized (avail: truncation,max_degree,monomial)"
   END SELECT
@@ -95,6 +104,59 @@ SUBROUTINE set_closure_model
   END SELECT
 END SUBROUTINE set_closure_model
 
+! Closure based on an ordering of tau. We remove all O(tau) terms in the last moment equation
+SUBROUTINE asymptotic_tau_closure
+  USE array, ONLY:  xnapj, &
+                    ynapp1j, ynapm1j, ynapp1jm1, ynapm1jm1,&
+                    zNapm1j, zNapm1jp1, zNapm1jm1,&
+                    xnapj, xnapjp1, xnapjm1,&
+                    xnapp1j, xnapm1j, xnapp2j, xnapm2j
+  USE grid,  ONLY:  parray, jarray, &
+                    local_na, local_np, local_nj, ngj, ngp
+  USE prec_const, ONLY: xp
+  IMPLICIT NONE
+  INTEGER     :: ia,ip,ij,p_int, j_int ! polynom. dagrees
+  REAL(xp)    :: p_xp, j_xp
+  !! these large loops are not efficient but it is done only once
+  !! and it's easier to read.
+  DO ia = 1,local_na
+    DO ip = 1,local_np
+      p_int= parray(ip+ngp/2)   ! Hermite degree
+      p_xp = REAL(p_int,xp) ! REAL of Hermite degree
+      DO ij = 1,local_nj
+        j_int= jarray(ij+ngj/2)   ! Laguerre degree
+        j_xp = REAL(j_int,xp) ! REAL of Laguerre degree
+        !! We se to zero all effects related to tau 
+        !! in the two highest degree GMs
+        IF((parray(ip)+2*jarray(ij) .GE. (dmax-1))) THEN
+            ! these cancel out the magn. curvature and perp. gradient coeff.
+            xnapj(ia,ip,ij)= 0._xp
+            xnapp2j(ia,ip) = 0._xp
+            xnapm2j(ia,ip) = 0._xp
+            xnapjp1(ia,ij) = 0._xp
+            xnapjm1(ia,ij) = 0._xp
+        ENDIF
+        !! We se to zero all effects related to sqrt(tau) 
+        !! in the highest degree GMs
+        IF((parray(ip)+2*jarray(ij) .GE. (dmax))) THEN
+          ! Mirror force terms
+          ynapp1j(ia,ip,ij)   = 0._xp
+          ynapm1j(ia,ip,ij)   = 0._xp
+          ynapp1jm1(ia,ip,ij) = 0._xp
+          ynapm1jm1(ia,ip,ij) = 0._xp
+          ! Trapping terms
+          zNapm1j(ia,ip,ij)   = 0._xp
+          zNapm1jp1(ia,ip,ij) = 0._xp
+          zNapm1jm1(ia,ip,ij) = 0._xp
+          ! Landau damping
+          xnapp1j(ia,ip)      = 0._xp
+          xnapm1j(ia,ip)      = 0._xp
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDDO
+END SUBROUTINE asymptotic_tau_closure
+
 ! Positive Oob indices are approximated with a model
 SUBROUTINE apply_closure_model
   USE prec_const, ONLY: xp
@@ -115,7 +177,7 @@ SUBROUTINE apply_closure_model
     ENDDO
   ENDDO  
   SELECT CASE (hierarchy_closure)
-    CASE('truncation','max_degree')
+    CASE('truncation','max_degree','hot_electrons')
       ! do nothing
     CASE('monomial')
       IF(num_procs_p .GT. 1) ERROR STOP "STOP: monomial closure is not parallelized in p"
