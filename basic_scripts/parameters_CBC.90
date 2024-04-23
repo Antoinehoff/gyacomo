@@ -30,9 +30,11 @@
   parallel_bc = 'dirichlet' ! to change the type of parallel boundary condition (experimental)
   shift_y= 0.0          ! to add a shift in the parallel BC (experimental)
   Npol   = 1.0          ! set the length of the z domain (-pi N_pol < z < pi N_pol)
+  PB_PHASE = .f.        ! add a phase factor to the parallel BC
 /
 &DIAGNOSTICS
-  dtsave_0d = 1         ! period of 0D diagnostics (time traces)
+  write_doubleprecision = .t.
+  dtsave_0d = 0.25      ! period of 0D diagnostics (time traces)
   dtsave_1d = -1        ! period of 1D diagnostics (nothing)
   dtsave_2d = -1        ! period of 2D diagnostics (nothing)
   dtsave_3d = 2         ! period of 3D diagnostics (phi, Aparallel, fluid moments etc.)

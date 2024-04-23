@@ -5,7 +5,7 @@ MODULE nonlinear
   USE fields,      ONLY : phi, psi, moments
   USE grid,        ONLY : local_na, &
                          local_np,ngp,parray,pmax,&
-                         local_nj,ngj,jarray,jmax, local_nj_offset, dmax,&
+                         local_nj,ngj,jarray,jmax, local_nj_offset,&
                          kyarray, AA_y, local_nky, inv_Ny,&
                          total_nkx,kxarray, AA_x, inv_Nx,local_nx, Ny, &
                          local_nz,ngz,zarray,nzgrid, deltakx, deltaky, iky0, contains_kx0, contains_ky0

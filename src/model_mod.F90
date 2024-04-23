@@ -8,7 +8,8 @@ MODULE model
             PUBLIC, PROTECTED ::LINEARITY= 'linear'   ! To turn on non linear bracket term
   REAL(xp), PUBLIC, PROTECTED ::    mu_x =  0._xp     ! spatial    x-Hyperdiffusivity coefficient (for num. stability)
   REAL(xp), PUBLIC, PROTECTED ::    mu_y =  0._xp     ! spatial    y-Hyperdiffusivity coefficient (for num. stability)
-  INTEGER,  PUBLIC, PROTECTED ::    N_HD =  4         ! order of numerical spatial diffusion
+  INTEGER,  PUBLIC, PROTECTED ::    N_HD =  4         ! order of numerical perpendicular spatial diffusion
+  INTEGER,  PUBLIC, PROTECTED ::   N_HDz =  4         ! order of numerical parallel spatial diffusion
   LOGICAL,  PUBLIC, PROTECTED ::   HDz_h =  .false.    ! to apply z-hyperdiffusion on non adiab part
   REAL(xp), PUBLIC, PROTECTED ::    mu_z =  0._xp     ! spatial    z-Hyperdiffusivity coefficient (for num. stability)
   REAL(xp), PUBLIC, PROTECTED ::    mu_p =  0._xp     ! kinetic para hyperdiffusivity coefficient (for num. stability)
@@ -26,7 +27,6 @@ MODULE model
   REAL(xp), PUBLIC, PROTECTED ::    k_mB =  1._xp     ! artificial mirror force tuner       (L_ref/L_cB)
   REAL(xp), PUBLIC, PROTECTED ::    k_tB =  1._xp     ! artificial trapping term tuner      (L_ref/L_cB)
   REAL(xp), PUBLIC, PROTECTED ::   k_ldB =  1._xp     ! artificial Landau damping tuner     (L_ref/L_cB)
-  REAL(xp), PUBLIC, PROTECTED :: lambdaD =  0._xp     ! Debye length
   REAL(xp), PUBLIC, PROTECTED ::    beta =  0._xp     ! electron plasma Beta (8piNT_e/B0^2)
   REAL(xp), PUBLIC, PROTECTED :: ExBrate =  0._xp     ! ExB background shearing rate (radially constant shear flow)
   INTEGER,  PUBLIC, PROTECTED ::   ikxZF =  0         ! Background zonal mode wavenumber (acts in the nonlinear term)
@@ -61,9 +61,9 @@ CONTAINS
 
     NAMELIST /MODEL/     LINEARITY, RM_LD_T_EQ, FORCE_SYMMETRY, MHD_PD, &
                          Na, ADIAB_E, ADIAB_I, q_i, tau_i, &
-                         mu_x, mu_y, N_HD, HDz_h, mu_z, mu_p, mu_j, HYP_V, &
+                         mu_x, mu_y, N_HD, N_HDz, HDz_h, mu_z, mu_p, mu_j, HYP_V, &
                          nu, k_gB, k_cB, k_mB, k_tB, k_ldB, &
-                         lambdaD, beta, ExBrate, ExB_NL_CORRECTION,&
+                         beta, ExBrate, ExB_NL_CORRECTION,&
                          ikxZF, ZFrate, ZF_ONLY, KN_MODEL, ORDER, ORDER_NUM, ORDER_DEN
 
     READ(lu_in,model)
@@ -118,7 +118,6 @@ CONTAINS
     CALL attach(fid, TRIM(str),        "nu",      nu)
     CALL attach(fid, TRIM(str),      "k_gB",    k_gB)
     CALL attach(fid, TRIM(str),      "k_cB",    k_cB)
-    CALL attach(fid, TRIM(str),   "lambdaD", lambdaD)
     CALL attach(fid, TRIM(str),    "MHD_PD",  MHD_PD)
     CALL attach(fid, TRIM(str),      "beta",    beta)
     CALL attach(fid, TRIM(str),   "ExBrate", ExBrate)
