@@ -83,7 +83,7 @@ CONTAINS
     IMPLICIT NONE
     NAMELIST /GEOMETRY/ geom, q0, shear, eps,&
       kappa, s_kappa,delta, s_delta, zeta, s_zeta,& ! For Miller
-      theta1, theta2,& ! for Miller global
+      theta1, theta2,& ! for Miller global (not ready)
       parallel_bc, shift_y, Npol, PB_PHASE
     READ(lu_in,geometry)
     PB_PHASE = .false.
