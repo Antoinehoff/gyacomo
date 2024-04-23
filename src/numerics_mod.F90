@@ -384,6 +384,7 @@ END SUBROUTINE compute_lin_coeff
 !!!!!!! Auxilliary kernel functions/subroutines (developped with Leonhard Driever)
 !******************************************************************************!
 REAL(xp) FUNCTION taylor_kernel_n(order, n, y)
+  IMPLICIT NONE
   INTEGER, INTENT(IN) :: order
   INTEGER, INTENT(IN) :: n
   REAL(xp), INTENT(IN) :: y
