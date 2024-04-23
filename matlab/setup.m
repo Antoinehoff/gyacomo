@@ -71,7 +71,6 @@ end
 MODEL.K_mB   = K_mB;      % artificial mirror force   tuner
 MODEL.K_tB   = K_tB;      % artificial trapping term  tuner
 MODEL.K_ldB  = K_ldB;     % artificial Landau damping tuner
-MODEL.lambdaD = LAMBDAD;
 % CLOSURE parameters
 CLOSURE.hierarchy_closure = ['''',HRCY_CLOS,''''];
 CLOSURE.nonlinear_closure = ['''',NLIN_CLOS,''''];
