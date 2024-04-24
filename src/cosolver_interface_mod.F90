@@ -13,8 +13,8 @@ CONTAINS
     USE parallel,    ONLY: num_procs_p, comm_p,dsp_p,rcv_p
     USE grid,        ONLY: &
       local_na, &
-      local_np, ngp, total_np, total_nj, ngj,&
-      local_nkx, local_nky, local_nz, bar
+      local_np, total_np, total_nj,&
+      local_nkx, local_nky, local_nz, bar, ngj_o2,ngp_o2
     USE array,       ONLY: Capj
     USE MPI
     USE closure,     ONLY: evolve_mom
@@ -31,7 +31,7 @@ CONTAINS
           a:DO ia = 1,local_na
             j:DO ij = 1,total_nj
               p:DO ip = 1,total_np
-              IF(evolve_mom(ip+ngp/2,ij+ngj/2)) THEN !compute for every moments except for closure 1
+              IF(evolve_mom(ip+ngp_o2,ij+ngj_o2)) THEN !compute for every moments except for closure 1
                   !! Take GK or DK limit
                   IF (GK_CO) THEN ! GK operator (k-dependant)
                     ikx_C = ikx; iky_C = iky; iz_C = iz;
@@ -73,8 +73,8 @@ CONTAINS
   SUBROUTINE apply_cosolver_mat(ia,ip,ij,iky,ikx,iz,ikx_C,iky_C,iz_C,local_coll)
     USE grid,        ONLY: &
       total_na, &
-      local_np, parray,parray_full, ngp,&
-      total_nj, jarray,jarray_full, ngj, bar, ngz
+      local_np, parray,parray_full,&
+      total_nj, jarray,jarray_full, bar, ngz_o2, ngj_o2,ngp_o2
     USE array,       ONLY: nuCself, Cab_F, nadiab_moments
     USE species,     ONLY: nu_ab
     IMPLICIT NONE
@@ -83,16 +83,16 @@ CONTAINS
     INTEGER :: ib,iq,il
     INTEGER :: p_int,q_int,j_int,l_int
     INTEGER :: izi, iqi, ili
-    izi = iz+ngz/2
+    izi = iz+ngz_o2
     p_int = parray_full(ip)
     j_int = jarray_full(ij)
     !! Apply the cosolver collision matrix
     local_coll = 0._xp ! Initialization
     q:DO iq = 1,local_np
-      iqi   = iq + ngp/2
+      iqi   = iq + ngp_o2
       q_int = parray(iqi)
       l:DO il = 1,total_nj
-        ili   = il + ngj/2
+        ili   = il + ngj_o2
         l_int = jarray(ili)
         ! self interaction + test interaction
         local_coll = local_coll + nadiab_moments(ia,iqi,ili,iky,ikx,izi) &
@@ -118,7 +118,7 @@ CONTAINS
       USE grid,        ONLY: &
         local_na, total_na, &
         local_nkx,local_nky, kparray,&
-        local_nz, ngz, bar,&
+        local_nz, ngz_o2, bar,&
         pmax, jmax, ieven
       USE array,       ONLY: Caa, Cab_T, Cab_F, nuCself
       USE MPI
@@ -246,7 +246,7 @@ CONTAINS
           DO iky = 1,local_nky
             DO iz = 1,local_nz
               ! Check for nonlinear case if we are in the anti aliased domain or the filtered one
-              kperp_sim = MIN(kparray(iky,ikx,iz+ngz/2,ieven),collision_kcut) ! current simulation kperp
+              kperp_sim = MIN(kparray(iky,ikx,iz+ngz_o2,ieven),collision_kcut) ! current simulation kperp
               ! Find the interval in kp grid mat where kperp_sim is contained
               ! Loop over the whole kp mat grid to find the smallest kperp that is
               ! larger than the current kperp_sim (brute force...)

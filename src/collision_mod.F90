@@ -116,7 +116,7 @@ CONTAINS
   !******************************************************************************!
   SUBROUTINE compute_lenard_bernstein
     USE grid, ONLY: ias,iae, ips,ipe, ijs,ije, parray, jarray, &
-                    ikys,ikye, ikxs,ikxe, izs,ize, kp2array, ngp, ngj, ngz
+                    ikys,ikye, ikxs,ikxe, izs,ize, kp2array, ngp_o2, ngj_o2, ngz_o2
     USE species,          ONLY: sigma2_tau_o2, nu_ab
     USE time_integration, ONLY: updatetlevel
     USE array,            ONLY: Capj
@@ -125,11 +125,11 @@ CONTAINS
     COMPLEX(xp) :: TColl_
     REAL(xp)    :: j_xp, p_xp, ba_2, kp2
     INTEGER     :: iz,ikx,iky,ij,ip,ia,eo,ipi,iji,izi
-    DO iz = izs,ize; izi = iz + ngz/2
+    DO iz = izs,ize; izi = iz + ngz_o2
     DO ikx = ikxs, ikxe;
     DO iky = ikys, ikye;
-    DO ij = ijs,ije; iji = ij + ngj/2
-    DO ip = ips,ipe; ipi = ip + ngp/2
+    DO ij = ijs,ije; iji = ij + ngj_o2
+    DO ip = ips,ipe; ipi = ip + ngp_o2
     DO ia = ias, iae
       !** Auxiliary variables **
       eo   = MODULO(parray(ipi),2)
@@ -157,9 +157,9 @@ CONTAINS
   !! Doughtery drift-kinetic collision operator (species like)
   !******************************************************************************!
   SUBROUTINE compute_ivanov
-    USE grid, ONLY: local_na, local_np, local_nj, parray, jarray, ngp, ngj, &
+    USE grid, ONLY: local_na, local_np, local_nj, parray, jarray, ngp_o2, ngj_o2, &
                     ip0, ip2, ij0, ij1, ieven, &
-                    local_nky, local_nkx, local_nz, ngz,&
+                    local_nky, local_nkx, local_nz, ngz_o2,&
                     kp2array
     USE species,          ONLY: nu_ab, tau, q_tau
     USE time_integration, ONLY: updatetlevel
@@ -171,14 +171,14 @@ CONTAINS
     INTEGER     :: iz,ikx,iky,ij,ip,ia, ipi,iji,izi
     REAL(xp)    :: j_xp, p_xp, kp2_xp
     DO iz = 1,local_nz
-      izi = iz + ngz/2
+      izi = iz + ngz_o2
       DO ikx = 1,local_nkx
         DO iky = 1,local_nky 
           kp2_xp = kp2array(iky,ikx,izi,ieven)
           DO ij = 1,local_nj
-            iji = ij + ngj/2 
+            iji = ij + ngj_o2 
             DO ip = 1,local_np
-              ipi = ip + ngp/2
+              ipi = ip + ngp_o2
               DO ia = 1,local_na
                 !** Auxiliary variables **
                 p_xp      = REAL(parray(ipi),xp)
@@ -226,9 +226,9 @@ CONTAINS
   !! Doughtery drift-kinetic collision operator (species like)
   !******************************************************************************!
   SUBROUTINE Dougherty_DK
-    USE grid, ONLY: local_na, local_np, local_nj, parray, jarray, ngp, ngj, &
-                    ip0, ip1, ip2, ij0, ij1, &
-                    local_nky, local_nkx, local_nz, ngz
+    USE grid, ONLY: local_na, local_np, local_nj, parray, jarray, &
+                    ip0, ip1, ip2, ij0, ij1, ngp_o2, ngj_o2, ngz_o2, &
+                    local_nky, local_nkx, local_nz
     USE species,          ONLY: nu_ab
     USE time_integration, ONLY: updatetlevel
     USE array,            ONLY: Capj
@@ -239,13 +239,13 @@ CONTAINS
     INTEGER     :: iz,ikx,iky,ij,ip,ia, ipi,iji,izi
     REAL(xp)    :: j_xp, p_xp
     DO iz = 1,local_nz
-      izi = iz + ngz/2
+      izi = iz + ngz_o2
       DO ikx = 1,local_nkx
         DO iky = 1,local_nky 
           DO ij = 1,local_nj
-            iji = ij + ngj/2 
+            iji = ij + ngj_o2 
             DO ip = 1,local_np
-              ipi = ip + ngp/2
+              ipi = ip + ngp_o2
               DO ia = 1,local_na
                 !** Auxiliary variables **
                 p_xp      = REAL(parray(ipi),xp)
@@ -273,9 +273,9 @@ CONTAINS
   !! Doughtery gyrokinetic collision operator (species like)
   !******************************************************************************!
   SUBROUTINE Dougherty_GK
-    USE grid, ONLY: local_na, local_np, local_nj, parray, jarray, ngp, ngj, &
+    USE grid, ONLY: local_na, local_np, local_nj, parray, jarray, ngp_o2, ngj_o2, &
                     ip0, ip1, ip2, &
-                    local_nky, local_nkx, local_nz, ngz, kparray, nzgrid
+                    local_nky, local_nkx, local_nz, ngz_o2, kparray, nzgrid
     USE species,          ONLY: sigma2_tau_o2, sqrt_sigma2_tau_o2, nu_ab
     USE array,            ONLY: Capj, nadiab_moments, kernel
     USE prec_const,       ONLY: xp, SQRT2, twothird
@@ -287,13 +287,13 @@ CONTAINS
     REAL(xp)    :: n_xp, j_xp, p_xp, ba, ba_2
     INTEGER     :: iz,ikx,iky,ij,ip,ia,eo,in, ipi,iji,izi,ini
     DO iz = 1,local_nz
-      izi = iz + ngz/2
+      izi = iz + ngz_o2
       DO ikx = 1,local_nkx
         DO iky = 1,local_nky 
           DO ij = 1,local_nj
-            iji = ij + ngj/2 
+            iji = ij + ngj_o2 
             DO ip = 1,local_np
-              ipi = ip + ngp/2
+              ipi = ip + ngp_o2
               DO ia = 1,local_na
     !** Auxiliary variables **
     p_xp      = REAL(parray(ipi),xp)
@@ -313,7 +313,7 @@ CONTAINS
         upar_  = 0._xp; uperp_ = 0._xp
         Tpar_  = 0._xp; Tperp_ = 0._xp
         DO in = 1,local_nj
-          ini = in + ngj/2
+          ini = in + ngj_o2
           n_xp = REAL(jarray(ini),xp)
           ! Store the kernels for sparing readings
           Knp0 =  kernel(ia,ini  ,iky,ikx,izi,eo)
@@ -342,7 +342,7 @@ CONTAINS
       !** build required fluid moments **
       upar_  = 0._xp
       DO in = 1,local_nj
-        ini = in + ngj/2
+        ini = in + ngj_o2
         n_xp = REAL(jarray(ini),xp)
         ! Parallel velocity
         upar_  = upar_  + kernel(ia,ini,iky,ikx,izi,eo) * nadiab_moments(ia,ip1,ini,iky,ikx,izi)
@@ -356,7 +356,7 @@ CONTAINS
       upar_  = 0._xp; uperp_ = 0._xp
       Tpar_  = 0._xp; Tperp_ = 0._xp
       DO in = 1,local_nj
-        ini = in + ngj/2
+        ini = in + ngj_o2
         n_xp = REAL(jarray(ini),xp)
         ! Store the kernels for sparing readings
         Knp0 =  kernel(ia,ini  ,iky,ikx,izi,eo)

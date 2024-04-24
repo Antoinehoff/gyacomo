@@ -292,17 +292,17 @@ SUBROUTINE compute_lin_coeff
   USE species, ONLY: k_T, k_N, tau, q, sqrt_tau_o_sigma
   USE model,   ONLY: k_cB, k_gB, k_mB, k_tB, k_ldB
   USE prec_const, ONLY: xp, SQRT2, SQRT3
-  USE grid,  ONLY: parray, jarray, local_na, local_np, local_nj, ngj, ngp
+  USE grid,  ONLY: parray, jarray, local_na, local_np, local_nj, ngj_o2,ngp_o2
   INTEGER     :: ia,ip,ij,p_int, j_int ! polynom. dagrees
   REAL(xp)    :: p_xp, j_xp
 
   !! linear coefficients for moment RHS !!!!!!!!!!
   DO ia = 1,local_na
     DO ip = 1,local_np
-      p_int= parray(ip+ngp/2)   ! Hermite degree
+      p_int= parray(ip+ngp_o2)   ! Hermite degree
       p_xp = REAL(p_int,xp) ! REAL of Hermite degree
       DO ij = 1,local_nj
-        j_int= jarray(ij+ngj/2)   ! Laguerre degree
+        j_int= jarray(ij+ngj_o2)   ! Laguerre degree
         j_xp = REAL(j_int,xp) ! REAL of Laguerre degree
         ! All Napj terms related to magn. curvature and perp. gradient
         xnapj(ia,ip,ij) = tau(ia)/q(ia)*(k_cB*(2._xp*p_xp + 1._xp) &
@@ -319,7 +319,7 @@ SUBROUTINE compute_lin_coeff
       ENDDO
     ENDDO
     DO ip = 1,local_np
-      p_int= parray(ip+ngp/2)   ! Hermite degree
+      p_int= parray(ip+ngp_o2)   ! Hermite degree
       p_xp = REAL(p_int,xp) ! REAL of Hermite degree
       ! Landau damping coefficients (ddz napj term)
       xnapp1j(ia,ip) = sqrt_tau_o_sigma(ia) * SQRT(p_xp+1._xp) * k_ldB
@@ -329,7 +329,7 @@ SUBROUTINE compute_lin_coeff
       xnapm2j(ia,ip) = tau(ia)/q(ia) * SQRT( p_xp       *(p_xp - 1._xp)) * k_cB
     ENDDO
     DO ij = 1,local_nj
-      j_int= jarray(ij+ngj/2)   ! Laguerre degree
+      j_int= jarray(ij+ngj_o2)   ! Laguerre degree
       j_xp = REAL(j_int,xp) ! REAL of Laguerre degree
       ! Magnetic perp. gradient term
       xnapjp1(ia,ij) = -tau(ia)/q(ia) * (j_xp + 1._xp) * k_gB
@@ -338,9 +338,9 @@ SUBROUTINE compute_lin_coeff
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! ES linear coefficients for moment RHS !!!!!!!!!!
     DO ip = 1,local_np
-      p_int= parray(ip+ngp/2)   ! Hermite degree
+      p_int= parray(ip+ngp_o2)   ! Hermite degree
       DO ij = 1,local_nj
-        j_int= jarray(ij+ngj/2)   ! REALof Laguerre degree
+        j_int= jarray(ij+ngj_o2)   ! REALof Laguerre degree
         j_xp = REAL(j_int,xp) ! REALof Laguerre degree
         !! Electrostatic potential pj terms
         IF (p_int .EQ. 0) THEN ! kronecker p0
@@ -359,9 +359,9 @@ SUBROUTINE compute_lin_coeff
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !! Electromagnatic linear coefficients for moment RHS !!!!!!!!!!
     DO ip = 1,local_np
-      p_int= parray(ip+ngp/2)   ! Hermite degree
+      p_int= parray(ip+ngp_o2)   ! Hermite degree
       DO ij = 1,local_nj
-        j_int= jarray(ij+ngj/2)   ! REALof Laguerre degree
+        j_int= jarray(ij+ngj_o2)   ! REALof Laguerre degree
         j_xp = REAL(j_int,xp) ! REALof Laguerre degree
         IF (p_int .EQ. 1) THEN ! kronecker p1
           xpsij  (ia,ip,ij)  = +(k_N(ia) + (2._xp*j_xp+1._xp)*k_T(ia))* sqrt_tau_o_sigma(ia)

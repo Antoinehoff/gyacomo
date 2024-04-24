@@ -209,7 +209,7 @@ CONTAINS
 
    SUBROUTINE filter_sv_moments_ky_pj
       USE fields,           ONLY: moments
-      USE grid,             ONLY: total_nky, total_np, total_nj, ngp,ngj,ngz,&
+      USE grid,             ONLY: total_nky, total_np, total_nj,ngz_o2,&
          local_np, local_nj, local_nz, local_nkx, local_nky, local_na
       USE time_integration, ONLY: updatetlevel
       USE basic,            ONLY: start_chrono, stop_chrono, chrono_CLA
@@ -226,14 +226,14 @@ CONTAINS
       ALLOCATE(moments_lky_lpj(local_nky,local_np*local_nj))
       ALLOCATE(moments_gky_lpj(total_nky,local_np*local_nj))
       ALLOCATE(moments_gky_gpj(total_nky,total_np*total_nj))
-      DO iz = 1+ngz/2,local_nz+ngz/2
+      DO iz = 1+ngz_o2,local_nz+ngz_o2
          DO ix = 1,local_nkx
             DO ia = 1,local_na
                ! Build the local slice explicitely
                DO ip = 1,local_np
                   DO ij = 1,local_nj
                      DO iy = 1,local_nky
-                        moments_lky_lpj(iy,local_np*(ij-1)+ip) = moments(ia,ip+ngp/2,ij+ngj/2,iy,ix,iz,updatetlevel)
+                        moments_lky_lpj(iy,local_np*(ij-1)+ip) = moments(ia,ip+ngp_o2,ij+ngj_o2,iy,ix,iz,updatetlevel)
                      ENDDO
                   ENDDO
                ENDDO
@@ -272,7 +272,7 @@ CONTAINS
                DO ip = 1,local_np
                   DO ij = 1,local_nj
                      DO iy = 1,local_nky
-                        moments(ia,ip+ngp/2,ij+ngj/2,iy,ix,iz,updatetlevel) = moments_lky_lpj(iy,local_np*(ij-1)+ip)
+                        moments(ia,ip+ngp_o2,ij+ngj_o2,iy,ix,iz,updatetlevel) = moments_lky_lpj(iy,local_np*(ij-1)+ip)
                      ENDDO
                   ENDDO
                ENDDO

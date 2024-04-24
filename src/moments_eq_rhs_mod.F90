@@ -8,7 +8,7 @@ CONTAINS
     USE array
     USE fields
     USE grid,       ONLY: local_na, local_np, local_nj, local_nkx, local_nky, local_nz,&
-                          nzgrid,pp2,ngp,ngj,ngz,&
+                          nzgrid,pp2,ngj_o2,ngp_o2,ngz_o2,&
                           diff_dz_coeff,diff_kx_coeff,diff_ky_coeff,diff_p_coeff,diff_j_coeff,&
                           parray,jarray,kxarray, kyarray, kp2array
     USE basic
@@ -33,7 +33,7 @@ CONTAINS
     COMPLEX(xp) :: Napj, RHS, phikykxz, psikykxz
     ! Spatial loops
     z:DO  iz = 1,local_nz
-      izi = iz + ngz/2
+      izi = iz + ngz_o2
       x:DO ikx = 1,local_nkx
         y:DO iky = 1,local_nky
           kx       = kxarray(iky,ikx)                 ! radial wavevector
@@ -44,10 +44,10 @@ CONTAINS
           psikykxz = psi(iky,ikx,izi)
           ! Kinetic loops
           j:DO ij = 1,local_nj               ! This loop is from 1 to jmaxi+1
-            iji   = ij+ngj/2
+            iji   = ij+ngj_o2
             j_int = jarray(iji)
             p:DO ip = 1,local_np             ! Hermite loop
-              ipi   = ip+ngp/2
+              ipi   = ip+ngp_o2
               p_int = parray(ipi)                   ! Hermite degree
               eo    = min(nzgrid,MODULO(p_int,2)+1) ! Indicates if we are on odd or even z grid
               kperp2= kp2array(iky,ikx,izi,eo)

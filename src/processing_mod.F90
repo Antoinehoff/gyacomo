@@ -1,7 +1,8 @@
 MODULE processing
    USE prec_const,  ONLY: xp, imagu, SQRT2, SQRT3, onetwelfth, twothird
    USE grid,        ONLY: &
-      local_na, local_np, local_nj, local_nky, local_nkx, local_nz, Ngz,Ngj,Ngp,nzgrid, &
+      local_na, local_np, local_nj, local_nky, local_nkx, local_nz, &
+      ngz, ngj, ngp, ngz_o2, ngp_o2, ngj_o2, nzgrid, &
       parray,pmax,ip0, iodd, ieven, total_nz, &
       CONTAINSp0,ip1,CONTAINSp1,ip2,CONTAINSp2,ip3,CONTAINSp3,&
       jarray,jmax,ij0,&
@@ -142,7 +143,7 @@ CONTAINS
          ENDDO
          ENDDO
       ELSE
-         interp_napj(:,:,:,:,:,1:local_nz) = nadiab_moments(:,:,:,:,:,(1+ngz/2):(local_nz+ngz/2))
+         interp_napj(:,:,:,:,:,1:local_nz) = nadiab_moments(:,:,:,:,:,(1+ngz_o2):(local_nz+ngz_o2))
       ENDIF
    END SUBROUTINE compute_interp_z
 
@@ -164,7 +165,7 @@ CONTAINS
          ! Electrostatic part
          IF(CONTAINSp0) THEN
             DO iz = 1,local_nz
-            izi = iz + ngz/2 !interior index for ghosted arrays
+            izi = iz + ngz_o2 !interior index for ghosted arrays
             DO ikx = 1,local_nkx
             DO iky = 1,local_nky
                integrant(iz) = integrant(iz) &
@@ -177,7 +178,7 @@ CONTAINS
          ! Electromagnetic part
          IF( EM .AND. CONTAINSp1 ) THEN
             DO iz = 1,local_nz ! we take interior points only
-            izi = iz + ngz/2 !interior index for ghosted arrays
+            izi = iz + ngz_o2 !interior index for ghosted arrays
             DO ikx = 1,local_nkx
             DO iky = 1,local_nky
                integrant(iz) = integrant(iz)&
@@ -197,11 +198,11 @@ CONTAINS
          ! Electrostatic part
          IF(CONTAINSp0) THEN
             DO iz = 1,local_nz ! we take interior points only
-            izi = iz + ngz/2 !interior index for ghosted arrays
+            izi = iz + ngz_o2 !interior index for ghosted arrays
             DO ikx = 1,local_nkx
             DO iky = 1,local_nky
             DO in = 1, local_nj
-            ini = in + ngj/2 !interior index for ghosted arrays
+            ini = in + ngj_o2 !interior index for ghosted arrays
                integrant(iz) = integrant(iz)+ &
                   Jacobian(izi,ieven)*moments(ia,ip0,ini,iky,ikx,izi,updatetlevel)&
                   *imagu*kyarray(iky)*kernel(ia,ini,iky,ikx,izi,ieven)*CONJG(phi(iky,ikx,izi))
@@ -213,11 +214,11 @@ CONTAINS
          ! Electromagnetic part
          IF( EM .AND. CONTAINSp1 ) THEN
             DO iz = 1,local_nz ! we take interior points only
-            izi = iz + ngz/2 !interior index for ghosted arrays
+            izi = iz + ngz_o2 !interior index for ghosted arrays
             DO ikx = 1,local_nkx
             DO iky = 1,local_nky
             DO in = 1, local_nj
-            ini = in + ngj/2 !interior index for ghosted arrays
+            ini = in + ngj_o2 !interior index for ghosted arrays
                   integrant(iz) = integrant(iz) - &
                   Jacobian(izi,iodd)*sqrt_tau_o_sigma(ia)*moments(ia,ip1,ini,iky,ikx,izi,updatetlevel)&
                   *imagu*kyarray(iky)*kernel(ia,ini,iky,ikx,izi,iodd)*CONJG(psi(iky,ikx,izi))
@@ -271,11 +272,11 @@ CONTAINS
          IF(CONTAINSp0 .AND. CONTAINSp2) THEN
             ! Loop to compute gamma_kx = sum_ky sum_j -i k_z Kernel_j Na00 * phi
             DO iz = 1,local_nz ! we take interior points only
-            izi = iz + ngz/2 !interior index for ghosted arrays
+            izi = iz + ngz_o2 !interior index for ghosted arrays
             DO ikx = 1,local_nkx
             DO iky = 1,local_nky
             DO in = 1, local_nj
-            ini  = in+ngj/2 !interior index for ghosted arrays
+            ini  = in+ngj_o2 !interior index for ghosted arrays
             n_xp = jarray(ini)
                integrant(iz) = integrant(iz) &
                   -Jacobian(izi,ieven)*tau(ia)*imagu*kyarray(iky)*phi(iky,ikx,izi)&
@@ -294,11 +295,11 @@ CONTAINS
          IF(EM .AND. CONTAINSp1 .AND. CONTAINSp3) THEN
             !!----------------ELECTROMAGNETIC CONTRIBUTION--------------------
             DO iz  = 1,local_nz
-            izi = iz + ngz/2 !interior index for ghosted arrays
+            izi = iz + ngz_o2 !interior index for ghosted arrays
             DO ikx = 1,local_nkx
             DO iky = 1,local_nky
             DO in = 1, local_nj
-            ini = in + ngj/2 !interior index for ghosted arrays
+            ini = in + ngj_o2 !interior index for ghosted arrays
             n_xp = jarray(ini)
                integrant(iz) = integrant(iz) &
                      +Jacobian(izi,iodd)*tau(ia)*sqrt_tau_o_sigma(ia)*imagu*kyarray(iky)*CONJG(psi(iky,ikx,izi))&
@@ -360,8 +361,8 @@ CONTAINS
          DO ij  = 1,local_nj
          DO ip  = 1,local_np
             local_sum(ip,ij,iz)  = local_sum(ip,ij,iz)  + &
-               REAL(moments(ia,ip+Ngp/2,ij+Ngj/2,iky,ikx,iz+Ngz/2,updatetlevel) &
-               * CONJG(moments(ia,ip+Ngp/2,ij+Ngj/2,iky,ikx,iz+Ngz/2,updatetlevel)),xp)
+               REAL(moments(ia,ip+ngp_o2,ij+ngj_o2,iky,ikx,iz+ngz_o2,updatetlevel) &
+               * CONJG(moments(ia,ip+ngp_o2,ij+ngj_o2,iky,ikx,iz+ngz_o2,updatetlevel)),xp)
          ENDDO
          ENDDO
          ENDDO
@@ -405,7 +406,7 @@ CONTAINS
    DO ikx = 1,local_nkx
       dens_ = 0._xp
       DO ij = 1, local_nj
-         dens_ = dens_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven) * moments(ia,ip0,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)
+         dens_ = dens_ + kernel(ia,ij+ngj_o2,iky,ikx,iz+ngz_o2,ieven) * moments(ia,ip0,ij+ngj_o2,iky,ikx,iz+ngz_o2,updatetlevel)
       ENDDO
       dens(ia,iky,ikx,iz) = dens_
    ENDDO
@@ -427,9 +428,9 @@ CONTAINS
       DO ikx = 1,local_nkx
       uperp_ = 0._xp
       DO ij = 1, local_nj
-         uperp_ = uperp_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven) *&
-            0.5_xp*(moments(ia,ip0,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)&
-                     -moments(ia,ip0,ij-1+ngj/2,iky,ikx,iz+ngz/2,updatetlevel))
+         uperp_ = uperp_ + kernel(ia,ij+ngj_o2,iky,ikx,iz+ngz_o2,ieven) *&
+            0.5_xp*(moments(ia,ip0,ij+ngj_o2,iky,ikx,iz+ngz_o2,updatetlevel)&
+                     -moments(ia,ip0,ij-1+ngj_o2,iky,ikx,iz+ngz_o2,updatetlevel))
       ENDDO
       uper(ia,iky,ikx,iz) = uperp_
       ENDDO
@@ -451,7 +452,7 @@ CONTAINS
       DO ikx = 1,local_nkx
          upar_ = 0._xp
          DO ij = 1, local_nj
-            upar_ = upar_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,iodd)*moments(ia,ip1,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)
+            upar_ = upar_ + kernel(ia,ij+ngj_o2,iky,ikx,iz+ngz_o2,iodd)*moments(ia,ip1,ij+ngj_o2,iky,ikx,iz+ngz_o2,updatetlevel)
          ENDDO
          upar(ia,iky,ikx,iz) = upar_
       ENDDO
@@ -476,11 +477,11 @@ CONTAINS
       DO ikx = 1,local_nkx
       Tperp_ = 0._xp
       DO ij = 1, local_nj
-         j_xp = jarray(ij+ngj/2)
-         Tperp_ = Tperp_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven)*&
-            ((2_xp*j_xp+1)*moments(ia,ip0,ij  +ngj/2,iky,ikx,iz+ngz/2,updatetlevel)&
-                     -j_xp*moments(ia,ip0,ij-1+ngj/2,iky,ikx,iz+ngz/2,updatetlevel)&
-                  -(j_xp+1)*moments(ia,ip0,ij+1+ngj/2,iky,ikx,iz+ngz/2,updatetlevel))
+         j_xp = jarray(ij+ngj_o2)
+         Tperp_ = Tperp_ + kernel(ia,ij+ngj_o2,iky,ikx,iz+ngz_o2,ieven)*&
+            ((2_xp*j_xp+1)*moments(ia,ip0,ij  +ngj_o2,iky,ikx,iz+ngz_o2,updatetlevel)&
+                     -j_xp*moments(ia,ip0,ij-1+ngj_o2,iky,ikx,iz+ngz_o2,updatetlevel)&
+                  -(j_xp+1)*moments(ia,ip0,ij+1+ngj_o2,iky,ikx,iz+ngz_o2,updatetlevel))
       ENDDO
       Tper(ia,iky,ikx,iz) = Tperp_
       ENDDO
@@ -506,9 +507,9 @@ CONTAINS
       Tpar_ = 0._xp
       DO ij = 1, local_nj
          j_xp = REAL(ij-1,xp)
-         Tpar_  = Tpar_ + kernel(ia,ij+ngj/2,iky,ikx,iz+ngz/2,ieven)*&
-            (SQRT2 * moments(ia,ip2,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel) &
-                     + moments(ia,ip0,ij+ngj/2,iky,ikx,iz+ngz/2,updatetlevel))
+         Tpar_  = Tpar_ + kernel(ia,ij+ngj_o2,iky,ikx,iz+ngz_o2,ieven)*&
+            (SQRT2 * moments(ia,ip2,ij+ngj_o2,iky,ikx,iz+ngz_o2,updatetlevel) &
+                     + moments(ia,ip0,ij+ngj_o2,iky,ikx,iz+ngz_o2,updatetlevel))
       ENDDO
       Tpar(ia,iky,ikx,iz) = Tpar_
       ENDDO

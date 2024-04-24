@@ -15,7 +15,7 @@ CONTAINS
 
     USE basic,  ONLY: dt
     USE grid,   ONLY:local_na,local_np,local_nj,local_nky,local_nkx,local_nz,&
-                     ngp, ngj, ngz
+                     ngp_o2, ngj_o2, ngz_o2
     USE closure,ONLY: evolve_mom
     use fields, ONLY: moments
     use array,  ONLY: moments_rhs
@@ -26,13 +26,13 @@ CONTAINS
     CASE(1)
       DO istage=1,ntimelevel
       DO iz    =1,local_nz
-        izi = iz+ngz/2
+        izi = iz+ngz_o2
       DO ikx   =1,local_nkx
       DO iky   =1,local_nky
       DO ij    =1,local_nj
-        iji = ij+ngj/2
+        iji = ij+ngj_o2
       DO ip    =1,local_np
-        ipi = ip+ngp/2
+        ipi = ip+ngp_o2
       DO ia    =1,local_na
         IF( evolve_mom(ipi,iji) )&
         moments(ia,ipi,iji,iky,ikx,izi,1) = moments(ia,ipi,iji,iky,ikx,izi,1) &
@@ -48,13 +48,13 @@ CONTAINS
       moments(:,:,:,:,:,:,updatetlevel) = moments(:,:,:,:,:,:,1);
       DO istage=1,ntimelevel-1
       DO iz    =1,local_nz
-        izi = iz+ngz/2
+        izi = iz+ngz_o2
       DO ikx   =1,local_nkx
       DO iky   =1,local_nky
       DO ij    =1,local_nj
-        iji = ij+ngj/2
+        iji = ij+ngj_o2
       DO ip    =1,local_np
-        ipi = ip+ngp/2
+        ipi = ip+ngp_o2
       DO ia    =1,local_na
         IF( evolve_mom(ipi,iji) )&
         moments(ia,ipi,iji,iky,ikx,izi,updatetlevel) = moments(ia,ipi,iji,iky,ikx,izi,updatetlevel) + &

@@ -179,7 +179,7 @@ CONTAINS
                                cstep,iframe0d,iframe2d,iframe3d,iframe5d,crashed
     USE grid,            ONLY: &
       parray_full,jarray_full, kparray, &
-      kyarray_full,kxarray_full,zarray_full, ngz, total_nz, local_nz, ieven,&
+      kyarray_full,kxarray_full,zarray_full, ngz_o2, total_nz, local_nz, ieven,&
       local_Nky, total_nky, local_nkx, total_nkx
     USE geometry, ONLY: gxx, gxy, gxz, gyy, gyz, gzz, &
                         hatR, hatZ, hatB, dBdx, dBdy, dBdz, Jacobian, gradz_coeff
@@ -229,33 +229,33 @@ CONTAINS
       CALL putarr(fidres, "/data/grid/coordkp" ,      kp_full,   "kp", ionode=0)
       ! Metric info
       CALL   creatg(fidres, "/data/metric", "Metric data")
-      CALL gather_z(gxx((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+      CALL gather_z(gxx((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/gxx", Az_full, "gxx", ionode =0)
-      CALL gather_z(gxy((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+      CALL gather_z(gxy((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/gxy", Az_full, "gxy", ionode =0)
-      CALL gather_z(gxz((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+      CALL gather_z(gxz((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/gxz", Az_full, "gxz", ionode =0)
-      CALL gather_z(gyy((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+      CALL gather_z(gyy((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/gyy", Az_full, "gyy", ionode =0)
-      CALL gather_z(gyz((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+      CALL gather_z(gyz((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/gyz", Az_full, "gyz", ionode =0)
-      CALL gather_z(gzz((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+      CALL gather_z(gzz((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/gzz", Az_full, "gzz", ionode =0)
-      CALL gather_z(hatR((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+      CALL gather_z(hatR((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/hatR", Az_full, "hatR", ionode =0)
-      CALL gather_z(hatZ((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+      CALL gather_z(hatZ((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/hatZ", Az_full, "hatZ", ionode =0)
-      CALL gather_z(hatB((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+      CALL gather_z(hatB((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/hatB", Az_full, "hatB", ionode =0)
-      CALL gather_z(dBdx((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+      CALL gather_z(dBdx((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/dBdx", Az_full, "dBdx", ionode =0)
-      CALL gather_z(dBdy((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+      CALL gather_z(dBdy((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/dBdy", Az_full, "dBdy", ionode =0)
-      CALL gather_z(dBdz((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+      CALL gather_z(dBdz((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/dBdz", Az_full, "dBdz", ionode =0)
-      CALL gather_z(Jacobian((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+      CALL gather_z(Jacobian((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/Jacobian", Az_full, "Jacobian", ionode =0)
-      CALL gather_z(gradz_coeff((1+ngz/2):(local_nz+ngz/2),ieven),Az_full,local_nz,total_nz)
+      CALL gather_z(gradz_coeff((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/gradz_coeff", Az_full, "gradz_coeff", ionode =0)
       !  var0d group (gyro transport)
       IF (nsave_0d .GT. 0) THEN
@@ -463,7 +463,7 @@ CONTAINS
     USE grid, ONLY: CONTAINSp0, ip0,ij0, local_na, total_na,&
          total_np, total_nj, total_nky, total_nkx, total_nz, &
          local_np, local_nky, local_nkx, local_nz, &
-         ngz, iz_obmp
+         ngz_o2, iz_obmp
     USE time_integration, ONLY: updatetlevel
     USE prec_const
     USE processing, ONLY: compute_fluid_moments, compute_Napjz_spectrum
@@ -483,13 +483,13 @@ CONTAINS
     CALL putarr(fidres, dset_name, Sf, ionode=0)
 #endif
     ! Write current EM fields
-    IF (write_phi)        CALL write_field2d_kykx_obmp(phi (:,:,(1+ngz/2):(local_nz+ngz/2)), 'phi_obmp')
-    IF (write_phi.AND.EM) CALL write_field2d_kykx_obmp(psi (:,:,(1+ngz/2):(local_nz+ngz/2)), 'psi_obmp')
+    IF (write_phi)        CALL write_field2d_kykx_obmp(phi (:,:,(1+ngz_o2):(local_nz+ngz_o2)), 'phi_obmp')
+    IF (write_phi.AND.EM) CALL write_field2d_kykx_obmp(psi (:,:,(1+ngz_o2):(local_nz+ngz_o2)), 'psi_obmp')
     IF (write_Na00) THEN
       CALL compute_Napjz_spectrum
       IF (CONTAINSp0) THEN
         ! gyrocenter density
-        Na00_    = moments(:,ip0,ij0,:,:,(1+ngz/2):(local_nz+ngz/2),updatetlevel)
+        Na00_    = moments(:,ip0,ij0,:,:,(1+ngz_o2):(local_nz+ngz_o2),updatetlevel)
       ELSE
         Na00_    = 0._xp
       ENDIF
@@ -572,7 +572,7 @@ CONTAINS
     USE grid, ONLY: CONTAINSp0, ip0,ij0, local_na, total_na,&
                     total_np, total_nj, total_nky, total_nkx, total_nz, &
                     local_np, local_nky, local_nkx, local_nz, &
-                    ngz
+                    ngz_o2
     USE time_integration, ONLY: updatetlevel
     USE prec_const
     USE processing, ONLY: compute_fluid_moments, compute_Napjz_spectrum
@@ -587,13 +587,13 @@ CONTAINS
     iframe3d=iframe3d+1
     CALL attach(fidres,"/data/var3d/" , "frames", iframe3d)
     ! Write current EM fields
-    IF (write_phi)        CALL write_field3d_kykxz(phi (:,:,(1+ngz/2):(local_nz+ngz/2)), 'phi')
-    IF (write_phi.AND.EM) CALL write_field3d_kykxz(psi (:,:,(1+ngz/2):(local_nz+ngz/2)), 'psi')
+    IF (write_phi)        CALL write_field3d_kykxz(phi (:,:,(1+ngz_o2):(local_nz+ngz_o2)), 'phi')
+    IF (write_phi.AND.EM) CALL write_field3d_kykxz(psi (:,:,(1+ngz_o2):(local_nz+ngz_o2)), 'psi')
     IF (write_Na00) THEN
       CALL compute_Napjz_spectrum
       IF (CONTAINSp0) THEN
         ! gyrocenter density
-        Na00_    = moments(:,ip0,ij0,:,:,(1+ngz/2):(local_nz+ngz/2),updatetlevel)
+        Na00_    = moments(:,ip0,ij0,:,:,(1+ngz_o2):(local_nz+ngz_o2),updatetlevel)
       ELSE
         Na00_    = 0._xp
       ENDIF
@@ -685,7 +685,7 @@ CONTAINS
     USE fields, ONLY: moments
     USE grid,   ONLY:total_np, total_nj, total_nky, total_nkx, total_nz, &
                      local_np, local_nj, local_nky, local_nkx, local_nz, &
-                     ngp, ngj, ngz, total_na
+                     ngp, ngj, ngz, ngz_o2, total_na
     USE prec_const, ONLY: xp, dp
     IMPLICIT NONE
     CALL append(fidres,  "/data/var5d/time",  REAL(time,dp),ionode=0)
@@ -713,7 +713,7 @@ CONTAINS
       COMPLEX(xp), DIMENSION(total_na,total_np,total_nj,total_nky,total_nkx,total_nz) :: field_full
       CHARACTER(LEN=50) :: dset_name
       field_sub  = field(1:total_na,(1+ngp/2):(local_np+ngp/2),(1+ngj/2):(local_nj+ngj/2),&
-                            1:local_nky,1:local_nkx,(1+ngz/2):(local_nz+ngz/2),1)
+                            1:local_nky,1:local_nkx,(1+ngz_o2):(local_nz+ngz_o2),1)
       field_full = 0;
       WRITE(dset_name, "(A, '/', A, '/', i6.6)") "/data/var5d", TRIM(text), iframe5d
       IF (num_procs .EQ. 1) THEN
@@ -735,7 +735,7 @@ CONTAINS
   SUBROUTINE spit_snapshot_check
     USE fields, ONLY: phi
     USE grid, ONLY: total_nkx,total_nky,total_nz,&
-                    local_nky,local_nz, ngz
+                    local_nky,local_nz, ngz_o2
     USE parallel, ONLY: gather_xyz, my_id
     USE basic
     USE prec_const, ONLY: xp
@@ -748,7 +748,7 @@ CONTAINS
     INQUIRE(file='check_phi', exist=file_exist)
     IF( file_exist ) THEN
        IF(my_id.EQ. 0) WRITE(*,*) 'Check file found -> gather phi..'
-       CALL gather_xyz(phi(:,:,(1+Ngz/2):(local_nz+Ngz/2)), field_to_check,local_nky,total_nky,total_nkx,local_nz,total_nz)
+       CALL gather_xyz(phi(:,:,(1+ngz_o2):(local_nz+ngz_o2)), field_to_check,local_nky,total_nky,total_nkx,local_nz,total_nz)
        IF(my_id.EQ. 0) THEN
          WRITE(check_filename,'(a16)') 'check_phi.out'
          fid_check = 0

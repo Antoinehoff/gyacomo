@@ -66,6 +66,7 @@ MODULE grid
   INTEGER, PUBLIC, PROTECTED :: local_nz
   INTEGER, PUBLIC, PROTECTED :: local_nkp
   INTEGER, PUBLIC, PROTECTED :: ngp, ngj, ngx, ngy, ngz ! number of ghosts points
+  INTEGER, PUBLIC, PROTECTED :: ngp_o2, ngj_o2, ngz_o2 ! number of ghosts points over 2
   INTEGER, PUBLIC, PROTECTED :: nzgrid  ! one or two depending on the staggered grid option
   ! Local offsets
   INTEGER, PUBLIC, PROTECTED :: local_na_offset
@@ -162,13 +163,14 @@ CONTAINS
     !! is separable between odds and even P
     IF((Nz .EQ. 1) .AND. .NOT. EM) THEN
       deltap  = 2
-      Ngp     = 2  ! two ghosts cells for p+/-2 only
+      ngp     = 2  ! two ghosts cells for p+/-2 only
       pp2     = 1  ! index p+2 is ip+1
     ELSE
       deltap  = 1
-      Ngp     = 4  ! four ghosts cells for p+/-1 and p+/-2 terms
+      ngp     = 4  ! four ghosts cells for p+/-1 and p+/-2 terms
       pp2     = 2  ! index p+2 is ip+2
     ENDIF
+    ngp_o2 = ngp/2
     ! Total number of Hermite polynomials we will evolve
     total_np = (Pmax/deltap) + 1
     ! Local data distribution
@@ -182,7 +184,8 @@ CONTAINS
     ! Total number of J degrees
     total_nj   = jmax+1
     local_jmax = jmax
-    Ngj= 2      ! 2-points ghosts for j+\-1 terms
+    ngj= 2      ! 2-points ghosts for j+\-1 terms
+    ngj_o2 = ngj/2
     ! Indices of local data
     ijs = 1; ije = jmax + 1
     ! Local number of J
@@ -264,6 +267,7 @@ CONTAINS
     ELSE
       ERROR STOP '>> ERROR << Nz is not appropriate!!'
     ENDIF
+    ngz_o2 = ngz/2
     ALLOCATE(zarray(local_nz+ngz,nzgrid))
     ALLOCATE(zarray_full(total_nz))
     ALLOCATE(counts_nz (num_procs_z))

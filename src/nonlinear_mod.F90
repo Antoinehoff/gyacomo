@@ -4,11 +4,11 @@ MODULE nonlinear
                           apply_inv_ExB_NL_factor
   USE fields,      ONLY : phi, psi, moments
   USE grid,        ONLY : local_na, &
-                         local_np,ngp,parray,pmax,&
-                         local_nj,ngj,jarray,jmax, local_nj_offset,&
+                         local_np,ngp_o2,parray,pmax,&
+                         local_nj,ngj_o2,jarray,jmax, local_nj_offset,&
                          kyarray, AA_y, local_nky, inv_Ny,&
                          total_nkx,kxarray, AA_x, inv_Nx,local_nx, Ny, &
-                         local_nz,ngz,zarray,nzgrid, deltakx, deltaky, iky0, contains_kx0, contains_ky0
+                         local_nz,ngz_o2,zarray,nzgrid, deltakx, deltaky, iky0, contains_kx0, contains_ky0
   USE model,       ONLY : LINEARITY, EM, ikxZF, ZFrate, ZF_ONLY, ExB_NL_CORRECTION
   USE closure,     ONLY : evolve_mom, nmaxarray
   USE prec_const,  ONLY : xp, imagu
@@ -59,12 +59,12 @@ SUBROUTINE compute_nonlinear
   INTEGER :: ikxExBp, ikxExBn ! Negative and positive ExB flow indices
   ! COMPLEX(xp), DIMENSION(Ny/2+1,local_nx) :: invinvfactor ! TEST
   z:DO iz = 1,local_nz
-    izi = iz + ngz/2
+    izi = iz + ngz_o2
     j:DO ij = 1,local_nj ! Loop over Laguerre moments
-      iji = ij + ngj/2
+      iji = ij + ngj_o2
       j_int=jarray(iji)
       p:DO ip = 1,local_np ! Loop over Hermite moments
-        ipi = ip + ngp/2
+        ipi = ip + ngp_o2
         IF(evolve_mom(ipi,iji)) THEN !compute for every moments except for closure 1
         p_int    = parray(ipi)
         sqrt_p   = SQRT(REAL(p_int,xp))
@@ -74,7 +74,7 @@ SUBROUTINE compute_nonlinear
             ! Set non linear sum truncation
             bracket_sum_r = 0._xp ! initialize sum over real nonlinear term
             n:DO in = 1,nmaxarray(ij)+1 ! Loop over laguerre for the sum
-              ini = in+ngj/2
+              ini = in+ngj_o2
   !-----------!! ELECTROSTATIC CONTRIBUTION
               ! First convolution terms
               DO ikx = 1,total_nkx
@@ -97,7 +97,7 @@ SUBROUTINE compute_nonlinear
               ! We set smax as min(n+j,Jmax) for safety reason but nmaxarray may prevent it as well (see anti-Laguerre-aliasing truncation)
               smax   = MIN( jarray(ini)+jarray(iji), jmax );
               s1:DO is = 1, smax+1 ! sum truncation on number of moments
-                isi = is + ngj/2
+                isi = is + ngj_o2
                 G_cmpx(:,:) = G_cmpx(:,:) + &
                   dnjs(in,ij,is) * moments(ia,ipi,isi,:,:,izi,updatetlevel)
               ENDDO s1
@@ -112,7 +112,7 @@ SUBROUTINE compute_nonlinear
                 ! Second convolution terms
                 G_cmpx = 0._xp ! initialization of the sum
                 s2:DO is = 1, smax+1 ! sum truncation on number of moments
-                  isi = is + ngj/2
+                  isi = is + ngj_o2
                   G_cmpx(:,:)  = G_cmpx(:,:) + &
                     dnjs(in,ij,is) * (sqrt_pp1*moments(ia,ipi+1,isi,:,:,izi,updatetlevel)&
                                     +sqrt_p  *moments(ia,ipi-1,isi,:,:,izi,updatetlevel))

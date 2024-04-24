@@ -17,9 +17,9 @@ CONTAINS
     USE time_integration, ONLY: updatetlevel
     USE array,            ONLY: kernel, inv_poisson_op, inv_pol_ion
     USE fields,           ONLY: phi, moments
-    USE grid,             ONLY: local_na, local_nky, local_nkx, local_nz,ngz, SOLVE_POISSON,&
+    USE grid,             ONLY: local_na, local_nky, local_nkx, local_nz,ngz,ngz_o2, SOLVE_POISSON,&
                                 kyarray, contains_kx0, contains_ky0,ikx0,iky0, zweights_SR, ieven,&
-                                ip0, total_nj, ngj
+                                ip0, total_nj, ngj_o2
     USE calculus,         ONLY: simpson_rule_z
     USE parallel,         ONLY: manual_3D_bcast
     USE model,            ONLY: ADIAB_E, ADIAB_I, q_i, tau_i
@@ -37,10 +37,10 @@ CONTAINS
           y:DO iky = 1,local_nky
             !!!!!!!!!!!!!!! Compute particle charge density q_a n_a for each evolved species
             DO iz = 1,local_nz
-              izi = iz+ngz/2
+              izi = iz+ngz_o2
               rho(iz) = 0._xp
               DO ij = 1,total_nj
-                iji = ij+ngj/2
+                iji = ij+ngj_o2
                 DO ia = 1,local_na
                   rho(iz) = rho(iz) + q(ia)*kernel(ia,iji,iky,ikx,izi,ieven)&
                               *moments(ia,ip0,iji,iky,ikx,izi,updatetlevel)
@@ -58,7 +58,7 @@ CONTAINS
               IF(kyarray(iky).EQ.0._xp) THEN ! take ky=0 mode (y-average)
                 ! Prepare integrant for z-average
                 DO iz = 1,local_nz
-                  izi = iz+ngz/2
+                  izi = iz+ngz_o2
                   integrant(iz) = Jacobian(izi,ieven)*rho(iz)*inv_pol_ion(iky,ikx,iz)
                 ENDDO
                 call simpson_rule_z(local_nz,zweights_SR,integrant,intf_) ! get the flux averaged phi
@@ -74,7 +74,7 @@ CONTAINS
 
             !!!!!!!!!!!!!!! Inverting the poisson equation
             DO iz = 1,local_nz
-              izi = iz+ngz/2
+              izi = iz+ngz_o2
               phi(iky,ikx,izi) = inv_poisson_op(iky,ikx,iz)*rho(iz)
             ENDDO
           ENDDO y
@@ -91,9 +91,9 @@ CONTAINS
     USE time_integration, ONLY: updatetlevel
     USE array,            ONLY: kernel, inv_ampere_op
     USE fields,           ONLY: moments, psi
-    USE grid,             ONLY: local_na, local_nky, local_nkx, local_nz,ngz, SOLVE_AMPERE,&
+    USE grid,             ONLY: local_na, local_nky, local_nkx, local_nz,ngz,ngz_o2, SOLVE_AMPERE,&
                                 contains_kx0, contains_ky0,ikx0,iky0, iodd,&
-                                ip1, total_nj, ngj
+                                ip1, total_nj, ngj_o2
     USE parallel,         ONLY: manual_3D_bcast
     use species,          ONLY: sqrt_tau_o_sigma, q
     use model,            ONLY: beta
@@ -103,20 +103,20 @@ CONTAINS
     !! Ampere can be solved only with beta > 0 and for process containng p=1 moments
     IF ( SOLVE_AMPERE ) THEN
       z:DO iz = 1,local_nz
-      izi = iz+ngz/2
+      izi = iz+ngz_o2
         x:DO ikx = 1,local_nkx
           y:DO iky = 1,local_nky
           !!!!!!!!!!!!!!! compute current density contribution "j_a = q_a u_a" for each species
           j_a = 0._xp
           n:DO ij=1,total_nj
-          iji = ij+ngj/2
+          iji = ij+ngj_o2
             a:DO ia = 1,local_na
             j_a = j_a &
               +q(ia)*sqrt_tau_o_sigma(ia)*kernel(ia,iji,iky,ikx,izi,iodd)*moments(ia,ip1,iji,iky,ikx,izi,updatetlevel)
             ENDDO a
           ENDDO n
           !!!!!!!!!!!!!!! Inverting the Ampere equation
-          psi(iky,ikx,iz+ngz/2) = beta*inv_ampere_op(iky,ikx,iz)*j_a
+          psi(iky,ikx,iz+ngz_o2) = beta*inv_ampere_op(iky,ikx,iz)*j_a
           ENDDO y
         ENDDO x
       ENDDO z
