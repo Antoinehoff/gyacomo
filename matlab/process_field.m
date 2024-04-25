@@ -201,13 +201,21 @@ switch OPTIONS.NAME
         OPE_ = 1;
         FLD_ = DATA.DENS_I(:,:,:,FRAMES)...
               -DATA.DENS_E(:,:,:,FRAMES);
-    case 'u_i' % ion density
-        NAME = 'ui';
+    case 'upar_i' % ion density
+        NAME = 'upari';
         FLD_ = DATA.UPAR_I(:,:,:,FRAMES);
         OPE_ = 1;  
-    case 'u_e' % electron density
-        NAME = 'ue';
+    case 'upar_e' % electron density
+        NAME = 'upare';
         FLD_ = DATA.UPAR_E(:,:,:,FRAMES);
+        OPE_ = 1;
+    case 'uper_i' % ion density
+        NAME = 'uperi';
+        FLD_ = DATA.UPER_I(:,:,:,FRAMES);
+        OPE_ = 1;  
+    case 'uper_e' % electron density
+        NAME = 'upere';
+        FLD_ = DATA.UPER_E(:,:,:,FRAMES);
         OPE_ = 1;
     case 'T_i' % ion temperature
         NAME = 'Ti';

@@ -9,9 +9,9 @@
 % resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/RH_test_kine/';
 % resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/KBM/';
 % resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/TEM/';
-resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/ITG/';
+% resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/ITG/';
 % resdir = '/home/ahoffman/Documents/gbms/benchmark_HeLaZ/linear_cyclone/';
-% resdir = '/home/ahoffman/molix/';
+resdir = '/home/ahoffman/Documents/gbms/results/MTM/';
 
 % system(['cd ',resdir,';','./gbms < parameters.in; cd /home/ahoffman/HeLaZ/wk']);
 outfile = [resdir,'field.dat.h5'];
