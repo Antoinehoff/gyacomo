@@ -42,6 +42,11 @@ MODEL.ExBrate = EXBRATE;
 MODEL.mu_x    = MU_X;
 MODEL.mu_y    = MU_Y;
 MODEL.N_HD    = N_HD;
+try 
+    MODEL.N_HDz = N_HDz;
+catch
+    MODEL.N_HDz = 4;
+end
 MODEL.mu_z    = MU_Z;
 MODEL.HYP_V   = ['''',HYP_V,''''];
 MODEL.mu_p    = MU_P;

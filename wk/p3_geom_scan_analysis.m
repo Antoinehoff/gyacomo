@@ -14,7 +14,7 @@ GETFLUXSURFACE = 0;
 
 % partition= '../results/paper_3/';
 % Get the scan directory
-switch 2
+switch 4
     case 1 % delta K_T tau=1
         casename = 'DIIID rho95 $\tau=1$';
         partition= '../results/paper_3/DIIID_tau_1_rho95_geom_scan/';  
@@ -45,6 +45,13 @@ switch 2
         scandir = '.'; scanname= 'CBC HEL';
         nml1 = 'GEOMETRY'; pnam1 = '$\delta$'; attr1 = 'delta'; pref1 = 0; scale1 =1.0;
         nml2 = 'SPECIES'; pnam2 = '$R_0/L_T\times T_i/T_e$'; attr2 = 'K_T_'; pref2 = 5; scale2 =500;
+        t1 = 100; t2 = 150; zfactor = 1;
+    case 4 % HEL CBC
+        casename = 'HEL CBC';
+        partition= '/misc/gyacomo23_outputs/thesis_ch_6/HEL_CBC/128x32x24/';  
+        scandir = '.'; scanname= 'CBC HEL';
+        nml1 = 'SPECIES'; pnam1 = '$R_0/L_T\times T_i/T_e$'; attr1 = 'k_T_'; pref1 = 0; scale1 =500;
+        nml2 = 'SPECIES'; pnam2 = '$R_0/L_N$'; attr2 = 'k_N_'; pref2 = 5; scale2 =1.0;
         t1 = 100; t2 = 150; zfactor = 1;
 end 
 scanname= [casename scanname];
@@ -248,7 +255,10 @@ end
 subplot(1,2,2)
 clrs = jet(N2);
 for i = 1:N2
-    errorbar(XX(:,i),Zavg(:,i),Zerr(:,i),...
+    % errorbar(XX(:,i),Zavg(:,i),Zerr(:,i),...
+    %     'DisplayName',[pnam2,'=',num2str(p2(i))],...
+    %     'Color',clrs(i,:));
+    plot(XX(:,i),Zavg(:,i),...
         'DisplayName',[pnam2,'=',num2str(p2(i))],...
         'Color',clrs(i,:));
     hold on;

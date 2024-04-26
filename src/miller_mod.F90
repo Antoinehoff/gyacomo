@@ -6,7 +6,7 @@ MODULE miller
   USE basic
   USE parallel, ONLY: my_id, num_procs_z, nbr_U, nbr_D, comm0
   ! use coordinates,only: gcoor, get_dzprimedz
-  USE grid, ONLY: local_Nky, local_Nkx, local_nz, ngz, nzgrid, kyarray, kxarray, zarray, total_nz, local_nz_offset, iodd, ieven
+  USE grid, ONLY: local_Nky, local_Nkx, local_nz, ngz, nzgrid, kyarray, kxarray, zarray, total_nz, local_nz_offset, iodd, ieven, deltaz
   ! use discretization
   USE lagrange_interpolation
 
@@ -516,6 +516,7 @@ CONTAINS
     !(R,Z) derivatives for visualization
     dxdR_s = dx_drho/drPsi*psi1_s*cosu_s
     dxdZ_s = dx_drho/drPsi*psi1_s*sinu_s
+
     ! GHOSTS ADAPTED VERSION
     if (edge_opt==0._xp) then
       !gyacomo z-grid wo ghosts
@@ -524,45 +525,49 @@ CONTAINS
       chi_out=linspace(-pi*Npol-4._xp*pi*Npol/total_nz,pi*Npol+2._xp*pi*Npol/total_nz,total_nz+ngz)
     else
       ERROR STOP '>> ERROR << ghosts not implemented for edge_opt yet'
-       !new parallel coordinate chi_out==zprime
-       !see also tracer_aux.F90
-       if (Npol>1) ERROR STOP '>> ERROR << Npol>1 has not been implemented for edge_opt=\=0._xp'
-       do k=1,total_nz
+      !new parallel coordinate chi_out==zprime
+      !see also tracer_aux.F90
+      if (Npol>1) ERROR STOP '>> ERROR << Npol>1 has not been implemented for edge_opt=\=0._xp'
+      do k=1,total_nz
           chi_out(k)=sinh((-pi+k*2._xp*pi/total_nz)*log(edge_opt*pi+sqrt(edge_opt**2*pi**2+1))/pi)/edge_opt
-       enddo
-       !transform metrics according to chain rule
-       do k=1,np_s
-         !>dz'/dz conversion for edge_opt as function of z
+      enddo
+      !transform metrics according to chain rule
+      do k=1,np_s
+        !>dz'/dz conversion for edge_opt as function of z
           if (edge_opt.gt.0) then
-             dzprimedz = edge_opt*pi/log(edge_opt*pi+sqrt((edge_opt*pi)**2+1._xp))/&
+            dzprimedz = edge_opt*pi/log(edge_opt*pi+sqrt((edge_opt*pi)**2+1._xp))/&
                   sqrt((edge_opt*chi_s(k))**2+1)
           else
-             dzprimedz = 1.0
+            dzprimedz = 1.0
           endif
           gxz(k)=gxz(k)*dzprimedz
           gyz(k)=gyz(k)*dzprimedz
           gzz(k)=gzz(k)*dzprimedz**2
           jacobian(k)=jacobian(k)/dzprimedz
           dBdz(k)=dBdz(k)/dzprimedz
-       enddo
+      enddo
     endif !edge_opt
-    ! interpolate with ghosts
-    call lag3interp(gxx,chi_s,np_s,gxx_out,chi_out,total_nz+ngz)
-    call lag3interp(gxy,chi_s,np_s,gxy_out,chi_out,total_nz+ngz)
-    call lag3interp(gxz,chi_s,np_s,gxz_out,chi_out,total_nz+ngz)
-    call lag3interp(gyy,chi_s,np_s,gyy_out,chi_out,total_nz+ngz)
-    call lag3interp(gyz,chi_s,np_s,gyz_out,chi_out,total_nz+ngz)
-    call lag3interp(gzz,chi_s,np_s,gzz_out,chi_out,total_nz+ngz)
-    call lag3interp(B_s,chi_s,np_s,Bfield_out,chi_out,total_nz+ngz)
-    call lag3interp(dBdx,chi_s,np_s,dBdx_out,chi_out,total_nz+ngz)
-    call lag3interp(dBdz,chi_s,np_s,dBdz_out,chi_out,total_nz+ngz)
-    call lag3interp(jacobian,chi_s,np_s,jacobian_out,chi_out,total_nz+ngz)
-    call lag3interp(R_s,chi_s,np_s,R_out,chi_out,total_nz+ngz)
-    call lag3interp(Z_s,chi_s,np_s,Z_out,chi_out,total_nz+ngz)
-    call lag3interp(dxdR_s,chi_s,np_s,dxdR_out,chi_out,total_nz+ngz)
-    call lag3interp(dxdZ_s,chi_s,np_s,dxdZ_out,chi_out,total_nz+ngz)
-    ! Fill the local geom arrays with the results
-    do eo=iodd,ieven
+
+    !! Loop over the z-grids and interpolate the results on it
+    do eo=ieven,iodd
+      ! Shift the grid
+      chi_out = chi_out + REAL(eo-1,xp)*0.5*deltaz
+      ! interpolate with ghosts
+      call lag3interp(gxx,chi_s,np_s,gxx_out,chi_out,total_nz+ngz)
+      call lag3interp(gxy,chi_s,np_s,gxy_out,chi_out,total_nz+ngz)
+      call lag3interp(gxz,chi_s,np_s,gxz_out,chi_out,total_nz+ngz)
+      call lag3interp(gyy,chi_s,np_s,gyy_out,chi_out,total_nz+ngz)
+      call lag3interp(gyz,chi_s,np_s,gyz_out,chi_out,total_nz+ngz)
+      call lag3interp(gzz,chi_s,np_s,gzz_out,chi_out,total_nz+ngz)
+      call lag3interp(B_s,chi_s,np_s,Bfield_out,chi_out,total_nz+ngz)
+      call lag3interp(dBdx,chi_s,np_s,dBdx_out,chi_out,total_nz+ngz)
+      call lag3interp(dBdz,chi_s,np_s,dBdz_out,chi_out,total_nz+ngz)
+      call lag3interp(jacobian,chi_s,np_s,jacobian_out,chi_out,total_nz+ngz)
+      call lag3interp(R_s,chi_s,np_s,R_out,chi_out,total_nz+ngz)
+      call lag3interp(Z_s,chi_s,np_s,Z_out,chi_out,total_nz+ngz)
+      call lag3interp(dxdR_s,chi_s,np_s,dxdR_out,chi_out,total_nz+ngz)
+      call lag3interp(dxdZ_s,chi_s,np_s,dxdZ_out,chi_out,total_nz+ngz)
+      ! Fill the local geom arrays with the results
       DO iz = 1,local_nz + ngz
         gxx_(iz,eo)      = gxx_out(iz+local_nz_offset)
         gxy_(iz,eo)      = gxy_out(iz+local_nz_offset)
@@ -580,7 +585,7 @@ CONTAINS
         dxdR_(iz,eo)     = dxdR_out(iz+local_nz_offset)
         dxdZ_(iz,eo)     = dxdZ_out(iz+local_nz_offset)
       ENDDO
-    ENDDO
+  ENDDO
   contains
     !> Generate an equidistant array from min to max with n points
     function linspace(min,max,n) result(out)
