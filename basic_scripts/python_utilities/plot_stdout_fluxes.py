@@ -9,8 +9,6 @@ def read_data(filename):
     dict       = {"t":[],"Pxi":[],"Pxe":[],"Qxi":[],"Qxe":[]}
     with open(filename, 'r') as file:
         for line in file:
-            
-            #match = re.match(r"\|t =\s*([\d.]+)\| Pxi =\s*([\d.E+-]+)\| Qxi =\s*([\d.E+-]+)\|", line)
             a = line.split('|')
             for i in a[1:-1]:
                 b = i.split('=')
@@ -25,7 +23,6 @@ if __name__ == "__main__":
 
     filename = sys.argv[1]
     dict = read_data(filename)
-    print(dict)
     time = dict["t"]
     dict.pop('t',None)
 
