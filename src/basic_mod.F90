@@ -257,7 +257,7 @@ CONTAINS
     !
   END SUBROUTINE daytim
     !================================================================================
-  CHARACTER(64) FUNCTION day_and_time_str
+  CHARACTER(64) FUNCTION day_and_time_str()
     !   Print date and time
     USE parallel, ONLY: my_id
     use prec_const

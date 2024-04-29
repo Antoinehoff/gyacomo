@@ -18,17 +18,16 @@ SUBROUTINE control
   CALL start_chrono(chrono_runt)
   !________________________________________________________________________________
   !           ]   1.   Prologue
-  ! Print out title
-  CALL show_title
 
-  ! Write the current time
-  CALL speak('Start time: '//day_and_time_str(),0)
-
-  !                   1.1     Initialize the parallel environment
+  !                   1.0     Initialize the parallel environment
   CALL speak('Init MPI [',2)
   CALL ppinit
   CALL speak('] MPI initialized',2)
   CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+
+  !                   1.1     Title and start time
+  CALL show_title
+  CALL speak('Start time: '//day_and_time_str(),0)
   
   !                   1.2     Define data specific to run
   CALL speak('Load basic data [',2)
