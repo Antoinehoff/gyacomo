@@ -58,25 +58,25 @@ subroutine auxval
     DO i_ = 0,num_procs-1
       CALL mpi_barrier(MPI_COMM_WORLD, ierr)
       IF (my_id .EQ. i_) THEN
+        IF (my_id .EQ. 0) WRITE(*,*) '------------ Parallel environment ------------'
+        IF (my_id .EQ. 0) WRITE(*,'(A,I4)') ' Total number of processes: ', num_procs
+        IF (my_id .EQ. 0) WRITE(*,'(A,I4,A,I4,A,I4,A)') ' Process distribution:'
+        IF (my_id .EQ. 0) WRITE(*,'(A,I4,A,I4,A,I4,A)') ' (', num_procs_p, ',', num_procs_ky, ',', num_procs_z,')'
         IF (my_id .EQ. 0) WRITE(*,*) ''
-        IF (my_id .EQ. 0) WRITE(*,*) '--------- Parallel environment ----------'
-        IF (my_id .EQ. 0) WRITE(*,'(A12,I3)') 'n_procs ', num_procs
-        IF (my_id .EQ. 0) WRITE(*,'(A12,I3,A14,I3,A14,I3)') 'num_procs_p   = ', num_procs_p, ', num_procs_ky   = ', num_procs_ky, ', num_procs_z   = ', num_procs_z
-        IF (my_id .EQ. 0) WRITE(*,*) ''
-        WRITE(*,'(A9,I3,A10,I3,A10,I3,A9,I3)')&
-        'my_id  = ', my_id, ', rank_p  = ', rank_p, ', rank_ky  = ', rank_ky,', rank_z  = ', rank_z
-        WRITE(*,'(A22,I3,A11,I3)')&
-        '         local_np   = ', local_np  , ', offset = ', local_np_offset
-        WRITE(*,'(A22,I3,A11,I3)')&
-        '         local_nj   = ', local_nj  , ', offset = ', local_nj_offset
-        WRITE(*,'(A22,I3,A11,I3)')&
-        '         local_nkx  = ', local_nkx , ', offset = ', local_nkx_offset
-        WRITE(*,'(A22,I3,A11,I3)')&
-        '         local_nky  = ', local_nky , ', offset = ', local_nky_offset
-        WRITE(*,'(A22,I3,A11,I3)')&
-        '         local_nz   = ', local_nz  , ', offset = ', local_nz_offset
+        WRITE(*,'(A10,I4,A3,I4,A1,I4,A1,I4,A1)')&
+        ' Process #', my_id, ' (', rank_p, ',', rank_ky,',', rank_z,')'
+        WRITE(*,'(A18,I4,A11,I4)')&
+        '     local_np   = ', local_np  , ', offset = ', local_np_offset
+        WRITE(*,'(A18,I4,A11,I4)')&
+        '     local_nj   = ', local_nj  , ', offset = ', local_nj_offset
+        WRITE(*,'(A18,I4,A11,I4)')&
+        '     local_nkx  = ', local_nkx , ', offset = ', local_nkx_offset
+        WRITE(*,'(A18,I4,A11,I4)')&
+        '     local_nky  = ', local_nky , ', offset = ', local_nky_offset
+        WRITE(*,'(A18,I4,A11,I4)')&
+        '     local_nz   = ', local_nz  , ', offset = ', local_nz_offset
         IF (my_id .NE. num_procs-1) WRITE (*,*) ''
-        IF (my_id .EQ. num_procs-1) WRITE(*,*) '------------------------------------------'
+        IF (my_id .EQ. num_procs-1) WRITE(*,*) '----------------------------------------------'
         IF (my_id .EQ. num_procs-1) CALL FLUSH(OUTPUT_UNIT)
       ENDIF
     ENDDO
