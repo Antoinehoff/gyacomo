@@ -9,12 +9,12 @@ SUBROUTINE endrun
   IF( nlend ) THEN
      !----------------------------------------------------------------------
      !              1.   Normal end of run
-     CALL speak('   Normal exit')
+     CALL speak('Normal exit',0)
 
      !----------------------------------------------------------------------
      !              2.   Abnormal exit
   ELSE
-     WRITE(*,'(/a)') '   Abnormal exit'
+     CALL speak('Abnormal exit',0)
   END IF
 
 

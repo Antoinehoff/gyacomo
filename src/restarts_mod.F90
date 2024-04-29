@@ -43,7 +43,7 @@ CONTAINS
     CALL cpu_time(timer_tot_1)
     ! Checkpoint filename
     WRITE(rstfile,'(a,i2.2,a3)') 'outputs_',job2load,'.h5'
-    CALL speak("Resume from "//rstfile)
+    CALL speak("Resume from "//rstfile,0)
     ! Open file
 #ifdef SINGLE_PRECISION
     CALL openf(rstfile, fidrst, mode='r', mpicomm=comm0)
@@ -58,21 +58,21 @@ CONTAINS
     CALL getatt(fidrst,"/data/input/grid" , "Nkx", Nkx_cp)
     CALL getatt(fidrst,"/data/input/grid" ,  "Nz", Nz_cp)
     !! Check dimensional compatibility with the planned simulation
-    IF(Na_cp  .NE. total_Na ) CALL speak("NOTE: Na  has changed")
-    IF(Np_cp  .NE. total_Np ) CALL speak("NOTE: Np  has changed")
-    IF(Nj_cp  .NE. total_Nj ) CALL speak("NOTE: Nj  has changed")
-    IF(Nky_cp .NE. total_Nky) CALL speak("NOTE: Nky has changed")
-    IF(Nkx_cp .NE. total_Nkx) CALL speak("NOTE: Nkx has changed")
-    IF(Nz_cp  .NE. total_Nz)  CALL speak("NOTE: Nz  has changed")
+    IF(Na_cp  .NE. total_Na ) CALL speak("NOTE: Na  has changed",1)
+    IF(Np_cp  .NE. total_Np ) CALL speak("NOTE: Np  has changed",1)
+    IF(Nj_cp  .NE. total_Nj ) CALL speak("NOTE: Nj  has changed",1)
+    IF(Nky_cp .NE. total_Nky) CALL speak("NOTE: Nky has changed",1)
+    IF(Nkx_cp .NE. total_Nkx) CALL speak("NOTE: Nkx has changed",1)
+    IF(Nz_cp  .NE. total_Nz)  CALL speak("NOTE: Nz  has changed",1)
     ! Get the x,y fourier modes and the z space and check grids
     ALLOCATE(ky_cp(Nky_cp),kx_cp(Nkx_cp),z_cp(Nz_cp))
     CALL getarr(fidrst,"/data/grid/coordky",ky_cp); Ly_cp = 2._xp*PI/ky_cp(2)
     CALL getarr(fidrst,"/data/grid/coordkx",kx_cp); Lx_cp = 2._xp*PI/kx_cp(2)
     CALL getarr(fidrst,"/data/grid/coordz" , z_cp); Lz_cp =-2._xp*z_cp(1)
     ! check changes
-    IF(ABS(ky_cp(2)-kyarray_full(2)) .GT. 1e-3) CALL speak("NOTE: Ly  has changed")
-    IF(ABS(kx_cp(2)-kxarray_full(2)) .GT. 1e-3) CALL speak("NOTE: Lx  has changed")
-    IF(ABS(z_cp(1) - zarray_full(1)) .GT. 1e-3) CALL speak("NOTE: Lz  has changed")
+    IF(ABS(ky_cp(2)-kyarray_full(2)) .GT. 1e-3) CALL speak("NOTE: Ly  has changed",1)
+    IF(ABS(kx_cp(2)-kxarray_full(2)) .GT. 1e-3) CALL speak("NOTE: Lx  has changed",1)
+    IF(ABS(z_cp(1) - zarray_full(1)) .GT. 1e-3) CALL speak("NOTE: Lz  has changed",1)
     dz_cp = (z_cp(2)- z_cp(1)) !! check deltaz changes
     ! IF(ABS(deltaz - dz_cp) .GT. 1e-3) ERROR STOP "ERROR STOP: change of deltaz is not implemented."
     ! compute the mapping for z grid adaptation
@@ -102,7 +102,7 @@ CONTAINS
     CALL getatt(fidrst, dset_name, 'jobnum', jobnum_cp)
     ! Set the cstep, step, time and iframnd variables in basic from the checkpoint
     CALL set_basic_cp(cstep_cp,time_cp,jobnum_cp)
-    CALL speak('.. restart from t = '//str(time))
+    CALL speak('.. restart from t = '//str(time),1)
     ! Read state of system from checkpoint file
     ! Brute force loading: load the full moments and take what is needed (RAM dangerous...)
     ! (other possibility would be to load all on process 0 and send the slices)
@@ -150,11 +150,11 @@ CONTAINS
     !! deallocate the full moment variable
     DEALLOCATE(moments_cp)
     CALL closef(fidrst)
-    CALL speak("Reading from restart file "//TRIM(rstfile)//" completed!")
+    CALL speak("Reading from restart file "//TRIM(rstfile)//" completed!",1)
     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
     ! stop time measurement
     CALL cpu_time(timer_tot_2)
-    CALL speak('** Total load time : '// str(timer_tot_2 - timer_tot_1)//' **')
+    CALL speak('** Total load time : '// str(timer_tot_2 - timer_tot_1)//' **',1)
   END SUBROUTINE load_moments
   !******************************************************************************!
   ! Auxiliary routine

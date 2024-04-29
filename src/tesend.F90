@@ -16,8 +16,8 @@ SUBROUTINE tesend
   IF( mlend ) THEN
     nlend   = .TRUE.
     crashed = .TRUE.
-    CALL speak('rhs are NaN/Inf')
-    CALL speak('Run terminated at cstep='//str(cstep))
+    CALL speak('rhs is NaN/Inf',0)
+    CALL speak('Run terminated at cstep='//str(cstep),0)
     RETURN
   END IF
 
@@ -25,7 +25,7 @@ SUBROUTINE tesend
   !                   2.  Test on NRUN
   nlend = step .GE. nrun
   IF ( nlend ) THEN
-     CALL speak('NRUN steps done')
+     CALL speak('NRUN steps done',0)
      RETURN
   END IF
 
@@ -34,7 +34,7 @@ SUBROUTINE tesend
   !                   3.  Test on TMAX
   nlend = time .GE. tmax
   IF ( nlend ) THEN
-     CALL speak('TMAX reached')
+     CALL speak('TMAX reached',0)
      RETURN
   END IF
   !
@@ -48,7 +48,7 @@ SUBROUTINE tesend
 
   CALL mpi_allreduce(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierr)
   IF ( nlend ) THEN
-     CALL speak('Max run time reached')
+     CALL speak('Max run time reached',0)
      RETURN
   END IF
   !________________________________________________________________________________
@@ -59,7 +59,7 @@ SUBROUTINE tesend
      IF( mlexist ) THEN
         OPEN(lu_stop, file=stop_file)
         mlend = mlexist ! Send stop status asa the file exists
-        CALL speak('Stop file found -> finishing..')
+        CALL speak('Stop file found -> finishing..',0)
         CLOSE(lu_stop, status='delete')
      END IF
   END IF

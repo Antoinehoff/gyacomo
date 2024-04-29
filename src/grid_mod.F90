@@ -199,10 +199,10 @@ CONTAINS
     !!----------------- SPATIAL GRIDS (parallelized)
     !! Parallel distribution of kx ky grid
     IF (LINEARITY .NE. 'linear') THEN ! we let FFTW distribute if we use it
-      IF (my_id .EQ. 0) write(*,*) 'FFTW3 y-grid distribution'
+      CALL speak('FFTW3 y-grid distribution',2)
       CALL init_grid_distr_and_plans(Nx,Ny,comm_ky,local_nx_ptr,local_nx_ptr_offset,local_nky_ptr,local_nky_ptr_offset)
     ELSE ! otherwise we distribute equally
-      IF (my_id .EQ. 0) write(*,*) 'Manual y-grid distribution'
+      CALL speak('Manual y-grid distribution',2)
       ! balanced distribution among the processes
       CALL  decomp1D( Ny/2+1, num_procs_ky, rank_ky, ikys, ikye )
       local_nky_ptr        = ikye - ikys + 1
@@ -239,7 +239,7 @@ CONTAINS
     !!---------------- PARALLEL Z GRID (parallelized)
     total_nz = Nz
     IF (SG) THEN
-      CALL speak('--2 staggered z grids--')
+      CALL speak('--2 staggered z grids--',2)
       ! indices for even p and odd p grids (used in kernel, jacobian, gij etc.)
       ieven  = 1
       iodd   = 2
@@ -499,17 +499,17 @@ CONTAINS
     INTEGER :: ikx, iky
     REAL(xp):: Lx_adapted
     IF(shear .GT. 0) THEN
-      CALL speak('Magnetic shear detected: set up sheared kx grid..')
+      CALL speak('Magnetic shear detected: set up sheared kx grid..',1)
       ! mininal size of box in x to respect dkx = 2pi shear dky
       Lx_adapted = Ly/(2._xp*pi*shear*Npol*Cyq0_x0)
       ! Put Nexc to 0 so that it is computed from a target value Lx
       IF(Nexc .EQ. 0) THEN
         Nexc = CEILING(0.9 * Lx/Lx_adapted)
-        CALL speak('Adapted Nexc ='//str(Nexc))
+        CALL speak('Adapted Nexc ='//str(Nexc),1)
       ENDIF
       ! x length is adapted
       Lx = Lx_adapted*Nexc
-      CALL speak('Simulation Lx ='//str(Lx))
+      CALL speak('Simulation Lx ='//str(Lx),1)
     ENDIF
     deltakx = 2._xp*PI/Lx
     inv_dkx = 1._xp/deltakx 

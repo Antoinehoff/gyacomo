@@ -1,7 +1,7 @@
 subroutine auxval
   !   Set auxiliary values, at beginning of simulation
   USE, intrinsic :: iso_fortran_env, ONLY: OUTPUT_UNIT
-  USE basic,          ONLY: str, speak
+  USE basic,          ONLY: str, speak, VERBOSE_LVL
   USE grid,           ONLY: local_np, local_np_offset, total_np, local_nj, local_nj_offset,&
                             local_nky, local_nky_offset, total_nky, local_nkx, local_nkx_offset,&
                             local_nz, local_nz_offset, init_grids_data, set_grids
@@ -22,7 +22,6 @@ subroutine auxval
 #endif
   IMPLICIT NONE
   INTEGER :: i_, ierr
-  CALL speak('=== Set auxiliary values ===')
   ! Init the grids
   CALL init_grids_data(Na,EM,LINEARITY) 
   CALL set_grids(shear,ExBrate,Npol,LINEARITY,N_HD,N_HDz,EM,Na) 
@@ -54,38 +53,40 @@ subroutine auxval
   CALL init_CLA(local_nky,local_np*local_nj)
 #endif
   !! Display parallel settings
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-  DO i_ = 0,num_procs-1
+  IF(VERBOSE_LVL .GE. 1) THEN
     CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-    IF (my_id .EQ. i_) THEN
-      IF (my_id .EQ. 0) WRITE(*,*) ''
-      IF (my_id .EQ. 0) WRITE(*,*) '--------- Parallel environment ----------'
-      IF (my_id .EQ. 0) WRITE(*,'(A12,I3)') 'n_procs ', num_procs
-      IF (my_id .EQ. 0) WRITE(*,'(A12,I3,A14,I3,A14,I3)') 'num_procs_p   = ', num_procs_p, ', num_procs_ky   = ', num_procs_ky, ', num_procs_z   = ', num_procs_z
-      IF (my_id .EQ. 0) WRITE(*,*) ''
-      WRITE(*,'(A9,I3,A10,I3,A10,I3,A9,I3)')&
-       'my_id  = ', my_id, ', rank_p  = ', rank_p, ', rank_ky  = ', rank_ky,', rank_z  = ', rank_z
-       WRITE(*,'(A22,I3,A11,I3)')&
-       '         local_np   = ', local_np  , ', offset = ', local_np_offset
-       WRITE(*,'(A22,I3,A11,I3)')&
-       '         local_nj   = ', local_nj  , ', offset = ', local_nj_offset
-       WRITE(*,'(A22,I3,A11,I3)')&
-       '         local_nkx  = ', local_nkx , ', offset = ', local_nkx_offset
-       WRITE(*,'(A22,I3,A11,I3)')&
-       '         local_nky  = ', local_nky , ', offset = ', local_nky_offset
-       WRITE(*,'(A22,I3,A11,I3)')&
-       '         local_nz   = ', local_nz  , ', offset = ', local_nz_offset
-      IF (my_id .NE. num_procs-1) WRITE (*,*) ''
-      IF (my_id .EQ. num_procs-1) WRITE(*,*) '------------------------------------------'
-      IF (my_id .EQ. num_procs-1) CALL FLUSH(OUTPUT_UNIT)
-    ENDIF
-  ENDDO
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+    DO i_ = 0,num_procs-1
+      CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+      IF (my_id .EQ. i_) THEN
+        IF (my_id .EQ. 0) WRITE(*,*) ''
+        IF (my_id .EQ. 0) WRITE(*,*) '--------- Parallel environment ----------'
+        IF (my_id .EQ. 0) WRITE(*,'(A12,I3)') 'n_procs ', num_procs
+        IF (my_id .EQ. 0) WRITE(*,'(A12,I3,A14,I3,A14,I3)') 'num_procs_p   = ', num_procs_p, ', num_procs_ky   = ', num_procs_ky, ', num_procs_z   = ', num_procs_z
+        IF (my_id .EQ. 0) WRITE(*,*) ''
+        WRITE(*,'(A9,I3,A10,I3,A10,I3,A9,I3)')&
+        'my_id  = ', my_id, ', rank_p  = ', rank_p, ', rank_ky  = ', rank_ky,', rank_z  = ', rank_z
+        WRITE(*,'(A22,I3,A11,I3)')&
+        '         local_np   = ', local_np  , ', offset = ', local_np_offset
+        WRITE(*,'(A22,I3,A11,I3)')&
+        '         local_nj   = ', local_nj  , ', offset = ', local_nj_offset
+        WRITE(*,'(A22,I3,A11,I3)')&
+        '         local_nkx  = ', local_nkx , ', offset = ', local_nkx_offset
+        WRITE(*,'(A22,I3,A11,I3)')&
+        '         local_nky  = ', local_nky , ', offset = ', local_nky_offset
+        WRITE(*,'(A22,I3,A11,I3)')&
+        '         local_nz   = ', local_nz  , ', offset = ', local_nz_offset
+        IF (my_id .NE. num_procs-1) WRITE (*,*) ''
+        IF (my_id .EQ. num_procs-1) WRITE(*,*) '------------------------------------------'
+        IF (my_id .EQ. num_procs-1) CALL FLUSH(OUTPUT_UNIT)
+      ENDIF
+    ENDDO
+    CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+  ENDIF
   SELECT CASE(hierarchy_closure)
   CASE('truncation')
-    CALL speak('Truncation closure')
+    CALL speak('Truncation closure',2)
   CASE('max_degree')
-    CALL speak('Max degree closure -> Maximal Napj degree is D = '// str(dmax))
+    CALL speak('Max degree closure -> Maximal Napj degree is D = '// str(dmax),2)
   END SELECT
 
 END SUBROUTINE auxval

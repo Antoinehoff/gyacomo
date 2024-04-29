@@ -598,7 +598,7 @@ END SUBROUTINE fft1D_plans
     SUBROUTINE finalize_plans
         USE basic, ONLY: speak
         IMPLICIT NONE
-        CALL speak('..plan Destruction.')
+        CALL speak('FFTW3 plan destruction]',2)
         call fftw_destroy_plan(planb)
         call fftw_destroy_plan(planf)
         call fftw_mpi_cleanup()

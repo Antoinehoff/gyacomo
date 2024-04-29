@@ -286,7 +286,7 @@ CONTAINS
       DEALLOCATE (Caa__kp); DEALLOCATE (CabT_kp); DEALLOCATE (CabF_kp)
 
       IF( .NOT. INTERSPECIES ) THEN
-        CALL speak("--Like Species operator--")
+        CALL speak("--Like Species operator--",2)
         Cab_F = 0._xp;
         Cab_T = 0._xp;
       ENDIF
@@ -301,7 +301,7 @@ CONTAINS
           ENDIF
         ENDDO
       ENDDO
-      CALL speak('============DONE===========')
+      CALL speak('============DONE===========',2)
 
     END SUBROUTINE load_COSOlver_mat
     !******************************************************************************!

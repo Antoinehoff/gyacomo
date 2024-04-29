@@ -84,7 +84,7 @@ SUBROUTINE set_closure_model
   SELECT CASE(nonlinear_closure)
   CASE('truncation','monomial')
     IF(nmax .LT. 0) THEN
-      CALL speak("Set nonlinear truncation to anti Laguerre aliasing")
+      CALL speak("Set nonlinear truncation to anti Laguerre aliasing",2)
       DO ij = 1,local_nj
         nmaxarray(ij) = jmax - jarray(ij+ngj_o2)
       ENDDO

@@ -10,6 +10,7 @@ MODULE basic
   real(xp), PUBLIC, PROTECTED :: dt         = 1.0      ! Time step
   real(xp), PUBLIC, PROTECTED :: maxruntime = 1e9      ! Maximum simulation CPU time
   INTEGER,  PUBLIC, PROTECTED :: job2load   = 99       ! jobnum of the checkpoint to load
+  INTEGER,  PUBLIC, PROTECTED :: VERBOSE_LVL= 1        ! tune the amount of std out (0: only time and fluxes, 1: MPI distribution, 2: all stages of init)
   ! Auxiliary variables
   real(xp), PUBLIC, PROTECTED :: time   = 0            ! Current simulation time (Init from restart file)
 
@@ -23,9 +24,11 @@ MODULE basic
   INTEGER, PUBLIC :: iframe2d ! counting the number of times 2d datasets are outputed (for diagnose)
   INTEGER, PUBLIC :: iframe3d ! counting the number of times 3d datasets are outputed (for diagnose)
   INTEGER, PUBLIC :: iframe5d ! counting the number of times 5d datasets are outputed (for diagnose)
+  ! input file name
+  CHARACTER(len=32), PUBLIC, PROTECTED :: input_file = "params.in" 
   !  List of logical file units
-  INTEGER, PUBLIC, PROTECTED  :: lu_in   = 90              ! File duplicated from STDIN
-  INTEGER, PUBLIC, PROTECTED  :: lu_stop = 91              ! stop file, see subroutine TESEND
+  INTEGER, PUBLIC, PROTECTED :: lu_in   = 90 ! File duplicated from STDIN
+  INTEGER, PUBLIC, PROTECTED :: lu_stop = 91 ! stop file, see subroutine TESEND
   ! To measure computation time
   type :: chrono
     real(xp) :: tstart !start of the chrono
@@ -51,9 +54,9 @@ MODULE basic
   CHARACTER(len=*), PUBLIC, PARAMETER :: maindir = ""
 #endif
   ! Routines interfaces
-  PUBLIC :: allocate_array, basic_outputinputs,basic_data,&
+  PUBLIC :: allocate_array, basic_outputinputs,basic_data, show_title,&
             speak, str, increase_step, increase_cstep, increase_time, display_h_min_s,&
-            set_basic_cp, daytim, start_chrono, stop_chrono, change_dt
+            set_basic_cp, daytim, start_chrono, stop_chrono, change_dt, day_and_time_str
   ! Interface for allocating arrays, these routines allocate and initialize directly to zero
   INTERFACE allocate_array
     MODULE PROCEDURE allocate_array_xp1,allocate_array_xp2,allocate_array_xp3, &
@@ -76,7 +79,7 @@ CONTAINS
     use prec_const
     IMPLICIT NONE
 
-    NAMELIST /BASIC/  nrun, dt, tmax, maxruntime, job2load
+    NAMELIST /BASIC/  nrun, dt, tmax, maxruntime, job2load, VERBOSE_LVL
 
     CALL find_input_file
 
@@ -162,35 +165,78 @@ CONTAINS
     timer%ttot = timer%ttot + (timer%tstop-timer%tstart)
   END SUBROUTINE
   !================================================================================
-  ! routine to speak in the terminal
-  SUBROUTINE speak(message)
+  ! routine to speak in the terminal according to the verbose level
+  ! The larger the verbose level, the more std output
+  SUBROUTINE speak(message,priority)
     USE parallel, ONLY: my_id
     IMPLICIT NONE
-    CHARACTER(len=*), INTENT(in) :: message
-    IF(my_id .EQ. 0) write(*,*) message
+    ! input variables
+    CHARACTER(len=*),  INTENT(IN) :: message
+    INTEGER,           INTENT(IN) :: priority
+    ! local variables
+    CHARACTER(len=16) :: indent
+    INTEGER :: i_
+    indent = ''
+    DO i_ = 1,priority
+      indent = trim(indent)//'-'
+    ENDDO
+    IF (priority .LE. VERBOSE_LVL) THEN
+      IF(my_id .EQ. 0) write(*,*) trim(indent)//message
+    ENDIF
   END SUBROUTINE
   !================================================================================
   SUBROUTINE find_input_file
     USE parallel, ONLY: my_id
     IMPLICIT NONE
-    CHARACTER(len=32) :: str_, input_file
+    CHARACTER(len=32) :: str_
     INTEGER :: nargs, fileid, l, ierr
-    LOGICAL :: mlexist
+    LOGICAL :: mlexist, file_found
     nargs = COMMAND_ARGUMENT_COUNT()
-    IF((nargs .EQ. 1) .OR. (nargs .EQ. 4)) THEN
+    file_found = .false. ! to check if the input file was correctly set
+
+    ! Input param, option 1: input file is defined with an index as command argument
+    IF((nargs .EQ. 1) .OR. (nargs .EQ. 4)) THEN 
       CALL GET_COMMAND_ARGUMENT(nargs, str_, l, ierr)
       READ(str_(1:l),'(i3)')  fileid
+      ! Old verson with "fort_XX.90" format (for retro compatibility)
       WRITE(input_file,'(a,a1,i2.2,a3)') 'fort','_',fileid,'.90'
-
       INQUIRE(file=input_file, exist=mlexist)
       IF( mlexist ) THEN
-        IF(my_id.EQ.0) write(*,*) 'Reading input ', input_file,'...'
+        CALL speak('Reading input '// input_file,1)
         OPEN(lu_in, file=input_file)
+        file_found = .true.
       ELSE
-        IF(my_id.EQ.0) write(*,*) 'Reading input fort.90...'
-        OPEN(lu_in, file='fort.90')
+        ! new verson with "params_XX.in" format
+        WRITE(input_file,'(a,a1,i2.2,a3)') 'params','_',fileid,'.in'
+        INQUIRE(file=input_file, exist=mlexist)
+        IF( mlexist ) THEN
+          CALL speak('Reading input '// input_file,1)
+          OPEN(lu_in, file=input_file)
+          file_found = .true.
+        ENDIF
       ENDIF
+      IF (.NOT. file_found) THEN
+        WRITE(*,*)  'Error stop: ' // input_file // ' not found.'
+        ERROR STOP
+      ENDIF
+    ELSE
+      ! Input param, option 2: a fort.90 or parameter.in input file is present
+      INQUIRE(file='fort.90', exist=mlexist)
+      IF ( mlexist ) THEN
+        CALL speak('Reading default input file (fort.90)',1)
+        OPEN(lu_in, file='fort.90')
+        file_found = .true.
+      ENDIF
+      ! Test a parameters.in input file
+      INQUIRE(file='params.in', exist=mlexist)
+      IF ( mlexist ) THEN
+        CALL speak('Reading default input file (params.in)',1)
+        OPEN(lu_in, file='params.in')
+        file_found = .true.
+      ENDIF        
     ENDIF
+    IF(.NOT. file_found) ERROR STOP "Error stop: basic input file not found (a file named params.in or fort.90 must be present)"
+
   END SUBROUTINE find_input_file
   !================================================================================
   SUBROUTINE daytim(str)
@@ -210,6 +256,21 @@ CONTAINS
       WRITE(*,'(a,1x,a,1x,a)') str, dat(1:10), time(1:12)
     !
   END SUBROUTINE daytim
+    !================================================================================
+  CHARACTER(64) FUNCTION day_and_time_str
+    !   Print date and time
+    USE parallel, ONLY: my_id
+    use prec_const
+    IMPLICIT NONE
+    CHARACTER(len=16) :: d, t, dat, time
+    !________________________________________________________________________________
+    !
+    CALL DATE_AND_TIME(d,t)
+    dat=d(7:8) // '/' // d(5:6) // '/' // d(1:4)
+    time=t(1:2) // ':' // t(3:4) // ':' // t(5:10)
+    day_and_time_str = trim(dat(1:10)//' '//trim(time(1:12)))
+    RETURN
+  END
   !================================================================================
   SUBROUTINE display_h_min_s(time)
     USE parallel, ONLY: my_id
@@ -442,5 +503,24 @@ CONTAINS
     ALLOCATE(a(is1:ie1,is2:ie2,is3:ie3,is4:ie4))
     a=.false.
   END SUBROUTINE allocate_array_l4
+
+  SUBROUTINE show_title
+  USE parallel, ONLY: my_id
+  IMPLICIT NONE
+  INCLUDE 'srcinfo.h' ! for the code version
+  IF(my_id .EQ. 0) THEN
+    write(*,*) "=============================================="
+    write(*,*) "   ______                                     "
+    write(*,*) "  / ____/_  ______ __________  ____ ___  ____ "
+    write(*,*) " / / __/ / / / __ `/ ___/ __ \/ __ `__ \/ __ \"
+    write(*,*) "/ /_/ / /_/ / /_/ / /__/ /_/ / / / / / / /_/ /"
+    write(*,*) "\____/\__, /\__,_/\___/\____/_/ /_/ /_/\____/ "
+    write(*,*) "     /____/                                   "
+    ! Write the git version of the code
+    write(*,*) 'This is GYACOMO code version:'
+    write(*,*)  VERSION
+    write(*,*) "=============================================="
+  ENDIF
+  END SUBROUTINE show_title
 
 END MODULE basic

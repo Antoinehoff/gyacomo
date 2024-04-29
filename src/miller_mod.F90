@@ -330,18 +330,15 @@ CONTAINS
 
     !definition of radial coordinate! dx_drho=1 --> x = r
     dx_drho=1. !drPsi/Psi0*Lnorm*q0
-    if (my_id==0) write(*,"(A,ES12.4)") 'Using radial coordinate with dx/dr = ',dx_drho
+    CALL speak('Using radial coordinate with dx/dr = '//str(dx_drho),2)
     dxPsi  = drPsi/dx_drho
     C_y    = dxPsi*sign_Ip_CW
     C_xy   = abs(B0*dxPsi/C_y)
 
-    if (my_id==0) then
-       write(*,"(A,ES12.4,A,ES12.4,A,ES12.4)") &
-            "Setting C_xy = ",C_xy,' C_y = ', C_y," C_x' = ", 1./dxPsi
-       write(*,'(A,ES12.4)') "B_unit/Bref conversion factor = ", q0/rho*drPsi
-       write(*,'(A,ES12.4)') "dPsi/dr = ", drPsi
-       if (thetaShift.ne.0._xp) write(*,'(A,ES12.4)') "thetaShift = ", thetaShift
-    endif
+    CALL speak("Setting C_xy = "//str(C_xy)//' C_y = '//str(C_y)//" C_x' = "//str(1./dxPsi),2)
+    CALL speak("B_unit/Bref conversion factor = "//str(q0/rho*drPsi),2)
+    CALL speak("dPsi/dr = "//str(drPsi),2)
+    IF (thetaShift.ne.0._xp) CALL speak("thetaShift = "//str(thetaShift),2)
 
 
     !--------shear is expected to be defined as rho/q*dq/drho--------!
@@ -382,9 +379,8 @@ CONTAINS
 
     ffprime=-(sign_Ip_CW*dq_dpsi*2._xp*pi*Npol_ext+D0_full+D2_full*pprime)/D1_full
 
-    if (my_id==0) then
-       write(*,'(A,ES12.4)') "ffprime = ", ffprime
-    endif
+    CALL speak("ffprime = "//str(ffprime),2)
+
     D0=D0-D0_mid
     D1=D1-D1_mid
     D2=D2-D2_mid

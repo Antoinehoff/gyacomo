@@ -90,7 +90,7 @@ CONTAINS
     ELSE
       CALL creatf(file, fid, mpicomm=comm)
     END IF
-    CALL speak(TRIM(file)//' created')
+    CALL speak(TRIM(file)//' created',2)
     !  basic data group
     CALL creatg(fid, "/data", "data")
     !  File group

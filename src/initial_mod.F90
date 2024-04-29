@@ -80,7 +80,7 @@ CONTAINS
     !!!!!! Set the moments arrays Nepj, Nipj and phi!!!!!!
     ! through loading a previous state
     IF ( job2load .GE. 0 ) THEN
-      CALL speak('Load moments')
+      CALL speak('Load moments',2)
       CALL load_moments ! get N_0
       CALL apply_closure_model
       CALL update_ghosts_moments
@@ -90,44 +90,44 @@ CONTAINS
       SELECT CASE (INIT_OPT)
       ! set phi with noise and set moments to 0
       CASE ('phi')
-        CALL speak('Init noisy phi')
+        CALL speak('Init noisy phi',2)
         CALL init_phi
       CASE ('phi_ppj')
-        CALL speak('Init noisy phi')
+        CALL speak('Init noisy phi',2)
         CALL init_phi_ppj
       ! set moments_00 (GC density) with noise and compute phi afterwards
       CASE('mom00')
-        CALL speak('Init noisy gyrocenter density')
+        CALL speak('Init noisy gyrocenter density',2)
         CALL init_gyrodens ! init only gyrocenter density
         CALL update_ghosts_moments
         CALL solve_EM_fields
       ! set moments_00 (GC density) with a single kx0,ky0 mode
       ! kx0 is setup but by the noise value and ky0 by the background value
       CASE('mom00_modes','mom00_mode')
-        CALL speak('Init modes in the gyrocenter density')
+        CALL speak('Init modes in the gyrocenter density',2)
         CALL init_modes ! init single mode in gyrocenter density
         CALL update_ghosts_moments
         CALL solve_EM_fields
       ! init all moments randomly (unadvised)
       CASE('allmom')
-        CALL speak('Init noisy moments')
+        CALL speak('Init noisy moments',2)
         CALL init_moments ! init all moments
         CALL update_ghosts_moments
         CALL solve_EM_fields
       ! init a gaussian blob in gyrodens
       CASE('blob','blob_nokx')
-        CALL speak('--init a blob')
+        CALL speak('Blob initialization',2)
         CALL initialize_blob
         CALL update_ghosts_moments
         CALL solve_EM_fields
       ! init moments 00 with a power law similarly to GENE
       CASE('ppj')
-        CALL speak('ppj init ~ GENE')
+        CALL speak('ppj init ~ GENE',2)
         call init_ppj
         CALL update_ghosts_moments
         CALL solve_EM_fields
       CASE('ricci')
-        CALL speak('Init Ricci')
+        CALL speak('Init Ricci',2)
         CALL init_ricci ! init only gyrocenter density
         CALL update_ghosts_moments
         CALL solve_EM_fields
@@ -136,10 +136,10 @@ CONTAINS
       END SELECT
     ENDIF
     ! closure of j>J, p>P and j<0, p<0 moments
-    CALL speak('Apply closure')
+    CALL speak('Apply closure',2)
     CALL apply_closure_model
     ! ghosts for p parallelization
-    CALL speak('Ghosts communication')
+    CALL speak('Ghosts communication',2)
     CALL update_ghosts_moments
     CALL update_ghosts_EM
     !! End of phi and moments initialization
@@ -147,7 +147,7 @@ CONTAINS
     CALL init_collision
     !! Preparing auxiliary arrays at initial state
     ! particle density, fluid velocity and temperature (used in diagnose)
-    CALL speak('Computing fluid moments and transport')
+    CALL speak('Computing fluid moments and transport',2)
     CALL compute_fluid_moments
     CALL compute_radial_transport
     CALL compute_radial_heatflux

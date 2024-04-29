@@ -101,7 +101,7 @@ CONTAINS
       CASE DEFAULT
         ERROR STOP '>> ERROR << Parallel BC not recognized'
     END SELECT
-    CALL speak('Parallel BC : '//parallel_bc)
+    CALL speak('Parallel BC : '//parallel_bc,2)
   END SUBROUTINE geometry_readinputs
 
   subroutine eval_magnetic_geometry
@@ -125,19 +125,19 @@ CONTAINS
 
     !
     IF( (total_nky .EQ. 1) .AND. (total_nz .EQ. 1)) THEN !1D perp linear run
-      CALL speak('1D perpendicular geometry')
+      CALL speak('1D perpendicular geometry',2)
       call eval_1D_geometry
     ELSE
       SELECT CASE(geom)
         CASE('s-alpha','salpha')
-          CALL speak('s-alpha geometry')
+          CALL speak('s-alpha geometry',2)
           IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for s-alpha geometry"
           IF(MODULO(FLOOR(Npol),2) .EQ. 0)   ERROR STOP "Npol must be odd for s-alpha"
           call eval_salpha_geometry
           C_y     = 1._xp
           Cyq0_x0 = 1._xp
         CASE('z-pinch','Z-pinch','zpinch','Zpinch')
-          CALL speak('Z-pinch geometry')
+          CALL speak('Z-pinch geometry',2)
           call eval_zpinch_geometry
           SHEARED = .FALSE.
           shear   = 0._xp
@@ -147,7 +147,7 @@ CONTAINS
           C_y     = 1._xp
           Cyq0_x0 = 1._xp
         CASE('miller','Miller','Miller_global','miller_global')
-          CALL speak('Miller geometry')
+          CALL speak('Miller geometry',2)
           IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for Miller geometry"
           IF(MODULO(FLOOR(Npol),2) .EQ. 0)   THEN
             write(*,*) "Npol must be odd for Miller, (Npol = ",Npol,")"
@@ -158,7 +158,7 @@ CONTAINS
                           C_y,C_xy,Cyq0_x0,xpdx_pm_geom,gxx,gxy,gxz,gyy,gyz,gzz,&
                           dBdx,dBdy,dBdz,hatB,jacobian,hatR,hatZ,dxdR,dxdZ)
         CASE('circular','circ')
-          CALL speak('Circular geometry')
+          CALL speak('Circular geometry',2)
           IF(FLOOR(Npol) .NE. CEILING(Npol)) ERROR STOP "ERROR STOP: Npol must be integer for circular geometry"
           IF(MODULO(FLOOR(Npol),2) .EQ. 0)   THEN
             write(*,*) "Npol must be odd for circular, (Npol = ",Npol,")"
@@ -174,9 +174,8 @@ CONTAINS
     ! inv squared of the magnetic gradient bckg amplitude (for fast kperp update)
     inv_hatB2 = 1/hatB/hatB
     ! Reset kx grid (to account for Cyq0_x0 factor)
-    CALL speak('--Reset kx grid according to Cyq0_x0 factor--')
+    CALL speak('Reset kx grid according to Cyq0_x0 factor',1)
     CALL set_kxgrid(shear,ExBrate,Npol,Cyq0_x0,LINEARITY,N_HD) 
-    CALL speak('-- done --')
     !
     ! Evaluate perpendicular wavenumber
     !  k_\perp^2 = g^{xx} k_x^2 + 2 g^{xy}k_x k_y + k_y^2 g^{yy}

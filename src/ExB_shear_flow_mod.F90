@@ -36,7 +36,7 @@ CONTAINS
         ! In GENE, there is a minus sign here...
         gamma_E = ExBrate*C_y*abs(Cyq0_x0/C_y)
         IF(abs(gamma_E) .GT. EPSILON(gamma_E)) THEN
-            CALL speak('-ExB background flow detected-')
+            CALL speak('-ExB background flow detected-',2)
             ExB    = .TRUE.
             t0     = deltakx/deltaky/gamma_E
             inv_t0 = 1._xp/t0

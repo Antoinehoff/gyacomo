@@ -77,15 +77,15 @@ CONTAINS
     IF(Na .EQ. 1) THEN
       IF((.NOT. ADIAB_E) .AND. (.NOT. ADIAB_I)) ERROR STOP "With one species, ADIAB_E or ADIAB_I must be set to .true. STOP"
       IF(ADIAB_E) THEN
-        CALL speak('Adiabatic electron model -> beta = 0')
+        CALL speak('Adiabatic electron model -> beta = 0',1)
         beta = 0._xp
         EM   = .false.
       ENDIF
-      IF(ADIAB_I) CALL speak('Adiabatic ion model')
+      IF(ADIAB_I) CALL speak('Adiabatic ion model',1)
     ENDIF
 
     IF(beta .GT. 0) THEN
-      CALL speak('Electromagnetic effects are included')
+      CALL speak('Electromagnetic effects are included',1)
       EM = .TRUE.
     ELSE
       EM = .FALSE.

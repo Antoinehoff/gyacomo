@@ -68,6 +68,7 @@ CONTAINS
   SUBROUTINE set_numerical_scheme
     ! Initialize Butcher coefficient of set_numerical_scheme
     use parallel, ONLY: my_id
+    use basic,    ONLY: speak
     IMPLICIT NONE
     SELECT CASE (numerical_scheme)
     ! Order 1 method
@@ -93,9 +94,9 @@ CONTAINS
       time_scheme_is_adaptive = .true.
       CALL DOPRI5
     CASE DEFAULT
-       IF (my_id .EQ. 0) WRITE(*,*) 'Cannot initialize time integration scheme. Name invalid.'
+       ERROR STOP 'Cannot initialize time integration scheme. Name invalid.'
     END SELECT
-    IF (my_id .EQ. 0) WRITE(*,*) " Time integration with ", numerical_scheme
+    CALL speak("-Time integration with "// numerical_scheme,2)
   END SUBROUTINE set_numerical_scheme
 
   !!! first order time schemes
@@ -326,8 +327,8 @@ CONTAINS
 
     if(should_discard_step) then
         ! Note this relates to the previous step!
-        if(dt/=old_dt) CALL speak("step discarded. dt update "//str(old_dt)//" => "//str(dt))
-        if(dt/=old_dt) CALL speak("errscale was "//str(adaptive_accuracy_ratio))
+        if(dt/=old_dt) CALL speak("step discarded. dt update "//str(old_dt)//" => "//str(dt),2)
+        if(dt/=old_dt) CALL speak("errscale was "//str(adaptive_accuracy_ratio),2)
     end if
 
     ! Setting `adaptive_accuracy_ratio` is equivalent to saying that the step

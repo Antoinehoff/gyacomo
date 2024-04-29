@@ -4,7 +4,7 @@ SUBROUTINE control
   use basic,          ONLY: str,daytim,speak,basic_data,&
                         nlend,step,increase_step,increase_time,increase_cstep,&
                         chrono_runt,chrono_step, chrono_diag, chrono_ExBs,&
-                        start_chrono, stop_chrono
+                        start_chrono, stop_chrono, day_and_time_str, show_title
   use prec_const,     ONLY: xp, stdout
   USE parallel,       ONLY: ppinit
   USE initial,        ONLY: initialize
@@ -17,52 +17,54 @@ SUBROUTINE control
   ! start the chronometer for the total runtime
   CALL start_chrono(chrono_runt)
   !________________________________________________________________________________
-  !              1.   Prologue
-  !                   1.1     Initialize the parallel environment
-  CALL ppinit
-  CALL speak('MPI initialized')
-  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
+  !           ]   1.   Prologue
+  ! Print out title
+  CALL show_title
 
-  CALL daytim('Start at ')
+  ! Write the current time
+  CALL speak('Start time: '//day_and_time_str(),0)
+
+  !                   1.1     Initialize the parallel environment
+  CALL speak('Init MPI [',2)
+  CALL ppinit
+  CALL speak('] MPI initialized',2)
+  CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   
   !                   1.2     Define data specific to run
-  CALL speak( 'Load basic data...')
+  CALL speak('Load basic data [',2)
   CALL basic_data
-  ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-  CALL speak('...basic data loaded.')
+  CALL speak('] basic data loaded.',2)
   
   !                   1.3   Read input parameters from input file
-  CALL speak('Read input parameters...')
+  CALL speak('Read input parameters [',2)
   CALL readinputs
-  ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-  CALL speak('...input parameters read')
+  CALL speak('] input parameters read',2)
 
   !                   1.4     Set auxiliary values (allocate arrays, set grid, ...)
-  CALL speak('Calculate auxval...')
+  CALL speak('Setting auxiliary values [',2)
   CALL auxval
-  ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-  CALL speak('...auxval calculated')
+  CALL speak('] auxval set ',2)
   
   !                   1.5     Initial conditions
-  CALL speak( 'Create initial state...')
+  CALL speak( 'Create initial state [',2)
   CALL initialize
   ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-  CALL speak('...initial state created')
+  CALL speak('] initial state created',2)
   
   !                   1.6     Initial diagnostics
-  CALL speak( 'Initial diagnostics...')
+  CALL speak( 'Initial diagnostics [',2)
   CALL cpu_time(t_init_diag_0) ! Measure the time of the init diag
   CALL diagnose(0)
   CALL cpu_time(t_init_diag_1)
   ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
-  CALL speak('...initial diagnostics done')
-  CALL speak('('//str(t_init_diag_1-t_init_diag_0)//'[s])')
+  CALL speak('] initial diagnostics done',2)
+  CALL speak('('//str(t_init_diag_1-t_init_diag_0)//'[s])',2)
 
   CALL FLUSH(stdout)
   CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   !________________________________________________________________________________
 
-  CALL speak( 'Time integration loop..')
+  CALL speak( 'Time integration loop [',2)
   !________________________________________________________________________________
   !              2.   Main loop
   DO
@@ -101,7 +103,7 @@ SUBROUTINE control
 
   END DO
 
-  CALL speak('...time integration done')
+  CALL speak('] time integration done',2)
   !________________________________________________________________________________
   !              9.   Epilogue
   ! Stop total run chronometer (must be done before the last diagnostic)
@@ -111,7 +113,8 @@ SUBROUTINE control
   ! end the run
   CALL endrun
   ! display final time
-  CALL daytim('Done at ')
+  ! CALL daytim('Run terminated at ')
+  CALL speak('Finish time: '//day_and_time_str(),0)
   ! close mpi environement
   CALL ppexit
 
