@@ -517,8 +517,8 @@ CONTAINS
     write(*,*) "\____/\__, /\__,_/\___/\____/_/ /_/ /_/\____/ "
     write(*,*) "     /____/                                   "
     ! Write the git version of the code
-    write(*,*) 'This is GYACOMO code version:'
-    write(*,*)  VERSION
+    write(*,*) 'This is the GYACOMO code'
+    write(*,*) 'version: ', VERSION
     write(*,*) "=============================================="
   ENDIF
   END SUBROUTINE show_title
