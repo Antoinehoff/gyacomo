@@ -6,19 +6,19 @@ echo "Setup of a new problem in the simulations directory..."
 if [ $# -ne 1 ]; then
     echo "- using CBC parameter"
     echo "  (you can ask for a Zpinch base case by adding "ZBC" after the call of the script)"
-    inputfile=$gyacomo_dir/basic_scripts/parameters_CBC.90
+    inputfile=$gyacomo_dir/basic_scripts/parameters_CBC.in
 else
     # Check the value of the argument
     if [ "$1" = "CBC" ]; then
         echo "- using CBC parameter"
-        inputfile=$gyacomo_dir/basic_scripts/parameters_CBC.90
+        inputfile=$gyacomo_dir/basic_scripts/parameters_CBC.in
     elif [ "$1" = "ZBC" ]; then
         echo "- using Zpinch parameter"
-        inputfile=$gyacomo_dir/basic_scripts/parameters_Zpinch.90
+        inputfile=$gyacomo_dir/basic_scripts/parameters_Zpinch.in
     else
         echo "- using CBC parameter"
         echo "(you can ask for a Zpinch test by adding "ZBC" after the call of the script)"
-        inputfile=$gyacomo_dir/basic_scripts/parameters_CBC.90
+        inputfile=$gyacomo_dir/basic_scripts/parameters_CBC.in
     fi
 fi
 
@@ -62,7 +62,7 @@ fi
 mkdir -p "$folder_name"
 
 # Copy basic parameter file
-cp $inputfile "$folder_name/fort.90"
+cp $inputfile "$folder_name/params.in"
 
 # Copy the marconi job submission example
 cp $gyacomo_dir/basic_scripts/submit_marconi_example.cmd "$folder_name/submit_marconi.cmd"
