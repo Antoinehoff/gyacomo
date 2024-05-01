@@ -101,6 +101,10 @@ test_svd: compile
 # to verify the path and other stuff
 verif:
 	@echo this is your PREFIX variable: $(PREFIX)
+	@echo this is your HDF5_LIB variable: $(HDF5_LIB)
+	@echo this is your FUTILS_DIR variable: $(FUTILS_DIR)
+	@echo this is your FFTW3DIR variable: $(FFTW3DIR)
+	@echo this is your FMDIR variable: $(FMDIR)
 
 new_prob:
 	@sh new_prob.sh
