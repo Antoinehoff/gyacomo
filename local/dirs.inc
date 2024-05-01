@@ -1,6 +1,6 @@
 # Variables for main path and libraries
 PREFIX   = $(HOME)/gyacomo
-LIBDIR   = $(HOME)/lib
+LIBDIR   = $(PREFIX)/lib
 
 # OS environment: Linux, Marconi or MacOS (use Linux per default)
 ENVTYPE = Linux
