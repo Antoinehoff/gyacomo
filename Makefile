@@ -97,6 +97,14 @@ test_svd: F90FLAGS = -DLAPACK -DTEST_SVD -O3
 test_svd: EXEC = $(BINDIR)/gyacomo23_test_svd
 test_svd: dirs src/srcinfo.h
 test_svd: compile
+
+# to verify the path and other stuff
+verif:
+	@echo this is your PREFIX variable: $(PREFIX)
+
+new_prob:
+	@sh new_prob.sh
+
 # subroutines
 dirs:
 	mkdir -p $(BINDIR)
