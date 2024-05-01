@@ -34,6 +34,7 @@ local
 iCa
 demo
 simulations
+lib
 __pycache__
 src/srcinfo
 wk/parameters/profiles
