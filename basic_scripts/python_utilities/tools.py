@@ -21,3 +21,21 @@ def closest_index(array, v):
     closest_index = np.argmin(absolute_diff)
     
     return closest_index
+
+def is_convertible_to_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+def numpy_array_to_list(d):
+    """
+    Recursively convert NumPy arrays to lists within a dictionary.
+    """
+    for key, value in d.items():
+        if isinstance(value, np.ndarray):
+            d[key] = value.tolist()
+        elif isinstance(value, dict):
+            d[key] = numpy_array_to_list(value)
+    return d
