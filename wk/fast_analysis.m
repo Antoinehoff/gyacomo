@@ -16,9 +16,9 @@ default_plots_options
 % resdir ='cheap_CBC_baseline';
 % resdir ='test_HEL_closure';
 % resdir ='dmax_closure/';
-PARTITION = '/misc/gyacomo23_outputs/reduced_fluid_paper/';
+% PARTITION = '/misc/gyacomo23_outputs/reduced_fluid_paper/';
 % resdir = '/Npol_study/AE_CBC_s0_beta0_P4J2';
-resdir = '/Npol_study/RF_CBC_s0_beta0/Npol_11';
+% resdir = '/Npol_study/RF_CBC_s0_beta0/Npol_11';
 % Triangularity paper
 
 % PARTITION = '/misc/gyacomo23_outputs/triangularity_paper/';
@@ -52,10 +52,13 @@ resdir = '/Npol_study/RF_CBC_s0_beta0/Npol_11';
 % resdir   = '6x2x32_5x3_Lx_120_Ly_8.1955_q0_4.8_e_0.3_s_2.5_mil__kN_1.7_kT_5.2_nu_2.0e-02_DGGK/';
 % resdir   = '6x2x32_17x9_Lx_120_Ly_8.1955_q0_4.8_e_0.3_s_2.5_mil__kN_1.7_kT_5.2_nu_2.0e-02_DGGK/';
 
-DATADIR = [PARTITION,resdir,'/'];
+% DATADIR = [PARTITION,resdir,'/'];
+% DATADIR = '/home/ahoffman/gyacomo/simulations/ralf/2D_Zpinch_ITG/3x2x64x48x1_no_curvB/';
+% DATADIR = '/home/ahoffman/gyacomo/simulations/ralf/3D_Zpinch_ITG/3x2x64x48x16_nocurvB/';
+DATADIR = '/home/ahoffman/gyacomo/simulations/ralf/3D_Zpinch_ITG/3x2x64x48x16_nocurvB_-14/';
 read_flux_out_XX(DATADIR,1,1);
 %%
-J0 = 00; J1 = 00;
+J0 = 00; J1 = 10;
 
 % Load basic info (grids and time traces)
 data    = {};
@@ -91,16 +94,16 @@ if 1
 %% Plot transport and phi radial profile
 % [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 % [data.PSI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'psi');
-options.TAVG_0   = data.Ts3D(end)/2;
-options.TAVG_1   = data.Ts3D(end);
+options.TAVG_0   = 250;
+options.TAVG_1   = options.TAVG_0+50;
 options.NCUT     = 5;              % Number of cuts for averaging and error estimation
 options.NMVA     = 1;              % Moving average for time traces
 % options.ST_FIELD = '\Gamma_x';   % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 % options.ST_FIELD = 'n_i';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 % options.ST_FIELD = 'u_i';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
-options.ST_FIELD = 'T_i';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
+% options.ST_FIELD = 'T_i';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 % options.ST_FIELD = 'n_i T_i';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
-% options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
+options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 % options.ST_FIELD = 'Q_{xi}';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 % options.ST_FIELD = 'G_x';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
 % options.ST_FIELD = 'w_{Ez}';          % chose your field to plot in spacetime diag (e.g \phi,v_x,G_x)
@@ -114,7 +117,7 @@ end
 if 0
 %% 2D field snapshots
 % Options
-options.INTERP    = 1;
+options.INTERP    = 0;
 options.POLARPLOT = 0;
 options.AXISEQUAL = 0;
 options.NORMALIZE = 0;
@@ -124,23 +127,23 @@ options.TAVG      = 1;
 % options.NAME      = ['N_i^{00}'];
 % options.NAME      = 'n_e';
 % options.NAME      = 'upar_i';
-% options.NAME      = 'n_i';
+options.NAME      = 'T_i';
 % options.NAME      = 'Q_{xi}';
 % options.NAME      = 'v_{Ey}';
 % options.NAME      = 'w_{Ez}';
 % options.NAME      = '\omega_z';
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = 'n_i-n_e';
 loc =11;
 [~,i_] = min(abs(loc - data.grids.y));
 options.COMP =i_;
-% options.PLAN      = '3D';  
+options.PLAN      = '3D';  
 % options.PLAN      = 'xy'; options.COMP =floor(data.grids.Nz/2)+1; 
-options.PLAN      = 'kxz'; options.COMP ='avg';
+% options.PLAN      = 'xz'; options.COMP ='avg';
 % options.COMP ='avg'; 
-options.XYZ  =[-11 20 0]; 
-% options.TIME = [100 250 350 500]; options.TAVG = 0;
-options.TIME = [50:500]; options.TAVG = 1;
+options.XYZ  =[-11 20 -2]; 
+options.TIME = [80 140 190 250]; options.TAVG = 0;
+% options.TIME = [50:500]; options.TAVG = 1;
 options.RESOLUTION = 256;
 fig = photomaton(data,options);
 % colormap(gray)
@@ -281,17 +284,17 @@ options.INTERP    = 1;
 options.POLARPLOT = 0;
 options.BWR       = 1; % bluewhitered plot or gray
 options.CLIMAUTO  = 0; % adjust the colormap auto
-options.NAME      = '\phi';
+% options.NAME      = '\phi';
 % options.NAME      = 'w_{Ez}';
 % options.NAME      = '\psi';
-% options.NAME      = 'T_i';
+options.NAME      = 'T_i';
 % options.NAME      = '\phi^{NZ}';
 % options.NAME     = ['N_i^{00}'];
 % options.NAME     = ['N_e^{00}'];
-options.PLAN      = 'xy'; options.COMP =floor(data.grids.Nz/2)+1; 
+% options.PLAN      = 'xy'; options.COMP =floor(data.grids.Nz/2)+1; 
 % options.PLAN      = 'xz'; options.COMP ='avg';
-% options.PLAN      = '3D';  
-options.XYZ  =[-11 20 0]; 
+options.PLAN      = '3D';  
+options.XYZ  =[-21 20 0]; 
 options.TIME      =  data.Ts3D(1:1:end);
 % options.TIME      = [0:1500];
 data.EPS          = 0.1;

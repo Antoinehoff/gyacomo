@@ -5,10 +5,11 @@ options.SHOW_CURVOP   = 0;
 [fig, geo_arrays] = plot_metric(data,options);
 
 eps_eff = 1/max((geo_arrays.hatB));
-T = [40];
-s = linspace(-4,4,64);
-x = linspace( 0,4,64);
+T = [260];
+s = linspace(-3,3,64);
+x = linspace( 0,3,64);
 [SS,XX,FF,FAM] = compute_fa_2D(data,'i',s,x,T);
+% [SS,XX,FF,FAM] = compute_fa_2D_spar_sper(data,'i',s,x,T);
 
 % FF = FF - FAM;
 
@@ -21,3 +22,5 @@ hold on
 % plot(s,(s.^2/(1+data.fort_00.GEOMETRY.eps)),'--w');
 % plot(s,eps_eff*(s.^2),'--k');
 colormap(bluewhitered)
+xlabel('$v_\parallel/c_s$');
+ylabel('$\mu B_0/T_e$');

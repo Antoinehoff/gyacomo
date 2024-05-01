@@ -14,15 +14,15 @@ GETFLUXSURFACE = 0;
 
 % partition= '../results/paper_3/';
 % Get the scan directory
-switch 4
+switch 2
     case 1 % delta K_T tau=1
         casename = 'DIIID rho95 $\tau=1$';
-        partition= '../results/paper_3/DIIID_tau_1_rho95_geom_scan/';  
+        partition= '/misc/gyacomo23_outputs/paper_3/DIIID_tau_1_rho95_geom_scan/';  
         % % scandir = '3x2x192x48x32_nu_0.05_delta_RT_scan'; scanname= '(2,1)';
         % scandir = '3x2x192x48x32_nu_0.1_delta_RT_scan'; scanname= '(2,1)';
         % scandir = '3x2x192x48x24_nu_0.1_delta_RT_scan'; scanname= '(2,1)';
         % scandir = '3x2x192x48x32_nu_1.0_delta_RT_scan'; scanname= '(2,1)';
-        scandir = '2_1_delta_RT_scan'; scanname= '(2,1)';
+        % scandir = '2_1_delta_RT_scan'; scanname= '(2,1)';
         % scandir = '5x3x192x48x32_nu_0.05_delta_RT_scan'; scanname= '(4,2)';
         scandir = '5x3x192x48x32_nu_1.0_delta_RT_scan'; scanname= '(4,2)';
         % scandir = '5x3x192x48x32_delta_RT_scan'; scanname= '(2,1)';
