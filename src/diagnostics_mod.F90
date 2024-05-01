@@ -80,7 +80,7 @@ CONTAINS
     CHARACTER(len=256), INTENT(OUT)   :: file
     INTEGER,            INTENT(OUT)   :: fid
     CHARACTER(len=256)                :: str
-    INCLUDE 'srcinfo.h'
+    INCLUDE 'srcinfo/srcinfo.h'
     ! Writing output filename
     WRITE(file,'(a,a1,i2.2,a3)') TRIM(file0)   ,'_',jobnum,'.h5'
     !                      1.1   Initial run

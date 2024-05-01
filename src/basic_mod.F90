@@ -507,7 +507,7 @@ CONTAINS
   SUBROUTINE show_title
   USE parallel, ONLY: my_id
   IMPLICIT NONE
-  INCLUDE 'srcinfo.h' ! for the code version
+  INCLUDE 'srcinfo/srcinfo.h' ! for the code version
   IF(my_id .EQ. 0) THEN
     write(*,*) "=============================================="
     write(*,*) "   ______                                     "
