@@ -51,3 +51,4 @@ wk/parameters/profiles
 local/dirs.inc
 simulations
 __pycache__
+ignore*
