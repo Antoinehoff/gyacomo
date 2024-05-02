@@ -3,7 +3,7 @@
 <img src="https://c4scdn.ch/file/data/7a6vpqgtfcxtwhkpd4hu/PHID-FILE-wlsgn3omnbfilbqnzsvb/ezgif-2-ebfac79eeb26.gif" width="240">
 </p>
 <figcaption align = "center">
-<i>Turbulence and zonal flows in a Z-pinch</i>
+<i>Turbulence and zonal flows in a Z-pinch, with (r,z) cylindrical coordinates </i>
 </figcaption>
 </figure>
 
