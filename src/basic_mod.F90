@@ -202,7 +202,7 @@ CONTAINS
       WRITE(input_file,'(a,a1,i2.2,a3)') 'fort','_',fileid,'.90'
       INQUIRE(file=input_file, exist=mlexist)
       IF( mlexist ) THEN
-        CALL speak('Reading input '// input_file,1)
+        CALL speak('Reading input '// input_file,0)
         OPEN(lu_in, file=input_file)
         file_found = .true.
       ELSE
@@ -210,7 +210,7 @@ CONTAINS
         WRITE(input_file,'(a,a1,i2.2,a3)') 'params','_',fileid,'.in'
         INQUIRE(file=input_file, exist=mlexist)
         IF( mlexist ) THEN
-          CALL speak('Reading input '// input_file,1)
+          CALL speak('Reading input '// input_file,0)
           OPEN(lu_in, file=input_file)
           file_found = .true.
         ENDIF
