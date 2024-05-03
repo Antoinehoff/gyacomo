@@ -14,7 +14,7 @@ GETFLUXSURFACE = 0;
 
 % partition= '../results/paper_3/';
 % Get the scan directory
-switch 2
+switch 1
     case 1 % delta K_T tau=1
         casename = 'DIIID rho95 $\tau=1$';
         partition= '/misc/gyacomo23_outputs/paper_3/DIIID_tau_1_rho95_geom_scan/';  
@@ -69,6 +69,13 @@ for i = 1:length(contents)
         % Get and display the name of the subdirectory
         subdir = [scandir,contents(i).name];
         disp(['Subdirectory: ' contents(i).name]);
+        if 0
+            MVIN = ['cd ',subdir,';'];
+            PY3  = ['python3 ',...
+'/home/ahoffman/gyacomo/basic_scripts/python_utilities/ignore_ralf_results.py;'];
+            MVOUT= 'cd /home/ahoffman/gyacomo/wk;';
+            system([MVIN,PY3,MVOUT]);
+        end
         % Get parameters
         param = read_namelist([subdir,'/fort_00.90']);
         para1 = [para1 param.(nml1).(attr1)];

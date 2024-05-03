@@ -16,8 +16,8 @@ SUBROUTINE tesend
   IF( mlend ) THEN
     nlend   = .TRUE.
     crashed = .TRUE.
-    CALL speak('rhs is NaN/Inf',0)
-    CALL speak('Run terminated at cstep='//str(cstep),0)
+    CALL speak('rhs is NaN/Inf',-99)
+    CALL speak('Run terminated at cstep='//str(cstep),-99)
     RETURN
   END IF
 
@@ -25,7 +25,7 @@ SUBROUTINE tesend
   !                   2.  Test on NRUN
   nlend = step .GE. nrun
   IF ( nlend ) THEN
-     CALL speak('NRUN steps done',0)
+     CALL speak('NRUN steps done',-99)
      RETURN
   END IF
 

@@ -1,20 +1,7 @@
 import sys
 import re
 import matplotlib.pyplot as plt
-
-def read_data(filename):
-    t_values = []
-    Pxi_values = []
-    Qxi_values = []
-    dict       = {"t":[],"Pxi":[],"Pxe":[],"Qxi":[],"Qxe":[]}
-    with open(filename, 'r') as file:
-        for line in file:
-            a = line.split('|')
-            for i in a[1:-1]:
-                b = i.split('=')
-                dict[b[0].strip()].append(float(b[1]))
-
-    return dict
+import load_data as loader
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -22,7 +9,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     filename = sys.argv[1]
-    dict = read_data(filename)
+    dict = loader.read_data_std(filename)
     time = dict["t"]
     dict.pop('t',None)
 

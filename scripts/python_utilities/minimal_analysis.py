@@ -38,7 +38,7 @@ t0D, hflux_x = loader.load_data_0D(filename,'hflux_x')
 t0D, pflux_x = loader.load_data_0D(filename,'pflux_x')
 # 3D fields (phi and first gyromoment)
 t3D, phi, tf = loader.load_data_3D_frame(filename,'phi',10000)
-t3D, Ni00,tf = loader.load_data_3D_frame(filename,'Ni00',10000)
+t3D, Ni00,tf = loader.load_data_3D_frame(filename,'Na00',10000)
 # grids of the simulation
 x,kx,y,ky,z,p,j  = loader.load_grids(filename)
 

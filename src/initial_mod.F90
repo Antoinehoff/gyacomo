@@ -596,7 +596,7 @@ CONTAINS
     USE basic,      ONLY: maindir
     USE grid,       ONLY: local_na, local_np, local_nj, total_nkx, local_nky, local_nz,&
                           local_nkx_offset, local_nky_offset, kxarray, kyarray, &
-                          ngp, ngj, ngz, parray, jarray,&
+                          ngp, ngj, ngz, parray, jarray, total_nky, &
                           deltakx, deltaky,&
                           AA_x, AA_y
     USE fields,     ONLY: moments
@@ -604,12 +604,14 @@ CONTAINS
     USE model,      ONLY: LINEARITY
     IMPLICIT NONE
     REAL(xp), DIMENSION(:,:), ALLOCATABLE :: ricci_mat_real, ricci_mat_imag
-    REAL(xp) :: scaling
-    INTEGER  :: ia,ip,ij,ikx,iky,iz, LPFx, LPFy
+    REAL(xp) :: scaling, kx_max,ky_max,kp_max,kp
+    COMPLEX(xp) :: f_
+    INTEGER  :: ia,ip,ij,ikx,iky,iz, LPF, ikxR, ikyR, NkxR, NkyR
     CHARACTER(256) ::  filename
-
+    NkxR = 186
+    NkyR = 94
     ! load picture from data file
-    ALLOCATE(ricci_mat_real(186,94),ricci_mat_imag(186,94))
+    ALLOCATE(ricci_mat_real(NkxR,NkyR),ricci_mat_imag(NkxR,NkyR))
     ricci_mat_real = 0; ricci_mat_imag = 0
     filename = TRIM(maindir) // '/Gallery/fourier_ricci_real.txt'
     OPEN(unit = 1 , file = filename)
@@ -621,25 +623,34 @@ CONTAINS
     CLOSE(2)
     scaling = init_amp*1e-5
     moments = 0._xp
+    IF ((total_nkx .LT. 186) .OR. (total_nky .LT. 95)) ERROR STOP "Riccinit works for Nx>=186 and Ny>=188 only"
       !**** initialization *******************************************
+    moments = 0._xp;
     DO ia=1,local_na
-      DO ikx=1,total_nkx
-        DO iky=1,local_nky
-          DO ip=1+ngp/2,local_np+ngp/2
-            DO ij=1+ngj/2,local_nj+ngj/2
-              DO iz=1+ngz/2,local_nz+ngz/2
-                IF((ikx+local_nkx_offset .LE. 186) .AND. (iky+local_nky_offset .LE. 94)) THEN
-                  !IF (.TRUE.) THEN
-                  IF ( (parray(ip) .EQ. 0) .AND. (jarray(ij) .EQ. 0) ) THEN
-                    moments(ia,ip,ij,iky,ikx,iz,:) = scaling*(ricci_mat_real(ikx+local_nkx_offset,iky+local_nky_offset)&
-                    - imagu*ricci_mat_imag(ikx+local_nkx_offset,iky+local_nky_offset))
+      DO ip=1+ngp/2,local_np+ngp/2
+        DO ij=1+ngj/2,local_nj+ngj/2
+          DO iz=1+ngz/2,local_nz+ngz/2
+            DO ikxR=1,NkxR
+              DO ikyR=1,NkyR
+                f_ = scaling*(ricci_mat_real(ikxR,ikyR) - imagu*ricci_mat_imag(ikxR,ikyR))
+                ikx = -1; iky = -1
+                ! Convert indices from the picture to the resolution we have
+                IF(ikyR .LE. total_nky) iky = ikyR - local_nky_offset
+
+                IF(ikxR .LE. total_nkx) THEN
+                  IF(ikxR .LE. NkxR/2+1) THEN
+                    ikx = ikxR
                   ELSE
-                    moments(ia,ip,ij,iky,ikx,iz,:) = 0._xp
+                    ikx = total_nkx - (NkxR - ikxR)
+                    IF(ikx .LE. total_nkx/2+1) ikx = -1
                   ENDIF
-                ELSE
-                  moments(ia,ip,ij,iky,ikx,iz,:) = 0._xp
                 ENDIF
-              END DO
+                ! Check out of bounds
+                IF( (iky .GT. 0) .AND. (iky .GT. 0) .AND. (iky .LE. total_nkx) .AND. (iky .LE. local_nky) ) THEN
+                  IF ( (parray(ip) .EQ. 0) .AND. (jarray(ij) .EQ. 0) ) &
+                    moments(ia,ip,ij,iky,ikx,iz,:) = f_
+                ENDIF
+            END DO
             END DO
           END DO
         END DO
@@ -660,12 +671,15 @@ CONTAINS
       ENDIF
     ENDDO
     !! Play with some filtering
-    LPFx = 0
-    LPFy = 0
+    kx_max = MAXVAL(kxarray); ky_max = MAXVAL(kyarray); kp_max = sqrt(kx_max**2+ky_max**2)
+    ! LPF = 50
       DO ikx=1,total_nkx
         DO iky=1,local_nky
-          IF ( (abs(kxarray(iky,ikx)) .LT. LPFx*deltakx ) .AND. (abs(kyarray(iky)) .LT. LPFy*deltaky ) )&
-            moments(:,:,:,iky,ikx,:,:) = 0._xp
+          kp = sqrt(kxarray(iky,ikx)**2 +kyarray(iky)**2)
+          ! IF ( sqrt(kxarray(iky,ikx)**2 +kyarray(iky)**2) .GT. LPF*sqrt(deltakx**2+deltaky**2) )&
+          ! moments(:,:,:,iky,ikx,:,:) = moments(:,:,:,iky,ikx,:,:) - 50*(kp/kp_max)**2*moments(:,:,:,iky,ikx,:,:)
+          moments(:,:,:,iky,ikx,:,:) = moments(:,:,:,iky,ikx,:,:) - 0.5*(kxarray(iky,ikx)/kx_max)**2*moments(:,:,:,iky,ikx,:,:)
+          moments(:,:,:,iky,ikx,:,:) = moments(:,:,:,iky,ikx,:,:) - 0.5*(kyarray(iky)    /ky_max)**2*moments(:,:,:,iky,ikx,:,:)
         ENDDO
       ENDDO
     DEALLOCATE(ricci_mat_real,ricci_mat_imag)
