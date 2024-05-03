@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 import tools
+
 def load_data_0D(filename,dname):
     with h5py.File(filename, 'r') as file:
         # Load time data
@@ -19,12 +20,22 @@ def load_data_3D_frame(filename,dname,tframe):
         iframe = tools.closest_index(time,tframe)
         tf     = time[iframe]
         # Load data
-        if dname == 'Ni00':
-            data = file[f'data/var3d/Na00/{iframe:06d}']
+        try:
+            data = file[f'data/var3d/{dname}/{iframe:06d}']
+        except:
+            g_ = file[f'data/var3d/']
+            print('Dataset: '+f'data/var3d/{dname}/{iframe:06d}'+' not found')
+            print('Available fields: ')
+            msg = ''
+            for key in g_:
+                msg = msg + key + ', '
+            print(msg)
+            exit()
+        # Select the first species for species dependent fields
+        if not (dname == 'phi' or dname == 'psi'):
             data = data[:,:,:,0]
         else:
-            data = file[f'data/var3d/{dname}/{iframe:06d}']
-        data = data[:]
+            data = data[:]
         data = data['real']+1j*data['imaginary'] 
         # Load the grids
         kxgrid = file[f'data/grid/coordkx']
@@ -55,6 +66,15 @@ def load_group(filename,group):
         g_  = file[f"data/"+group]
         for key in g_.keys():
             name='data/'+group+'/'+key
+            data[key] = file.get(name)[:]
+    return data
+
+def load_3Dfield(filename,field):
+    data = {}
+    with h5py.File(filename, 'r') as file:
+        g_  = file[f"data/var3d/"+field]
+        for key in g_.keys():
+            name='data/var3d/'+field+'/'+key
             data[key] = file.get(name)[:]
     return data
 
@@ -92,3 +112,17 @@ def read_namelist(nml_str):
                 else:
                     all_namelists[current_namelist][key] = value
     return all_namelists
+
+def read_data_std(filename):
+    t_values = []
+    Pxi_values = []
+    Qxi_values = []
+    dict       = {"t":[],"Pxi":[],"Pxe":[],"Qxi":[],"Qxe":[]}
+    with open(filename, 'r') as file:
+        for line in file:
+            a = line.split('|')
+            for i in a[1:-1]:
+                b = i.split('=')
+                dict[b[0].strip()].append(float(b[1]))
+
+    return dict
