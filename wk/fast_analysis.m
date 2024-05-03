@@ -55,8 +55,9 @@ default_plots_options
 % DATADIR = [PARTITION,resdir,'/'];
 % DATADIR = '/home/ahoffman/gyacomo/simulations/ralf/2D_Zpinch_ITG/3x2x64x48x1_no_curvB/';
 % DATADIR = '/home/ahoffman/gyacomo/simulations/ralf/3D_Zpinch_ITG/3x2x64x48x16_nocurvB/';
-DATADIR = '/home/ahoffman/gyacomo/simulations/ralf/3D_Zpinch_ITG/3x2x64x48x16_nocurvB_-14/';
-read_flux_out_XX(DATADIR,1,1);
+% DATADIR = '/home/ahoffman/gyacomo/simulations/ralf/3D_Zpinch_ITG/3x2x64x48x16_nocurvB_-14/';
+DATADIR = '/home/ahoffman/gyacomo/simulations/ricci/';
+% read_flux_out_XX(DATADIR,1,1);
 %%
 J0 = 00; J1 = 10;
 
@@ -90,7 +91,7 @@ if data.inputs.Na > 1
     data.Ne00 = reshape(data.Na00(2,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 end
 end
-if 1
+if 0
 %% Plot transport and phi radial profile
 % [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 % [data.PSI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'psi');
@@ -114,7 +115,7 @@ options.RESOLUTION = 256;
 plot_radial_transport_and_spacetime(data,options);
 end
 
-if 0
+if 1
 %% 2D field snapshots
 % Options
 options.INTERP    = 0;
@@ -125,9 +126,9 @@ options.LOGSCALE  = 0;
 options.CLIMAUTO  = 1;
 options.TAVG      = 1;
 % options.NAME      = ['N_i^{00}'];
-% options.NAME      = 'n_e';
+options.NAME      = 'n_i';
 % options.NAME      = 'upar_i';
-options.NAME      = 'T_i';
+% options.NAME      = 'T_i';
 % options.NAME      = 'Q_{xi}';
 % options.NAME      = 'v_{Ey}';
 % options.NAME      = 'w_{Ez}';
@@ -137,17 +138,18 @@ options.NAME      = 'T_i';
 loc =11;
 [~,i_] = min(abs(loc - data.grids.y));
 options.COMP =i_;
-options.PLAN      = '3D';  
-% options.PLAN      = 'xy'; options.COMP =floor(data.grids.Nz/2)+1; 
+% options.PLAN      = '3D';  
+options.PLAN      = 'xy'; options.COMP =floor(data.grids.Nz/2)+1; 
 % options.PLAN      = 'xz'; options.COMP ='avg';
 % options.COMP ='avg'; 
 options.XYZ  =[-11 20 -2]; 
-options.TIME = [80 140 190 250]; options.TAVG = 0;
+options.TIME = [0.5]; options.TAVG = 0;
 % options.TIME = [50:500]; options.TAVG = 1;
 options.RESOLUTION = 256;
 fig = photomaton(data,options);
-% colormap(gray)
+colormap(gray)
 clim('auto')
+% set(gca,'ColorScale','log')
 % save_figure(data,fig)
 end
 if 0
@@ -282,8 +284,8 @@ if 0
 % data.TEMP_I = reshape(data.TEMP(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 options.INTERP    = 1;
 options.POLARPLOT = 0;
-options.BWR       = 1; % bluewhitered plot or gray
-options.CLIMAUTO  = 0; % adjust the colormap auto
+options.BWR       = 0; % bluewhitered plot or gray
+options.CLIMAUTO  = 1; % adjust the colormap auto
 % options.NAME      = '\phi';
 % options.NAME      = 'w_{Ez}';
 % options.NAME      = '\psi';
@@ -291,9 +293,9 @@ options.NAME      = 'T_i';
 % options.NAME      = '\phi^{NZ}';
 % options.NAME     = ['N_i^{00}'];
 % options.NAME     = ['N_e^{00}'];
-% options.PLAN      = 'xy'; options.COMP =floor(data.grids.Nz/2)+1; 
+options.PLAN      = 'xy'; options.COMP =floor(data.grids.Nz/2)+1; 
 % options.PLAN      = 'xz'; options.COMP ='avg';
-options.PLAN      = '3D';  
+% options.PLAN      = '3D';  
 options.XYZ  =[-21 20 0]; 
 options.TIME      =  data.Ts3D(1:1:end);
 % options.TIME      = [0:1500];
@@ -301,7 +303,7 @@ data.EPS          = 0.1;
 data.a = data.EPS * 2000;
 options.RESOLUTION = 256;
 options.FPS       = 12;
-options.RMAXIS    = 0;
+options.RMAXIS    = 1;
 create_film(data,options,'.gif');
 end
 
