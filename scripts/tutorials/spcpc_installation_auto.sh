@@ -17,7 +17,7 @@ echo '=============================================='
 
 # 1. Prelude
 # 1.1 - First, we clone the repository.
-echo "1. Clone the directory "
+echo "1/6 Clone the directory "
 git clone https://gitlab.epfl.ch/ahoffman/gyacomo.git &> gyacomo_clone.out
 cd gyacomo
 
@@ -44,12 +44,12 @@ mkdir lib
 # Each of these libraries must be installed in the `/lib` folder (here `/gyacomo/lib`).
 
 echo "      repository cloned"
-echo ______________________________________________
+echo "______________________________________________"
 
 #############################################
 ### 2. Futils installation
 # 2.1 - We navigate to our `lib` folder and clone first the `futils` library.
-echo "2. Installing Futils"
+echo "2/6 Installing Futils"
 cd lib
 echo "      clone repository"
 git clone https://c4science.ch/diffusion/FUTILS/futils.git &> futils_clone.out
@@ -79,11 +79,11 @@ make install &> futils_make_install.out
 # 2.7 - We can test now the installation and linkage of futils by typing `make` in `/gyacomo`. The compilation should pass the previously observed error and halt now with an error at the call of `fftw` routines in `src.fourier_mod.F90`.
 cd ../../
 echo "      Futils installed"
-echo ______________________________________________
+echo "______________________________________________"
 
 #############################################
 ### 3. FFTW3 installation
-echo "3. Installing FFTW3"
+echo "3/6 Installing FFTW3"
 echo "      download source"
 # 3.1 - We download the `fftw` zip directory, unzip it, and navigate to the directory.
 wget http://www.fftw.org/fftw-3.3.10.tar.gz &> wget_fftw3.out
@@ -118,12 +118,12 @@ cd ../
 
 # 3.8 - We test the installation and linkage by typing `make` in `/gyacomo`. The compilation should halt with an error at the call of `FM` routines in the `src/coeff_mod.F90` file.
 echo "      FFTW3 installed"
-echo ______________________________________________
+echo "______________________________________________"
 
 
 #############################################
 ## 4. FM installation
-echo "4. Installing FM"
+echo "4/6 Installing FM"
 
 # 4.1 - Navigate back to the main `lib` directory (e.g., `/gyacomo/lib/`) and download the zipped folder.
 echo "      download source"
@@ -168,24 +168,24 @@ mv *.mod mod
 
 cd ../
 echo "      FM installed"
-echo ______________________________________________
+echo "______________________________________________"
 
 #############################################
 # 5 compilation of GYACOMO
 cd ../
-echo "5. Compilation of GYACOMO"
+echo "5/6 Compilation of GYACOMO"
 make 2>&1 | tee make.out
-echo ______________________________________________
+echo "______________________________________________"
 
 #############################################
 # 6. setup of a testcase
-echo "6. Test case setup"
+echo "6/6 Test case setup"
 make new_prob
 echo "-- GYACOMO is ready --"
 echo "you can test running it using:"
 echo "cd gyacomo/simulations/problem_01"
 echo "mpirun -np 4 ./gyacomo.exe 1 4 1"
-echo ______________________________________________
+echo "______________________________________________"
 
 #############################################
 # 7. Epilogue

@@ -1,31 +1,26 @@
 #!/bin/bash
 gyacomo_dir=$(pwd)
+echo "Setup of a new problem in /simulations"
 
 # Check if an argument is provided
 if [ $# -ne 1 ]; then
-    echo "- using 2D Z-pinch parameter"
-    echo "  (you can ask for a cyclone base case by adding "CBC" after the call of the script)"
+echo "- 2D Z-pinch parameter"
+echo "  (add "CBC" for a cyclone base case)"
     inputfile=$gyacomo_dir/scripts/parameter_files/parameters_Zpinch.in
 else
     # Check the value of the argument
-    if [ "$1" = "help" ]; then
-        echo "This script setup a new simulation directory in /simulation"
-        echo "The basic setup is a small 2D z-pinch simulation."
-        echo "You can ask a cyclone base case (more expensive) by typing sh new_prob.sh CBC"
-        exit 1
-    elif [ "$1" = "CBC" ]; then
-        echo "- using CBC parameter"
+if [ "$1" = "CBC" ]; then
+        echo "- CBC parameter"
         inputfile=$gyacomo_dir/scripts/parameter_files/parameters_CBC.in
     elif [ "$1" = "ZBC" ]; then
-        echo "- using Zpinch parameter"
+        echo "- 2D Z-pinch parameter"
         inputfile=$gyacomo_dir/scripts/parameter_files/parameters_Zpinch.in
     else
-        echo "ERROR STOP unknown entry"
-        echo "(usage: sh new_prob.sh [CBC or ZBC (opt)])"
+        echo "- ERROR STOP unknown entry"
+        echo "  (usage: sh new_prob.sh [CBC or ZBC (opt)] [folder_name (opt)])"
         exit 1
     fi
 fi
-echo "Setup of a new problem in the simulations directory..."
 
 mkdir -p $gyacomo_dir/simulations
 cd $gyacomo_dir/simulations
@@ -45,7 +40,7 @@ get_next_problem_folder() {
 # Function to display usage information
 usage() {
     echo "- usage: $0 [base_case_type] [folder_name]"
-    echo "If folder_name is not provided, default is the next available 'problem_xx'"
+    echo "  If folder_name is not provided, default is the next available 'problem_xx'"
     exit 1
 }
 
@@ -59,7 +54,7 @@ folder_name="${2:-$(get_next_problem_folder)}"
 
 # Check if the executable exists
 if [ ! -x $gyacomo_dir/bin/gyacomo23_dp ]; then
-    echo "Error: Executable 'bin/gyacomo23_dp' not found or not executable. Please compile the code first."
+    echo "- Error: Executable 'bin/gyacomo23_dp' not found or not executable. Please compile the code first."
     exit 1
 fi
 
@@ -70,7 +65,7 @@ mkdir -p "$folder_name"
 cp $inputfile "$folder_name/params.in"
 
 # Copy the marconi job submission example
-cp $gyacomo_dir/scripts/parameter_files/submit_marconi_example.cmd "$folder_name/submit_marconi.cmd"
+cp $gyacomo_dir/scripts/shell_scripts/submit_marconi_example.cmd "$folder_name/submit_marconi.cmd"
 
 # Copy tutorial file
 cp $gyacomo_dir/scripts/tutorials/tutorial.md "$folder_name/."
@@ -82,6 +77,11 @@ ln -s $gyacomo_dir/bin/gyacomo23_dp "$folder_name/gyacomo.exe"
 ln -s $gyacomo_dir/scripts/python_utilities/minimal_analysis.py "$folder_name/."
 ln -s $gyacomo_dir/scripts/python_utilities/movie.py "$folder_name/."
 
-echo "- folder 'simulations/$folder_name' created with symbolic link to the executable."
-echo "- check the tutorial file in there!"
-echo "...done"
+echo "- simulations/$folder_name created"
+echo "  (check the tutorial file in there)"
+
+echo "You can now run Gyacomo with"
+echo "  cd simulations/$folder_name"
+echo "  mpirun -np 4 ./gyacomo.exe 1 4 1"
+echo "Then use the example analysis script"
+echo "  python3 minimal_analysis.py"
