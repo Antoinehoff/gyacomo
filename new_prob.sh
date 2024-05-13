@@ -19,6 +19,9 @@ else
     elif [ "$1" = "ZBC" ]; then
         echo "- using Zpinch parameter"
         inputfile=$gyacomo_dir/scripts/parameter_files/parameters_Zpinch.in
+     elif [ "$1" = "Ricci" ]; then
+        echo "- using Ricci"
+        inputfile=$gyacomo_dir/scripts/parameter_files/parameters_Ricci.in
     else
         echo "ERROR STOP unknown entry"
         echo "(usage: sh new_prob.sh [CBC or ZBC (opt)])"
@@ -70,7 +73,7 @@ mkdir -p "$folder_name"
 cp $inputfile "$folder_name/params.in"
 
 # Copy the marconi job submission example
-cp $gyacomo_dir/scripts/parameter_files/submit_marconi_example.cmd "$folder_name/submit_marconi.cmd"
+cp $gyacomo_dir/scripts/shell_scripts/submit_marconi_example.cmd "$folder_name/submit_marconi.cmd"
 
 # Copy tutorial file
 cp $gyacomo_dir/scripts/tutorials/tutorial.md "$folder_name/."
