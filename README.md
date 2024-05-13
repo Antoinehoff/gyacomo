@@ -7,7 +7,7 @@
 </figcaption>
 </figure>
 
-GYACOMO (Gyrokinetic Advanced Collision Moment solver)
+Gyacomo (Gyrokinetic Advanced Collision Moment solver)
 Copyright (C) 2022 EPFL
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
@@ -20,23 +20,23 @@ Author: Antoine C.D. Hoffmann
 
 Contact: antoine.hoffmann@epfl.ch
 
-##### Citing GYACOMO
-If you use GYACOMO in your work, please cite at least the following paper: 
+##### Citing Gyacomo
+If you use Gyacomo in your work, please cite at least the following paper: 
 
 - Hoffmann, A.C.D., Frei, B.J. & Ricci, P. (2023). Gyrokinetic moment-based simulations of the Dimits shift. Journal of Plasma Physics, 89(6), 905890611. [doi:10.1017/S0022377823001320](https://doi.org/10.1017/S0022377823001320)
 
 You can also find results and application with kinetic electrons in a simplified geometry here:
 - Hoffmann, A.C.D., Frei, B.J. & Ricci, P. (2023). Gyrokinetic simulations of plasma turbulence in a Z-pinch using a moment-based approach and advanced collision operators. Journal of Plasma Physics, 89(2), 905890214. [doi:10.1017/S0022377823000284](https://doi.org/10.1017/S0022377823000284)
 
-# What is GYACOMO ?
+# What is Gyacomo ?
 
-GYACOMO is the Gyrokinetic Advanced Collision Moment solver which solves the gyrokinetic Boltzmann equation in the delta-f flux-tube limit based on a projection of the velocity distribution function onto a Hermite-Laguerre velocity basis.
+Gyacomo is the Gyrokinetic Advanced Collision Moment solver which solves the gyrokinetic Boltzmann equation in the delta-f flux-tube limit based on a projection of the velocity distribution function onto a Hermite-Laguerre velocity basis.
 
 It can be coupled with precomputed matrices from the code Cosolver (B.J. Frei) to incorporate advanced collision operators up to the gyro-averaged linearized exact coulomb interaction (GK Landau operator).
 
 This repository contains the solver source code (in /src) but also my personnal post-processing Matlab scripts, which are less documented. I would recommend the user to write their own post-processing scripts based on the H5 files the code outputs.
 
-#### GYACOMO can
+#### Gyacomo can
 - run in parallel using MPI (mpirun -np N ./path_to_exec Np Ny Nz, where N = Np x Ny x Nz is the number of processes and Np Ny Nz are the parallel dimensions in Hermite polynomials, binormal direction, and parallel direction, respectively).
 - run in single precision.
 - evolve kinetic electrons and ions.
@@ -47,24 +47,24 @@ This repository contains the solver source code (in /src) but also my personnal 
 - use linear GK Landau, Sugama, Lorentz collision operators. (requires precomputed matrix files, ask them!)
 - add background ExB shear flow. (Hammett's method)
 - use an adiabatic ion model. (not verified)
-#### GYACOMO cannot (I wish it could...)
+#### Gyacomo cannot (I wish it could...)
 - include parallel magnetic field fluctuations. (easy)
 - include finite rhostar effects. (hard)
 - run without the futils library. (easy but boring, ask the zip file!)
 - Use shared memory parallelization. (okish)
 - run global simulations. (for another code)
 
-# How to compile and run GYACOMO
+# How to compile and run Gyacomo
 
-A detailed tutorial is present in the code's [wiki](https://gitlab.epfl.ch/ahoffman/gyacomo/-/wikis/home).
+A detailed tutorial is present in the code's [wiki](https://gitlab.epfl.ch/ahoffman/Gyacomo/-/wikis/home).
 
-Note: For some collision operators (Sugama and Full Coulomb), you will need to run COSOlver from B.J.Frei to generate the required matrices in the gyacomo/iCa folder before running GYACOMO.
+Note: For some collision operators (Sugama and Full Coulomb), you will need to run COSOlver from B.J.Frei to generate the required matrices in the Gyacomo/iCa folder before running Gyacomo.
 
 
 
 # Changelog
 
-### v3.x GYACOMO
+### v3.x Gyacomo
 > installation tutorials and python analysis scripts (SPC release)
 
 > background ExB shear
