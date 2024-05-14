@@ -1,13 +1,24 @@
 %% This is a example of matlab analysis script
-gyacomodir = '/Users/ahoffmann/gyacomo/'; % get code directory
+% -------------------------------------------------------------------------
+% -------------------------------------------------------------------------
+% Before anything, setup the right path to your gyacommo directory here
+gyacomodir = '/Users/ahoffmann/gyacomo/';
+% -------------------------------------------------------------------------
+% -------------------------------------------------------------------------
+% add to our path the routines in our local matlab folder
 addpath(genpath([gyacomodir,'matlab'])) % ... add
 addpath(genpath([gyacomodir,'matlab/plot'])) % ... add
 addpath(genpath([gyacomodir,'matlab/compute'])) % ... add
 addpath(genpath([gyacomodir,'matlab/load'])) % ... add
+% setup font and line size
 default_plots_options
 
-% Directory where the data sits -------------------------------
+
+% -------------------------------------------------------------------------
+% Indicate where are the data you would like to analyze
 DATADIR = '/Users/ahoffmann/gyacomo/simulations/problem_01/';
+% the rest is optional
+% -------------------------------------------------------------------------
 
 % Jobs to load (from outputs_J0.h5 to outputs_J1.h5 if exists)
 J0 = 00; J1 = 10;
@@ -18,7 +29,7 @@ data    = {};
 % Load basic info (grids and time traces)
 data    = compile_results_low_mem(data,DATADIR,J0,J1);
 
-% load EM fields -------------------------------
+% load EM fields ----------------------------------------------------------
 % Electrostatic potential
 [data.PHI, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'phi');
 % Electromagnetic potential (if beta non zero)
@@ -26,7 +37,7 @@ if data.inputs.BETA > 0
     [data.PSI, data.Ts3D]  = compile_results_3D(DATADIR,J0,J1,'psi');
 end
 
-% load moments -------------------------------
+% load moments ------------------------------------------------------------
 % temperature
 [TEMP, data.Ts3D] = compile_results_3Da(data.folder,J0,J1,'temp');
 % parallel velocity
@@ -46,9 +57,9 @@ data.DENS_I = reshape(DENS(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.N
 data.Ni00   = reshape(Na00(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 % if we have a second species we store in electrons
 if data.inputs.Na > 1
-    data.TEMP_E = reshape(data.TEMP(2,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
-    data.DENS_E = reshape(data.DENS(2,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
-    data.Ne00 = reshape(data.Na00(2,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
+    data.TEMP_E = reshape(TEMP(2,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
+    data.DENS_E = reshape(DENS(2,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
+    data.Ne00 = reshape(Na00(2,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 end
 clear TEMP UPAR UPER DENS Na00;
 
@@ -61,27 +72,30 @@ options.ST_FIELD = '\phi';          % chose your field to plot in spacetime diag
 options.INTERP   = 0;               % interp the pcolor plot or not
 plot_radial_transport_and_spacetime(data,options);
 
+%% The rest is optional
+if 0
 %% 2D field snapshots
 % Options
 options.INTERP    = 1;
-options.AXISEQUAL = 1;
+options.AXISEQUAL = 0;
 options.NORMALIZE = 0;
 options.LOGSCALE  = 0;
 % chose the name (available : n_i,upar_i,T_i,Q_{xi},v_{Ey},w_{Ez},\phi,\psi
 options.NAME      = 'n_i';
-options.PLAN      = 'xy'; options.COMP =floor(data.grids.Nz/2)+1; 
+% options.PLAN      = 'xy'; options.COMP =floor(data.grids.Nz/2)+1; 
+options.PLAN      = 'kxky'; options.COMP =floor(data.grids.Nz/2)+1; 
 % options.PLAN      = 'xz'; options.COMP ='avg';
 % options.PLAN      = '3D';
 options.XYZ  =[-11 20 -2]; 
-options.TIME = [50]; options.TAVG = 0;
+options.TIME = [5 10 25 75]; options.TAVG = 0;
 % options.TIME = [50:500]; options.TAVG = 1;
 options.RESOLUTION = 256;
 fig = photomaton(data,options);
-colormap(bluewhitered)
-colorbar
+colormap(gray)
+% colorbar
 % set(gca,'ColorScale','log')
 % save_figure(data,fig)
-
+end
 
 if 0
 %% Mode evolution
