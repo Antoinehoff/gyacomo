@@ -75,17 +75,13 @@ FIGURE.fig = figure; %set(gcf, 'Position',  toplot.DIMENSIONS.*[1 1 Ncols Nrows]
             tshot = DATA.Ts5D(FRAMES(i_));
         end
         xlabel(toplot.XNAME); ylabel(toplot.YNAME);
-%         if i_ > 1; set(gca,'ytick',[]); end; 
         title([sprintf('$t c_s/R=%5.2f$',tshot),', max = ',sprintf('%.1e',frame_max)]);
-        if OPTIONS.CLIMAUTO
-            clim('auto')
-        end
     end
     if OPTIONS.AXISEQUAL
         pbaspect(toplot.ASPECT)
     end
     if ~strcmp(OPTIONS.PLAN,'kxky')
-        clim([-1,1]*frame_max/scale);
+        % clim([-1,1]*frame_max/scale);
         colormap(bluewhitered);
         if OPTIONS.INTERP
             shading interp; 

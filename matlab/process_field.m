@@ -52,25 +52,8 @@ Lmin_ = min([Xmax_,Ymax_]);
 Rx    = Xmax_/Lmin_ * SCALE + (1-SCALE)*1.2; 
 Ry    = Ymax_/Lmin_ * SCALE + (1-SCALE)*1.2; 
 ASPECT     = [Rx, Ry, 1];
-DIMENSIONS = [500, 1000, OPTIONS.RESOLUTION*Rx, OPTIONS.RESOLUTION*Ry];
-% Polar grid
-POLARNAME = [];
-if POLARPLOT
-    POLARNAME = 'polar';
-    X__ = (X+DATA.a).*cos(Y);
-    Y__ = (X+DATA.a).*sin(Y);
-    X = X__;
-    Y = Y__;
-    XNAME='X';
-    YNAME='Z';
-    DIMENSIONS = [100, 100, OPTIONS.RESOLUTION, OPTIONS.RESOLUTION];
-    ASPECT     = [1,1,1];
-    sz = size(X);
-    FIELD = zeros(sz(1),sz(2),Nt);
-else
-    sz = size(X);
-    FIELD = zeros(sz(1),sz(2),Nt);
-end
+sz = size(X);
+FIELD = zeros(sz(1),sz(2),Nt);
 %% Process the field to plot
 % --
 switch OPTIONS.COMP
@@ -346,8 +329,7 @@ TOPLOT.Z         = Z;
 TOPLOT.FIELDNAME = FIELDNAME;
 TOPLOT.XNAME     = XNAME;
 TOPLOT.YNAME     = YNAME;
-TOPLOT.FILENAME  = [NAME,'_',OPTIONS.PLAN,'_',COMPNAME,'_',POLARNAME];
-TOPLOT.DIMENSIONS= DIMENSIONS;
+TOPLOT.FILENAME  = [NAME,'_',OPTIONS.PLAN,'_',COMPNAME];
 TOPLOT.ASPECT    = ASPECT;
 TOPLOT.FRAMES    = FRAMES;
 TOPLOT.INTERP    = INTERP;

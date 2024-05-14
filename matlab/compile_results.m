@@ -63,15 +63,15 @@ while(CONTINUE)
         % CPUTIME   = h5readatt(filename,'/data/input','cpu_time');
         % DT_SIM    = h5readatt(filename,'/data/input','dt');
         [P, J, kx, ky, z] = load_grid_data(filename);
-        W_GAMMA   = strcmp(h5readatt(filename,'/data/input','write_gamma'),'y');
-        W_HF      = strcmp(h5readatt(filename,'/data/input','write_hf'   ),'y');
-        W_PHI     = strcmp(h5readatt(filename,'/data/input','write_phi'  ),'y');
-        W_NA00    = strcmp(h5readatt(filename,'/data/input','write_Na00' ),'y');
-        W_NAPJ    = strcmp(h5readatt(filename,'/data/input','write_Napj' ),'y');
-        W_SAPJ    = strcmp(h5readatt(filename,'/data/input','write_Sapj' ),'y');
-        W_DENS    = strcmp(h5readatt(filename,'/data/input','write_dens' ),'y');
-        W_TEMP    = strcmp(h5readatt(filename,'/data/input','write_temp' ),'y');
-        KIN_E     = strcmp(h5readatt(filename,'/data/input',     'KIN_E' ),'y');
+        W_GAMMA   = strcmp(h5readatt(filename,'/data/input/diagnostics','write_gamma'),'y');
+        W_HF      = strcmp(h5readatt(filename,'/data/input/diagnostics','write_hf'   ),'y');
+        W_PHI     = strcmp(h5readatt(filename,'/data/input/diagnostics','write_phi'  ),'y');
+        W_NA00    = strcmp(h5readatt(filename,'/data/input/diagnostics','write_Na00' ),'y');
+        W_NAPJ    = strcmp(h5readatt(filename,'/data/input/diagnostics','write_Napj' ),'y');
+        W_SAPJ    = strcmp(h5readatt(filename,'/data/input/diagnostics','write_Sapj' ),'y');
+        W_DENS    = strcmp(h5readatt(filename,'/data/input/diagnostics','write_dens' ),'y');
+        W_TEMP    = strcmp(h5readatt(filename,'/data/input/diagnostics','write_temp' ),'y');
+        KIN_E     = strcmp(h5readatt(filename,'/data/input/model',     'ADIAB_E' ),'n');
         try
             BETA      = h5readatt(filename,'/data/input','beta');
         catch
