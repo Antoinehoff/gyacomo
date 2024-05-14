@@ -16,21 +16,28 @@ def update_slide(val):
     fig.canvas.draw_idle()
 
 # Parameters (default values)
-option    = 'movie'
 filename  = 'outputs_00.h5'
 fieldname = 'Tpar' 
+option    = 'movie'
 if len(sys.argv) > 1:
-    option   = sys.argv[1]
-    if option == 'help':
+     # Command-line argument provided
+    arg = sys.argv[1]
+    if arg.isdigit():
+        # Argument is an integer, format it as XX
+        filename = f"outputs_{int(arg):02d}.h5"
+    else:
+        # Argument is a string
+        filename = arg
+    if filename == 'help':
         print("This script produces a movie of a field in a 2D perpendicular plane")
         print("Usage: python3 movie.py [movie/slider (opt), outfilename (opt), phi/dens/Tpar etc. (opt)]")
         sys.exit(1)
 if len(sys.argv) > 2:
-    filename = sys.argv[2]
+    fieldname = sys.argv[2]
 if len(sys.argv) > 3:
-    fieldname = sys.argv[3]
+    option = sys.argv[3]
 if len(sys.argv) > 4:
-    print("Usage: python3 movie.py [movie/slider (opt), outputs_XX.h5 (opt), phi/dens/Tpar etc. (opt)]")
+    print("Usage: python3 movie.py [outputs_XX.h5 (opt)] [phi/dens/Tpar etc. (opt)] [movie/slider (opt)]")
     sys.exit(1)
 
 # Load grids
@@ -80,7 +87,7 @@ else:
     sys.exit(1)
 
 if option == 'save':
-    ani.save('movie_'+fieldname+'.mov', fps=30)
+    ani.save('movie_'+fieldname+'.gif', fps=30)
 
 # Show the animation
 plt.show()

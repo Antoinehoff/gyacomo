@@ -12,8 +12,9 @@ import numpy as np
 import sys
 import tools
 
+
 #------ Open the HDF5 file
-if __name__ == "__main__":
+if len(sys.argv) == 1:
     # No command-line argument provided, use default filename
    filename = "outputs_00.h5"
 elif len(sys.argv) == 2:
@@ -88,7 +89,7 @@ axes[0,1].set_ylabel('y')
 # Plot slice of electrostatic potential at constant z
 axes[1,1].imshow(phi, extent=[x[0], x[-1], y[0], y[-1]],cmap='viridis',interpolation='quadric')
 #axes[1,1].pcolor(x,y,phi, cmap='viridis')
-axes[1,1].set_title(f'\phi (z = 0, t = {tf:3.1f})')
+axes[1,1].set_title(f'phi (z = 0, t = {tf:3.1f})')
 axes[1,1].set_xlabel('x')
 axes[1,1].set_ylabel('y')
 #fig.colorbar(im, ax=axes[1,1], label='Potential')

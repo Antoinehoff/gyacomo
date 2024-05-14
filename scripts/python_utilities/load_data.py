@@ -79,8 +79,9 @@ def load_3Dfield(filename,field):
     return data
 
 def load_params(filename):
+    jobid = filename[-5:-3]
     with h5py.File(filename, 'r') as file:
-        nml_str = file[f"files/STDIN.00"][0]
+        nml_str = file[f"files/STDIN."+jobid][0]
         nml_str = nml_str.decode('utf-8')
         params = read_namelist(nml_str)
     return params
