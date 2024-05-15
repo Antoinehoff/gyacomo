@@ -12,7 +12,9 @@ echo ' / / __/ / / / __ `/ ___/ __ \/ __ `__ \/ __ \'
 echo '/ /_/ / /_/ / /_/ / /__/ /_/ / / / / / / /_/ /'
 echo '\____/\__, /\__,_/\___/\____/_/ /_/ /_/\____/ '
 echo '     /____/                                   '
-echo 'This is the GYACOMO code auto installer'
+echo '---This is the GYACOMO code auto installer----'
+echo 'for SPC PCs (openSUSE, intel comp., MPI, HDF5)'
+echo 'takes ~5min                                   '
 echo '=============================================='
 
 # 1. Prelude
@@ -138,24 +140,14 @@ cd FM
 for file in *.f95 ; do cp "$file" "${file%.*}.F90" ; done
 
 # 4.4 - We compile manually (some compilation may take ~5min).
-echo "      compiling.. (~5min)"
+echo "      compiling.."
 echo "      fmsave.."
 ifort fmsave.F90 -c -O3
 echo "      fm.."
 ifort fm.F90 -c -O3
 echo "      fmzm.."
 ifort fmzm90.F90 -c -O3
-# echo "      TestFM.."
-# ifort TestFM.F90 -c -O3
-# echo "      SampleFM.."
-# ifort SampleFM.F90 -c -O3
-# echo "      building all.."
-# ifort fmsave.o fm.o fmzm90.o TestFM.o -o TestFM
-# ifort fmsave.o fm.o fmzm90.o SampleFM.o -o SampleFM
 echo "      ..done"
-# 4.5 We can test the installation.
-# ./TestFM &> TestFM.out
-# ./SampleFM &> SampleFM.out
 
 # 4.6 The library file is put together and moved to a local `lib` directory.
 mkdir lib
@@ -175,13 +167,14 @@ echo "______________________________________________"
 cd ../
 echo "5/6 Compilation of GYACOMO"
 make 2>&1 | tee make.out
+echo "-- GYACOMO is ready --"
 echo "______________________________________________"
 
 #############################################
 # 6. setup of a testcase
 echo "6/6 Test case setup"
 make new_prob
-echo "-- GYACOMO is ready --"
+echo ' '
 echo "you can test running it using:"
 echo "cd gyacomo/simulations/problem_01"
 echo "mpirun -np 4 ./gyacomo.exe 1 4 1"
