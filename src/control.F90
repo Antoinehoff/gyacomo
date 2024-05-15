@@ -20,7 +20,6 @@ SUBROUTINE control
   !           ]   1.   Prologue
 
   !                   1.0     Initialize the parallel environment
-  CALL speak('Init MPI [',2)
   CALL ppinit
   CALL speak('] MPI initialized',2)
   CALL mpi_barrier(MPI_COMM_WORLD, ierr)
