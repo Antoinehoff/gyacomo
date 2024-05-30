@@ -21,21 +21,24 @@ function [ data, time, dt ] = load_3Da_data( filename, variablename )
         cmpx = 0;
     end
     % add a dimension if nz=1 or na=1
-%     if Na == 1
-%         sz = [1 sz];
-%     end
+    % if Na == 1
+    %     sz = [1 sz];
+    % end
     if Nz == 1
+        sz = [sz 1];
+    end
+    if Np == 1
         sz = [sz 1];
     end
     % add time dimension
     data     = zeros([sz numel(time)]);
-    
+    sz_t   = size(data(:,:,:,:,1));
     for it = 1:numel(time)
         tmp         = h5read(filename,['/data/var3d/',variablename,'/', num2str(cstart+it,'%06d')]);
         if cmpx
-            data(:,:,:,:,it) = reshape(tmp.real,sz) + 1i * reshape(tmp.imaginary,sz);
+            data(:,:,:,:,it) = reshape(tmp.real,sz_t) + 1i * reshape(tmp.imaginary,sz_t);
         else
-            data(:,:,:,:,it) = reshape(tmp,sz);
+            data(:,:,:,:,it) = reshape(tmp,sz_t);
         end
     end
 

@@ -14,7 +14,7 @@ GETFLUXSURFACE = 0;
 
 % partition= '../results/paper_3/';
 % Get the scan directory
-switch 1
+switch 5
     case 1 % delta K_T tau=1
         casename = 'DIIID rho95 $\tau=1$';
         partition= '/misc/gyacomo23_outputs/paper_3/DIIID_tau_1_rho95_geom_scan/';  
@@ -53,6 +53,14 @@ switch 1
         nml1 = 'SPECIES'; pnam1 = '$R_0/L_T\times T_i/T_e$'; attr1 = 'k_T_'; pref1 = 0; scale1 =500;
         nml2 = 'SPECIES'; pnam2 = '$R_0/L_N$'; attr2 = 'k_N_'; pref2 = 5; scale2 =1.0;
         t1 = 100; t2 = 150; zfactor = 1;
+    case 5 % KEM
+        casename = 'KEM DIII-D';
+        partition= '/misc/gyacomo23_outputs/triangularity_paper/ion_scale/5x3x192x48x24/no_gradN/scan_failed/';  
+        % partition= '/misc/gyacomo23_outputs/triangularity_paper/ion_scale/5x3x192x48x24/no_gradN/scan/';  
+        scandir = '.'; scanname= ' ';queuu
+        nml1 = 'GEOMETRY'; pnam1 = '$\delta$'; attr1 = 'delta'; pref1 = 0; scale1 =1;
+        nml2 = 'SPECIES'; pnam2 = '$\kappa_T$'; attr2 = 'K_T_'; pref2 = 0; scale2 =1;
+        t1 = 275; t2 = 320; zfactor = 1;
 end 
 scanname= [casename scanname];
 scandir = [partition,scandir,'/']; 
@@ -77,7 +85,7 @@ for i = 1:length(contents)
             system([MVIN,PY3,MVOUT]);
         end
         % Get parameters
-        param = read_namelist([subdir,'/fort_00.90']);
+        param = read_namelist([subdir,'/fort_07.90']);
         para1 = [para1 param.(nml1).(attr1)];
         para2 = [para2 param.(nml2).(attr2)];        
         % Now you are in the subdirectory. You can perform operations here.

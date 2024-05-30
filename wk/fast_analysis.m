@@ -21,11 +21,13 @@ default_plots_options
 % resdir = '/Npol_study/RF_CBC_s0_beta0/Npol_11';
 % Triangularity paper
 
-% PARTITION = '/misc/gyacomo23_outputs/triangularity_paper/';
+PARTITION = '/misc/gyacomo23_outputs/triangularity_paper/';
 % Nominal parameters
 % resdir = 'ion_scale/3x2x256x64x32/0T';
 % resdir = 'ion_scale/5x3x256x64x32/0T';
-% resdir = 'ion_scale/5x3x192x48x24/0T';
+resdir = 'ion_scale/5x3x192x48x24/0T';
+% resdir = 'ion_scale/5x3x192x48x24/no_gradN/0T';
+% resdir = 'ion_scale/5x3x192x48x24/lower_grad/PT';
 % resdir = 'ion_scale/9x5x256x64x32/0T';
 % resdir = 'ion_scale/restart/5x3x256x64x32/0T';
 % resdir = 'ion_scale/restart/9x5x192x48x24/0T';
@@ -52,12 +54,12 @@ default_plots_options
 % resdir   = '6x2x32_5x3_Lx_120_Ly_8.1955_q0_4.8_e_0.3_s_2.5_mil__kN_1.7_kT_5.2_nu_2.0e-02_DGGK/';
 % resdir   = '6x2x32_17x9_Lx_120_Ly_8.1955_q0_4.8_e_0.3_s_2.5_mil__kN_1.7_kT_5.2_nu_2.0e-02_DGGK/';
 
-% DATADIR = [PARTITION,resdir,'/'];
+DATADIR = [PARTITION,resdir,'/'];
 % DATADIR = '/home/ahoffman/gyacomo/simulations/ralf/2D_Zpinch_ITG/3x2x64x48x1_no_curvB/';
 % DATADIR = '/home/ahoffman/gyacomo/simulations/ralf/3D_Zpinch_ITG/3x2x64x48x16_nocurvB/';
 % DATADIR = '/home/ahoffman/gyacomo/simulations/ralf/3D_Zpinch_ITG/3x2x64x48x16_nocurvB_-14/';
-DATADIR = '/home/ahoffman/gyacomo/simulations/ricci/';
-% read_flux_out_XX(DATADIR,1,1);
+% DATADIR = '/home/ahoffman/gyacomo/simulations/ricci_UHD/';
+read_flux_out_XX(DATADIR,1,1);
 %%
 J0 = 00; J1 = 10;
 
@@ -77,12 +79,12 @@ end
 if 1
     %%
 [data.TEMP, data.Ts3D] = compile_results_3Da(data.folder,J0,J1,'temp');
-[data.UPAR, data.Ts3D] = compile_results_3Da(data.folder,J0,J1,'upar');
-[data.UPER, data.Ts3D] = compile_results_3Da(data.folder,J0,J1,'uper');
+% [data.UPAR, data.Ts3D] = compile_results_3Da(data.folder,J0,J1,'upar');
+% [data.UPER, data.Ts3D] = compile_results_3Da(data.folder,J0,J1,'uper');
 [data.DENS, data.Ts3D] = compile_results_3Da(data.folder,J0,J1,'dens');
 data.TEMP_I = reshape(data.TEMP(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
-data.UPAR_I = reshape(data.UPAR(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
-data.UPER_I = reshape(data.UPER(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
+% data.UPAR_I = reshape(data.UPAR(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
+% data.UPER_I = reshape(data.UPER(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 data.DENS_I = reshape(data.DENS(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 data.Ni00 = reshape(data.Na00(1,:,:,:,:),data.grids.Nky,data.grids.Nkx,data.grids.Nz,numel(data.Ts3D));
 if data.inputs.Na > 1
@@ -125,8 +127,8 @@ options.NORMALIZE = 0;
 options.LOGSCALE  = 0;
 options.CLIMAUTO  = 1;
 options.TAVG      = 1;
-% options.NAME      = ['N_i^{00}'];
-options.NAME      = 'n_i';
+options.NAME      = ['N_i^{00}'];
+% options.NAME      = 'n_i';
 % options.NAME      = 'upar_i';
 % options.NAME      = 'T_i';
 % options.NAME      = 'Q_{xi}';
@@ -143,7 +145,7 @@ options.PLAN      = 'xy'; options.COMP =floor(data.grids.Nz/2)+1;
 % options.PLAN      = 'xz'; options.COMP ='avg';
 % options.COMP ='avg'; 
 options.XYZ  =[-11 20 -2]; 
-options.TIME = [0.5]; options.TAVG = 0;
+options.TIME = [0.0 0.1 0.2]; options.TAVG = 0;
 % options.TIME = [50:500]; options.TAVG = 1;
 options.RESOLUTION = 256;
 fig = photomaton(data,options);
@@ -213,8 +215,8 @@ end
 if 0
 %% Hermite-Laguerre spectrum
 [data.Napjz, data.Ts3D] = compile_results_3Da(DATADIR,J0,J1,'Napjz');
-data.Napjz(1,3,1,:,:) = data.Napjz(1,3,1,:,:)*data.inputs.tau(1);
-data.Napjz(1,1,2,:,:) = data.Napjz(1,1,2,:,:)*data.inputs.tau(1);
+% data.Napjz(1,3,1,:,:) = data.Napjz(1,3,1,:,:)*data.inputs.tau(1);
+% data.Napjz(1,1,2,:,:) = data.Napjz(1,1,2,:,:)*data.inputs.tau(1);
 % [data.Napjz, data.Ts3D] = compile_results_3D(DATADIR,J0,J1,'Nipjz');
 options.ST         = 1;
 options.NORMALIZED = 0;
@@ -222,7 +224,7 @@ options.LOGSCALE   = 1;
 options.FILTER     = 0; %filter the 50% time-average of the spectrum from
 options.TAVG_2D    = 0; %Show a 2D plot of the modes, 50% time averaged
 options.TAVG_2D_CTR= 0; %make it contour plot
-options.TWINDOW    = [20 20];
+options.TWINDOW    = [0 20];
 fig = show_moments_spectrum(data,options);
 end
 
@@ -289,9 +291,9 @@ options.CLIMAUTO  = 1; % adjust the colormap auto
 % options.NAME      = '\phi';
 % options.NAME      = 'w_{Ez}';
 % options.NAME      = '\psi';
-options.NAME      = 'T_i';
+% options.NAME      = 'T_i';
 % options.NAME      = '\phi^{NZ}';
-% options.NAME     = ['N_i^{00}'];
+options.NAME     = ['N_i^{00}'];
 % options.NAME     = ['N_e^{00}'];
 options.PLAN      = 'xy'; options.COMP =floor(data.grids.Nz/2)+1; 
 % options.PLAN      = 'xz'; options.COMP ='avg';
