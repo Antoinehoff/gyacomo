@@ -57,7 +57,7 @@ switch 5
         casename = 'KEM DIII-D';
         partition= '/misc/gyacomo23_outputs/triangularity_paper/ion_scale/5x3x192x48x24/no_gradN/scan_failed/';  
         % partition= '/misc/gyacomo23_outputs/triangularity_paper/ion_scale/5x3x192x48x24/no_gradN/scan/';  
-        scandir = '.'; scanname= ' ';queuu
+        scandir = '.'; scanname= ' ';
         nml1 = 'GEOMETRY'; pnam1 = '$\delta$'; attr1 = 'delta'; pref1 = 0; scale1 =1;
         nml2 = 'SPECIES'; pnam2 = '$\kappa_T$'; attr2 = 'K_T_'; pref2 = 0; scale2 =1;
         t1 = 275; t2 = 320; zfactor = 1;
