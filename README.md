@@ -1,11 +1,6 @@
-<figure>
-<p align = "center">
-<img src="https://c4scdn.ch/file/data/7a6vpqgtfcxtwhkpd4hu/PHID-FILE-wlsgn3omnbfilbqnzsvb/ezgif-2-ebfac79eeb26.gif" width="240">
-</p>
-<figcaption align = "center">
-<i>Turbulence and zonal flows in a Z-pinch, with (r,z) cylindrical coordinates </i>
-</figcaption>
-</figure>
+![ezgif-2-ebfac79eeb26](https://github.com/user-attachments/assets/e38bbeed-e672-4a32-a6c9-2e321086656b)
+
+_Fig 1: Turbulence and zonal flows in a Z-pinch._
 
 Gyacomo (Gyrokinetic Advanced Collision Moment solver)
 Copyright (C) 2022 EPFL
@@ -18,7 +13,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 Author: Antoine C.D. Hoffmann
 
-Contact: antoine.hoffmann@epfl.ch
+Contact: ahoffmann@pppl.gov
 
 ##### Citing Gyacomo
 If you use Gyacomo in your work, please cite at least the following paper: 
