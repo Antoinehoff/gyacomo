@@ -8,7 +8,7 @@
 
 **Gyacomo** is a solver for the gyrokinetic Boltzmann equation in the delta-f flux-tube limit. It is based on a Hermite-Laguerre moment expansion of the velocity distribution function. The code supports kinetic and adiabatic electrons/ions, multiple geometries, advanced collision operators, and parallelization via MPI.
 
-Originally developed at EPFL, Gyacomo is now open-source under the GNU General Public License v3.
+Originally developed at the [Swiss Plasma Center](https://www.epfl.ch/research/domains/swiss-plasma-center/), [EPFL](https://www.epfl.ch/en/), Gyacomo is now open-source under the GNU General Public License v3.
 
 **Author**: Antoine C.D. Hoffmann  
 **Contact**: ahoffmann@pppl.gov  
