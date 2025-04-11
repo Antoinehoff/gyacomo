@@ -109,7 +109,7 @@ CONTAINS
     !    Write the input parameters to the results_xx.h5 file
     !
     USE prec_const
-    USE futils, ONLY: attach, creatd
+    USE h5fortran
     IMPLICIT NONE
 
     CALL h5write("outputinput.h5", "/basic/start_iframe0d", iframe0d)
