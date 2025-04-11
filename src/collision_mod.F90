@@ -68,11 +68,10 @@ CONTAINS
 
   END SUBROUTINE collision_readinputs
 
-  SUBROUTINE coll_outputinputs(fidres)
+  SUBROUTINE coll_outputinputs
     !    Write the input parameters to the results_xx.h5 file
-    USE futils, ONLY: attach, creatd
+    USE h5fortran
     IMPLICIT NONE
-    INTEGER, INTENT(in) :: fidres
     CHARACTER(len=256) :: str
     CHARACTER(len=2)   :: gkco = 'DK'
     CHARACTER(len=2)   :: abco = 'aa'
@@ -80,10 +79,8 @@ CONTAINS
     IF (GK_CO)   gkco = 'GK'
     IF (INTERSPECIES) abco = 'ab'
     WRITE(coname,'(a2,a2,a2)') collision_model,gkco,abco
-    WRITE(str,'(a)') '/data/input/coll'
-    CALL creatd(fidres, 0,(/0/),TRIM(str),'Collision Input')
-    CALL attach(fidres, TRIM(str),         "CO", coname)
-    CALL attach(fidres, TRIM(str), "matfilename",mat_file)
+    CALL h5write("outputinput.h5", "collision/CO", coname)
+    CALL h5write("outputinput.h5", "collision/matfilename", mat_file)    
   END SUBROUTINE coll_outputinputs
 
   SUBROUTINE compute_Capj

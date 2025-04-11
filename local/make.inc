@@ -64,6 +64,9 @@ else
   LDIRS := -L$(FUTILS_DIR)/lib/$(OPTLEVEL) -L$(HDF5_LIB)
 endif
 
+ifdef H5FORTRAN_LIB
+  IDIRS += -I$(H5FORTRAN_LIB)/build/include
+endif
 
 # Add Multiple-Precision Library
 LIBS += -lfm
@@ -114,8 +117,8 @@ ifeq ($(ENVTYPE), Marconi) #Linux env.
      EXTLIBS   = $(LDIRS) -Wl,--start-group $(LIBS) -Wl,--end-group
 endif
 ifeq ($(ENVTYPE), MacOS) #MacOS (tested for Sonoma 14)
-     LDFLAGS = -ld_classic
-     EXTLIBS   = $(LDIRS) $(LIBS)
+     #LDFLAGS = -ld_classic
+     EXTLIBS = $(LDIRS) $(LIBS)
 endif
 
 #Flag for finding external include files

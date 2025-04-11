@@ -117,24 +117,28 @@ CONTAINS
   END SUBROUTINE species_readinputs
 
 
-  SUBROUTINE species_outputinputs(fid)
+  SUBROUTINE species_outputinputs
     !    Write the input parameters to the results_xx.h5 file
-    USE futils, ONLY: attach, creatd
+    USE h5fortran
     USE model,  ONLY: Na
     IMPLICIT NONE
-    INTEGER, INTENT(in) :: fid
     INTEGER :: ia
     CHARACTER(len=256)  :: str
     DO ia = 1,Na
-      WRITE(str,'(a,a)') '/data/input/', name(ia)
-      CALL creatd(fid, 0,(/0/),TRIM(str),'Species Input')
-      CALL attach(fid, TRIM(str),    "name",  name(ia))
-      CALL attach(fid, TRIM(str),     "tau",   tau(ia))
-      CALL attach(fid, TRIM(str),   "sigma", sigma(ia))
-      CALL attach(fid, TRIM(str),       "q",     q(ia))
-      CALL attach(fid, TRIM(str),      "k_N",  k_N(ia))
-      CALL attach(fid, TRIM(str),      "k_T",  k_T(ia))
-      CALL attach(fid, TRIM(str),       "mu",   mu(ia))
+      WRITE(str,'(a,a,a)') '/', name(ia), '/name'
+      CALL h5write("outputinput.h5", TRIM(str), name(ia))
+      WRITE(str,'(a,a,a)') '/', name(ia), '/tau'
+      CALL h5write("outputinput.h5", TRIM(str), tau(ia))
+      WRITE(str,'(a,a,a)') '/', name(ia), '/sigma'
+      CALL h5write("outputinput.h5", TRIM(str), sigma(ia))
+      WRITE(str,'(a,a,a)') '/', name(ia), '/q'
+      CALL h5write("outputinput.h5", TRIM(str), q(ia))
+      WRITE(str,'(a,a,a)') '/', name(ia), '/k_N'
+      CALL h5write("outputinput.h5", TRIM(str), k_N(ia))
+      WRITE(str,'(a,a,a)') '/', name(ia), '/k_T'
+      CALL h5write("outputinput.h5", TRIM(str), k_T(ia))
+      WRITE(str,'(a,a,a)') '/', name(ia), '/mu'
+      CALL h5write("outputinput.h5", TRIM(str), mu(ia))
     ENDDO
   END SUBROUTINE species_outputinputs
 

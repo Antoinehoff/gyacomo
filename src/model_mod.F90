@@ -96,40 +96,36 @@ CONTAINS
 
   END SUBROUTINE model_readinputs
 
-  SUBROUTINE model_outputinputs(fid)
+  SUBROUTINE model_outputinputs
     ! Write the input parameters to the results_xx.h5 file
-    USE futils, ONLY: attach, creatd
+    USE h5fortran
     IMPLICIT NONE
-    INTEGER, INTENT(in) :: fid
-    CHARACTER(len=256)  :: str
-    WRITE(str,'(a)') '/data/input/model'
-    CALL creatd(fid, 0,(/0/),TRIM(str),'Model Input')
-    CALL attach(fid, TRIM(str), "LINEARITY", LINEARITY)
-    CALL attach(fid, TRIM(str),"RM_LD_T_EQ",RM_LD_T_EQ)
-    CALL attach(fid, TRIM(str),      "mu_x",    mu_x)
-    CALL attach(fid, TRIM(str),      "mu_y",    mu_y)
-    CALL attach(fid, TRIM(str),      "N_HD",    N_HD)
-    CALL attach(fid, TRIM(str),      "mu_z",    mu_z)
-    CALL attach(fid, TRIM(str),     "HDz_h",   HDz_h)
-    CALL attach(fid, TRIM(str),      "mu_p",    mu_p)
-    CALL attach(fid, TRIM(str),      "mu_j",    mu_j)
-    CALL attach(fid, TRIM(str),     "HYP_V",   HYP_V)
-    CALL attach(fid, TRIM(str),        "Na",      Na)
-    CALL attach(fid, TRIM(str),        "nu",      nu)
-    CALL attach(fid, TRIM(str),      "k_gB",    k_gB)
-    CALL attach(fid, TRIM(str),      "k_cB",    k_cB)
-    CALL attach(fid, TRIM(str),    "MHD_PD",  MHD_PD)
-    CALL attach(fid, TRIM(str),      "beta",    beta)
-    CALL attach(fid, TRIM(str),   "ExBrate", ExBrate)
-    CALL attach(fid, TRIM(str),     "ikxZF",   ikxZF)
-    CALL attach(fid, TRIM(str),    "ZFrate",  ZFrate)
-    CALL attach(fid, TRIM(str),   "ADIAB_E", ADIAB_E)
-    CALL attach(fid, TRIM(str),   "ADIAB_I", ADIAB_I)
-    CALL attach(fid, TRIM(str),     "tau_i",   tau_i)
-    CALL attach(fid, TRIM(str),"kern model",KN_MODEL)
-    CALL attach(fid, TRIM(str), "order den",ORDER_DEN)
-    CALL attach(fid, TRIM(str), "order num",ORDER_NUM)
-    CALL attach(fid, TRIM(str),     "order",   ORDER)
+    CALL h5write("outputinput.h5", "/model/LINEARITY", LINEARITY)
+    CALL h5write("outputinput.h5", "/model/RM_LD_T_EQ", RM_LD_T_EQ)
+    CALL h5write("outputinput.h5", "/model/mu_x", mu_x)
+    CALL h5write("outputinput.h5", "/model/mu_y", mu_y)
+    CALL h5write("outputinput.h5", "/model/N_HD", N_HD)
+    CALL h5write("outputinput.h5", "/model/mu_z", mu_z)
+    CALL h5write("outputinput.h5", "/model/HDz_h", HDz_h)
+    CALL h5write("outputinput.h5", "/model/mu_p", mu_p)
+    CALL h5write("outputinput.h5", "/model/mu_j", mu_j)
+    CALL h5write("outputinput.h5", "/model/HYP_V", HYP_V)
+    CALL h5write("outputinput.h5", "/model/Na", Na)
+    CALL h5write("outputinput.h5", "/model/nu", nu)
+    CALL h5write("outputinput.h5", "/model/k_gB", k_gB)
+    CALL h5write("outputinput.h5", "/model/k_cB", k_cB)
+    CALL h5write("outputinput.h5", "/model/MHD_PD", MHD_PD)
+    CALL h5write("outputinput.h5", "/model/beta", beta)
+    CALL h5write("outputinput.h5", "/model/ExBrate", ExBrate)
+    CALL h5write("outputinput.h5", "/model/ikxZF", ikxZF)
+    CALL h5write("outputinput.h5", "/model/ZFrate", ZFrate)
+    CALL h5write("outputinput.h5", "/model/ADIAB_E", ADIAB_E)
+    CALL h5write("outputinput.h5", "/model/ADIAB_I", ADIAB_I)
+    CALL h5write("outputinput.h5", "/model/tau_i", tau_i)
+    CALL h5write("outputinput.h5", "/model/kern model", KN_MODEL)
+    CALL h5write("outputinput.h5", "/model/order den", ORDER_DEN)
+    CALL h5write("outputinput.h5", "/model/order num", ORDER_NUM)
+    CALL h5write("outputinput.h5", "/model/order", ORDER)
   END SUBROUTINE model_outputinputs
 
 END MODULE model

@@ -11,10 +11,11 @@ FMDIR    = $(LIBDIR)/FM
 FUTILS_DIR = $(LIBDIR)/futils/src
 FFTW3DIR   = $(LIBDIR)/fftw-3.3.10
 #LAPACKDIR  = $(LIBDIR)/lapack-3.10.0
-HDF5_LIB   = $(HDF5_ROOT)/lib
+HDF5_LIB   =  /usr/local/hdf5-1.14.5/
+H5FORTRAN_LIB = $(LIBDIR)/h5fortran
 
 # Overwrite path according to the OS environment (Linux, MacOS or Marconi)
-ENVTYPE = Linux
+ENVTYPE = MacOS
 
 ifeq ($(ENVTYPE), MacOS) #MacOS
 	LAPACKDIR = /opt/homebrew/opt/lapack

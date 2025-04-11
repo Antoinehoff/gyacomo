@@ -54,15 +54,11 @@ CONTAINS
   END SUBROUTINE time_integration_readinputs
 
 
-  SUBROUTINE time_integration_outputinputs(fid)
+  SUBROUTINE time_integration_outputinputs
     ! Write the input parameters to the results_xx.h5 file
-    USE futils, ONLY: attach, creatd
+    USE h5fortran
     IMPLICIT NONE
-    INTEGER, INTENT(in) :: fid
-    CHARACTER(len=256)  :: str
-    WRITE(str,'(a)') '/data/input/time_integration'
-    CALL creatd(fid, 0,(/0/),TRIM(str),'Time Integration Input')
-    CALL attach(fid, TRIM(str), "numerical_scheme", numerical_scheme)
+    CALL h5write("outputinput.h5", "time_integration/numerical_scheme", numerical_scheme)
   END SUBROUTINE time_integration_outputinputs
 
   SUBROUTINE set_numerical_scheme

@@ -465,18 +465,14 @@ CONTAINS
   END SUBROUTINE exchange_ghosts_1D
 
 
-  SUBROUTINE parallel_outputinputs(fid)
+  SUBROUTINE parallel_outputinputs
     ! Write the input parameters to the results_xx.h5 file
-    USE futils, ONLY: attach, creatd
+    USE h5fortran
     IMPLICIT NONE
-    INTEGER, INTENT(in) :: fid
-    CHARACTER(len=256)  :: str
-    WRITE(str,'(a)') '/data/input/parallel'
-    CALL creatd(fid, 0,(/0/),TRIM(str),'MPI parallelization')
-    CALL attach(fid, TRIM(str),    "num_procs",    num_procs)
-    CALL attach(fid, TRIM(str),  "num_procs_p",  num_procs_p)
-    CALL attach(fid, TRIM(str), "num_procs_ky", num_procs_ky)
-    CALL attach(fid, TRIM(str),  "num_procs_z",  num_procs_z)
+    CALL h5write("outputinput.h5", "parallel/num_procs", num_procs)
+    CALL h5write("outputinput.h5", "parallel/num_procs_p", num_procs_p)
+    CALL h5write("outputinput.h5", "parallel/num_procs_ky", num_procs_ky)
+    CALL h5write("outputinput.h5", "parallel/num_procs_z", num_procs_z)
   END SUBROUTINE parallel_outputinputs
 
 END MODULE parallel

@@ -704,30 +704,26 @@ CONTAINS
     ENDDO
   END SUBROUTINE
 
-  SUBROUTINE grid_outputinputs(fid)
+  SUBROUTINE grid_outputinputs
     ! Write the input parameters to the results_xx.h5 file
-    USE futils, ONLY: attach, creatd
+    USE h5fortran
     IMPLICIT NONE
-    INTEGER, INTENT(in) :: fid
-    CHARACTER(len=256)  :: str
-    WRITE(str,'(a)') '/data/input/grid'
-    CALL creatd(fid, 0,(/0/),TRIM(str),'Grid Input')
-    CALL attach(fid, TRIM(str),  "pmax", pmax)
-    CALL attach(fid, TRIM(str),"deltap", deltap)
-    CALL attach(fid, TRIM(str),    "Np",  total_np)
-    CALL attach(fid, TRIM(str),  "jmax", jmax)
-    CALL attach(fid, TRIM(str),    "Nj",  total_nj)
-    CALL attach(fid, TRIM(str),   "Nkx",  Nkx)
-    CALL attach(fid, TRIM(str),    "Nx",   Nx)
-    CALL attach(fid, TRIM(str),    "Lx",   Lx)
-    CALL attach(fid, TRIM(str),  "Nexc", Nexc)
-    CALL attach(fid, TRIM(str),    "Ny",   Ny)
-    CALL attach(fid, TRIM(str),   "Nky",  Nky)
-    CALL attach(fid, TRIM(str),    "Ly",   Ly)
-    CALL attach(fid, TRIM(str),    "Nz",   Nz)
-    CALL attach(fid, TRIM(str),   "total_nkx",  total_nkx)
-    CALL attach(fid, TRIM(str),   "Nky",  Nky)
-    CALL attach(fid, TRIM(str),    "SG",   SG)
+    CALL h5write("outputinput.h5", "/grid/pmax", pmax)
+    CALL h5write("outputinput.h5", "/grid/deltap", deltap)
+    CALL h5write("outputinput.h5", "/grid/Np", total_np)
+    CALL h5write("outputinput.h5", "/grid/jmax", jmax)
+    CALL h5write("outputinput.h5", "/grid/Nj", total_nj)
+    CALL h5write("outputinput.h5", "/grid/Nkx", Nkx)
+    CALL h5write("outputinput.h5", "/grid/Nx", Nx)
+    CALL h5write("outputinput.h5", "/grid/Lx", Lx)
+    CALL h5write("outputinput.h5", "/grid/Nexc", Nexc)
+    CALL h5write("outputinput.h5", "/grid/Ny", Ny)
+    CALL h5write("outputinput.h5", "/grid/Nky", Nky)
+    CALL h5write("outputinput.h5", "/grid/Ly", Ly)
+    CALL h5write("outputinput.h5", "/grid/Nz", Nz)
+    CALL h5write("outputinput.h5", "/grid/Nkx", total_nkx)
+    CALL h5write("outputinput.h5", "/grid/Nky", Nky)
+    CALL h5write("outputinput.h5", "/grid/SG", SG)
   END SUBROUTINE grid_outputinputs
 
   FUNCTION bar(p_,j_)

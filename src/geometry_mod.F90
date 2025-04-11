@@ -550,17 +550,11 @@ END SUBROUTINE set_ikx_zBC_map
 
    END SUBROUTINE geometry_allocate_mem
 
-   SUBROUTINE geometry_outputinputs(fid)
-     ! Write the input parameters to the results_xx.h5 file
-     USE futils, ONLY: attach, creatd
+   SUBROUTINE geometry_outputinputs
      IMPLICIT NONE
-     INTEGER, INTENT(in) :: fid
-     CHARACTER(len=256)  :: str
-     WRITE(str,'(a)') '/data/input/geometry'
-     CALL creatd(fid, 0,(/0/),TRIM(str),'Geometry Input')
-     CALL attach(fid, TRIM(str),"geometry",  geom)
-     CALL attach(fid, TRIM(str),      "q0",    q0)
-     CALL attach(fid, TRIM(str),   "shear", shear)
-     CALL attach(fid, TRIM(str),     "eps",   eps)
+     CALL h5write("outputinput.h5", "/geometry/geom", geom)
+     CALL h5write("outputinput.h5", "/geometry/q0", q0)
+     CALL h5write("outputinput.h5", "/geometry/shear", shear)
+     CALL h5write("outputinput.h5", "/geometry/eps", eps)
    END SUBROUTINE geometry_outputinputs
 end module geometry

@@ -236,18 +236,13 @@ SUBROUTINE apply_closure_model
 END SUBROUTINE apply_closure_model
 
 
-SUBROUTINE closure_outputinputs(fid)
-  ! Write the input parameters to the results_xx.h5 file
-  USE futils, ONLY: attach, creatd
+SUBROUTINE closure_outputinputs
+  USE h5fortran
   IMPLICIT NONE
-  INTEGER, INTENT(in) :: fid
-  CHARACTER(len=256)  :: str
-  WRITE(str,'(a)') '/data/input/closure'
-  CALL creatd(fid, 0,(/0/),TRIM(str),'Closure Input')
-  CALL attach(fid, TRIM(str),"hierarchy_closure",hierarchy_closure)
-  CALL attach(fid, TRIM(str),             "dmax",dmax)
-  CALL attach(fid, TRIM(str),"nonlinear_closure",nonlinear_closure)
-  CALL attach(fid, TRIM(str),             "nmax",nmax)
+  CALL h5write("outputinput.h5", "/closure/hierarchy_closure", hierarchy_closure)
+  CALL h5write("outputinput.h5", "/closure/dmax", dmax)
+  CALL h5write("outputinput.h5", "/closure/nonlinear_closure", nonlinear_closure)
+  CALL h5write("outputinput.h5", "/closure/nmax", nmax)
 END SUBROUTINE closure_outputinputs
 
 END module closure

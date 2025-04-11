@@ -687,18 +687,14 @@ CONTAINS
   !******************************************************************************!
 
 
-  SUBROUTINE initial_outputinputs(fid)
+  SUBROUTINE initial_outputinputs
     ! Write the input parameters to the results_xx.h5 file
-    USE futils, ONLY: attach, creatd
+    USE h5fortran
     IMPLICIT NONE
-    INTEGER, INTENT(in) :: fid
-    CHARACTER(len=256)  :: str
-    WRITE(str,'(a)') '/data/input/intial'
-    CALL creatd(fid, 0,(/0/),TRIM(str),'Initial Input')
-    CALL attach(fid, TRIM(str), "INIT_OPT", INIT_OPT)
-    CALL attach(fid, TRIM(str), "init_background", init_background)
-    CALL attach(fid, TRIM(str), "init_noiselvl", init_noiselvl)
-    CALL attach(fid, TRIM(str), "iseed", iseed)
+    CALL h5write("outputinput.h5", "/initial/INIT_OPT", INIT_OPT)
+    CALL h5write("outputinput.h5", "/initial/init_background", init_background)
+    CALL h5write("outputinput.h5", "/initial/init_noiselvl", init_noiselvl)
+    CALL h5write("outputinput.h5", "/initial/iseed", iseed)
   END SUBROUTINE initial_outputinputs
 
 END MODULE initial

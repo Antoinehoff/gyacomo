@@ -72,27 +72,23 @@ MODULE units
     END SUBROUTINE units_readinputs
   
   
-    SUBROUTINE units_outputinputs(fid)
+    SUBROUTINE units_outputinputs
       ! Write the input parameters to the results_xx.h5 file
-      USE futils, ONLY: attach, creatd
+      USE h5fortran
       IMPLICIT NONE
-      INTEGER, INTENT(in) :: fid
-      CHARACTER(len=256)  :: str
-      WRITE(str,'(a)') '/data/input/units'
-      CALL creatd(fid, 0,(/0/),TRIM(str),'Units Input')
-      CALL attach(fid, TRIM(str), "density          (electrons)",   n_ref)
-      CALL attach(fid, TRIM(str), "temperature      (electrons)",   T_ref)
-      CALL attach(fid, TRIM(str), "length           (major radius)",R_ref)
-      CALL attach(fid, TRIM(str), "magnetic field   (electrons)",   B_ref)
-      CALL attach(fid, TRIM(str), "mass             (proton)",      m_ref)
-      CALL attach(fid, TRIM(str), "charge           (elementary)",  q_ref)
-      ! Write the mksa converter if units input are provided
+      CALL h5write("outputinput.h5", "units/density", n_ref)
+      CALL h5write("outputinput.h5", "units/temperature", T_ref)
+      CALL h5write("outputinput.h5", "units/length", R_ref)
+      CALL h5write("outputinput.h5", "units/magnetic_field", B_ref)
+      CALL h5write("outputinput.h5", "units/mass", m_ref)
+      CALL h5write("outputinput.h5", "units/charge", q_ref)
       if ( (hf_ref > 0) .AND. (pf_ref > 0) .AND. (mf_ref > 0)) THEN
-        CALL attach(fid, TRIM(str), "heat flux        (gyroBohm)",    hf_ref)
-        CALL attach(fid, TRIM(str), "power            (gyroBohm)",    pow_ref)
-        CALL attach(fid, TRIM(str), "particle flux    (gyroBohm)",    pf_ref)
-        CALL attach(fid, TRIM(str), "momentum flux    (gyroBohm)",    mf_ref)
-      ENDIF
+        CALL h5write("outputinput.h5", "units/heat_flux", hf_ref)
+        CALL h5write("outputinput.h5", "units/particle_flux", pf_ref)
+        CALL h5write("outputinput.h5", "units/momentum_flux", mf_ref)
+        CALL h5write("outputinput.h5", "units/voltage", ph_ref)
+        CALL h5write("outputinput.h5", "units/power", pow_ref)
+      endif
     END SUBROUTINE units_outputinputs
 
 END MODULE units

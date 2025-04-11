@@ -104,27 +104,27 @@ CONTAINS
   END SUBROUTINE basic_data
 
 
-  SUBROUTINE basic_outputinputs(fid)
+  SUBROUTINE basic_outputinputs
     !
     !    Write the input parameters to the results_xx.h5 file
     !
     USE prec_const
     USE futils, ONLY: attach, creatd
     IMPLICIT NONE
-    INTEGER, INTENT(in) :: fid
-    CHARACTER(len=256)  :: str
-    WRITE(str,'(a)') '/data/input/basic'
-    CALL creatd(fid, 0,(/0/),TRIM(str),'Basic Input')
-    CALL attach(fid, TRIM(str), "start_iframe0d", iframe0d)
-    CALL attach(fid, TRIM(str), "start_iframe2d", iframe2d)
-    CALL attach(fid, TRIM(str), "start_iframe3d", iframe3d)
-    CALL attach(fid, TRIM(str), "start_iframe5d", iframe5d)
-    CALL attach(fid, TRIM(str),  "start_time",     time)
-    CALL attach(fid, TRIM(str), "start_cstep",    cstep-1)
-    CALL attach(fid, TRIM(str),          "dt",       dt)
-    CALL attach(fid, TRIM(str),        "tmax",     tmax)
-    CALL attach(fid, TRIM(str),        "nrun",     nrun)
-    CALL attach(fid, TRIM(str),    "cpu_time",       -1)
+
+    CALL h5write("outputinput.h5", "/basic/start_iframe0d", iframe0d)
+    CALL h5write("outputinput.h5", "/basic/start_iframe1d", iframe1d)
+    CALL h5write("outputinput.h5", "/basic/start_iframe2d", iframe2d)
+    CALL h5write("outputinput.h5", "/basic/start_iframe3d", iframe3d)
+    CALL h5write("outputinput.h5", "/basic/start_iframe5d", iframe5d)
+    CALL h5write("outputinput.h5", "/basic/start_time", time)
+    CALL h5write("outputinput.h5", "/basic/start_cstep", cstep-1)
+    CALL h5write("outputinput.h5", "/basic/dt", dt)
+    CALL h5write("outputinput.h5", "/basic/tmax", tmax)
+    CALL h5write("outputinput.h5", "/basic/nrun", nrun)
+    CALL h5write("outputinput.h5", "/basic/cpu_time", -1.0_xp)
+
+
   END SUBROUTINE basic_outputinputs
   !! Increments private attributes
   SUBROUTINE increase_step
