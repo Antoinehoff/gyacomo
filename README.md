@@ -1,137 +1,161 @@
+# Gyacomo (Gyrokinetic Advanced Collision Moment Solver)
+
 ![ezgif-2-ebfac79eeb26](https://github.com/user-attachments/assets/e38bbeed-e672-4a32-a6c9-2e321086656b)
 
-_Fig 1: Turbulence and zonal flows in a Z-pinch._
+*Fig. 1: Turbulence and zonal flows in a Z-pinch.*
 
-Gyacomo (Gyrokinetic Advanced Collision Moment solver)
-Copyright (C) 2022 EPFL
+---
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+**Gyacomo** is a solver for the gyrokinetic Boltzmann equation in the delta-f flux-tube limit. It is based on a Hermite-Laguerre moment expansion of the velocity distribution function. The code supports kinetic and adiabatic electrons/ions, multiple geometries, advanced collision operators, and parallelization via MPI.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+Originally developed at EPFL, Gyacomo is now open-source under the GNU General Public License v3.
 
-You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
+**Author**: Antoine C.D. Hoffmann  
+**Contact**: ahoffmann@pppl.gov  
 
-Author: Antoine C.D. Hoffmann
+---
 
-Contact: ahoffmann@pppl.gov
+## 📄 License
 
-##### Citing Gyacomo
-If you use Gyacomo in your work, please cite at least the following paper: 
+This program is free software: you can redistribute it and/or modify it under the terms of the [GNU General Public License](https://www.gnu.org/licenses/) as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-- Hoffmann, A.C.D., Frei, B.J. & Ricci, P. (2023). Gyrokinetic moment-based simulations of the Dimits shift. Journal of Plasma Physics, 89(6), 905890611. [doi:10.1017/S0022377823001320](https://doi.org/10.1017/S0022377823001320)
+It is distributed in the hope that it will be useful, but **WITHOUT ANY WARRANTY**—without even the implied warranty of **MERCHANTABILITY** or **FITNESS FOR A PARTICULAR PURPOSE**.
 
-You can also find results and application with kinetic electrons in a simplified geometry here:
-- Hoffmann, A.C.D., Frei, B.J. & Ricci, P. (2023). Gyrokinetic simulations of plasma turbulence in a Z-pinch using a moment-based approach and advanced collision operators. Journal of Plasma Physics, 89(2), 905890214. [doi:10.1017/S0022377823000284](https://doi.org/10.1017/S0022377823000284)
+---
 
-# What is Gyacomo ?
+## 📚 References
 
-Gyacomo is the Gyrokinetic Advanced Collision Moment solver which solves the gyrokinetic Boltzmann equation in the delta-f flux-tube limit based on a projection of the velocity distribution function onto a Hermite-Laguerre velocity basis.
+If you use or mention **Gyacomo** in your work, please cite the following reference:
 
-It can be coupled with precomputed matrices from the code Cosolver (B.J. Frei) to incorporate advanced collision operators up to the gyro-averaged linearized exact coulomb interaction (GK Landau operator).
+- Hoffmann, A.C.D., Frei, B.J. & Ricci, P. (2023). *Gyrokinetic moment-based simulations of the Dimits shift.* J. Plasma Phys. 89(6), 905890611.  
+  [doi:10.1017/S0022377823001320](https://doi.org/10.1017/S0022377823001320)
 
-This repository contains the solver source code (in /src) but also my personnal post-processing Matlab scripts, which are less documented. I would recommend the user to write their own post-processing scripts based on the H5 files the code outputs.
+Publications:
 
-#### Gyacomo can
-- run in parallel using MPI (mpirun -np N ./path_to_exec Np Ny Nz, where N = Np x Ny x Nz is the number of processes and Np Ny Nz are the parallel dimensions in Hermite polynomials, binormal direction, and parallel direction, respectively).
-- run in single precision.
-- evolve kinetic electrons and ions.
-- use an adiabatic electrons model.
-- include perpendicular magnetic fluctuations.
-- use Z-pinch, s-alpha, circular and Miller geometry model.
-- use various experimental closures for the linear and nonlinear terms.
-- use linear GK Landau, Sugama, Lorentz collision operators. (requires precomputed matrix files, ask them!)
-- add background ExB shear flow. (Hammett's method)
-- use an adiabatic ion model. (not verified)
-#### Gyacomo cannot (I wish it could...)
-- include parallel magnetic field fluctuations. (easy)
-- include finite rhostar effects. (hard)
-- run without the futils library. (easy but boring, ask the zip file!)
-- Use shared memory parallelization. (okish)
-- run global simulations. (for another code)
+- Hoffmann, A.C.D., Frei, B.J. & Ricci, P. (2023). *Gyrokinetic simulations of plasma turbulence in a Z-pinch using a moment-based approach and advanced collision operators.* J. Plasma Phys. 89(2), 905890214.  
+  [doi:10.1017/S0022377823000284](https://doi.org/10.1017/S0022377823000284)
 
-# How to compile and run Gyacomo
+- Hoffmann, A.C.D., Frei, B.J. & Ricci, P. (2023). *Gyrokinetic moment-based simulations of the Dimits shift.* J. Plasma Phys. 89(6), 905890611.  
+  [doi:10.1017/S0022377823001320](https://doi.org/10.1017/S0022377823001320)
 
-A detailed tutorial is present in the code's [wiki](https://gitlab.epfl.ch/ahoffman/Gyacomo/-/wikis/home).
+- Frei, B.J. (2023). *A Gyrokinetic Moment Model of the Plasma Boundary in Fusion Devices.* EPFL, Lausanne.   
+  [doi:10.5075/epfl-thesis-9960](https://doi.org/10.5075/epfl-thesis-9960)
 
-Note: For some collision operators (Sugama and Full Coulomb), you will need to run COSOlver from B.J.Frei to generate the required matrices in the Gyacomo/iCa folder before running Gyacomo.
+- Hoffmann, A.C.D., Frei, B., Giroud-Garampon, P., & Ricci, P. (2024). *A gyrokinetic moment-based approach for multi-scale multi-fidelity turbulence simulations*. [Computational Challenges and Optimization in Kinetic Plasma Physics](https://www.imsi.institute/computational-challenges-and-optimization-in-kinetic-plasma-physics-poster-session/), Institute for Mathematical Science and Statistics Innovation, Chicago, IL.
 
+- Hoffmann, A.C.D., Balestri, A., & Ricci, P. (2025). *Investigation of triangularity effects on tokamak edge turbulence through multi-fidelity gyrokinetic simulations.* Plasma Phys. Control. Fusion 67 015031.   
+  [doi:10.1088/1361-6587/ad9e6f](https://iopscience.iop.org/article/10.1088/1361-6587/ad9e6f)
 
+- Hoffmann, A.C.D. (2025). *Nonlinear Simulation of Plasma Turbulence Using a Gyrokinetic Moment-Based Approach.* EPFL, Lausanne, 2024.   
+[doi:10.5075/epfl-thesis-10651](https://doi.org/10.5075/epfl-thesis-10651)
 
-# Changelog
+---
 
-### v3.x Gyacomo
-> installation tutorials and python analysis scripts (SPC release)
+## ❓ What is Gyacomo?
 
-> background ExB shear
+Gyacomo solves the gyrokinetic Boltzmann equation projected onto a Hermite-Laguerre velocity space basis. It supports flux-tube simulations in multiple geometries and includes kinetic effects, electromagnetic fluctuations, and advanced collisions using precomputed matrices from **Cosolver** (by B.J. Frei).
 
-> Miller geometry benchmarked
+> 💡 This repository also includes personal post-processing MATLAB scripts. They're provided as-is and less documented — users are encouraged to write their own post-processing routines using the HDF5 output files.
 
-> singular value decomposition is availale with LAPACK (used for DLRA experiments)
+---
 
-> Gyacomo is born and the code is open-source with a GNU GPLv3 license
+## ✅ Gyacomo Can
 
-### v2.x HeLaZ 3D (flux tube s-alpha)
+- Run in parallel using MPI:  
+  `mpirun -np N ./path_to_exec Np Ny Nz`  
+  where `N = Np × Ny × Nz` (parallelization in Hermite modes, binormal, and parallel directions).
 
-> perpendicular electromagnetic fluctuations by solving Ampere equations (benchmarked linearly)
+- Run in **single precision**
 
-> benchmarked for CBC against GENE for various gradients values (see Dimits_fig3.m)
+- Handle **kinetic or adiabatic electrons and ions**
 
-> transpose the frequency plane from positive kx to positive ky for easier implementation of shear. Also added 3D Z-pinch geometry
+- Include **perpendicular magnetic fluctuations**
 
-> MPI 3D parallelization in p, kx and z and benchmarked for each parallel options with gbms (new molix) for linear fluxtube shearless.
+- Simulate in **Z-pinch**, **s-alpha**, **circular**, and **Miller** geometries
 
-> staggered grid for parallel odd/even coupling
+- Use various closures for linear and nonlinear terms
 
-> adiabatic electrons
+- Incorporate linear GK Landau, Sugama, and Lorentz collision operators  
+  *(requires precomputed matrices from Cosolver — ask for them!)*
 
-> benchmarked in fluxtube s-alpha geometry linear run with molix (B.J.Frei) code and works now for shear = 0 with periodic z BC
+- Add background **ExB shear flows** (Hammett’s method)
 
-> stopping file procedure like in GBS is added
+- Use an **adiabatic ion model** *(not fully verified)*
 
-> implementation of mirror force
+---
 
-> 3D version and works as the 2D version if Nz = 1, the coordinates were renamed from (r,z)  to (x,y,z). Now the parallel direction is ez.
+## ❌ Gyacomo Cannot (yet)
 
-### v1.x 2D Zpinch MPI parallel version
+- Include **parallel magnetic field fluctuations** *(should be easy)*
 
-> versatile interpolation of kperp for the cosolver matrices and corrections done on DGGK
+- Model **finite ρ\* (rhostar) effects** *(hard)*
 
-> change of collisionality normalisation (from nu_ei to nu_ii), implementation of FCGK
+- Run without the **futils** library *(easy, but tedious — ask for the zip!)*
 
-> GK cosolver collision implementation
+- Use **shared memory** parallelization *(semi-working)*
 
-> MPI 2D cartesian parallel (along p and kr)
+- Run **global simulations** *(out of scope for now)*
 
-> GK Dougherty operator
+---
 
-> allow restart with different P,J values
+## ⚙️ How to Compile and Run
 
-> first compilable parallel version (1D parallel along kr)
+Detailed installation and usage instructions are available on the [Gyacomo Wiki](https://gitlab.epfl.ch/ahoffman/Gyacomo/-/wikis/home).
 
-### v0.x Implementation of the non linear Poisson bracket term
+> 🔧 Note: Some collision operators (Sugama, full Coulomb) require you to precompute matrix files using **COSOlver** and place them in the `Gyacomo/iCa` folder before running simulations.
 
-> 1uantitative study with stationary average particle flux \Gamma_\infty
+---
 
-> linear analysis showed that a certain amount of PJ are recquired to trigger mode
+## 🕒 Changelog
 
-> zonal flows observed, qualitative agreement with Ricci et al. 2006 (GS2)
+### v3.x – Gyacomo
 
-> qualitative test : find similar turbulences as Hasegawa Wakatani system with few moments
+- Initial public release with [GNU GPLv3](https://www.gnu.org/licenses/gpl-3.0.html)
+- Python post-processing utilities
+- Installation tutorials
+- Background **ExB shear** implemented
+- **Miller geometry** benchmarked
+- Support for **SVD** with LAPACK (for DLRA experiments)
 
-> methods in fourier_mod.f90 have been validated by tests on Hasegawa Wakatani system
+---
 
-> FFTW3 has been used to treat the convolution as a product and discrete fourier transform
+### v2.x – HeLaZ 3D (Flux-tube s-alpha)
 
-> load COSOlver matrices
+- Perpendicular electromagnetic fluctuations (Ampère’s law, linearly benchmarked)
+- Benchmarked for CBC against GENE (see `Dimits_fig3.m`)
+- Sheared implementation via frequency transpose (kx → ky)
+- Full 3D MPI parallelization (p, kx, z)
+- **Staggered grid** for parallel odd/even coupling
+- **Adiabatic electron** model
+- Mirror force implementation
+- 2D/3D hybrid mode (Nz=1 = 2D)
+- Restart capability with different P, J
+- GBS-style stop file procedure
 
-> benchmark with MOLI matlab results for Z-pinch (cf. kz_linear script)
+---
 
-> RK4 time solver
+### v1.x – 2D Z-pinch MPI Parallel Version
 
-> implement moment hierarchy linear terms
+- Parallelization in 2D (p, kr)
+- Implementation of GK Dougherty and Cosolver-based collision operators
+- New collisionality normalization (from νₑᵢ to νᵢᵢ)
+- Versatile k_perp interpolation for Cosolver matrices
+- Compatibility with MOLI MATLAB benchmarks
+- First stable parallel release
 
-> implement linear Poisson equation in fourier space
+---
 
-> go from 1D space to 2D fourier and from Hermite basis to Hermite-Laguerre basis
+### v0.x – Initial Implementation
 
-> start from GBS skeleton
+- Nonlinear Poisson bracket term
+- RK4 time solver
+- Moment-hierarchy linear terms
+- Fourier space linear Poisson equation
+- Validation against Hasegawa-Wakatani system
+- FFTW3 for convolution
+- Support for Hermite and Hermite-Laguerre bases
+- Start from GBS skeleton
+
+---
+
+Feel free to reach out for matrix files, help compiling, or contributing to the project!
