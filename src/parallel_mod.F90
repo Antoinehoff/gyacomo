@@ -167,23 +167,7 @@ CONTAINS
     END DO
   END SUBROUTINE init_parallel_var
 
-  SUBROUTINE parallel_ouptutinputs(fid)
-    !
-    !    Write the input parameters to the results_xx.h5 file
-    !
-    USE futils, ONLY: attach, creatd
-    IMPLICIT NONE
-    INTEGER, INTENT(in) :: fid
-    CHARACTER(len=256)  :: str
-    WRITE(str,'(a)') '/data/input/parallel'
-    CALL creatd(fid, 0,(/0/),TRIM(str),'Parallel Input')
-    CALL attach(fid, TRIM(str),       "Nproc",   num_procs)
-    CALL attach(fid, TRIM(str),       "Np_p" , num_procs_p)
-    CALL attach(fid, TRIM(str),       "Np_kx",num_procs_ky)
-    CALL attach(fid, TRIM(str),        "Np_z", num_procs_z)
-  END SUBROUTINE parallel_ouptutinputs
-
-    !!!! Gather a field in z coordinates on rank 0 !!!!!
+  !!!! Gather a field in z coordinates on rank 0 !!!!!
   SUBROUTINE gather_z(field_loc,field_tot,nz_loc,nz_tot)
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nz_loc,nz_tot
