@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 import tools
+import copy as cp
 
 def load_data_0D(filename,dname):
     with h5py.File(filename, 'r') as file:
@@ -43,14 +44,44 @@ def load_data_3D_frame(filename,dname,tframe):
         zgrid  = file[f'data/grid/coordz']
     return time,data,tf
 
-def load_grids(filename):
+def load_data_5D_frame(filename,dname,tframe):
     with h5py.File(filename, 'r') as file:
+        # load time
+        time  = file['data/var5d/time']
+        time  = time[:]
+        # find frame
+        iframe = tools.closest_index(time,tframe)
+        tf     = time[iframe]
+        # Load data
+        try:
+            data = file[f'data/var5d/{dname}/{iframe:06d}']
+        except:
+            g_ = file[f'data/var5d/']
+            print('Dataset: '+f'data/var5d/{dname}/{iframe:06d}'+' not found')
+            print('Available fields: ')
+            msg = ''
+            for key in g_:
+                msg = msg + key + ', '
+            print(msg)
+            exit()
+        # Select the first species for species dependent fields
+        data = data[:]
+        data = data['real']+1j*data['imaginary'] 
         # Load the grids
         kxgrid = file[f'data/grid/coordkx']
         kygrid = file[f'data/grid/coordky']
         zgrid  = file[f'data/grid/coordz']
-        pgrid  = file[f'data/grid/coordp']
-        jgrid  = file[f'data/grid/coordj']
+    return time,data,tf
+
+
+def load_grids(filename):
+    with h5py.File(filename, 'r') as file:
+        # Load the grids
+        kxgrid = file[f'data/grid/coordkx'][:]
+        kygrid = file[f'data/grid/coordky'][:]
+        zgrid  = file[f'data/grid/coordz'][:]
+        pgrid  = file[f'data/grid/coordp'][:]
+        jgrid  = file[f'data/grid/coordj'][:]
         Nx     = kxgrid.size
         Nky    = kygrid.size
         Ny     = 2*(Nky-1)
@@ -58,6 +89,7 @@ def load_grids(filename):
         Ly     = 2*np.pi/kygrid[1]
         xgrid  = np.linspace(-Lx/2,Lx/2,Nx)
         ygrid  = np.linspace(-Ly/2,Ly/2,Ny)
+
     return xgrid,kxgrid,ygrid,kygrid,zgrid,pgrid,jgrid
 
 def load_group(filename,group):
