@@ -1,10 +1,9 @@
+
+<table>
+<tr>
+<td width="65%">
+
 # Gyacomo (Gyrokinetic Advanced Collision Moment Solver)
-
-![ezgif-2-ebfac79eeb26](https://github.com/user-attachments/assets/e38bbeed-e672-4a32-a6c9-2e321086656b)
-
-*Fig. 1: Turbulence and zonal flows in a Z-pinch.*
-
----
 
 **Gyacomo** is a solver for the gyrokinetic Boltzmann equation in the delta-f flux-tube limit. It is based on a Hermite-Laguerre moment expansion of the velocity distribution function. The code supports kinetic and adiabatic electrons/ions, multiple geometries, advanced collision operators, and parallelization via MPI.
 
@@ -13,7 +12,15 @@ Originally developed at the [Swiss Plasma Center](https://www.epfl.ch/research/d
 **Author**: Antoine C.D. Hoffmann  
 **Contact**: ahoffmann@pppl.gov  
 
----
+</td>
+<td width="35%">
+
+https://github.com/user-attachments/assets/999e6f6d-64ec-4f6c-8621-f4cf10ab690a
+
+
+</td>
+</tr>
+</table>
 
 ## 📄 License
 
