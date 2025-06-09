@@ -98,6 +98,7 @@ Gyacomo solves the gyrokinetic Boltzmann equation projected onto a Hermite-Lague
 ## ⚙️ How to Compile and Run
 
 Detailed installation and usage instructions are available on the [Gyacomo Wiki](https://gitlab.epfl.ch/ahoffman/Gyacomo/-/wikis/home).
+You can analyze Gyacomo simulations either with matlab scripts stored [here](https://github.com/Antoinehoff/gyacomo-postprocessing) or with python Jupyter notebook with [here](https://github.com/Antoinehoff/personal_gkyl_scripts).
 
 > 🔧 Note: Some collision operators (Sugama, full Coulomb) require you to precompute matrix files using **COSOlver** and place them in the `Gyacomo/iCa` folder before running simulations.
 
