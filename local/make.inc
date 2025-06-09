@@ -114,7 +114,6 @@ ifeq ($(ENVTYPE), Marconi) #Linux env.
      EXTLIBS   = $(LDIRS) -Wl,--start-group $(LIBS) -Wl,--end-group
 endif
 ifeq ($(ENVTYPE), MacOS) #MacOS (tested for Sonoma 14)
-     LDFLAGS = -ld_classic
      EXTLIBS   = $(LDIRS) $(LIBS)
 endif
 

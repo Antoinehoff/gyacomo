@@ -14,7 +14,7 @@ FFTW3DIR   = $(LIBDIR)/fftw-3.3.10
 HDF5_LIB   = $(LIBDIR)/hdf5/lib
 
 # Overwrite path according to the OS environment (Linux, MacOS or Marconi)
-ENVTYPE = Linux
+ENVTYPE = MacOS
 
 ifeq ($(ENVTYPE), MacOS) #MacOS
 	LAPACKDIR = /opt/homebrew/opt/lapack
