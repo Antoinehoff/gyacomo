@@ -24,7 +24,7 @@ CONTAINS
     real(xp), INTENT(INOUT) :: major_R         ! major radius
     real(xp), INTENT(INOUT) :: major_Z         ! major Z
     real(xp), INTENT(INOUT) :: q0              ! safetyfactor
-    real(xp), INTENT(INOUT) :: shat            ! safetyfactor
+    real(xp), INTENT(INOUT) :: shat            ! normalized shear
     real(xp), INTENT(INOUT) :: C_y, C_xy, Cyq0_x0
     real(xp), dimension(local_nz+ngz,nzgrid), INTENT(OUT) :: &
                                               gxx_,gxy_,gxz_,gyy_,gyz_,gzz_,&
