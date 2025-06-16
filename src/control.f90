@@ -11,6 +11,7 @@ SUBROUTINE control
   USE mpi,            ONLY: MPI_COMM_WORLD
   USE diagnostics,    ONLY: diagnose
   USE ExB_shear_flow, ONLY: Update_ExB_shear_flow
+  USE time_integration, ONLY: time_scheme_is_adaptive, adaptive_time_scheme_setup
   IMPLICIT NONE
   REAL(xp) :: t_init_diag_0, t_init_diag_1
   INTEGER  :: ierr
@@ -75,6 +76,11 @@ SUBROUTINE control
     ! Increment steps and csteps (private in basic module)
     CALL increase_step
     CALL increase_cstep
+    
+    ! For adaptive time stepping, setup the next step
+    IF (time_scheme_is_adaptive) THEN
+      CALL adaptive_time_scheme_setup()
+    END IF
 
     ! Update the ExB shear flow for the next step
     ! This call includes :

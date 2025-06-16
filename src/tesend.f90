@@ -4,6 +4,7 @@ SUBROUTINE tesend
   USE basic
   USE mpi
   USE parallel, ONLY: my_id
+  USE time_integration, ONLY: time_scheme_is_adaptive, dt_min
   IMPLICIT NONE
   LOGICAL :: mlend, mlexist
   REAL    :: tnow
@@ -37,11 +38,19 @@ SUBROUTINE tesend
      CALL speak('TMAX reached',0)
      RETURN
   END IF
-  !
-  !
+  
+  !________________________________________________________________________________
+  !                   4.  Test on minimum timestep (for adaptive schemes)
+  IF (time_scheme_is_adaptive) THEN
+     nlend = dt <= dt_min
+     IF ( nlend ) THEN
+        CALL speak('Minimum time step dt_min reached',0)
+        RETURN
+     END IF
+  END IF
 
   !________________________________________________________________________________
-  !                   4.  Test on run time
+  !                   5.  Test on run time
   CALL cpu_time(tnow)
   mlend = (1.1*(tnow-chrono_runt%tstart)) .GT. maxruntime
 
@@ -52,7 +61,7 @@ SUBROUTINE tesend
      RETURN
   END IF
   !________________________________________________________________________________
-  !                   5.  NRUN modified through "stop file"
+  !                   6.  NRUN modified through "stop file"
   !
   IF( (my_id .EQ. 0) .AND. (MOD(cstep, ncheck_stop) == 0) ) THEN
      INQUIRE(file=stop_file, exist=mlexist)

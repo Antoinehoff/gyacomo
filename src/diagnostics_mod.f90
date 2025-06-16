@@ -131,6 +131,8 @@ CONTAINS
     USE processing,      ONLY: pflux_x, hflux_x
     USE parallel,        ONLY: my_id
     USE units,           ONLY: WRITE_MW, pow_ref
+    USE basic,           ONLY: dt
+    USE time_integration, ONLY: time_scheme_is_adaptive, adaptive_accuracy_ratio
     IMPLICIT NONE
     INTEGER, INTENT(in) :: kstep
     !! Basic diagnose loop for reading input file, displaying advancement and ending
@@ -158,16 +160,26 @@ CONTAINS
           WRITE(*,"(A,F8.2,A8,G10.3,A14,G10.3,A7)")&
           '|t = ', time,'| Qxi = ',hflux_x(1)*pow_ref,' [MW] | Qxe = ',hflux_x(2)*pow_Ref,' [MW] |'
         else
-          WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A)")&
-          '|t = ', time,'| Qxi = ',hflux_x(1)*pow_ref,' [MW]|'
+          IF (time_scheme_is_adaptive) THEN
+            WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A8,G10.3,A)")&
+            '|t = ', time,'| Qxi = ',hflux_x(1)*pow_ref,' [MW] | dt = ',dt,' | err = ',1.0/adaptive_accuracy_ratio,' |'
+          ELSE
+            WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A)")&
+            '|t = ', time,'| Qxi = ',hflux_x(1)*pow_ref,' [MW] | dt = ',dt,' |'
+          END IF
         endif
       ELSE ! Display normalized code values
           if(SIZE(pflux_x) .GT. 1) THEN
             WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A8,G10.3,A8,G10.3,A)")&
             '|t = ', time,'| Pxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'| Pxe = ',pflux_x(2),'| Qxe = ',hflux_x(2),'|'
           else
-            WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A)")&
-            '|t = ', time,'| Pxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'|'
+            IF (time_scheme_is_adaptive) THEN
+              WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A8,G10.3,A8,G10.3,A)")&
+              '|t = ', time,'| Pxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'| dt = ',dt,'| err = ',1.0/adaptive_accuracy_ratio,'|'
+            ELSE
+              WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3, A, G10.3, A)")&
+              '|t = ', time,'| Pxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'| dt = ',dt,'|'
+            END IF
           endif
       ENDIF
     ENDIF

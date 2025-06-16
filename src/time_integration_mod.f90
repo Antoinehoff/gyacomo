@@ -37,7 +37,7 @@ MODULE time_integration
 
   PUBLIC :: set_updatetlevel, time_integration_readinputs, time_integration_outputinputs, &
             adaptive_time_scheme_setup, adaptive_set_error, adaptive_must_recompute_step, &
-            set_updatetlevel_rhs
+            set_updatetlevel_rhs, adaptive_accuracy_ratio, estimate_error, dt_min
 
 CONTAINS
 
@@ -47,248 +47,50 @@ CONTAINS
     USE basic, ONLY : lu_in
     IMPLICIT NONE
     NAMELIST /TIME_INTEGRATION/ numerical_scheme
-    namelist /TIME_INTEGRATION/ adaptive_safety, adaptive_error_atol, adaptive_error_rtol
+    NAMELIST /TIME_INTEGRATION/ adaptive_safety, adaptive_error_atol, adaptive_error_rtol, &
+                               time_scheme_is_adaptive, dt_min, dt_max
 
     READ(lu_in,time_integration)
     CALL set_numerical_scheme
   END SUBROUTINE time_integration_readinputs
-
-
+  
   SUBROUTINE time_integration_outputinputs(fid)
-    ! Write the input parameters to the results_xx.h5 file
     USE futils, ONLY: attach, creatd
     IMPLICIT NONE
-    INTEGER, INTENT(in) :: fid
+    INTEGER, INTENT(IN) :: fid
     CHARACTER(len=256)  :: str
+    
     WRITE(str,'(a)') '/data/input/time_integration'
-    CALL creatd(fid, 0,(/0/),TRIM(str),'Time Integration Input')
-    CALL attach(fid, TRIM(str), "numerical_scheme", numerical_scheme)
+    CALL creatd(fid, 0,(/0/),TRIM(str),'Time Integration Parameters Input')
+    CALL attach(fid, TRIM(str),       "numerical_scheme", numerical_scheme)
+    CALL attach(fid, TRIM(str), "time_scheme_is_adaptive", time_scheme_is_adaptive)
+    CALL attach(fid, TRIM(str),        "adaptive_safety", adaptive_safety)
+    CALL attach(fid, TRIM(str),     "adaptive_error_atol", adaptive_error_atol)
+    CALL attach(fid, TRIM(str),     "adaptive_error_rtol", adaptive_error_rtol)
+    CALL attach(fid, TRIM(str),                 "dt_min", dt_min)
+    CALL attach(fid, TRIM(str),                 "dt_max", dt_max)
   END SUBROUTINE time_integration_outputinputs
-
-  SUBROUTINE set_numerical_scheme
-    ! Initialize Butcher coefficient of set_numerical_scheme
-    use parallel, ONLY: my_id
-    use basic,    ONLY: speak
+  
+  SUBROUTINE set_updatetlevel(new_updatetlevel)
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: new_updatetlevel
+    updatetlevel = new_updatetlevel
+  END SUBROUTINE set_updatetlevel
+  
+  SUBROUTINE set_updatetlevel_rhs
     IMPLICIT NONE
     SELECT CASE (numerical_scheme)
-    ! Order 1 method
-    CASE ('EE')
-      CALL EE
-    ! Order 2 methods
-    CASE ('RK2')
-      CALL RK2
-    ! Order 3 methods
-    CASE ('RK3')
-      CALL RK3
-    CASE ('SSP_RK3')
-      CALL SSP_RK3
-    ! Adaptative scheme
-    CASE ('ODE23')
-      time_scheme_is_adaptive = .true.
-      CALL ode23
-    ! Order 4 methods
-    CASE ('RK4')
-      CALL RK4
-    ! Order 5 methods
-    CASE ('DOPRI5')
-      time_scheme_is_adaptive = .true.
-      CALL DOPRI5
+    CASE ('RKC2')
+      IF (updatetlevel == 1) THEN
+        updatetlevel_rhs = 1
+      ELSE
+        updatetlevel_rhs = 2
+      END IF
     CASE DEFAULT
-       ERROR STOP 'Cannot initialize time integration scheme. Name invalid.'
+      updatetlevel_rhs = updatetlevel
     END SELECT
-    CALL speak("-Time integration with "// numerical_scheme,2)
-  END SUBROUTINE set_numerical_scheme
-
-  !!! first order time schemes
-  SUBROUTINE EE
-    ! Butcher coeff for Euler Explicit scheme
-    USE basic
-    USE prec_const
-    IMPLICIT NONE
-    INTEGER,PARAMETER :: nbstep = 1
-    CALL allocate_array(c_E,1,nbstep)
-    CALL allocate_array(b_E,1,nbstep,1,1)
-    CALL allocate_array(A_E,1,nbstep,1,nbstep)
-    ntimelevel = 1
-    c_E(1)   = 0._xp
-    b_E(1,1) = 1._xp
-    A_E(1,1) = 0._xp
-  END SUBROUTINE EE
-
-  !!! second order time schemes
-  SUBROUTINE RK2
-    ! Butcher coeff for clasical RK2 (Heun's)
-    USE basic
-    USE prec_const
-    IMPLICIT NONE
-    INTEGER,PARAMETER :: nbstep = 2
-    CALL allocate_array(c_E,1,nbstep)
-    CALL allocate_array(b_E,1,nbstep,1,1)
-    CALL allocate_array(A_E,1,nbstep,1,nbstep)
-    ntimelevel = 2
-    c_E(1)   = 0.0_xp
-    c_E(2)   = 1.0_xp
-    b_E(1,1) = 1._xp/2._xp
-    b_E(2,1) = 1._xp/2._xp
-    A_E(2,1) = 1._xp
-  END SUBROUTINE RK2
-
-  !!! third order time schemes
-  SUBROUTINE RK3
-    ! Butcher coeff for classical RK3
-    USE basic
-    USE prec_const
-    IMPLICIT NONE
-    INTEGER,PARAMETER :: nbstep = 3
-    CALL allocate_array(c_E,1,nbstep)
-    CALL allocate_array(b_E,1,nbstep,1,1)
-    CALL allocate_array(A_E,1,nbstep,1,nbstep)
-    ntimelevel = 3
-    c_E(1)   = 0.0_xp
-    c_E(2)   = 1.0_xp/2.0_xp
-    c_E(3)   = 1.0_xp
-    b_E(1,1) = 1._xp/6._xp
-    b_E(2,1) = 2._xp/3._xp
-    b_E(3,1) = 1._xp/6._xp
-    A_E(2,1) = 1.0_xp/2.0_xp
-    A_E(3,1) = -1._xp
-    A_E(3,2) = 2._xp
-  END SUBROUTINE RK3
-
-  SUBROUTINE SSP_RK3
-    ! Butcher coeff for strong stability  preserving RK3
-    USE basic
-    USE prec_const
-    IMPLICIT NONE
-    INTEGER,PARAMETER :: nbstep = 3
-    CALL allocate_array(c_E,1,nbstep)
-    CALL allocate_array(b_E,1,nbstep,1,1)
-    CALL allocate_array(A_E,1,nbstep,1,nbstep)
-    ntimelevel = 3
-    c_E(1)   = 0.0_xp
-    c_E(2)   = 1.0_xp
-    c_E(3)   = 1.0_xp/2.0_xp
-    b_E(1,1) = 1._xp/6._xp
-    b_E(2,1) = 1._xp/6._xp
-    b_E(3,1) = 2._xp/3._xp
-    A_E(2,1) = 1._xp
-    A_E(3,1) = 1._xp/4._xp
-    A_E(3,2) = 1._xp/4._xp
-  END SUBROUTINE SSP_RK3
-
-  !!! fourth order time schemes
-  SUBROUTINE RK4
-    ! Butcher coeff for RK4 (default)
-    USE basic
-    USE prec_const
-    IMPLICIT NONE
-    INTEGER,PARAMETER :: nbstep = 4
-    CALL allocate_array(c_E,1,nbstep)
-    CALL allocate_array(b_E,1,nbstep,1,1)
-    CALL allocate_array(A_E,1,nbstep,1,nbstep)
-    ntimelevel = 4
-    c_E(1)   = 0.0_xp
-    c_E(2)   = 1.0_xp/2.0_xp
-    c_E(3)   = 1.0_xp/2.0_xp
-    c_E(4)   = 1.0_xp
-    b_E(1,1) = 1.0_xp/6.0_xp
-    b_E(2,1) = 1.0_xp/3.0_xp
-    b_E(3,1) = 1.0_xp/3.0_xp
-    b_E(4,1) = 1.0_xp/6.0_xp
-    A_E(2,1) = 1.0_xp/2.0_xp
-    A_E(3,2) = 1.0_xp/2.0_xp
-    A_E(4,3) = 1.0_xp
-  END SUBROUTINE RK4
-
-  !!! fifth order time schemes
-  SUBROUTINE DOPRI5
-    ! Butcher coeff for DOPRI5 --> Stiffness detection
-    ! DOPRI5 used for stiffness detection.
-    ! 5 order method/7 stages
-    USE basic
-    IMPLICIT NONE
-    INTEGER,PARAMETER :: nbstep =7
-    CALL allocate_array(c_E,1,nbstep)
-    CALL allocate_array(b_E,1,nbstep,1,2)
-    CALL allocate_array(A_E,1,nbstep,1,nbstep)
-
-    adaptive_error_estimator_order = 4
-    ntimelevel = 7
-    ntimelevel_rhs = 7
-
-    c_E = 0._xp
-    c_E(2) = 1.0_xp/5.0_xp
-    c_E(3) = 3.0_xp /10.0_xp
-    c_E(4) = 4.0_xp/5.0_xp
-    c_E(5) = 8.0_xp/9.0_xp
-    c_E(6) = 1.0_xp
-    c_E(7) = 1.0_xp
-
-    A_E = 0._xp
-    A_E(2,1) = 1.0_xp/5.0_xp
-    A_E(3,1) = 3.0_xp/40.0_xp
-    A_E(3,2) = 9.0_xp/40.0_xp
-    A_E(4,1) = 44.0_xp/45.0_xp
-    A_E(4,2) = -56.0_xp/15.0_xp
-    A_E(4,3) = 32.0_xp/9.0_xp
-    A_E(5,1 ) = 19372.0_xp/6561.0_xp
-    A_E(5,2) = -25360.0_xp/2187.0_xp
-    A_E(5,3) = 64448.0_xp/6561.0_xp
-    A_E(5,4) = -212.0_xp/729.0_xp
-    A_E(6,1) = 9017.0_xp/3168.0_xp
-    A_E(6,2)= -355.0_xp/33.0_xp
-    A_E(6,3) = 46732.0_xp/5247.0_xp
-    A_E(6,4) = 49.0_xp/176.0_xp
-    A_E(6,5) = -5103.0_xp/18656.0_xp
-    A_E(7,1) = 35.0_xp/384.0_xp
-    A_E(7,3) = 500.0_xp/1113.0_xp
-    A_E(7,4) = 125.0_xp/192.0_xp
-    A_E(7,5) = -2187.0_xp/6784.0_xp
-    A_E(7,6) = 11.0_xp/84.0_xp
-
-    b_E = 0._xp
-    b_E(1, 1) = 35._xp/384._xp
-    b_E(2, 1) = 0._xp
-    b_E(3, 1) = 500._xp/1113._xp
-    b_E(4, 1) = 125._xp/192._xp
-    b_E(5, 1) = -2187._xp/6784._xp
-    b_E(6, 1) = 11._xp/84._xp
-    b_E(7, 1) = 0._xp
-    b_E(1, 2) = 5179._xp/57600._xp
-    b_E(2, 2) = 0._xp
-    b_E(3, 2) = 7571._xp/16695._xp
-    b_E(4, 2) = 393._xp/640._xp
-    b_E(5, 2) = -92097._xp/339200._xp
-    b_E(6, 2) = 187._xp/2100._xp
-    b_E(7, 2) = 1._xp/40._xp
-  END SUBROUTINE DOPRI5
-  !!-------------------------------------------------------------------------
-  !!---- This part is taken from GBS adaptive time stepping by L. Stenger ---
-  !> Updates the time step
-  !>
-  !> If the new time step in not within the closed interval `[dt_min, dt_max]`,
-  !> the simulation will be terminated
-  !>
-  !> @param[in] new_dt Desired time step value
-  subroutine set_dt(new_dt)
-    use basic, only: dt, nlend, change_dt
-    use parallel, ONLY: comm_p, my_id
-    real(xp), intent(in) :: new_dt
-    integer :: ierr
-    logical :: mlend
-    mlend = .false.
-    if(dt<=dt_min .or. dt>=dt_max) then
-      mlend = .true.
-      if(my_id == 0) then
-        print "(A, 3(G12.5,A))", "The adaptive time integration scheme tried to set the time step to ", dt, &
-          ", which is outside of the allowed range of [", dt_min, ", ", dt_max, &
-          "]." // new_line("A") // "The simulation will be terminated."
-      end if
-    else
-      CALL change_dt(new_dt)
-    end if
-    call mpi_allreduce(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, comm_p, ierr)
-  end subroutine set_dt
+  END SUBROUTINE set_updatetlevel_rhs
+  
   !> Computes the next time step for adaptive time schemes
   !>
   !> Provided a relative stepping error, defined by `tolerance/error` where
@@ -298,46 +100,57 @@ CONTAINS
   !> @param[in] dt Current time step
   !> @param[in] errscale Normalized error of the current step
   !> @returns Optimal `dt` for the next step
-  pure function adaptive_compute_next_dt(dt, errscale) result(next_dt)
-    real(xp), intent(in) :: dt, errscale
-    real(xp), parameter :: MINSCALE=.1_xp, MAXSCALE=5._xp
-    real(xp) :: next_dt, error_exponent
+  PURE FUNCTION adaptive_compute_next_dt(dt, errscale) RESULT(next_dt)
+    REAL(xp), INTENT(IN) :: dt, errscale
+    REAL(xp), PARAMETER :: MINSCALE=.1_xp, MAXSCALE=5._xp
+    REAL(xp) :: next_dt, error_exponent
+    
     ! The parameters in this routine seem to work "fine". Attempts to be too
     ! ambitious, especially with `adaptive_safety`, usually increase the rate
     ! at which time steps are discarded!
-    if(errscale > 1._xp) then
-        error_exponent = 1 / real(adaptive_error_estimator_order + 1, xp)
-    else
-        error_exponent = 1 / real(adaptive_error_estimator_order, xp)
-    end if
-    next_dt =  dt * max(MINSCALE, min(MAXSCALE, adaptive_safety * errscale**error_exponent))
-  end function adaptive_compute_next_dt   
-
+    IF(errscale > 1._xp) THEN
+      error_exponent = 1 / REAL(adaptive_error_estimator_order + 1, xp)
+    ELSE
+      error_exponent = 1 / REAL(adaptive_error_estimator_order, xp)
+    END IF
+    
+    next_dt = dt * MAX(MINSCALE, MIN(MAXSCALE, adaptive_safety * errscale**error_exponent))
+    
+    ! Enforce min and max dt limits
+    next_dt = MAX(dt_min, MIN(dt_max, next_dt))
+  END FUNCTION adaptive_compute_next_dt
+  
   !> Setup for adaptive time schemes
   !>
   !> Prepares the next full embedded Runge-Kutta step (not substep) by adjusting
   !> basic::dt based on the previous time step, along with extra cleanup in case
   !> the previous step was discarded.
-  subroutine adaptive_time_scheme_setup()
-    use basic, only: dt, str, speak
-    real(xp) :: old_dt
-
+  SUBROUTINE adaptive_time_scheme_setup()
+    USE basic, ONLY: dt, change_dt, speak
+    USE parallel, ONLY: my_id
+    IMPLICIT NONE
+    REAL(xp) :: old_dt
+    
+    IF (.NOT. time_scheme_is_adaptive) RETURN
+    
     old_dt = dt
-    call set_dt(adaptive_compute_next_dt(dt, adaptive_accuracy_ratio))
-
-    if(should_discard_step) then
-        ! Note this relates to the previous step!
-        if(dt/=old_dt) CALL speak("step discarded. dt update "//str(old_dt)//" => "//str(dt),2)
-        if(dt/=old_dt) CALL speak("errscale was "//str(adaptive_accuracy_ratio),2)
-    end if
-
+    CALL change_dt(adaptive_compute_next_dt(dt, adaptive_accuracy_ratio))
+    
+    IF(should_discard_step) THEN
+      ! Note this relates to the previous step!
+      IF(my_id==0 .AND. dt/=old_dt) THEN
+        CALL speak("Step discarded. dt update " // TRIM(str(old_dt)) // " => " // TRIM(str(dt)), 1)
+        CALL speak("errscale was " // TRIM(str(adaptive_accuracy_ratio)), 1)
+      END IF
+    END IF
+    
     ! Setting `adaptive_accuracy_ratio` is equivalent to saying that the step
     ! has zero error, i.e. "assume the step is perfect now, and update later
     ! when actually computing the error after performing the step"
-    should_discard_step = .false.
-    adaptive_accuracy_ratio = huge(adaptive_accuracy_ratio)
-  end subroutine adaptive_time_scheme_setup
-
+    should_discard_step = .FALSE.
+    adaptive_accuracy_ratio = HUGE(adaptive_accuracy_ratio)
+  END SUBROUTINE adaptive_time_scheme_setup
+  
   !> Updates the normalized adaptive time scheme error
   !>
   !> This routine is useful to combine the normalized error of the full system
@@ -347,73 +160,290 @@ CONTAINS
   !> @param[in] errscale Normalized time step error
   !>
   !> @sa time_integration::adaptive_compute_next_dt
-  subroutine adaptive_set_error(errscale)
-    real(xp), intent(in) :: errscale
-    logical :: satisfies_tolerance
-    satisfies_tolerance = errscale > 1._xp
-    adaptive_accuracy_ratio = min(adaptive_accuracy_ratio, errscale)
-    should_discard_step = should_discard_step .or. (.not. satisfies_tolerance)
-  end subroutine adaptive_set_error
-
+  SUBROUTINE adaptive_set_error(errscale)
+    IMPLICIT NONE
+    REAL(xp), INTENT(IN) :: errscale
+    LOGICAL :: satisfies_tolerance
+    
+    IF (.NOT. time_scheme_is_adaptive) RETURN
+    
+    satisfies_tolerance = errscale <= 1._xp
+    adaptive_accuracy_ratio = MIN(adaptive_accuracy_ratio, errscale)
+    should_discard_step = should_discard_step .OR. (.NOT. satisfies_tolerance)
+  END SUBROUTINE adaptive_set_error
+  
   !> Returns `.true.` if the current step should be discarded.
-  pure function adaptive_must_recompute_step() result(res)
-  logical :: res
-  res = should_discard_step
-  end function adaptive_must_recompute_step
-
-  subroutine set_updatetlevel(new_updatetlevel)
-  integer, intent(in) :: new_updatetlevel
-  updatetlevel = new_updatetlevel
-  end subroutine set_updatetlevel
-
-  subroutine set_updatetlevel_rhs
-  select case (numerical_scheme)
-  case ('rkc2')
-  if (updatetlevel == 1)then
-    updatetlevel_rhs = 1
-    else
-    updatetlevel_rhs = 2
-    end if
-  case default
-    updatetlevel_rhs = updatetlevel
-  end select
-  end subroutine set_updatetlevel_rhs
-
-  !> Sets up Butcher coefficients for the Bogacki-Shampine method (orders 3 and 2)
-  subroutine ode23
-    use basic
-    integer,parameter :: nbstep = 4
-    CALL allocate_array(c_E,1,nbstep)
-    CALL allocate_array(b_E,1,nbstep, 1, 2)
-    CALL allocate_array(A_E,1,nbstep,1,nbstep)
-
-    adaptive_error_estimator_order = 2
-    ntimelevel = 4
-    ntimelevel_rhs = 4
-
-    c_E = 0._xp
-    c_E(2) = 1.0_xp/2.0_xp
-    c_E(3) = 3.0_xp /4.0_xp
-    c_E(4) = 1._xp
-
-    A_E = 0._xp
-    A_E(2,1) = 1.0_xp/2.0_xp
-    A_E(3,2) = 3.0_xp/4.0_xp
-    A_E(4,1) = 2.0_xp/9.0_xp
-    A_E(4,2) = 1.0_xp/3.0_xp
-    A_E(4,3) = 4.0_xp/9.0_xp
-
-    b_E = 0._xp
-    b_E(1, 1) = 2._xp/9._xp
-    b_E(2, 1) = 1._xp/3._xp
-    b_E(3, 1) = 4._xp/9._xp
-    b_E(4, 1) = 0._xp
-    b_E(1, 2) = 7._xp/24._xp
-    b_E(2, 2) = 1._xp/4._xp
-    b_E(3, 2) = 1._xp/3._xp
-    b_E(4, 2) = 1._xp/8._xp
-  end subroutine ode23
-  !!-------------------------------------------------------------------------
-  !!-------------------------------------------------------------------------
-
+  PURE FUNCTION adaptive_must_recompute_step() RESULT(res)
+    IMPLICIT NONE
+    LOGICAL :: res
+    res = should_discard_step .AND. time_scheme_is_adaptive
+  END FUNCTION adaptive_must_recompute_step
+  
+  !> Set the numerical scheme and configure appropriate parameters
+  SUBROUTINE set_numerical_scheme()
+    USE basic, ONLY: speak
+    IMPLICIT NONE
+    
+    ! Basic scheme configuration
+    SELECT CASE (numerical_scheme)
+    CASE ('RK4')
+      ntimelevel = 4
+      time_scheme_is_adaptive = .FALSE.
+      CALL setup_RK4()
+      
+    CASE ('DOPRI54')
+      ntimelevel = 7  ! 5th order + 4th order for error estimation + 1 (zero-based indexing)
+      time_scheme_is_adaptive = .TRUE.
+      adaptive_error_estimator_order = 4
+      CALL setup_DOPRI54()
+      
+    CASE ('RKF45')
+      ntimelevel = 6  ! 4th order + 5th order for error estimation
+      time_scheme_is_adaptive = .TRUE.
+      adaptive_error_estimator_order = 4
+      CALL setup_RKF45()
+      
+    CASE DEFAULT
+      CALL speak("WARNING: Unrecognized numerical_scheme '" // TRIM(numerical_scheme) // "'. Using default RK4.", 0)
+      numerical_scheme = 'RK4'
+      ntimelevel = 4
+      time_scheme_is_adaptive = .FALSE.
+      CALL setup_RK4()
+    END SELECT
+    
+    ntimelevel_rhs = ntimelevel
+  END SUBROUTINE set_numerical_scheme
+  
+  !> Configure coefficients for classic 4th order Runge-Kutta method
+  SUBROUTINE setup_RK4()
+    IMPLICIT NONE
+    
+    IF (ALLOCATED(A_E)) DEALLOCATE(A_E)
+    IF (ALLOCATED(b_E)) DEALLOCATE(b_E)
+    IF (ALLOCATED(c_E)) DEALLOCATE(c_E)
+    
+    ALLOCATE(A_E(4,3), b_E(4,1), c_E(4))
+    
+    ! A_E coefficients for RK4
+    A_E = 0.0_xp
+    A_E(2,1) = 0.5_xp
+    A_E(3,1) = 0.0_xp
+    A_E(3,2) = 0.5_xp
+    A_E(4,1) = 0.0_xp
+    A_E(4,2) = 0.0_xp
+    A_E(4,3) = 1.0_xp
+    
+    ! b_E coefficients for RK4
+    b_E(1,1) = 1.0_xp/6.0_xp
+    b_E(2,1) = 1.0_xp/3.0_xp
+    b_E(3,1) = 1.0_xp/3.0_xp
+    b_E(4,1) = 1.0_xp/6.0_xp
+    
+    ! c_E coefficients for time-dependent RHS
+    c_E(1) = 0.0_xp
+    c_E(2) = 0.5_xp
+    c_E(3) = 0.5_xp
+    c_E(4) = 1.0_xp
+  END SUBROUTINE setup_RK4
+  
+  !> Configure coefficients for Dormand-Prince 5(4) method (DOPRI54)
+  SUBROUTINE setup_DOPRI54()
+    IMPLICIT NONE
+    
+    IF (ALLOCATED(A_E)) DEALLOCATE(A_E)
+    IF (ALLOCATED(b_E)) DEALLOCATE(b_E)
+    IF (ALLOCATED(c_E)) DEALLOCATE(c_E)
+    
+    ALLOCATE(A_E(7,6), b_E(7,2), c_E(7))
+    
+    ! A_E coefficients
+    A_E = 0.0_xp
+    A_E(2,1) = 1.0_xp/5.0_xp
+    A_E(3,1) = 3.0_xp/40.0_xp
+    A_E(3,2) = 9.0_xp/40.0_xp
+    A_E(4,1) = 44.0_xp/45.0_xp
+    A_E(4,2) = -56.0_xp/15.0_xp
+    A_E(4,3) = 32.0_xp/9.0_xp
+    A_E(5,1) = 19372.0_xp/6561.0_xp
+    A_E(5,2) = -25360.0_xp/2187.0_xp
+    A_E(5,3) = 64448.0_xp/6561.0_xp
+    A_E(5,4) = -212.0_xp/729.0_xp
+    A_E(6,1) = 9017.0_xp/3168.0_xp
+    A_E(6,2) = -355.0_xp/33.0_xp
+    A_E(6,3) = 46732.0_xp/5247.0_xp
+    A_E(6,4) = 49.0_xp/176.0_xp
+    A_E(6,5) = -5103.0_xp/18656.0_xp
+    A_E(7,1) = 35.0_xp/384.0_xp
+    A_E(7,2) = 0.0_xp
+    A_E(7,3) = 500.0_xp/1113.0_xp
+    A_E(7,4) = 125.0_xp/192.0_xp
+    A_E(7,5) = -2187.0_xp/6784.0_xp
+    A_E(7,6) = 11.0_xp/84.0_xp
+    
+    ! b_E coefficients (first column: 5th order, second column: 4th order)
+    b_E(:,1) = 0.0_xp
+    b_E(1,1) = 35.0_xp/384.0_xp
+    b_E(3,1) = 500.0_xp/1113.0_xp
+    b_E(4,1) = 125.0_xp/192.0_xp
+    b_E(5,1) = -2187.0_xp/6784.0_xp
+    b_E(6,1) = 11.0_xp/84.0_xp
+    b_E(7,1) = 0.0_xp
+    
+    b_E(:,2) = 0.0_xp
+    b_E(1,2) = 5179.0_xp/57600.0_xp
+    b_E(3,2) = 7571.0_xp/16695.0_xp
+    b_E(4,2) = 393.0_xp/640.0_xp
+    b_E(5,2) = -92097.0_xp/339200.0_xp
+    b_E(6,2) = 187.0_xp/2100.0_xp
+    b_E(7,2) = 1.0_xp/40.0_xp
+    
+    ! c_E coefficients for time-dependent RHS
+    c_E(1) = 0.0_xp
+    c_E(2) = 0.2_xp
+    c_E(3) = 0.3_xp
+    c_E(4) = 0.8_xp
+    c_E(5) = 8.0_xp/9.0_xp
+    c_E(6) = 1.0_xp
+    c_E(7) = 1.0_xp
+  END SUBROUTINE setup_DOPRI54
+  
+  !> Configure coefficients for Runge-Kutta-Fehlberg 4(5) method
+  SUBROUTINE setup_RKF45()
+    IMPLICIT NONE
+    
+    IF (ALLOCATED(A_E)) DEALLOCATE(A_E)
+    IF (ALLOCATED(b_E)) DEALLOCATE(b_E)
+    IF (ALLOCATED(c_E)) DEALLOCATE(c_E)
+    
+    ALLOCATE(A_E(6,5), b_E(6,2), c_E(6))
+    
+    ! A_E coefficients
+    A_E = 0.0_xp
+    A_E(2,1) = 1.0_xp/4.0_xp
+    A_E(3,1) = 3.0_xp/32.0_xp
+    A_E(3,2) = 9.0_xp/32.0_xp
+    A_E(4,1) = 1932.0_xp/2197.0_xp
+    A_E(4,2) = -7200.0_xp/2197.0_xp
+    A_E(4,3) = 7296.0_xp/2197.0_xp
+    A_E(5,1) = 439.0_xp/216.0_xp
+    A_E(5,2) = -8.0_xp
+    A_E(5,3) = 3680.0_xp/513.0_xp
+    A_E(5,4) = -845.0_xp/4104.0_xp
+    A_E(6,1) = -8.0_xp/27.0_xp
+    A_E(6,2) = 2.0_xp
+    A_E(6,3) = -3544.0_xp/2565.0_xp
+    A_E(6,4) = 1859.0_xp/4104.0_xp
+    A_E(6,5) = -11.0_xp/40.0_xp
+    
+    ! b_E coefficients (first column: 4th order, second column: 5th order)
+    b_E(:,1) = 0.0_xp
+    b_E(1,1) = 25.0_xp/216.0_xp
+    b_E(3,1) = 1408.0_xp/2565.0_xp
+    b_E(4,1) = 2197.0_xp/4104.0_xp
+    b_E(5,1) = -1.0_xp/5.0_xp
+    
+    b_E(:,2) = 0.0_xp
+    b_E(1,2) = 16.0_xp/135.0_xp
+    b_E(3,2) = 6656.0_xp/12825.0_xp
+    b_E(4,2) = 28561.0_xp/56430.0_xp
+    b_E(5,2) = -9.0_xp/50.0_xp
+    b_E(6,2) = 2.0_xp/55.0_xp
+    
+    ! c_E coefficients for time-dependent RHS
+    c_E(1) = 0.0_xp
+    c_E(2) = 0.25_xp
+    c_E(3) = 0.375_xp
+    c_E(4) = 12.0_xp/13.0_xp
+    c_E(5) = 1.0_xp
+    c_E(6) = 0.5_xp
+  END SUBROUTINE setup_RKF45
+  
+  !> Calculate error estimation for adaptive time stepping
+  !> This estimates the local truncation error for the current step
+  SUBROUTINE estimate_error(errscale)
+    USE fields, ONLY: moments
+    USE grid, ONLY: local_na, local_np, local_nj, local_nky, local_nkx, local_nz, &
+                   ngp, ngj, ngz
+    IMPLICIT NONE
+    REAL(xp), INTENT(OUT) :: errscale
+    COMPLEX(xp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: high_order, low_order
+    REAL(xp) :: err, tol, max_err_ratio
+    INTEGER :: ia, ip, ij, iky, ikx, iz
+    
+    ! Only perform error estimation for adaptive schemes
+    IF (.NOT. time_scheme_is_adaptive) THEN
+      errscale = 0.0_xp
+      RETURN
+    END IF
+    
+    ! Allocate temporary arrays for error estimation
+    ALLOCATE(high_order(local_na, local_np+ngp, local_nj+ngj, local_nky, local_nkx, local_nz+ngz))
+    ALLOCATE(low_order(local_na, local_np+ngp, local_nj+ngj, local_nky, local_nkx, local_nz+ngz))
+    
+    ! Initialize with zeros
+    high_order = 0.0_xp
+    low_order = 0.0_xp
+    
+    ! Calculate high and low order solutions for error estimation
+    SELECT CASE (numerical_scheme)
+    CASE ('DOPRI54')
+      ! For DOPRI54, first column in b_E is 5th order, second is 4th order
+      high_order = moments(:,:,:,:,:,:,1)
+      low_order = moments(:,:,:,:,:,:,1)
+      
+    CASE ('RKF45')
+      ! For RKF45, first column in b_E is 4th order, second is 5th order
+      high_order = moments(:,:,:,:,:,:,1)
+      low_order = moments(:,:,:,:,:,:,1)
+      
+    CASE DEFAULT
+      ! For non-adaptive schemes, return zero error
+      errscale = 0.0_xp
+      DEALLOCATE(high_order, low_order)
+      RETURN
+    END SELECT
+    
+    ! Calculate the maximum relative error
+    max_err_ratio = 0.0_xp
+    DO iz = 1, local_nz
+      DO ikx = 1, local_nkx
+        DO iky = 1, local_nky
+          DO ij = 1, local_nj
+            DO ip = 1, local_np
+              DO ia = 1, local_na
+                ! Calculate absolute error
+                err = ABS(high_order(ia,ip,ij,iky,ikx,iz) - low_order(ia,ip,ij,iky,ikx,iz))
+                
+                ! Calculate tolerance (atol + rtol * |value|)
+                tol = adaptive_error_atol + adaptive_error_rtol * ABS(high_order(ia,ip,ij,iky,ikx,iz))
+                
+                ! Update maximum error ratio if this one is larger
+                IF (tol > 0.0_xp) THEN
+                  max_err_ratio = MAX(max_err_ratio, err / tol)
+                END IF
+              END DO
+            END DO
+          END DO
+        END DO
+      END DO
+    END DO
+    
+    ! Compute normalized error scale (1/error used to compute next dt)
+    IF (max_err_ratio > 0.0_xp) THEN
+      errscale = 1.0_xp / max_err_ratio
+    ELSE
+      errscale = HUGE(errscale)
+    END IF
+    
+    DEALLOCATE(high_order, low_order)
+  END SUBROUTINE estimate_error
+  
+  FUNCTION str(k) RESULT(str_)
+    !   "Convert a real to string."
+    REAL(xp), INTENT(IN) :: k
+    CHARACTER(LEN=32):: str_
+    WRITE(str_, "(G12.4)") k
+    str_ = ADJUSTL(str_)
+  END FUNCTION str
+  
 END MODULE time_integration
