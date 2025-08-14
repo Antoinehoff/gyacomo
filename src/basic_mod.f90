@@ -10,7 +10,7 @@ MODULE basic
   real(xp), PUBLIC, PROTECTED :: dt         = 1.0      ! Time step
   real(xp), PUBLIC, PROTECTED :: maxruntime = 1e9      ! Maximum simulation CPU time
   INTEGER,  PUBLIC, PROTECTED :: job2load   = 99       ! jobnum of the checkpoint to load
-  INTEGER,  PUBLIC, PROTECTED :: VERBOSE_LVL= 1        ! tune the amount of std out (0: only time and fluxes, 1: MPI distribution, 2: all stages of init)
+  INTEGER,  PUBLIC, PROTECTED :: VERBOSE_LVL= 0        ! tune the amount of std out (0: only time and fluxes, 1: MPI distribution, 2: all stages of init)
   ! Auxiliary variables
   real(xp), PUBLIC, PROTECTED :: time   = 0            ! Current simulation time (Init from restart file)
 
@@ -516,9 +516,10 @@ CONTAINS
     write(*,*) "/ /_/ / /_/ / /_/ / /__/ /_/ / / / / / / /_/ /"
     write(*,*) "\____/\__, /\__,_/\___/\____/_/ /_/ /_/\____/ "
     write(*,*) "     /____/                                   "
-    ! Write the git version of the code
+    write(*,*) " "
     write(*,*) 'This is the GYACOMO code'
     write(*,*) 'version: ', VERSION
+    write(*,*) '(github.com/Antoinehoff/gyacomo)'
     write(*,*) "=============================================="
   ENDIF
   END SUBROUTINE show_title
