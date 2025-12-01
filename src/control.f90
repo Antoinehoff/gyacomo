@@ -11,6 +11,7 @@ SUBROUTINE control
   USE mpi,            ONLY: MPI_COMM_WORLD
   USE diagnostics,    ONLY: diagnose
   USE ExB_shear_flow, ONLY: Update_ExB_shear_flow
+  USE time_integration, ONLY: apply_cfl_dt
   IMPLICIT NONE
   REAL(xp) :: t_init_diag_0, t_init_diag_1
   INTEGER  :: ierr
@@ -88,6 +89,10 @@ SUBROUTINE control
 
     ! Do a full RK step (e.g. 4 substeps for ERK4)
     CALL stepon
+
+    ! Apply CFL-based adaptive time stepping if enabled
+    ! This updates dt for the next time step based on current ExB velocity
+    CALL apply_cfl_dt
 
     ! Increment time (private in basic module)
     CALL increase_time

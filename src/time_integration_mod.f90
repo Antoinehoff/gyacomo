@@ -35,9 +35,20 @@ MODULE time_integration
   integer, public, protected :: updatetlevel_rhs = 1 !< time level to be updated for rhs
   !!---- end
 
+  !!---- CFL-based adaptive time stepping
+  !> Enable CFL-based adaptive time stepping (independent of embedded RK schemes)
+  logical, public, protected :: cfl_adaptive_dt = .false.
+  !> CFL number target (typically < 1 for stability)
+  real(xp), public, protected :: cfl_number = 0.5_xp
+  !> Minimum allowable timestep for CFL-based adaptive time stepping
+  real(xp), public, protected :: cfl_dt_min = 1e-8_xp
+  !> Maximum allowable timestep for CFL-based adaptive time stepping
+  real(xp), public, protected :: cfl_dt_max = 1e1_xp
+  !!---- end CFL-based adaptive time stepping
+
   PUBLIC :: set_updatetlevel, time_integration_readinputs, time_integration_outputinputs, &
             adaptive_time_scheme_setup, adaptive_set_error, adaptive_must_recompute_step, &
-            set_updatetlevel_rhs
+            set_updatetlevel_rhs, compute_cfl_dt, apply_cfl_dt
 
 CONTAINS
 
@@ -48,6 +59,7 @@ CONTAINS
     IMPLICIT NONE
     NAMELIST /TIME_INTEGRATION/ numerical_scheme
     namelist /TIME_INTEGRATION/ adaptive_safety, adaptive_error_atol, adaptive_error_rtol
+    namelist /TIME_INTEGRATION/ cfl_adaptive_dt, cfl_number, cfl_dt_min, cfl_dt_max
 
     READ(lu_in,time_integration)
     CALL set_numerical_scheme
@@ -63,6 +75,10 @@ CONTAINS
     WRITE(str,'(a)') '/data/input/time_integration'
     CALL creatd(fid, 0,(/0/),TRIM(str),'Time Integration Input')
     CALL attach(fid, TRIM(str), "numerical_scheme", numerical_scheme)
+    CALL attach(fid, TRIM(str), "cfl_adaptive_dt", cfl_adaptive_dt)
+    CALL attach(fid, TRIM(str), "cfl_number", cfl_number)
+    CALL attach(fid, TRIM(str), "cfl_dt_min", cfl_dt_min)
+    CALL attach(fid, TRIM(str), "cfl_dt_max", cfl_dt_max)
   END SUBROUTINE time_integration_outputinputs
 
   SUBROUTINE set_numerical_scheme
@@ -415,5 +431,85 @@ CONTAINS
   end subroutine ode23
   !!-------------------------------------------------------------------------
   !!-------------------------------------------------------------------------
+
+  !> Compute the time step based on CFL condition for ExB velocity
+  !>
+  !> The CFL condition is based on the maximum ExB velocity estimated from
+  !> the electrostatic potential phi. In Fourier space:
+  !>   v_ExB_x ~ ky * phi (x-component of ExB velocity)
+  !>   v_ExB_y ~ kx * phi (y-component of ExB velocity)
+  !>
+  !> The CFL condition gives:
+  !>   dt_cfl = CFL_number / max_velocity_per_wavelength
+  !>
+  !> @returns dt_cfl The CFL-limited time step
+  function compute_cfl_dt() result(dt_cfl)
+    use fields,   only: phi
+    use grid,     only: local_nky, local_nkx, local_nz, ngz_o2, &
+                        kyarray, kxarray, kx_max, ky_max
+    use parallel, only: comm_p, my_id
+    use mpi
+    implicit none
+    real(xp) :: dt_cfl
+    real(xp) :: max_vExB_local, max_vExB_global
+    real(xp) :: phi_abs, vExB_x, vExB_y
+    integer  :: iky, ikx, iz, izi, ierr
+
+    max_vExB_local = 0._xp
+
+    ! Loop over all k-space points to find the maximum ExB velocity
+    do iz = 1, local_nz
+      izi = iz + ngz_o2
+      do ikx = 1, local_nkx
+        do iky = 1, local_nky
+          phi_abs = abs(phi(iky, ikx, izi))
+          ! ExB velocity components (normalized by B)
+          ! v_ExB_x ~ ky * phi (drives transport in x)
+          ! v_ExB_y ~ kx * phi (drives transport in y)
+          vExB_x = abs(kyarray(iky)) * phi_abs
+          vExB_y = abs(kxarray(iky, ikx)) * phi_abs
+          ! CFL velocity: max over k*v combinations
+          ! For spectral methods, the effective velocity per grid spacing is k*v
+          max_vExB_local = max(max_vExB_local, vExB_x * kx_max, vExB_y * ky_max)
+        end do
+      end do
+    end do
+
+    ! Get global maximum across all MPI processes
+    call MPI_ALLREDUCE(max_vExB_local, max_vExB_global, 1, MPI_DOUBLE_PRECISION, &
+                       MPI_MAX, comm_p, ierr)
+
+    ! Compute CFL-limited time step
+    if (max_vExB_global > 0._xp) then
+      dt_cfl = cfl_number / max_vExB_global
+      ! Apply bounds
+      dt_cfl = max(cfl_dt_min, min(cfl_dt_max, dt_cfl))
+    else
+      ! No velocity means we can use maximum dt
+      dt_cfl = cfl_dt_max
+    end if
+
+  end function compute_cfl_dt
+
+  !> Apply the CFL-based time step adjustment
+  !>
+  !> This subroutine computes the CFL time step and updates the current dt
+  !> if CFL-based adaptive time stepping is enabled.
+  subroutine apply_cfl_dt()
+    use basic, only: dt, change_dt, speak, str
+    implicit none
+    real(xp) :: dt_cfl
+
+    if (.not. cfl_adaptive_dt) return
+
+    dt_cfl = compute_cfl_dt()
+
+    ! Only update if significantly different (to avoid excessive output)
+    if (abs(dt_cfl - dt) / max(dt, 1.e-10_xp) > 0.01_xp) then
+      call speak("CFL dt update: "//str(dt)//" => "//str(dt_cfl), 2)
+      call change_dt(dt_cfl)
+    end if
+
+  end subroutine apply_cfl_dt
 
 END MODULE time_integration
