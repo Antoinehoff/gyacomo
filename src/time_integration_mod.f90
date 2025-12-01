@@ -476,7 +476,8 @@ CONTAINS
     end do
 
     ! Get global maximum across all MPI processes
-    call MPI_ALLREDUCE(max_vExB_local, max_vExB_global, 1, MPI_DOUBLE_PRECISION, &
+    ! Use mpi_xp_r for precision-dependent MPI type (single or double)
+    call MPI_ALLREDUCE(max_vExB_local, max_vExB_global, 1, mpi_xp_r, &
                        MPI_MAX, comm_p, ierr)
 
     ! Compute CFL-limited time step
