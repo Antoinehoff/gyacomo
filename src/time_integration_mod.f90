@@ -442,16 +442,16 @@ CONTAINS
   !>   dt_cfl = CFL * min(dx, dy) / max(V_ExB)
   !>
   !> The ExB velocity is computed in k-space as:
-  !>   V_ExB_x = -ky * phi / B
-  !>   V_ExB_y =  kx * phi / B
+  !>   V_ExB_x = -dphi/dy = -i*ky*phi
+  !>   V_ExB_y =  dphi/dx =  i*kx*phi
   !> The maximum velocity is estimated from the spectral amplitudes.
   subroutine cfl_adjust_dt
     use basic, only: dt, change_dt, speak, str, nlend
     use fields, only: phi
     use grid, only: local_nky, local_nkx, local_nz, ngz_o2, &
-                    kyarray, kxarray, deltakx, deltaky
+                    kyarray, kxarray, Lx, Ly, Nx, Ny
     use parallel, only: comm_p, my_id
-    use prec_const, only: mpi_xp_r, PI
+    use prec_const, only: mpi_xp_r
     use mpi
     implicit none
     real(xp) :: v_ExB_max_local, v_ExB_max_global
@@ -463,24 +463,17 @@ CONTAINS
     ! Skip if CFL adaptive time stepping is disabled
     if (.not. cfl_adaptive_dt) return
 
-    ! Estimate grid spacing from k-space resolution
-    ! dx ~ 2*pi / (N * dk) where dk is the spacing
-    if (deltakx > 0._xp) then
-      dx = 2._xp * PI / (real(local_nkx, xp) * deltakx)
-    else
-      dx = huge(dx)
-    end if
-    if (deltaky > 0._xp) then
-      dy = 2._xp * PI / (real(local_nky, xp) * deltaky)
-    else
-      dy = huge(dy)
-    end if
+    ! Compute physical grid spacing
+    ! dx = Lx / Nx, dy = Ly / Ny
+    dx = Lx / real(Nx, xp)
+    dy = Ly / real(Ny, xp)
 
     ! Compute maximum ExB velocity from phi gradients in k-space
     ! V_ExB ~ (grad phi x B) / B^2
     ! In 2D perpendicular plane with B along z:
-    !   V_ExB_x = -dphi/dy = -i*ky*phi -> max |ky*phi|
-    !   V_ExB_y =  dphi/dx =  i*kx*phi -> max |kx*phi|
+    !   V_ExB_x = -dphi/dy -> proportional to ky*phi
+    !   V_ExB_y =  dphi/dx -> proportional to kx*phi
+    ! Note: kxarray(iky,ikx) is 2D to account for ExB shear effects
     v_ExB_max_local = 0._xp
     vx_max = 0._xp
     vy_max = 0._xp
@@ -490,18 +483,21 @@ CONTAINS
       do ikx = 1, local_nkx
         do iky = 1, local_nky
           ! ExB velocity components magnitude
+          ! V_ExB_x ~ ky * phi
           vx_max = max(vx_max, abs(kyarray(iky)) * abs(phi(iky, ikx, izi)))
+          ! V_ExB_y ~ kx * phi (kxarray is 2D due to possible ExB shear)
           vy_max = max(vy_max, abs(kxarray(iky, ikx)) * abs(phi(iky, ikx, izi)))
         end do
       end do
     end do
 
-    ! Total max velocity (could use either component or magnitude)
+    ! Total max velocity (use the maximum of both components)
     v_ExB_max_local = max(vx_max, vy_max)
 
     ! Get global maximum across all MPI ranks
+    ! Using comm_p communicator for consistency with the rest of the codebase
     call MPI_ALLREDUCE(v_ExB_max_local, v_ExB_max_global, 1, mpi_xp_r, &
-                       MPI_MAX, MPI_COMM_WORLD, ierr)
+                       MPI_MAX, comm_p, ierr)
 
     ! Compute CFL-limited time step
     if (v_ExB_max_global > 1.0e-15_xp) then
@@ -522,7 +518,7 @@ CONTAINS
       end if
     end if
 
-    call mpi_allreduce(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, MPI_COMM_WORLD, ierr)
+    call mpi_allreduce(mlend, nlend, 1, MPI_LOGICAL, MPI_LOR, comm_p, ierr)
 
     ! Update time step
     old_dt = dt
