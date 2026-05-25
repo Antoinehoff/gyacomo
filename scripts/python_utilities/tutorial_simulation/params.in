@@ -1,0 +1,97 @@
+&BASIC
+  nrun            = 99999999        ! number of time steps to perform
+  dt              = 0.0005          ! time step (not adaptive)
+  tmax            = 15              ! maximal time [c_s/R]
+  maxruntime      = 72000           ! maximal wallclock runtime [sec]
+  job2load        = -1              ! index of previous run to restart (-1:new)
+/
+&GRID
+  pmax            = 4               ! maximal degree of Hermite basis (parallel velocity)
+  jmax            = 2               ! maximal degree of Laguerre basis (magnetic moment)
+  Nx              = 4               ! number of points in radial direction
+  Lx              = 400             ! size of box in radial direction [rho_s]
+  Ny              = 32              ! number of points in binormal direction
+  Ly              = 75              ! size of box in binormal direction [rho_s]
+  Nz              = 32              ! number of points in magnetic field direction
+  SG              = .f.             ! use staggered grid in z (experimental)
+  Nexc            = 0               ! fulfill sheared boundary condition (-1:auto)
+/
+&GEOMETRY
+  geom            = 'miller'        ! 
+  q0              = 1.5             ! 
+  shear           = 2.7             ! 
+  eps             = 0.26            ! 
+  kappa           = 1.45            ! 
+  s_kappa         = 0               ! 
+  delta           = 0               ! 
+  s_delta         = 0               ! 
+  zeta            = 0               ! 
+  s_zeta          = 0               ! 
+  parallel_bc     = 'dirichlet'     ! 
+  shift_y         = 0               ! 
+  Npol            = 1               ! 
+  PB_PHASE        = .f.             ! 
+/
+&DIAGNOSTICS
+  write_doubleprecision = .t.             ! 
+  dtsave_0d       = 0.05            ! 
+  dtsave_1d       = -1              ! 
+  dtsave_2d       = -1              ! 
+  dtsave_3d       = 0.05            ! 
+  dtsave_5d       = 2               ! 
+/
+&MODEL
+  LINEARITY       = 'linear'        ! 
+  Na              = 2               ! 
+  mu_x            = 0               ! 
+  mu_y            = 0               ! 
+  N_HD            = 4               ! 
+  mu_z            = 0               ! 
+  HYP_V           = 'hypcoll'       ! 
+  mu_p            = 0               ! 
+  mu_j            = 0               ! 
+  nu              = 0.1             ! 
+  beta            = 0               ! 
+  ADIAB_E         = .f.             ! 
+/
+&CLOSURE
+  hierarchy_closure = 'truncation'    ! 
+  dmax            = -1              ! 
+  nonlinear_closure = 'anti_laguerre_aliasing' ! 
+  nmax            = -1              ! 
+/
+&SPECIES
+ name_ = 'ions'
+ tau_ = 1
+ sigma_ = 1
+ q_ = 1
+ k_N_ = 50
+ k_T_ = 9
+/
+&SPECIES
+ name_ = 'electrons'
+ tau_ = 1
+ sigma_ = 0.023338
+ q_ = -1
+ k_N_ = 50
+ k_T_ = 2
+/
+&COLLISION
+  collision_model = 'DG'            ! 
+  GK_CO           = .t.             ! 
+/
+&INITIAL
+  INIT_OPT        = 'blob'          ! 
+/
+&TIME_INTEGRATION
+  numerical_scheme = 'RK4'           ! 
+/
+&UNITS
+  n_ref           = 5               ! 
+  T_ref           = 2.5             ! 
+  R_ref           = 1.7             ! 
+  B_ref           = 1.5             ! 
+  m_ref           = 1               ! 
+  q_ref           = 1               ! 
+  WRITE_MW        = .f.             ! 
+/
