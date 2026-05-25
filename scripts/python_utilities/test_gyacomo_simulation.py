@@ -95,7 +95,7 @@ def test_load_existing():
     print("\nTest 5: Load existing simulation...")
     
     # Try to load the PT_rho0.9 simulation from attachments
-    sim_dir = Path(__file__).parent.parent.parent.parent / \
+    sim_dir = Path(__file__).parent.parent.parent / \
               "simulations/check_instability_tcv_gkyl/PT_rho0.9"
     
     if not sim_dir.exists():

@@ -3,6 +3,10 @@ import numpy as np
 import tools
 import copy as cp
 
+def load_h5path(filename, h5path):
+    with h5py.File(filename, 'r') as file:
+        return file[h5path][:]
+
 def load_data_0D(filename,dname):
     with h5py.File(filename, 'r') as file:
         # Load time data
