@@ -1,0 +1,25 @@
+# Variables for main path to /gyacomo
+PREFIX   = $(shell pwd)
+
+# Auxiliary variables (for SPCPC)
+LIBDIR   = $(PREFIX)/lib
+SRCDIR   = $(PREFIX)/src
+BINDIR   = $(PREFIX)/bin
+OBJDIR   = $(PREFIX)/obj
+MODDIR   = $(PREFIX)/mod
+FMDIR    = $(LIBDIR)/FM
+FUTILS_DIR = $(LIBDIR)/futils/src
+FFTW3DIR   = $(LIBDIR)/fftw-3.3.10
+#LAPACKDIR  = $(LIBDIR)/lapack-3.10.0
+HDF5_LIB   = $(LIBDIR)/hdf5/lib
+
+# Overwrite path according to the OS environment (Linux, MacOS or Marconi)
+ENVTYPE = MacOS
+
+ifeq ($(ENVTYPE), MacOS) #MacOS
+	LAPACKDIR = /opt/homebrew/opt/lapack/lib
+	HDF5_LIB   = /usr/local/hdf5-1.8.22/lib -L/opt/homebrew/opt/zlib/lib -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
+endif
+ifeq ($(ENVTYPE), Marconi) #Marconi env.
+	FFTW3DIR   = $(FFTW_HOME)
+endif
