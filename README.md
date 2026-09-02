@@ -102,6 +102,18 @@ You can analyze Gyacomo simulations either with matlab scripts stored [here](htt
 
 > 🔧 Note: Some collision operators (Sugama, full Coulomb) require you to precompute matrix files using **COSOlver** and place them in the `Gyacomo/iCa` folder before running simulations.
 
+### Unit tests
+
+```sh
+make check
+```
+
+builds and runs the test programs in `unit/`. They cover the numerical building
+blocks that no simulation output would flag as wrong: the parallel finite
+difference stencils, the Lagrange interpolator, the grid and ghost cell layout,
+the Simpson weights, the Butcher tableaux, the Laguerre coupling coefficients
+and the kernel approximations. See `unit/README.md` for how to add one.
+
 ---
 
 ## 🕒 Changelog

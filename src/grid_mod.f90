@@ -62,7 +62,7 @@ MODULE grid
   INTEGER, PUBLIC, PROTECTED :: local_nj
   INTEGER, PUBLIC, PROTECTED :: local_nky
   INTEGER, PUBLIC, PROTECTED :: local_nkx  ! = total_Nkx = Nx, not parallel
-  INTEGER, PUBLIC, PROTECTED :: local_nx   ! = local_nx_ptr from FFTW (used only for Fourier)
+  INTEGER, PUBLIC, PROTECTED :: local_nx   ! real space x, = local_nx_ptr from FFTW (used only for Fourier). NOT a kx split: local_nkx is always Nx
   INTEGER, PUBLIC, PROTECTED :: local_nz
   INTEGER, PUBLIC, PROTECTED :: local_nkp
   INTEGER, PUBLIC, PROTECTED :: ngp, ngj, ngx, ngy, ngz ! number of ghosts points
@@ -207,6 +207,10 @@ CONTAINS
       CALL  decomp1D( Ny/2+1, num_procs_ky, rank_ky, ikys, ikye )
       local_nky_ptr        = ikye - ikys + 1
       local_nky_ptr_offset = ikys - 1
+      ! Defined just because it is read below but useless.
+      CALL  decomp1D( Nx, num_procs_ky, rank_ky, istart, iend )
+      local_nx_ptr         = iend - istart + 1
+      local_nx_ptr_offset  = istart - 1
     ENDIF
     !!----------------- BINORMAL KY INDICES (parallelized)
     Nky              = Ny/2+1 ! Defined only on positive kx since fields are real

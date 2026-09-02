@@ -149,7 +149,7 @@ dirs:
 	mkdir -p $(MODDIR)
 src/srcinfo.h:
 	( cd src/srcinfo; $(MAKE);)
-clean: cleanobj cleanmod
+clean: cleanobj cleanmod cleanunit
 	@rm -f src/srcinfo.h
 	@rm -f src/srcinfo/srcinfo.h
 cleanobj:
@@ -400,3 +400,96 @@ $(OBJDIR)/CLA_mod.o
    $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/grid_mod.o \
    $(OBJDIR)/time_integration_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/CLA_mod.f90 -o $@
+
+#------------------------------------------------------------------------------
+# Unit tests -- "make check"
+#
+# The tests are built into their own obj/ and mod/ subtrees through a recursive
+# make that overrides OBJDIR and MODDIR. That isolation is deliberate: the
+# normal targets leave their .mod files wherever the last invocation happened to
+# put them (EXTMOD is empty for dp/sp/debug, so gfortran drops them in the
+# working directory), and a test build must not depend on, or clobber, that.
+#
+# Each test program links against every object except main.o, so a test can USE
+# any module of the code without this Makefile needing a per-test dependency
+# list. The price is one link per test, which is cheap next to the compile.
+#
+# Runtime checks are on: an out of bounds access in the code under test should
+# fail the test rather than go unnoticed.
+#
+# Set TESTRUNNER if your MPI needs a launcher even for a single rank, e.g.
+#   make check TESTRUNNER="mpirun -np 1"
+#------------------------------------------------------------------------------
+UNITSRCDIR = $(PREFIX)/unit
+UNITBINDIR = $(BINDIR)/unit
+UNITOBJDIR = $(OBJDIR)/tests
+TESTRUNNER =
+
+CHK_AUTO   = $(if $(F90_IS_GNU),-O1 -g -fcheck=all -fbacktrace -ffree-line-length-0,-O1 -g -traceback -check all)
+MODOUT_AUTO= $(if $(F90_IS_GNU),-J $(MODDIR),-module $(MODDIR))
+
+# One executable per test program in unit/ (test_harness_mod is the shared
+# assertion helper, not a program).
+UNIT_PROGS = test_prec_const test_utility test_lag_interp test_calculus \
+             test_numerics test_coeff test_grid test_time_integration
+UNIT_EXECS = $(addprefix $(UNITBINDIR)/,$(UNIT_PROGS))
+UNIT_OBJS  = $(addprefix $(UNITOBJDIR)/,$(addsuffix .o,$(UNIT_PROGS)))
+
+# allocate_array does not deallocate first, so time_integration_readinputs can
+# only run once per process. The scheme is a command line argument instead and
+# the binary is run once per scheme.
+TI_SCHEMES = EE RK2 RK3 SSP_RK3 ODE23 RK4 DOPRI5
+
+check:
+	@$(MAKE) --no-print-directory run-unit-tests \
+	    OBJDIR=$(PREFIX)/obj/unit MODDIR=$(PREFIX)/mod/unit
+
+run-unit-tests: F90      = mpif90
+run-unit-tests: F90FLAGS = $(CHK_AUTO) -D__GYACDIR__=\"$(PREFIX)\"
+run-unit-tests: FPPFLAGS = $(FPP_AUTO)
+run-unit-tests: EXTMOD   = $(MODOUT_AUTO)
+run-unit-tests: dirs unitdirs src/srcinfo.h $(UNIT_EXECS)
+	@echo ""
+	@echo "== running unit tests =="
+	@echo ""
+	@fail=0; \
+	for t in $(filter-out $(UNITBINDIR)/test_time_integration,$(UNIT_EXECS)); do \
+	  $(TESTRUNNER) $$t || fail=`expr $$fail + 1`; \
+	done; \
+	for s in $(TI_SCHEMES); do \
+	  $(TESTRUNNER) $(UNITBINDIR)/test_time_integration $$s || fail=`expr $$fail + 1`; \
+	done; \
+	if [ $$fail -eq 0 ]; then \
+	  echo "== all unit tests passed =="; \
+	else \
+	  echo "== $$fail unit test suite(s) FAILED =="; exit 1; \
+	fi
+
+unitdirs:
+	mkdir -p $(UNITBINDIR)
+	mkdir -p $(UNITOBJDIR)
+
+cleanunit:
+	@rm -rf $(PREFIX)/obj/unit $(PREFIX)/mod/unit $(BINDIR)/unit
+
+# Shared assertion helpers
+$(UNITOBJDIR)/test_harness_mod.o : $(UNITSRCDIR)/test_harness_mod.f90 \
+   $(OBJDIR)/prec_const_mod.o
+	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) $< -o $@
+
+# Every test program may reach any module, so all of them are prerequisites.
+$(UNITOBJDIR)/%.o : $(UNITSRCDIR)/%.f90 $(UNITOBJDIR)/test_harness_mod.o $(FOBJ)
+	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) $< -o $@
+
+# The object list is globbed at recipe time so that objects built as a side
+# effect of $(FOBJ) (calculus_mod, cosolver_interface_mod) are picked up too.
+# main.o is dropped because it carries the PROGRAM unit of the solver.
+$(UNITBINDIR)/% : $(UNITOBJDIR)/%.o
+	$(F90) $(LDFLAGS) $< $(UNITOBJDIR)/test_harness_mod.o \
+	  $(filter-out $(OBJDIR)/main.o,$(wildcard $(OBJDIR)/*.o)) \
+	  $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $@
+
+.PHONY: check run-unit-tests unitdirs cleanunit
+# Without this, make treats the test objects as intermediates of the chained
+# pattern rules above and deletes them, recompiling every test on every run.
+.SECONDARY: $(UNIT_OBJS)
