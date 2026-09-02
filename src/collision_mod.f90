@@ -6,7 +6,9 @@ PRIVATE
 CHARACTER(len=32),    PUBLIC, PROTECTED :: collision_model      ! (Lenard-Bernstein: 'LB', Dougherty: 'DG', Sugama: 'SG', Lorentz: 'LR', Landau: 'LD')
 LOGICAL,              PUBLIC, PROTECTED :: GK_CO        =.true. ! activates GK effects on CO
 LOGICAL,              PUBLIC, PROTECTED :: INTERSPECIES =.true. ! activates interpecies collision
-CHARACTER(len=128),   PUBLIC, PROTECTED :: mat_file    ! COSOlver matrix file names
+! COSOlver matrix file name. The default must not be blank: it is written to the
+! output file as an attribute, and a zero-length string makes HDF5 complain.
+CHARACTER(len=128),   PUBLIC, PROTECTED :: mat_file = 'none'
 REAL(xp),             PUBLIC, PROTECTED :: collision_kcut = 100.0
 LOGICAL,              PUBLIC, PROTECTED :: cosolver_coll ! check if cosolver matrices are used
 
@@ -101,7 +103,8 @@ CONTAINS
           CALL compute_dougherty
         CASE ('SG','LR','LD')
           CALL compute_cosolver_coll(GK_CO)
-        CASE ('none','hypcoll','dvpar4')
+        ! collision_readinputs normalises 'none'/'hypcoll'/'dvpar4' to 'NO'
+        CASE ('NO')
           Capj = 0._xp
         CASE DEFAULT
           ERROR STOP '>> ERROR << collision operator not recognized!!'
@@ -115,8 +118,9 @@ CONTAINS
   !! Lenard Bernstein collision operator
   !******************************************************************************!
   SUBROUTINE compute_lenard_bernstein
-    USE grid, ONLY: ias,iae, ips,ipe, ijs,ije, parray, jarray, &
-                    ikys,ikye, ikxs,ikxe, izs,ize, kp2array, ngp_o2, ngj_o2, ngz_o2
+    USE grid, ONLY: local_na, local_np, local_nj, parray, jarray, &
+                    local_nky, local_nkx, local_nz, kp2array, nzgrid, &
+                    ngp_o2, ngj_o2, ngz_o2
     USE species,          ONLY: sigma2_tau_o2, nu_ab
     USE time_integration, ONLY: updatetlevel
     USE array,            ONLY: Capj
@@ -125,14 +129,14 @@ CONTAINS
     COMPLEX(xp) :: TColl_
     REAL(xp)    :: j_xp, p_xp, ba_2, kp2
     INTEGER     :: iz,ikx,iky,ij,ip,ia,eo,ipi,iji,izi
-    DO iz = izs,ize; izi = iz + ngz_o2
-    DO ikx = ikxs, ikxe;
-    DO iky = ikys, ikye;
-    DO ij = ijs,ije; iji = ij + ngj_o2
-    DO ip = ips,ipe; ipi = ip + ngp_o2
-    DO ia = ias, iae
+    DO iz = 1,local_nz; izi = iz + ngz_o2
+    DO ikx = 1,local_nkx
+    DO iky = 1,local_nky
+    DO ij = 1,local_nj; iji = ij + ngj_o2
+    DO ip = 1,local_np; ipi = ip + ngp_o2
+    DO ia = 1,local_na
       !** Auxiliary variables **
-      eo   = MODULO(parray(ipi),2)
+      eo   = MIN(nzgrid,MODULO(parray(ipi),2)+1)
       p_xp = REAL(parray(ipi),xp)
       j_xp = REAL(jarray(iji),xp)
       kp2  = kp2array(iky,ikx,izi,eo)

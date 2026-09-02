@@ -295,8 +295,8 @@ CONTAINS
   ! The other grids are simply
   ! |_|_|_|_|
   !  1 2 3 4
-  SUBROUTINE set_grids(shear,ExBrate,Npol,LINEARITY,N_HD,N_HDz,EM,Na)
-    REAL(xp), INTENT(IN) :: shear, ExBrate, Npol
+  SUBROUTINE set_grids(shear,Npol,LINEARITY,N_HD,N_HDz,EM,Na)
+    REAL(xp), INTENT(IN) :: shear, Npol
     CHARACTER(len=*), INTENT(IN) :: LINEARITY
     INTEGER, INTENT(IN)  :: N_HD, N_HDz
     LOGICAL, INTENT(IN)  :: EM
@@ -305,7 +305,7 @@ CONTAINS
     CALL set_pgrid(EM)
     CALL set_jgrid
     CALL set_kygrid(LINEARITY,N_HD)
-    CALL set_kxgrid(shear,ExBrate,Npol,1._xp,LINEARITY,N_HD) ! this will be redone after geometry if Cyq0_x0 .NE. 1
+    CALL set_kxgrid(shear,Npol,1._xp,LINEARITY,N_HD) ! this will be redone after geometry if Cyq0_x0 .NE. 1
     CALL set_xgrid
     CALL set_zgrid (Npol,N_HDz)
   END SUBROUTINE set_grids
@@ -489,11 +489,11 @@ CONTAINS
     ENDIF
   END SUBROUTINE set_kygrid
 
-  SUBROUTINE set_kxgrid(shear,ExBrate,Npol,Cyq0_x0,LINEARITY,N_HD)
+  SUBROUTINE set_kxgrid(shear,Npol,Cyq0_x0,LINEARITY,N_HD)
     USE prec_const, ONLY: xp, pi
     USE basic, ONLY: speak, str
     IMPLICIT NONE
-    REAL(xp), INTENT(IN) :: shear, Npol, Cyq0_x0, ExBrate
+    REAL(xp), INTENT(IN) :: shear, Npol, Cyq0_x0
     CHARACTER(len=*), INTENT(IN) ::LINEARITY
     INTEGER, INTENT(IN)  :: N_HD
     INTEGER :: ikx, iky
@@ -502,8 +502,9 @@ CONTAINS
       CALL speak('Magnetic shear detected: set up sheared kx grid..',1)
       ! mininal size of box in x to respect dkx = 2pi shear dky
       Lx_adapted = Ly/(2._xp*pi*shear*Npol*Cyq0_x0)
-      ! Put Nexc to 0 so that it is computed from a target value Lx
-      IF(Nexc .EQ. 0) THEN
+      ! Any non positive Nexc (0 or the documented -1) asks for an automatic
+      ! value computed from the target Lx given in the input file
+      IF(Nexc .LE. 0) THEN
         Nexc = CEILING(0.9 * Lx/Lx_adapted)
         CALL speak('Adapted Nexc ='//str(Nexc),1)
       ENDIF
@@ -511,6 +512,8 @@ CONTAINS
       Lx = Lx_adapted*Nexc
       CALL speak('Simulation Lx ='//str(Lx),1)
     ENDIF
+    IF(Lx .LE. 0._xp) &
+      ERROR STOP '>> ERROR << Lx must be positive (check Lx and Nexc in the input file)'
     deltakx = 2._xp*PI/Lx
     inv_dkx = 1._xp/deltakx 
     IF(MODULO(total_nkx,2) .EQ. 0) THEN ! Even number of kx (-2 -1 0 1 2 3)
@@ -543,13 +546,7 @@ CONTAINS
       ERROR STOP "Gyacomo is safer with an even Kx number"
     ENDIF
     ! Orszag 2/3 filter
-    ! We remove one point more if ExB is on since the moving grid
-    ! can go up to kx=+-(kx_max+deltakx/2)
-    IF (ABS(ExBrate) .GT. 0) THEN
-      two_third_kxmax = 2._xp/3._xp*abs(kx_min)
-    ELSE
-      two_third_kxmax = 2._xp/3._xp*abs(kx_min)
-    ENDIF
+    two_third_kxmax = 2._xp/3._xp*abs(kx_min)
     ! Antialiasing filter
     DO iky = 1,local_nky
       DO ikx = 1,local_nkx
@@ -589,7 +586,8 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     INTEGER , INTENT(IN) :: N_HDz
-    REAL(xp):: grid_shift, Lz, zmax, zmin, Npol
+    REAL(xp), INTENT(IN) :: Npol
+    REAL(xp):: grid_shift, Lz, zmax, zmin
     INTEGER :: iz, ig, eo
     ! Length of the flux tube (in ballooning angle)
     Lz         = 2._xp*pi*Npol
@@ -605,9 +603,7 @@ CONTAINS
     ELSE
       grid_shift = 0._xp
     ENDIF
-    ! Build the full grids on process 0 to diagnose it without comm   
-    IF (Nz .EQ. 1) &
-      Npol   = 0._xp
+    ! Build the full grids on process 0 to diagnose it without comm
     zmax = 0; zmin = 0;
     DO iz = 1,total_nz ! z in [-pi pi-dz] x Npol
       zarray_full(iz) = REAL(iz-1,xp)*deltaz - Lz/2._xp
@@ -629,7 +625,7 @@ CONTAINS
       ! continue in z<pi and z>pi
       DO ig = 1,ngz/2
         zarray(local_nz+ngz/2+ig,eo) = zarray(local_nz+ngz/2,eo) + ig*deltaz
-        zarray(ig,eo) = zarray(1+ngz/2,eo) - (3-ig)*deltaz
+        zarray(ig,eo) = zarray(1+ngz/2,eo) - (ngz/2+1-ig)*deltaz
       ENDDO
       ! Set up the flags to know if the process contains the tip and/or the tail
       ! of the z domain (important for z-boundary condition)

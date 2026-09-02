@@ -395,19 +395,25 @@ class GyacomoSimulation:
         # Write params file
         self.write_params_file()
     
-    def run(self, nproc=8, blocking=True, verbose=True):
+    def run(self, nproc=8, decomposition=None, blocking=True, verbose=True):
         """
         Execute Gyacomo simulation with MPI.
-        
+
         Parameters
         ----------
         nproc : int, optional
             Number of MPI processes (default: 8)
+        decomposition : tuple of 3 int, optional
+            Process counts along (p, ky, z) -- the three arguments Gyacomo
+            expects. Note these are *process* counts, not grid sizes, and that
+            kx is never distributed. Their product must equal nproc.
+            Defaults to (1, nproc, 1), the same fallback the solver uses when
+            it is given no decomposition arguments.
         blocking : bool, optional
             Wait for completion (default: True)
         verbose : bool, optional
             Print output to console (default: True)
-            
+
         Returns
         -------
         subprocess.CompletedProcess or subprocess.Popen
@@ -415,44 +421,50 @@ class GyacomoSimulation:
         """
         # Ensure directory and params exist
         self.setup_directory()
-        
-        # Determine MPI decomposition (Nx * Ny * 1)
-        Nx_procs = self.params['GRID']['Nx']
-        Ny_procs = nproc // Nx_procs
-        
+
+        # MPI decomposition along (p, ky, z)
+        if decomposition is None:
+            decomposition = (1, nproc, 1)
+        np_p, np_ky, np_z = decomposition
+        product = np_p * np_ky * np_z
+        if product != nproc:
+            raise ValueError(
+                f"decomposition {decomposition} uses {product} processes "
+                f"but nproc is {nproc}; the product must equal nproc")
+
         # Build command
         cmd = [
             'mpirun', '-np', str(nproc),
             str(self.executable),
-            str(Nx_procs), str(Ny_procs), '1'
+            str(np_p), str(np_ky), str(np_z)
         ]
-        
+
         if verbose:
-            print(f"Running: {' '.join(cmd)} < params.in")
+            print(f"Running: {' '.join(cmd)}")
             print(f"Working directory: {self.run_dir}")
-        
-        # Execute
-        with open(self.params_file, 'r') as stdin_file:
-            if blocking:
+
+        # Execute. Gyacomo reads params.in from its working directory, so
+        # there is nothing to pipe on stdin.
+        if blocking:
+            with open(self.stdout_file, 'w') as stdout_file:
                 result = subprocess.run(
                     cmd,
-                    stdin=stdin_file,
-                    stdout=open(self.stdout_file, 'w'),
+                    stdout=stdout_file,
                     stderr=subprocess.STDOUT,
                     cwd=self.run_dir
                 )
-                if verbose:
-                    print(f"Simulation completed with exit code: {result.returncode}")
-                return result
-            else:
+            if verbose:
+                print(f"Simulation completed with exit code: {result.returncode}")
+            return result
+        else:
+            with open(self.stdout_file, 'w') as stdout_file:
                 process = subprocess.Popen(
                     cmd,
-                    stdin=stdin_file,
-                    stdout=open(self.stdout_file, 'w'),
+                    stdout=stdout_file,
                     stderr=subprocess.STDOUT,
                     cwd=self.run_dir
                 )
-                return process
+            return process
     
     def check_status(self):
         """

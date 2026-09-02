@@ -252,7 +252,7 @@ CONTAINS
              + ((-4._xp + Cos(rAng) + Sqrt(3._xp)*Sin(rAng))*dtrAng**2)/(-1._xp + Cos(rAng) + Sqrt(3._xp)*Sin(rAng))**2 &
              + ((Sqrt(3._xp)*Cos(rAng) - Sin(rAng))*dtdtrAng)/(-1._xp + Cos(rAng) + Sqrt(3._xp)*Sin(rAng)))
 
-        do i=1._xp,np
+        do i=1,np
            if (abs(CN3*cos(3._xp*(thAdj(i)+theta3)))<1e-8) then
               rShape(i) = aSurf*Sqrt(psiN/(1._xp + CN2*Cos(2*(thAdj(i) + theta2))))
               drrShape(i) = (rShape(i)*drpsiN)/(2._xp*psiN)

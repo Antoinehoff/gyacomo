@@ -94,6 +94,12 @@ CONTAINS
     IF(abs(ExBrate) .LT. epsilon(ExBrate))&
       ExB_NL_CORRECTION = .false.
 
+    ! The background zonal mode is injected at the kx index pair (ikxZF+1,
+    ! total_nkx-ikxZF+1), which is out of the kx grid for ikxZF < 1 (and carries
+    ! no amplitude there either, since the drive scales with ikxZF)
+    IF((abs(ZFrate) .GT. epsilon(ZFrate)) .AND. (ikxZF .LT. 1)) &
+      ERROR STOP '>> ERROR << a non zero ZFrate requires ikxZF >= 1'
+
   END SUBROUTINE model_readinputs
 
   SUBROUTINE model_outputinputs(fid)

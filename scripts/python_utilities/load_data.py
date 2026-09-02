@@ -21,21 +21,19 @@ def load_data_3D_frame(filename,dname,tframe):
         # load time
         time  = file['data/var3d/time']
         time  = time[:]
-        # find frame
+        # find frame. Datasets are numbered from 1 while time[] is 0-based,
+        # so time[i] is stored in dataset {i+1:06d}.
         iframe = tools.closest_index(time,tframe)
         tf     = time[iframe]
+        dset   = f'data/var3d/{dname}/{iframe+1:06d}'
         # Load data
         try:
-            data = file[f'data/var3d/{dname}/{iframe:06d}']
-        except:
-            g_ = file[f'data/var3d/']
-            print('Dataset: '+f'data/var3d/{dname}/{iframe:06d}'+' not found')
-            print('Available fields: ')
-            msg = ''
-            for key in g_:
-                msg = msg + key + ', '
-            print(msg)
-            exit()
+            data = file[dset]
+        except KeyError:
+            g_ = file['data/var3d/']
+            raise KeyError(
+                f'Dataset {dset} not found. Available fields: '
+                + ', '.join(g_.keys()))
         # Select the first species for species dependent fields
         if not (dname == 'phi' or dname == 'psi'):
             data = data[:,:,:,0]
@@ -53,21 +51,19 @@ def load_data_5D_frame(filename,dname,tframe):
         # load time
         time  = file['data/var5d/time']
         time  = time[:]
-        # find frame
+        # find frame. Datasets are numbered from 1 while time[] is 0-based,
+        # so time[i] is stored in dataset {i+1:06d}.
         iframe = tools.closest_index(time,tframe)
         tf     = time[iframe]
+        dset   = f'data/var5d/{dname}/{iframe+1:06d}'
         # Load data
         try:
-            data = file[f'data/var5d/{dname}/{iframe:06d}']
-        except:
-            g_ = file[f'data/var5d/']
-            print('Dataset: '+f'data/var5d/{dname}/{iframe:06d}'+' not found')
-            print('Available fields: ')
-            msg = ''
-            for key in g_:
-                msg = msg + key + ', '
-            print(msg)
-            exit()
+            data = file[dset]
+        except KeyError:
+            g_ = file['data/var5d/']
+            raise KeyError(
+                f'Dataset {dset} not found. Available fields: '
+                + ', '.join(g_.keys()))
         # Select the first species for species dependent fields
         data = data[:]
         data = data['real']+1j*data['imaginary'] 
@@ -91,8 +87,10 @@ def load_grids(filename):
         Ny     = 2*(Nky-1)
         Lx     = 2*np.pi/kxgrid[1]
         Ly     = 2*np.pi/kygrid[1]
-        xgrid  = np.linspace(-Lx/2,Lx/2,Nx)
-        ygrid  = np.linspace(-Ly/2,Ly/2,Ny)
+        # The domain is periodic, so the last point is not repeated: the grid
+        # spacing is Lx/Nx (as in grid_mod.f90::set_xgrid), not Lx/(Nx-1).
+        xgrid  = np.linspace(-Lx/2,Lx/2,Nx,endpoint=False)
+        ygrid  = np.linspace(-Ly/2,Ly/2,Ny,endpoint=False)
 
     return xgrid,kxgrid,ygrid,kygrid,zgrid,pgrid,jgrid
 

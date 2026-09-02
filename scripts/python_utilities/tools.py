@@ -15,13 +15,12 @@ def zkxky_to_xy_const_z(array, iz):
     return array
     
 def closest_index(array, v):
+    """Index of the element of `array` closest to `v` (0-based)."""
     # Compute absolute differences between each element of the array and v
     absolute_diff = np.abs(array - v)
-    
+
     # Find the index of the minimum difference
-    closest_index = np.argmin(absolute_diff)
-    closest_index = max(closest_index,1)
-    return closest_index
+    return int(np.argmin(absolute_diff))
 
 def is_convertible_to_float(s):
     try:

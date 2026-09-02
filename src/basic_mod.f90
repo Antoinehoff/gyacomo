@@ -20,7 +20,6 @@ MODULE basic
   LOGICAL, PUBLIC             :: nlend   = .FALSE.     ! Signal end of run
   LOGICAL, PUBLIC             :: crashed = .FALSE.     ! Signal end of crashed run
   INTEGER, PUBLIC :: iframe0d ! counting the number of times 0d datasets are outputed (for diagnose)
-  INTEGER, PUBLIC :: iframe1d ! counting the number of times 1d datasets are outputed (for diagnose)
   INTEGER, PUBLIC :: iframe2d ! counting the number of times 2d datasets are outputed (for diagnose)
   INTEGER, PUBLIC :: iframe3d ! counting the number of times 3d datasets are outputed (for diagnose)
   INTEGER, PUBLIC :: iframe5d ! counting the number of times 5d datasets are outputed (for diagnose)
@@ -29,6 +28,8 @@ MODULE basic
   !  List of logical file units
   INTEGER, PUBLIC, PROTECTED :: lu_in   = 90 ! File duplicated from STDIN
   INTEGER, PUBLIC, PROTECTED :: lu_stop = 91 ! stop file, see subroutine TESEND
+  INTEGER, PUBLIC, PROTECTED :: lu_ttr  = 92 ! time trace text file (txtonly diag mode)
+  INTEGER, PUBLIC, PROTECTED :: lu_chk  = 93 ! phi snapshot file, see SPIT_SNAPSHOT_CHECK
   ! To measure computation time
   type :: chrono
     real(xp) :: tstart !start of the chrono
@@ -86,6 +87,8 @@ CONTAINS
     READ(lu_in,basic)
 
     !Init chronometers
+    chrono_runt%ttot = 0
+    chrono_coll%ttot = 0
     chrono_mrhs%ttot = 0
     chrono_pois%ttot = 0
     chrono_sapj%ttot = 0

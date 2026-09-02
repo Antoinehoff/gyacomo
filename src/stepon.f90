@@ -186,13 +186,13 @@ CONTAINS
          ! ENDDO z
          ! Phi
          DO ikx=2,total_nkx/2 !symmetry at ky = 0
-            phi(iky0,ikx,:) = phi(iky0,total_nkx+2-ikx,:)
+            phi(iky0,ikx,:) = CONJG(phi(iky0,total_nkx+2-ikx,:))
          END DO
          ! must be real at origin
          phi(iky0,ikx0,:) = REAL(phi(iky0,ikx0,:),xp)
          ! Psi
          DO ikx=2,total_nkx/2 !symmetry at ky = 0
-            psi(iky0,ikx,:) = psi(iky0,total_nkx+2-ikx,:)
+            psi(iky0,ikx,:) = CONJG(psi(iky0,total_nkx+2-ikx,:))
          END DO
          ! must be real at origin
          psi(iky0,ikx0,:) = REAL(psi(iky0,ikx0,:),xp)

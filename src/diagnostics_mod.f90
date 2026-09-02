@@ -16,8 +16,13 @@ MODULE diagnostics
   LOGICAL, PUBLIC, PROTECTED :: write_fvel  = .TRUE. 
   LOGICAL, PUBLIC, PROTECTED :: write_temp  = .TRUE. 
 
-  INTEGER, PUBLIC, PROTECTED :: nsave_0d, nsave_1d, nsave_2d, nsave_3d, nsave_5d ! save data every n step
-  REAL,    PUBLIC, PROTECTED :: dtsave_0d, dtsave_1d, dtsave_2d, dtsave_3d, dtsave_5d ! save data every dt time unit
+  ! save data every n step (<= 0 disables the corresponding output)
+  INTEGER, PUBLIC, PROTECTED :: nsave_0d = 0, nsave_1d = 0, nsave_2d = 0, nsave_3d = 0, nsave_5d = 0
+  ! save data every dt time unit (<= 0 disables the corresponding output).
+  ! These must have the same kind as dt, otherwise the CEILING below rounds up
+  ! on values such as dtsave/dt = 0.1/0.01 that are not exact in binary32.
+  REAL(xp), PUBLIC, PROTECTED :: dtsave_0d = -1._xp, dtsave_1d = -1._xp, dtsave_2d = -1._xp, &
+                                 dtsave_3d = -1._xp, dtsave_5d = -1._xp
   ! Change diagnostic mode (full/txtonly)
   CHARACTER(len=256), PUBLIC, PROTECTED :: diag_mode = "full"
   !  HDF5 file
@@ -81,8 +86,13 @@ CONTAINS
     INTEGER,            INTENT(OUT)   :: fid
     CHARACTER(len=256)                :: str
     INCLUDE 'srcinfo/srcinfo.h'
-    ! Writing output filename
-    WRITE(file,'(a,a1,i2.2,a3)') TRIM(file0)   ,'_',jobnum,'.h5'
+    ! Writing output filename (i0 keeps job numbers >= 100 readable, they would
+    ! otherwise overflow a i2.2 field and be written as '**')
+    IF(jobnum .LE. 99) THEN
+      WRITE(file,'(a,a1,i2.2,a3)') TRIM(file0),'_',jobnum,'.h5'
+    ELSE
+      WRITE(file,'(a,a1,i0,a3)')   TRIM(file0),'_',jobnum,'.h5'
+    ENDIF
     !                      1.1   Initial run
     ! Main output file creation
     IF (write_doubleprecision) THEN
@@ -152,7 +162,8 @@ CONTAINS
     END SELECT
   
     ! Terminal info
-    IF ((kstep .GE. 0) .AND. (MOD(cstep, nsave_0d) == 0) .AND. (my_id .EQ. 0)) THEN
+    IF ((kstep .GE. 0) .AND. (nsave_0d .GT. 0) .AND. (my_id .EQ. 0)) THEN
+     IF (MOD(cstep, nsave_0d) == 0) THEN
       IF (WRITE_MW) THEN ! Display MW
         if(SIZE(pflux_x) .GT. 1) THEN
           WRITE(*,"(A,F8.2,A8,G10.3,A14,G10.3,A7)")&
@@ -170,6 +181,7 @@ CONTAINS
             '|t = ', time,'| Pxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'|'
           endif
       ENDIF
+     ENDIF
     ENDIF
 
   END SUBROUTINE diagnose
@@ -289,6 +301,9 @@ CONTAINS
 #ifdef TEST_SVD
         CALL creatg(fidres, "/data/var2d/sv_ky_pj", "singular values of the moment ky/pj cut")
 #endif
+        IF (cstep==0) THEN
+          iframe2d=0
+        ENDIF
         CALL attach(fidres,"/data/var2d/" , "frames", iframe2d)
       ENDIF
       !  var3d group (phi,psi, fluid moments, Ni00, Napjz)
@@ -390,16 +405,25 @@ CONTAINS
     INTEGER, parameter  :: BUFSIZE = 2
     INTEGER :: rank = 0
     INTEGER :: dims(1) = (/0/)
+    IF (kstep .EQ. 0) THEN
+      ! open the time trace text file on a unit we own
+      IF (my_id .EQ. 0) &
+        OPEN(lu_ttr, file=TRIM(ttrfile0)//'.txt', form='formatted', status='replace')
+      iframe5d = 0
+    ENDIF
     IF (kstep .GE. 0) THEN
       ! output the transport in a txt file
-      IF ( MOD(cstep, nsave_0d) == 0 ) THEN
+      IF ( nsave_0d .GT. 0 ) THEN
+       IF ( MOD(cstep, nsave_0d) == 0 ) THEN
         CALL compute_radial_transport
         CALL compute_radial_heatflux
         IF (my_id .EQ. 0) &
-          WRITE(1,*) time, pflux_x(1), hflux_x(1)
+          WRITE(lu_ttr,*) time, pflux_x(1), hflux_x(1)
+       END IF
       END IF
     !! Save the last state
     ELSEIF (kstep .EQ. -1) THEN
+      IF (my_id .EQ. 0) CLOSE(lu_ttr)
       CALL init_outfile(comm0,   resfile0,resfile,fidres)
       CALL creatg(fidres, "/data/var5d", "5d profiles")
       CALL creatd(fidres, rank, dims,  "/data/var5d/time",     "Time t*c_s/R")
@@ -474,6 +498,7 @@ CONTAINS
 #endif
     IMPLICIT NONE
     COMPLEX(xp), DIMENSION(local_na,local_nky,local_nkx,local_nz) :: Na00_
+    CALL getatt(fidres,      "/data/var2d/",       "frames",iframe2d)
     iframe2d=iframe2d+1
     CALL attach(fidres,"/data/var2d/" , "frames", iframe2d)
     CALL append(fidres,"/data/var2d/time", REAL(time,dp), ionode=0)
@@ -741,8 +766,8 @@ CONTAINS
     USE prec_const, ONLY: xp
     IMPLICIT NONE
     LOGICAL :: file_exist
-    INTEGER :: fid_check, ikx, iky, iz
-    CHARACTER(256) :: check_filename
+    INTEGER :: ikx, iky, iz
+    CHARACTER(len=*), PARAMETER :: check_filename = 'check_phi.out'
     COMPLEX(xp), DIMENSION(total_nky,total_nkx,total_nz) :: field_to_check
     !! Spit a snapshot of PHI if requested (triggered by creating a file named "check_phi")
     INQUIRE(file='check_phi', exist=file_exist)
@@ -750,19 +775,17 @@ CONTAINS
        IF(my_id.EQ. 0) WRITE(*,*) 'Check file found -> gather phi..'
        CALL gather_xyz(phi(:,:,(1+ngz_o2):(local_nz+ngz_o2)), field_to_check,local_nky,total_nky,total_nkx,local_nz,total_nz)
        IF(my_id.EQ. 0) THEN
-         WRITE(check_filename,'(a16)') 'check_phi.out'
-         fid_check = 0
-         OPEN(fid_check, file=check_filename, form='formatted')
+         OPEN(lu_chk, file=check_filename, form='formatted', status='replace')
          WRITE(*,*) 'Check file found -> output phi ..'
-         WRITE(fid_check,*) total_nky, total_nkx, total_nz
+         WRITE(lu_chk,*) total_nky, total_nkx, total_nz
          DO iky = 1,total_nky; DO ikx = 1, total_nkx; DO iz = 1,total_nz
-           WRITE(fid_check,*) real(field_to_check(iky,ikx,iz)), ',' , imag(field_to_check(iky,ikx,iz))
+           WRITE(lu_chk,*) real(field_to_check(iky,ikx,iz)), ',' , imag(field_to_check(iky,ikx,iz))
          ENDDO; ENDDO; ENDDO
-         CLOSE(fid_check)
+         CLOSE(lu_chk)
          WRITE(*,*) 'Check file found -> done.'
          ! delete the check_phi flagfile
-         OPEN(fid_check, file='check_phi')
-         CLOSE(fid_check, status='delete')
+         OPEN(lu_chk, file='check_phi')
+         CLOSE(lu_chk, status='delete')
        ENDIF
     ENDIF
   END SUBROUTINE spit_snapshot_check
@@ -779,7 +802,7 @@ CONTAINS
     INTEGER, INTENT(in) :: fid
     CHARACTER(len=256)  :: str
     WRITE(str,'(a)') '/data/input/diagnostics'
-    CALL creatd(fidres, 0,(/0/),TRIM(str),'Diagnostics Parameters Input')
+    CALL creatd(fid, 0,(/0/),TRIM(str),'Diagnostics Parameters Input')
     CALL attach(fid, TRIM(str), "write_doubleprecision", write_doubleprecision)
     CALL attach(fid, TRIM(str), "nsave_0d", nsave_0d)
     CALL attach(fid, TRIM(str), "nsave_1d", nsave_1d)

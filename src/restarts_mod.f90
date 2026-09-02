@@ -35,14 +35,19 @@ CONTAINS
     INTEGER :: ia,ip,ij,iky,ikx,iz, iacp,ipcp,ijcp,iycp,ixcp, ierr
     INTEGER :: ipi,iji,izi,izg
     REAL(xp), DIMENSION(:), ALLOCATABLE :: ky_cp, kx_cp, z_cp
-    REAL(xp):: Lx_cp, Ly_cp, Lz_cp, dz_cp, zi, zj_cp, zjp1_cp
+    REAL(xp):: zi, zj_cp, zjp1_cp
+    INTEGER :: jz_cp, jz_cp_p1
     REAL(xp):: timer_tot_1,timer_tot_2, zerotoone
     INTEGER,  DIMENSION(:), ALLOCATABLE  :: z_idx_mapping
     REAL(xp), DIMENSION(:), ALLOCATABLE  :: z_cp_stretched
     COMPLEX(xp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: moments_cp
     CALL cpu_time(timer_tot_1)
-    ! Checkpoint filename
-    WRITE(rstfile,'(a,i2.2,a3)') 'outputs_',job2load,'.h5'
+    ! Checkpoint filename (must match init_outfile's naming for job2load >= 100)
+    IF(job2load .LE. 99) THEN
+      WRITE(rstfile,'(a,i2.2,a3)') 'outputs_',job2load,'.h5'
+    ELSE
+      WRITE(rstfile,'(a,i0,a3)')   'outputs_',job2load,'.h5'
+    ENDIF
     CALL speak("Resume from "//rstfile,0)
     ! Open file
 #ifdef SINGLE_PRECISION
@@ -66,15 +71,13 @@ CONTAINS
     IF(Nz_cp  .NE. total_Nz)  CALL speak("NOTE: Nz  has changed",1)
     ! Get the x,y fourier modes and the z space and check grids
     ALLOCATE(ky_cp(Nky_cp),kx_cp(Nkx_cp),z_cp(Nz_cp))
-    CALL getarr(fidrst,"/data/grid/coordky",ky_cp); Ly_cp = 2._xp*PI/ky_cp(2)
-    CALL getarr(fidrst,"/data/grid/coordkx",kx_cp); Lx_cp = 2._xp*PI/kx_cp(2)
-    CALL getarr(fidrst,"/data/grid/coordz" , z_cp); Lz_cp =-2._xp*z_cp(1)
+    CALL getarr(fidrst,"/data/grid/coordky",ky_cp)
+    CALL getarr(fidrst,"/data/grid/coordkx",kx_cp)
+    CALL getarr(fidrst,"/data/grid/coordz" , z_cp)
     ! check changes
     IF(ABS(ky_cp(2)-kyarray_full(2)) .GT. 1e-3) CALL speak("NOTE: Ly  has changed",1)
     IF(ABS(kx_cp(2)-kxarray_full(2)) .GT. 1e-3) CALL speak("NOTE: Lx  has changed",1)
     IF(ABS(z_cp(1) - zarray_full(1)) .GT. 1e-3) CALL speak("NOTE: Lz  has changed",1)
-    dz_cp = (z_cp(2)- z_cp(1)) !! check deltaz changes
-    ! IF(ABS(deltaz - dz_cp) .GT. 1e-3) ERROR STOP "ERROR STOP: change of deltaz is not implemented."
     ! compute the mapping for z grid adaptation
     IF(Nz_cp .GT. 1) THEN
       ALLOCATE(z_idx_mapping(total_Nz+1),z_cp_stretched(Nz_cp+1)) ! we allocate them +1 for periodicity
@@ -129,12 +132,16 @@ CONTAINS
               IF((iacp.LE.Na_cp).AND.(ipcp.LE.Np_cp).AND.(ijcp.LE.Nj_cp).AND.(iycp.LE.Nky_cp).AND.(ixcp.LE.Nkx_cp)) THEN
                   IF(Nz_cp .GT. 1) THEN ! interpolate
                     zi      = zarray(izi,ieven)           ! position (=zarray_full(izg))
-                    zj_cp   = z_cp_stretched(z_idx_mapping(izg))
-                    zjp1_cp = z_cp_stretched(z_idx_mapping(izg)+1)
+                    ! Bracketing nodes of the stretched checkpoint grid. The
+                    ! upper one wraps around since the z domain is periodic.
+                    jz_cp    = z_idx_mapping(izg)
+                    jz_cp_p1 = MODULO(jz_cp,Nz_cp) + 1
+                    zj_cp   = z_cp_stretched(jz_cp)
+                    zjp1_cp = z_cp_stretched(jz_cp+1)
                     zerotoone = (zi - zj_cp)/(zjp1_cp-zj_cp) ! weight for interpolation
                     moments(ia,ipi,iji,iky,ikx,izi,:) = &
-                    (1._xp-zerotoone) *moments_cp(iacp,ipcp,ijcp,iycp,ixcp,z_idx_mapping(izg))&
-                    +       zerotoone *moments_cp(iacp,ipcp,ijcp,iycp,ixcp,z_idx_mapping(izg+1))
+                    (1._xp-zerotoone) *moments_cp(iacp,ipcp,ijcp,iycp,ixcp,jz_cp)&
+                    +       zerotoone *moments_cp(iacp,ipcp,ijcp,iycp,ixcp,jz_cp_p1)
                   ELSE ! copy on all planes
                     moments(ia,ipi,iji,iky,ikx,izi,:) = moments_cp(iacp,ipcp,ijcp,iycp,ixcp,1)
                   ENDIF
@@ -187,7 +194,9 @@ CONTAINS
           z_cp_stretched(iz_new) = zarray_new(iz_new)
           z_idx_mapping(iz_new)  = iz_new
         ENDDO
-        z_cp_stretched(Nz_new+1) = zarray_new(1)
+        ! Periodic image of the first node, one step beyond the last one, so
+        ! that the last interval has the same width as the others
+        z_cp_stretched(Nz_new+1) = z_cp_stretched(Nz_new) + dz_s
         z_idx_mapping(Nz_new+1)  = 1
       ELSE ! Strech the grid
         ! We loop over each new z grid points 
@@ -210,11 +219,13 @@ CONTAINS
         DO jz_cp = 1,Nz_cp
           z_cp_stretched(jz_cp) = zarray_new(1) + (jz_cp-1)*dz_s
         ENDDO
-        ! Periodicity
-        z_cp_stretched(Nz_cp+1) = z_cp_stretched(1)
+        ! Periodicity: the extra node is the periodic image of the first one,
+        ! one step beyond the last, so that the last interval keeps width dz_s
+        z_cp_stretched(Nz_cp+1) = z_cp_stretched(Nz_cp) + dz_s
         z_idx_mapping (Nz_new+1) = z_idx_mapping(1)
         ! Check that the start and the end of the grids are the same
-        IF(.NOT.(abs(z_cp_stretched(1)-zarray_new(1)) .LT. 1e-3).AND.(abs(z_cp_stretched(Nz_cp)-zarray_new(Nz_new)).LT.1e-3)) &
+        IF(.NOT.((abs(z_cp_stretched(1)-zarray_new(1)) .LT. 1e-3) .AND. &
+                 (abs(z_cp_stretched(Nz_cp)-zarray_new(Nz_new)) .LT. 1e-3))) &
           ERROR STOP "Failed to stretch the cp grid"
       ENDIF
     END SUBROUTINE z_grid_mapping

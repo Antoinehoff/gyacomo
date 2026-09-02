@@ -145,7 +145,15 @@ CONTAINS
       REAL(xp) :: kp_max,kperp_sim, kperp_mat, zerotoone
       CHARACTER(len=128) :: var_name, ikp_string, name_a, name_b
       CHARACTER(len=1)   :: letter_a, letter_b
-      ! Opening the compiled cosolver matrices results
+      LOGICAL  :: matfile_exists
+      ! Opening the compiled cosolver matrices results. futils only warns when
+      ! the file is missing, so check first: continuing would silently run the
+      ! whole simulation with uninitialised collision matrices.
+      INQUIRE(file=TRIM(matfile), exist=matfile_exists)
+      IF (.NOT. matfile_exists) THEN
+        IF (my_id .EQ. 0) WRITE(*,*) '>> ERROR << COSOlver matrix file not found: '//TRIM(matfile)
+        ERROR STOP '>> ERROR << COSOlver matrix file not found (check mat_file in the COLLISION namelist)'
+      ENDIF
       CALL openf(matfile,fid, 'r', 'D', mpicomm=comm_p);
       ! Get matrices dimensions (polynomials degrees and kperp grid)
       CALL getarr(fid, '/dims_i', dims) ! Get the ion polynomial degrees (consider same for electrons)
@@ -164,6 +172,9 @@ CONTAINS
         IF ( (kp_grid_mat(nkp_mat) .LT. kp_max) .AND. (my_id .EQ. 0)) WRITE(*,*) 'warning: Matrix kperp grid too small !!'
       ENDIF
       IF (GK_CO) THEN ! GK operator (k-dependant)
+        ! the kperp interpolation below needs at least one interval
+        IF (nkp_mat .LT. 2) &
+          ERROR STOP '>> ERROR << GK collision operator needs a matrix with at least 2 kperp points'
         ikps_C = 1; ikpe_C = nkp_mat
       ELSE ! DK operator, only the k=0 mat applied to all k
         ikps_C = 1; ikpe_C = 1
@@ -256,15 +267,16 @@ CONTAINS
                 IF(kperp_mat .GT. kperp_sim) EXIT ! a matrix with kperq > current kx2 + ky2 has been found
               ENDDO
               ! Interpolation
-              ! interval boundaries
-              ikp_next  = ikp_mat     !index of k1 (larger than kperp_sim thanks to previous loop)
-              ikp_prev  = ikp_mat - 1 !index of k0 (smaller neighbour to interpolate inbetween)
-              if ( (kp_grid_mat(ikp_prev) .GT. kperp_sim) .OR. (kp_grid_mat(ikp_next) .LT. kperp_sim) ) THEN
-                ! write(*,*) 'Warning, linear interp of collision matrix failed!! '
-                ! write(*,*) kp_grid_mat(ikp_prev), '<', kperp_sim, '<', kp_grid_mat(ikp_next)
-              ENDIF
-              ! 0->1 variable for linear interp, i.e. zero2one = (k-k0)/(k1-k0)
-              zerotoone = MIN(1._xp,(kperp_sim - kp_grid_mat(ikp_prev))/(kp_grid_mat(ikp_next) - kp_grid_mat(ikp_prev)))
+              ! interval boundaries. The search above exits at ikp_mat = 1 when
+              ! kperp_sim sits below the first matrix kperp (e.g. the kx=ky=0
+              ! mode), so clamp to keep the pair inside the matrix grid.
+              ikp_next  = MAX(2,ikp_mat)     !index of k1 (larger than kperp_sim thanks to previous loop)
+              ikp_prev  = ikp_next - 1       !index of k0 (smaller neighbour to interpolate inbetween)
+              ! 0->1 variable for linear interp, i.e. zero2one = (k-k0)/(k1-k0).
+              ! Clamped at both ends so that a kperp_sim outside the matrix grid
+              ! uses the nearest matrix value instead of extrapolating.
+              zerotoone = MAX(0._xp, MIN(1._xp, &
+                (kperp_sim - kp_grid_mat(ikp_prev))/(kp_grid_mat(ikp_next) - kp_grid_mat(ikp_prev))))
               ! Linear interpolation between previous and next kperp matrix values
               Caa (:,:,:,iky,ikx,iz) = (Caa__kp(:,:,:,ikp_next) - Caa__kp(:,:,:,ikp_prev))*zerotoone + Caa__kp(:,:,:,ikp_prev)
               IF(INTERSPECIES) THEN

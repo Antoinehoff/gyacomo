@@ -69,7 +69,7 @@ SUBROUTINE compute_nonlinear
         p_int    = parray(ipi)
         sqrt_p   = SQRT(REAL(p_int,xp))
         sqrt_pp1 = SQRT(REAL(p_int,xp) + 1._xp)
-        eo       = min(nzgrid,MODULO(parray(ip),2)+1)
+        eo       = min(nzgrid,MODULO(parray(ipi),2)+1)
         a:DO ia = 1,local_na
             ! Set non linear sum truncation
             bracket_sum_r = 0._xp ! initialize sum over real nonlinear term

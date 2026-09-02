@@ -77,6 +77,7 @@ SUBROUTINE evaluate_kernels
   USE grid,    ONLY : local_na, local_nj,ngj, local_nkx, local_nky, local_nz, ngz, jarray, kp2array,&
                       nzgrid
   USE species, ONLY : sigma2_tau_o2
+  USE parallel,ONLY : my_id
   USE model,    ONLY : KN_MODEL, ORDER
 #ifdef LAPACK
   USE model,    ONLY : ORDER_NUM, ORDER_DEN
@@ -89,7 +90,7 @@ SUBROUTINE evaluate_kernels
   SELECT CASE (KN_MODEL)
   CASE('taylor') ! developped with Leonhard Driever
     ! Kernels based on the ORDER_NUM order Taylor series of J0
-    WRITE (*,*) 'Kernel approximation uses Taylor series with ', ORDER, ' powers of k'
+    IF(my_id .EQ. 0) WRITE (*,*) 'Kernel approximation uses Taylor series with ', ORDER, ' powers of k'
     DO ia  = 1,local_na
       DO eo  = 1,nzgrid
         DO ikx = 1,local_nkx
@@ -99,9 +100,9 @@ SUBROUTINE evaluate_kernels
                 y_    =  sigma2_tau_o2(ia) * kp2array(iky,ikx,iz,eo)
                 j_int = jarray(ij)
                 IF (j_int > ORDER .OR. j_int < 0) THEN
-                  kernel(ia,ij,ikx,iky,iz,eo) = 0._xp
+                  kernel(ia,ij,iky,ikx,iz,eo) = 0._xp
                 ELSE
-                  kernel(ia,ij,ikx,iky,iz,eo) = taylor_kernel_n(ORDER, j_int, y_)
+                  kernel(ia,ij,iky,ikx,iz,eo) = taylor_kernel_n(ORDER, j_int, y_)
                 ENDIF
               ENDDO
             ENDDO
@@ -112,7 +113,7 @@ SUBROUTINE evaluate_kernels
   CASE ('pade')
 #ifdef LAPACK
     ! Kernels based on the ORDER_NUM / ORDER_DEN Pade approximation of the kernels
-    WRITE (*,*) 'Kernel approximation uses ', ORDER_NUM ,'/', ORDER_DEN, ' Pade approximation'
+    IF(my_id .EQ. 0) WRITE (*,*) 'Kernel approximation uses ', ORDER_NUM ,'/', ORDER_DEN, ' Pade approximation'
     DO ia  = 1,local_na
       DO eo  = 1,nzgrid
         DO ikx = 1,local_nkx
@@ -122,9 +123,9 @@ SUBROUTINE evaluate_kernels
                 y_    =  sigma2_tau_o2(ia) * kp2array(iky,ikx,iz,eo)
                 j_int = jarray(ij)
                 IF (j_int > ORDER_NUM .OR. j_int < 0) THEN
-                  kernel(ia,ij,ikx,iky,iz,eo) = 0._xp
+                  kernel(ia,ij,iky,ikx,iz,eo) = 0._xp
                 ELSE
-                  kernel(ia,ij,ikx,iky,iz,eo) = pade_kernel_n(j_int, y_,ORDER_NUM,ORDER_DEN)
+                  kernel(ia,ij,iky,ikx,iz,eo) = pade_kernel_n(j_int, y_,ORDER_NUM,ORDER_DEN)
                 ENDIF
               ENDDO
             ENDDO
@@ -411,6 +412,11 @@ REAL(xp) FUNCTION pade_kernel_n(n, y, N_NUM, N_DEN)
   REAL(xp) :: numerator_sum
   REAL(xp) :: denominator_sum
   INTEGER  :: m
+  ! N_DEN is not honoured below: the denominator is sized and summed on N_NUM,
+  ! so only diagonal [N/N] approximants are actually built. Refuse anything else
+  ! rather than silently returning a different approximant than the user asked for.
+  IF (N_DEN /= N_NUM) &
+    ERROR STOP '>> ERROR << only diagonal Pade kernels are implemented, set ORDER_DEN = ORDER_NUM'
   ! If N_NUM == 0, then the approximation should be the same as the Taylor approx. of N_NUM:
   IF (N_NUM == 0) THEN
       pade_kernel_n = taylor_kernel_n(N_NUM, n, y)
@@ -443,7 +449,7 @@ SUBROUTINE find_pade_coefficients(pade_num_coeffs, pade_denom_coeffs, n, N_NUM, 
 	INTEGER  :: m, j
 	REAL(xp) :: m_dp, n_dp
 	INTEGER  :: return_code  ! for DGESV
-	REAL(xp) :: pivot(N_NUM) ! for DGESV
+	INTEGER  :: pivot(N_NUM) ! for DGESV (IPIV must be an INTEGER array)
 
 	n_dp = REAL(n, xp)
 	
@@ -470,7 +476,6 @@ SUBROUTINE find_pade_coefficients(pade_num_coeffs, pade_denom_coeffs, n, N_NUM, 
 	END DO
 
 	! Then solve for the denominator coefficients, setting the first one to 1
-	!!!! SOLVER NOT YET IMPLEMENTED!!!!
 	pade_denom_coeffs(1) = 1
 	pade_denom_coeffs(2:) = - taylor_kernel_coeffs(N_NUM + 2 : N_NUM + N_NUM + 1) ! First acts as RHS vector for equation, is then transformed to solution by DGESV
 #ifdef SINGLE_PRECISION

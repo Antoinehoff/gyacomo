@@ -24,7 +24,7 @@ subroutine auxval
   INTEGER :: i_, ierr
   ! Init the grids
   CALL init_grids_data(Na,EM,LINEARITY) 
-  CALL set_grids(shear,ExBrate,Npol,LINEARITY,N_HD,N_HDz,EM,Na) 
+  CALL set_grids(shear,Npol,LINEARITY,N_HD,N_HDz,EM,Na) 
   ! Allocate memory for global arrays
   CALL memory
   ! Initialize displacement and receive arrays

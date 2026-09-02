@@ -6,10 +6,6 @@ from matplotlib.widgets import Slider
 import sys
 import tools
 
-def update_mov(frame):
-    # plt.imshow(data[:, :, frame], cmap='gray',interpolation='quadric')
-    return [data[:, :, frame]]
-    
 def update_slide(val):
     frame = int(slider.val)
     im.set_data(data[:, :, frame])
@@ -30,14 +26,14 @@ if len(sys.argv) > 1:
         filename = arg
     if filename == 'help':
         print("This script produces a movie of a field in a 2D perpendicular plane")
-        print("Usage: python3 movie.py [movie/slider (opt), outfilename (opt), phi/dens/Tpar etc. (opt)]")
+        print("Usage: python3 movie.py [outputs_XX.h5 or job index (opt)] [phi/dens/Tpar etc. (opt)] [movie/slider/save (opt)]")
         sys.exit(1)
 if len(sys.argv) > 2:
     fieldname = sys.argv[2]
 if len(sys.argv) > 3:
     option = sys.argv[3]
 if len(sys.argv) > 4:
-    print("Usage: python3 movie.py [outputs_XX.h5 (opt)] [phi/dens/Tpar etc. (opt)] [movie/slider (opt)]")
+    print("Usage: python3 movie.py [outputs_XX.h5 or job index (opt)] [phi/dens/Tpar etc. (opt)] [movie/slider/save (opt)]")
     sys.exit(1)
 
 # Load grids
@@ -80,10 +76,11 @@ if option == 'movie' or option == 'save':
 elif option == 'slider':
     # Add slider widget
     slider_ax = plt.axes([0.1, 0.01, 0.8, 0.03])
-    slider = Slider(slider_ax, 'Time', 0, data.shape[2]-1, valinit=0, valstep=t3D[1]-t3D[0])
+    # the slider selects a frame index, so it steps by 1 (not by a time increment)
+    slider = Slider(slider_ax, 'Frame', 0, data.shape[2]-1, valinit=0, valstep=1)
     slider.on_changed(update_slide)
 else:
-    print("Usage: python3 movie.py [movie, slider (opt)]")
+    print("Usage: python3 movie.py [outputs_XX.h5 or job index (opt)] [phi/dens/Tpar etc. (opt)] [movie/slider/save (opt)]")
     sys.exit(1)
 
 if option == 'save':

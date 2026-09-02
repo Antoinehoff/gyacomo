@@ -111,7 +111,7 @@ CONTAINS
     USE miller,   ONLY: set_miller_parameters, get_miller
     USE circular, ONLY: get_circ
     USE calculus, ONLY: simpson_rule_z
-    USE model,    ONLY: beta, ExBrate, LINEARITY, N_HD
+    USE model,    ONLY: beta, LINEARITY, N_HD
     USE species,  ONLY: Ptot
     ! evalute metrix, elementwo_third_kpmaxts, jacobian and gradient
     implicit none
@@ -175,7 +175,7 @@ CONTAINS
     inv_hatB2 = 1/hatB/hatB
     ! Reset kx grid (to account for Cyq0_x0 factor)
     CALL speak('Reset kx grid according to Cyq0_x0 factor',1)
-    CALL set_kxgrid(shear,ExBrate,Npol,Cyq0_x0,LINEARITY,N_HD) 
+    CALL set_kxgrid(shear,Npol,Cyq0_x0,LINEARITY,N_HD) 
     !
     ! Evaluate perpendicular wavenumber
     !  k_\perp^2 = g^{xx} k_x^2 + 2 g^{xy}k_x k_y + k_y^2 g^{yy}
@@ -398,9 +398,9 @@ CONTAINS
         shift = 2._xp*PI*shear*kyarray(iky)*Npol*Cyq0_x0
           DO ikx = 1,total_nkx
             ! Usual formula for shifting indices using that dkx = 2pi*shear*dky/Nexc
-            ikx_zBC_L(iky,ikx) = ikx-mn_y*Nexc
-            ! Check if it has to be connected to the otherside of the kx grid
-            if(ikx_zBC_L(iky,ikx) .LE. 0) ikx_zBC_L(iky,ikx) = ikx_zBC_L(iky,ikx) + total_nkx
+            ! Wrap to the other side of the kx grid with MODULO so that shifts
+            ! larger than one grid width still land on a valid index
+            ikx_zBC_L(iky,ikx) = MODULO(ikx-mn_y*Nexc-1, total_nkx) + 1
             ! Check if it points out of the kx domain
             ! print*, kxarray(iky,ikx), shift, kx_min
             IF( (kxarray(iky,ikx) - shift) .LT. kx_min ) THEN ! outside of the frequ domain
@@ -436,9 +436,9 @@ CONTAINS
         shift = 2._xp*PI*shear*kyarray(iky)*Npol*Cyq0_x0
           DO ikx = 1,total_nkx
             ! Usual formula for shifting indices
-            ikx_zBC_R(iky,ikx) = ikx+mn_y*Nexc
-            ! Check if it has to be connected to the otherside of the kx grid
-            if(ikx_zBC_R(iky,ikx) .GT. total_nkx) ikx_zBC_R(iky,ikx) = ikx_zBC_R(iky,ikx) - total_nkx
+            ! Wrap to the other side of the kx grid with MODULO so that shifts
+            ! larger than one grid width still land on a valid index
+            ikx_zBC_R(iky,ikx) = MODULO(ikx+mn_y*Nexc-1, total_nkx) + 1
             ! Check if it points out of the kx domain
             IF( (kxarray(iky,ikx) + shift) .GT. kx_max ) THEN ! outside of the frequ domain
             ! IF( (ikx+mn_y*Nexc) .GT. total_nkx ) THEN ! outside of the frequ domain

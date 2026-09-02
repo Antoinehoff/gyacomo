@@ -33,7 +33,7 @@ SUBROUTINE set_closure_model
     dmax = MIN(pmax,2*jmax+1)
   ! set the evolve mom array
   ALLOCATE(evolve_mom(local_np+ngp,local_nj+ngj))
-  evolve_mom = 0
+  evolve_mom = .FALSE.
   SELECT CASE(hierarchy_closure)
   CASE('truncation')
     DO ip = 1,local_np+ngp
