@@ -288,7 +288,7 @@ $(OBJDIR)/CLA_mod.o
 
  $(OBJDIR)/initial_mod.o : src/initial_mod.f90 \
  	 $(OBJDIR)/array_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o \
-     $(OBJDIR)/model_mod.o $(OBJDIR)/numerics_mod.o \
+     $(OBJDIR)/model_mod.o $(OBJDIR)/numerics_mod.o $(OBJDIR)/ExB_shear_flow_mod.o \
 	 $(OBJDIR)/solve_EM_fields.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/ghosts_mod.o \
 	 $(OBJDIR)/grid_mod.o $(OBJDIR)/collision_mod.o $(OBJDIR)/closure_mod.o \
 	 $(OBJDIR)/nonlinear_mod.o \
@@ -431,7 +431,8 @@ MODOUT_AUTO= $(if $(F90_IS_GNU),-J $(MODDIR),-module $(MODDIR))
 # One executable per test program in unit/ (test_harness_mod is the shared
 # assertion helper, not a program).
 UNIT_PROGS = test_prec_const test_utility test_lag_interp test_calculus \
-             test_numerics test_coeff test_grid test_time_integration
+             test_numerics test_coeff test_grid test_time_integration \
+             test_ExB_shear_flow
 UNIT_EXECS = $(addprefix $(UNITBINDIR)/,$(UNIT_PROGS))
 UNIT_OBJS  = $(addprefix $(UNITOBJDIR)/,$(addsuffix .o,$(UNIT_PROGS)))
 
@@ -439,6 +440,11 @@ UNIT_OBJS  = $(addprefix $(UNITOBJDIR)/,$(addsuffix .o,$(UNIT_PROGS)))
 # only run once per process. The scheme is a command line argument instead and
 # the binary is run once per scheme.
 TI_SCHEMES = EE RK2 RK3 SSP_RK3 ODE23 RK4 DOPRI5
+
+# Same story for the ExB suite: Setup_ExB_shear_flow allocates without
+# deallocating, so the linearity is a command line argument and the binary is
+# run once per mode.
+EXB_MODES = linear nonlinear off
 
 check:
 	@$(MAKE) --no-print-directory run-unit-tests \
@@ -453,11 +459,14 @@ run-unit-tests: dirs unitdirs src/srcinfo.h $(UNIT_EXECS)
 	@echo "== running unit tests =="
 	@echo ""
 	@fail=0; \
-	for t in $(filter-out $(UNITBINDIR)/test_time_integration,$(UNIT_EXECS)); do \
+	for t in $(filter-out $(UNITBINDIR)/test_time_integration $(UNITBINDIR)/test_ExB_shear_flow,$(UNIT_EXECS)); do \
 	  $(TESTRUNNER) $$t || fail=`expr $$fail + 1`; \
 	done; \
 	for s in $(TI_SCHEMES); do \
 	  $(TESTRUNNER) $(UNITBINDIR)/test_time_integration $$s || fail=`expr $$fail + 1`; \
+	done; \
+	for m in $(EXB_MODES); do \
+	  $(TESTRUNNER) $(UNITBINDIR)/test_ExB_shear_flow $$m || fail=`expr $$fail + 1`; \
 	done; \
 	if [ $$fail -eq 0 ]; then \
 	  echo "== all unit tests passed =="; \
