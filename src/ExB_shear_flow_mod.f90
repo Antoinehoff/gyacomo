@@ -18,6 +18,7 @@ MODULE ExB_shear_flow
     REAL(xp), PUBLIC, PROTECTED :: maximal_kx, minimal_kx ! max and min kx evolved for array shifting
     ! Routines
     PUBLIC :: Setup_ExB_shear_flow, Array_shift_ExB_shear_flow, Update_ExB_shear_flow
+    PUBLIC :: Restore_ExB_shear_flow
 
 CONTAINS
 
@@ -89,6 +90,48 @@ CONTAINS
 
     END SUBROUTINE Setup_ExB_shear_flow
 
+    ! Fold a kx shift back into [-dkx/2,dkx/2], i.e. the range that the
+    ! incremental update leaves s(ky) in once Array_shift_ExB_shear_flow
+    ! has removed the integer part of the shift.
+    REAL(xp) FUNCTION fold_sky(s_)
+        USE grid, ONLY: deltakx, inv_dkx
+        IMPLICIT NONE
+        REAL(xp), INTENT(IN) :: s_
+        fold_sky = s_ - deltakx*ANINT(s_*inv_dkx,xp)
+    END FUNCTION fold_sky
+
+    ! Restore the ExB shear state after a restart.
+    ! The accumulated shift is not stored in the checkpoint file, but it does not
+    ! need to be: the increments of Update_ExB_shear_flow sum up to
+    !   s(ky,t) = -ky*gamma_E*t
+    ! and Array_shift_ExB_shear_flow only ever removes integer multiples of dkx
+    ! from it. The moments are written to disk already shifted by that integer
+    ! part, so only the sub-grid remainder has to be rebuilt here, and it is a
+    ! function of the restart time alone.
+    SUBROUTINE Restore_ExB_shear_flow
+        USE basic,      ONLY: time, speak
+        USE grid,       ONLY: local_nky, total_nky, kyarray, deltaky, update_grids
+        USE geometry,   ONLY: gxx,gxy,gyy,inv_hatB2, evaluate_magn_curv
+        USE numerics,   ONLY: evaluate_EM_op, evaluate_kernels
+        IMPLICIT NONE
+        INTEGER :: iky
+        IF(.NOT. ExB) RETURN
+        CALL speak('-restoring ExB shear state from the checkpoint time-',2)
+        DO iky = 1,local_nky
+            sky_ExB(iky)      = fold_sky(-kyarray(iky)*gamma_E*time)
+            jump_ExB(iky)     = 0
+            shiftnow_ExB(iky) = .FALSE.
+        ENDDO
+        DO iky = 1,total_nky+1
+            sky_ExB_full(iky) = fold_sky(-REAL(iky-1,xp)*deltaky*gamma_E*time)
+        ENDDO
+        ! Rebuild the grids and the operators on the restored kx grid
+        CALL update_grids(sky_ExB,gxx,gxy,gyy,inv_hatB2)
+        CALL evaluate_kernels
+        CALL evaluate_EM_op
+        CALL evaluate_magn_curv
+    END SUBROUTINE Restore_ExB_shear_flow
+
     ! update the ExB shear value for the next time step
     SUBROUTINE Update_ExB_shear_flow(step_number)
         USE basic,      ONLY: dt!,time
@@ -156,6 +199,7 @@ CONTAINS
         IMPLICIT NONE
         ! local var
         INTEGER :: iky, ikx, ikx_s, i_, loopstart, loopend, increment, jump_
+        REAL(xp):: kx_s
         IF(ExB) THEN
             ! shift all local fields and correct the local shift value
             DO iky = 1,local_Nky
@@ -190,9 +234,13 @@ CONTAINS
                             ikx_s = ikx_s + total_nkx
                         IF (ikx_s .GT. total_nkx) &
                             ikx_s = ikx_s - total_nkx
+                        ! kx of the mode we read from, before the wrapping applied above.
+                        ! (kxarray0(ikx_s) cannot be used here: it returns the wrapped
+                        !  value, which is precisely what we want to detect)
+                        kx_s = kxarray0(ikx) - jump_ExB(iky)*deltakx
                         ! Then we test if the shifted modes are still contained in our resolution
-                        IF ( (kxarray0(ikx)+jump_ExB(iky)*deltakx .LE. maximal_kx) .AND. &
-                             (kxarray0(ikx)+jump_ExB(iky)*deltakx .GE. minimal_kx)) THEN
+                        IF ( (kx_s .LE. maximal_kx) .AND. &
+                             (kx_s .GE. minimal_kx)) THEN
                                 moments(:,:,:,iky,ikx,:,:) = moments(:,:,:,iky,ikx_s,:,:)
                                 phi(iky,ikx,:)             = phi(iky,ikx_s,:)
                                 psi(iky,ikx,:)             = psi(iky,ikx_s,:)

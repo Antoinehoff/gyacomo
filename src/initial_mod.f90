@@ -75,6 +75,7 @@ CONTAINS
     USE restarts,         ONLY: load_moments, job2load
     USE processing,       ONLY: compute_fluid_moments, compute_radial_heatflux, compute_radial_transport
     USE nonlinear,        ONLY: compute_Sapj, nonlinear_init
+    USE ExB_shear_flow,   ONLY: Restore_ExB_shear_flow
     IMPLICIT NONE
     CALL set_updatetlevel(1)
     !!!!!! Set the moments arrays Nepj, Nipj and phi!!!!!!
@@ -82,6 +83,9 @@ CONTAINS
     IF ( job2load .GE. 0 ) THEN
       CALL speak('Load moments',2)
       CALL load_moments ! get N_0
+      ! the checkpoint holds already shifted moments, put the kx grid and the
+      ! operators back on the shear state they had at the checkpoint time
+      CALL Restore_ExB_shear_flow
       CALL apply_closure_model
       CALL update_ghosts_moments
       CALL solve_EM_fields ! compute phi_0=phi(N_0)
