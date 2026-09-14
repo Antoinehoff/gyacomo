@@ -28,6 +28,7 @@ make check TESTRUNNER="mpirun -np 1"
 | `test_coeff` | `coeff_mod` | Laguerre triple products `d_nks` against exact rational values, plus the symmetry that `build_dnjs_table` assumes |
 | `test_grid` | `grid_mod` | spacings, Fourier mode ordering, ghost cell layout, index shortcuts, Simpson weights and `simpson_rule_z` |
 | `test_time_integration` | `time_integration_mod` | every Butcher tableau against the Runge-Kutta order conditions for the order its name claims |
+| `test_ExB_shear_flow` | `ExB_shear_flow_mod` | the shear setup, the kx remap of the fields against a reference built from the wavenumbers, and the shift that `Restore_ExB_shear_flow` rebuilds on a restart |
 
 ## How the build works
 
@@ -79,3 +80,12 @@ and write the namelist into it rather than leaving a file on disk — see
 `*_readinputs` routine that allocates can only be called once per process.
 That is why `test_time_integration` takes the scheme on the command line and
 `make check` runs it once per scheme instead of looping inside the program.
+`test_ExB_shear_flow` takes its linearity the same way, for the same reason
+plus `Setup_ExB_shear_flow` allocating its own arrays unconditionally; the
+modes it is run with are in `EXB_MODES` in the Makefile.
+
+That test also stands up a whole run, `readinputs` then `auxval`, because the
+shear touches the grids and the operators. It does *not* call `basic_data`:
+that goes looking for an input file on disk and would read the command line
+argument as a file index. `dt` therefore keeps the default of `basic_mod`, and
+the test picks its shearing rate against whatever that default is.
