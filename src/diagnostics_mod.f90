@@ -77,6 +77,7 @@ CONTAINS
     USE time_integration,ONLY: time_integration_outputinputs
     USE parallel,        ONLY: parallel_outputinputs
     USE units,           ONLY: units_outputinputs
+    USE linear_growth,   ONLY: linear_growth_outputinputs => lin_outputinputs
     USE futils,          ONLY: creatf, creatg, creatd, attach, putfile
     IMPLICIT NONE
     !input
@@ -126,6 +127,7 @@ CONTAINS
     CALL time_integration_outputinputs(fid)
     CALL         parallel_outputinputs(fid)
     CALL            units_outputinputs(fid)
+    CALL    linear_growth_outputinputs(fid)
     !  Save STDIN (input file) of this run
     IF(jobnum .LE. 99) THEN
        WRITE(str,'(a,i2.2)') "/files/STDIN.",jobnum
@@ -141,6 +143,7 @@ CONTAINS
     USE processing,      ONLY: pflux_x, hflux_x
     USE parallel,        ONLY: my_id
     USE units,           ONLY: WRITE_MW, pow_ref
+    USE linear_growth,   ONLY: LIN_GROWTH, lin_measure, lin_print
     IMPLICIT NONE
     INTEGER, INTENT(in) :: kstep
     !! Basic diagnose loop for reading input file, displaying advancement and ending
@@ -153,6 +156,13 @@ CONTAINS
        ! Display total run time
        CALL display_h_min_s(chrono_runt%ttot)
     END IF
+    !! Linear eigenvalue measurement
+    !  Collective, so it sits outside the rank 0 terminal block below, and ahead
+    !  of the writing calls so that the values they store are the current ones.
+    !  The 0d period is what sets the interval between two measurements.
+    IF (LIN_GROWTH .AND. (kstep .GE. 0) .AND. (nsave_0d .GT. 0)) THEN
+      IF (MOD(cstep, nsave_0d) == 0) CALL lin_measure
+    ENDIF
     !! Specific diagnostic calls
     SELECT CASE(diag_mode)
     CASE('full')
@@ -181,6 +191,7 @@ CONTAINS
             '|t = ', time,'| Pxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'|'
           endif
       ENDIF
+      IF (LIN_GROWTH) CALL lin_print
      ENDIF
     ENDIF
 
@@ -200,6 +211,7 @@ CONTAINS
     USE model,           ONLY: EM
     USE parallel,        ONLY: my_id, comm0, gather_z, gather_xyz_real
     USE collision,       ONLY: coll_outputinputs
+    USE linear_growth,   ONLY: LIN_GROWTH, lin_outputinputs
     IMPLICIT NONE
     INTEGER, INTENT(in) :: kstep
     INTEGER, parameter  :: BUFSIZE = 2
@@ -280,6 +292,17 @@ CONTAINS
        ENDIF
        IF (write_hf) THEN
         CALL creatd(fidres, rank, dims, "/data/var0d/hflux_x", "Radial part heat flux")
+       ENDIF
+       IF (LIN_GROWTH) THEN
+        ! With parallel IO, creatd sums the partitioned dimension over the
+        ! ranks, and by default that is the ky one, which would make the
+        ! dataset nprocs times too wide. The spectrum is already whole on
+        ! rank 0, so point pardim at the (still empty) time dimension instead.
+        CALL creatd(fidres, 1, (/total_nky/), "/data/var0d/lin_gamma", "Growth rate per ky", pardim=2)
+        CALL creatd(fidres, 1, (/total_nky/), "/data/var0d/lin_omega", "Frequency per ky",   pardim=2)
+        ! The fields written out are renormalised; multiplying them by
+        ! EXP(lin_lnscale) recovers the amplitude the run would have had.
+        CALL creatd(fidres, rank, dims, "/data/var0d/lin_lnscale", "Cumulative log rescaling")
        ENDIF
        IF (cstep==0) THEN
          iframe0d=0
@@ -441,6 +464,7 @@ CONTAINS
     USE futils, ONLY: append, attach, getatt, creatd
     USE prec_const
     USE processing
+    USE linear_growth, ONLY: LIN_GROWTH, gamma_ky, omega_ky, lin_lnscale
     IMPLICIT NONE
     ! Time measurement data
     CALL append(fidres, "/profiler/Tc_rhs",       REAL(chrono_mrhs%ttot,dp),ionode=0)
@@ -475,6 +499,12 @@ CONTAINS
     IF (write_hf) THEN
       CALL compute_radial_heatflux
       CALL append(fidres, "/data/var0d/hflux_x",REAL(hflux_x,dp),ionode=0)
+    ENDIF
+    ! Linear eigenvalue data (measured in diagnose, just above this call)
+    IF (LIN_GROWTH) THEN
+      CALL append(fidres, "/data/var0d/lin_gamma",  REAL(gamma_ky,dp),ionode=0)
+      CALL append(fidres, "/data/var0d/lin_omega",  REAL(omega_ky,dp),ionode=0)
+      CALL append(fidres, "/data/var0d/lin_lnscale",REAL(lin_lnscale,dp),ionode=0)
     ENDIF
   END SUBROUTINE diagnose_0d
   

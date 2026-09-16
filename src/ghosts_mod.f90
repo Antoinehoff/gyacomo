@@ -74,13 +74,20 @@ SUBROUTINE update_ghosts_p_mom
 #else
   !! Alternative version (explicit copy here, EXPERIMENTAL)
   !! Send the last local moment to fill the -1 neighbour ghost
+  !! p is not periodic, so the first and last processes have MPI_PROC_NULL as
+  !! outer neighbour. A receive from MPI_PROC_NULL leaves the buffer untouched,
+  !! so copying it would fill the ghosts below p=0 with uninitialised memory and
+  !! those above pmax with the moments received in the other direction, instead
+  !! of the zeros (or closure values) set by apply_closure_model. Skip the copy
+  !! there, as the serial run does.
   count = local_na*(local_nj+ngj)*local_nky*local_nkx*(local_nz+ngz) ! Number of elements to send
   DO ig=1,ngp_o2
     buff_jxyz_out = moments(:,last-(ig-1),:,:,:,:,updatetlevel)
     CALL mpi_sendrecv(buff_jxyz_out,count,mpi_xp_c,nbr_R,14+ig, & ! Send to Right the last
                       buff_jxyz_in ,count,mpi_xp_c,nbr_L,14+ig, & ! Recieve from Left the first-1
                       comm0, status, ierr)
-    moments(:,first-ig,:,:,:,:,updatetlevel) = buff_jxyz_in
+    IF (nbr_L .NE. MPI_PROC_NULL) &
+      moments(:,first-ig,:,:,:,:,updatetlevel) = buff_jxyz_in
   ENDDO
   ! !!!!!!! Send to the left, receive from the right
   DO ig=1,ngp_o2
@@ -88,7 +95,8 @@ SUBROUTINE update_ghosts_p_mom
     CALL mpi_sendrecv(buff_jxyz_out,count,mpi_xp_c,nbr_L,16+ig, & ! Send to Left the first
                       buff_jxyz_in ,count,mpi_xp_c,nbr_R,16+ig, & ! Recieve from Right the last+1
                       comm0, status, ierr)
-    moments(:,last+ig,:,:,:,:,updatetlevel) = buff_jxyz_in
+    IF (nbr_R .NE. MPI_PROC_NULL) &
+      moments(:,last+ig,:,:,:,:,updatetlevel) = buff_jxyz_in
   ENDDO
 #endif
 END SUBROUTINE update_ghosts_p_mom

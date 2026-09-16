@@ -29,6 +29,7 @@ make check TESTRUNNER="mpirun -np 1"
 | `test_grid` | `grid_mod` | spacings, Fourier mode ordering, ghost cell layout, index shortcuts, Simpson weights and `simpson_rule_z` |
 | `test_time_integration` | `time_integration_mod` | every Butcher tableau against the Runge-Kutta order conditions for the order its name claims |
 | `test_ExB_shear_flow` | `ExB_shear_flow_mod` | the shear setup, the kx remap of the fields against a reference built from the wavenumbers, and the shift that `Restore_ExB_shear_flow` rebuilds on a restart |
+| `test_linear_growth` | `linear_growth_mod` | gamma and omega recovered from a field with a known eigenvalue, their invariance across a rescale, `lin_lnscale` undoing the rescaling, and a convergence test that ignores slow drifts in either gamma or omega |
 
 ## How the build works
 

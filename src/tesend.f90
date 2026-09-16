@@ -3,7 +3,8 @@ SUBROUTINE tesend
 
   USE basic
   USE mpi
-  USE parallel, ONLY: my_id
+  USE parallel,      ONLY: my_id
+  USE linear_growth, ONLY: LIN_GROWTH, lin_converged
   IMPLICIT NONE
   LOGICAL :: mlend, mlexist
   REAL    :: tnow
@@ -19,6 +20,18 @@ SUBROUTINE tesend
     CALL speak('rhs is NaN/Inf',-99)
     CALL speak('Run terminated at cstep='//str(cstep),-99)
     RETURN
+  END IF
+
+  !________________________________________________________________________________
+  !                   1b. Linear growth rates settled
+  !  Placed after the NaN test so that a crash is still reported as a crash, and
+  !  before the step and time limits so that a converged eigenvalue ends the run
+  !  early, leaving tmax as the fallback. lin_converged is computed from a
+  !  spectrum every process holds identically, so this needs no reduction.
+  IF ( LIN_GROWTH .AND. lin_converged ) THEN
+     nlend = .TRUE.
+     CALL speak('Linear growth rates converged',0)
+     RETURN
   END IF
 
   !________________________________________________________________________________

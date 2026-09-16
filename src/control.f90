@@ -11,6 +11,7 @@ SUBROUTINE control
   USE mpi,            ONLY: MPI_COMM_WORLD
   USE diagnostics,    ONLY: diagnose
   USE ExB_shear_flow, ONLY: Update_ExB_shear_flow
+  USE linear_growth,  ONLY: LIN_GROWTH, lin_rescale
   IMPLICIT NONE
   REAL(xp) :: t_init_diag_0, t_init_diag_1
   INTEGER  :: ierr
@@ -91,6 +92,11 @@ SUBROUTINE control
 
     ! Increment time (private in basic module)
     CALL increase_time
+
+    ! Keep a linear mode within a fixed amplitude band so that it cannot
+    ! overflow. Done before the diagnostics so that what is measured and written
+    ! out is the state the next step starts from.
+    IF (LIN_GROWTH) CALL lin_rescale
 
     ! Periodic diagnostics
     CALL start_chrono(chrono_diag)

@@ -20,6 +20,14 @@ FPP_AUTO   = $(if $(F90_IS_GNU),-cpp,-fpp)
 OPT_AUTO   = $(if $(F90_IS_GNU),-O3 -ffree-line-length-0,-O3 -xHOST)
 FAST_AUTO  = $(if $(F90_IS_GNU),-Ofast -ffree-line-length-0,-fast)
 DBG_AUTO   = $(if $(F90_IS_GNU),-O0 -g -Wall -fcheck=all -fbacktrace -ffree-line-length-0,-C -g -traceback -warn all -check all -debug all -init=zero,snan -fpe0)
+# Where the compiler writes (and looks for) the .mod files.
+MODOUT_AUTO= $(if $(F90_IS_GNU),-J $(MODDIR),-module $(MODDIR))
+
+# local/make.inc only sets EXTMOD when COMPTYPE is given. Without it the .mod
+# files would land in whatever directory make runs from, i.e. the repository
+# root, so fall back to MODDIR. An EXTMOD from COMPTYPE (e.g. the Cray one) or
+# from a target below still takes precedence.
+EXTMOD ?= $(MODOUT_AUTO)
 
 # Standard version with optimized compilation and double precision
 all: dp
@@ -171,7 +179,8 @@ $(OBJDIR)/diagnostics_mod.o $(OBJDIR)/endrun.o \
 $(OBJDIR)/ExB_shear_flow_mod.o \
 $(OBJDIR)/fields_mod.o $(OBJDIR)/fourier_mod.o $(OBJDIR)/geometry_mod.o \
 $(OBJDIR)/ghosts_mod.o $(OBJDIR)/grid_mod.o \
-$(OBJDIR)/initial_mod.o $(OBJDIR)/lag_interp_mod.o $(OBJDIR)/main.o \
+$(OBJDIR)/initial_mod.o $(OBJDIR)/lag_interp_mod.o $(OBJDIR)/linear_growth_mod.o \
+$(OBJDIR)/main.o \
 $(OBJDIR)/memory.o $(OBJDIR)/miller_mod.o $(OBJDIR)/model_mod.o \
 $(OBJDIR)/moments_eq_rhs_mod.o $(OBJDIR)/numerics_mod.o $(OBJDIR)/parallel_mod.o \
 $(OBJDIR)/ppexit.o $(OBJDIR)/prec_const_mod.o \
@@ -239,7 +248,7 @@ $(OBJDIR)/CLA_mod.o
  $(OBJDIR)/control.o : src/control.f90 \
 	 $(OBJDIR)/auxval.o $(OBJDIR)/geometry_mod.o $(OBJDIR)/prec_const_mod.o \
      $(OBJDIR)/basic_mod.o $(OBJDIR)/ppexit.o $(OBJDIR)/readinputs.o $(OBJDIR)/tesend.o \
-     $(OBJDIR)/diagnostics_mod.o
+     $(OBJDIR)/diagnostics_mod.o $(OBJDIR)/linear_growth_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/control.f90 -o $@
 
  $(OBJDIR)/cosolver_interface_mod.o : src/cosolver_interface_mod.f90 \
@@ -251,7 +260,8 @@ $(OBJDIR)/CLA_mod.o
  	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/processing_mod.o $(OBJDIR)/array_mod.o \
      $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o \
 	 $(OBJDIR)/grid_mod.o $(OBJDIR)/initial_mod.o $(OBJDIR)/model_mod.o \
-	 $(OBJDIR)/time_integration_mod.o $(OBJDIR)/parallel_mod.o $(OBJDIR)/units_mod.o
+	 $(OBJDIR)/time_integration_mod.o $(OBJDIR)/parallel_mod.o $(OBJDIR)/units_mod.o \
+	 $(OBJDIR)/linear_growth_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/diagnostics_mod.f90 -o $@
 
  $(OBJDIR)/endrun.o : src/endrun.f90 \
@@ -298,6 +308,12 @@ $(OBJDIR)/CLA_mod.o
  $(OBJDIR)/lag_interp_mod.o : src/lag_interp_mod.f90 \
  	 $(OBJDIR)/prec_const_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/lag_interp_mod.f90 -o $@
+
+ $(OBJDIR)/linear_growth_mod.o : src/linear_growth_mod.f90 \
+	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/grid_mod.o \
+	 $(OBJDIR)/fields_mod.o $(OBJDIR)/parallel_mod.o $(OBJDIR)/model_mod.o \
+	 $(OBJDIR)/time_integration_mod.o
+	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/linear_growth_mod.f90 -o $@
 
  $(OBJDIR)/main.o : src/main.f90 $(OBJDIR)/prec_const_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/main.f90 -o $@
@@ -353,7 +369,7 @@ $(OBJDIR)/CLA_mod.o
  $(OBJDIR)/readinputs.o : src/readinputs.f90  \
    $(OBJDIR)/diagnostics_mod.o $(OBJDIR)/initial_mod.o $(OBJDIR)/model_mod.o  \
 	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/time_integration_mod.o \
-  	 $(OBJDIR)/units_mod.o
+  	 $(OBJDIR)/units_mod.o $(OBJDIR)/linear_growth_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/readinputs.f90 -o $@
 
  $(OBJDIR)/restarts_mod.o : src/restarts_mod.f90   \
@@ -381,7 +397,7 @@ $(OBJDIR)/CLA_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/stepon.f90 -o $@
 
  $(OBJDIR)/tesend.o : src/tesend.f90 \
- 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o
+ 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/linear_growth_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/tesend.f90 -o $@
 
  $(OBJDIR)/time_integration_mod.o : src/time_integration_mod.f90 \
@@ -406,9 +422,8 @@ $(OBJDIR)/CLA_mod.o
 #
 # The tests are built into their own obj/ and mod/ subtrees through a recursive
 # make that overrides OBJDIR and MODDIR. That isolation is deliberate: the
-# normal targets leave their .mod files wherever the last invocation happened to
-# put them (EXTMOD is empty for dp/sp/debug, so gfortran drops them in the
-# working directory), and a test build must not depend on, or clobber, that.
+# normal targets write their .mod files to mod/ with the flags of the last
+# build, and a test build must not depend on, or clobber, that.
 #
 # Each test program links against every object except main.o, so a test can USE
 # any module of the code without this Makefile needing a per-test dependency
@@ -426,13 +441,12 @@ UNITOBJDIR = $(OBJDIR)/tests
 TESTRUNNER =
 
 CHK_AUTO   = $(if $(F90_IS_GNU),-O1 -g -fcheck=all -fbacktrace -ffree-line-length-0,-O1 -g -traceback -check all)
-MODOUT_AUTO= $(if $(F90_IS_GNU),-J $(MODDIR),-module $(MODDIR))
 
 # One executable per test program in unit/ (test_harness_mod is the shared
 # assertion helper, not a program).
 UNIT_PROGS = test_prec_const test_utility test_lag_interp test_calculus \
              test_numerics test_coeff test_grid test_time_integration \
-             test_ExB_shear_flow
+             test_ExB_shear_flow test_linear_growth
 UNIT_EXECS = $(addprefix $(UNITBINDIR)/,$(UNIT_PROGS))
 UNIT_OBJS  = $(addprefix $(UNITOBJDIR)/,$(addsuffix .o,$(UNIT_PROGS)))
 
