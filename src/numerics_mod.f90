@@ -136,6 +136,32 @@ SUBROUTINE evaluate_kernels
 #else
     error stop "ERROR STOP: Pade kernels cannot be used when LAPACK is not included (marconi?)"
 #endif
+  CASE ('gkeyll','gkeyll_dk')
+    ! Velocity-independent gyroaverage as in Gkeyll's FLR_pade model: the gyroaveraged
+    ! potential (and density) is G*phi with G = 1/(1+b/2) (b = kperp^2 rho_a^2 = 2 y_),
+    ! i.e. only the n = 0 kernel is nonzero. 'gkeyll_dk' is the drift-kinetic limit G = 1.
+    ! The matching polarization (b/(1+b), resp. b) is set in evaluate_poisson_op.
+    IF(my_id .EQ. 0) WRITE (*,*) 'Kernel model: velocity-independent gyroaverage (', TRIM(KN_MODEL), ')'
+    DO ia  = 1,local_na
+      DO eo  = 1,nzgrid
+        DO ikx = 1,local_nkx
+          DO iky = 1,local_nky
+            DO iz  = 1,local_nz + ngz
+              DO ij = 1,local_nj + ngj
+                y_    =  sigma2_tau_o2(ia) * kp2array(iky,ikx,iz,eo)
+                IF (jarray(ij) .NE. 0) THEN
+                  kernel(ia,ij,iky,ikx,iz,eo) = 0._xp
+                ELSEIF (KN_MODEL .EQ. 'gkeyll') THEN
+                  kernel(ia,ij,iky,ikx,iz,eo) = 1._xp/(1._xp + y_)
+                ELSE
+                  kernel(ia,ij,iky,ikx,iz,eo) = 1._xp
+                ENDIF
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDDO
   CASE DEFAULT
     DO ia  = 1,local_na
       DO eo  = 1,nzgrid
@@ -191,14 +217,14 @@ SUBROUTINE evaluate_poisson_op
   USE basic
   USE array,   ONLY : kernel, inv_poisson_op, inv_pol_ion
   USE grid,    ONLY : local_na, local_nkx, local_nky, local_nz,&
-                      kxarray, kyarray, local_nj, ngj, ngz, ieven
-  USE species, ONLY : q2_tau
-  USE model,   ONLY : ADIAB_E, ADIAB_I, tau_i, q_i
+                      kxarray, kyarray, local_nj, ngj, ngz, ieven, kp2array
+  USE species, ONLY : q2_tau, sigma2_tau_o2
+  USE model,   ONLY : ADIAB_E, ADIAB_I, tau_i, q_i, KN_MODEL
   USE prec_const, ONLY: xp
   IMPLICIT NONE
   REAL(xp)    :: pol_tot, operator_ion
   INTEGER     :: in,ikx,iky,iz,ia
-  REAL(xp)    :: sumker
+  REAL(xp)    :: sumker, b_
   ! This term has no staggered grid dependence. It is evalued for the
   ! even z grid since poisson uses p=0 moments and phi only.
   kxloop: DO ikx = 1,local_nkx
@@ -216,7 +242,16 @@ SUBROUTINE evaluate_poisson_op
       DO in=1,local_nj
         sumker = sumker + q2_tau(ia)*kernel(ia,in+ngj/2,iky,ikx,iz+ngz/2,ieven)**2 ! ... sum recursively ...
       END DO
-      pol_tot = pol_tot + q2_tau(ia) - sumker
+      SELECT CASE (KN_MODEL)
+      CASE ('gkeyll')    ! Pade polarization b/(1+b) of Gkeyll's FLR_pade model
+        b_ = 2._xp*sigma2_tau_o2(ia)*kp2array(iky,ikx,iz+ngz/2,ieven)
+        pol_tot = pol_tot + q2_tau(ia)*b_/(1._xp + b_)
+      CASE ('gkeyll_dk') ! long-wavelength polarization b of Gkeyll without FLR
+        b_ = 2._xp*sigma2_tau_o2(ia)*kp2array(iky,ikx,iz+ngz/2,ieven)
+        pol_tot = pol_tot + q2_tau(ia)*b_
+      CASE DEFAULT
+        pol_tot = pol_tot + q2_tau(ia) - sumker
+      END SELECT
     ENDDO a
     operator_ion = pol_tot
 
