@@ -171,7 +171,7 @@ SUBROUTINE interp_z(target,local_nz,ngz,f_in,f_out)
   ! If Staggered Grid flag (SG) is false, returns identity
   implicit none
   INTEGER, INTENT(IN) :: local_nz, ngz
-  INTEGER, intent(in) :: target ! target grid : 0 for even grid, 1 for odd
+  INTEGER, intent(in) :: target ! 1: odd to even, 2: even to odd, else identity (same as grad_z)
   COMPLEX(xp),dimension(local_nz+ngz), INTENT(IN)  :: f_in
   COMPLEX(xp),dimension(local_nz),     INTENT(OUT) :: f_out
   SELECT CASE(TARGET)

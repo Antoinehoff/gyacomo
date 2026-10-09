@@ -31,6 +31,7 @@ make check TESTRUNNER="mpirun -np 1"
 | `test_ExB_shear_flow` | `ExB_shear_flow_mod` | the shear setup, the kx remap of the fields against a reference built from the wavenumbers, and the shift that `Restore_ExB_shear_flow` rebuilds on a restart |
 | `test_linear_growth` | `linear_growth_mod` | gamma and omega recovered from a field with a known eigenvalue, their invariance across a rescale, `lin_lnscale` undoing the rescaling, and a convergence test that ignores slow drifts in either gamma or omega |
 | `test_bpar` | `numerics_mod`, `solve_EM_fields`, `processing_mod`, `moments_eq_rhs_mod` | the delta B_par kernels `K_j - K_{j-1}` against the closed form and against `x 2J1/l` from the Bessel intrinsics, the coupled Poisson/pressure balance operator against a hand built 2x2 inverse and the `Gamma_0 - Gamma_1` couplings, the field equation residuals of a solve from random moments, the untouched A_par-only path with BPAR off, and the hierarchy drive of dBpar alone against its closed form (run once per mode: on, off, nobeta) |
+| `test_staggered_z` | `processing_mod` | with `SG = .true.`, the direction `compute_interp_z` carries every p (ghosts included) to the other z grid: half a cell down for p even, half a cell up for p odd, and the same points `compute_gradients_z` differentiates at |
 
 ## How the build works
 

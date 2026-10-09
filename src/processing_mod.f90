@@ -132,7 +132,7 @@ CONTAINS
       ! z grid interpolation
    SUBROUTINE compute_interp_z
       IMPLICIT NONE
-      INTEGER :: eo, ia,ip,ij,iky,ikx,iz
+      INTEGER :: eo, p_int, ia,ip,ij,iky,ikx,iz
       COMPLEX(xp), DIMENSION(local_nz+ngz) :: f_in
       COMPLEX(xp), DIMENSION(local_nz)     :: f_out
       IF(nzgrid .GT. 1) THEN
@@ -141,6 +141,8 @@ CONTAINS
          DO ij = 1,local_nj+ngj
          DO ip = 1,local_np+ngp
          DO ia = 1,local_na
+            p_int = parray(ip)
+            eo    = MODULO(p_int,2)+1 ! same direction as the z derivative in compute_gradients_z
             ! Compute even odd grids interpolation
             f_in = nadiab_moments(ia,ip,ij,iky,ikx,:)
             CALL interp_z(eo,local_nz,ngz,f_in,f_out)

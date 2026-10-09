@@ -446,7 +446,7 @@ CHK_AUTO   = $(if $(F90_IS_GNU),-O1 -g -fcheck=all -fbacktrace -ffree-line-lengt
 # assertion helper, not a program).
 UNIT_PROGS = test_prec_const test_utility test_lag_interp test_calculus \
              test_numerics test_coeff test_grid test_time_integration \
-             test_ExB_shear_flow test_linear_growth test_bpar
+             test_ExB_shear_flow test_linear_growth test_bpar test_staggered_z
 UNIT_EXECS = $(addprefix $(UNITBINDIR)/,$(UNIT_PROGS))
 UNIT_OBJS  = $(addprefix $(UNITOBJDIR)/,$(addsuffix .o,$(UNIT_PROGS)))
 
