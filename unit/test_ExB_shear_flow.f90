@@ -33,7 +33,7 @@ PROGRAM test_ExB_shear_flow
   USE grid,       ONLY: Nx, Ny, total_nkx, total_nky, local_nkx, local_nky, local_nx, &
                         deltakx, deltaky, inv_dkx, kx_max, kx_min, &
                         kxarray, kxarray0, kyarray
-  USE fields,     ONLY: moments, phi, psi
+  USE fields,     ONLY: moments, phi, psi, dBpar
   USE model,      ONLY: LINEARITY, ExBrate
   USE geometry,   ONLY: C_y, Cyq0_x0
   USE ExB_shear_flow
@@ -61,7 +61,7 @@ PROGRAM test_ExB_shear_flow
   REAL(xp) :: sky_kept(64), kx_kept(64)
   REAL(xp), ALLOCATABLE :: kxarray_kept(:,:)
   INTEGER  :: nargs, iky, ikx, s, j, nkept, nzeroed
-  LOGICAL  :: shearing, ok, ok_phi, ok_psi, ok_mom, ok_zero
+  LOGICAL  :: shearing, ok, ok_phi, ok_psi, ok_dB, ok_mom, ok_zero
 
   CALL ppinit
   nargs = COMMAND_ARGUMENT_COUNT()
@@ -169,6 +169,7 @@ PROGRAM test_ExB_shear_flow
       DO ikx = 1,total_nkx
         IF (phi(iky,ikx,1) .NE. tag(iky,ikx,0)) ok = .FALSE.
         IF (psi(iky,ikx,1) .NE. tag(iky,ikx,1)) ok = .FALSE.
+        IF (dBpar(iky,ikx,1) .NE. tag(iky,ikx,3)) ok = .FALSE.
       ENDDO
     ENDDO
     CALL check('the fields are left untouched', ok)
@@ -226,7 +227,7 @@ PROGRAM test_ExB_shear_flow
     ! shift may carry, not a standing filter, and the dealiasing of the fields
     ! themselves belongs to the nonlinear bracket instead.
     CALL section('the remap relabels the surviving modes and zeroes the rest')
-    ok_phi = .TRUE.; ok_psi = .TRUE.; ok_mom = .TRUE.; ok_zero = .TRUE.
+    ok_phi = .TRUE.; ok_psi = .TRUE.; ok_dB = .TRUE.; ok_mom = .TRUE.; ok_zero = .TRUE.
     ok = .TRUE.
     nkept = 0; nzeroed = 0
     DO iky = 1,local_nky
@@ -234,6 +235,7 @@ PROGRAM test_ExB_shear_flow
         DO ikx = 1,total_nkx
           IF (phi(iky,ikx,1)             .NE. tag(iky,ikx,0)) ok = .FALSE.
           IF (psi(iky,ikx,1)             .NE. tag(iky,ikx,1)) ok = .FALSE.
+          IF (dBpar(iky,ikx,1)           .NE. tag(iky,ikx,3)) ok = .FALSE.
           IF (moments(1,1,1,iky,ikx,1,1) .NE. tag(iky,ikx,2)) ok = .FALSE.
         ENDDO
         CYCLE
@@ -246,11 +248,13 @@ PROGRAM test_ExB_shear_flow
           nkept = nkept + 1
           IF (phi(iky,ikx,1)            .NE. tag(iky,s,0)) ok_phi = .FALSE.
           IF (psi(iky,ikx,1)            .NE. tag(iky,s,1)) ok_psi = .FALSE.
+          IF (dBpar(iky,ikx,1)          .NE. tag(iky,s,3)) ok_dB  = .FALSE.
           IF (moments(1,1,1,iky,ikx,1,1).NE. tag(iky,s,2)) ok_mom = .FALSE.
         ELSE
           nzeroed = nzeroed + 1
           IF (phi(iky,ikx,1)             .NE. (0._xp,0._xp)) ok_zero = .FALSE.
           IF (psi(iky,ikx,1)             .NE. (0._xp,0._xp)) ok_zero = .FALSE.
+          IF (dBpar(iky,ikx,1)           .NE. (0._xp,0._xp)) ok_zero = .FALSE.
           IF (moments(1,1,1,iky,ikx,1,1) .NE. (0._xp,0._xp)) ok_zero = .FALSE.
         ENDIF
       ENDDO
@@ -258,6 +262,7 @@ PROGRAM test_ExB_shear_flow
     CALL check('a row that does not jump is left alone',         ok)
     CALL check('phi carries the right mode into every slot',     ok_phi)
     CALL check('psi carries the right mode into every slot',     ok_psi)
+    CALL check('dBpar carries the right mode into every slot',   ok_dB)
     CALL check('moments carry the right mode into every slot',   ok_mom)
     CALL check('the slots with no source are zeroed',            ok_zero)
     ! Guard against a reference that kept or dropped everything and so proved
@@ -337,8 +342,8 @@ CONTAINS
 
   !> Unique marker for the mode held in slot (iky,ikx). The imaginary part is
   !! the slot index, so a field can be asked afterwards which mode it ended up
-  !! holding. which_ separates phi, psi and moments so that a copy mixing the
-  !! three of them up cannot pass.
+  !! holding. which_ separates phi, psi, moments and dBpar so that a copy mixing
+  !! them up cannot pass.
   COMPLEX(xp) FUNCTION tag(iky_, ikx_, which_)
     INTEGER, INTENT(IN) :: iky_, ikx_, which_
     tag = CMPLX(REAL(iky_,xp)+100._xp*REAL(which_,xp), REAL(ikx_,xp), xp)
@@ -351,6 +356,7 @@ CONTAINS
       DO ix = 1,total_nkx
         phi(iy,ix,:)             = tag(iy,ix,0)
         psi(iy,ix,:)             = tag(iy,ix,1)
+        dBpar(iy,ix,:)           = tag(iy,ix,3)
         moments(:,:,:,iy,ix,:,:) = tag(iy,ix,2)
       ENDDO
     ENDDO

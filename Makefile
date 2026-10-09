@@ -446,7 +446,7 @@ CHK_AUTO   = $(if $(F90_IS_GNU),-O1 -g -fcheck=all -fbacktrace -ffree-line-lengt
 # assertion helper, not a program).
 UNIT_PROGS = test_prec_const test_utility test_lag_interp test_calculus \
              test_numerics test_coeff test_grid test_time_integration \
-             test_ExB_shear_flow test_linear_growth
+             test_ExB_shear_flow test_linear_growth test_bpar
 UNIT_EXECS = $(addprefix $(UNITBINDIR)/,$(UNIT_PROGS))
 UNIT_OBJS  = $(addprefix $(UNITOBJDIR)/,$(addsuffix .o,$(UNIT_PROGS)))
 
@@ -459,6 +459,11 @@ TI_SCHEMES = EE RK2 RK3 SSP_RK3 ODE23 RK4 DOPRI5
 # deallocating, so the linearity is a command line argument and the binary is
 # run once per mode.
 EXB_MODES = linear nonlinear off
+
+# And for the delta B_par suite: readinputs runs once per process, so the
+# flag/beta combination is a command line argument and the binary is run once
+# per combination.
+BPAR_MODES = on off nobeta
 
 check:
 	@$(MAKE) --no-print-directory run-unit-tests \
@@ -473,7 +478,7 @@ run-unit-tests: dirs unitdirs src/srcinfo.h $(UNIT_EXECS)
 	@echo "== running unit tests =="
 	@echo ""
 	@fail=0; \
-	for t in $(filter-out $(UNITBINDIR)/test_time_integration $(UNITBINDIR)/test_ExB_shear_flow,$(UNIT_EXECS)); do \
+	for t in $(filter-out $(UNITBINDIR)/test_time_integration $(UNITBINDIR)/test_ExB_shear_flow $(UNITBINDIR)/test_bpar,$(UNIT_EXECS)); do \
 	  $(TESTRUNNER) $$t || fail=`expr $$fail + 1`; \
 	done; \
 	for s in $(TI_SCHEMES); do \
@@ -481,6 +486,9 @@ run-unit-tests: dirs unitdirs src/srcinfo.h $(UNIT_EXECS)
 	done; \
 	for m in $(EXB_MODES); do \
 	  $(TESTRUNNER) $(UNITBINDIR)/test_ExB_shear_flow $$m || fail=`expr $$fail + 1`; \
+	done; \
+	for m in $(BPAR_MODES); do \
+	  $(TESTRUNNER) $(UNITBINDIR)/test_bpar $$m || fail=`expr $$fail + 1`; \
 	done; \
 	if [ $$fail -eq 0 ]; then \
 	  echo "== all unit tests passed =="; \

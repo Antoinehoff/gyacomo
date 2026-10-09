@@ -16,7 +16,7 @@ CONTAINS
     USE prec_const
     USE collision
     USE time_integration
-    USE species, ONLY: Ptot
+    USE species, ONLY: Ptot, tau_q
     USE geometry, ONLY: gradz_coeff, dlnBdz, Ckxky!, Gamma_phipar
     USE calculus, ONLY: interp_z, grad_z, grad_z2
     IMPLICIT NONE
@@ -27,10 +27,10 @@ CONTAINS
     COMPLEX(xp) :: Tnapj, Tnapp2j, Tnapm2j, Tnapjp1, Tnapjm1 ! Terms from b x gradB and drives
     COMPLEX(xp) :: Tnapp1j, Tnapm1j, Tnapp1jm1, Tnapm1jm1 ! Terms from mirror force with non adiab moments_
     COMPLEX(xp) :: Ldamp, Fmir
-    COMPLEX(xp) :: Mperp, Mpara, Dphi, Dpsi
+    COMPLEX(xp) :: Mperp, Mpara, Dphi, Dpsi, DdB
     COMPLEX(xp) :: Unapm1j, Unapm1jp1, Unapm1jm1 ! Terms from mirror force with adiab moments_
     COMPLEX(xp) :: i_kx,i_ky
-    COMPLEX(xp) :: Napj, RHS, phikykxz, psikykxz
+    COMPLEX(xp) :: Napj, RHS, phikykxz, psikykxz, dBparkykxz
     ! Spatial loops
     z:DO  iz = 1,local_nz
       izi = iz + ngz_o2
@@ -42,6 +42,7 @@ CONTAINS
           i_ky     = imagu * ky                       ! binormal derivative
           phikykxz = phi(iky,ikx,izi)
           psikykxz = psi(iky,ikx,izi)
+          dBparkykxz = dBpar(iky,ikx,izi)
           ! Kinetic loops
           j:DO ij = 1,local_nj               ! This loop is from 1 to jmaxi+1
             iji   = ij+ngj_o2
@@ -99,6 +100,16 @@ CONTAINS
                   ELSE
                     Dphi = 0._xp
                   ENDIF
+                  !! Parallel magnetic fluctuation term: the gradient drive of
+                  ! (tau/q) x 2J1/l dBpar. Same Hermite/Laguerre coefficients as
+                  ! phi (xphij encodes both p = 0 and p = 2) with K_j -> K'_j.
+                  IF ( BPAR .AND. (p_int .LE. 2) ) THEN ! kronecker p0 p2
+                    DdB = i_ky*tau_q(ia)*( xphij(ia,ip,ij)*kernel_dB(ia,iji  ,iky,ikx,izi,eo) &
+                                          +xphijp1(ia,ip,ij)*kernel_dB(ia,iji+1,iky,ikx,izi,eo) &
+                                          +xphijm1(ia,ip,ij)*kernel_dB(ia,iji-1,iky,ikx,izi,eo) )*dBparkykxz
+                  ELSE
+                    DdB = 0._xp
+                  ENDIF
                   !! Vector potential term
                   IF ( (p_int  .LE. 3) .AND. (p_int  .GE. 1) ) THEN ! Kronecker p1 or p3
                     Dpsi =-i_ky*( xpsij  (ia,ip,ij)*kernel(ia,iji  ,iky,ikx,izi,eo) &
@@ -116,7 +127,7 @@ CONTAINS
                       ! Parallel magnetic term
                       - Mpara &
                       ! Drives (density + temperature gradients)
-                      - (Dphi + Dpsi) &
+                      - (Dphi + Dpsi + DdB) &
                       ! Collision term
                       + Capj(ia,ip,ij,iky,ikx,iz) &
                       ! Parallel drive term (should be negligible, to test)

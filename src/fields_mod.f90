@@ -13,7 +13,10 @@ MODULE fields
 !------------------MAGNETIC VECTOR
   ! Parallel component (A_\parallel)
   COMPLEX(xp), DIMENSION(:,:,:), ALLOCATABLE :: psi
-  ! delta B parallel (not implemeneted)
-  ! COMPLEX(xp), DIMENSION(:,:,:), ALLOCATABLE :: dBpar
+  ! Parallel magnetic fluctuation, normalized to the local field:
+  !   dBpar = (delta B_par/B0(z)) * (L_ref/rho_s)          ! (kx,ky,z)
+  ! Solved with phi from perpendicular pressure balance when BPAR is on,
+  ! identically zero otherwise.
+  COMPLEX(xp), DIMENSION(:,:,:), ALLOCATABLE :: dBpar
 
 END MODULE fields

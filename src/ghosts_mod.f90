@@ -22,14 +22,16 @@ SUBROUTINE update_ghosts_moments
 END SUBROUTINE update_ghosts_moments
 
 SUBROUTINE update_ghosts_EM
-  USE model,  ONLY :  beta
+  USE model,  ONLY :  beta, BPAR
   USE grid,   ONLY: total_nz
-  USE fields, ONLY: phi, psi
+  USE fields, ONLY: phi, psi, dBpar
   IMPLICIT NONE
   IF(total_nz .GT. 1) THEN
     CALL update_ghosts_z_3D(phi)
     IF(beta .GT. 0._xp) &
       CALL update_ghosts_z_3D(psi)
+    IF(BPAR) &
+      CALL update_ghosts_z_3D(dBpar)
   ENDIF
 END SUBROUTINE update_ghosts_EM
 

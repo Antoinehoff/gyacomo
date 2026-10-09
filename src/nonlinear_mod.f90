@@ -1,18 +1,18 @@
 MODULE nonlinear
-  USE array,       ONLY : dnjs, Sapj, kernel
+  USE array,       ONLY : dnjs, Sapj, kernel, kernel_dB
   USE fourier,     ONLY : bracket_sum_r, bracket_sum_c, planf, planb, poisson_bracket_and_sum,&
                           apply_inv_ExB_NL_factor
-  USE fields,      ONLY : phi, psi, moments
+  USE fields,      ONLY : phi, psi, dBpar, moments
   USE grid,        ONLY : local_na, &
                          local_np,ngp_o2,parray,pmax,&
                          local_nj,ngj_o2,jarray,jmax, local_nj_offset,&
                          kyarray, AA_y, local_nky, inv_Ny,&
                          total_nkx,kxarray, AA_x, inv_Nx,local_nx, Ny, &
                          local_nz,ngz_o2,zarray,nzgrid, deltakx, deltaky, iky0, contains_kx0, contains_ky0
-  USE model,       ONLY : LINEARITY, EM, ikxZF, ZFrate, ZF_ONLY, ExB_NL_CORRECTION
+  USE model,       ONLY : LINEARITY, EM, BPAR, ikxZF, ZFrate, ZF_ONLY, ExB_NL_CORRECTION
   USE closure,     ONLY : evolve_mom, nmaxarray
   USE prec_const,  ONLY : xp, imagu
-  USE species,     ONLY : sqrt_tau_o_sigma
+  USE species,     ONLY : sqrt_tau_o_sigma, tau_q
   USE time_integration, ONLY : updatetlevel
   USE ExB_shear_flow,   ONLY : ExB_NL_factor, inv_ExB_NL_factor
   use, intrinsic :: iso_c_binding
@@ -82,6 +82,17 @@ SUBROUTINE compute_nonlinear
                   F_cmpx(iky,ikx) = phi(iky,ikx,izi) * kernel(ia,ini,iky,ikx,izi,eo)
                 ENDDO
               ENDDO
+              ! delta B_par part of the gyrokinetic potential, (tau/q) x 2J1/l dBpar,
+              ! has the same velocity structure (p = 0, Laguerre sum) as phi, so it
+              ! rides on the same bracket: F -> K_n phi + (tau/q) K'_n dBpar.
+              IF(BPAR) THEN
+                DO ikx = 1,total_nkx
+                  DO iky = 1,local_nky
+                    F_cmpx(iky,ikx) = F_cmpx(iky,ikx) &
+                      + tau_q(ia)*dBpar(iky,ikx,izi) * kernel_dB(ia,ini,iky,ikx,izi,eo)
+                  ENDDO
+                ENDDO
+              ENDIF
               ! ExB shearing as a additional zonal mode in the ES potential
               IF(abs(ZFrate) .GT. 0) THEN
                 ikxExBp = ikxZF + 1

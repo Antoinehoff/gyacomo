@@ -66,7 +66,7 @@ Gyacomo solves the gyrokinetic Boltzmann equation projected onto a Hermite-Lague
 
 - Handle **kinetic or adiabatic electrons and ions**
 
-- Include **perpendicular magnetic fluctuations**
+- Include **electromagnetic fluctuations**: the parallel vector potential A∥ (Ampère's law, `beta > 0`) and, with `BPAR = .t.` in the `&MODEL` namelist, the parallel magnetic fluctuation δB∥ solved from perpendicular pressure balance together with Poisson. The output field `dBpar` is normalized to the local field, `dBpar = (δB∥/B0(z)) (L_ref/ρ_s)`. δB∥ needs kinetic electrons, `jmax >= 1`, and a standard kernel model (`KN_MODEL = 'std'`, `'taylor'` or `'pade'`); keep `MHD_PD` on with it (the pressure gradient part of the curvature drift and δB∥ partly cancel: both or neither). Linear KBM and MTM demonstrations are in `testcases/linear_KBM_CBC` and `testcases/linear_MTM`.
 
 - Simulate in **Z-pinch**, **s-alpha**, **circular**, and **Miller** geometries
 

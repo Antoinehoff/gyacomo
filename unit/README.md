@@ -30,6 +30,7 @@ make check TESTRUNNER="mpirun -np 1"
 | `test_time_integration` | `time_integration_mod` | every Butcher tableau against the Runge-Kutta order conditions for the order its name claims |
 | `test_ExB_shear_flow` | `ExB_shear_flow_mod` | the shear setup, the kx remap of the fields against a reference built from the wavenumbers, and the shift that `Restore_ExB_shear_flow` rebuilds on a restart |
 | `test_linear_growth` | `linear_growth_mod` | gamma and omega recovered from a field with a known eigenvalue, their invariance across a rescale, `lin_lnscale` undoing the rescaling, and a convergence test that ignores slow drifts in either gamma or omega |
+| `test_bpar` | `numerics_mod`, `solve_EM_fields`, `processing_mod`, `moments_eq_rhs_mod` | the delta B_par kernels `K_j - K_{j-1}` against the closed form and against `x 2J1/l` from the Bessel intrinsics, the coupled Poisson/pressure balance operator against a hand built 2x2 inverse and the `Gamma_0 - Gamma_1` couplings, the field equation residuals of a solve from random moments, the untouched A_par-only path with BPAR off, and the hierarchy drive of dBpar alone against its closed form (run once per mode: on, off, nobeta) |
 
 ## How the build works
 
@@ -84,6 +85,8 @@ That is why `test_time_integration` takes the scheme on the command line and
 `test_ExB_shear_flow` takes its linearity the same way, for the same reason
 plus `Setup_ExB_shear_flow` allocating its own arrays unconditionally; the
 modes it is run with are in `EXB_MODES` in the Makefile.
+`test_bpar` likewise takes its BPAR/beta combination on the command line
+(`BPAR_MODES` in the Makefile).
 
 That test also stands up a whole run, `readinputs` then `auxval`, because the
 shear touches the grids and the operators. It does *not* call `basic_data`:

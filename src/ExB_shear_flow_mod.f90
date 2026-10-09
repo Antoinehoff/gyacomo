@@ -194,7 +194,7 @@ CONTAINS
         USE grid,       ONLY: local_nky, total_nky, update_grids, &
             total_nkx, deltakx, kxarray0, inv_dkx!,kx_min, kx_max
         USE prec_const, ONLY: PI
-        USE fields,     ONLY: moments, phi, psi
+        USE fields,     ONLY: moments, phi, psi, dBpar
         USE numerics,   ONLY: evaluate_EM_op, evaluate_kernels
         IMPLICIT NONE
         ! local var
@@ -244,10 +244,12 @@ CONTAINS
                                 moments(:,:,:,iky,ikx,:,:) = moments(:,:,:,iky,ikx_s,:,:)
                                 phi(iky,ikx,:)             = phi(iky,ikx_s,:)
                                 psi(iky,ikx,:)             = psi(iky,ikx_s,:)
+                                dBpar(iky,ikx,:)           = dBpar(iky,ikx_s,:)
                         ELSE ! if it is not, it is lost (~dissipation for high modes)
                             moments(:,:,:,iky,ikx,:,:) = 0._xp
                             phi(iky,ikx,:)             = 0._xp
                             psi(iky,ikx,:)             = 0._xp
+                            dBpar(iky,ikx,:)           = 0._xp
                         ENDIF
                     ENDDO
                     ! correct the shift value s(ky) for this row

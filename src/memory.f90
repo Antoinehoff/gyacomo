@@ -20,10 +20,14 @@ SUBROUTINE memory
   
   ! 4D+ arrays
   CALL allocate_array(     Kernel, 1,local_na, 1,local_nj+ngj, 1,local_nky, 1,local_nkx, 1,local_nz+ngz, 1,nzgrid)
-  
+  CALL allocate_array(  kernel_dB, 1,local_na, 1,local_nj+ngj, 1,local_nky, 1,local_nkx, 1,local_nz+ngz, 1,nzgrid)
+
   ! 3D arrays
   CALL allocate_array( phi, 1,local_nky, 1,local_nkx, 1,local_nz+ngz)
   CALL allocate_array( psi, 1,local_nky, 1,local_nkx, 1,local_nz+ngz)
+  ! always allocated (and zero when BPAR is off) so that the remap, rescale and
+  ! symmetry routines can treat it like phi and psi without guards
+  CALL allocate_array( dBpar, 1,local_nky, 1,local_nkx, 1,local_nz+ngz)
   
   ! smaller arrays
   
@@ -47,7 +51,10 @@ SUBROUTINE memory
   CALL allocate_array(inv_poisson_op, 1,local_nky, 1,local_nkx, 1,local_nz)
   CALL allocate_array( inv_ampere_op, 1,local_nky, 1,local_nkx, 1,local_nz)
   CALL allocate_array(   inv_pol_ion, 1,local_nky, 1,local_nkx, 1,local_nz)
-  
+  CALL allocate_array(    bp_phi_rho, 1,local_nky, 1,local_nkx, 1,local_nz)
+  CALL allocate_array(     bp_xcoupl, 1,local_nky, 1,local_nkx, 1,local_nz)
+  CALL allocate_array(      bp_dB_pp, 1,local_nky, 1,local_nkx, 1,local_nz)
+
   ! smaller arrays
   CALL allocate_array(     xnapj, 1,local_na, 1,local_np, 1,local_nj)
 

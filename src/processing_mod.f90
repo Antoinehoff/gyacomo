@@ -10,15 +10,15 @@ MODULE processing
       kxarray, AA_x,&
       zarray, zweights_SR, ieven, iodd, inv_deltaz,&
       kroneck_p0, kroneck_p1
-   USE fields,           ONLY: moments, phi, psi
-   USE array,            ONLY : kernel, nadiab_moments, &
+   USE fields,           ONLY: moments, phi, psi, dBpar
+   USE array,            ONLY : kernel, kernel_dB, nadiab_moments, &
       ddz_napj, ddzND_Napj, interp_napj,&
       dens, upar, uper, Tpar, Tper, temp
    USE geometry,         ONLY: Jacobian, iInt_Jacobian
    USE time_integration, ONLY: updatetlevel
    USE calculus,         ONLY: simpson_rule_z, grad_z, grad_z_5D, grad_z2, grad_z4, grad_z4_5D, interp_z
-   USE model,            ONLY: EM, beta, HDz_h, N_HDz
-   USE species,          ONLY: tau,q_tau,q_o_sqrt_tau_sigma,sqrt_tau_o_sigma
+   USE model,            ONLY: EM, beta, BPAR, HDz_h, N_HDz
+   USE species,          ONLY: tau,q_tau,tau_q,q_o_sqrt_tau_sigma,sqrt_tau_o_sigma
    USE parallel,         ONLY: num_procs_ky, rank_ky, comm_ky
    USE mpi
    implicit none
@@ -48,7 +48,8 @@ CONTAINS
 ! as fast as possible since they are called every RK step
    ! evaluate the non-adiabatique ion moments
    !
-   ! n_{pi} = N^{pj} + kernel(j) /tau_i phi delta_p0
+   ! n_{pi} = N^{pj} + q/tau kernel(j) phi delta_p0 + kernel_dB(j) dBpar delta_p0
+   !                 - q/(sqrt(tau) sigma) kernel(j) psi delta_p1
    !
    SUBROUTINE compute_nadiab_moments
       IMPLICIT NONE
@@ -62,8 +63,17 @@ CONTAINS
          DO ia = 1,local_na
             nadiab_moments(ia,ip0,ij,:,:,:) = moments(ia,ip0,ij,:,:,:,updatetlevel) &
             +q_tau(ia)*kernel(ia,ij,:,:,:,ieven)*phi(:,:,:)
-         ENDDO 
          ENDDO
+         ENDDO
+         ! delta B_par: (q/tau)(tau/q) x 2J1/l dBpar -> no species factor
+         IF (BPAR) THEN
+            DO ij=1,local_nj+ngj
+            DO ia = 1,local_na
+               nadiab_moments(ia,ip0,ij,:,:,:) = nadiab_moments(ia,ip0,ij,:,:,:) &
+               +kernel_dB(ia,ij,:,:,:,ieven)*dBpar(:,:,:)
+            ENDDO
+            ENDDO
+         ENDIF
       ENDIF
       IF (CONTAINSp1 .AND. (beta .GT. 0)) THEN
          DO ij=1,local_nj+ngj
@@ -188,6 +198,20 @@ CONTAINS
             ENDDO
             ENDDO
          ENDIF
+         ! delta B_par part: drift from (tau/q) x dBpar with x = L_0 - L_1 (drift kinetic)
+         IF( BPAR .AND. CONTAINSp0 ) THEN
+            DO iz = 1,local_nz
+            izi = iz + ngz_o2
+            DO ikx = 1,local_nkx
+            DO iky = 1,local_nky
+               integrant(iz) = integrant(iz) &
+               +Jacobian(izi,ieven)*tau_q(ia)*(moments(ia,ip0,ij0  ,iky,ikx,izi,updatetlevel)&
+                                              -moments(ia,ip0,ij0+1,iky,ikx,izi,updatetlevel))&
+               *imagu*kyarray(iky)*CONJG(dBpar(iky,ikx,izi))
+            ENDDO
+            ENDDO
+            ENDDO
+         ENDIF
          ! Integrate over z
          call simpson_rule_z(local_nz,zweights_SR,integrant,integral)
          ! Get process local gyrocenter flux with a factor two to account for the negative ky modes
@@ -222,6 +246,22 @@ CONTAINS
                   integrant(iz) = integrant(iz) - &
                   Jacobian(izi,iodd)*sqrt_tau_o_sigma(ia)*moments(ia,ip1,ini,iky,ikx,izi,updatetlevel)&
                   *imagu*kyarray(iky)*kernel(ia,ini,iky,ikx,izi,iodd)*CONJG(psi(iky,ikx,izi))
+            ENDDO
+            ENDDO
+            ENDDO
+            ENDDO
+         ENDIF
+         ! delta B_par part: drift from (tau/q) x 2J1/l dBpar = (tau/q) sum_j K'_j L_j dBpar
+         IF( BPAR .AND. CONTAINSp0 ) THEN
+            DO iz = 1,local_nz ! we take interior points only
+            izi = iz + ngz_o2 !interior index for ghosted arrays
+            DO ikx = 1,local_nkx
+            DO iky = 1,local_nky
+            DO in = 1, local_nj
+            ini = in + ngj_o2 !interior index for ghosted arrays
+               integrant(iz) = integrant(iz) + &
+                  Jacobian(izi,ieven)*tau_q(ia)*moments(ia,ip0,ini,iky,ikx,izi,updatetlevel)&
+                  *imagu*kyarray(iky)*kernel_dB(ia,ini,iky,ikx,izi,ieven)*CONJG(dBpar(iky,ikx,izi))
             ENDDO
             ENDDO
             ENDDO
@@ -291,6 +331,28 @@ CONTAINS
             ENDDO
          ELSEIF(CONTAINSp0) THEN
             ERROR STOP "Degrees p=0 and p=2 should be owned by the same process"
+         ENDIF
+         !!----------------DELTA B_PAR CONTRIBUTION-----------------------------
+         ! same as the electrostatic block with phi K_j -> (tau/q) dBpar K'_j
+         IF(BPAR .AND. CONTAINSp0 .AND. CONTAINSp2) THEN
+            DO iz = 1,local_nz ! we take interior points only
+            izi = iz + ngz_o2 !interior index for ghosted arrays
+            DO ikx = 1,local_nkx
+            DO iky = 1,local_nky
+            DO in = 1, local_nj
+            ini  = in+ngj_o2 !interior index for ghosted arrays
+            n_xp = jarray(ini)
+               integrant(iz) = integrant(iz) &
+                  -Jacobian(izi,ieven)*tau(ia)*imagu*kyarray(iky)*tau_q(ia)*dBpar(iky,ikx,izi)&
+                  *kernel_dB(ia,ini,iky,ikx,izi,ieven)*CONJG(&
+                              0.5_xp*SQRT2*moments(ia,ip2,ini  ,iky,ikx,izi,updatetlevel)&
+                    +(2._xp*n_xp + 1.5_xp)*moments(ia,ip0,ini  ,iky,ikx,izi,updatetlevel)&
+                             -(n_xp+1._xp)*moments(ia,ip0,ini+1,iky,ikx,izi,updatetlevel)&
+                                     -n_xp*moments(ia,ip0,ini-1,iky,ikx,izi,updatetlevel))
+            ENDDO
+            ENDDO
+            ENDDO
+            ENDDO
          ENDIF
          IF(EM .AND. CONTAINSp1 .AND. CONTAINSp3) THEN
             !!----------------ELECTROMAGNETIC CONTRIBUTION--------------------

@@ -280,7 +280,7 @@ CONTAINS
     ! damped branch would otherwise decay into the denormals and stop being
     ! measurable, which is the same failure as an overflow at the other end.
     USE basic,  ONLY: speak, str
-    USE fields, ONLY: moments, phi, psi
+    USE fields, ONLY: moments, phi, psi, dBpar
     USE grid,   ONLY: local_nky, local_nkx, local_nz, ngz, ngz_o2
     USE time_integration, ONLY: ntimelevel
     USE mpi
@@ -315,6 +315,7 @@ CONTAINS
     moments(:,:,:,:,:,:,1:ntimelevel) = factor*moments(:,:,:,:,:,:,1:ntimelevel)
     phi = factor*phi
     psi = factor*psi
+    dBpar = factor*dBpar
     ! The reference of the measurement moves with the state, so the projection
     ! ratio, and hence the eigenvalue, is unaffected by this call.
     IF (has_prev) phi_prev = factor*phi_prev

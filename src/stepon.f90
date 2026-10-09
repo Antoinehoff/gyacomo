@@ -162,7 +162,7 @@ CONTAINS
    END SUBROUTINE anti_aliasing
 
    SUBROUTINE enforce_symmetry ! Force X(k) = X(N-k)* complex conjugate symmetry
-      USE fields, ONLY: phi, psi, moments
+      USE fields, ONLY: phi, psi, dBpar, moments
       USE time_integration, ONLY: updatetlevel
       USE grid,   ONLY: total_nkx, ikx0,iky0, contains_ky0
       IMPLICIT NONE
@@ -196,6 +196,11 @@ CONTAINS
          END DO
          ! must be real at origin
          psi(iky0,ikx0,:) = REAL(psi(iky0,ikx0,:),xp)
+         ! dBpar (identically zero when BPAR is off)
+         DO ikx=2,total_nkx/2 !symmetry at ky = 0
+            dBpar(iky0,ikx,:) = CONJG(dBpar(iky0,total_nkx+2-ikx,:))
+         END DO
+         dBpar(iky0,ikx0,:) = REAL(dBpar(iky0,ikx0,:),xp)
       ENDIF
    END SUBROUTINE enforce_symmetry
 

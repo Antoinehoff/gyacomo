@@ -208,7 +208,7 @@ CONTAINS
                         hatR, hatZ, hatB, dBdx, dBdy, dBdz, Jacobian, gradz_coeff
     USE futils,          ONLY: creatf, creatg, creatd, closef, putarr, putfile, attach, openf!, putarrnd ! Routine de merde, jamais l'utiliser
     USE array
-    USE model,           ONLY: EM
+    USE model,           ONLY: EM, BPAR
     USE parallel,        ONLY: my_id, comm0, gather_z, gather_xyz_real
     USE collision,       ONLY: coll_outputinputs
     USE linear_growth,   ONLY: LIN_GROWTH, lin_outputinputs
@@ -316,6 +316,7 @@ CONTAINS
         CALL creatd(fidres, rank, dims, "/data/var2d/cstep", "iteration number")
         IF (write_phi)  CALL creatg(fidres, "/data/var2d/phi_obmp", "phi out board midplane")
   IF (write_phi.AND.EM) CALL creatg(fidres, "/data/var2d/psi_obmp", "psi out board midplane")
+  IF (write_phi.AND.BPAR) CALL creatg(fidres, "/data/var2d/dBpar_obmp", "delta B_par out board midplane")
         IF (write_Na00) CALL creatg(fidres, "/data/var2d/Na00_obmp", "gyrocenter density out board midplane")
         IF (write_Na00) CALL creatg(fidres, "/data/var2d/Napj_obmp", "p,j moment spectrum out board midplane")
         IF (write_dens) CALL creatg(fidres, "/data/var2d/dens_obmp", "density out board midplane")
@@ -336,6 +337,7 @@ CONTAINS
        CALL creatd(fidres, rank, dims, "/data/var3d/cstep", "iteration number")
        IF (write_phi) CALL creatg(fidres, "/data/var3d/phi", "phi")
        IF (write_phi.AND.EM) CALL creatg(fidres, "/data/var3d/psi", "psi")
+       IF (write_phi.AND.BPAR) CALL creatg(fidres, "/data/var3d/dBpar", "delta B_par (local B normalisation)")
       IF (write_Na00) THEN
       CALL creatg(fidres, "/data/var3d/Na00", "gyrocenter density ")
       CALL creatg(fidres, "/data/var3d/Napjz", "pj(z) moment spectrum ")
@@ -511,7 +513,7 @@ CONTAINS
   SUBROUTINE diagnose_2d
     USE prec_const
     USE basic
-    USE fields, ONLY: phi, psi, moments
+    USE fields, ONLY: phi, psi, dBpar, moments
     USE array,  ONLY: Napjz,dens,upar,temp
     USE futils, ONLY: append, getatt, attach, putarr
     USE grid, ONLY: CONTAINSp0, ip0,ij0, local_na, total_na,&
@@ -521,7 +523,7 @@ CONTAINS
     USE time_integration, ONLY: updatetlevel
     USE prec_const
     USE processing, ONLY: compute_fluid_moments, compute_Napjz_spectrum
-    USE model,      ONLY: EM
+    USE model,      ONLY: EM, BPAR
     USE parallel,   ONLY: manual_3D_bcast
 #ifdef TEST_SVD
     USE CLA, ONLY: Sf
@@ -540,6 +542,7 @@ CONTAINS
     ! Write current EM fields
     IF (write_phi)        CALL write_field2d_kykx_obmp(phi (:,:,(1+ngz_o2):(local_nz+ngz_o2)), 'phi_obmp')
     IF (write_phi.AND.EM) CALL write_field2d_kykx_obmp(psi (:,:,(1+ngz_o2):(local_nz+ngz_o2)), 'psi_obmp')
+    IF (write_phi.AND.BPAR) CALL write_field2d_kykx_obmp(dBpar(:,:,(1+ngz_o2):(local_nz+ngz_o2)), 'dBpar_obmp')
     IF (write_Na00) THEN
       CALL compute_Napjz_spectrum
       IF (CONTAINSp0) THEN
@@ -622,7 +625,7 @@ CONTAINS
   SUBROUTINE diagnose_3d
     USE basic
     USE futils, ONLY: append, getatt, attach, putarr!, putarrnd
-    USE fields, ONLY: phi, psi, moments
+    USE fields, ONLY: phi, psi, dBpar, moments
     USE array,  ONLY: Napjz,dens,upar,uper,Tpar,Tper,temp
     USE grid, ONLY: CONTAINSp0, ip0,ij0, local_na, total_na,&
                     total_np, total_nj, total_nky, total_nkx, total_nz, &
@@ -631,7 +634,7 @@ CONTAINS
     USE time_integration, ONLY: updatetlevel
     USE prec_const
     USE processing, ONLY: compute_fluid_moments, compute_Napjz_spectrum
-    USE model,      ONLY: EM
+    USE model,      ONLY: EM, BPAR
     USE parallel,   ONLY: manual_3D_bcast
     IMPLICIT NONE
     COMPLEX(xp), DIMENSION(local_na,local_nky,local_nkx,local_nz) :: Na00_
@@ -644,6 +647,7 @@ CONTAINS
     ! Write current EM fields
     IF (write_phi)        CALL write_field3d_kykxz(phi (:,:,(1+ngz_o2):(local_nz+ngz_o2)), 'phi')
     IF (write_phi.AND.EM) CALL write_field3d_kykxz(psi (:,:,(1+ngz_o2):(local_nz+ngz_o2)), 'psi')
+    IF (write_phi.AND.BPAR) CALL write_field3d_kykxz(dBpar(:,:,(1+ngz_o2):(local_nz+ngz_o2)), 'dBpar')
     IF (write_Na00) THEN
       CALL compute_Napjz_spectrum
       IF (CONTAINSp0) THEN

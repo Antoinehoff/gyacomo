@@ -6,6 +6,7 @@ MODULE numerics
   IMPLICIT NONE
   PUBLIC :: build_dnjs_table, evaluate_kernels, evaluate_EM_op
   PUBLIC :: compute_lin_coeff, build_dv4Hp_table
+  PUBLIC :: evaluate_poisson_op, evaluate_ampere_op, evaluate_bpar_op
 
 CONTAINS
 
@@ -73,7 +74,7 @@ END SUBROUTINE build_dv4Hp_table
 SUBROUTINE evaluate_kernels
   USE basic
   USE prec_const, ONLY: xp
-  USE array,   ONLY : kernel!, HF_phi_correction_operator
+  USE array,   ONLY : kernel, kernel_dB!, HF_phi_correction_operator
   USE grid,    ONLY : local_na, local_nj,ngj, local_nkx, local_nky, local_nz, ngz, jarray, kp2array,&
                       nzgrid
   USE species, ONLY : sigma2_tau_o2
@@ -186,6 +187,33 @@ SUBROUTINE evaluate_kernels
     ENDDO
   END SELECT
 
+  !! delta B_par kernels K'_j = K_j - K_{j-1}
+  ! The mu delta B_par term of the gyrokinetic potential is gyroaveraged into
+  ! x 2J1(l)/l = -d/dy J0(l) (l = 2 sqrt(x y)), and since J0 = sum_j K_j L_j
+  ! with K_j = y^j e^-y/j!, its Laguerre coefficients are -dK_j/dy = K_j - K_{j-1}.
+  ! Built from whatever kernel model is in use, after the SELECT CASE. The
+  ! lower ghost (j = -1) is zero; the upper ghost K'_{jmax+1} = K_{jmax+1} - K_{jmax}
+  ! is kept since the j = jmax drive reaches it (as the phi drive does with K_{jmax+1}).
+  DO ia  = 1,local_na
+    DO eo  = 1,nzgrid
+      DO ikx = 1,local_nkx
+        DO iky = 1,local_nky
+          DO iz  = 1,local_nz + ngz
+            DO ij = 1,local_nj + ngj
+              IF (jarray(ij) .LT. 0) THEN
+                kernel_dB(ia,ij,iky,ikx,iz,eo) = 0._xp
+              ELSEIF (ij .EQ. 1) THEN ! j = 0 without a ghost below (ngj = 0)
+                kernel_dB(ia,ij,iky,ikx,iz,eo) = kernel(ia,ij,iky,ikx,iz,eo)
+              ELSE
+                kernel_dB(ia,ij,iky,ikx,iz,eo) = kernel(ia,ij,iky,ikx,iz,eo) - kernel(ia,ij-1,iky,ikx,iz,eo)
+              ENDIF
+            ENDDO
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDDO
+  ENDDO
+
   ! !! Correction term for the evaluation of the heat flux
   ! HF_phi_correction_operator(:,:,:) = &
   !        2._xp * Kernel(ia,1,:,:,:,1) &
@@ -205,10 +233,12 @@ END SUBROUTINE evaluate_kernels
 
 !******************************************************************************!
 SUBROUTINE evaluate_EM_op
+  USE model, ONLY : BPAR
   IMPLICIT NONE
 
   CALL evaluate_poisson_op
   CALL evaluate_ampere_op
+  IF (BPAR) CALL evaluate_bpar_op
 
 END SUBROUTINE evaluate_EM_op
 !!!!!!! Evaluate inverse polarisation operator for Poisson equation
@@ -268,6 +298,86 @@ SUBROUTINE evaluate_poisson_op
   END DO kyloop
   END DO kxloop
 END SUBROUTINE evaluate_poisson_op
+!******************************************************************************!
+
+!******************************************************************************!
+!!!!!!! Evaluate the inverse of the coupled Poisson / perpendicular Ampere
+!!!!!!! (pressure balance) operator used when BPAR is on
+!******************************************************************************!
+SUBROUTINE evaluate_bpar_op
+  ! With h_a = N_a + (q_a/tau_a) K phi + K' dBpar (p = 0 moments), quasineutrality
+  ! and perpendicular pressure balance read, per (ky,kx,z),
+  !
+  !        P phi -       C dBpar =  rho
+  ! (beta/2) C phi +     M dBpar = -(beta/2) pperp
+  !
+  ! P     = sum_a q_a^2/tau_a (1 - sum_j K_j^2)  [+ q_i^2/tau_i for adiabatic ions]
+  ! C     = sum_a q_a   sum_j K_j K'_j            ( = sum_a q_a (Gamma_0 - Gamma_1) )
+  ! M     = hatB^2 + (beta/2) sum_a tau_a sum_j K'_j^2
+  ! rho   = sum_a q_a   sum_j K_j  N_a^{0j},   pperp = sum_a tau_a sum_j K'_j N_a^{0j}
+  !
+  ! hatB^2 comes from the local normalisation dBpar = delta B_par/B0(z): the
+  ! balance is B0 delta B_par/4pi = -delta p_perp. The inverse is symmetric,
+  !   phi   = ( M rho - (beta/2) C pperp)/D,  D = P M + (beta/2) C^2 > 0
+  !   dBpar = (-(beta/2) C rho - (beta/2) P pperp)/D
+  ! and the three distinct coefficients are stored. The sums over j are the
+  ! truncated ones, consistent with the moments that are evolved.
+  !
+  ! Correspondence with GENE (Pueschel, PhD thesis 2009, Eqs. 2.66-2.67, where
+  ! B_par is normalised to B_ref and g is the gyrocenter distribution): the
+  ! polarisation sum_j q^2/tau (1 - Gamma_0), the phi-B_par coupling
+  ! sum_j q (Gamma_0 - Gamma_1) in both equations (GENE carries a 1/B0 from its
+  ! normalisation), the diamagnetic term 2 tau (Gamma_0 - Gamma_1) and the
+  ! mu J1 source are the same. Here Gamma_0 - Gamma_1 = sum_j K_j K'_j and
+  ! 2(Gamma_0 - Gamma_1) = sum_j K'_j^2. Note that the vacuum term and the
+  ! diamagnetic term of the B_par equation have the same sign here (screening,
+  ! 1 + beta in the long wavelength limit); as printed, Eq. 2.67 has them
+  ! opposite, which cannot be reconciled with h = g + (q/T) chi F0 and is
+  ! taken as a misprint. The Debye term of Eq. 2.66 is not included.
+  USE prec_const, ONLY : xp
+  USE array,      ONLY : kernel, kernel_dB, bp_phi_rho, bp_xcoupl, bp_dB_pp
+  USE grid,       ONLY : local_na, local_nkx, local_nky, local_nz,&
+                         kxarray, kyarray, local_nj, ngj, ngz, ieven
+  USE species,    ONLY : q, tau, q2_tau
+  USE model,      ONLY : ADIAB_I, tau_i, q_i, beta
+  USE geometry,   ONLY : hatB
+  IMPLICIT NONE
+  REAL(xp) :: P_, C_, M_, D_, sumKK, sumKKp, sumKpKp, Kj, Kpj
+  INTEGER  :: in,ikx,iky,iz,ia,izi
+  kxloop: DO ikx = 1,local_nkx
+  kyloop: DO iky = 1,local_nky
+  zloop:  DO iz  = 1,local_nz
+  izi = iz+ngz/2
+  IF( (kxarray(iky,ikx).EQ.0._xp) .AND. (kyarray(iky).EQ.0._xp) ) THEN
+    bp_phi_rho(iky,ikx,iz) = 0._xp
+    bp_xcoupl (iky,ikx,iz) = 0._xp
+    bp_dB_pp  (iky,ikx,iz) = 0._xp
+  ELSE
+    P_ = 0._xp; C_ = 0._xp; M_ = hatB(izi,ieven)**2
+    a:DO ia = 1,local_na
+      sumKK = 0._xp; sumKKp = 0._xp; sumKpKp = 0._xp
+      DO in = 1,local_nj
+        Kj  = kernel   (ia,in+ngj/2,iky,ikx,izi,ieven)
+        Kpj = kernel_dB(ia,in+ngj/2,iky,ikx,izi,ieven)
+        sumKK   = sumKK   + Kj *Kj
+        sumKKp  = sumKKp  + Kj *Kpj
+        sumKpKp = sumKpKp + Kpj*Kpj
+      ENDDO
+      P_ = P_ + q2_tau(ia)*(1._xp - sumKK)
+      C_ = C_ + q(ia)*sumKKp
+      M_ = M_ + 0.5_xp*beta*tau(ia)*sumKpKp
+    ENDDO a
+    ! adiabatic ions: Boltzmann response in Poisson, no non adiabatic pressure
+    IF(ADIAB_I) P_ = P_ + q_i**2/tau_i
+    D_ = P_*M_ + 0.5_xp*beta*C_**2
+    bp_phi_rho(iky,ikx,iz) =  M_/D_
+    bp_xcoupl (iky,ikx,iz) = -0.5_xp*beta*C_/D_
+    bp_dB_pp  (iky,ikx,iz) = -0.5_xp*beta*P_/D_
+  ENDIF
+  END DO zloop
+  END DO kyloop
+  END DO kxloop
+END SUBROUTINE evaluate_bpar_op
 !******************************************************************************!
 
 !******************************************************************************!

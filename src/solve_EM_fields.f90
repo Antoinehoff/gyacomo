@@ -1,11 +1,15 @@
 SUBROUTINE solve_EM_fields
   ! Solve Poisson and Ampere equations
-  USE model, ONLY : beta
+  USE model, ONLY : beta, BPAR
   USE basic
   USE prec_const
   IMPLICIT NONE
 
-  CALL poisson
+  IF(BPAR) THEN
+    CALL poisson_bpar ! phi and dBpar together (coupled through the kernels)
+  ELSE
+    CALL poisson
+  ENDIF
 
   IF(beta .GT. 0._xp) &
   CALL ampere
@@ -85,6 +89,57 @@ CONTAINS
     ! Transfer phi to all the others process along p
     CALL manual_3D_bcast(phi,local_nky,local_nkx,local_nz+ngz)
   END SUBROUTINE poisson
+
+  SUBROUTINE poisson_bpar
+    ! Solve the coupled quasineutrality / perpendicular pressure balance
+    ! system for phi and dBpar (see evaluate_bpar_op for the operator):
+    !   phi   = bp_phi_rho*rho + bp_xcoupl*pperp
+    !   dBpar = bp_xcoupl*rho  + bp_dB_pp*pperp
+    ! with rho = sum_a q_a sum_j K_j N_a^{0j}, pperp = sum_a tau_a sum_j K'_j N_a^{0j}.
+    ! Both sources need p = 0 only, so like Poisson it is solved where
+    ! SOLVE_POISSON holds and broadcast along p. The adiabatic electron model is
+    ! refused with BPAR (model_readinputs); adiabatic ions have no h, hence no
+    ! pressure, and sit in the operator only.
+    USE time_integration, ONLY: updatetlevel
+    USE array,            ONLY: kernel, kernel_dB, bp_phi_rho, bp_xcoupl, bp_dB_pp
+    USE fields,           ONLY: phi, dBpar, moments
+    USE grid,             ONLY: local_na, local_nky, local_nkx, local_nz,ngz,ngz_o2, SOLVE_POISSON,&
+                                contains_kx0, contains_ky0,ikx0,iky0, ieven,&
+                                ip0, total_nj, ngj_o2
+    USE parallel,         ONLY: manual_3D_bcast
+    USE species,          ONLY: q, tau
+    IMPLICIT NONE
+    INTEGER     :: ij, ia, ikx, iky, iz, izi, iji
+    COMPLEX(xp) :: rho, pperp, Napj
+    IF ( SOLVE_POISSON ) THEN
+      z:DO iz = 1,local_nz
+        izi = iz+ngz_o2
+        x:DO ikx = 1,local_nkx
+          y:DO iky = 1,local_nky
+            rho = 0._xp; pperp = 0._xp
+            DO ij = 1,total_nj
+              iji = ij+ngj_o2
+              DO ia = 1,local_na
+                Napj  = moments(ia,ip0,iji,iky,ikx,izi,updatetlevel)
+                rho   = rho   +   q(ia)*kernel   (ia,iji,iky,ikx,izi,ieven)*Napj
+                pperp = pperp + tau(ia)*kernel_dB(ia,iji,iky,ikx,izi,ieven)*Napj
+              ENDDO
+            ENDDO
+            phi  (iky,ikx,izi) = bp_phi_rho(iky,ikx,iz)*rho + bp_xcoupl(iky,ikx,iz)*pperp
+            dBpar(iky,ikx,izi) = bp_xcoupl (iky,ikx,iz)*rho + bp_dB_pp (iky,ikx,iz)*pperp
+          ENDDO y
+        ENDDO x
+      ENDDO z
+      ! Cancel origin singularity
+      IF (contains_kx0 .AND. contains_ky0) THEN
+        phi  (iky0,ikx0,:) = 0._xp
+        dBpar(iky0,ikx0,:) = 0._xp
+      ENDIF
+    ENDIF
+    ! Transfer the fields to all the others process along p
+    CALL manual_3D_bcast(phi,  local_nky,local_nkx,local_nz+ngz)
+    CALL manual_3D_bcast(dBpar,local_nky,local_nkx,local_nz+ngz)
+  END SUBROUTINE poisson_bpar
 
   SUBROUTINE ampere
     ! Solve ampere equation to get psi

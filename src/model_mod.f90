@@ -28,6 +28,9 @@ MODULE model
   REAL(xp), PUBLIC, PROTECTED ::    k_tB =  1._xp     ! artificial trapping term tuner      (L_ref/L_cB)
   REAL(xp), PUBLIC, PROTECTED ::   k_ldB =  1._xp     ! artificial Landau damping tuner     (L_ref/L_cB)
   REAL(xp), PUBLIC, PROTECTED ::    beta =  0._xp     ! electron plasma Beta (8piNT_e/B0^2)
+  ! Parallel magnetic fluctuations delta B_par (compressional component), solved
+  ! from perpendicular pressure balance together with Poisson. Needs beta > 0.
+  LOGICAL,  PUBLIC, PROTECTED ::    BPAR =  .false.
   REAL(xp), PUBLIC, PROTECTED :: ExBrate =  0._xp     ! ExB background shearing rate (radially constant shear flow)
   INTEGER,  PUBLIC, PROTECTED ::   ikxZF =  0         ! Background zonal mode wavenumber (acts in the nonlinear term)
   REAL(xp), PUBLIC, PROTECTED ::  ZFrate =  0._xp     ! Shearing rate of the background zonal mode
@@ -57,13 +60,14 @@ CONTAINS
     USE basic,          ONLY: lu_in, speak
     USE parallel,       ONLY: num_procs_p
     USE prec_const,     ONLY: xp
+    USE grid,           ONLY: jmax ! read before the model namelist
     IMPLICIT NONE
 
     NAMELIST /MODEL/     LINEARITY, RM_LD_T_EQ, FORCE_SYMMETRY, MHD_PD, &
                          Na, ADIAB_E, ADIAB_I, q_i, tau_i, &
                          mu_x, mu_y, N_HD, N_HDz, HDz_h, mu_z, mu_p, mu_j, HYP_V, &
                          nu, k_gB, k_cB, k_mB, k_tB, k_ldB, &
-                         beta, ExBrate, ExB_NL_CORRECTION,&
+                         beta, BPAR, ExBrate, ExB_NL_CORRECTION,&
                          ikxZF, ZFrate, ZF_ONLY, KN_MODEL, ORDER, ORDER_NUM, ORDER_DEN
 
     READ(lu_in,model)
@@ -89,6 +93,35 @@ CONTAINS
       EM = .TRUE.
     ELSE
       EM = .FALSE.
+    ENDIF
+
+    ! delta B_par is a correction to an electromagnetic run: without beta it
+    ! has no source, so it is silently a no-op rather than an error.
+    IF(BPAR .AND. (.NOT. EM)) THEN
+      CALL speak('BPAR requires beta > 0 -> parallel magnetic fluctuations are off',1)
+      BPAR = .FALSE.
+    ENDIF
+    IF(BPAR) THEN
+      CALL speak('Parallel magnetic fluctuations (delta B_par) are included',1)
+      ! The adiabatic electron path solves a flux surface averaged Poisson
+      ! equation (inv_pol_ion) that does not know about the phi-B_par coupling.
+      IF(ADIAB_E) &
+        ERROR STOP '>> ERROR << BPAR is not compatible with the adiabatic electron model'
+      ! The gkeyll kernels come with a Pade polarization that is not
+      ! 1 - sum_j K_j^2, so the coupled Poisson/pressure balance operator
+      ! could not be built consistently with them.
+      IF(KN_MODEL(1:6) .EQ. 'gkeyll') &
+        ERROR STOP '>> ERROR << BPAR is not compatible with the gkeyll kernel models'
+      ! Even in the long wavelength limit the mu delta B_par term is
+      ! x = L_0 - L_1, so the first Laguerre moment must be evolved.
+      IF(jmax .LT. 1) &
+        ERROR STOP '>> ERROR << BPAR requires jmax >= 1'
+      IF((KN_MODEL .EQ. 'taylor') .OR. (KN_MODEL .EQ. 'pade')) &
+        CALL speak('NOTE: BPAR uses K_j - K_{j-1} of the '//TRIM(KN_MODEL)//' kernels',1)
+      ! The delta B_par parallel force lives in the Landau damping of the j > 0
+      ! moments, which RM_LD_T_EQ removes.
+      IF(RM_LD_T_EQ) &
+        CALL speak('WARNING: RM_LD_T_EQ removes most of the delta B_par parallel force',0)
     ENDIF
 
     IF(abs(ExBrate) .LT. epsilon(ExBrate))&
@@ -126,6 +159,7 @@ CONTAINS
     CALL attach(fid, TRIM(str),      "k_cB",    k_cB)
     CALL attach(fid, TRIM(str),    "MHD_PD",  MHD_PD)
     CALL attach(fid, TRIM(str),      "beta",    beta)
+    CALL attach(fid, TRIM(str),      "BPAR",    BPAR)
     CALL attach(fid, TRIM(str),   "ExBrate", ExBrate)
     CALL attach(fid, TRIM(str),     "ikxZF",   ikxZF)
     CALL attach(fid, TRIM(str),    "ZFrate",  ZFrate)

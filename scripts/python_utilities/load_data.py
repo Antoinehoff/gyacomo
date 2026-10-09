@@ -35,7 +35,7 @@ def load_data_3D_frame(filename,dname,tframe):
                 f'Dataset {dset} not found. Available fields: '
                 + ', '.join(g_.keys()))
         # Select the first species for species dependent fields
-        if not (dname == 'phi' or dname == 'psi'):
+        if not (dname == 'phi' or dname == 'psi' or dname == 'dBpar'):
             data = data[:,:,:,0]
         else:
             data = data[:]

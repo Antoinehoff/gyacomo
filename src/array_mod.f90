@@ -43,11 +43,18 @@ MODULE array
   REAL(xp), DIMENSION(:,:,:), ALLOCATABLE :: xpsij, xpsijp1, xpsijm1
   ! Kernel function evaluation (ia,ij,iky,ikx,iz,odd/even p)
   REAL(xp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: kernel
+  ! delta B_par kernel K'_j = K_j - K_{j-1} = -dK_j/dy: Laguerre coefficients
+  ! of x 2J1(l)/l, the gyroaverage of the mu delta B_par term (same shape)
+  REAL(xp), DIMENSION(:,:,:,:,:,:), ALLOCATABLE :: kernel_dB
 
   ! Poisson operator (iky,ikx,iz)
   REAL(xp), DIMENSION(:,:,:), ALLOCATABLE :: inv_poisson_op
   REAL(xp), DIMENSION(:,:,:), ALLOCATABLE :: inv_ampere_op
   REAL(xp), DIMENSION(:,:,:), ALLOCATABLE :: inv_pol_ion
+  ! Inverse of the coupled Poisson/pressure balance operator (BPAR) (iky,ikx,iz)
+  !   phi   = bp_phi_rho*rho + bp_xcoupl*pperp
+  !   dBpar = bp_xcoupl*rho  + bp_dB_pp*pperp
+  REAL(xp), DIMENSION(:,:,:), ALLOCATABLE :: bp_phi_rho, bp_xcoupl, bp_dB_pp
   ! REAL(xp), DIMENSION(:,:,:), ALLOCATABLE :: HF_phi_correction_operator
 
   ! Kinetic spectrum sum_kx,ky(|Napj(z)|^2), (ia,ip,ij,iz) (should be real)
