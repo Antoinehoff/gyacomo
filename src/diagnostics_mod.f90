@@ -78,6 +78,7 @@ CONTAINS
     USE parallel,        ONLY: parallel_outputinputs
     USE units,           ONLY: units_outputinputs
     USE linear_growth,   ONLY: linear_growth_outputinputs => lin_outputinputs
+    USE adaptive_dt,     ONLY: adaptive_dt_outputinputs
     USE futils,          ONLY: creatf, creatg, creatd, attach, putfile
     IMPLICIT NONE
     !input
@@ -128,6 +129,7 @@ CONTAINS
     CALL         parallel_outputinputs(fid)
     CALL            units_outputinputs(fid)
     CALL    linear_growth_outputinputs(fid)
+    CALL      adaptive_dt_outputinputs(fid)
     !  Save STDIN (input file) of this run
     IF(jobnum .LE. 99) THEN
        WRITE(str,'(a,i2.2)') "/files/STDIN.",jobnum
@@ -139,11 +141,12 @@ CONTAINS
 
   SUBROUTINE diagnose(kstep)
     !   Diagnostics, writing simulation state to disk
-    USE basic,           ONLY: lu_in, chrono_runt, cstep, time, display_h_min_s
+    USE basic,           ONLY: lu_in, chrono_runt, cstep, time, dt, display_h_min_s
     USE processing,      ONLY: pflux_x, hflux_x
     USE parallel,        ONLY: my_id
     USE units,           ONLY: WRITE_MW, pow_ref
     USE linear_growth,   ONLY: LIN_GROWTH, lin_measure, lin_print
+    USE adaptive_dt,     ONLY: use_adaptive_dt
     IMPLICIT NONE
     INTEGER, INTENT(in) :: kstep
     !! Basic diagnose loop for reading input file, displaying advancement and ending
@@ -161,7 +164,7 @@ CONTAINS
     !  of the writing calls so that the values they store are the current ones.
     !  The 0d period is what sets the interval between two measurements.
     IF (LIN_GROWTH .AND. (kstep .GE. 0) .AND. (nsave_0d .GT. 0)) THEN
-      IF (MOD(cstep, nsave_0d) == 0) CALL lin_measure
+      IF (is_due(nsave_0d, dtsave_0d)) CALL lin_measure
     ENDIF
     !! Specific diagnostic calls
     SELECT CASE(diag_mode)
@@ -173,7 +176,7 @@ CONTAINS
   
     ! Terminal info
     IF ((kstep .GE. 0) .AND. (nsave_0d .GT. 0) .AND. (my_id .EQ. 0)) THEN
-     IF (MOD(cstep, nsave_0d) == 0) THEN
+     IF (is_due(nsave_0d, dtsave_0d)) THEN
       IF (WRITE_MW) THEN ! Display MW
         if(SIZE(pflux_x) .GT. 1) THEN
           WRITE(*,"(A,F8.2,A8,G10.3,A14,G10.3,A7)")&
@@ -184,12 +187,14 @@ CONTAINS
         endif
       ELSE ! Display normalized code values
           if(SIZE(pflux_x) .GT. 1) THEN
-            WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A8,G10.3,A8,G10.3,A)")&
+            WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A8,G10.3,A8,G10.3,A)",advance='no')&
             '|t = ', time,'| Pxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'| Pxe = ',pflux_x(2),'| Qxe = ',hflux_x(2),'|'
           else
-            WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A)")&
+            WRITE(*,"(A,F8.2,A8,G10.3,A8,G10.3,A)",advance='no')&
             '|t = ', time,'| Pxi = ',pflux_x(1),'| Qxi = ',hflux_x(1),'|'
           endif
+          IF (use_adaptive_dt) WRITE(*,"(A7,ES9.2,A)",advance='no') ' dt = ', dt, '|'
+          WRITE(*,'(A)') ''
       ENDIF
       IF (LIN_GROWTH) CALL lin_print
      ENDIF
@@ -212,6 +217,7 @@ CONTAINS
     USE parallel,        ONLY: my_id, comm0, gather_z, gather_xyz_real
     USE collision,       ONLY: coll_outputinputs
     USE linear_growth,   ONLY: LIN_GROWTH, lin_outputinputs
+    USE adaptive_dt,     ONLY: use_adaptive_dt, adaptive_dt_finalize_output
     IMPLICIT NONE
     INTEGER, INTENT(in) :: kstep
     INTEGER, parameter  :: BUFSIZE = 2
@@ -292,6 +298,11 @@ CONTAINS
        ENDIF
        IF (write_hf) THEN
         CALL creatd(fidres, rank, dims, "/data/var0d/hflux_x", "Radial part heat flux")
+       ENDIF
+       IF (use_adaptive_dt) THEN
+        CALL creatd(fidres, rank, dims, "/data/var0d/dt",       "Time step that produced the state")
+        CALL creatd(fidres, rank, dims, "/data/var0d/dt_est",   "Stability limit of the state the step started from (cfl_frac=1)")
+        CALL creatd(fidres, rank, dims, "/data/var0d/omega_nl", "ExB CFL frequency of the state the step started from")
        ENDIF
        IF (LIN_GROWTH) THEN
         ! With parallel IO, creatd sums the partitioned dimension over the
@@ -379,19 +390,19 @@ CONTAINS
     IF (kstep .GE. 0) THEN
       !                       2.1   0d history arrays
       IF (nsave_0d .GT. 0) THEN
-        IF ( MOD(cstep, nsave_0d) == 0 ) THEN
+        IF ( is_due(nsave_0d, dtsave_0d) ) THEN
           CALL diagnose_0d
         END IF
       END IF
       !                       2.2   2d profiles
       IF (nsave_2d .GT. 0) THEN
-        IF (MOD(cstep, nsave_2d) == 0) THEN
+        IF (is_due(nsave_2d, dtsave_2d)) THEN
           CALL diagnose_2d
         ENDIF
       ENDIF
       !                       2.3   3d profiles
       IF (nsave_3d .GT. 0) THEN
-        IF (MOD(cstep, nsave_3d) == 0) THEN
+        IF (is_due(nsave_3d, dtsave_3d)) THEN
           CALL diagnose_3d
           ! Looks at the folder if the file check_phi exists and spits a snapshot
           ! of the current electrostatic potential in a basic text file
@@ -400,7 +411,7 @@ CONTAINS
       ENDIF
       !                       2.4   5d profiles
       IF (nsave_5d .GT. 0) THEN
-        IF (MOD(cstep, nsave_5d) == 0) THEN
+        IF (is_due(nsave_5d, dtsave_5d)) THEN
           CALL diagnose_5d
         END IF
       END IF
@@ -408,6 +419,7 @@ CONTAINS
     !                   3.   Final diagnostics
     ELSEIF (kstep .EQ. -1) THEN
       CALL attach(fidres, "/data/input","cpu_time",chrono_runt%ttot)
+      IF (use_adaptive_dt) CALL adaptive_dt_finalize_output(fidres)
       ! make a checkpoint at last timestep if not crashed
       IF(.NOT. crashed) THEN
         IF(my_id .EQ. 0) write(*,*) 'Saving last state'
@@ -425,6 +437,7 @@ CONTAINS
     USE processing,      ONLY: pflux_x, hflux_x, compute_radial_transport, compute_radial_heatflux
     USE parallel,        ONLY: my_id, comm0
     USE futils,          ONLY: creatf, creatg, creatd, attach, putfile, closef
+    USE adaptive_dt,     ONLY: use_adaptive_dt, adaptive_dt_finalize_output
     IMPLICIT NONE
     INTEGER, INTENT(in) :: kstep
     INTEGER, parameter  :: BUFSIZE = 2
@@ -439,7 +452,7 @@ CONTAINS
     IF (kstep .GE. 0) THEN
       ! output the transport in a txt file
       IF ( nsave_0d .GT. 0 ) THEN
-       IF ( MOD(cstep, nsave_0d) == 0 ) THEN
+       IF ( is_due(nsave_0d, dtsave_0d) ) THEN
         CALL compute_radial_transport
         CALL compute_radial_heatflux
         IF (my_id .EQ. 0) &
@@ -450,6 +463,7 @@ CONTAINS
     ELSEIF (kstep .EQ. -1) THEN
       IF (my_id .EQ. 0) CLOSE(lu_ttr)
       CALL init_outfile(comm0,   resfile0,resfile,fidres)
+      IF (use_adaptive_dt) CALL adaptive_dt_finalize_output(fidres)
       CALL creatg(fidres, "/data/var5d", "5d profiles")
       CALL creatd(fidres, rank, dims,  "/data/var5d/time",     "Time t*c_s/R")
       CALL creatd(fidres, rank, dims, "/data/var5d/cstep", "iteration number")
@@ -467,6 +481,7 @@ CONTAINS
     USE prec_const
     USE processing
     USE linear_growth, ONLY: LIN_GROWTH, gamma_ky, omega_ky, lin_lnscale
+    USE adaptive_dt,   ONLY: use_adaptive_dt, dt_est, omega_nl
     IMPLICIT NONE
     ! Time measurement data
     CALL append(fidres, "/profiler/Tc_rhs",       REAL(chrono_mrhs%ttot,dp),ionode=0)
@@ -501,6 +516,13 @@ CONTAINS
     IF (write_hf) THEN
       CALL compute_radial_heatflux
       CALL append(fidres, "/data/var0d/hflux_x",REAL(hflux_x,dp),ionode=0)
+    ENDIF
+    ! Adaptive time step data (dt is the one that produced this state, the
+    ! limit and CFL frequency those of the state the step started from)
+    IF (use_adaptive_dt) THEN
+      CALL append(fidres, "/data/var0d/dt",       REAL(dt,dp),      ionode=0)
+      CALL append(fidres, "/data/var0d/dt_est",   REAL(dt_est,dp),  ionode=0)
+      CALL append(fidres, "/data/var0d/omega_nl", REAL(omega_nl,dp),ionode=0)
     ENDIF
     ! Linear eigenvalue data (measured in diagnose, just above this call)
     IF (LIN_GROWTH) THEN
@@ -825,6 +847,29 @@ CONTAINS
   END SUBROUTINE spit_snapshot_check
   
 
+
+  !> Whether an output with the given cadence is due at the current step.
+  !! With a fixed dt the cadence is the step count nsave (= CEILING(dtsave/dt))
+  !! as it always was. With an adaptive dt the step count means nothing, so
+  !! the output is due when the step that just ended crossed a multiple of
+  !! dtsave: the samples then stay about dtsave apart in time whatever dt does.
+  !! nsave <= 0 disables the output in both cases.
+  LOGICAL FUNCTION is_due(nsave, dtsave)
+    USE basic,       ONLY: cstep, time, dt
+    USE adaptive_dt, ONLY: use_adaptive_dt
+    IMPLICIT NONE
+    INTEGER,  INTENT(IN) :: nsave
+    REAL(xp), INTENT(IN) :: dtsave
+    REAL(xp) :: eps
+    IF (nsave .LE. 0) THEN
+      is_due = .FALSE.
+    ELSE IF (use_adaptive_dt) THEN
+      eps    = 1.0e-6_xp*dtsave
+      is_due = FLOOR((time+eps)/dtsave) .NE. FLOOR((time-dt+eps)/dtsave)
+    ELSE
+      is_due = MOD(cstep, nsave) .EQ. 0
+    ENDIF
+  END FUNCTION is_due
 
   SUBROUTINE diag_outputinputs(fid)
     !

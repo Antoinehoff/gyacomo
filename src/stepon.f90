@@ -1,14 +1,24 @@
+MODULE stepper
+   ! One full Runge-Kutta step of the moment hierarchy, and the two building
+   ! blocks it is made of (RHS assembly and the closure/ghosts/field update
+   ! that brings a state back to consistency). The building blocks are public
+   ! so that the adaptive time step module can apply the linear operator of
+   ! the code, matrix free, through exactly the same code path as a time step.
+   USE prec_const, ONLY: xp, sp
+   IMPLICIT NONE
+   PRIVATE
+
+   PUBLIC :: stepon, assemble_RHS, close_and_solve_fields
+
+CONTAINS
+
 SUBROUTINE stepon
    !   Advance one time step, (num_step=4 for Runge Kutta 4 scheme)
    USE advance_field_routine, ONLY: advance_time_level, advance_moments
-   USE basic,                 ONLY: nlend, chrono_advf, chrono_pois,&
-      chrono_chck, chrono_clos, chrono_ghst,&
+   USE basic,                 ONLY: nlend, chrono_advf, chrono_chck,&
       start_chrono, stop_chrono
-   USE closure,               ONLY: apply_closure_model
-   USE ghosts,                ONLY: update_ghosts_moments, update_ghosts_EM
    use mpi,                   ONLY: MPI_COMM_WORLD
    USE time_integration,      ONLY: ntimelevel
-   USE prec_const,            ONLY: xp, sp
 #ifdef TEST_SVD
    USE CLA,                  ONLY: test_svd,filter_sv_moments_ky_pj
 #endif
@@ -16,7 +26,6 @@ SUBROUTINE stepon
    IMPLICIT NONE
 
    INTEGER :: num_step, ierr
-   LOGICAL :: mlend
 
    SUBSTEPS:DO num_step=1,ntimelevel ! eg RK4 compute successively k1, k2, k3, k4
 !----- TEST !-----
@@ -44,24 +53,8 @@ SUBROUTINE stepon
         CALL advance_moments
       CALL stop_chrono(chrono_advf)
 
-      ! Closure enforcement of moments
-      CALL start_chrono(chrono_clos)
-        CALL apply_closure_model
-      CALL stop_chrono(chrono_clos)
-
-      ! Exchanges the ghosts values of N_n+1
-      CALL start_chrono(chrono_ghst)
-        CALL update_ghosts_moments
-      CALL stop_chrono(chrono_ghst)
-
-      ! Update electrostatic potential phi_n = phi(N_n+1) and potential vect psi
-      CALL start_chrono(chrono_pois)
-        CALL solve_EM_fields
-      CALL stop_chrono(chrono_pois)
-      ! Update EM ghosts
-      CALL start_chrono(chrono_ghst)
-        CALL update_ghosts_EM
-      CALL stop_chrono(chrono_ghst)
+      ! Closure, ghosts, fields and EM ghosts of N_n+1
+      CALL close_and_solve_fields
 
       !-  Check before next step
       CALL start_chrono(chrono_chck)
@@ -82,49 +75,17 @@ SUBROUTINE stepon
    END DO SUBSTEPS
 
 CONTAINS
-!!!! Basic structure to simplify stepon
-   SUBROUTINE assemble_RHS
-      USE basic,          ONLY: chrono_mrhs, chrono_sapj, chrono_coll, chrono_grad, chrono_napj, start_chrono, stop_chrono
-      USE moments_eq_rhs, ONLY: compute_moments_eq_rhs
-      USE collision,      ONLY: compute_Capj
-      USE nonlinear,      ONLY: compute_Sapj
-      USE processing,     ONLY: compute_nadiab_moments, compute_interp_z, compute_gradients_z
-      IMPLICIT NONE
-      ! compute auxiliary non adiabatic moments array
-      CALL start_chrono(chrono_napj)
-        CALL compute_nadiab_moments
-      CALL stop_chrono(chrono_napj)
-
-      ! compute gradients and interp
-      CALL start_chrono(chrono_grad)
-        CALL compute_gradients_z
-        CALL compute_interp_z
-      CALL stop_chrono(chrono_grad)
-
-      ! compute nonlinear term ("if linear" is included inside)
-      CALL start_chrono(chrono_sapj)
-        CALL compute_Sapj
-      CALL stop_chrono(chrono_sapj)
-
-      ! compute collision term ("if coll, if nu >0" is included inside)
-      CALL start_chrono(chrono_coll)
-        CALL compute_Capj
-      CALL stop_chrono(chrono_coll)
-
-      ! compute the moments equation rhs
-      CALL start_chrono(chrono_mrhs)
-        CALL compute_moments_eq_rhs
-      CALL stop_chrono(chrono_mrhs)
-   END SUBROUTINE assemble_RHS
 
    SUBROUTINE checkfield_all ! Check all the fields for inf or nan
       USE utility,ONLY: is_nan, is_inf
       USE fields, ONLY: phi
+      USE basic,  ONLY: nlend
       USE MPI
       USE model,            ONLY: LINEARITY, FORCE_SYMMETRY
       IMPLICIT NONE
-      LOGICAL :: checkf_
+      LOGICAL :: checkf_, mlend
       REAL(sp):: sum_
+      INTEGER :: ierr
       ! filtering
       IF(LINEARITY .NE. 'linear') CALL anti_aliasing    ! ensure 0 mode for 2/3 rule
       IF(FORCE_SYMMETRY)          CALL enforce_symmetry ! Enforcing symmetry on kx = 0 (looks useless)
@@ -205,3 +166,84 @@ CONTAINS
    END SUBROUTINE enforce_symmetry
 
 END SUBROUTINE stepon
+
+!!!! Basic structure to simplify stepon
+   !> Assemble the right hand side of the moment hierarchy from the state held
+   !! in the current time level: moments_rhs(...,updatetlevel) = RHS(N, phi, ...).
+   !! With skip_nonlinear the Poisson bracket is left out (Sapj = 0), which
+   !! turns the routine into the linear operator of the run whatever LINEARITY
+   !! says. Everything else (closure drives, collisions, hyperdiffusion, fields
+   !! entering through the non adiabatic moments) stays in.
+   SUBROUTINE assemble_RHS(skip_nonlinear)
+      USE basic,          ONLY: chrono_mrhs, chrono_sapj, chrono_coll, chrono_grad, chrono_napj, start_chrono, stop_chrono
+      USE array,          ONLY: Sapj
+      USE moments_eq_rhs, ONLY: compute_moments_eq_rhs
+      USE collision,      ONLY: compute_Capj
+      USE nonlinear,      ONLY: compute_Sapj
+      USE processing,     ONLY: compute_nadiab_moments, compute_interp_z, compute_gradients_z
+      IMPLICIT NONE
+      LOGICAL, OPTIONAL, INTENT(IN) :: skip_nonlinear
+      LOGICAL :: skip_nl
+      skip_nl = .FALSE.
+      IF (PRESENT(skip_nonlinear)) skip_nl = skip_nonlinear
+      ! compute auxiliary non adiabatic moments array
+      CALL start_chrono(chrono_napj)
+        CALL compute_nadiab_moments
+      CALL stop_chrono(chrono_napj)
+
+      ! compute gradients and interp
+      CALL start_chrono(chrono_grad)
+        CALL compute_gradients_z
+        CALL compute_interp_z
+      CALL stop_chrono(chrono_grad)
+
+      ! compute nonlinear term ("if linear" is included inside)
+      CALL start_chrono(chrono_sapj)
+        IF (skip_nl) THEN
+          Sapj = 0._xp
+        ELSE
+          CALL compute_Sapj
+        ENDIF
+      CALL stop_chrono(chrono_sapj)
+
+      ! compute collision term ("if coll, if nu >0" is included inside)
+      CALL start_chrono(chrono_coll)
+        CALL compute_Capj
+      CALL stop_chrono(chrono_coll)
+
+      ! compute the moments equation rhs
+      CALL start_chrono(chrono_mrhs)
+        CALL compute_moments_eq_rhs
+      CALL stop_chrono(chrono_mrhs)
+   END SUBROUTINE assemble_RHS
+
+   !> Bring the current time level to a consistent state: closure of the non
+   !! evolved moments, ghost exchange, field solve and EM ghosts. This is what
+   !! follows every RK stage update, and what a state must go through before
+   !! its RHS can be assembled.
+   SUBROUTINE close_and_solve_fields
+      USE basic,   ONLY: chrono_pois, chrono_clos, chrono_ghst, start_chrono, stop_chrono
+      USE closure, ONLY: apply_closure_model
+      USE ghosts,  ONLY: update_ghosts_moments, update_ghosts_EM
+      IMPLICIT NONE
+      ! Closure enforcement of moments
+      CALL start_chrono(chrono_clos)
+        CALL apply_closure_model
+      CALL stop_chrono(chrono_clos)
+
+      ! Exchanges the ghosts values of N_n+1
+      CALL start_chrono(chrono_ghst)
+        CALL update_ghosts_moments
+      CALL stop_chrono(chrono_ghst)
+
+      ! Update electrostatic potential phi_n = phi(N_n+1) and potential vect psi
+      CALL start_chrono(chrono_pois)
+        CALL solve_EM_fields
+      CALL stop_chrono(chrono_pois)
+      ! Update EM ghosts
+      CALL start_chrono(chrono_ghst)
+        CALL update_ghosts_EM
+      CALL stop_chrono(chrono_ghst)
+   END SUBROUTINE close_and_solve_fields
+
+END MODULE stepper

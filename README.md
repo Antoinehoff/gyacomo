@@ -102,6 +102,32 @@ You can analyze Gyacomo simulations either with matlab scripts stored [here](htt
 
 > 🔧 Note: Some collision operators (Sugama, full Coulomb) require you to precompute matrix files using **COSOlver** and place them in the `Gyacomo/iCa` folder before running simulations.
 
+### Adaptive time step
+
+The time step can follow the stability limit of the explicit scheme instead
+of being fixed. Add the optional group (anywhere in the input file)
+
+```fortran
+&ADAPTIVE_DT
+  use_adaptive_dt = .true.
+  cfl_frac        = 1.0   ! fraction of the measured stability limit to run at
+/
+```
+
+At startup the code measures the extreme eigenvalues of its linear operator
+(matrix-free Arnoldi on the RHS, one Krylov space per `(kx,ky)` block) and
+tests them against the stability polynomial of the Runge-Kutta tableau in
+use; after every step it measures the ExB CFL frequency from the real-space
+gradients of the potentials. The step is `cfl_frac` times the largest stable
+one for the combination, with gentle growth, immediate decrease and an exact
+landing on `tmax`. `dt` in `&BASIC` is then only the starting value. Outputs
+are triggered when a multiple of `dtsave_*` is crossed, and `dt`, `dt_est`,
+`omega_nl` are written to `/data/var0d/`; the linear limit per mode and the
+limiting eigenvalue go to `/data/input/adaptive_dt`. Other knobs (`dt_min`,
+`dt_max`, `dt_growth`, `dt_hyst`, `dt_lin_safety`, `krylov_dim`, ...) are
+listed in `src/adaptive_dt_mod.f90`; `testcases/adaptive_dt_validation`
+checks the feature end to end.
+
 ### Unit tests
 
 ```sh

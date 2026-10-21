@@ -172,7 +172,7 @@ mvmod:
 $(OBJDIR)/diagnose.o : src/srcinfo.h
 
 # Main source dependencies
-FOBJ=$(OBJDIR)/advance_field_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/auxval.o \
+FOBJ=$(OBJDIR)/adaptive_dt_mod.o $(OBJDIR)/advance_field_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/auxval.o \
 $(OBJDIR)/basic_mod.o $(OBJDIR)/coeff_mod.o $(OBJDIR)/closure_mod.o $(OBJDIR)/circular_mod.o \
 $(OBJDIR)/collision_mod.o $(OBJDIR)/nonlinear_mod.o $(OBJDIR)/control.o \
 $(OBJDIR)/diagnostics_mod.o $(OBJDIR)/endrun.o \
@@ -197,6 +197,14 @@ $(OBJDIR)/CLA_mod.o
 	$(F90) $(LDFLAGS) $(OBJDIR)/*.o $(EXTMOD) $(EXTINC) $(EXTLIBS) -o $(EXEC)
 
 # Modules compilation
+ $(OBJDIR)/adaptive_dt_mod.o : src/adaptive_dt_mod.f90 \
+   $(OBJDIR)/prec_const_mod.o $(OBJDIR)/basic_mod.o $(OBJDIR)/grid_mod.o \
+	 $(OBJDIR)/fields_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/model_mod.o \
+	 $(OBJDIR)/time_integration_mod.o $(OBJDIR)/closure_mod.o $(OBJDIR)/fourier_mod.o \
+	 $(OBJDIR)/parallel_mod.o $(OBJDIR)/species_mod.o $(OBJDIR)/geometry_mod.o \
+	 $(OBJDIR)/nonlinear_mod.o $(OBJDIR)/stepon.o
+	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/adaptive_dt_mod.f90 -o $@
+
  $(OBJDIR)/advance_field_mod.o : src/advance_field_mod.f90 \
    $(OBJDIR)/grid_mod.o $(OBJDIR)/array_mod.o $(OBJDIR)/initial_mod.o \
 	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/time_integration_mod.o $(OBJDIR)/basic_mod.o \
@@ -248,7 +256,8 @@ $(OBJDIR)/CLA_mod.o
  $(OBJDIR)/control.o : src/control.f90 \
 	 $(OBJDIR)/auxval.o $(OBJDIR)/geometry_mod.o $(OBJDIR)/prec_const_mod.o \
      $(OBJDIR)/basic_mod.o $(OBJDIR)/ppexit.o $(OBJDIR)/readinputs.o $(OBJDIR)/tesend.o \
-     $(OBJDIR)/diagnostics_mod.o $(OBJDIR)/linear_growth_mod.o
+     $(OBJDIR)/diagnostics_mod.o $(OBJDIR)/linear_growth_mod.o $(OBJDIR)/stepon.o \
+     $(OBJDIR)/adaptive_dt_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/control.f90 -o $@
 
  $(OBJDIR)/cosolver_interface_mod.o : src/cosolver_interface_mod.f90 \
@@ -261,7 +270,7 @@ $(OBJDIR)/CLA_mod.o
      $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o \
 	 $(OBJDIR)/grid_mod.o $(OBJDIR)/initial_mod.o $(OBJDIR)/model_mod.o \
 	 $(OBJDIR)/time_integration_mod.o $(OBJDIR)/parallel_mod.o $(OBJDIR)/units_mod.o \
-	 $(OBJDIR)/linear_growth_mod.o
+	 $(OBJDIR)/linear_growth_mod.o $(OBJDIR)/adaptive_dt_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/diagnostics_mod.f90 -o $@
 
  $(OBJDIR)/endrun.o : src/endrun.f90 \
@@ -369,7 +378,7 @@ $(OBJDIR)/CLA_mod.o
  $(OBJDIR)/readinputs.o : src/readinputs.f90  \
    $(OBJDIR)/diagnostics_mod.o $(OBJDIR)/initial_mod.o $(OBJDIR)/model_mod.o  \
 	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/time_integration_mod.o \
-  	 $(OBJDIR)/units_mod.o $(OBJDIR)/linear_growth_mod.o
+  	 $(OBJDIR)/units_mod.o $(OBJDIR)/linear_growth_mod.o $(OBJDIR)/adaptive_dt_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/readinputs.f90 -o $@
 
  $(OBJDIR)/restarts_mod.o : src/restarts_mod.f90   \
@@ -393,11 +402,13 @@ $(OBJDIR)/CLA_mod.o
 	 $(OBJDIR)/array_mod.o $(OBJDIR)/numerics_mod.o $(OBJDIR)/fields_mod.o \
 	 $(OBJDIR)/ghosts_mod.o $(OBJDIR)/moments_eq_rhs_mod.o $(OBJDIR)/solve_EM_fields.o\
 	 $(OBJDIR)/utility_mod.o $(OBJDIR)/model_mod.o $(OBJDIR)/time_integration_mod.o \
-	 $(OBJDIR)/CLA_mod.o $(OBJDIR)/ExB_shear_flow_mod.o
+	 $(OBJDIR)/CLA_mod.o $(OBJDIR)/ExB_shear_flow_mod.o $(OBJDIR)/closure_mod.o \
+	 $(OBJDIR)/collision_mod.o $(OBJDIR)/processing_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/stepon.f90 -o $@
 
  $(OBJDIR)/tesend.o : src/tesend.f90 \
- 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/linear_growth_mod.o
+ 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/prec_const_mod.o $(OBJDIR)/linear_growth_mod.o \
+	 $(OBJDIR)/adaptive_dt_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/tesend.f90 -o $@
 
  $(OBJDIR)/time_integration_mod.o : src/time_integration_mod.f90 \
@@ -446,7 +457,8 @@ CHK_AUTO   = $(if $(F90_IS_GNU),-O1 -g -fcheck=all -fbacktrace -ffree-line-lengt
 # assertion helper, not a program).
 UNIT_PROGS = test_prec_const test_utility test_lag_interp test_calculus \
              test_numerics test_coeff test_grid test_time_integration \
-             test_ExB_shear_flow test_linear_growth test_bpar test_staggered_z
+             test_ExB_shear_flow test_linear_growth test_bpar test_staggered_z \
+             test_adaptive_dt
 UNIT_EXECS = $(addprefix $(UNITBINDIR)/,$(UNIT_PROGS))
 UNIT_OBJS  = $(addprefix $(UNITOBJDIR)/,$(addsuffix .o,$(UNIT_PROGS)))
 
@@ -465,6 +477,10 @@ EXB_MODES = linear nonlinear off
 # per combination.
 BPAR_MODES = on off nobeta
 
+# And for the adaptive time step suite: one deck (linear hyperdiffusion or a
+# nonlinear FFT setup) per process, so the mode is a command line argument.
+ADT_MODES = hyperdiff cfl
+
 check:
 	@$(MAKE) --no-print-directory run-unit-tests \
 	    OBJDIR=$(PREFIX)/obj/unit MODDIR=$(PREFIX)/mod/unit
@@ -478,7 +494,7 @@ run-unit-tests: dirs unitdirs src/srcinfo.h $(UNIT_EXECS)
 	@echo "== running unit tests =="
 	@echo ""
 	@fail=0; \
-	for t in $(filter-out $(UNITBINDIR)/test_time_integration $(UNITBINDIR)/test_ExB_shear_flow $(UNITBINDIR)/test_bpar,$(UNIT_EXECS)); do \
+	for t in $(filter-out $(UNITBINDIR)/test_time_integration $(UNITBINDIR)/test_ExB_shear_flow $(UNITBINDIR)/test_bpar $(UNITBINDIR)/test_adaptive_dt,$(UNIT_EXECS)); do \
 	  $(TESTRUNNER) $$t || fail=`expr $$fail + 1`; \
 	done; \
 	for s in $(TI_SCHEMES); do \
@@ -489,6 +505,9 @@ run-unit-tests: dirs unitdirs src/srcinfo.h $(UNIT_EXECS)
 	done; \
 	for m in $(BPAR_MODES); do \
 	  $(TESTRUNNER) $(UNITBINDIR)/test_bpar $$m || fail=`expr $$fail + 1`; \
+	done; \
+	for m in $(ADT_MODES); do \
+	  $(TESTRUNNER) $(UNITBINDIR)/test_adaptive_dt $$m || fail=`expr $$fail + 1`; \
 	done; \
 	if [ $$fail -eq 0 ]; then \
 	  echo "== all unit tests passed =="; \

@@ -323,7 +323,8 @@ class GyacomoSimulation:
             # Write each namelist
             for namelist in ['BASIC', 'GRID', 'GEOMETRY', 'DIAGNOSTICS', 
                             'MODEL', 'CLOSURE', 'SPECIES', 'COLLISION', 
-                            'INITIAL', 'TIME_INTEGRATION', 'UNITS']:
+                            'INITIAL', 'TIME_INTEGRATION', 'UNITS',
+                            'LINEAR_GROWTH', 'ADAPTIVE_DT']:
                 
                 if namelist not in self.params:
                     continue
@@ -359,10 +360,25 @@ class GyacomoSimulation:
         comments = {
             'BASIC': {
                 'nrun': 'number of time steps to perform',
-                'dt': 'time step (not adaptive)',
+                'dt': 'time step (initial value only when ADAPTIVE_DT is on)',
                 'tmax': 'maximal time [c_s/R]',
                 'maxruntime': 'maximal wallclock runtime [sec]',
                 'job2load': 'index of previous run to restart (-1:new)'
+            },
+            'ADAPTIVE_DT': {
+                'use_adaptive_dt': 'adapt dt to the stability limit of the scheme',
+                'cfl_frac': 'fraction of the measured stability limit to run at',
+                'dt_min': 'the run stops when the stable dt falls below this',
+                'dt_max': 'upper bound on dt',
+                'dt_growth': 'largest growth factor of dt per step',
+                'dt_hyst': 'dt only grows when the target exceeds it by this fraction',
+                'estimate_dt_lin': 'measure the linear stability limit at startup (Arnoldi)',
+                'dt_lin': 'linear stability limit (input when not estimated)',
+                'dt_lin_safety': 'margin applied to the measured linear spectrum',
+                'krylov_dim': 'Arnoldi dimension per block',
+                'krylov_mem_levels': 'Krylov memory budget in moments time levels',
+                'n_omega_tab': 'size of the stability table in the ExB CFL frequency',
+                'dt_verbose': 'print every dt change'
             },
             'GRID': {
                 'pmax': 'maximal degree of Hermite basis (parallel velocity)',

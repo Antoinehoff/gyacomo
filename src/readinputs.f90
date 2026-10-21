@@ -7,6 +7,7 @@ SUBROUTINE readinputs
   USE grid,             ONLY: grid_readinputs
   USE initial,          ONLY: initial_readinputs
   USE linear_growth,    ONLY: lin_readinputs
+  USE adaptive_dt,      ONLY: adaptive_dt_readinputs
   USE model,            ONLY: model_readinputs
   USE species,          ONLY: species_readinputs
   USE time_integration, ONLY: time_integration_readinputs
@@ -52,5 +53,8 @@ SUBROUTINE readinputs
   ! Load the linear growth rate measurement options. This one rewinds the input
   ! file and tolerates a missing namelist, so it does not have to be positional.
   CALL lin_readinputs
+
+  ! Load the adaptive time step options. Same optional, rewinding read.
+  CALL adaptive_dt_readinputs
 
 END SUBROUTINE readinputs

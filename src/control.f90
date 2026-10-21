@@ -12,6 +12,8 @@ SUBROUTINE control
   USE diagnostics,    ONLY: diagnose
   USE ExB_shear_flow, ONLY: Update_ExB_shear_flow
   USE linear_growth,  ONLY: LIN_GROWTH, lin_rescale
+  USE stepper,        ONLY: stepon
+  USE adaptive_dt,    ONLY: adaptive_dt_init, adaptive_dt_update
   IMPLICIT NONE
   REAL(xp) :: t_init_diag_0, t_init_diag_1
   INTEGER  :: ierr
@@ -49,6 +51,10 @@ SUBROUTINE control
   CALL initialize
   ! CALL mpi_barrier(MPI_COMM_WORLD, ierr)
   CALL speak('] initial state created',2)
+
+  !                   1.5b    Adaptive time step: measure the stability limits
+  !                           and set the first dt (inert unless requested)
+  CALL adaptive_dt_init
   
   !                   1.6     Initial diagnostics
   CALL speak( 'Initial diagnostics [',2)
@@ -102,6 +108,10 @@ SUBROUTINE control
     CALL start_chrono(chrono_diag)
       CALL diagnose(step)
     CALL stop_chrono(chrono_diag)
+
+    ! Adaptive time step: measure the CFL of the new state and set dt for the
+    ! next step (after the diagnostics, which record the dt that was used)
+    CALL adaptive_dt_update
 
     CALL stop_chrono(chrono_step)
 

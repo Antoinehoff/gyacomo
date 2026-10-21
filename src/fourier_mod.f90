@@ -17,6 +17,7 @@ MODULE fourier
 
     !! Module accessible routines
     PUBLIC :: init_grid_distr_and_plans, poisson_bracket_and_sum, finalize_plans, apply_inv_ExB_NL_factor
+    PUBLIC :: grad_xy_max
 
     !! Module variables
     !! 2D fft specific variables (C interface)
@@ -373,6 +374,57 @@ END SUBROUTINE fft1D_plans
 #endif
         sum_real_ = sum_real_ - real_data_f*real_data_g*inv_Ny*inv_Nx
     END SUBROUTINE poisson_bracket_and_sum
+    !******************************************************************************!
+
+    !******************************************************************************!
+    !!! Pointwise CFL frequency of the advection by a potential F,
+    !     omega = max over the (x,y) plane of ( kx_eff*|dF/dy| + ky_eff*|dF/dx| ),
+    !   measured with the same transposition, anti-aliasing and c2r transforms as
+    !   the Poisson bracket above, so that the velocities are the ones the
+    !   nonlinear term actually advects with (v = (-dF/dy, dF/dx)).
+    !   Collective over the ky communicator: every rank of it has to call this
+    !   routine the same number of times, including ranks that own no ky mode.
+    SUBROUTINE grad_xy_max( ky_array, kx_array, AA_y, AA_x, local_nky, total_nkx, Ny, F_,&
+                            kx_eff, ky_eff, omega_loc)
+        IMPLICIT NONE
+        INTEGER,                                  INTENT(IN) :: local_nky, total_nkx, Ny
+        REAL(xp), DIMENSION(local_nky),           INTENT(IN) :: ky_array, AA_y
+        REAL(xp), DIMENSION(total_nkx),           INTENT(IN) :: AA_x
+        REAL(xp), DIMENSION(local_nky,total_nkx), INTENT(IN) :: kx_array
+        COMPLEX(c_xp_c), DIMENSION(local_nky,total_nkx), &
+                                                  INTENT(IN) :: F_
+        REAL(xp),                                 INTENT(IN) :: kx_eff, ky_eff
+        REAL(xp),                                 INTENT(OUT):: omega_loc
+        ! local variables (c2r destroys its input, so the fields are rebuilt here)
+        COMPLEX(xp), DIMENSION(total_nkx,local_nky) :: ikxF, ikyF
+        INTEGER :: ikx, iky, ix, iy
+        REAL(xp):: kxs, ky, w
+        DO iky = 1,local_nky
+            DO ikx = 1,total_nkx
+                ky  = ky_array(iky)
+                kxs = kx_array(iky,ikx)
+                ikxF(ikx,iky) = imagu*kxs*F_(iky,ikx)*AA_y(iky)*AA_x(ikx)
+                ikyF(ikx,iky) = imagu*ky *F_(iky,ikx)*AA_y(iky)*AA_x(ikx)
+            ENDDO
+        ENDDO
+#ifdef SINGLE_PRECISION
+        call fftwf_mpi_execute_dft_c2r(planb, ikxF, real_data_f)
+        call fftwf_mpi_execute_dft_c2r(planb, ikyF, real_data_g)
+#else
+        call fftw_mpi_execute_dft_c2r(planb, ikxF, real_data_f)
+        call fftw_mpi_execute_dft_c2r(planb, ikyF, real_data_g)
+#endif
+        ! real_data_f = dF/dx and real_data_g = dF/dy on (y, local x). The c2r
+        ! output is the physical field (the 1/NxNy normalization of the code sits
+        ! on the r2c side). Rows beyond Ny are FFTW padding and are skipped.
+        omega_loc = 0._xp
+        DO ix = 1,SIZE(real_data_f,2)
+            DO iy = 1,Ny
+                w = kx_eff*ABS(real_data_g(iy,ix)) + ky_eff*ABS(real_data_f(iy,ix))
+                IF (w .GT. omega_loc) omega_loc = w
+            ENDDO
+        ENDDO
+    END SUBROUTINE grad_xy_max
     !******************************************************************************!
     !******************************************************************************!
 

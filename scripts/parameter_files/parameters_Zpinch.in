@@ -1,6 +1,6 @@
 &BASIC
   nrun       = 99999999 ! number of time step to perform
-  dt         = 0.01     ! time step (not adaptive)
+  dt         = 0.01     ! time step (initial value only if ADAPTIVE_DT is on)
   tmax       = 100       ! maximal time [c_s/R]
   maxruntime = 72000    ! maximal wallclock runtime [sec]
   job2load   = -1       ! index of the previous run to restart (-1:start a new run)
@@ -87,4 +87,8 @@
 /
 &TIME_INTEGRATION
   numerical_scheme = 'RK4' ! numerical scheme for time integration (RK2,3,4 etc.)
+/
+&ADAPTIVE_DT
+  use_adaptive_dt = .false. ! adapt dt to the stability limit of the scheme (optional group)
+  cfl_frac        = 1.0     ! fraction of the measured stability limit to run at
 /

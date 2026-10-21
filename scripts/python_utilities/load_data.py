@@ -149,15 +149,24 @@ def read_namelist(nml_str):
     return all_namelists
 
 def read_data_std(filename):
-    t_values = []
-    Pxi_values = []
-    Qxi_values = []
-    dict       = {"t":[],"Pxi":[],"Pxe":[],"Qxi":[],"Qxe":[]}
+    # Parses the '|t = ...| Pxi = ...| ...|' progress lines of the standard
+    # output. Any '| key = value |' field is accepted (an adaptive run also
+    # prints '| dt = ...|'), so the keys are whatever the run printed.
+    dict = {"t":[],"Pxi":[],"Pxe":[],"Qxi":[],"Qxe":[]}
     with open(filename, 'r') as file:
         for line in file:
+            if not line.startswith('|t ='):
+                continue
             a = line.split('|')
             for i in a[1:-1]:
                 b = i.split('=')
-                dict[b[0].strip()].append(float(b[1]))
+                if len(b) != 2:
+                    continue
+                key = b[0].strip()
+                try:
+                    val = float(b[1])
+                except ValueError:
+                    continue
+                dict.setdefault(key, []).append(val)
 
     return dict

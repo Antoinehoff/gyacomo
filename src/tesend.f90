@@ -5,6 +5,7 @@ SUBROUTINE tesend
   USE mpi
   USE parallel,      ONLY: my_id
   USE linear_growth, ONLY: LIN_GROWTH, lin_converged
+  USE adaptive_dt,   ONLY: adt_stop
   IMPLICIT NONE
   LOGICAL :: mlend, mlexist
   REAL    :: tnow
@@ -20,6 +21,15 @@ SUBROUTINE tesend
     CALL speak('rhs is NaN/Inf',-99)
     CALL speak('Run terminated at cstep='//str(cstep),-99)
     RETURN
+  END IF
+
+  !________________________________________________________________________________
+  !                   1a. Adaptive time step fell below dt_min (set identically
+  !                       on every process from reduced data, no reduction needed)
+  IF ( adt_stop ) THEN
+     nlend = .TRUE.
+     CALL speak('Adaptive time step below dt_min',0)
+     RETURN
   END IF
 
   !________________________________________________________________________________
