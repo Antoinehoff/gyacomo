@@ -300,6 +300,7 @@ CONTAINS
   ! |_|_|_|_|
   !  1 2 3 4
   SUBROUTINE set_grids(shear,Npol,LINEARITY,N_HD,N_HDz,EM,Na)
+    USE prec_const, ONLY: PI
     REAL(xp), INTENT(IN) :: shear, Npol
     CHARACTER(len=*), INTENT(IN) :: LINEARITY
     INTEGER, INTENT(IN)  :: N_HD, N_HDz
@@ -309,7 +310,9 @@ CONTAINS
     CALL set_pgrid(EM)
     CALL set_jgrid
     CALL set_kygrid(LINEARITY,N_HD)
-    CALL set_kxgrid(shear,Npol,1._xp,LINEARITY,N_HD) ! this will be redone after geometry if Cyq0_x0 .NE. 1
+    ! Provisional twist-and-shift factor 2 pi shear Npol (Cyq0_x0 = 1); the kx grid
+    ! is rebuilt by eval_magnetic_geometry once the geometry knows the real factor
+    CALL set_kxgrid(2._xp*PI*shear*Npol*1._xp,LINEARITY,N_HD)
     CALL set_xgrid
     CALL set_zgrid (Npol,N_HDz)
   END SUBROUTINE set_grids
@@ -493,19 +496,23 @@ CONTAINS
     ENDIF
   END SUBROUTINE set_kygrid
 
-  SUBROUTINE set_kxgrid(shear,Npol,Cyq0_x0,LINEARITY,N_HD)
+  SUBROUTINE set_kxgrid(tsfac,LINEARITY,N_HD)
+    ! tsfac is the twist-and-shift factor Gamma of the geometry: a mode (kx,ky)
+    ! connects to (kx + Gamma ky, ky) across the parallel boundary, so the kx
+    ! grid must satisfy dkx = |Gamma| dky / Nexc. Gamma = 2 pi shear Npol Cyq0_x0
+    ! for the tokamak models and comes from the metric at the tube ends for VMEC.
     USE prec_const, ONLY: xp, pi
     USE basic, ONLY: speak, str
     IMPLICIT NONE
-    REAL(xp), INTENT(IN) :: shear, Npol, Cyq0_x0
+    REAL(xp), INTENT(IN) :: tsfac
     CHARACTER(len=*), INTENT(IN) ::LINEARITY
     INTEGER, INTENT(IN)  :: N_HD
     INTEGER :: ikx, iky
     REAL(xp):: Lx_adapted
-    IF(shear .GT. 0) THEN
+    IF(ABS(tsfac) .GT. 1e-5_xp) THEN
       CALL speak('Magnetic shear detected: set up sheared kx grid..',1)
-      ! mininal size of box in x to respect dkx = 2pi shear dky
-      Lx_adapted = Ly/(2._xp*pi*shear*Npol*Cyq0_x0)
+      ! mininal size of box in x to respect dkx = |Gamma| dky
+      Lx_adapted = Ly/ABS(tsfac)
       ! Any non positive Nexc (0 or the documented -1) asks for an automatic
       ! value computed from the target Lx given in the input file
       IF(Nexc .LE. 0) THEN

@@ -187,7 +187,7 @@ $(OBJDIR)/ppexit.o $(OBJDIR)/prec_const_mod.o \
 $(OBJDIR)/processing_mod.o $(OBJDIR)/readinputs.o $(OBJDIR)/restarts_mod.o \
 $(OBJDIR)/solve_EM_fields.o $(OBJDIR)/species_mod.o $(OBJDIR)/stepon.o $(OBJDIR)/tesend.o \
 $(OBJDIR)/time_integration_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/units_mod.o \
-$(OBJDIR)/CLA_mod.o
+$(OBJDIR)/CLA_mod.o $(OBJDIR)/vmec_mod.o
 
 # Add finally the definition of the Gyacomo directory
 # (helps if the code needs to load a file as for the init Ricci)
@@ -293,8 +293,12 @@ $(OBJDIR)/CLA_mod.o
  $(OBJDIR)/geometry_mod.o : src/geometry_mod.f90 \
  	 $(OBJDIR)/array_mod.o $(OBJDIR)/calculus_mod.o $(OBJDIR)/circular_mod.o \
 	 $(OBJDIR)/miller_mod.o $(OBJDIR)/grid_mod.o $(OBJDIR)/model_mod.o \
-	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/utility_mod.o
+	 $(OBJDIR)/prec_const_mod.o $(OBJDIR)/utility_mod.o $(OBJDIR)/vmec_mod.o
 	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/geometry_mod.f90 -o $@
+
+ $(OBJDIR)/vmec_mod.o : src/vmec_mod.f90 \
+ 	 $(OBJDIR)/basic_mod.o $(OBJDIR)/parallel_mod.o $(OBJDIR)/prec_const_mod.o
+	$(F90) -c $(F90FLAGS) $(FPPFLAGS) $(EXTMOD) $(EXTINC) src/vmec_mod.f90 -o $@
 
  $(OBJDIR)/ghosts_mod.o : src/ghosts_mod.f90 \
  	 $(OBJDIR)/basic_mod.o $(OBJDIR)/fields_mod.o $(OBJDIR)/grid_mod.o\
@@ -458,7 +462,7 @@ CHK_AUTO   = $(if $(F90_IS_GNU),-O1 -g -fcheck=all -fbacktrace -ffree-line-lengt
 UNIT_PROGS = test_prec_const test_utility test_lag_interp test_calculus \
              test_numerics test_coeff test_grid test_time_integration \
              test_ExB_shear_flow test_linear_growth test_bpar test_staggered_z \
-             test_adaptive_dt
+             test_adaptive_dt test_vmec
 UNIT_EXECS = $(addprefix $(UNITBINDIR)/,$(UNIT_PROGS))
 UNIT_OBJS  = $(addprefix $(UNITOBJDIR)/,$(addsuffix .o,$(UNIT_PROGS)))
 

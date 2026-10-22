@@ -457,7 +457,7 @@ CONTAINS
     USE fields,     ONLY: moments
     USE prec_const, ONLY: xp
     USE model,      ONLY: LINEARITY
-    USE geometry,   ONLY: Jacobian, iInt_Jacobian, shear
+    USE geometry,   ONLY: Jacobian, iInt_Jacobian, shear, gxx, gxy
     IMPLICIT NONE
     REAL(xp) ::kx, ky, z, sigma_x, sigma_y, gain
     INTEGER :: ia,iky,ikx,iz,ip,ij, p, j
@@ -475,7 +475,8 @@ CONTAINS
         DO iz=1+ngz/2,local_nz+ngz/2
           z  = zarray(iz,ieven)
           DO ikx=1,total_nkx
-            kx = kxarray(iky,ikx) + z*shear*ky
+            ! ballooning-like envelope: kx + ky gxy/gxx (= kx + z shear ky for s-alpha)
+            kx = kxarray(iky,ikx) + ky*gxy(iz,ieven)/gxx(iz,ieven)
             DO ip=1+ngp/2,local_np+ngp/2
               p = parray(ip)
               DO ij=1+ngj/2,local_nj+ngj/2

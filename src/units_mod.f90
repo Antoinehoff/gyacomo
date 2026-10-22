@@ -40,6 +40,7 @@ MODULE units
       ! Read the input parameters
       USE basic,      ONLY: lu_in
       USE geometry,   ONLY: eps, geom
+      USE vmec,       ONLY: vmec_a_minor, vmec_rho0, vmec_R_major
       USE prec_const, ONLY: xp, pi
       IMPLICIT NONE
       REAL(xp) :: T0,n0, p0, m0, q0
@@ -60,6 +61,8 @@ MODULE units
       SELECT CASE(geom)
         CASE('z-pinch','Z-pinch','zpinch','Zpinch')
             A_fs  = 2*pi*R_ref*R_ref              ! Area of a cylinder of height R_ref [m2]
+        CASE('vmec','VMEC')
+            A_fs  = REAL(4*pi**2*(vmec_a_minor*vmec_rho0)*vmec_R_major,xp) ! torus of minor radius a rho [m2]
         CASE DEFAULT
             A_fs  = 4*pi**2*eps*R_ref**2          ! Area of the toroidal flux surface [m2]
       END SELECT

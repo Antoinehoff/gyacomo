@@ -210,7 +210,8 @@ CONTAINS
       kyarray_full,kxarray_full,zarray_full, ngz_o2, total_nz, local_nz, ieven,&
       local_Nky, total_nky, local_nkx, total_nkx
     USE geometry, ONLY: gxx, gxy, gxz, gyy, gyz, gzz, &
-                        hatR, hatZ, hatB, dBdx, dBdy, dBdz, Jacobian, gradz_coeff
+                        hatR, hatZ, hatB, dBdx, dBdy, dBdz, Jacobian, gradz_coeff,&
+                        dlnBdz, zeta_arr, theta_arr
     USE futils,          ONLY: creatf, creatg, creatd, closef, putarr, putfile, attach, openf!, putarrnd ! Routine de merde, jamais l'utiliser
     USE array
     USE model,           ONLY: EM, BPAR
@@ -287,6 +288,12 @@ CONTAINS
       CALL putarr(fidres, "/data/metric/Jacobian", Az_full, "Jacobian", ionode =0)
       CALL gather_z(gradz_coeff((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
       CALL putarr(fidres, "/data/metric/gradz_coeff", Az_full, "gradz_coeff", ionode =0)
+      CALL gather_z(dlnBdz((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
+      CALL putarr(fidres, "/data/metric/dlnBdz", Az_full, "dlnBdz", ionode =0)
+      CALL gather_z(zeta_arr((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
+      CALL putarr(fidres, "/data/metric/zeta", Az_full, "zeta", ionode =0)
+      CALL gather_z(theta_arr((1+ngz_o2):(local_nz+ngz_o2),ieven),Az_full,local_nz,total_nz)
+      CALL putarr(fidres, "/data/metric/theta", Az_full, "theta", ionode =0)
       !  var0d group (gyro transport)
       IF (nsave_0d .GT. 0) THEN
        CALL creatg(fidres, "/data/var0d", "0d profiles")

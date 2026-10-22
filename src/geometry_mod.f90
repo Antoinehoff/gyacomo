@@ -31,6 +31,22 @@ implicit none
   !  'shearless'    : Connect all kx to itself
   CHARACTER(len=256), &
                PUBLIC, PROTECTED :: parallel_bc = 'dirichlet'
+  ! VMEC (stellarator) flux-tube geometry, geom = 'vmec' (see vmec_mod.f90)
+  CHARACTER(len=256), &
+               PUBLIC, PROTECTED :: vmec_file      = ''      ! HDF5 file from scripts/python_utilities/wout2h5.py
+  REAL(xp),    PUBLIC, PROTECTED :: torflux        = 0.5_xp  ! s = psi_t/psi_t,edge of the flux surface
+  REAL(xp),    PUBLIC, PROTECTED :: alpha0         = 0._xp   ! field line label alpha = theta_pest - iota zeta
+  REAL(xp),    PUBLIC, PROTECTED :: zeta_center    = 0._xp   ! toroidal angle at the centre of the tube
+  REAL(xp),    PUBLIC, PROTECTED :: nfield_periods = -1._xp  ! toroidal extent in field periods (<= 0: one full turn)
+  INTEGER,     PUBLIC, PROTECTED :: surface_option = 0       ! 0: exact s, 1: nearest half-grid, 2: nearest full-grid surface
+  LOGICAL,     PUBLIC, PROTECTED :: z_equal_arc    = .false. ! equal-arc-length z (not implemented yet)
+  CHARACTER(len=16), &
+               PUBLIC, PROTECTED :: Lref_opt       = 'R'     ! reference length: 'R' (major radius) or 'a' (minor radius)
+  CHARACTER(len=16), &
+               PUBLIC, PROTECTED :: twist_shift_opt= 'local' ! 'local': metric at the tube ends (Martin et al. 2018), 'global': 2 pi shat iota P/nfp
+  ! Twist-and-shift factor Gamma: a mode (kx,ky) at z = +pi connects to (kx + Gamma ky, ky) at z = -pi
+  !  Gamma = 2 pi shear Npol Cyq0_x0 for the tokamak models, from the metric for VMEC
+  REAL(xp),    PUBLIC, PROTECTED :: twist_shift_fac = 0._xp
 
   ! GENE unused additional parameters for miller_mod
   REAL(xp), PUBLIC, PROTECTED :: edge_opt      = 0.0_xp ! meant to redistribute the points in z
@@ -56,6 +72,8 @@ implicit none
   REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatB, inv_hatB2 ! normalized bckg magnetic gradient amplitude and its inv squared
   ! Relative strength of major radius
   REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: hatR, hatZ
+  ! Toroidal and poloidal (VMEC) angles along the tube (= z for the tokamak models)
+  REAL(xp),    PUBLIC, DIMENSION(:,:), ALLOCATABLE :: zeta_arr, theta_arr
   ! Some geometrical coefficients
   REAL(xp),    PUBLIC, DIMENSION(:,:) , ALLOCATABLE :: gradz_coeff  ! 1 / [ J_{xyz} \hat{B} ]
   ! full arrays for output
@@ -79,14 +97,33 @@ CONTAINS
 
   SUBROUTINE geometry_readinputs
     USE basic, ONLY: lu_in, speak
+    USE vmec,  ONLY: vmec_read_h5, vmec_select_surface, vmec_setup_tube,&
+                     vmec_q0, vmec_shat, vmec_a_minor, vmec_R_major, vmec_rho0
     ! Read the input parameters
     IMPLICIT NONE
     NAMELIST /GEOMETRY/ geom, q0, shear, eps,&
       kappa, s_kappa,delta, s_delta, zeta, s_zeta,& ! For Miller
       theta1, theta2,& ! for Miller global (not ready)
-      parallel_bc, shift_y, Npol, PB_PHASE
+      parallel_bc, shift_y, Npol, PB_PHASE,&
+      vmec_file, torflux, alpha0, zeta_center, nfield_periods, surface_option,& ! For VMEC
+      z_equal_arc, Lref_opt, twist_shift_opt
     READ(lu_in,geometry)
     PB_PHASE = .false.
+    SELECT CASE(geom)
+    CASE('vmec','VMEC')
+      ! The equilibrium is read here (not in eval_magnetic_geometry) because the
+      ! units and grid modules need eps, q0 and shear before the geometry is built
+      IF(ABS(Npol-1._xp) .GT. EPSILON(Npol)) &
+        ERROR STOP ">> ERROR << Npol must be 1 for VMEC geometry (z in [-pi,pi] spans nfield_periods field periods)"
+      IF(z_equal_arc) ERROR STOP ">> ERROR << z_equal_arc is not implemented yet for VMEC geometry"
+      CALL vmec_read_h5(vmec_file)
+      CALL vmec_select_surface(torflux, surface_option)
+      CALL vmec_setup_tube(alpha0, zeta_center, nfield_periods, Lref_opt)
+      q0    = REAL(vmec_q0,xp)
+      shear = REAL(vmec_shat,xp)
+      eps   = REAL(vmec_a_minor*vmec_rho0/vmec_R_major,xp)
+    END SELECT
+    ! Provisional (the final value follows from the twist-and-shift factor in eval_magnetic_geometry)
     IF(shear .GT. 0._xp) SHEARED = .TRUE.
     SELECT CASE(geom)
     CASE('z-pinch','Z-pinch','zpinch','Zpinch')
@@ -106,13 +143,15 @@ CONTAINS
 
   subroutine eval_magnetic_geometry
     USE grid,     ONLY: total_nky, total_nz, local_nkx, local_nky, local_nz, ngz,&
-                        set_kparray, nzgrid, zweights_SR, ieven, set_kxgrid
-    USE basic,    ONLY: speak
+                        set_kparray, nzgrid, zweights_SR, ieven, set_kxgrid, zarray
+    USE basic,    ONLY: speak, str
     USE miller,   ONLY: set_miller_parameters, get_miller
     USE circular, ONLY: get_circ
+    USE vmec,     ONLY: get_vmec_geometry, vmec_sigma_y, vmec_rho0, vmec_Lref_over_a
     USE calculus, ONLY: simpson_rule_z
-    USE model,    ONLY: beta, LINEARITY, N_HD
+    USE model,    ONLY: beta, LINEARITY, N_HD, ExBrate
     USE species,  ONLY: Ptot
+    USE prec_const, ONLY: PI
     ! evalute metrix, elementwo_third_kpmaxts, jacobian and gradient
     implicit none
     COMPLEX(xp), DIMENSION(local_nz) :: integrant
@@ -167,15 +206,35 @@ CONTAINS
           call get_circ(eps,major_R,major_Z,q0,shear,&
                           C_y,C_xy,Cyq0_x0,gxx,gxy,gxz,gyy,gyz,gzz,&
                           dBdx,dBdy,dBdz,hatB,jacobian,hatR,hatZ,dxdR,dxdZ)  
+        CASE('vmec','VMEC')
+          CALL speak('VMEC flux-tube geometry',2)
+          IF(ABS(ExBrate) .GT. 0._xp) ERROR STOP '>> ERROR << ExB shear flow is not supported with VMEC geometry yet'
+          CALL get_vmec_geometry(local_nz,ngz,nzgrid,zarray,twist_shift_opt,&
+                                 gxx,gxy,gxz,gyy,gyz,gzz,dBdx,dBdy,dBdz,hatB,Jacobian,&
+                                 hatR,hatZ,Rc,phic,Zc,dxdR,dxdZ,zeta_arr,theta_arr,twist_shift_fac)
+          ! B = C_xy grad x X grad y with C_xy = 1 by construction (see vmec_mod)
+          C_xy    = 1._xp
+          C_y     = REAL(vmec_sigma_y,xp)*REAL(vmec_rho0/vmec_Lref_over_a,xp) ! dy/dalpha in L_ref units
+          Cyq0_x0 = 1._xp
         CASE DEFAULT
           ERROR STOP '>> ERROR << geometry not recognized!!'
         END SELECT
     ENDIF
     ! inv squared of the magnetic gradient bckg amplitude (for fast kperp update)
     inv_hatB2 = 1/hatB/hatB
-    ! Reset kx grid (to account for Cyq0_x0 factor)
-    CALL speak('Reset kx grid according to Cyq0_x0 factor',1)
-    CALL set_kxgrid(shear,Npol,Cyq0_x0,LINEARITY,N_HD) 
+    ! Twist-and-shift factor Gamma (Delta kx = Gamma ky at the parallel boundary)
+    SELECT CASE(geom)
+    CASE('vmec','VMEC') ! twist_shift_fac, zeta_arr, theta_arr set by get_vmec_geometry
+    CASE DEFAULT        ! tokamak models: 2 pi shear Npol, times the Miller factor
+      twist_shift_fac = 2._xp*PI*shear*Npol*Cyq0_x0
+      zeta_arr  = zarray
+      theta_arr = zarray
+    END SELECT
+    SHEARED = ABS(twist_shift_fac) .GT. 1e-5_xp
+    CALL speak('Twist-and-shift factor Gamma = '//str(twist_shift_fac),1)
+    ! Reset kx grid (to account for the twist-and-shift factor of the geometry)
+    CALL speak('Reset kx grid according to the twist-and-shift factor',1)
+    CALL set_kxgrid(twist_shift_fac,LINEARITY,N_HD) 
     !
     ! Evaluate perpendicular wavenumber
     !  k_\perp^2 = g^{xx} k_x^2 + 2 g^{xy}k_x k_y + k_y^2 g^{yy}
@@ -362,11 +421,11 @@ CONTAINS
 
  SUBROUTINE set_ikx_zBC_map
    USE grid,       ONLY: local_nky,total_nkx,contains_zmin,contains_zmax, Nexc,&
-                         local_nky_offset, kx_max, kx_min, kyarray, kxarray
+                         local_nky_offset, kx_max, kx_min, kyarray, kxarray, deltakx
    USE prec_const, ONLY: imagu, pi
    IMPLICIT NONE
    REAL(xp) :: shift
-   INTEGER :: ikx,iky, mn_y
+   INTEGER :: ikx,iky, mn_y, isg, m_src, m_tgt, m_min, m_max
    ALLOCATE(ikx_zBC_L(local_nky,total_nkx))
    ALLOCATE(ikx_zBC_R(local_nky,total_nkx))
    ALLOCATE(pb_phase_L(local_nky))
@@ -388,25 +447,29 @@ CONTAINS
    ! Parallel boundary are not trivial for sheared case and if
    !  the user does not ask explicitly for shearless bc
    IF(SHEARED .AND. (parallel_bc .NE. 'shearless')) THEN
+     ! The kx grid satisfies dkx = |Gamma| dky/Nexc (set_kxgrid), so the shift
+     ! Gamma*ky is exactly sign(Gamma)*mn_y*Nexc grid steps: the connection and the
+     ! out-of-domain test are done on the integer mode numbers m = kx/dkx
+     isg   = NINT(SIGN(1._xp, twist_shift_fac))
+     m_min = NINT(kx_min/deltakx)
+     m_max = NINT(kx_max/deltakx)
      !!!!!!!!!! LEFT PARALLEL BOUNDARY
      ! Modify connection map only at border of z (matters for MPI z-parallelization)
      IF(contains_zmin) THEN ! Check if the process is at the start of the fluxtube
        DO iky = 1,local_nky
         ! get the real mode number (iky starts at 1 and is shifted from paral)
         mn_y = iky-1+local_nky_offset
-        ! Formula for the shift due to shear after Npol turns
-        shift = 2._xp*PI*shear*kyarray(iky)*Npol*Cyq0_x0
+        ! Shift of kx across the parallel boundary (2 pi shear Npol ky for a tokamak)
+        shift = twist_shift_fac*kyarray(iky)
           DO ikx = 1,total_nkx
-            ! Usual formula for shifting indices using that dkx = 2pi*shear*dky/Nexc
+            ! Usual formula for shifting indices using that dkx = |Gamma|*dky/Nexc
             ! Wrap to the other side of the kx grid with MODULO so that shifts
             ! larger than one grid width still land on a valid index
-            ikx_zBC_L(iky,ikx) = MODULO(ikx-mn_y*Nexc-1, total_nkx) + 1
+            ikx_zBC_L(iky,ikx) = MODULO(ikx-isg*mn_y*Nexc-1, total_nkx) + 1
             ! Check if it points out of the kx domain
-            ! print*, kxarray(iky,ikx), shift, kx_min
-            IF( (kxarray(iky,ikx) - shift) .LT. kx_min ) THEN ! outside of the frequ domain
-              ! print*,( ((kxarray(iky,ikx) - shift)-kx_min) .LT. EPSILON(kx_min) )
-              ! print*, kxarray(iky,ikx)-kx_min, EPSILON(kx_min)
-              ! IF( (ikx-mn_y*Nexc) .LT. 1 ) THEN 
+            m_src = NINT(kxarray(iky,ikx)/deltakx)
+            m_tgt = m_src - isg*mn_y*Nexc
+            IF( (m_tgt .LT. m_min) .OR. (m_tgt .GT. m_max) ) THEN ! outside of the frequ domain
               SELECT CASE(parallel_bc)
               CASE ('dirichlet','disconnected') ! connected to 0
                 ikx_zBC_L(iky,ikx) = -99
@@ -432,16 +495,17 @@ CONTAINS
        DO iky = 1,local_nky
         ! get the real mode number (iky starts at 1 and is shifted from paral)
         mn_y = iky-1+local_nky_offset
-        ! Formula for the shift due to shear after Npol
-        shift = 2._xp*PI*shear*kyarray(iky)*Npol*Cyq0_x0
+        ! Shift of kx across the parallel boundary (2 pi shear Npol ky for a tokamak)
+        shift = twist_shift_fac*kyarray(iky)
           DO ikx = 1,total_nkx
             ! Usual formula for shifting indices
             ! Wrap to the other side of the kx grid with MODULO so that shifts
             ! larger than one grid width still land on a valid index
-            ikx_zBC_R(iky,ikx) = MODULO(ikx+mn_y*Nexc-1, total_nkx) + 1
+            ikx_zBC_R(iky,ikx) = MODULO(ikx+isg*mn_y*Nexc-1, total_nkx) + 1
             ! Check if it points out of the kx domain
-            IF( (kxarray(iky,ikx) + shift) .GT. kx_max ) THEN ! outside of the frequ domain
-            ! IF( (ikx+mn_y*Nexc) .GT. total_nkx ) THEN ! outside of the frequ domain
+            m_src = NINT(kxarray(iky,ikx)/deltakx)
+            m_tgt = m_src + isg*mn_y*Nexc
+            IF( (m_tgt .LT. m_min) .OR. (m_tgt .GT. m_max) ) THEN ! outside of the frequ domain
               SELECT CASE(parallel_bc)
               CASE ('dirichlet','disconnected') ! connected to 0
                 ikx_zBC_R(iky,ikx) = -99
@@ -547,12 +611,16 @@ END SUBROUTINE set_ikx_zBC_map
        ALLOCATE(       dxdR(local_nz+ngz,nzgrid))
        ALLOCATE(       dxdZ(local_nz+ngz,nzgrid))
        ALLOCATE(gradz_coeff(local_nz+ngz,nzgrid))
+       ALLOCATE(   zeta_arr(local_nz+ngz,nzgrid))
+       ALLOCATE(  theta_arr(local_nz+ngz,nzgrid))
 
    END SUBROUTINE geometry_allocate_mem
 
    SUBROUTINE geometry_outputinputs(fid)
      ! Write the input parameters to the results_xx.h5 file
      USE futils, ONLY: attach, creatd
+     USE vmec,   ONLY: vmec_nfield_periods, vmec_a_minor, vmec_R_major, vmec_B_ref, vmec_L_ref,&
+                       vmec_rho0, vmec_iota, vmec_nfp, vmec_sign_torflux, vmec_sigma_y, vmec_sigma_z
      IMPLICIT NONE
      INTEGER, INTENT(in) :: fid
      CHARACTER(len=256)  :: str
@@ -562,5 +630,29 @@ END SUBROUTINE set_ikx_zBC_map
      CALL attach(fid, TRIM(str),      "q0",    q0)
      CALL attach(fid, TRIM(str),   "shear", shear)
      CALL attach(fid, TRIM(str),     "eps",   eps)
+     CALL attach(fid, TRIM(str),    "Npol",  Npol)
+     CALL attach(fid, TRIM(str),"parallel_bc", parallel_bc)
+     CALL attach(fid, TRIM(str),"twist_shift_fac", twist_shift_fac)
+     SELECT CASE(geom)
+     CASE('vmec','VMEC')
+       CALL attach(fid, TRIM(str),       "vmec_file", vmec_file)
+       CALL attach(fid, TRIM(str),         "torflux", torflux)
+       CALL attach(fid, TRIM(str),          "alpha0", alpha0)
+       CALL attach(fid, TRIM(str),     "zeta_center", zeta_center)
+       CALL attach(fid, TRIM(str),  "nfield_periods", REAL(vmec_nfield_periods,xp))
+       CALL attach(fid, TRIM(str),  "surface_option", surface_option)
+       CALL attach(fid, TRIM(str),        "Lref_opt", Lref_opt)
+       CALL attach(fid, TRIM(str), "twist_shift_opt", twist_shift_opt)
+       CALL attach(fid, TRIM(str),         "a_minor", REAL(vmec_a_minor,xp))
+       CALL attach(fid, TRIM(str),         "R_major", REAL(vmec_R_major,xp))
+       CALL attach(fid, TRIM(str),           "B_ref", REAL(vmec_B_ref,xp))
+       CALL attach(fid, TRIM(str),           "L_ref", REAL(vmec_L_ref,xp))
+       CALL attach(fid, TRIM(str),            "rho0", REAL(vmec_rho0,xp))
+       CALL attach(fid, TRIM(str),            "iota", REAL(vmec_iota,xp))
+       CALL attach(fid, TRIM(str),             "nfp", vmec_nfp)
+       CALL attach(fid, TRIM(str),    "sign_torflux", vmec_sign_torflux)
+       CALL attach(fid, TRIM(str),         "sigma_y", vmec_sigma_y)
+       CALL attach(fid, TRIM(str),         "sigma_z", vmec_sigma_z)
+     END SELECT
    END SUBROUTINE geometry_outputinputs
 end module geometry
