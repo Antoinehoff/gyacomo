@@ -50,7 +50,9 @@ MODULE array
   ! Poisson operator (iky,ikx,iz)
   REAL(xp), DIMENSION(:,:,:), ALLOCATABLE :: inv_poisson_op
   REAL(xp), DIMENSION(:,:,:), ALLOCATABLE :: inv_ampere_op
-  REAL(xp), DIMENSION(:,:,:), ALLOCATABLE :: inv_pol_ion
+  ! Flux surface average <1/(P+1)> of inv_poisson_op on the ky = 0 row (ikx),
+  ! the adiabatic electron closure <phi> = <phi0>/(1 - <1/(P+1)>) of poisson
+  REAL(xp), DIMENSION(:),     ALLOCATABLE :: inv_poisson_op_fsa
   ! Inverse of the coupled Poisson/pressure balance operator (BPAR) (iky,ikx,iz)
   !   phi   = bp_phi_rho*rho + bp_xcoupl*pperp
   !   dBpar = bp_xcoupl*rho  + bp_dB_pp*pperp

@@ -10,7 +10,7 @@ MODULE nonlinear
                          total_nkx,kxarray, AA_x, inv_Nx,local_nx, Ny, &
                          local_nz,ngz_o2,zarray,nzgrid, deltakx, deltaky, iky0, contains_kx0, contains_ky0
   USE model,       ONLY : LINEARITY, EM, BPAR, ikxZF, ZFrate, ZF_ONLY, ExB_NL_CORRECTION
-  USE closure,     ONLY : evolve_mom, nmaxarray
+  USE closure,     ONLY : evolve_mom, nmaxarray, smaxarray
   USE prec_const,  ONLY : xp, imagu
   USE species,     ONLY : sqrt_tau_o_sigma, tau_q
   USE time_integration, ONLY : updatetlevel
@@ -41,7 +41,8 @@ SUBROUTINE compute_Sapj
   ! This routine is meant to compute the non linear term for each specie and degree
   !! In real space Sapj ~ b*(grad(phi) x grad(g)) which in moments in fourier becomes
   !! Sapj = Sum_n (ikx Kn phi)#(iky Sum_s d_njs Naps) - (iky Kn phi)#(ikx Sum_s d_njs Naps)
-  !! where # denotes the convolution.
+  !! where # denotes the convolution. The bounds of the n and s sums are set by the
+  !! nonlinear closure (nmaxarray, smaxarray in closure_mod).
   SELECT CASE(LINEARITY)
     CASE ('nonlinear')
       CALL compute_nonlinear
@@ -105,8 +106,8 @@ SUBROUTINE compute_nonlinear
               ENDIF
               ! Second convolution terms
               G_cmpx = 0._xp ! initialization of the sum
-              ! We set smax as min(n+j,Jmax) for safety reason but nmaxarray may prevent it as well (see anti-Laguerre-aliasing truncation)
-              smax   = MIN( jarray(ini)+jarray(iji), jmax );
+              ! Upper bound of the sum over s for this (n,j), set by the nonlinear closure
+              smax   = smaxarray(in,ij)
               s1:DO is = 1, smax+1 ! sum truncation on number of moments
                 isi = is + ngj_o2
                 G_cmpx(:,:) = G_cmpx(:,:) + &

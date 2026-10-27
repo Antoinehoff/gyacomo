@@ -9,6 +9,7 @@ INTEGER,            PUBLIC, PROTECTED :: nmax              = 0           ! upper
 !  Attributes
 LOGICAL,DIMENSION(:,:), ALLOCATABLE, PUBLIC, PROTECTED :: evolve_mom     ! array that sets if a moment has to be evolved or not
 INTEGER,DIMENSION(:),   ALLOCATABLE, PUBLIC, PROTECTED :: nmaxarray      ! upperbound of the nonlinear sum over n (depend on j)
+INTEGER,DIMENSION(:,:), ALLOCATABLE, PUBLIC, PROTECTED :: smaxarray      ! upperbound of the nonlinear sum over s (depend on n and j)
  
 PUBLIC :: closure_readinputs, set_closure_model, apply_closure_model
 
@@ -27,7 +28,7 @@ SUBROUTINE set_closure_model
                    pmax, jmax, ngj_o2
   USE CLA,   ONLY: set_monomial_trunc_coeff
   IMPLICIT NONE
-  INTEGER :: ip,ij
+  INTEGER :: ip,ij,in
   ! adapt the dmax if it is set <0
   IF(dmax .LT. 0) &
     dmax = MIN(pmax,2*jmax+1)
@@ -80,12 +81,32 @@ SUBROUTINE set_closure_model
     CALL set_monomial_trunc_coeff(pmax,jmax)
   END SELECT
 
-  ! Set the nonlinear closure scheme (truncation of sum over n in Sapj)
+  ! Set the nonlinear closure scheme, i.e. the bounds of the two Laguerre sums of
+  ! the ExB (and flutter) nonlinear term computed in compute_nonlinear,
+  !   S_apj = sum_{n=0}^{nmax(j)} { K_n phi , sum_{s=0}^{smax(n,j)} d_njs N_aps }.
+  ! The dealiased Poisson bracket conserves the Laguerre free energy sum_j |N_apj|^2
+  ! only if every retained coupling (n,j,s) comes with its mirror (n,s,j), i.e. if
+  ! the set of retained triplets is symmetric in (j,s) (d_njs is). Otherwise the
+  ! unpaired couplings pump energy into N_apj, which is catastrophic for moments
+  ! that phi does not see (ions at k_perp rho_i >> 1 in multiscale runs).
+  !  truncation (nmax >= 0), full_sum : n <= nmax,  s <= min(n+j, J)   conserving
+  !  anti_laguerre_aliasing           : n <= J-j,   s <= min(n+j, J)   NOT conserving
+  !      (only products L_n L_j whose Laguerre expansion stays within the retained
+  !       range are used, but the coupling (n,j,s>j) then has no mirror)
+  !  anti_laguerre_aliasing_sym       : n <= J-j,   s <= min(n+j, J-n) conserving
+  !      (the largest symmetric subset of the former: n + max(j,s) <= J)
   ALLOCATE(nmaxarray(local_nj))
+  ALLOCATE(smaxarray(jmax+1,local_nj))
+  ! default bound of the s sum: every retained moment the product L_n L_j projects on
+  DO ij = 1,local_nj
+    DO in = 1,jmax+1
+      smaxarray(in,ij) = MIN(jarray(ij+ngj_o2) + (in-1), jmax)
+    ENDDO
+  ENDDO
   SELECT CASE(nonlinear_closure)
   CASE('truncation','monomial')
     IF(nmax .LT. 0) THEN
-      CALL speak("Set nonlinear truncation to anti Laguerre aliasing",2)
+      CALL speak("Set nonlinear truncation to anti Laguerre aliasing (not free-energy conserving, see anti_laguerre_aliasing_sym or full_sum)",2)
       DO ij = 1,local_nj
         nmaxarray(ij) = jmax - jarray(ij+ngj_o2)
       ENDDO
@@ -98,10 +119,18 @@ SUBROUTINE set_closure_model
     DO ij = 1,local_nj
       nmaxarray(ij) = jmax - jarray(ij+ngj_o2)
     ENDDO
+  CASE('anti_laguerre_aliasing_sym')
+    DO ij = 1,local_nj
+      nmaxarray(ij) = jmax - jarray(ij+ngj_o2)
+      ! s <= J - n as well, so that (n,j,s) is retained iff (n,s,j) is
+      DO in = 1,jmax+1
+        smaxarray(in,ij) = MIN(smaxarray(in,ij), jmax - (in-1))
+      ENDDO
+    ENDDO
   CASE('full_sum')
     nmaxarray(:) = jmax
   CASE DEFAULT
-    ERROR STOP "nonlinear closure scheme not recognized (avail: truncation,anti_laguerre_aliasing,full_sum)"
+    ERROR STOP "nonlinear closure scheme not recognized (avail: truncation,anti_laguerre_aliasing,anti_laguerre_aliasing_sym,full_sum)"
   END SELECT
 END SUBROUTINE set_closure_model
 

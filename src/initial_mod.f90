@@ -19,7 +19,8 @@ MODULE initial
   INTEGER,  PUBLIC, PROTECTED :: iseed=42
   ! Multiple mode init
   INTEGER,  PUBLIC, PROTECTED :: Nmodes = -1
-  INTEGER,  PUBLIC, PROTECTED :: I_, J_, amp_
+  INTEGER,  PUBLIC, PROTECTED :: I_, J_
+  REAL(xp), PUBLIC, PROTECTED :: amp_ = 1._xp ! mode amplitude (real: decks write amp_ = 1.0)
   INTEGER,  PUBLIC, PROTECTED, ALLOCATABLE :: ikx_init(:),iky_init(:)
   REAL(xp), PUBLIC, PROTECTED, ALLOCATABLE :: mode_amp(:)
 
@@ -34,7 +35,7 @@ CONTAINS
     USE prec_const
     IMPLICIT NONE
     ! Local var
-    INTEGER :: im, amp_
+    INTEGER :: im
     NAMELIST /INITIAL/ INIT_OPT,ACT_ON_MODES,&
                        init_amp,init_background,init_noiselvl,iseed,&
                        Nmodes

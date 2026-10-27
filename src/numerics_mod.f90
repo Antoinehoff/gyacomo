@@ -245,16 +245,21 @@ END SUBROUTINE evaluate_EM_op
 !******************************************************************************!
 SUBROUTINE evaluate_poisson_op
   USE basic
-  USE array,   ONLY : kernel, inv_poisson_op, inv_pol_ion
+  USE array,   ONLY : kernel, inv_poisson_op, inv_poisson_op_fsa
   USE grid,    ONLY : local_na, local_nkx, local_nky, local_nz,&
-                      kxarray, kyarray, local_nj, ngj, ngz, ieven, kp2array
+                      kxarray, kyarray, local_nj, ngj, ngz, ieven, kp2array,&
+                      zweights_SR, contains_ky0, iky0
   USE species, ONLY : q2_tau, sigma2_tau_o2
   USE model,   ONLY : ADIAB_E, ADIAB_I, tau_i, q_i, KN_MODEL
+  USE geometry, ONLY: Jacobian, iInt_Jacobian
+  USE calculus, ONLY: simpson_rule_z
   USE prec_const, ONLY: xp
   IMPLICIT NONE
-  REAL(xp)    :: pol_tot, operator_ion
+  REAL(xp)    :: pol_tot
   INTEGER     :: in,ikx,iky,iz,ia
   REAL(xp)    :: sumker, b_
+  COMPLEX(xp) :: intf_
+  COMPLEX(xp), DIMENSION(local_nz) :: integrant
   ! This term has no staggered grid dependence. It is evalued for the
   ! even z grid since poisson uses p=0 moments and phi only.
   kxloop: DO ikx = 1,local_nkx
@@ -262,7 +267,6 @@ SUBROUTINE evaluate_poisson_op
   zloop:  DO iz  = 1,local_nz
   IF( (kxarray(iky,ikx).EQ.0._xp) .AND. (kyarray(iky).EQ.0._xp) ) THEN
       inv_poisson_op(iky, ikx, iz) =  0._xp
-      inv_pol_ion   (iky, ikx, iz) =  0._xp
   ELSE
     ! loop over n only up to the max polynomial degree
     pol_tot = 0._xp  ! total polarisation term
@@ -283,20 +287,33 @@ SUBROUTINE evaluate_poisson_op
         pol_tot = pol_tot + q2_tau(ia) - sumker
       END SELECT
     ENDDO a
-    operator_ion = pol_tot
 
     IF(ADIAB_E) & ! Adiabatic electron model
       pol_tot = pol_tot + 1._xp
 
     IF(ADIAB_I) & ! adiabatic ions model, kernel_i = 0 and -q_i/tau_i*phi = rho_i
       pol_tot = pol_tot + q_i**2/tau_i
-      
+
     inv_poisson_op(iky, ikx, iz) =  1._xp/pol_tot
-    inv_pol_ion   (iky, ikx, iz) =  1._xp/operator_ion
   ENDIF
   END DO zloop
   END DO kyloop
   END DO kxloop
+  ! Flux surface average <1/(P+1)> of the inverse operator for the ky = 0 modes,
+  ! needed by the exact adiabatic electron response in poisson (the closed form
+  ! <phi> = <phi0>/(1 - <1/(P+1)>)). Zero at the origin (inv_poisson_op = 0) and
+  ! on the ranks without ky = 0. Every rank of a z communicator holds the same ky
+  ! range, so the collective simpson_rule_z is called consistently.
+  inv_poisson_op_fsa = 0._xp
+  IF (ADIAB_E .AND. contains_ky0) THEN
+    DO ikx = 1,local_nkx
+      DO iz = 1,local_nz
+        integrant(iz) = Jacobian(iz+ngz/2,ieven)*inv_poisson_op(iky0,ikx,iz)
+      ENDDO
+      CALL simpson_rule_z(local_nz,zweights_SR,integrant,intf_)
+      inv_poisson_op_fsa(ikx) = REAL(intf_*iInt_Jacobian,xp)
+    ENDDO
+  ENDIF
 END SUBROUTINE evaluate_poisson_op
 !******************************************************************************!
 

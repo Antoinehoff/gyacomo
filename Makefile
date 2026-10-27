@@ -462,7 +462,7 @@ CHK_AUTO   = $(if $(F90_IS_GNU),-O1 -g -fcheck=all -fbacktrace -ffree-line-lengt
 UNIT_PROGS = test_prec_const test_utility test_lag_interp test_calculus \
              test_numerics test_coeff test_grid test_time_integration \
              test_ExB_shear_flow test_linear_growth test_bpar test_staggered_z \
-             test_adaptive_dt test_vmec
+             test_adaptive_dt test_vmec test_adiab_e test_nonlinear_closure
 UNIT_EXECS = $(addprefix $(UNITBINDIR)/,$(UNIT_PROGS))
 UNIT_OBJS  = $(addprefix $(UNITOBJDIR)/,$(addsuffix .o,$(UNIT_PROGS)))
 
@@ -485,6 +485,10 @@ BPAR_MODES = on off nobeta
 # nonlinear FFT setup) per process, so the mode is a command line argument.
 ADT_MODES = hyperdiff cfl
 
+# And for the nonlinear Laguerre closure suite: one closure per process, so the
+# closure is a command line argument.
+NLC_MODES = full_sum anti_laguerre_aliasing anti_laguerre_aliasing_sym truncation truncation_nmax1
+
 check:
 	@$(MAKE) --no-print-directory run-unit-tests \
 	    OBJDIR=$(PREFIX)/obj/unit MODDIR=$(PREFIX)/mod/unit
@@ -498,7 +502,7 @@ run-unit-tests: dirs unitdirs src/srcinfo.h $(UNIT_EXECS)
 	@echo "== running unit tests =="
 	@echo ""
 	@fail=0; \
-	for t in $(filter-out $(UNITBINDIR)/test_time_integration $(UNITBINDIR)/test_ExB_shear_flow $(UNITBINDIR)/test_bpar $(UNITBINDIR)/test_adaptive_dt,$(UNIT_EXECS)); do \
+	for t in $(filter-out $(UNITBINDIR)/test_time_integration $(UNITBINDIR)/test_ExB_shear_flow $(UNITBINDIR)/test_bpar $(UNITBINDIR)/test_adaptive_dt $(UNITBINDIR)/test_nonlinear_closure,$(UNIT_EXECS)); do \
 	  $(TESTRUNNER) $$t || fail=`expr $$fail + 1`; \
 	done; \
 	for s in $(TI_SCHEMES); do \
@@ -512,6 +516,9 @@ run-unit-tests: dirs unitdirs src/srcinfo.h $(UNIT_EXECS)
 	done; \
 	for m in $(ADT_MODES); do \
 	  $(TESTRUNNER) $(UNITBINDIR)/test_adaptive_dt $$m || fail=`expr $$fail + 1`; \
+	done; \
+	for m in $(NLC_MODES); do \
+	  $(TESTRUNNER) $(UNITBINDIR)/test_nonlinear_closure $$m || fail=`expr $$fail + 1`; \
 	done; \
 	if [ $$fail -eq 0 ]; then \
 	  echo "== all unit tests passed =="; \

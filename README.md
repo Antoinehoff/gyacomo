@@ -162,7 +162,7 @@ and the kernel approximations. See `unit/README.md` for how to add one.
 - Sheared implementation via frequency transpose (kx → ky)
 - Full 3D MPI parallelization (p, kx, z)
 - **Staggered grid** for parallel odd/even coupling
-- **Adiabatic electron** model
+- **Adiabatic electron** model, with the exact flux-surface-averaged response `n_e = phi - <phi>` for the zonal (`ky = 0`) modes (closed form, no iteration)
 - Mirror force implementation
 - 2D/3D hybrid mode (Nz=1 = 2D)
 - Restart capability with different P, J

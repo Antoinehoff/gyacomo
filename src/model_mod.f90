@@ -103,8 +103,8 @@ CONTAINS
     ENDIF
     IF(BPAR) THEN
       CALL speak('Parallel magnetic fluctuations (delta B_par) are included',1)
-      ! The adiabatic electron path solves a flux surface averaged Poisson
-      ! equation (inv_pol_ion) that does not know about the phi-B_par coupling.
+      ! The adiabatic electron path closes Poisson with the flux surface average
+      ! of phi (inv_poisson_op_fsa) and does not know about the phi-B_par coupling.
       IF(ADIAB_E) &
         ERROR STOP '>> ERROR << BPAR is not compatible with the adiabatic electron model'
       ! The gkeyll kernels come with a Pade polarization that is not

@@ -60,7 +60,7 @@
 &CLOSURE
   hierarchy_closure='truncation' ! closure scheme
   dmax = -1             ! set the maximal degree of moment to evolve (-1 evolves all th)
-  nonlinear_closure='anti_laguerre_aliasing' ! set the truncation of the Laguerre convolution (truncation,full_sum,anti_laguerre_aliasing)
+  nonlinear_closure='anti_laguerre_aliasing' ! set the truncation of the Laguerre convolution (truncation,full_sum,anti_laguerre_aliasing,anti_laguerre_aliasing_sym; only full_sum, anti_laguerre_aliasing_sym and truncation with nmax>=0 conserve the Laguerre free energy)
   nmax = -1             ! set the maximal degree in the truncation of the Laguerre convolution (experimental)
 /
 &SPECIES ! Defines the species a (out of Na species)

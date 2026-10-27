@@ -34,6 +34,8 @@ make check TESTRUNNER="mpirun -np 1"
 | `test_staggered_z` | `processing_mod` | with `SG = .true.`, the direction `compute_interp_z` carries every p (ghosts included) to the other z grid: half a cell down for p even, half a cell up for p odd, and the same points `compute_gradients_z` differentiates at |
 | `test_adaptive_dt` | `adaptive_dt_mod` | the stability polynomial of the RK4 tableau and its extents on the real and imaginary axes, the largest stable step per eigenvalue (with unstable eigenvalues projected on the imaginary axis), the in-house Hessenberg QR on a companion and a triangular matrix, the Hermite ladder radius, the block Arnoldi kernel on an injected diagonal operator (full and truncated Krylov spaces, residuals), the step controller; then on the real RHS, per mode, the exact eigenvalue of a pure hyperdiffusion deck and the restored state (`hyperdiff`), and the ExB CFL frequency of single-mode potentials including the anti-aliasing cutoff (`cfl`) |
 | `test_vmec` | `vmec_mod`, `geometry_mod`, `grid_mod` | the VMEC HDF5 reader and surface selection against the scalars stella prints for the W7-X kjm file, every Fourier derivative against a finite difference, the identities `hatB^2 = gxx gyy - gxy^2`, `J (grad x X grad y . grad z) = 1`, `J > 0`, `b.grad z > 0`, `dBdz`/`dBdy`/`dBdx` against finite differences along the tube, across field lines and across surfaces, the metric and grad-B drift coefficients against stella's `EXPECTED_OUTPUT.vmec_geometry.geometry` table (in stella's units, `Lref_opt = 'a'`), and through `readinputs`/`auxval` the twist-and-shift factor, `Lx = Ly/|Gamma|` and the parallel kx map |
+| `test_adiab_e` | `numerics_mod`, `solve_EM_fields` | the adiabatic electron closure of quasineutrality on an s-alpha tube with `eps = 0.3`: the stored `<1/(P+1)>` against a rebuild from the kernels, Simpson weights and Jacobian, and for a solve from random moments that `rho - (P+1) phi` is constant along the field line for the `ky = 0` modes, that the constant is `-<phi>` and the closed form `<rho/(P+1)>/<P/(P+1)>`, that the electrons carry no flux surface averaged density, that the former `<rho/P>` shortcut would be off, and that the `ky /= 0` modes are the plain `phi = rho/(P+1)` |
+| `test_nonlinear_closure` | `closure_mod`, `nonlinear_mod` | which Laguerre couplings `(n,j,s)` of the nonlinear term each `nonlinear_closure` retains (against the documented rule for each one), and whether the ExB and flutter brackets on random fields conserve `sum_pj |N_pj|^2` of each species: to round off for `full_sum`, `anti_laguerre_aliasing_sym` and `truncation` with `nmax >= 0`, and demonstrably not for `anti_laguerre_aliasing` (`truncation` with `nmax = -1`), whose unpaired couplings leak an O(1) fraction of `sum |N||S|` (run once per closure) |
 
 ## How the build works
 
@@ -90,6 +92,7 @@ plus `Setup_ExB_shear_flow` allocating its own arrays unconditionally; the
 modes it is run with are in `EXB_MODES` in the Makefile.
 `test_bpar` likewise takes its BPAR/beta combination on the command line
 (`BPAR_MODES` in the Makefile).
+`test_nonlinear_closure` takes the closure the same way (`NLC_MODES`).
 
 That test also stands up a whole run, `readinputs` then `auxval`, because the
 shear touches the grids and the operators. It does *not* call `basic_data`:

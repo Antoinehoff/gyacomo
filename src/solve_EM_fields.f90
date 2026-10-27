@@ -19,7 +19,7 @@ CONTAINS
   SUBROUTINE poisson
     ! Solve poisson equation to get phi
     USE time_integration, ONLY: updatetlevel
-    USE array,            ONLY: kernel, inv_poisson_op, inv_pol_ion
+    USE array,            ONLY: kernel, inv_poisson_op, inv_poisson_op_fsa
     USE fields,           ONLY: phi, moments
     USE grid,             ONLY: local_na, local_nky, local_nkx, local_nz,ngz,ngz_o2, SOLVE_POISSON,&
                                 kyarray, contains_kx0, contains_ky0,ikx0,iky0, zweights_SR, ieven,&
@@ -33,7 +33,7 @@ CONTAINS
     IMPLICIT NONE
 
     INTEGER     :: ij, ia, ikx, iky, iz, izi, iji
-    COMPLEX(xp) :: fsa_phi, intf_   ! current flux averaged phi
+    COMPLEX(xp) :: fsa_phi, intf_   ! flux surface averaged phi of the mode
     COMPLEX(xp), DIMENSION(local_nz) :: rho, integrant  ! charge density q_a n_a and aux var
     !! Poisson can be solved only for process containng p=0
     IF ( SOLVE_POISSON ) THEN
@@ -51,25 +51,6 @@ CONTAINS
                 END DO
               END DO
             END DO
-            !!!!!!!!!!!!!!! adiabatic electron contribution if asked
-            ! Adiabatic charge density (linked to flux surface averaged phi)
-            ! We compute the flux surface average solving a flux surface averaged
-            ! Poisson equation, i.e.
-            ! [qi^2/taui (1-sum_j K_j^2)/tau_i] <phi>_psi = <q_i n_i >_psi
-            !       inv_pol_ion^-1         fsa_phi  = simpson(Jacobian rho_i ) * iInt_Jacobian
-            IF (ADIAB_E) THEN
-              fsa_phi = 0._xp
-              IF(kyarray(iky).EQ.0._xp) THEN ! take ky=0 mode (y-average)
-                ! Prepare integrant for z-average
-                DO iz = 1,local_nz
-                  izi = iz+ngz_o2
-                  integrant(iz) = Jacobian(izi,ieven)*rho(iz)*inv_pol_ion(iky,ikx,iz)
-                ENDDO
-                call simpson_rule_z(local_nz,zweights_SR,integrant,intf_) ! get the flux averaged phi
-                fsa_phi = intf_ * iInt_Jacobian !Normalize by 1/int(Jxyz)dz
-              ENDIF
-              rho = rho + fsa_phi
-            ENDIF
             !!!!!!!!!!!!!!! adiabatic ion model
             ! Candy et al. 2007, rho_i = -q_i/tau_i phi
             IF (ADIAB_I) THEN
@@ -77,10 +58,33 @@ CONTAINS
             ENDIF
 
             !!!!!!!!!!!!!!! Inverting the poisson equation
-            DO iz = 1,local_nz
-              izi = iz+ngz_o2
-              phi(iky,ikx,izi) = inv_poisson_op(iky,ikx,iz)*rho(iz)
-            ENDDO
+            ! Quasineutrality reads rho = P phi (+ phi - <phi> with adiabatic
+            ! electrons), P the polarisation and <.> the flux surface average.
+            ! inv_poisson_op = 1/(P+1) carries the +1 of the adiabatic electrons.
+            IF (ADIAB_E .AND. (kyarray(iky).EQ.0._xp)) THEN
+              ! The ky = 0 modes are the only ones with <phi> /= 0. The exact
+              ! solution of (P+1) phi = rho + <phi> is phi = phi0 + <phi>/(P+1)
+              ! with phi0 = rho/(P+1), and averaging gives the closed form
+              !   <phi> = <phi0> / (1 - <1/(P+1)>)       (<1/(P+1)> = inv_poisson_op_fsa)
+              ! so that no iteration is needed. (The old <phi> = <rho/P> was
+              ! exact only for a z-independent polarisation.)
+              DO iz = 1,local_nz
+                izi = iz+ngz_o2
+                phi(iky,ikx,izi) = inv_poisson_op(iky,ikx,iz)*rho(iz)
+                integrant(iz)    = Jacobian(izi,ieven)*phi(iky,ikx,izi)
+              ENDDO
+              CALL simpson_rule_z(local_nz,zweights_SR,integrant,intf_)
+              fsa_phi = intf_*iInt_Jacobian/(1._xp - inv_poisson_op_fsa(ikx))
+              DO iz = 1,local_nz
+                izi = iz+ngz_o2
+                phi(iky,ikx,izi) = phi(iky,ikx,izi) + fsa_phi*inv_poisson_op(iky,ikx,iz)
+              ENDDO
+            ELSE
+              DO iz = 1,local_nz
+                izi = iz+ngz_o2
+                phi(iky,ikx,izi) = inv_poisson_op(iky,ikx,iz)*rho(iz)
+              ENDDO
+            ENDIF
           ENDDO y
         ENDDO x
       ! Cancel origin singularity

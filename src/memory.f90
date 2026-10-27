@@ -50,7 +50,7 @@ SUBROUTINE memory
   ! 3D arrays
   CALL allocate_array(inv_poisson_op, 1,local_nky, 1,local_nkx, 1,local_nz)
   CALL allocate_array( inv_ampere_op, 1,local_nky, 1,local_nkx, 1,local_nz)
-  CALL allocate_array(   inv_pol_ion, 1,local_nky, 1,local_nkx, 1,local_nz)
+  CALL allocate_array(inv_poisson_op_fsa, 1,local_nkx)
   CALL allocate_array(    bp_phi_rho, 1,local_nky, 1,local_nkx, 1,local_nz)
   CALL allocate_array(     bp_xcoupl, 1,local_nky, 1,local_nkx, 1,local_nz)
   CALL allocate_array(      bp_dB_pp, 1,local_nky, 1,local_nkx, 1,local_nz)
